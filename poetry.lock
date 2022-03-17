@@ -481,6 +481,18 @@ python-ldap = ">=3.0"
 dev = ["check-manifest", "flake8", "isort (>=5.0.0)", "tox", "factory-boy", "volatildap (>=1.1.0)", "wheel", "zest.releaser"]
 
 [[package]]
+name = "django-localflavor"
+version = "3.1"
+description = "Country-specific Django helpers"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+django = ">=2.2"
+python-stdnum = ">=1.6"
+
+[[package]]
 name = "django-phonenumber-field"
 version = "5.2.0"
 description = "An international phone number field for django models."
@@ -734,6 +746,17 @@ sqlalchemy = ["sqlalchemy"]
 sqs = ["boto3 (>=1.9.12)", "pycurl (>=7.44.1,<7.45.0)", "urllib3 (>=1.26.7)"]
 yaml = ["PyYAML (>=3.10)"]
 zookeeper = ["kazoo (>=1.3.1)"]
+
+[[package]]
+name = "localflavor"
+version = "1.9"
+description = "Country-specific validation helpers, ported from Django Localflavor"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = ">=1.11.0"
 
 [[package]]
 name = "markupsafe"
@@ -1077,6 +1100,19 @@ pyasn1 = ">=0.3.7"
 pyasn1_modules = ">=0.1.5"
 
 [[package]]
+name = "python-stdnum"
+version = "1.17"
+description = "Python module to handle standardized numbers and codes"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+soap = ["zeep"]
+soap-alt = ["suds"]
+soap-fallback = ["pysimplesoap"]
+
+[[package]]
 name = "pytz"
 version = "2021.3"
 description = "World timezone definitions, modern and historical"
@@ -1353,7 +1389,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "8b5d0f5b67e19c3df2db8114f5795331ff0f34746974ade4cbc373627f2a0e2b"
+content-hash = "627d84dda8a20f42aa8b0f2b82e94e3011ca8ce78c97caf87411ec5d4f293483"
 
 [metadata.files]
 amqp = [
@@ -1590,6 +1626,10 @@ django-ldapdb = [
     {file = "django-ldapdb-1.5.1.tar.gz", hash = "sha256:5ea333c3130abbb86f8629766370a7f490878706469fce4e5008e41fb566392a"},
     {file = "django_ldapdb-1.5.1-py2.py3-none-any.whl", hash = "sha256:2daee828a7eb1ce6ad0634ce5311339d77c08128829e575ff14d62a46771b86a"},
 ]
+django-localflavor = [
+    {file = "django-localflavor-3.1.tar.gz", hash = "sha256:ac2fa377bbcba4cae95e97077d9e77c7f22b3d93e4845e2e133ba7e664043a44"},
+    {file = "django_localflavor-3.1-py3-none-any.whl", hash = "sha256:6593865dc671333b3edc88e729e6d384d00b6db7891ef5d3a65db831a40050d2"},
+]
 django-phonenumber-field = [
     {file = "django-phonenumber-field-5.2.0.tar.gz", hash = "sha256:52b2e5970133ec5ab701218b802f7ab237229854dc95fd239b7e9e77dc43731d"},
     {file = "django_phonenumber_field-5.2.0-py3-none-any.whl", hash = "sha256:5547fb2b2cc690a306ba77a5038419afc8fa8298a486fb7895008e9067cc7e75"},
@@ -1656,6 +1696,10 @@ jinja2 = [
 kombu = [
     {file = "kombu-5.2.3-py3-none-any.whl", hash = "sha256:eeaeb8024f3a5cfc71c9250e45cddb8493f269d74ada2f74909a93c59c4b4179"},
     {file = "kombu-5.2.3.tar.gz", hash = "sha256:81a90c1de97e08d3db37dbf163eaaf667445e1068c98bfd89f051a40e9f6dbbd"},
+]
+localflavor = [
+    {file = "localflavor-1.9-py3-none-any.whl", hash = "sha256:02820a541d5fd0317265b7bacbc6a30a19492decc97205620545e4ae8eb8689c"},
+    {file = "localflavor-1.9.tar.gz", hash = "sha256:b051be69c778d02754be4a1c447d73107d80330e261e2eb77e17780e41e49272"},
 ]
 markupsafe = [
     {file = "MarkupSafe-2.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3028252424c72b2602a323f70fbf50aa80a5d3aa616ea6add4ba21ae9cc9da4c"},
@@ -1884,6 +1928,10 @@ python-dateutil = [
 ]
 python-ldap = [
     {file = "python-ldap-3.4.0.tar.gz", hash = "sha256:60464c8fc25e71e0fd40449a24eae482dcd0fb7fcf823e7de627a6525b3e0d12"},
+]
+python-stdnum = [
+    {file = "python-stdnum-1.17.tar.gz", hash = "sha256:374e2b5e13912ccdbf50b0b23fca2c3e0531174805c32d74e145f37756328340"},
+    {file = "python_stdnum-1.17-py2.py3-none-any.whl", hash = "sha256:a46e6cf9652807314d369b654b255c86a59f93d18be2834f3d567ed1a346c547"},
 ]
 pytz = [
     {file = "pytz-2021.3-py2.py3-none-any.whl", hash = "sha256:3672058bc3453457b622aab7a1c3bfd5ab0bdae451512f6cf25f64ed37f5b87c"},

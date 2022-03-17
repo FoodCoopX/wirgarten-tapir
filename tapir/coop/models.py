@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from localflavor.generic.models import IBANField, BICField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir import utils
@@ -288,6 +289,10 @@ class DraftUser(models.Model):
     ratenzahlung = models.BooleanField(verbose_name=_("Ratenzahlung"), default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    account_owner = models.CharField(_("Account owner"), max_length=150)
+    iban = IBANField(_("IBAN"))
+    bic = BICField(_("BIC"))
 
     def get_absolute_url(self):
         return reverse(

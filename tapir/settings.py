@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_select2",  # For autocompletion in form fields
     "phonenumber_field",
+    "localflavor",
     # TODO(Leon Handreke): Don't install in prod
     "django_extensions",
 ]
