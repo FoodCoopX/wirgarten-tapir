@@ -8,6 +8,7 @@ from tapir.coop.models import (
     DraftUser,
     ShareOwner,
     FinancingCampaign,
+    COOP_MINIMUM_SHARES,
 )
 from tapir.utils.forms import DateInput, TapirPhoneNumberField
 
@@ -31,7 +32,18 @@ class PaymentUserDataMixin(forms.Form):
     iban = forms.CharField(label=_("IBAN"))
     bic = forms.CharField(label=_("BIC"))
 
+    def get_initial_for_field(self, field, field_name):
+        if self.instance is None:
+            return
+
+        if field_name in ["account_owner", "iban", "bic"]:
+            return getattr(self.instance, field_name)
+        else:
+            return super().get_initial_for_field(field, field_name)
+
     def clean_iban(self):
+        # Théo 17.03.22 : I tried just putting iban and bic as fields in the Meta class,
+        # I was getting django errors that I didn't manage to solve, so I made them manually.
         iban = self.cleaned_data["iban"]
         try:
             IBANValidator()(iban)
@@ -92,10 +104,18 @@ class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
                 )
             )
 
+    def clean_num_shares(self):
+        num_shares = self.cleaned_data["num_shares"]
+        if num_shares < COOP_MINIMUM_SHARES:
+            self.add_error(
+                "num_shares",
+                _(f"The minimum amount of shares is {COOP_MINIMUM_SHARES}."),
+            )
+        return num_shares
+
     def save(self, commit=True):
         draft_user = super().save(commit)
         self.save_payment_user_data(draft_user)
-
         return draft_user
 
 
@@ -110,7 +130,6 @@ class DraftUserFullForm(DraftUserLimitedForm):
             "paid_shares",
             "signed_membership_agreement",
         ]
-        required = [field for field in fields if field != "street_2"]
         widgets = {
             "birthdate": DateInput(),
         }

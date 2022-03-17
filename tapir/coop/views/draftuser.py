@@ -27,7 +27,7 @@ from tapir.coop.models import (
 )
 from tapir.coop.pdfs import get_membership_agreement_pdf
 from tapir.settings import FROM_EMAIL_MEMBER_OFFICE
-from tapir.utils.models import copy_user_info
+from tapir.utils.models import copy_user_info, copy_payment_data
 
 
 class DraftUserViewMixin:
@@ -190,6 +190,7 @@ def create_share_owner_and_shares_from_draft_user(draft_user: DraftUser) -> Shar
     )
 
     copy_user_info(draft_user, share_owner)
+    copy_payment_data(draft_user, share_owner)
     share_owner.save()
 
     for _ in range(0, draft_user.num_shares):
