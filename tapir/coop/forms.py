@@ -9,6 +9,7 @@ from tapir.coop.models import (
     ShareOwner,
     FinancingCampaign,
     COOP_MINIMUM_SHARES,
+    COOP_SHARE_PRICE,
 )
 from tapir.utils.forms import DateInput, TapirPhoneNumberField
 
@@ -65,6 +66,11 @@ class PaymentUserDataMixin(forms.Form):
         user.bic = self.cleaned_data["bic"]
         user.save()
 
+    def save(self, commit=True):
+        instance = super().save(commit)
+        self.save_payment_user_data(instance)
+        return instance
+
 
 class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
     class Meta:
@@ -84,6 +90,11 @@ class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
         ]
         required = [field for field in fields if field != "street_2"]
         widgets = {"birthdate": DateInput()}
+        labels = {
+            "num_shares": _(
+                f"Per Satzung bist du verpflichtet, mindestens {COOP_MINIMUM_SHARES} Anteile a {COOP_SHARE_PRICE} € zeichnen. Je mehr Genossenschaftsanteile du zeichnest, desto solider kann die Infrastruktur deines WirGartens finanziert werden."
+            )
+        }
 
     phone_number = TapirPhoneNumberField()
 
@@ -113,11 +124,6 @@ class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
             )
         return num_shares
 
-    def save(self, commit=True):
-        draft_user = super().save(commit)
-        self.save_payment_user_data(draft_user)
-        return draft_user
-
 
 class DraftUserFullForm(DraftUserLimitedForm):
     class Meta(DraftUserLimitedForm.Meta):
@@ -135,7 +141,7 @@ class DraftUserFullForm(DraftUserLimitedForm):
         }
 
 
-class ShareOwnerForm(forms.ModelForm):
+class ShareOwnerForm(PaymentUserDataMixin, forms.ModelForm):
     class Meta:
         model = ShareOwner
         fields = [
