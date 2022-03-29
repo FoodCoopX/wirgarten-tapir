@@ -1,5 +1,6 @@
 import localflavor
 from django import forms
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.validators import IBANValidator, BICValidator
 
@@ -94,7 +95,7 @@ class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
         labels = {
             "num_shares": _(
                 f"Per Satzung bist du verpflichtet, mindestens {COOP_MINIMUM_SHARES} Anteile a {COOP_SHARE_PRICE} € zeichnen. Je mehr Genossenschaftsanteile du zeichnest, desto solider kann die Infrastruktur deines WirGartens finanziert werden."
-            )
+            ),
         }
 
     phone_number = TapirPhoneNumberField()
@@ -106,14 +107,20 @@ class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
             self.fields[field].required = True
 
         if kwargs.get("instance") is None:
-            self.fields["must_accept_sepa"] = forms.BooleanField(
+            self.fields["accept_sepa"] = forms.BooleanField(
                 label=_(
-                    (
-                        "Ich ermächtige die WirGarten Lüneburg eG die gezeichneten Geschäftsanteile mittels "
-                        "Lastschrift von meinem Bankkonto einzuziehen. "
-                        "Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+                    "Ich ermächtige die WirGarten Lüneburg eG die gezeichneten Geschäftsanteile mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+                )
+            )
+            self.fields["accept_statutes"] = forms.BooleanField(
+                label=mark_safe(
+                    _(
+                        "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende unter <a href='https://lueneburg.wirgarten.com/satzung/'>https://lueneburg.wirgarten.com/satzung/</a> zur Kenntnis genommen."
                     )
                 )
+            )
+            self.fields["right_of_withdrawal"] = forms.BooleanField(
+                label=_("Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen.")
             )
 
     def clean_num_shares(self):

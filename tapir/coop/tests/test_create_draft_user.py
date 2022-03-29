@@ -51,5 +51,8 @@ class TestCreateDraftUser(TapirFactoryTestBase):
         post_data = {}
         for attribute in DraftUserFactory.ATTRIBUTES:
             post_data[attribute] = getattr(mock_draft_user, attribute)
-        post_data["must_accept_sepa"] = True
+        post_data["accept_sepa"] = True
+        post_data["accept_statutes"] = True
+        post_data["right_of_withdrawal"] = True
+
         return self.client.post(reverse("coop:draftuser_create"), post_data)

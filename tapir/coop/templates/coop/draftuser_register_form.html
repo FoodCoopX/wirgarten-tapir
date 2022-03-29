@@ -47,7 +47,19 @@
                 {% endblocktranslate %}
                 <form role="form" method="post">
                     {% csrf_token %}
-                    {% bootstrap_form form %}
+                    {% bootstrap_form form exclude="accept_statutes, right_of_withdrawal" %}
+                    <div class="mb-3">
+                        <p>{% translate "Ich verpflichte mich, die nach Gestz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."%}</p>
+                        {% bootstrap_field form.accept_statutes %}
+                    </div>
+                    <div class="mb-3">
+                        <p>{% translate "Du kannst Deine Beitrittserklärung ohne Angabe von Gründen innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an lueneburg@wirgarten.com."%}</p>
+                        {% bootstrap_field form.right_of_withdrawal %}
+                    </div>
+                    <div class="mb-3">
+                        {% blocktranslate %}
+                            Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. Unsere Datenschutzerklärung kannst du hier einsehen: <a href="https://lueneburg.wirgarten.com/datenschutzerklaerung/">Datenschutzerklärung</a>
+                        {% endblocktranslate %}</div>
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn tapir-btn btn-primary">
                             <span class="material-icons">save</span>
