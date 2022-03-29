@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from localflavor.generic.models import IBANField, BICField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir import utils
@@ -19,9 +20,19 @@ from tapir.utils.user_utils import UserUtils
 
 COOP_SHARE_PRICE = Decimal(100)
 COOP_ENTRY_AMOUNT = Decimal(10)
+COOP_MINIMUM_SHARES = 2
 
 
-class ShareOwner(models.Model):
+class PaymentDataMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    account_owner = models.CharField(_("Account owner"), max_length=150)
+    iban = IBANField(_("IBAN"))
+    bic = BICField(_("BIC"))
+
+
+class ShareOwner(PaymentDataMixin, models.Model):
     """ShareOwner represents an owner of a ShareOwnership.
 
     Usually, this is just a proxy for the associated user. However, it may also be used to
@@ -251,7 +262,7 @@ class DeleteShareOwnershipLogEntry(ModelLogEntry):
     exclude_fields = ["id", "owner"]
 
 
-class DraftUser(models.Model):
+class DraftUser(PaymentDataMixin, models.Model):
     first_name = models.CharField(_("First name"), max_length=150, blank=True)
     last_name = models.CharField(_("Last name"), max_length=150, blank=True)
     email = models.EmailField(_("Email address"), blank=True)
@@ -270,7 +281,9 @@ class DraftUser(models.Model):
         max_length=16,
     )
 
-    num_shares = models.IntegerField(_("Number of Shares"), blank=False, default=1)
+    num_shares = models.IntegerField(
+        _("Number of Shares"), blank=False, default=COOP_MINIMUM_SHARES
+    )
 
     is_investing = models.BooleanField(
         verbose_name=_("Investing member"), default=False

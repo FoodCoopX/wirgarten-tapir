@@ -1,7 +1,13 @@
 import factory
 
 from tapir.accounts.tests.factories.user_data_factory import UserDataFactory
-from tapir.coop.models import ShareOwnership, ShareOwner, DraftUser, COOP_SHARE_PRICE
+from tapir.coop.models import (
+    ShareOwnership,
+    ShareOwner,
+    DraftUser,
+    COOP_SHARE_PRICE,
+    COOP_MINIMUM_SHARES,
+)
 
 
 class ShareOwnershipFactory(factory.django.DjangoModelFactory):
@@ -12,11 +18,27 @@ class ShareOwnershipFactory(factory.django.DjangoModelFactory):
     amount_paid = factory.Faker("pydecimal", min_value=0, max_value=COOP_SHARE_PRICE)
 
 
-class ShareOwnerFactory(UserDataFactory):
+class PaymentDataFactoryMixin(factory.django.DjangoModelFactory):
+    class Meta:
+        abstract = True
+        exclude = ("ATTRIBUTES",)
+
+    ATTRIBUTES = ["account_owner", "iban", "bic"]
+
+    account_owner = factory.LazyAttribute(lambda o: f"{o.first_name} {o.last_name}")
+    iban = factory.Faker("iban")
+    bic = factory.Faker("swift")
+
+
+class ShareOwnerFactory(UserDataFactory, PaymentDataFactoryMixin):
     class Meta:
         model = ShareOwner
 
-    ATTRIBUTES = UserDataFactory.ATTRIBUTES + ["is_investing"]
+    ATTRIBUTES = (
+        UserDataFactory.ATTRIBUTES
+        + PaymentDataFactoryMixin.ATTRIBUTES
+        + ["is_investing"]
+    )
 
     is_investing = factory.Faker("pybool")
 
@@ -28,21 +50,25 @@ class ShareOwnerFactory(UserDataFactory):
             ShareOwnershipFactory.create(owner=self)
 
 
-class DraftUserFactory(UserDataFactory):
+class DraftUserFactory(UserDataFactory, PaymentDataFactoryMixin):
     class Meta:
         model = DraftUser
 
-    ATTRIBUTES = UserDataFactory.ATTRIBUTES + [
-        "num_shares",
-        "is_investing",
-        "paid_shares",
-        "attended_welcome_session",
-        "ratenzahlung",
-        "paid_membership_fee",
-        "signed_membership_agreement",
-    ]
+    ATTRIBUTES = (
+        UserDataFactory.ATTRIBUTES
+        + PaymentDataFactoryMixin.ATTRIBUTES
+        + [
+            "num_shares",
+            "is_investing",
+            "paid_shares",
+            "attended_welcome_session",
+            "ratenzahlung",
+            "paid_membership_fee",
+            "signed_membership_agreement",
+        ]
+    )
 
-    num_shares = factory.Faker("pyint", min_value=1, max_value=20)
+    num_shares = factory.Faker("pyint", min_value=COOP_MINIMUM_SHARES, max_value=20)
     is_investing = factory.Faker("pybool")
     paid_shares = factory.Faker("pybool")
     attended_welcome_session = factory.Faker("pybool")

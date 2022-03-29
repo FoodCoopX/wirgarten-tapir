@@ -29,7 +29,6 @@ class TestCreateDraftUser(TapirFactoryTestBase):
         self.login_as_member_office_user()
         mock_draft_user = DraftUserFactory.build(preferred_language="en", country="GB")
         response = self.visit_view(mock_draft_user)
-
         draft_users = DraftUser.objects.filter(
             first_name=mock_draft_user.first_name,
             last_name=mock_draft_user.last_name,
@@ -52,5 +51,5 @@ class TestCreateDraftUser(TapirFactoryTestBase):
         post_data = {}
         for attribute in DraftUserFactory.ATTRIBUTES:
             post_data[attribute] = getattr(mock_draft_user, attribute)
-
+        post_data["must_accept_sepa"] = True
         return self.client.post(reverse("coop:draftuser_create"), post_data)

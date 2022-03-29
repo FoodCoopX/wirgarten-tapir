@@ -125,6 +125,24 @@
                         {{ object.paid_shares|yesno:"Yes,No" }}
                     </div>
                 </div>
+                <div class="row m-1">
+                    <div class="col-3 fw-bold text-end">{% translate "Account owner" %}:</div>
+                    <div class="col-9">
+                        {{ object.account_owner }}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-3 fw-bold text-end">{% translate "IBAN" %}:</div>
+                    <div class="col-9">
+                        {{ object.iban }}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-3 fw-bold text-end">{% translate "BIC" %}:</div>
+                    <div class="col-9">
+                        {{ object.bic }}
+                    </div>
+                </div>
                 <div class="d-flex m-1 mt-5">
                     <div class="d-flex flex-row justify-content-end gap-2">
                         <a class="btn tapir-btn btn-outline-secondary ms-3"

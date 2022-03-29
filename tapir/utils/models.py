@@ -382,3 +382,8 @@ def copy_user_info(source, target):
     target.city = source.city
     target.country = source.country
     target.preferred_language = source.preferred_language
+
+
+def copy_payment_data(source, target):
+    for attribute in ["account_owner", "iban", "bic"]:
+        setattr(target, attribute, getattr(source, attribute))

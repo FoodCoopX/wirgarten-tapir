@@ -1,13 +1,16 @@
+import localflavor
 from django import forms
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from localflavor.generic.validators import IBANValidator, BICValidator
 
-from tapir import settings
-from tapir.coop.models import ShareOwnership, DraftUser, ShareOwner, FinancingCampaign
-from tapir.coop.pdfs import get_membership_agreement_pdf
-from tapir.settings import FROM_EMAIL_MEMBER_OFFICE
+from tapir.coop.models import (
+    ShareOwnership,
+    DraftUser,
+    ShareOwner,
+    FinancingCampaign,
+    COOP_MINIMUM_SHARES,
+    COOP_SHARE_PRICE,
+)
 from tapir.utils.forms import DateInput, TapirPhoneNumberField
 
 
@@ -25,9 +28,51 @@ class ShareOwnershipForm(forms.ModelForm):
         }
 
 
-class DraftUserForm(forms.ModelForm):
-    phone_number = TapirPhoneNumberField(required=False)
+class PaymentUserDataMixin(forms.Form):
+    account_owner = forms.CharField(label=_("Account owner"))
+    iban = forms.CharField(label=_("IBAN"))
+    bic = forms.CharField(label=_("BIC"))
 
+    def get_initial_for_field(self, field, field_name):
+        if self.instance is None:
+            return
+
+        if field_name in ["account_owner", "iban", "bic"]:
+            return getattr(self.instance, field_name)
+        else:
+            return super().get_initial_for_field(field, field_name)
+
+    def clean_iban(self):
+        # Théo 17.03.22 : I tried just putting iban and bic as fields in the Meta class,
+        # I was getting django errors that I didn't manage to solve, so I made them manually.
+        iban = self.cleaned_data["iban"]
+        try:
+            IBANValidator()(iban)
+        except localflavor.exceptions.ValidationError:
+            self.add_error("iban", _("Invalid IBAN"))
+        return iban
+
+    def clean_bic(self):
+        bic = self.cleaned_data["bic"]
+        try:
+            BICValidator()(bic)
+        except localflavor.exceptions.ValidationError:
+            self.add_error("bic", _("Invalid BIC"))
+        return bic
+
+    def save_payment_user_data(self, user):
+        user.account_owner = self.cleaned_data["account_owner"]
+        user.iban = self.cleaned_data["iban"]
+        user.bic = self.cleaned_data["bic"]
+        user.save()
+
+    def save(self, commit=True):
+        instance = super().save(commit)
+        self.save_payment_user_data(instance)
+        return instance
+
+
+class DraftUserLimitedForm(PaymentUserDataMixin, forms.ModelForm):
     class Meta:
         model = DraftUser
         fields = [
@@ -42,20 +87,16 @@ class DraftUserForm(forms.ModelForm):
             "city",
             "country",
             "preferred_language",
-            "is_investing",
-            "attended_welcome_session",
-            "ratenzahlung",
-            "paid_membership_fee",
-            "paid_shares",
-            "signed_membership_agreement",
             "num_shares",
         ]
-        widgets = {
-            "birthdate": DateInput(),
+        required = [field for field in fields if field != "street_2"]
+        widgets = {"birthdate": DateInput()}
+        labels = {
+            "num_shares": _(
+                f"Per Satzung bist du verpflichtet, mindestens {COOP_MINIMUM_SHARES} Anteile a {COOP_SHARE_PRICE} € zeichnen. Je mehr Genossenschaftsanteile du zeichnest, desto solider kann die Infrastruktur deines WirGartens finanziert werden."
+            )
         }
 
-
-class DraftUserRegisterForm(forms.ModelForm):
     phone_number = TapirPhoneNumberField()
 
     def __init__(self, *args, **kwargs):
@@ -64,67 +105,44 @@ class DraftUserRegisterForm(forms.ModelForm):
         for field in self.Meta.required:
             self.fields[field].required = True
 
-    def save(self, commit=True):
-        draft_user: DraftUser = super().save(commit)
-        with translation.override(draft_user.preferred_language):
-            mail = EmailMessage(
-                subject=_("Welcome at %(organisation_name)s!")
-                % {"organisation_name": settings.COOP_NAME},
-                body=render_to_string(
-                    [
-                        "coop/email/membership_confirmation_welcome.html",
-                        "coop/email/membership_confirmation_welcome.default.html",
-                    ],
-                    {
-                        "owner": draft_user,
-                        "contact_email_address": settings.EMAIL_ADDRESS_MEMBER_OFFICE,
-                    },
-                ),
-                from_email=FROM_EMAIL_MEMBER_OFFICE,
-                to=[draft_user.email],
-                attachments=[
+        if kwargs.get("instance") is None:
+            self.fields["must_accept_sepa"] = forms.BooleanField(
+                label=_(
                     (
-                        "Beteiligungserklärung %s.pdf" % draft_user.get_display_name(),
-                        get_membership_agreement_pdf(draft_user).write_pdf(),
-                        "application/pdf",
+                        "Ich ermächtige die WirGarten Lüneburg eG die gezeichneten Geschäftsanteile mittels "
+                        "Lastschrift von meinem Bankkonto einzuziehen. "
+                        "Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
                     )
-                ],
+                )
             )
-            mail.content_subtype = "html"
-            mail.send()
-        return draft_user
 
-    class Meta:
+    def clean_num_shares(self):
+        num_shares = self.cleaned_data["num_shares"]
+        if num_shares < COOP_MINIMUM_SHARES:
+            self.add_error(
+                "num_shares",
+                _(f"The minimum amount of shares is {COOP_MINIMUM_SHARES}."),
+            )
+        return num_shares
+
+
+class DraftUserFullForm(DraftUserLimitedForm):
+    class Meta(DraftUserLimitedForm.Meta):
         model = DraftUser
-        fields = [
-            "first_name",
-            "last_name",
-            "email",
-            "phone_number",
-            "birthdate",
-            "street",
-            "street_2",
-            "postcode",
-            "city",
-            "country",
-            "preferred_language",
+        fields = DraftUserLimitedForm.Meta.fields + [
+            "is_investing",
+            "attended_welcome_session",
+            "ratenzahlung",
+            "paid_membership_fee",
+            "paid_shares",
+            "signed_membership_agreement",
         ]
-        required = [
-            "first_name",
-            "last_name",
-            "email",
-            "phone_number",
-            "birthdate",
-            "street",
-            "postcode",
-            "city",
-            "country",
-            "preferred_language",
-        ]
-        widgets = {"birthdate": DateInput()}
+        widgets = {
+            "birthdate": DateInput(),
+        }
 
 
-class ShareOwnerForm(forms.ModelForm):
+class ShareOwnerForm(PaymentUserDataMixin, forms.ModelForm):
     class Meta:
         model = ShareOwner
         fields = [

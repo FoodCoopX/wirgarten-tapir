@@ -1,19 +1,24 @@
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse_lazy
+from django.utils import translation
 from django.utils.datetime_safe import date
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST, require_GET
 
+from tapir import settings
 from tapir.coop import pdfs
 from tapir.coop.forms import (
-    DraftUserForm,
-    DraftUserRegisterForm,
+    DraftUserLimitedForm,
+    DraftUserFullForm,
 )
 from tapir.coop.models import (
     DraftUser,
@@ -21,12 +26,14 @@ from tapir.coop.models import (
     ShareOwnership,
     COOP_SHARE_PRICE,
 )
-from tapir.utils.models import copy_user_info
+from tapir.coop.pdfs import get_membership_agreement_pdf
+from tapir.settings import FROM_EMAIL_MEMBER_OFFICE
+from tapir.utils.models import copy_user_info, copy_payment_data
 
 
 class DraftUserViewMixin:
     model = DraftUser
-    form_class = DraftUserForm
+    form_class = DraftUserFullForm
 
 
 class DraftUserListView(PermissionRequiredMixin, DraftUserViewMixin, generic.ListView):
@@ -38,9 +45,40 @@ class DraftUserCreateView(
 ):
     permission_required = "coop.manage"
 
+    def form_valid(self, form):
+        draft_user = form.instance
+
+        with translation.override(draft_user.preferred_language):
+            mail = EmailMessage(
+                subject=_("Welcome at %(organisation_name)s!")
+                % {"organisation_name": settings.COOP_NAME},
+                body=render_to_string(
+                    [
+                        "coop/email/membership_confirmation_welcome.html",
+                        "coop/email/membership_confirmation_welcome.default.html",
+                    ],
+                    {
+                        "owner": draft_user,
+                        "contact_email_address": settings.EMAIL_ADDRESS_MEMBER_OFFICE,
+                    },
+                ),
+                from_email=FROM_EMAIL_MEMBER_OFFICE,
+                to=[draft_user.email],
+                attachments=[
+                    (
+                        "Beteiligungserklärung %s.pdf" % draft_user.get_display_name(),
+                        get_membership_agreement_pdf(draft_user).write_pdf(),
+                        "application/pdf",
+                    )
+                ],
+            )
+            mail.content_subtype = "html"
+            mail.send()
+        return super().form_valid(form)
+
 
 class DraftUserRegisterView(DraftUserViewMixin, generic.CreateView):
-    form_class = DraftUserRegisterForm
+    form_class = DraftUserLimitedForm
     success_url = reverse_lazy("coop:draftuser_confirm_registration")
 
     def get_template_names(self):
@@ -155,6 +193,7 @@ def create_share_owner_and_shares_from_draft_user(draft_user: DraftUser) -> Shar
     )
 
     copy_user_info(draft_user, share_owner)
+    copy_payment_data(draft_user, share_owner)
     share_owner.save()
 
     for _ in range(0, draft_user.num_shares):

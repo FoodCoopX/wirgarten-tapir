@@ -1,6 +1,6 @@
 from django.urls import reverse
 
-from tapir.coop.models import DraftUser
+from tapir.coop.models import DraftUser, COOP_MINIMUM_SHARES
 from tapir.coop.tests.factories import DraftUserFactory
 from tapir.utils.tests_utils import TapirFactoryTestBase
 
@@ -9,7 +9,7 @@ class TestRegisterDraftUser(TapirFactoryTestBase):
     def test_register_draft_user(self):
         self.client.logout()
 
-        mock_draft_user = DraftUserFactory.build(num_shares=1)
+        mock_draft_user = DraftUserFactory.build(num_shares=COOP_MINIMUM_SHARES)
         cant_be_set_when_self_registering = [
             "is_investing",
             "paid_shares",
@@ -26,8 +26,9 @@ class TestRegisterDraftUser(TapirFactoryTestBase):
         post_data = {}
         for attribute in DraftUserFactory.ATTRIBUTES:
             post_data[attribute] = getattr(mock_draft_user, attribute)
+        post_data["must_accept_sepa"] = True
         response = self.client.post(reverse("coop:draftuser_register"), post_data)
-
+        print(response.content.decode())
         self.assertRedirects(response, reverse("coop:draftuser_confirm_registration"))
 
         draft_user = DraftUser.objects.get(
