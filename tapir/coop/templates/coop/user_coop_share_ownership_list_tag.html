@@ -25,6 +25,11 @@
     <div class="card-body">
         {% if owner %}
             <div class="row m-1">
+                <div class="col-5 fw-bold text-end">{% translate "Joined on" %}:</div>
+                <div class="col-7">{{ owner.date_joined|date:"d.m.Y H:i" }}</div>
+            </div>
+
+            <div class="row m-1">
                 <div class="col-5 fw-bold text-end">{% translate "Status" %}:</div>
                 <div class="col-7" id="share_owner_status">
                     {% if owner.is_investing %}

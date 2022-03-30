@@ -41,6 +41,7 @@ class ShareOwnerFactory(UserDataFactory, PaymentDataFactoryMixin):
     )
 
     is_investing = factory.Faker("pybool")
+    date_joined = factory.Faker("date_time")
 
     @factory.post_generation
     def nb_shares(self, create, nb_shares, **kwargs):

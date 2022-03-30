@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 from phonenumber_field.modelfields import PhoneNumberField
@@ -84,6 +85,7 @@ class ShareOwner(PaymentDataMixin, models.Model):
     willing_to_gift_a_share = models.DateField(
         _("Is willing to gift a share"), null=True, blank=True
     )
+    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
     class ShareOwnerQuerySet(models.QuerySet):
         def with_name(self, search_string: str):
