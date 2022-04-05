@@ -203,7 +203,7 @@ SELECT2_I18N_PATH = "core/select2/4.0.13/js/i18n"
 
 WEASYPRINT_BASEURL = "/"
 
-LDAP_BASE_DN = "dc=supercoop,dc=de"
+LDAP_BASE_DN = "dc=lueneburg,dc=wirgarten,dc=com"
 REG_PERSON_BASE_DN = "ou=people," + LDAP_BASE_DN
 REG_PERSON_OBJECT_CLASSES = ["inetOrgPerson", "organizationalPerson", "person"]
 REG_GROUP_BASE_DN = "ou=groups," + LDAP_BASE_DN
