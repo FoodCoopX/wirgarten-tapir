@@ -111,7 +111,8 @@ WSGI_APPLICATION = "tapir.wsgi.application"
 DATABASES = {
     "default": env.db(default="postgresql://tapir:tapir@db:5432/tapir"),
     "ldap": env.db_url(
-        "LDAP_URL", default="ldap://cn=admin,dc=supercoop,dc=de:admin@openldap"
+        "LDAP_URL",
+        default="ldap://cn=admin,dc=lueneburg,dc=wirgarten,dc=com:admin@openldap",
     ),
 }
 
