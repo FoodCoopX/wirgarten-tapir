@@ -1,10 +1,10 @@
-dn: ou=people,dc=supercoop,dc=de
+dn: ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 ou: people
 objectClass: organizationalUnit
 objectClass: top
 
-dn: uid=admin,ou=people,dc=supercoop,dc=de
+dn: uid=admin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
@@ -13,12 +13,12 @@ cn: admin
 sn: admin
 uid: admin
 
-dn: uid=admin,ou=people,dc=supercoop,dc=de
+dn: uid=admin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: modify
 replace: userPassword
 userPassword: admin
 
-dn: uid=ariana.perrin,ou=people,dc=supercoop,dc=de
+dn: uid=ariana.perrin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
@@ -27,12 +27,12 @@ cn: ariana.perrin
 sn: ariana.perrin
 uid: ariana.perrin
 
-dn: uid=ariana.perrin,ou=people,dc=supercoop,dc=de
+dn: uid=ariana.perrin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: modify
 replace: userPassword
 userPassword: ariana.perrin
 
-dn: uid=roberto.cortes,ou=people,dc=supercoop,dc=de
+dn: uid=roberto.cortes,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
@@ -41,12 +41,12 @@ cn: roberto.cortes
 sn: roberto.cortes
 uid: roberto.cortes
 
-dn: uid=roberto.cortes,ou=people,dc=supercoop,dc=de
+dn: uid=roberto.cortes,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: modify
 replace: userPassword
 userPassword: roberto.cortes
 
-dn: uid=nicolas.vicente,ou=people,dc=supercoop,dc=de
+dn: uid=nicolas.vicente,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
@@ -55,29 +55,29 @@ cn: nicolas.vicente
 sn: nicolas.vicente
 uid: nicolas.vicente
 
-dn: uid=nicolas.vicente,ou=people,dc=supercoop,dc=de
+dn: uid=nicolas.vicente,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 changetype: modify
 replace: userPassword
 userPassword: nicolas.vicente
 
-dn: ou=groups,dc=supercoop,dc=de
+dn: ou=groups,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: organizationalUnit
 objectClass: top
 ou: groups
 
-dn: cn=vorstand,ou=groups,dc=supercoop,dc=de
+dn: cn=vorstand,ou=groups,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: groupOfNames
 objectClass: top
 cn: vorstand
-member: uid=admin,ou=people,dc=supercoop,dc=de
-member: uid=ariana.perrin,ou=people,dc=supercoop,dc=de
+member: uid=admin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
+member: uid=ariana.perrin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
 
-dn: cn=member-office,ou=groups,dc=supercoop,dc=de
+dn: cn=member-office,ou=groups,dc=lueneburg,dc=wirgarten,dc=com
 changetype: add
 objectClass: groupOfNames
 objectClass: top
 cn: member-office
-member: uid=admin,ou=people,dc=supercoop,dc=de
-member: uid=roberto.cortes,ou=people,dc=supercoop,dc=de
+member: uid=admin,ou=people,dc=lueneburg,dc=wirgarten,dc=com
+member: uid=roberto.cortes,ou=people,dc=lueneburg,dc=wirgarten,dc=com
