@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "localflavor",
     # TODO(Leon Handreke): Don't install in prod
     "django_extensions",
+    "formtools",
 ]
 
 if ENABLE_SILK_PROFILING:

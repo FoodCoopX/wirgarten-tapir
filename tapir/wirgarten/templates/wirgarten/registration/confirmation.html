@@ -1,0 +1,45 @@
+{% extends "wirgarten/base.html" %}
+
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load static %}
+{% load wirgarten %}
+
+{% block head %}
+{{ wizard.form.media }}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
+<link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="margin-top:4em" class="container wizard-container">
+    <div class="card m-2">
+        <div class="card-header" id="draft_user_registration_confirmed">
+            <h4>{% translate "Geschafft!" %}</h4>
+        </div>
+        <div class="card-body">
+            <div class="text-center bg-image" style="background-image: url('{% static 'wirgarten/images/confirmation_3.jpg' %}'); background-repeat: no-repeat; background-size: cover;
+      height:40em;">
+                <div class="mask"
+                     style="margin:0;padding:0;height:100%;background-color: rgba(0, 0, 0, 0.6);">
+                    <div class="d-flex justify-content-center align-items-center h-100">
+                        <div class="text-white">
+                            {% blocktranslate %}
+                            <h1 class="mb-3">Schön, dass du Teil der<br/><strong>WirGarten</strong>-Gemeinschaft wirst!
+                            </h1>
+                            <br/><br/>
+                            <h3 class="mb-3">Wir prüfen jetzt nochmal alle deine Angaben.</h3>
+                            <h4 class="mb-3">Im Anschluss bekommst du
+                                eine
+                                Email mit allen
+                                wichtigen Informationen.</h4>
+                            {% endblocktranslate %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{%endblock %}

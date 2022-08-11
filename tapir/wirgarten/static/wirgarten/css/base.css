@@ -1,0 +1,21 @@
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-intro-text {
+ white-space: pre-line;
+ margin-top:0px;
+ font:inherit;
+}
+
+@media screen and (max-width: 500px) {
+  .step p {
+    font-size: 11px;
+    bottom: -20px;
+  }
+}

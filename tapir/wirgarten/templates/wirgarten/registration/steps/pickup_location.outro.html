@@ -1,0 +1,11 @@
+{% load static %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'wirgarten/css/leaflet.css' %}">
+<script src="{% static 'wirgarten/js/leaflet.js' %}"></script>
+<script src="{% static 'wirgarten/js/registration/pickup_location.js' %}"></script>
+{% endblock %}
+
+<div id="map" style="height:40em"></div>
+<script>initMap(JSON.parse('{{form.coords|safe}}'))</script>

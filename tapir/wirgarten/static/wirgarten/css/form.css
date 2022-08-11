@@ -1,0 +1,8 @@
+.form-fields{
+    display:grid;
+    grid-gap:1em;
+}
+
+.form-intro-text{
+    white-space:normal;
+}

@@ -1,0 +1,29 @@
+{% load configuration %}
+{% load static %}
+
+{% block head %}
+<script src="{% static 'wirgarten/js/registration/harvest_shares.js' %}"></script>
+{% endblock %}
+
+<div style="float:right; font-size:1.25rem">= <strong><span id="harvest_shares_total">0.00</span> €</strong> / Monat
+</div>
+<br/><br/>
+<p><b>Solidarische Beiträge:</b><br/>
+    Unsere Mitglieder haben sich entschieden, Solibeiträge einzuführen, um einen Ausgleich zu schaffen zwischen
+    Mitgliedern mit mehr und Mitgliedern mit weniger Einkommen. Für jeden Ernteanteil kannst du die Beitragshöhe selbst
+    wählen. Zahlt ein Mitglied mehr, kann ein anderes Mitglied weniger zahlen. Wir behalten uns vor, die Kontingente für
+    ermäßigte Anteile zu begrenzen, da dieses System nur funktioniert, wenn ausreichend Menschen sich für einen
+    Solibeitrag entscheiden.</p>
+
+Wer auch den niedrigsten Anteilsbeitrag finanziell nicht stemmen kann, melde sich bitte unter <a
+        href="mailto:{{ 'wirgarten.site.email'|parameter}}">
+    {{'wirgarten.site.email'|parameter}}
+</a> bei uns und wir prüfen, was sich machen lässt.</p>
+<hr/>
+<div class="container"><small>¹ Du kannst deinen Beitrag abhängig von deiner finanziellen Situation wählen (Solipreise).
+    Wenn du den niedrigsten Preis finanziell nicht zahlen kannst, melde dich bitte bei uns und wir prüfen, was sich
+    machen lässt.<br/>
+    ² Alle Werte sind Jahresdurchschnittswerte und können je nach Witterung höher oder niedriger ausfallen. Wenn Du in
+    der Saison merkst, dass du lieber mehr Gemüse hättest, oder dein Ernteanteil zu groß für dich ist, melde dich bei
+    uns!</small></div>
+<script>initSummary("{{form.harvest_shares}}")</script>
