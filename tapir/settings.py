@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "tapir.utils",
     "tapir.coop",
     "tapir.odoo",
+    "tapir.wirgarten",
+    "tapir.configuration",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
@@ -66,7 +68,6 @@ INSTALLED_APPS = [
 
 if ENABLE_SILK_PROFILING:
     INSTALLED_APPS.append("silk")
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -104,7 +105,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "tapir.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -154,7 +154,6 @@ PASSWORD_RESET_TIMEOUT = (
     7776000  # 90 days, so that the welcome emails stay valid for long enough
 )
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -163,7 +162,6 @@ TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
 
 # django-environ EMAIL_URL mechanism is a bit hairy with passwords with slashes in them, so use this instead
 EMAIL_ENV = env("EMAIL_ENV", default="dev")
@@ -184,7 +182,6 @@ EMAIL_ADDRESS_MEMBER_OFFICE = "mitglied@supercoop.de"
 COOP_NAME = "SuperCoop Berlin"
 FROM_EMAIL_MEMBER_OFFICE = f"{COOP_NAME} Mitgliederbüro <{EMAIL_ADDRESS_MEMBER_OFFICE}>"
 DEFAULT_FROM_EMAIL = FROM_EMAIL_MEMBER_OFFICE
-
 
 # DJANGO_ADMINS="Blake <blake@cyb.org>, Alice Judge <alice@cyb.org>"
 ADMINS = tuple(email.utils.parseaddr(x) for x in env.list("DJANGO_ADMINS", default=[]))
