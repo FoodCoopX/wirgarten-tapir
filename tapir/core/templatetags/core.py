@@ -25,6 +25,15 @@ def sidebar_links(context):
 def get_sidebar_link_groups(request):
     groups = []
 
+    if request.user.has_perm("coop.admin"):
+        admin_group = SidebarLinkGroup(name="Administration")
+        admin_group.add_link(
+            display_name=_("Configuration"),
+            material_icon="settings",
+            url=reverse_lazy("configuration:parameters"),
+        )
+        groups.append(admin_group)
+
     if request.user.has_perm("coop.manage"):
         coop_group = SidebarLinkGroup(name=_("Cooperative"))
         coop_group.add_link(
