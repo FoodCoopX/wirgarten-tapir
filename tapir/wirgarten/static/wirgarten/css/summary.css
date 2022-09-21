@@ -1,0 +1,47 @@
+.summary-card-active{
+    background-color:#f4fcf2;
+}
+
+.summary-card-disabled, .summary-card-disabled > div{
+    background-color:#fafafa !important;
+    color: #4d4d4d !important;
+}
+
+.center {
+  display: block;
+  margin: auto;
+  width: 50%;
+  vertical-align: middle;
+  justify-content: center;
+  text-align:center;
+}
+
+#summary_grid {
+    display:grid;
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: auto auto;
+    grid-gap:1em;
+}
+#summary_grid > div{
+    width: 100%;
+}
+
+#summary_grid > div > div.card-body > table > tbody > tr > th{
+    width: 10em;
+}
+
+#summary_grid > div:nth-child(2n-1) {
+    justify-self: center;
+}
+
+#summary_grid > div:nth-child(2n) {
+    justify-self: end;
+}
+
+#summary_grid > div:nth-child(2n-1):nth-last-of-type(1) {
+    grid-column: span 2;
+}
+
+.card-footer  {
+    background-color:rgba(0,0,0,.02);
+}

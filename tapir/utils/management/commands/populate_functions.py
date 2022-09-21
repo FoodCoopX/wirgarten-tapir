@@ -24,6 +24,7 @@ from tapir.shifts.models import (
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_monday
+from tapir.wirgarten.models import ActiveProduct
 
 SHIFT_NAME_CASHIER_MORNING = "Cashier morning"
 SHIFT_NAME_CASHIER_AFTERNOON = "Cashier afternoon"
@@ -369,6 +370,7 @@ def clear_data():
     ShareOwnership.objects.all().delete()
     ShareOwner.objects.all().delete()
     DraftUser.objects.all().delete()
+    ActiveProduct.objects.all().delete()
     TapirUser.objects.filter(is_staff=False).delete()
     print("Done")
 

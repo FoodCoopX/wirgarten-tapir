@@ -1,0 +1,36 @@
+{% extends "wirgarten/registration/registration_wizard.html" %}
+
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load static %}
+{% load wirgarten %}
+
+{% block cardbody %}
+
+{{ wizard.form.non_field_errors}}
+
+{% if wizard.form.intro_template %}
+<pre class="form-intro-text">
+    {% include wizard.form.intro_template %}
+                    </pre>
+{% if not wizard.form.intro_text_skip_hr %}
+<hr/>
+{% endif %}
+
+{% endif %}
+
+<div style="grid-template-columns:repeat({{ wizard.form.n_columns|default:'1' }}, 1fr);"
+     class="form-fields">
+    {% for field in wizard.form %}
+    <div style="grid-column:span {{wizard.form.colspans|get_value:field.name|default:1}}"
+         class="form-field" id="{{ field.name }}">
+        {% bootstrap_field field %}
+    </div>
+    {% endfor %}
+</div>
+{% if wizard.form.outro_template %}
+<div class="summary">
+    {% include wizard.form.outro_template %}
+</div>
+{% endif %}
+{% endblock %}

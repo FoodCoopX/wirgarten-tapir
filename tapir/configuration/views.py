@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 
 from tapir.configuration.forms import ParameterForm
-from tapir.configuration.models import Parameter
+from tapir.configuration.models import TapirParameter
 
 
 class ParameterView(PermissionRequiredMixin, generic.FormView):
@@ -18,8 +18,8 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
         response = super().form_valid(form)
 
         for field in form.visible_fields():
-            Parameter.objects.filter(pk=field.name).update(
-                value=str(form.data[field.name])
+            TapirParameter.objects.filter(pk=field.name).update(
+                value=str(form.cleaned_data[field.name])
             )
 
         return response

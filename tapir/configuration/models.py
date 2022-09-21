@@ -1,16 +1,17 @@
+import distutils
 from enum import Enum
 
 from django.db import models
 
 
-class ParameterDatatype(Enum):
+class TapirParameterDatatype(Enum):
     INTEGER = "integer"
     DECIMAL = "decimal"
     BOOLEAN = "boolean"
     STRING = "string"
 
 
-class Parameter(models.Model):
+class TapirParameter(models.Model):
     key = models.CharField(max_length=256, primary_key=True, editable=False)
     description = models.CharField(max_length=512)
     category = models.CharField(max_length=256)
@@ -18,13 +19,19 @@ class Parameter(models.Model):
     value = models.CharField(max_length=4096, null=True)
 
     def get_value(self):
-        if self.datatype == ParameterDatatype.INTEGER.value:
+        if self.datatype == TapirParameterDatatype.INTEGER.value:
             return int(self.value)
-        elif self.datatype == ParameterDatatype.DECIMAL.value:
+        elif self.datatype == TapirParameterDatatype.DECIMAL.value:
             return float(self.value)
-        elif self.datatype == ParameterDatatype.BOOLEAN.value:
-            return bool(self.value)
-        elif self.datatype == ParameterDatatype.STRING.value:
+        elif self.datatype == TapirParameterDatatype.BOOLEAN.value:
+            return bool(distutils.util.strtobool(self.value))
+        elif self.datatype == TapirParameterDatatype.STRING.value:
             return self.value
         else:
             Exception("""Unknown parameter type: {}""".format(self.datatype))
+
+
+class TapirParameterDefinitionImporter:
+    def import_definitions(self):
+        """Import the parameter definitions for the module."""
+        pass

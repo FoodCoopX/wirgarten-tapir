@@ -30,6 +30,7 @@ urlpatterns = [
     path("coop/", include("tapir.coop.urls")),
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
+    path("wirgarten/", include("tapir.wirgarten.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if ENABLE_SILK_PROFILING:

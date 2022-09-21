@@ -1,0 +1,230 @@
+{% extends "wirgarten/registration/registration_wizard.html" %}
+
+{% load wirgarten %}
+
+{% block cardbody %}
+
+<div id="summary_grid">
+
+    <!-- HARVEST SHARES -->
+    {% if wizard.form.harvest_shares_info.has_shares %}
+    <div class="card summary-card-active">
+        <div class="card-header">
+            <h5 class="card-title">Ernteanteile</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th>Startdatum</th>
+                    <td>{{wizard.form.harvest_shares_info.start_date}}</td>
+                </tr>
+                <tr>
+                    <th>Enddatum</th>
+                    <td>{{wizard.form.harvest_shares_info.end_date}}</td>
+                </tr>
+                <tr>
+                    <th>Probezeitraum</th>
+                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                </tr>
+                <tr>
+                    <th>Abholort</th>
+                    <td>{{wizard.form.pickup_location| safe}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="card-footer">
+            <table class="table">
+                {% for key, val in wizard.form.harvest_shares.items %}
+                {% if val.amount > 0 %}
+                <tr>
+                    <th>{{val.name}}</th>
+                    <td style="text-align:right">{{val.amount}} x</td>
+                    <td style="text-align:right">{{val.price}} € / Monat</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+
+                {% if wizard.form.harvest_shares_info.solidarity_price != 0.0 %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align:right">= {{wizard.form.harvest_shares_info.total_without_solidarity}} € /
+                        Monat
+                    </td>
+                </tr>
+                <tr>
+                    <th>Solidarpreis</th>
+                    <td style="text-align:right">
+                        {% widthratio wizard.form.harvest_shares_info.solidarity_price 1 100 %} %
+                    </td>
+                    <td style="text-align:right">{{wizard.form.harvest_shares_info.solidarity_price_diff}} € / Monat
+                    </td>
+                </tr>
+                {% endif %}
+
+                <tr>
+                    <th></th>
+                    <th></th>
+                    {% if wizard.form.harvest_shares_info.has_shares %}
+                    <th style="text-align:right">= {{wizard.form.harvest_shares_info.total}} € / Monat</th>
+                    {% else %}
+                    <th style="text-align:right">keine Ernteanteile</th>
+                    {% endif %}
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    {% summary_card_disabled "Ernteanteile" %}
+    {% endif %}
+
+
+    <!-- COOP SHARES -->
+    <div class="card summary-card-active">
+        <div class="card-header"><h5 class="card-title">Genossenschaftsanteile</h5></div>
+        <div class="card-body">
+            <p>Als <strong>Genossenschaftsmitglied</strong> wirst du <strong>Miteigentümer:in des WirGarten
+                Lüneburg</strong>.</p>
+            <p>Das heißt, du
+                finanzierst
+                unser Gemeinschaftsunternehmen mit und hast bei allen zentralen Entscheidungen und Wahlen ein
+                Stimmrecht. Unter <a href="https://lueneburg.wirgarten.com/genossenschaft/">Genossenschaft</a> haben
+                wir das nochmal ausführlich erklärt!</p>
+        </div>
+        <div class="card-footer">
+            <table class="table">
+                <tr>
+                    <th>Genossenschaftsanteile</th>
+                    <td style="text-align:right">{{wizard.form.coop_shares.amount}} x</td>
+                    <td style="text-align:right">{{wizard.form.coop_shares.price}} €</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <th style="text-align:right">= {{wizard.form.coop_shares.total}} €</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+    {% if wizard.form.has_additional_shares %}
+
+    <!-- CHICKEN SHARES -->
+    {% if wizard.form.chicken_shares_info.has_shares %}
+    <div class="card summary-card-active">
+        <div class="card-header"><h5 class="card-title">Hühneranteile</h5></div>
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th>Startdatum</th>
+                    <td>{{wizard.form.harvest_shares_info.start_date}}</td>
+                </tr>
+                <tr>
+                    <th>Enddatum</th>
+                    <td>{{wizard.form.harvest_shares_info.end_date}}</td>
+                </tr>
+                <tr>
+                    <th>Probezeitraum</th>
+                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                </tr>
+                {% if wizard.form.chicken_shares_info.has_shares %}
+                <tr>
+                    <th>Abholort</th>
+                    <td>{{wizard.form.pickup_location| safe}}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        <div class="card-footer">
+            <table class="table">
+                {% for key, val in wizard.form.chicken_shares.items %}
+                {% if val.amount > 0 %}
+                <tr>
+                    <th>{{val.name}}</th>
+                    <td style="text-align:right">{{val.amount}} x</td>
+                    <td style="text-align:right">{{val.price}} € / Monat</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+                <tr>
+                    <th></th>
+                    <th></th>
+                    {% if wizard.form.chicken_shares_info.has_shares %}
+                    <th style="text-align:right">= {{wizard.form.chicken_shares_info.total}} € / Monat</th>
+                    {% else %}
+                    <th style="text-align:right">keine Hühneranteile</th>
+                    {% endif %}
+                </tr>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    {% summary_card_disabled "Hühneranteile" %}
+    {% endif %}
+
+    <!-- BESTELLCOOP -->
+    {% if wizard.form.bestellcoop.sign_up %}
+    <div class="card summary-card-active">
+        <div class="card-header"><h5 class="card-title">BestellCoop</h5></div>
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th>Startdatum</th>
+                    <td>{{wizard.form.harvest_shares_info.start_date}}</td>
+                </tr>
+                <tr>
+                    <th>Enddatum</th>
+                    <td>{{wizard.form.harvest_shares_info.end_date}}</td>
+                </tr>
+                <tr>
+                    <th>Probezeitraum</th>
+                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                </tr>
+            </table>
+        </div>
+        <div class="card-footer">
+            <table class="table">
+                {% if wizard.form.bestellcoop.sign_up %}
+                <tr>
+                    <th>Mitgliedschaft</th>
+                    <th style="text-align:right"></th>
+                    <th style="text-align:right"></th>
+                </tr>
+                {%endif%}
+                <tr>
+                    {% if wizard.form.bestellcoop.sign_up %}
+                    <td></td>
+                    <td></td>
+                    <th style="text-align:right">= {{wizard.form.bestellcoop.price}} € / Monat</th>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    <th style="text-align:right">keine BestellCoop Mitgliedschaft</th>
+                    {% endif %}
+                </tr>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    {% summary_card_disabled "BestellCoop" %}
+    {% endif %}
+
+    {% endif %}
+</div>
+
+<br/>
+
+<!-- SUM -->
+<span style="float:right">
+                   <h5>
+                       <b>{{wizard.form.total_onetime}} €</b> / <small>einmalig für Genossenschaftsanteile</small><br/>
+                      <b>{{wizard.form.total_monthly}} €</b> / <small>Monat</small><br/>
+                   </h5>
+                </span>
+
+
+{% endblock %}
