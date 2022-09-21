@@ -27,21 +27,6 @@ Next, set up the test database and load test data
     # Load lots of test users & shifts
     docker-compose exec web poetry run python manage.py populate --reset_all
 
-## Developing
-
-Leon uses [PyCharm](https://www.jetbrains.com/pycharm/) for development.
-It has a Poetry plugin that easily allows setting up a local (not in the container) Python env and run the tests in
-there. Make sure to enable Django support in the project settings so that things like the template language and the
-test runner are automagically selected (note that right now this doesn't really work anymore as the tests must be run
-inside docker to have an LDAP server. But PyCharm is still pretty cool)
-
-### Pre-commit hooks
-
-First thing after checkout, run the following to install auto-formatting using [black](https://github.com/psf/black/)
-before every commit:
-
-    poetry install && pre-commit install
-
 ### Django Shell
 
     docker-compose exec web poetry run python manage.py shell_plus
