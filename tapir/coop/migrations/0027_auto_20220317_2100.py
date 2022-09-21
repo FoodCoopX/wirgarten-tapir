@@ -7,31 +7,41 @@ import localflavor.generic.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('coop', '0026_auto_20220317_1614'),
+        ("coop", "0026_auto_20220317_1614"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='shareowner',
-            name='account_owner',
-            field=models.CharField(default='Account owner', max_length=150, verbose_name='Account owner'),
+            model_name="shareowner",
+            name="account_owner",
+            field=models.CharField(
+                default="Account owner", max_length=150, verbose_name="Account owner"
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='shareowner',
-            name='bic',
-            field=localflavor.generic.models.BICField(default='SSKMDEMM', max_length=11, verbose_name='BIC'),
+            model_name="shareowner",
+            name="bic",
+            field=localflavor.generic.models.BICField(
+                default="SSKMDEMM", max_length=11, verbose_name="BIC"
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='shareowner',
-            name='iban',
-            field=localflavor.generic.models.IBANField(default='DE02120300000000202051', include_countries=None, max_length=34, use_nordea_extensions=False, verbose_name='IBAN'),
+            model_name="shareowner",
+            name="iban",
+            field=localflavor.generic.models.IBANField(
+                default="DE02120300000000202051",
+                include_countries=None,
+                max_length=34,
+                use_nordea_extensions=False,
+                verbose_name="IBAN",
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='draftuser',
-            name='num_shares',
-            field=models.IntegerField(default=2, verbose_name='Number of Shares'),
+            model_name="draftuser",
+            name="num_shares",
+            field=models.IntegerField(default=2, verbose_name="Number of Shares"),
         ),
     ]
