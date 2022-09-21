@@ -51,10 +51,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "tapir.core",
     "tapir.log",
-    "tapir.shifts",
     "tapir.utils",
-    "tapir.coop",
-    "tapir.odoo",
     "tapir.wirgarten",
     "tapir.configuration",
     "django_tables2",
@@ -121,18 +118,7 @@ DATABASE_ROUTERS = ["ldapdb.router.Router"]
 
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
-CELERY_BEAT_SCHEDULE = {
-    "send_shift_reminders": {
-        "task": "tapir.shifts.tasks.send_shift_reminders",
-        "schedule": celery.schedules.crontab(
-            hour="*/2", minute=5
-        ),  # Every two hours five after the hour
-    },
-    "apply_shift_cycle_start": {
-        "task": "tapir.shifts.tasks.apply_shift_cycle_start",
-        "schedule": celery.schedules.crontab(hour="*/2", minute=20),
-    },
-}
+CELERY_BEAT_SCHEDULE = {}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -180,7 +166,7 @@ elif EMAIL_ENV == "prod":
     EMAIL_USE_TLS = True
 
 EMAIL_ADDRESS_MEMBER_OFFICE = "mitglied@supercoop.de"
-COOP_NAME = "SuperCoop Berlin"
+COOP_NAME = "WirGarten Lüneburg"
 FROM_EMAIL_MEMBER_OFFICE = f"{COOP_NAME} Mitgliederbüro <{EMAIL_ADDRESS_MEMBER_OFFICE}>"
 DEFAULT_FROM_EMAIL = FROM_EMAIL_MEMBER_OFFICE
 
@@ -213,7 +199,6 @@ GROUP_VORSTAND = "vorstand"
 GROUP_MEMBER_OFFICE = "member-office"
 # This is our own little stupid permission system. See explanation in accounts/models.py.
 PERMISSIONS = {
-    "shifts.manage": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
     "coop.view": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
     "coop.manage": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
     # TODO(Leon Handreke): Reserve this to a list of knowledgeable superusers

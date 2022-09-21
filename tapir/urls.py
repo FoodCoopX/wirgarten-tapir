@@ -26,8 +26,6 @@ urlpatterns = [
     path("", generic.RedirectView.as_view(pattern_name="accounts:index")),
     path("admin/", admin.site.urls),
     path("accounts/", include("tapir.accounts.urls")),
-    path("shifts/", include("tapir.shifts.urls")),
-    path("coop/", include("tapir.coop.urls")),
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("wirgarten/", include("tapir.wirgarten.urls")),

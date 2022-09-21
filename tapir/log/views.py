@@ -4,7 +4,6 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
 
 from tapir.accounts.models import TapirUser
-from tapir.coop.models import ShareOwner
 from tapir.log.forms import CreateTextLogEntryForm
 from tapir.log.models import EmailLogEntry, TextLogEntry
 from tapir.log.util import freeze_for_log
@@ -37,10 +36,10 @@ class UpdateViewLogMixin:
 @permission_required("coop.manage")
 def create_text_log_entry(request, **kwargs):
     user = TapirUser.objects.filter(pk=kwargs.get("user_pk")).first()
-    share_owner = ShareOwner.objects.filter(pk=kwargs.get("shareowner_pk")).first()
+    # share_owner = ShareOwner.objects.filter(pk=kwargs.get("shareowner_pk")).first()
 
     log_entry = TextLogEntry().populate(
-        actor=request.user, user=user, share_owner=share_owner
+        actor=request.user, user=user  # , share_owner=share_owner
     )
 
     form = CreateTextLogEntryForm(request.POST, instance=log_entry)
