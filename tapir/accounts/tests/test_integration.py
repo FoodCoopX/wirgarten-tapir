@@ -15,6 +15,6 @@ class AccountsIntegrationTests(TapirSeleniumTestBase):
     def test_redirect_to_login_page(self):
         self.selenium.get(self.live_server_url)
         self.logout_if_necessary()
-        self.selenium.get(f"{self.live_server_url}/coop/member/")
+        self.selenium.get(f"{self.live_server_url}/config/parameters")
         url = str(self.selenium.current_url)
         self.assertTrue("/accounts/login/" in url)

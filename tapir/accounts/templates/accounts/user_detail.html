@@ -3,14 +3,11 @@
 {% load django_bootstrap5 %}
 {% load static %}
 {% load i18n %}
-{% load shifts %}
-{% load coop %}
 {% load log %}
 {% load accounts %}
 
 {% block head %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static "shifts/css/shifts.css" %}">
     <link rel="stylesheet" href="{% static "accounts/css/user_detail.css" %}">
 {% endblock %}
 
@@ -99,14 +96,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="col-6 p-0">
-            {% share_owner_ownership_list object.share_owner %}
-        </div>
-
-        <div class="col-6 p-0">
-            {% user_shifts_overview object %}
         </div>
 
         <div class="col-12 p-0">

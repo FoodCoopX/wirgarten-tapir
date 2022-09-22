@@ -3,7 +3,6 @@ import factory
 from tapir import settings
 from tapir.accounts.models import TapirUser, LdapGroup
 from tapir.accounts.tests.factories.user_data_factory import UserDataFactory
-from tapir.coop.tests.factories import ShareOwnerFactory
 
 
 class TapirUserFactory(UserDataFactory):
@@ -11,12 +10,6 @@ class TapirUserFactory(UserDataFactory):
         model = TapirUser
 
     username = factory.LazyAttribute(lambda o: f"{o.first_name}.{o.last_name}")
-
-    share_owner = factory.RelatedFactory(
-        ShareOwnerFactory,
-        factory_related_name="user",
-        nb_shares=factory.Faker("pyint", min_value=1, max_value=20),
-    )
 
     @factory.post_generation
     def password(self, create, password, **kwargs):
@@ -41,11 +34,3 @@ class TapirUserFactory(UserDataFactory):
             # or a previous run
             group.members.remove(user_dn)
             group.save()
-
-    @factory.post_generation
-    def shift_capabilities(self, create, shift_capabilities, **kwargs):
-        if not create:
-            return
-
-        self.shift_user_data.capabilities = shift_capabilities or []
-        self.shift_user_data.save()

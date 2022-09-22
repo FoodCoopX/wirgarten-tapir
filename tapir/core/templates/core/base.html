@@ -1,7 +1,6 @@
 {% load django_bootstrap5 %}
 {% load static %}
 {% load i18n %}
-{% load coop %}
 {% load core %}
 
 <!doctype html>
@@ -40,24 +39,6 @@
     <span class="navbar-brand">
         <img alt="Wirgarten Lünegurg Logo" height=30" src="{% static 'core/images/Logo_white.webp' %}">
     </span>
-
-    <div class="collapse navbar-collapse d-flex justify-content-center">
-        <div class="navbar-nav">
-            <div>
-                <a class="nav-link"
-                   href="https://wiki.supercoop.de/wiki/Finanzierung">{% shop_extension_progress_bar %}</a>
-            </div>
-        </div>
-    </div>
-
-    {% if perms.coop.manage %}
-        <form class="form-inline" method="get" action="{% url "coop:shareowner_list" %}">
-        <span class="mr-5">
-        <input id="member_search" name="display_name" type="text" placeholder="{% translate "Search Members" %}"
-               class="form-control">
-        </span>
-        </form>
-    {% endif %}
 
     {% if request.user.is_authenticated %}
         <a class="text-light nav-link"
