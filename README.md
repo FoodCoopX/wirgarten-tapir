@@ -18,6 +18,9 @@ Next, set up the test database and load test data
     # Create tables
     docker-compose exec web poetry run python manage.py migrate
     
+    # Import master data
+    docker-compose exec web ./import-masterdata.sh
+
     # Import configuration parameter definitions
     docker-compose exec web poetry run python manage.py parameter_definitions
 
@@ -57,17 +60,24 @@ To regenerate the test data fixtures:
 You can connect to the selenium container via VNC for debugging purpose. The address is localhost:5900, password :
 secret
 
+### Model
+
+[![models.png](models.png)](https://raw.githubusercontent.com/FoodCoopX/wirgarten-tapir/master/models.png)
+
+### Generate Class Diagram
+
+Run the following command to generate a class diagram: \
+`docker-compose exec web sh -c "apt install -y graphviz graphviz-dev && poetry run pip install pygraphviz && poetry run python manage.py graph_models -a -g -o models.png"`
+
 ### Vocabulary
 
 A few definitions to help newcomers understand the model classes.
 
-| Class | Definition |
-| ----- | ---------- |
-| DraftUser | Also called Applicant. Represents a person that expressed interest in joining but that hasn't completed the subscription process yet. |
-| ShareOwner | Represents a person or a company that is either currently owning at least a share, or has owned shares in the past. Therefore they are or have been a member of the cooperative. They may not be active, for example investing members or someone who sold their shares. |
-| TapirUser | Represents a person with a user account. Accounts are linked between Tapir and the Wiki for example. Gets created when the member becomes active (part of the shift system etc.), but can become inactive. |  
-| Shift | Represents a shift with a specific date and time (for example, 18/06/21 10:00 to 13:00). Can be a one-time activity or an instance of a ShiftTemplate |
-| ShiftTemplate | Represents the recurring aspect of a shift in the ABCD system. For example helping at the shop on Tuesday, 10:00 to 13:00, on Week C. It has a weekday (Tuesday) and a time, but no date (18/06/21) | 
+| Class          | Definition                                                                                                                                                                                                 |
+|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ShareOwnership | Represents a person that is owning at least one share.                                                                                                                                                     |
+| TapirUser      | Represents a person with a user account. Accounts are linked between Tapir and the Wiki for example. Gets created when the member becomes active (part of the shift system etc.), but can become inactive. |  
+ 
 
 ### Translations
 

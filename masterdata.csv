@@ -1,3 +1,5 @@
 App;Fixture Name
-wirgarten;pickup_locations
-wirgarten;products
+wirgarten;0010_pickup_locations
+wirgarten;0020_product_types
+wirgarten;0030_products
+wirgarten;0040_growing_periods

@@ -7,7 +7,7 @@ from tapir.accounts.models import TapirUser
 from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
-from tapir.wirgarten.models import ActiveProduct
+from tapir.wirgarten.models import Subscription
 
 
 def get_test_users():
@@ -65,7 +65,7 @@ def populate_users():
 def clear_data():
     print("Clearing data...")
     LogEntry.objects.all().delete()
-    ActiveProduct.objects.all().delete()
+    Subscription.objects.all().delete()
     TapirUser.objects.filter(is_staff=False).delete()
     print("Done")
 

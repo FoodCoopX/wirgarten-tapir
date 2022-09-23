@@ -1,0 +1,23 @@
+[
+  {
+    "model": "wirgarten.ProductType",
+    "pk": 1,
+    "fields": {
+      "name": "Ernteanteile"
+    }
+  },
+  {
+    "model": "wirgarten.ProductType",
+    "pk": 2,
+    "fields": {
+      "name": "Hühneranteile"
+    }
+  },
+  {
+    "model": "wirgarten.ProductType",
+    "pk": 3,
+    "fields": {
+      "name": "BestellCoop"
+    }
+  }
+]

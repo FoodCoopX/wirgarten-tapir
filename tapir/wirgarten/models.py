@@ -29,10 +29,24 @@ class PickupLocation(models.Model):
         ]
 
 
-class Member(TapirUser, models.Model):
-    solidarity_price = models.DecimalField(
-        _("Solidarpreis"), decimal_places=2, max_digits=3
+class GrowingPeriod(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+
+class ProductType(models.Model):
+    name = models.CharField(max_length=128, null=False)
+
+
+class ProductCapacity(models.Model):
+    period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.DO_NOTHING)
+    product_type = models.ForeignKey(
+        ProductType, null=False, on_delete=models.DO_NOTHING
     )
+    capacity = models.DecimalField(decimal_places=2, max_digits=20, null=False)
+
+
+class Member(TapirUser, models.Model):
     account_owner = models.CharField(_("Account owner"), max_length=150)
     iban = IBANField(_("IBAN"))
     bic = BICField(_("BIC"))
@@ -42,32 +56,34 @@ class Member(TapirUser, models.Model):
     privacy_consent = models.DateTimeField(_("Privacy consent"))
 
 
-class ProductBase(models.Model):
-    variation = models.CharField(max_length=16, null=True)
-    price = models.FloatField()
-
-    # Valid timespan?
-    # start_date = models.DateField()
-    # end_date = models.DateField()
-
-    class Meta:
-        abstract = True
-
-
-class ChickenShareProduct(ProductBase):
-    pass
+class Product(models.Model):
+    type = models.ForeignKey(
+        ProductType, on_delete=models.DO_NOTHING, editable=False, null=False
+    )
+    name = models.CharField(max_length=128, editable=True, null=False)
+    price = models.DecimalField(
+        decimal_places=2, max_digits=6, editable=False, null=False
+    )
+    deleted = models.IntegerField(default=0)
 
 
-class HarvestShareProduct(ProductBase):
+class HarvestShareProduct(Product):
     min_coop_shares = models.IntegerField()
 
-    # TODO: unique constraints?
+
+class Subscription(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=False)
+    period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=False)
+    quantity = models.PositiveSmallIntegerField(null=False)
+    start_date = models.DateField(null=False)
+    end_date = models.DateField(null=False)
+    cancellation_ts = models.DateTimeField(null=True)
+    solidarity_price = models.FloatField(default=0.0)
 
 
-class ActiveProduct(models.Model):
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
-    type = models.CharField(max_length=60)
-    variant = models.CharField(max_length=16)
-    amount = models.PositiveSmallIntegerField()
-    start_date = models.DateField()
-    end_date = models.DateField()
+class ShareOwnership(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    quantity = models.PositiveSmallIntegerField(null=False)
+    share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
+    entry_date = models.DateField(null=False)

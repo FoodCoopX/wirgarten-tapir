@@ -1,4 +1,4 @@
-name: Run tests and SonarCloudScan
+name: Run Tests
 
 on:
   push:

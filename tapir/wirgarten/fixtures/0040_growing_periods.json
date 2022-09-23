@@ -1,0 +1,10 @@
+[
+  {
+    "model": "wirgarten.GrowingPeriod",
+    "pk": 1,
+    "fields": {
+      "start_date": "2022-03-01",
+      "end_date": "2023-02-28"
+    }
+  }
+]

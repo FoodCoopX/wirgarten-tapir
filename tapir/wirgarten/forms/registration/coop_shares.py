@@ -17,7 +17,7 @@ class CooperativeShareForm(forms.Form):
         # FIXME: query already executed on first form. Maybe execute it once in the wizard view and pass result to the forms?
         self.harvest_shares_products = {
             """harvest_shares_{variation}""".format(
-                variation=p.variation.lower()
+                variation=p.product_ptr.name.lower()
             ): p.__dict__
             for p in HarvestShareProduct.objects.all()
         }

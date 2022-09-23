@@ -37,7 +37,7 @@ class HarvestShareForm(forms.Form):
 
         self.products = {
             """harvest_shares_{variation}""".format(
-                variation=p.variation.lower()
+                variation=p.product_ptr.name.lower()
             ): p.__dict__
             for p in HarvestShareProduct.objects.all()
         }
@@ -53,7 +53,9 @@ class HarvestShareForm(forms.Form):
                 min_value=0,
                 initial=0,
                 label=_(
-                    """{variation}-Ernteanteile""".format(variation=v["variation"])
+                    """{variation}-Ernteanteile""".format(
+                        variation=k.replace("harvest_shares_", "").upper()
+                    )
                 ),
                 help_text="""{:.2f} € / Monat""".format(v["price"]),
             )

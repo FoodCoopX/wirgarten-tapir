@@ -3,16 +3,8 @@ from importlib.resources import _
 from django import forms
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import ChickenShareProduct, HarvestShareProduct
+from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
-
-# FIXME: must be configurable!
-HARVEST_SHARES_STARTDATE = "01.01.2023"
-HARVEST_SHARES_ENDDATE = "31.12.2023"
-CHICKEN_SHARES_STARTDATE = "01.01.2023"
-CHICKEN_SHARES_ENDDATE = "31.12.2023"
-BESTELLCOOP_STARTDATE = "01.01.2023"
-BESTELLCOOP_ENDDATE = "31.12.2023"
 
 
 class SummaryForm(forms.Form):
@@ -23,13 +15,16 @@ class SummaryForm(forms.Form):
         super(SummaryForm, self).__init__(*args, **kwargs)
         initial = kwargs["initial"]
 
+        start_date = initial["general"]["start_date"]
+        end_date = initial["general"]["end_date"]
+
         # prepare data for the summary template
         self.harvest_shares = dict()
         self.harvest_shares_info = dict()
 
         harvest_share_products = {
             """harvest_shares_{variation}""".format(
-                variation=p.variation.lower()
+                variation=p.product_ptr.name.lower()
             ): p.__dict__
             for p in HarvestShareProduct.objects.all()
         }
@@ -39,9 +34,7 @@ class SummaryForm(forms.Form):
                 self.harvest_shares[key] = {
                     "amount": val,
                     "price": "{:.2f}".format(harvest_share_products[key]["price"]),
-                    "name": _(
-                        harvest_share_products[key]["variation"] + "-Ernteanteile"
-                    ),
+                    "name": _(harvest_share_products[key]["name"] + "-Ernteanteile"),
                 }
             else:
                 self.harvest_shares_info[key] = val
@@ -54,12 +47,8 @@ class SummaryForm(forms.Form):
 
         self.total_monthly = harvest_shares_total * (1 + float(solidarity_price))
 
-        self.harvest_shares_info[
-            "start_date"
-        ] = HARVEST_SHARES_STARTDATE  # FIXME: geeichtes Startdatum
-        self.harvest_shares_info[
-            "end_date"
-        ] = HARVEST_SHARES_ENDDATE  # FIXME: geeichtes Enddatum
+        self.harvest_shares_info["start_date"] = start_date
+        self.harvest_shares_info["end_date"] = end_date
 
         self.harvest_shares_info["has_shares"] = harvest_shares_total > 0
         self.harvest_shares_info["total_without_solidarity"] = "{:.2f}".format(
@@ -88,18 +77,13 @@ class SummaryForm(forms.Form):
             "statute_link": get_parameter_value(Parameter.COOP_STATUTE_LINK),
         }
 
-        self.chicken_shares_info = dict(
-            {
-                "has_shares": False,
-                "start_date": CHICKEN_SHARES_STARTDATE,
-            }  # FIXME: geeichtes Startdatum
-        )
+        self.chicken_shares_info = dict({"has_shares": False, "start_date": start_date})
         if initial["additional_shares"]:
             chicken_share_products = {
-                """chicken_shares_{variation}""".format(
-                    variation=p.variation.lower()
-                ): p.__dict__
-                for p in ChickenShareProduct.objects.all()
+                """chicken_shares_{variation}""".format(variation=p.name): p.__dict__
+                for p in Product.objects.filter(
+                    type=ProductType.objects.get(name="Hühneranteile")
+                )
             }
             self.chicken_shares = dict()
             for key, val in initial["additional_shares"].items():
@@ -108,7 +92,7 @@ class SummaryForm(forms.Form):
                         "amount": val,
                         "price": "{:.2f}".format(chicken_share_products[key]["price"]),
                         "name": _(
-                            chicken_share_products[key]["variation"] + " Hühneranteile"
+                            chicken_share_products[key]["name"] + " Hühneranteile"
                         ),
                     }
 
@@ -128,9 +112,7 @@ class SummaryForm(forms.Form):
             sign_up = initial["bestellcoop"]["bestellcoop"]
             self.bestellcoop["sign_up"] = sign_up
             self.bestellcoop["price"] = "{:.2f}".format(price)
-            self.bestellcoop[
-                "start_date"
-            ] = BESTELLCOOP_STARTDATE  # FIXME: config property
+            self.bestellcoop["start_date"] = start_date
             if sign_up:
                 self.total_monthly += price
 
