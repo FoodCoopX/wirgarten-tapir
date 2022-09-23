@@ -1,0 +1,93 @@
+[
+  {
+    "model": "wirgarten.Product",
+    "pk": 1,
+    "fields": {
+      "name": "S",
+      "price": 45,
+      "type": 1
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 2,
+    "fields": {
+      "name": "M",
+      "price": 67.5,
+      "type": 1
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 3,
+    "fields": {
+      "name": "L",
+      "price": 90,
+      "type": 1
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 4,
+    "fields": {
+      "name": "XL",
+      "price": 112.5,
+      "type": 1
+    }
+  },
+  {
+    "model": "wirgarten.HarvestShareProduct",
+    "pk": 1,
+    "fields": {
+      "min_coop_shares": 2
+    }
+  },
+  {
+    "model": "wirgarten.HarvestShareProduct",
+    "pk": 2,
+    "fields": {
+      "min_coop_shares": 3
+    }
+  },
+  {
+    "model": "wirgarten.HarvestShareProduct",
+    "pk": 3,
+    "fields": {
+      "min_coop_shares": 4
+    }
+  },
+  {
+    "model": "wirgarten.HarvestShareProduct",
+    "pk": 4,
+    "fields": {
+      "min_coop_shares": 5
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 5,
+    "fields": {
+      "name": "Volle",
+      "price": 18,
+      "type": 2
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 6,
+    "fields": {
+      "name": "Halbe",
+      "price": 9.5,
+      "type": 2
+    }
+  },
+  {
+    "model": "wirgarten.Product",
+    "pk": 7,
+    "fields": {
+      "name": "Mitgliedschaft",
+      "price": 3,
+      "type": 3
+    }
+  }
+]

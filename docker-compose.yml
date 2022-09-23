@@ -87,5 +87,10 @@ services:
       - redis
       - celery
 
+  db-admin:
+    image: adminer
+    ports:
+      - "8280:8080"
+
 volumes:
   nginx-certs-volume:

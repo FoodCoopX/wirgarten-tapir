@@ -3,7 +3,7 @@ from importlib.resources import _
 from django import forms
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import ChickenShareProduct
+from tapir.wirgarten.models import Product, ProductType
 from tapir.wirgarten.parameters import Parameter
 
 
@@ -19,11 +19,10 @@ class ChickenShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ChickenShareForm, self).__init__(*args, **kwargs)
 
+        product_type = ProductType.objects.get(name="Hühneranteile")
         self.products = {
-            """chicken_shares_{variation}""".format(
-                variation=p.variation.lower()
-            ): p.__dict__
-            for p in ChickenShareProduct.objects.all()
+            """chicken_shares_{variation}""".format(variation=p.name): p.__dict__
+            for p in Product.objects.filter(deleted=0, type=product_type)
         }
 
         self.field_order = list(self.products.keys()) + ["consent"]
@@ -37,7 +36,9 @@ class ChickenShareForm(forms.Form):
                 min_value=0,
                 initial=0,
                 label=_(
-                    """{variation} Hühneranteile""".format(variation=v["variation"])
+                    """{variation} Hühneranteile""".format(
+                        variation=k.replace("chicken_shares_", "")
+                    )
                 ),
                 help_text="""{:.2f} € / Monat""".format(v["price"]),
             )

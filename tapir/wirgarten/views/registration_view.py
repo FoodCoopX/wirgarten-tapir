@@ -10,6 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.accounts.models import LdapPerson
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -19,9 +20,18 @@ from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.personal_data import PersonalDataForm
 from tapir.wirgarten.forms.registration.pickup_location import PickupLocationForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
-from tapir.wirgarten.models import ActiveProduct
+from tapir.wirgarten.models import (
+    Subscription,
+    ProductType,
+    Product,
+    GrowingPeriod,
+    Member,
+    ShareOwnership,
+)
 
 # Wizard Steps Keys
+from tapir.wirgarten.parameters import Parameter
+
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_COOP_SHARES = "Cooperative Shares"
 STEP_ADDITIONAL_SHARES = "Additional Shares"
@@ -56,30 +66,46 @@ FORMS = [
     (STEP_CONSENTS, ConsentForm),
 ]
 
+PRODUCT_TYPE_HARVEST_SHARES = "Ernteanteile"
+PRODUCT_TYPE_CHICKEN_SHARES = "Hühneranteile"
+PRODUCT_TYPE_BESTELLCOOP = "BestellCoop"
 
-def save_active_products(form_dict, member):
-    for key, amount in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
-        if key.startswith("harvest_shares_") and amount > 0:
-            ActiveProduct.objects.create(
-                member=member,
-                type="HarvestShare",
-                variant=key.replace("harvest_shares_", ""),
-                amount=amount,
-                start_date=date.today(),  # FIXME real start date
-                end_date=date.today(),  # FIXME real end date
+
+def save_subscriptions(
+    form_dict,
+    member: Member,
+    start_date: date,
+    end_date: date,
+    growing_period: GrowingPeriod,
+):
+    product_type = ProductType.objects.get(name=PRODUCT_TYPE_HARVEST_SHARES)
+    has_shares = False
+    for key, quantity in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
+        if key.startswith("harvest_shares_") and quantity > 0:
+            product = Product.objects.get(
+                type=product_type, name=key.replace("harvest_shares_", "").upper()
             )
+            Subscription.objects.create(
+                member=member,
+                product=product,
+                period=growing_period,
+                quantity=quantity,
+                start_date=start_date,
+                end_date=end_date,
+                solidarity_price=form_dict[STEP_HARVEST_SHARES].cleaned_data[
+                    "solidarity_price"
+                ],
+            )
+            has_shares = True
 
-            # only save additional products if the applicant has selected at least 1 harvest share
-            save_additional_shares(form_dict, member)
-            save_bestellcoop(form_dict, member)
+    if has_shares:
+        save_additional_shares(form_dict, member, start_date, end_date, growing_period)
+        save_bestellcoop(form_dict, member, start_date, end_date, growing_period)
 
 
 def save_member(form_dict):
     member = form_dict[STEP_PERSONAL_DETAILS].instance
 
-    member.solidarity_price = form_dict[STEP_HARVEST_SHARES].cleaned_data[
-        "solidarity_price"
-    ]
     member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
         "pickup_location"
     ]
@@ -115,38 +141,59 @@ def save_ldap_person(member):
     ldap_user.save()
 
 
-def save_additional_shares(form_dict, member):
-    for key, amount in form_dict[STEP_ADDITIONAL_SHARES].cleaned_data.items():
-        if amount > 0 and key.startswith("chicken_shares_"):
-            ActiveProduct.objects.create(
+def save_additional_shares(
+    form_dict,
+    member: Member,
+    start_date: date,
+    end_date: date,
+    growing_period: GrowingPeriod,
+):
+    product_type = ProductType.objects.get(name=PRODUCT_TYPE_CHICKEN_SHARES)
+    for key, quantity in form_dict[STEP_ADDITIONAL_SHARES].cleaned_data.items():
+        if quantity > 0 and key.startswith("chicken_shares_"):
+            product = Product.objects.get(
+                type=product_type, name=key.replace("chicken_shares_", "")
+            )
+            Subscription.objects.create(
                 member=member,
-                type="ChickenShare",
-                variant=key.replace("chicken_shares_", ""),
-                amount=amount,
-                start_date=date.today(),  # FIXME real start date
-                end_date=date.today(),  # FIXME real end date
+                product=product,
+                quantity=quantity,
+                period=growing_period,
+                start_date=start_date,
+                end_date=end_date,
             )
 
 
-def save_cooperative_shares(form_dict, member):
-    ActiveProduct.objects.create(
+def save_cooperative_shares(form_dict, member, start_date):
+    ShareOwnership.objects.create(
         member=member,
-        type="CoopShare",
-        amount=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
-        start_date=date.today(),  # FIXME real start date
-        end_date=date.today(),  # FIXME real end date
+        quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
+        share_price=get_parameter_value(Parameter.COOP_SHARE_PRICE),
+        entry_date=start_date,  # FIXME: entry_date must be the first day after the notice period!
     )
 
 
-def save_bestellcoop(form_dict, member):
+def save_bestellcoop(
+    form_dict, member, start_date: date, end_date: date, growing_period: GrowingPeriod
+):
     if form_dict[STEP_BESTELLCOOP].cleaned_data["bestellcoop"]:
-        ActiveProduct.objects.create(
+        product_type = ProductType.objects.get(name=PRODUCT_TYPE_BESTELLCOOP)
+        product = Product.objects.get(type=product_type, name="Mitgliedschaft")
+
+        Subscription.objects.create(
             member=member,
-            type="BestellCoop",
-            amount=1,
-            start_date=date.today(),  # FIXME real start date
-            end_date=date.today(),  # FIXME real end date
+            product=product,
+            quantity=1,
+            start_date=start_date,
+            end_date=end_date,
+            period=growing_period,
         )
+
+
+def get_next_start_date(ref_date=date.today()):
+    now = ref_date
+    y, m = divmod(now.year * 12 + now.month, 12)
+    return date(y, m + 1, 1)
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")
@@ -156,6 +203,15 @@ class RegistrationWizardView(CookieWizardView):
     form_list = FORMS
 
     finish_button_label = _("Bestellung abschließen")
+
+    def __init__(self, *args, **kwargs):
+        super(RegistrationWizardView, self).__init__(*args, **kwargs)
+
+        self.start_date = get_next_start_date()
+        self.growing_period = GrowingPeriod.objects.filter(
+            start_date__lte=self.start_date, end_date__gte=self.start_date
+        ).first()
+        self.end_date = self.growing_period.end_date
 
     def get_template_names(self):
         if self.steps.current == "Summary":
@@ -187,6 +243,10 @@ class RegistrationWizardView(CookieWizardView):
             for key, val in data.items():
                 initial[key] = val
         elif step == STEP_SUMMARY:
+            initial["general"] = {
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+            }
             initial["harvest_shares"] = self.get_cleaned_data_for_step(
                 STEP_HARVEST_SHARES
             )
@@ -212,14 +272,16 @@ class RegistrationWizardView(CookieWizardView):
     def done(self, form_list, form_dict, **kwargs):
         # TODO: these fields are still missing:
         #  - Mandatsreferenzen (für alle Produkte einzeln?)
-        #  - Geeichtes Startdatum (bzw. unterjährig falls zugelassen)
-        #  - Enddatum
-        #  - Fälligkeitsdatum
 
         member = save_member(form_dict)
 
-        save_active_products(form_dict, member)
-        save_cooperative_shares(form_dict, member)
+        save_subscriptions(
+            form_dict, member, self.start_date, self.end_date, self.growing_period
+        )
+
+        # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
+        actual_coop_start = get_next_start_date(self.start_date)
+        save_cooperative_shares(form_dict, member, actual_coop_start)
 
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:draftuser_confirm_registration")
