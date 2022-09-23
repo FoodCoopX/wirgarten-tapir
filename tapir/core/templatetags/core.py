@@ -30,6 +30,11 @@ def get_sidebar_link_groups(request):
             material_icon="settings",
             url=reverse_lazy("configuration:parameters"),
         )
+        admin_group.add_link(
+            display_name=_("Exported Files"),
+            material_icon="attach_file",
+            url=reverse_lazy("wirgarten:exported_files_list"),
+        )
         groups.append(admin_group)
 
     misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
