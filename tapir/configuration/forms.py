@@ -6,31 +6,32 @@ from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 
 
 def create_field(param: TapirParameter):
+    description = f"""<small><i>{param.key}</i></small><br/>{_(param.description)}"""
     if param.datatype == TapirParameterDatatype.STRING.value:
         return forms.CharField(
-            label=_(param.key),
-            help_text=_(param.description),
+            label=_(param.label),
+            help_text=description,
             required=True,
             initial=param.get_value(),
         )
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
-            label=_(param.key),
-            help_text=_(param.description),
+            label=_(param.label),
+            help_text=description,
             required=True,
             initial=param.get_value(),
         )
     elif param.datatype == TapirParameterDatatype.DECIMAL.value:
         return forms.DecimalField(
-            label=_(param.key),
-            help_text=_(param.description),
+            label=_(param.label),
+            help_text=description,
             required=True,
             initial=param.get_value(),
         )
     elif param.datatype == TapirParameterDatatype.BOOLEAN.value:
         return forms.BooleanField(
-            label=_(param.key),
-            help_text=_(param.description),
+            label=_(param.label),
+            help_text=description,
             required=False,
             initial=param.get_value(),
         )

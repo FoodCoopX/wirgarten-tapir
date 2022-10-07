@@ -38,6 +38,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         parameter_definition(
             key=Parameter.SITE_NAME,
+            label="Standort Name",
             datatype=TapirParameterDatatype.STRING,
             initial_value="WirGarten Lüneburg eG",
             description="Der Name des WirGarten Standorts. Beispiel: 'WirGarten Lüneburg eG'",
@@ -46,6 +47,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SITE_EMAIL,
+            label="Kontakt Email-Adresse",
             datatype=TapirParameterDatatype.STRING,
             initial_value="lueneburg@wirgarten.com",
             description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
@@ -54,6 +56,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SITE_ADMIN_EMAIL,
+            label="Admin Email",
             datatype=TapirParameterDatatype.STRING,
             initial_value="tapiradmin@wirgarten.com",
             description="Die Admin Email-Adresse des WirGarten Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
@@ -62,6 +65,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SITE_PRIVACY_LINK,
+            label="Link zur Datenschutzerklärung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/datenschutzerklaerung",
             description="Der Link zur Datenschutzerklärung. Beispiel: 'https://lueneburg.wirgarten.com/datenschutzerklaerung'",
@@ -70,6 +74,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.COOP_MIN_SHARES,
+            label="Mindestanzahl Genossenschaftsanteile",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
@@ -78,6 +83,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.COOP_SHARE_PRICE,
+            label="Preis für einen Genossenschaftsanteil",
             datatype=TapirParameterDatatype.DECIMAL,
             initial_value=50.0,
             description="Der Preis eines Genossenschaftsanteils in Euro.",
@@ -86,6 +92,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.COOP_STATUTE_LINK,
+            label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/satzung",
             description="Der Link zur Satzung der Genossenschaft.",
@@ -94,6 +101,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.COOP_INFO_LINK,
+            label="Link zu weiteren Infos über die Genossenschaft",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
             description="Der Link zu weiteren Infos über die Genossenschaft/Mitgliedschaft.",
@@ -102,6 +110,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.CHICKEN_MAX_SHARES,
+            label="Maximale Anzahl Hühneranteile pro Mitglied",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=5,
             description="Die maximale Anzahl Hühneranteile (pro Produkt) die pro Mitglied/Interessent gewählt werden kann.",
@@ -110,6 +119,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.BESTELLCOOP_PRICE,
+            label="Monatlicher Preis für BestellCoop Mitgliedschaft",
             datatype=TapirParameterDatatype.DECIMAL,
             initial_value=3.0,
             description="Der monatliche Preis der BestellCoop Mitgliedschaft in Euro.",
@@ -118,6 +128,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
+            label="Solipreise möglich",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann ist es möglich bei der Auswahl der Ernteanteile einen niedrigeren Preis als den Richtpreis zu wählen.",
@@ -126,6 +137,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SUPPLIER_LIST_PRODUCT_TYPES,
+            label="Produkte für Lieferentenlisten",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Hühneranteile",
             description="Komma-separierte Liste der Zusatzabos für die eine Lieferantenliste erzeugt werden soll.",
@@ -134,6 +146,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL,
+            label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit den Lieferantenlisten an den Admin versandt.",
@@ -142,6 +155,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
+            label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
