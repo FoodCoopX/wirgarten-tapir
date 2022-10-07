@@ -1,93 +1,93 @@
 [
   {
     "model": "wirgarten.Product",
-    "pk": 1,
+    "pk": "UicJzTMc9y",
     "fields": {
       "name": "S",
       "price": 45,
-      "type": 1
+      "type": "jW3l0EcsVM"
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 2,
+    "pk": "tF4a0ZonVw",
     "fields": {
       "name": "M",
       "price": 67.5,
-      "type": 1
+      "type": "jW3l0EcsVM"
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 3,
+    "pk": "MBq0SqtZ6X",
     "fields": {
       "name": "L",
       "price": 90,
-      "type": 1
+      "type": "jW3l0EcsVM"
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 4,
+    "pk": "ItpIuRUgoy",
     "fields": {
       "name": "XL",
       "price": 112.5,
-      "type": 1
+      "type": "jW3l0EcsVM"
     }
   },
   {
     "model": "wirgarten.HarvestShareProduct",
-    "pk": 1,
+    "pk": "UicJzTMc9y",
     "fields": {
       "min_coop_shares": 2
     }
   },
   {
     "model": "wirgarten.HarvestShareProduct",
-    "pk": 2,
+    "pk": "tF4a0ZonVw",
     "fields": {
       "min_coop_shares": 3
     }
   },
   {
     "model": "wirgarten.HarvestShareProduct",
-    "pk": 3,
+    "pk": "MBq0SqtZ6X",
     "fields": {
       "min_coop_shares": 4
     }
   },
   {
     "model": "wirgarten.HarvestShareProduct",
-    "pk": 4,
+    "pk": "ItpIuRUgoy",
     "fields": {
       "min_coop_shares": 5
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 5,
+    "pk": "NGAwHvrHjD",
     "fields": {
       "name": "Volle",
       "price": 18,
-      "type": 2
+      "type": "Wv0JEzFQFa"
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 6,
+    "pk": "w6FlqZ1wSQ",
     "fields": {
       "name": "Halbe",
       "price": 9.5,
-      "type": 2
+      "type": "Wv0JEzFQFa"
     }
   },
   {
     "model": "wirgarten.Product",
-    "pk": 7,
+    "pk": "CgmCfyN3q1",
     "fields": {
       "name": "Mitgliedschaft",
       "price": 3,
-      "type": 3
+      "type": "iOrXOQTZxy"
     }
   }
 ]

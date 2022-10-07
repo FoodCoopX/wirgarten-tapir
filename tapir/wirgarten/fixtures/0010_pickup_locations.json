@@ -1,7 +1,7 @@
 [
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 1,
+    "pk": "qdaLYBx8Y0",
     "fields": {
       "name": "WirGarten Lüneburg",
       "coords_lon": 53.2731785,
@@ -14,7 +14,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 2,
+    "pk": "AQbONXHloB",
     "fields": {
       "name": "BUDNI Ilmenau Center",
       "coords_lon": 53.2619231,
@@ -27,7 +27,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 3,
+    "pk": "Zi6gUHT8WT",
     "fields": {
       "name": "Neuer Speicher Unverpackt",
       "coords_lon": 53.2512887,
@@ -40,7 +40,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 4,
+    "pk": "TxRDf3NBf7",
     "fields": {
       "name": "Edeka Bergmann",
       "coords_lon": 53.2443079,
@@ -53,7 +53,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 5,
+    "pk": "8QhfRnfNvP",
     "fields": {
       "name": "Wohnprojekt Fluse",
       "coords_lon": 53.2541747,
@@ -66,7 +66,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 6,
+    "pk": "UFRcyNdOUD",
     "fields": {
       "name": "FrohNatur",
       "coords_lon": 53.2476476,
@@ -79,7 +79,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 7,
+    "pk": "jCWXVm075I",
     "fields": {
       "name": "Garage am Finkenberg",
       "coords_lon": 53.2421706,
@@ -92,7 +92,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 8,
+    "pk": "QvVM3zOtKJ",
     "fields": {
       "name": "Paul-Gerhardt-Gemeinde",
       "coords_lon": 53.2477177,
@@ -105,7 +105,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 9,
+    "pk": "TnRBO08fG9",
     "fields": {
       "name": "Uni-Campus",
       "coords_lon": 53.2477453,
@@ -119,7 +119,7 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": 10,
+    "pk": "jA8R0Go4LB",
     "fields": {
       "name": "Feldstraße (Rotes Feld)",
       "coords_lon": 53.2424043,
