@@ -2,12 +2,21 @@
 
 {% load django_bootstrap5 %}
 {% load i18n %}
+{% load static %}
 
 {% block content %}
 <div style="margin-top: 2em" class="container">
     <div class="card">
         <div class="card-header">
-            <h4>Parameters</h4>
+            <div id="search-input" style="display:grid; grid-template-columns: 2fr 1fr">
+                <div>
+                    <h4>{% translate "Konfiguration" %}</h4>
+                </div>
+                <div>
+                    <input type="text" class="form-control" placeholder="Search..."/>
+                </div>
+            </div>
+
         </div>
         <div class="card-body">
             <form method="post">
@@ -20,7 +29,9 @@
                     {% for field in form.visible_fields %}
 
                     {% if field.category == category %}
-                    {% bootstrap_field field %}
+                    <div class="single-parameter">
+                        {% bootstrap_field field %}
+                    </div>
                     {% endif %}
 
                     {% endfor %}
@@ -34,4 +45,7 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'configuration/js/search.js' %}"></script>
 {% endblock %}
+
