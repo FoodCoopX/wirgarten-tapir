@@ -20,6 +20,7 @@ from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.personal_data import PersonalDataForm
 from tapir.wirgarten.forms.registration.pickup_location import PickupLocationForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
+from tapir.wirgarten.tasks.csv_exports import export_supplier_list_csv
 from tapir.wirgarten.models import (
     Subscription,
     ProductType,

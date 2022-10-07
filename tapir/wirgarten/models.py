@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -87,3 +89,15 @@ class ShareOwnership(models.Model):
     quantity = models.PositiveSmallIntegerField(null=False)
     share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
     entry_date = models.DateField(null=False)
+
+
+class ExportedFile(models.Model):
+    class FileType(models.TextChoices):
+        CSV = "csv", _("CSV")
+        PDF = "pdf", _("PDF")
+
+    name = models.CharField(max_length=256, null=False)
+    type = models.CharField(max_length=8, choices=FileType.choices, null=False)
+    file = models.BinaryField(null=False)
+
+    created_at = models.DateTimeField(default=datetime.now(), null=False)

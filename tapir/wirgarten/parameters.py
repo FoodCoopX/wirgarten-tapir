@@ -4,6 +4,8 @@ from tapir.configuration.models import (
 )
 from tapir.configuration.parameter import parameter_definition
 
+PREFIX = "wirgarten"
+
 
 class ParameterCategory:
     SITE = "Standort"
@@ -11,19 +13,23 @@ class ParameterCategory:
     CHICKEN = "Hühneranteile"
     BESTELLCOOP = "BestellCoop"
     HARVEST = "Ernteanteile"
+    SUPPLIER_LIST = "Lieferantenliste"
 
 
 class Parameter:
-    SITE_NAME = "wirgarten.site.name"
-    SITE_EMAIL = "wirgarten.site.email"
-    SITE_PRIVACY_LINK = "wirgarten.site.privacy_link"
-    COOP_MIN_SHARES = "wirgarten.coop.min_shares"
-    COOP_SHARE_PRICE = "wirgarten.coop.share_price"
-    COOP_STATUTE_LINK = "wirgarten.coop.statute_link"
-    COOP_INFO_LINK = "wirgarten.coop.info_link"
-    CHICKEN_MAX_SHARES = "wirgarten.chicken.max_shares"
-    BESTELLCOOP_PRICE = "wirgarten.bestellcoop.price"
-    HARVEST_NEGATIVE_SOLIPRICE_ENABLED = "wirgarten.harvest.negative_soliprice_enabled"
+    SITE_NAME = f"{PREFIX}.site.name"
+    SITE_EMAIL = f"{PREFIX}.site.email"
+    SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
+    SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
+    COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
+    COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
+    COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
+    COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
+    CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
+    BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"
+    HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
+    SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
+    SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -41,6 +47,14 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value="lueneburg@wirgarten.com",
             description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
+            category=ParameterCategory.SITE,
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_ADMIN_EMAIL,
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="tapiradmin@wirgarten.com",
+            description="Die Admin Email-Adresse des WirGarten Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
             category=ParameterCategory.SITE,
         )
 
@@ -106,4 +120,20 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=True,
             description="Wenn aktiv, dann ist es möglich bei der Auswahl der Ernteanteile einen niedrigeren Preis als den Richtpreis zu wählen.",
             category=ParameterCategory.HARVEST,
+        )
+
+        parameter_definition(
+            key=Parameter.SUPPLIER_LIST_PRODUCT_TYPES,
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Hühneranteile",
+            description="Komma-separierte Liste der Zusatzabos für die eine Lieferantenliste erzeugt werden soll.",
+            category=ParameterCategory.SUPPLIER_LIST,
+        )
+
+        parameter_definition(
+            key=Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL,
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit den Lieferantenlisten an den Admin versandt.",
+            category=ParameterCategory.SUPPLIER_LIST,
         )

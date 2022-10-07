@@ -9,12 +9,11 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+import email.utils
 import os
-import sys
 from pathlib import Path
 
 import celery.schedules
-import email.utils
 import environ
 
 env = environ.Env()
@@ -118,7 +117,17 @@ DATABASE_ROUTERS = ["ldapdb.router.Router"]
 
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
-CELERY_BEAT_SCHEDULE = {}
+CELERY_BEAT_SCHEDULE = {
+    "export_supplier_list_csv": {
+        "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
+        "schedule": celery.schedules.crontab(
+            day_of_week="tuesday",
+            minute=0,
+            hour=0
+            # once a week, Tuesday at 00:00
+        ),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
