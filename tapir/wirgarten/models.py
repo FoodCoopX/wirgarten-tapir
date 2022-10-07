@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -38,6 +36,7 @@ class GrowingPeriod(models.Model):
 
 class ProductType(models.Model):
     name = models.CharField(max_length=128, null=False)
+    pickup_enabled = models.BooleanField(null=False, default=False)
 
 
 class ProductCapacity(models.Model):
@@ -99,5 +98,4 @@ class ExportedFile(models.Model):
     name = models.CharField(max_length=256, null=False)
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
-
-    created_at = models.DateTimeField(default=datetime.now(), null=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
