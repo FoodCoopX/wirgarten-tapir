@@ -14,6 +14,7 @@ class ParameterCategory:
     BESTELLCOOP = "BestellCoop"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
+    PICK_LIST = "Kommissionierliste"
 
 
 class Parameter:
@@ -30,6 +31,7 @@ class Parameter:
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
+    PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -136,4 +138,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit den Lieferantenlisten an den Admin versandt.",
             category=ParameterCategory.SUPPLIER_LIST,
+        )
+
+        parameter_definition(
+            key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
+            category=ParameterCategory.PICK_LIST,
         )

@@ -126,7 +126,16 @@ CELERY_BEAT_SCHEDULE = {
             hour=0
             # once a week, Tuesday at 00:00
         ),
-    }
+    },
+    "export_pick_list_csv": {
+        "task": "tapir.wirgarten.tasks.export_pick_list_csv",
+        "schedule": celery.schedules.crontab(
+            day_of_week="tuesday",
+            minute=0,
+            hour=0
+            # once a week, Tuesday at 00:00
+        ),
+    },
 }
 
 # Password validation
