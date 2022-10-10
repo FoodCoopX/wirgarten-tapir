@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+
+{% load i18n %}
+{% load wirgarten %}
+
+{% block content %}
+
+<div style="margin-top: 2em" class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4>Exported Files</h4>
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                {% for file in object_list %}
+                <a class="list-group-item list-group-item-action"
+                   href="{% url 'wirgarten:exported_files_download' file.pk %}">
+                    <strong>{{ file.name }}.{{file.type}}</strong>
+                    <span style="float:right">{{ file.created_at }}</span>
+                </a>
+                {% empty %}
+                <li class="list-group-item disabled">No exported files yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

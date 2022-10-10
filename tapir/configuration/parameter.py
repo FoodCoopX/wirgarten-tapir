@@ -13,6 +13,7 @@ def get_parameter_value(key: str):
 
 def parameter_definition(
     key: str,
+    label: str,
     description: str,
     category: str,
     datatype: TapirParameterDatatype,
@@ -39,6 +40,7 @@ def parameter_definition(
 
     try:
         param = TapirParameter.objects.get(pk=key)
+        param.label = label
         param.description = description
         param.category = category
         param.datatype = datatype.value
@@ -51,6 +53,7 @@ def parameter_definition(
 
         TapirParameter.objects.create(
             key=key,
+            label=label,
             description=description,
             category=category,
             datatype=datatype.value,

@@ -3,21 +3,24 @@
     "model": "wirgarten.ProductType",
     "pk": 1,
     "fields": {
-      "name": "Ernteanteile"
+      "name": "Ernteanteile",
+      "pickup_enabled": true
     }
   },
   {
     "model": "wirgarten.ProductType",
     "pk": 2,
     "fields": {
-      "name": "Hühneranteile"
+      "name": "Hühneranteile",
+      "pickup_enabled": true
     }
   },
   {
     "model": "wirgarten.ProductType",
     "pk": 3,
     "fields": {
-      "name": "BestellCoop"
+      "name": "BestellCoop",
+      "pickup_enabled": false
     }
   }
 ]
