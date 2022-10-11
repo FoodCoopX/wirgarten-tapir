@@ -37,6 +37,9 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
+    - name: Install dependencies
+      run: sudo apt-get install libsasl2-dev python3-dev libldap2-dev libssl-dev
+
     - name: Checkout repository
       uses: actions/checkout@v3
 
