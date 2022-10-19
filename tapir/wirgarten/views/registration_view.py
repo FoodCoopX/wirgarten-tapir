@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from importlib.resources import _
 
 from django.db import transaction
@@ -8,6 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
+from nanoid import generate
 
 from tapir.accounts.models import LdapPerson
 from tapir.configuration.parameter import get_parameter_value
@@ -27,6 +28,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     ShareOwnership,
+    MandateReference,
 )
 
 # Wizard Steps Keys
@@ -77,6 +79,7 @@ def save_subscriptions(
     start_date: date,
     end_date: date,
     growing_period: GrowingPeriod,
+    mandate_ref: MandateReference,
 ):
     product_type = ProductType.objects.get(name=PRODUCT_TYPE_HARVEST_SHARES)
     has_shares = False
@@ -95,12 +98,17 @@ def save_subscriptions(
                 solidarity_price=form_dict[STEP_HARVEST_SHARES].cleaned_data[
                     "solidarity_price"
                 ],
+                mandate_ref=mandate_ref,
             )
             has_shares = True
 
     if has_shares:
-        save_additional_shares(form_dict, member, start_date, end_date, growing_period)
-        save_bestellcoop(form_dict, member, start_date, end_date, growing_period)
+        save_additional_shares(
+            form_dict, member, start_date, end_date, growing_period, mandate_ref
+        )
+        save_bestellcoop(
+            form_dict, member, start_date, end_date, growing_period, mandate_ref
+        )
 
 
 def save_member(form_dict):
@@ -147,6 +155,7 @@ def save_additional_shares(
     start_date: date,
     end_date: date,
     growing_period: GrowingPeriod,
+    mandate_ref: MandateReference,
 ):
     product_type = ProductType.objects.get(name=PRODUCT_TYPE_CHICKEN_SHARES)
     for key, quantity in form_dict[STEP_ADDITIONAL_SHARES].cleaned_data.items():
@@ -161,6 +170,7 @@ def save_additional_shares(
                 period=growing_period,
                 start_date=start_date,
                 end_date=end_date,
+                mandate_ref=mandate_ref,
             )
 
 
@@ -174,7 +184,12 @@ def save_cooperative_shares(form_dict, member, start_date):
 
 
 def save_bestellcoop(
-    form_dict, member, start_date: date, end_date: date, growing_period: GrowingPeriod
+    form_dict,
+    member,
+    start_date: date,
+    end_date: date,
+    growing_period: GrowingPeriod,
+    mandate_ref: MandateReference,
 ):
     if form_dict[STEP_BESTELLCOOP].cleaned_data["bestellcoop"]:
         product_type = ProductType.objects.get(name=PRODUCT_TYPE_BESTELLCOOP)
@@ -187,6 +202,7 @@ def save_bestellcoop(
             start_date=start_date,
             end_date=end_date,
             period=growing_period,
+            mandate_ref=mandate_ref,
         )
 
 
@@ -194,6 +210,18 @@ def get_next_start_date(ref_date=date.today()):
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
     return date(y, m + 1, 1)
+
+
+def save_mandate_ref(member: Member):
+    ref = generate_mandate_ref(member)
+    mr = MandateReference.objects.create(
+        ref=ref, member=member, start_ts=datetime.now()
+    )
+    return mr
+
+
+def generate_mandate_ref(member):
+    return f"""{str(member.id).zfill(10)}/{generate('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 24)}"""
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")
@@ -270,13 +298,17 @@ class RegistrationWizardView(CookieWizardView):
 
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
-        # TODO: these fields are still missing:
-        #  - Mandatsreferenzen (für alle Produkte einzeln?)
-
         member = save_member(form_dict)
 
+        mandate_ref = save_mandate_ref(member)
+
         save_subscriptions(
-            form_dict, member, self.start_date, self.end_date, self.growing_period
+            form_dict,
+            member,
+            self.start_date,
+            self.end_date,
+            self.growing_period,
+            mandate_ref,
         )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month

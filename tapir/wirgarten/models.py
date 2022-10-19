@@ -72,6 +72,13 @@ class HarvestShareProduct(Product):
     min_coop_shares = models.IntegerField()
 
 
+class MandateReference(models.Model):
+    ref = models.CharField(primary_key=True, null=False, blank=False, max_length=35)
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    start_ts = models.DateTimeField(null=False)
+    end_ts = models.DateTimeField(null=True)
+
+
 class Subscription(models.Model):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=False)
@@ -81,6 +88,9 @@ class Subscription(models.Model):
     end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     solidarity_price = models.FloatField(default=0.0)
+    mandate_ref = models.ForeignKey(
+        MandateReference, on_delete=models.DO_NOTHING, null=False
+    )
 
 
 class ShareOwnership(models.Model):
