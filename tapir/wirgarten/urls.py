@@ -5,8 +5,15 @@ from tapir.wirgarten.views import (
     RegistrationWizardConfirmView,
     exported_files,
 )
+from tapir.wirgarten.views.member import (
+    MemberListView,
+    MemberDetailView,
+    MemberPaymentsView,
+    MemberDeliveriesView,
+)
 
 app_name = "wirgarten"
+
 urlpatterns = [
     path(
         "register",
@@ -27,5 +34,11 @@ urlpatterns = [
         "admin/exportedfiles/<int:pk>/download",
         exported_files.download,
         name="exported_files_download",
+    ),
+    path("members", MemberListView.as_view(), name="member_list"),
+    path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
+    path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
+    path(
+        "deliveries/<int:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
     ),
 ]

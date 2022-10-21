@@ -98,6 +98,9 @@ class ShareOwnership(models.Model):
     quantity = models.PositiveSmallIntegerField(null=False)
     share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
     entry_date = models.DateField(null=False)
+    mandate_ref = models.ForeignKey(
+        MandateReference, on_delete=models.DO_NOTHING, null=False
+    )
 
 
 class ExportedFile(models.Model):
@@ -109,3 +112,30 @@ class ExportedFile(models.Model):
     type = models.CharField(max_length=8, choices=FileType.choices, null=False)
     file = models.BinaryField(null=False)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
+
+
+class Payment(models.Model):
+    class PaymentStatus(models.TextChoices):
+        UPCOMING = "UPCOMING", _("Bevorstehend")
+        PAID = "PAID", _("Bezahlt")
+        DUE = "DUE", _("Offen")
+
+    due_date = models.DateField(null=False)
+    mandate_ref = models.ForeignKey(
+        MandateReference, on_delete=models.DO_NOTHING, null=False
+    )
+    amount = models.DecimalField(decimal_places=2, max_digits=8, null=False)
+    status = models.CharField(
+        max_length=8,
+        choices=PaymentStatus.choices,
+        null=False,
+        default=PaymentStatus.DUE,
+    )
+
+
+class Deliveries(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    delivery_date = models.DateField(null=False)
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.DO_NOTHING, null=False
+    )
