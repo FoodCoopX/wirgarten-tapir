@@ -1,3 +1,28 @@
+from functools import partial
+
+from django.db import models
+from nanoid import generate
+
+ID_LENGTH = 10
+
+
+def generate_id():
+    return generate(size=ID_LENGTH)
+
+
+class TapirModel(models.Model):
+    id = models.CharField(
+        "ID",
+        max_length=ID_LENGTH,
+        unique=True,
+        primary_key=True,
+        default=partial(generate_id),
+    )
+
+    class Meta:
+        abstract = True
+
+
 class SidebarLinkGroup:
     name: str
     links: []

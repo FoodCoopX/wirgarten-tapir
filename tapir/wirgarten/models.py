@@ -4,9 +4,10 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 
 from tapir.accounts.models import TapirUser
+from tapir.core.models import TapirModel
 
 
-class PickupLocation(models.Model):
+class PickupLocation(TapirModel):
     name = models.TextField(_("Name"), max_length=150)
     coords_lon = models.DecimalField(
         _("Coordinates Longitude"), decimal_places=10, max_digits=12
@@ -29,17 +30,17 @@ class PickupLocation(models.Model):
         ]
 
 
-class GrowingPeriod(models.Model):
+class GrowingPeriod(TapirModel):
     start_date = models.DateField()
     end_date = models.DateField()
 
 
-class ProductType(models.Model):
+class ProductType(TapirModel):
     name = models.CharField(max_length=128, null=False)
     pickup_enabled = models.BooleanField(null=False, default=False)
 
 
-class ProductCapacity(models.Model):
+class ProductCapacity(TapirModel):
     period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.DO_NOTHING)
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
@@ -47,7 +48,7 @@ class ProductCapacity(models.Model):
     capacity = models.DecimalField(decimal_places=2, max_digits=20, null=False)
 
 
-class Member(TapirUser, models.Model):
+class Member(TapirUser):
     account_owner = models.CharField(_("Account owner"), max_length=150)
     iban = IBANField(_("IBAN"))
     bic = BICField(_("BIC"))
@@ -57,7 +58,7 @@ class Member(TapirUser, models.Model):
     privacy_consent = models.DateTimeField(_("Privacy consent"))
 
 
-class Product(models.Model):
+class Product(TapirModel):
     type = models.ForeignKey(
         ProductType, on_delete=models.DO_NOTHING, editable=False, null=False
     )
@@ -79,7 +80,7 @@ class MandateReference(models.Model):
     end_ts = models.DateTimeField(null=True)
 
 
-class Subscription(models.Model):
+class Subscription(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=False)
     period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=False)
@@ -93,7 +94,7 @@ class Subscription(models.Model):
     )
 
 
-class ShareOwnership(models.Model):
+class ShareOwnership(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     quantity = models.PositiveSmallIntegerField(null=False)
     share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
@@ -103,7 +104,7 @@ class ShareOwnership(models.Model):
     )
 
 
-class ExportedFile(models.Model):
+class ExportedFile(TapirModel):
     class FileType(models.TextChoices):
         CSV = "csv", _("CSV")
         PDF = "pdf", _("PDF")
@@ -114,7 +115,7 @@ class ExportedFile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
-class Payment(models.Model):
+class Payment(TapirModel):
     class PaymentStatus(models.TextChoices):
         UPCOMING = "UPCOMING", _("Bevorstehend")
         PAID = "PAID", _("Bezahlt")
@@ -133,7 +134,7 @@ class Payment(models.Model):
     )
 
 
-class Deliveries(models.Model):
+class Deliveries(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     delivery_date = models.DateField(null=False)
     pickup_location = models.ForeignKey(
