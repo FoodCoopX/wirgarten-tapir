@@ -1,0 +1,74 @@
+{% extends "accounts/base.html" %}
+
+{% load django_bootstrap5 %}
+{% load static %}
+{% load i18n %}
+{% load wirgarten %}
+
+{% block head %}
+<script src="{% static 'wirgarten/js/moment.min.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div style="margin:2em" class="container">
+    <div class="card">
+        <div class="card-header">
+            <h5>Lieferungen - {{member.first_name}} {{member.last_name}}</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th style="text-align:center">
+                        {% translate 'Datum' %}
+                    </th>
+                    <th style="text-align:center">
+                        {% translate 'Produkte' %}
+                    </th>
+                    <th style="text-align:center">
+                        {% translate 'Abholort' %}
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for delivery in deliveries %}
+                <tr>
+                    <td style="text-align:center">
+                        <strong id="date-{{delivery.delivery_date}}">{{delivery.date}}</strong><br/>
+                        <p style="line-height:1.25em"><small id="datediff-{{delivery.delivery_date}}"></small></p>
+                    </td>
+                    <td style="text-align:center">
+                        <p style="line-height:1.25em">
+                            {% for sub in delivery.subs %}
+                            {{sub.quantity}} × {{sub.product.name}} {{sub.product.type.name}}<br/>
+                            {% endfor %}
+                        </p>
+                    </td>
+                    <td style="text-align:center">
+                        <strong>{{delivery.pickup_location.name}}</strong><br/>
+                        <small>{{delivery.pickup_location.street}}<br/>
+                            {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}</small>
+                    </td>
+                    <td style="max-width: 14em">{{delivery.pickup_location.info}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    const now = moment();
+    let diff, date;
+
+    {% for delivery in deliveries %}
+    date = moment("{{delivery.delivery_date}}");
+    diff = now.to(date);
+    document.getElementById("datediff-{{delivery.delivery_date}}").innerText = diff;
+    document.getElementById("date-{{delivery.delivery_date}}").innerText = date.format("LL");
+    {% endfor %}
+
+</script>
+{% endblock %}
+

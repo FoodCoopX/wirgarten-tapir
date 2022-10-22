@@ -2,7 +2,7 @@ const search = document.getElementById('search-input')
 search.addEventListener('input', (event) => {
 
     for(const param of document.getElementsByClassName('single-parameter')){
-        if(!param.outerText.toLowerCase().includes(event.target.value)){
+        if(!param.outerText.toLowerCase().includes(event.target.value.toLowerCase())){
             param.style.display = 'none'
         } else {
             param.style.display = 'block'
