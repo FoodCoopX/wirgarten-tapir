@@ -3,37 +3,50 @@ from importlib.resources import _
 from django import forms
 
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
+from tapir.configuration.parameter import get_parameter_options
 
 
 def create_field(param: TapirParameter):
     description = f"""<small><i>{param.key}</i></small><br/>{_(param.description)}"""
-    if param.datatype == TapirParameterDatatype.STRING.value:
+
+    param_options = get_parameter_options(param.key)
+    param_value = param.get_value()
+
+    if param_options is not None:
+        return forms.ChoiceField(
+            label=_(param.label),
+            help_text=description,
+            choices=param_options,
+            required=True,
+            initial=param_value,
+        )
+    elif param.datatype == TapirParameterDatatype.STRING.value:
         return forms.CharField(
             label=_(param.label),
             help_text=description,
             required=True,
-            initial=param.get_value(),
+            initial=param_value,
         )
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
             label=_(param.label),
             help_text=description,
             required=True,
-            initial=param.get_value(),
+            initial=param_value,
         )
     elif param.datatype == TapirParameterDatatype.DECIMAL.value:
         return forms.DecimalField(
             label=_(param.label),
             help_text=description,
             required=True,
-            initial=param.get_value(),
+            initial=param_value,
         )
     elif param.datatype == TapirParameterDatatype.BOOLEAN.value:
         return forms.BooleanField(
             label=_(param.label),
             help_text=description,
             required=False,
-            initial=param.get_value(),
+            initial=param_value,
         )
     else:
         NotImplementedError(

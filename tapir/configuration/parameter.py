@@ -1,6 +1,29 @@
 from django.core.exceptions import ObjectDoesNotExist
 
-from tapir.configuration.models import TapirParameter, TapirParameterDatatype
+from tapir.configuration.models import (
+    TapirParameter,
+    TapirParameterDatatype,
+    TapirParameterDefinitionImporter,
+)
+
+
+class ParameterCache:
+    parameters = {str: TapirParameter}
+    initialized = False
+
+    def initialize(self):
+        for cls in TapirParameterDefinitionImporter.__subclasses__():
+            cls.import_definitions(cls)
+        self.initialized = True
+
+
+cache = ParameterCache()
+
+
+def get_parameter_options(key: str):
+    if not cache.initialized:
+        cache.initialize()
+    return cache.parameters[key].options
 
 
 def get_parameter_value(key: str):
@@ -18,6 +41,7 @@ def parameter_definition(
     category: str,
     datatype: TapirParameterDatatype,
     initial_value: str | int | float | bool,
+    options: [tuple] = None,
 ):
     try:
         if type(initial_value) == str:
@@ -51,7 +75,7 @@ def parameter_definition(
     except ObjectDoesNotExist:
         print("\t[create] ", key)
 
-        TapirParameter.objects.create(
+        param = TapirParameter.objects.create(
             key=key,
             label=label,
             description=description,
@@ -59,3 +83,6 @@ def parameter_definition(
             datatype=datatype.value,
             value=str(initial_value),
         )
+
+    param.options = options
+    cache.parameters[param.key] = param
