@@ -136,6 +136,8 @@ class ParameterCategory:
 class Parameter:
     SITE_NAME = "wirgarten.site.name"
     SITE_EMAIL = "wirgarten.site.email"
+    HARVEST_SHARES_SUBSCRIBABLE = "wirgarten.harvest.harvest_shares_subscribable"
+
     # [...]
 
 # Parameter definitions (for automatic import)
@@ -158,8 +160,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SITE,
         )
         
+        parameter_definition(
+            key=Parameter.HARVEST_SHARES_SUBSCRIBABLE,
+            label="Ernteanteile zeichenbar",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=1,
+            description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
+            category=ParameterCategory.HARVEST,
+            options=[
+                ( 2, "automatisch"),
+                ( 1, "zeichenbar"),
+                ( 0, "nicht zeichenbar"),
+            ]
+        )
+        
         # [...]
 ```
+`options` is defined as array of 2-tuple \
+which elements are defined as `(value, label)` pairs, \
+with `value` of type `TapirParameterDatatype` \
+and `label` of type `string`. \
+The programmer has to make sure, the value of `value` is **never** `None`
+
+
 
 #### UI
 

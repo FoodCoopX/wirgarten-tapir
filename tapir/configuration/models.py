@@ -18,6 +18,7 @@ class TapirParameter(models.Model):
     category = models.CharField(max_length=256)
     datatype = models.CharField(max_length=8, editable=False)
     value = models.CharField(max_length=4096, null=True)
+    options: [] = None
 
     def get_value(self):
         if self.datatype == TapirParameterDatatype.INTEGER.value:
