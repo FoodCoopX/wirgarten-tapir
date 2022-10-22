@@ -1,8 +1,20 @@
+import datetime
+
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
 from tapir.configuration.parameter import parameter_definition
+
+OPTIONS_WEEKDAYS = [
+    (0, "Montag"),
+    (1, "Dienstag"),
+    (2, "Mittwoch"),
+    (3, "Donnerstag"),
+    (4, "Freitag"),
+    (5, "Samstag"),
+    (6, "Sonntag"),
+]
 
 PREFIX = "wirgarten"
 
@@ -15,6 +27,8 @@ class ParameterCategory:
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
     PICK_LIST = "Kommissionierliste"
+    PAYMENT = "Zahlungen"
+    DELIVERY = "Lieferung"
 
 
 class Parameter:
@@ -32,6 +46,8 @@ class Parameter:
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
+    PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
+    DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -160,4 +176,32 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
             category=ParameterCategory.PICK_LIST,
+        )
+
+        parameter_definition(
+            key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
+            label="Automatische Email an Admin",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
+            category=ParameterCategory.PICK_LIST,
+        )
+
+        parameter_definition(
+            key=Parameter.PAYMENT_DUE_DAY,
+            label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=15,
+            description="Der Tag im Monat an dem Beitragszahlungen für Abonnements fällig sind.",
+            category=ParameterCategory.PAYMENT,
+        )
+
+        parameter_definition(
+            key=Parameter.DELIVERY_DAY,
+            label="Wochentag an dem Ware geliefert wird",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Der Wochentag an dem die Ware zum Abholort geliefert wird.",
+            category=ParameterCategory.DELIVERY,
+            options=OPTIONS_WEEKDAYS,
         )

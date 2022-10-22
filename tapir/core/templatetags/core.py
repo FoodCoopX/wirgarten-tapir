@@ -24,18 +24,7 @@ def get_sidebar_link_groups(request):
     groups = []
 
     if request.user.has_perm("coop.admin"):
-        admin_group = SidebarLinkGroup(name="Administration")
-        admin_group.add_link(
-            display_name=_("Configuration"),
-            material_icon="settings",
-            url=reverse_lazy("configuration:parameters"),
-        )
-        admin_group.add_link(
-            display_name=_("Exported Files"),
-            material_icon="attach_file",
-            url=reverse_lazy("wirgarten:exported_files_list"),
-        )
-        groups.append(admin_group)
+        add_admin_links(groups)
 
     misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
     groups.append(misc_group)
@@ -66,3 +55,27 @@ def get_sidebar_link_groups(request):
     #   )
 
     return groups
+
+
+def add_admin_links(groups):
+    admin_group = SidebarLinkGroup(name=_("Administration"))
+    admin_group.add_link(
+        display_name=_("Konfiguration"),
+        material_icon="settings",
+        url=reverse_lazy("configuration:parameters"),
+    )
+    admin_group.add_link(
+        display_name=_("Exportierte Dateien"),
+        material_icon="attach_file",
+        url=reverse_lazy("wirgarten:exported_files_list"),
+    )
+
+    members_group = SidebarLinkGroup(name=_("Mitglieder"))
+    members_group.add_link(
+        display_name=(_("Mitglieder")),
+        material_icon="groups",
+        url=reverse_lazy("wirgarten:member_list"),
+    )
+
+    groups.append(members_group)
+    groups.append(admin_group)

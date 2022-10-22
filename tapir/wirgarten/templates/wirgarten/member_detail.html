@@ -1,0 +1,160 @@
+{% extends "accounts/base.html" %}
+
+{% load django_bootstrap5 %}
+{% load static %}
+{% load i18n %}
+{% load log %}
+{% load accounts %}
+{% load wirgarten %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'accounts/css/user_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex flex-wrap">
+        <div class="col-6 p-0">
+            <div class="card m-2" id="tapir_user_detail_card">
+                <h5 class="card-header d-flex justify-content-between align-items-center">
+                    {% translate "Personal Data" %}
+                    {% if perms.accounts.manage %}
+                    <a class="btn tapir-btn btn-outline-info" href="{% url 'accounts:user_update' object.pk %}"
+                       id="tapir_user_edit_button">
+                        <span class="material-icons">edit</span>{% translate 'Edit' %}
+                    </a>
+                    {% endif %}
+                </h5>
+                <div class="card-body">
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
+                        <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Username" %}:</div>
+                        <div class="col-8" id="tapir_user_username">{{ object.username }}</div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                        <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Phone number" %}:</div>
+                        <div class="col-8" id="tapir_user_phone_number">
+                            {% if object.phone_number %}
+                            {{ object.phone_number|format_phone_number }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Birthdate" %}:</div>
+                        <div class="col-8" id="tapir_user_birthdate">
+                            {% if object.birthdate %}
+                            {{ object.birthdate|date:"d.m.Y" }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Address" %}:</div>
+                        <div class="col-8" id="tapir_user_address">
+                            {% if object.street and object.city %}
+                            {{ object.get_display_address }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!--div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Preferred Language" %}:</div>
+                        <div class="col-8">{{ object.get_preferred_language_display }}</div>
+                    </div-->
+                    {% if perms.accounts.manage %}
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Permissions" %}:</div>
+                        <div class="col-8">{{ object.get_permissions_display }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex m-1 mt-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            {% if object.pk == request.user.pk %}
+                            <a class="btn tapir-btn btn-outline-info ms-1" href="{% url " password_change" %}"><span
+                                class="material-icons">vpn_key</span>{% translate "Change Password" %}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 p-0">
+            <div class="card m-2" id="tapir_user_membership_card">
+                <div style="height:3.5em" class="card-header d-flex justify-content-between align-items-center">
+                    <h5>{% translate "Mitgliedschaft" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Geno-Anteile" %}:</div>
+                        <div class="col-8">{{ coop_shares }}</div>
+                    </div>
+
+                    <hr/>
+
+                    <div class="row m-1">
+                        {% for type in subscriptions.keys %}
+
+                        <div class="col-4 fw-bold text-end">{% translate type %}:</div>
+                        <div class="col-8">
+                            {% for key, val in subscriptions.items %}
+                            {% if key == type %}
+                            </ul>
+                            {% for sub in val %}
+                            <li>
+                                {{ sub.quantity }} × {{ sub.product.name }}
+                            </li>
+                            {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+                {% if perms.accounts.manage %}
+                <div class="card-footer">
+                    <div class="col md-6">
+                        <a style="width:100%"  class="btn tapir-btn btn-outline-info" href="{% url 'wirgarten:member_payments' object.pk %}"
+                           id="tapir_user_payment_row">
+                            <span class="material-icons">payments</span>{% translate 'Zahlungsreihe' %}
+                        </a>
+                    </div>
+                    <div class="col md-6">
+                        <a style="width:100%" class="btn tapir-btn btn-outline-info"
+                           href="{% url 'wirgarten:member_deliveries' object.pk %}"
+                           id="tapir_user_delivery_row">
+                            <span class="material-icons">local_shipping</span>{% translate 'Lieferreihe' %}
+                        </a>
+                    </div>
+                </div>
+
+                {% endif %}
+            </div>
+
+        </div>
+
+
+        <div class="col-12 p-0">
+            {% user_log_entry_list object %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

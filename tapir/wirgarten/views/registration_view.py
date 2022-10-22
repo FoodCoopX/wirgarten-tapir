@@ -29,10 +29,13 @@ from tapir.wirgarten.models import (
     Member,
     ShareOwnership,
     MandateReference,
+    Payment,
 )
 
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
+
+MANDATE_REF_ALPHABET = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_COOP_SHARES = "Cooperative Shares"
@@ -174,12 +177,24 @@ def save_additional_shares(
             )
 
 
-def save_cooperative_shares(form_dict, member, start_date):
+def save_cooperative_shares(form_dict, member: Member, start_date):
+    mandate_ref = save_mandate_ref(member, True)
+    share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
+    quantity = form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
+
     ShareOwnership.objects.create(
         member=member,
-        quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
-        share_price=get_parameter_value(Parameter.COOP_SHARE_PRICE),
+        quantity=quantity,
+        share_price=share_price,
         entry_date=start_date,  # FIXME: entry_date must be the first day after the notice period!
+        mandate_ref=mandate_ref,
+    )
+
+    Payment.objects.create(
+        due_date=start_date,
+        amount=share_price * quantity,
+        mandate_ref=mandate_ref,
+        status=Payment.PaymentStatus.DUE,
     )
 
 
@@ -212,16 +227,20 @@ def get_next_start_date(ref_date=date.today()):
     return date(y, m + 1, 1)
 
 
-def save_mandate_ref(member: Member):
-    ref = generate_mandate_ref(member)
-    mr = MandateReference.objects.create(
+def save_mandate_ref(member: Member, coop_shares: bool):
+    ref = generate_mandate_ref(member, coop_shares)
+    return MandateReference.objects.create(
         ref=ref, member=member, start_ts=datetime.now()
     )
-    return mr
 
 
-def generate_mandate_ref(member):
-    return f"""{str(member.id).zfill(10)}/{generate('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 24)}"""
+def generate_mandate_ref(member: Member, coop_shares: bool):
+    if coop_shares:
+        return (
+            f"""{str(member.id).zfill(10)}/{generate(MANDATE_REF_ALPHABET, 19)}/GENO"""
+        )
+    else:
+        return f"""{str(member.id).zfill(10)}/{generate(MANDATE_REF_ALPHABET, 24)}"""
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")
@@ -242,7 +261,7 @@ class RegistrationWizardView(CookieWizardView):
         self.end_date = self.growing_period.end_date
 
     def get_template_names(self):
-        if self.steps.current == "Summary":
+        if self.steps.current == STEP_SUMMARY:
             return ["wirgarten/registration/steps/summary.html"]
         else:
             return ["wirgarten/registration/registration_form.html"]
@@ -300,7 +319,7 @@ class RegistrationWizardView(CookieWizardView):
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
 
-        mandate_ref = save_mandate_ref(member)
+        subs_mandate_ref = save_mandate_ref(member, False)
 
         save_subscriptions(
             form_dict,
@@ -308,7 +327,7 @@ class RegistrationWizardView(CookieWizardView):
             self.start_date,
             self.end_date,
             self.growing_period,
-            mandate_ref,
+            subs_mandate_ref,
         )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month

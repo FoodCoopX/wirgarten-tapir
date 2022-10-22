@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+
+{% load i18n %}
+{% load core %}
+{% load static %}
+
+{% block title %}
+{% translate "Mitglieder" %}
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-top: 2em" class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate "Mitglieder" %}</h4>
+        </div>
+        <div class="card-body">
+            <form method="get">
+                {{ filter.form.as_p }}
+                <input type="submit"/>
+            </form>
+            <hr/>
+            <table class="table"
+                   aria-label="{% translate 'List of applicants' %}">
+                <thead>
+                <th>{% translate "Vorname" %}</th>
+                <th>{% translate "Nachname" %}</th>
+                <th>{% translate "Geburtstag" %}</th>
+                <th>{% translate "Email" %}</th>
+                <th>{% translate "Beitrittsdatum" %}</th>
+                </thead>
+                {% for member in filter.qs %}
+
+                <tr class="tr-href" href="/wirgarten/members/{{member.id}}">
+                    <td class="align-middle">{{ member.first_name }}</td>
+                    <td class="align-middle">{{ member.last_name }}</td>
+                    <td class="align-middle">{{ member.birthdate }}</td>
+                    <td class="align-middle">{{ member.email }}</td>
+                    <td class="align-middle">{{ member.date_joined }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'wirgarten/js/table-functions.js' %}"></script>
+
+{% endblock %}
