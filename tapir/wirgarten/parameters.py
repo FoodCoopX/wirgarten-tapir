@@ -43,6 +43,7 @@ class Parameter:
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
+    HARVEST_SHARES_SUBSCRIBABLE = f"{PREFIX}.harvest.harvest_shares_subscribable"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
@@ -204,4 +205,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Wochentag an dem die Ware zum Abholort geliefert wird.",
             category=ParameterCategory.DELIVERY,
             options=OPTIONS_WEEKDAYS,
+        )
+
+        parameter_definition(
+            key=Parameter.HARVEST_SHARES_SUBSCRIBABLE,
+            label="Ernteanteile zeichenbar",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=1,
+            description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
+            category=ParameterCategory.HARVEST,
+            options=[
+                # (2, "Automatik"), # TODO: implement automatism logic
+                (1, "zeichenbar"),
+                (0, "nicht zeichenbar"),
+            ],
         )
