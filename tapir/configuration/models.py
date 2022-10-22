@@ -30,7 +30,7 @@ class TapirParameter(models.Model):
         elif self.datatype == TapirParameterDatatype.STRING.value:
             return self.value
         else:
-            Exception("""Unknown parameter type: {}""".format(self.datatype))
+            raise TypeError("""Unknown parameter type: {}""".format(self.datatype))
 
 
 class TapirParameterDefinitionImporter:

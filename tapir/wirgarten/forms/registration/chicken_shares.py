@@ -9,9 +9,8 @@ from tapir.wirgarten.parameters import Parameter
 
 def has_chicken_shares(cleaned_data):
     for key, val in cleaned_data.items():
-        if key.startswith("chicken_shares_"):
-            if val > 0:
-                return True
+        if key.startswith("chicken_shares_") and val > 0:
+            return True
         return False
 
 
@@ -64,11 +63,10 @@ class ChickenShareForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        if has_chicken_shares(cleaned_data):
-            if not cleaned_data.get("consent"):
-                self.add_error(
-                    "consent",
-                    _(
-                        "Du musst den Vertragsgrundsätzen zustimmen um Hühneranteile zu zeichnen."
-                    ),
-                )
+        if has_chicken_shares(cleaned_data) and not cleaned_data.get("consent"):
+            self.add_error(
+                "consent",
+                _(
+                    "Du musst den Vertragsgrundsätzen zustimmen um Hühneranteile zu zeichnen."
+                ),
+            )
