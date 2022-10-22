@@ -49,7 +49,7 @@ def create_field(param: TapirParameter):
             initial=param_value,
         )
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             """Unknown ParameterDatatype for parameter {param.key}: {param.datatype}""".format(
                 param=param
             )
