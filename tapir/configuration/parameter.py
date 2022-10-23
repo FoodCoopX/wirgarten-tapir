@@ -54,7 +54,8 @@ def parameter_definition(
             assert datatype == TapirParameterDatatype.BOOLEAN
     except AssertionError:
         raise TypeError(
-            "Parameter '{key}' is defined with datatype '{datatype}', but the initial value is of type '{actual_type}': {value}".format(
+            "Parameter '{key}' is defined with datatype '{datatype}', \
+            but the initial value is of type '{actual_type}': {value}".format(
                 key=key,
                 datatype=datatype,
                 value=initial_value,

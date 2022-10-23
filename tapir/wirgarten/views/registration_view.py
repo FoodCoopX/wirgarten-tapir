@@ -261,10 +261,14 @@ class RegistrationWizardView(CookieWizardView):
         self.end_date = self.growing_period.end_date
 
     def get_template_names(self):
+        if (
+            self.steps.current == STEP_HARVEST_SHARES
+            and not self.is_harvest_share_subscribable()
+        ):
+            return ["wirgarten/registration/steps/harvest_shares_no_subscription.html"]
         if self.steps.current == STEP_SUMMARY:
             return ["wirgarten/registration/steps/summary.html"]
-        else:
-            return ["wirgarten/registration/registration_form.html"]
+        return ["wirgarten/registration/registration_form.html"]
 
     def no_harvest_shares_selected(self):
         for key, val in self.get_cleaned_data_for_step(STEP_HARVEST_SHARES).items():
@@ -272,6 +276,22 @@ class RegistrationWizardView(CookieWizardView):
                 if val > 0:
                     return False
         return True
+
+    def harvest_share_subscribable_auto(self):
+        # FIXME: implement automatism logic
+        print(
+            "Defaults to False. Function 'harvest_share_sbscribable_auto' not implemented yet."
+        )
+        return False
+
+    def is_harvest_share_subscribable(self) -> bool:
+        status = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
+        if status == 0:
+            return False
+        elif status == 1:
+            return True
+
+        return self.harvest_share_subscribable_auto()
 
     # skip certain steps if no harvest shares are selected
     def override_next_step(self, next_step, overridden):

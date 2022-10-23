@@ -1,0 +1,23 @@
+{% extends "wirgarten/registration/registration_wizard.html" %}
+
+{% load wirgarten %}
+
+{% block cardbody %}
+
+<div id="warning_no_harvest_shares">
+
+    <!-- HARVEST SHARES: NO SUBSCRIPTION -->
+    <div class="card summary-card-active">
+        <div class="card-header">
+            <h5 class="card-title">Keine Ernteanteile zeichenbar</h5>
+        </div>
+        <div class="card-body">
+            <p>Leider sind im Moment keine Ernteanteile zeichenbar.</p>
+            <p>Der restliche Registrierungsprozess, sowie das erwerben von Genossenschaftsanteilen stehen ihnen weiterhin zur Verfügung.</p>
+        </div>
+        <div class="card-footer">
+            <p>Bei weiteren Fragen wenden sie sich bitte ann *BLANK*</p>
+        </div>
+    </div>
+
+{% endblock %}
