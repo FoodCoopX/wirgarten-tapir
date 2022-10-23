@@ -31,7 +31,7 @@ urlpatterns = [
         name="exported_files_list",
     ),
     path(
-        "admin/exportedfiles/<int:pk>/download",
+        "admin/exportedfiles/<str:pk>/download",
         exported_files.download,
         name="exported_files_download",
     ),
