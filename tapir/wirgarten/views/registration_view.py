@@ -71,6 +71,24 @@ FORMS = [
     (STEP_CONSENTS, ConsentForm),
 ]
 
+
+def show_all_steps(wizard):
+    if (
+        "step_data" in wizard.storage.data
+        and STEP_HARVEST_SHARES in wizard.storage.data["step_data"]
+    ):
+        for key, val in wizard.storage.data["step_data"][STEP_HARVEST_SHARES].items():
+            if key.startswith("Harvest Shares-harvest_shares_") and int(val[0]) > 0:
+                return True
+        return False
+
+
+CONDITIONS = {
+    STEP_ADDITIONAL_SHARES: show_all_steps,
+    STEP_BESTELLCOOP: show_all_steps,
+    STEP_PICKUP_LOCATION: show_all_steps,
+}
+
 PRODUCT_TYPE_HARVEST_SHARES = "Ernteanteile"
 PRODUCT_TYPE_CHICKEN_SHARES = "Hühneranteile"
 PRODUCT_TYPE_BESTELLCOOP = "BestellCoop"
@@ -82,8 +100,8 @@ def save_subscriptions(
     start_date: date,
     end_date: date,
     growing_period: GrowingPeriod,
-    mandate_ref: MandateReference,
 ):
+    mandate_ref = save_mandate_ref(member, False)
     product_type = ProductType.objects.get(name=PRODUCT_TYPE_HARVEST_SHARES)
     has_shares = False
     for key, quantity in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
@@ -117,9 +135,10 @@ def save_subscriptions(
 def save_member(form_dict):
     member = form_dict[STEP_PERSONAL_DETAILS].instance
 
-    member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
-        "pickup_location"
-    ]
+    if STEP_PICKUP_LOCATION in form_dict:
+        member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
+            "pickup_location"
+        ]
     member.account_owner = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["account_owner"]
     member.iban = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["iban"]
     member.bic = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["bic"]
@@ -248,6 +267,7 @@ def generate_mandate_ref(member: Member, coop_shares: bool):
 class RegistrationWizardView(CookieWizardView):
     template_name = "wirgarten/registration/registration_wizard.html"
     form_list = FORMS
+    condition_dict = CONDITIONS
 
     finish_button_label = _("Bestellung abschließen")
 
@@ -270,13 +290,6 @@ class RegistrationWizardView(CookieWizardView):
             return ["wirgarten/registration/steps/summary.html"]
         return ["wirgarten/registration/registration_form.html"]
 
-    def no_harvest_shares_selected(self):
-        for key, val in self.get_cleaned_data_for_step(STEP_HARVEST_SHARES).items():
-            if key.startswith("harvest_shares_"):
-                if val > 0:
-                    return False
-        return True
-
     def harvest_share_subscribable_auto(self):
         # FIXME: implement automatism logic
         print(
@@ -292,15 +305,6 @@ class RegistrationWizardView(CookieWizardView):
             return True
 
         return self.harvest_share_subscribable_auto()
-
-    # skip certain steps if no harvest shares are selected
-    def override_next_step(self, next_step, overridden):
-        if (
-            next_step == STEP_ADDITIONAL_SHARES or next_step == STEP_BESTELLCOOP
-        ) and self.no_harvest_shares_selected():
-            return overridden
-
-        return next_step
 
     # gather data from dependent forms
     def get_form_initial(self, step=None):
@@ -318,37 +322,34 @@ class RegistrationWizardView(CookieWizardView):
                 STEP_HARVEST_SHARES
             )
             initial["coop_shares"] = self.get_cleaned_data_for_step(STEP_COOP_SHARES)
-            initial["additional_shares"] = self.get_cleaned_data_for_step(
-                STEP_ADDITIONAL_SHARES
-            )
-            initial["bestellcoop"] = self.get_cleaned_data_for_step(STEP_BESTELLCOOP)
-            initial["pickup_location"] = self.get_cleaned_data_for_step(
-                STEP_PICKUP_LOCATION
-            )
+
+            # TODO: check if steps exists
+            if is_harvest_shares_selected(
+                self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
+            ):
+                initial["additional_shares"] = self.get_cleaned_data_for_step(
+                    STEP_ADDITIONAL_SHARES
+                )
+                initial["bestellcoop"] = self.get_cleaned_data_for_step(
+                    STEP_BESTELLCOOP
+                )
+                initial["pickup_location"] = self.get_cleaned_data_for_step(
+                    STEP_PICKUP_LOCATION
+                )
         return initial
-
-    def get_prev_step(self, step=None):
-        prev_step = super(RegistrationWizardView, self).get_prev_step()
-        return self.override_next_step(prev_step, STEP_COOP_SHARES)
-
-    def get_next_step(self, step=None):
-        next_step = super(RegistrationWizardView, self).get_next_step()
-        return self.override_next_step(next_step, STEP_SUMMARY)
 
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
 
-        subs_mandate_ref = save_mandate_ref(member, False)
-
-        save_subscriptions(
-            form_dict,
-            member,
-            self.start_date,
-            self.end_date,
-            self.growing_period,
-            subs_mandate_ref,
-        )
+        if is_harvest_shares_selected(form_dict[STEP_HARVEST_SHARES].cleaned_data):
+            save_subscriptions(
+                form_dict,
+                member,
+                self.start_date,
+                self.end_date,
+                self.growing_period,
+            )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
         actual_coop_start = get_next_start_date(self.start_date)
@@ -362,3 +363,10 @@ class RegistrationWizardView(CookieWizardView):
 @method_decorator(xframe_options_exempt, name="dispatch")
 class RegistrationWizardConfirmView(generic.TemplateView):
     template_name = "wirgarten/registration/confirmation.html"
+
+
+def is_harvest_shares_selected(harvest_share_form_data):
+    for key, val in harvest_share_form_data.items():
+        if key.startswith("harvest_shares_") and val > 0:
+            return True
+    return False

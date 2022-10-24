@@ -53,7 +53,9 @@ class Member(TapirUser):
     iban = IBANField(_("IBAN"))
     bic = BICField(_("BIC"))
     sepa_consent = models.DateTimeField(_("SEPA Consent"))
-    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    pickup_location = models.ForeignKey(
+        PickupLocation, on_delete=models.DO_NOTHING, null=True
+    )
     withdrawal_consent = models.DateTimeField(_("Right of withdrawal consent"))
     privacy_consent = models.DateTimeField(_("Privacy consent"))
 

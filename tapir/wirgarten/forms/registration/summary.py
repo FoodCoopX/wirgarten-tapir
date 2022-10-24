@@ -61,7 +61,7 @@ class SummaryForm(forms.Form):
             float(harvest_shares_total) * float(solidarity_price)
         ).replace("+", "+ ")
 
-        if initial["pickup_location"]:
+        if "pickup_location" in initial:
             self.pickup_location = """{val.name}<br/>{val.street}, {val.postcode} {val.city}<br/>({val.info})""".format(
                 val=initial["pickup_location"]["pickup_location"]
             )  # get pickup location text
@@ -78,7 +78,7 @@ class SummaryForm(forms.Form):
         }
 
         self.chicken_shares_info = dict({"has_shares": False, "start_date": start_date})
-        if initial["additional_shares"]:
+        if "additional_shares" in initial:
             chicken_share_products = {
                 """chicken_shares_{variation}""".format(variation=p.name): p.__dict__
                 for p in Product.objects.filter(
@@ -106,8 +106,8 @@ class SummaryForm(forms.Form):
             self.chicken_shares_info["total"] = "{:.2f}".format(chicken_total)
             self.total_monthly += chicken_total
 
-        self.bestellcoop = dict()
-        if initial["bestellcoop"]:
+        self.bestellcoop = {"sign_up": False}
+        if "bestellcoop" in initial:
             price = get_parameter_value(Parameter.BESTELLCOOP_PRICE)
             sign_up = initial["bestellcoop"]["bestellcoop"]
             self.bestellcoop["sign_up"] = sign_up
