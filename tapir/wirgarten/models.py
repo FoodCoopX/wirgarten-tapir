@@ -1,3 +1,6 @@
+import datetime
+from functools import partial
+
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -202,3 +205,17 @@ class Deliveries(TapirModel):
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=False
     )
+
+
+class TaxRate(TapirModel):
+    """
+    Tax rates per product type. This has no influence on the gross price, it is only used to calculate the tax amount from the gross price.
+    If valid_to == NULL, the tax rate is used as a fallback. If valid_to != NULL and it is now valid, this one is used.
+    """
+
+    product_type = models.ForeignKey(
+        ProductType, on_delete=models.DO_NOTHING, null=False
+    )
+    tax_rate = models.FloatField(null=False)
+    valid_from = models.DateField(null=False, default=partial(datetime.date.today))
+    valid_to = models.DateField(null=True)

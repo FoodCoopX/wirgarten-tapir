@@ -1,0 +1,29 @@
+[
+  {
+    "model": "wirgarten.TaxRate",
+    "pk": "PZ5xd6WtFP",
+    "fields": {
+      "product_type": "jW3l0EcsVM",
+      "tax_rate": 0.07,
+      "valid_from": "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.TaxRate",
+    "pk": "lmmZpQd0Ql",
+    "fields": {
+      "product_type": "Wv0JEzFQFa",
+      "tax_rate": 0.07,
+      "valid_from": "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.TaxRate",
+    "pk": "FBZ-vExsfB",
+    "fields": {
+      "product_type": "iOrXOQTZxy",
+      "tax_rate": 0.19,
+      "valid_from": "2022-01-01"
+    }
+  }
+]
