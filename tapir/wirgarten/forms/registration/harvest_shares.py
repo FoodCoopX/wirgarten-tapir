@@ -1,9 +1,12 @@
+import datetime
 from importlib.resources import _
 
 from django import forms
+from django.db import models
+from django.db.models import Sum, F
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import HarvestShareProduct
+from tapir.wirgarten.models import HarvestShareProduct, Subscription
 from tapir.wirgarten.parameters import Parameter
 
 SOLIDARITY_PRICES = [
@@ -19,11 +22,26 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_solidarity_price_choices():
-    if get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED):
-        return SOLIDARITY_PRICES
-    else:
-        return filter(lambda sp: sp[0] >= 0, SOLIDARITY_PRICES)
+def get_solidarity_total() -> float:
+    val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
+    if val == 0:  # disabled
+        return 0.0
+    elif val == 1:  # enabled
+        return 1000.0  # FIXME: configuration property: max solidarity discount for one user
+    elif val == 2:  # automatic calculation
+        today = datetime.date.today()
+        solidarity_total = (
+            Subscription.objects.filter(start_date__lte=today, end_date__gte=today)
+            .values("quantity", "product__price", "solidarity_price")
+            .aggregate(
+                total=Sum(
+                    F("quantity") * F("product__price") * F("solidarity_price"),
+                    output_field=models.DecimalField(),
+                )
+            )
+        )
+
+        return solidarity_total["total"]
 
 
 class HarvestShareForm(forms.Form):
@@ -46,6 +64,8 @@ class HarvestShareForm(forms.Form):
         self.n_columns = len(self.products)
         self.colspans = {"solidarity_price": self.n_columns}
 
+        self.solidarity_total = get_solidarity_total()
+
         for k, v in self.products.items():
             self.fields[k] = forms.IntegerField(
                 required=True,
@@ -63,7 +83,7 @@ class HarvestShareForm(forms.Form):
         self.fields["solidarity_price"] = forms.ChoiceField(
             required=True,
             label=_("Solidarpreis"),
-            choices=get_solidarity_price_choices(),
+            choices=SOLIDARITY_PRICES,
         )
 
         self.harvest_shares = ",".join(
