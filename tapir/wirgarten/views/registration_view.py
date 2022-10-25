@@ -200,6 +200,7 @@ def save_cooperative_shares(form_dict, member: Member, start_date):
     mandate_ref = save_mandate_ref(member, True)
     share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
     quantity = form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
+    due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
 
     ShareOwnership.objects.create(
         member=member,
@@ -210,7 +211,7 @@ def save_cooperative_shares(form_dict, member: Member, start_date):
     )
 
     Payment.objects.create(
-        due_date=start_date,
+        due_date=due_date,
         amount=share_price * quantity,
         mandate_ref=mandate_ref,
         status=Payment.PaymentStatus.DUE,

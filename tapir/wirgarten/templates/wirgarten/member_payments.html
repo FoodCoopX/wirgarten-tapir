@@ -35,8 +35,8 @@
                 {% for payment in payments %}
                 <tr>
                     <td style="text-align:center">
-                        <strong id="date-{{payment.due_date}}">{{payment.date}}</strong><br/>
-                        <p style="line-height:1.25em"><small id="datediff-{{payment.due_date}}"></small></p>
+                        <strong id="date-{{payment.due_date}}-{{payment.mandate_ref}}">{{payment.due_date}}</strong><br/>
+                        <p style="line-height:1.25em"><small id="datediff-{{payment.due_date}}-{{payment.mandate_ref}}"></small></p>
                         <h5><span class="rounded-pill badge bg-{%if payment.status == 'DUE' %}danger{%elif payment.status == 'UPCOMING' %}info{%elif payment.status == 'PAID' %}success{%endif%}">{{payment.status}}</span></h5>
                     </td>
                     <td style="text-align:center">
@@ -74,8 +74,8 @@
     {% for payment in payments %}
     date = moment("{{payment.due_date}}");
     diff = now.to(date);
-    document.getElementById("datediff-{{payment.due_date}}").innerText = diff;
-    document.getElementById("date-{{payment.due_date}}").innerText = date.format("LL");
+    document.getElementById("datediff-{{payment.due_date}}-{{payment.mandate_ref}}").innerText = diff;
+    document.getElementById("date-{{payment.due_date}}-{{payment.mandate_ref}}").innerText = date.format("LL");
     {% endfor %}
 </script>
 {% endblock %}
