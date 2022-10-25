@@ -88,7 +88,7 @@ def generate_future_payments(subs: list):
 
                 payments.append(
                     {
-                        "due_date": next_payment_date,
+                        "due_date": next_payment_date.isoformat(),
                         "mandate_ref": mandate_ref,
                         "amount": round(
                             sum(
@@ -142,7 +142,7 @@ def get_previous_payments(member_id):
     return list(
         map(
             lambda x: {
-                "due_date": x.due_date,
+                "due_date": x.due_date.isoformat(),
                 "mandate_ref": x.mandate_ref,
                 "amount": round(x.amount, 2),
                 "subs": get_subs_or_shares(x.mandate_ref, x.due_date),
