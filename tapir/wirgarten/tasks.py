@@ -1,86 +1,16 @@
-import csv
 import itertools
 from datetime import datetime
-from importlib.resources import _
 
 from celery import shared_task
-from django.core.mail import EmailMultiAlternatives
+
 from django.db import transaction
 from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import ProductType, Subscription, ExportedFile, Payment
+from tapir.wirgarten.models import ExportedFile, Payment, Subscription, ProductType
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.file_export import export_file, begin_csv_string
 from tapir.wirgarten.views.member import get_sub_total
-
-
-class CsvTextBuilder(object):
-    def __init__(self):
-        self.csv_string = []
-
-    def write(self, row):
-        self.csv_string.append(row)
-
-
-def __send_email(file: ExportedFile, recipient: str | None = None):
-    if recipient is None:
-        recipient = [get_parameter_value(Parameter.SITE_ADMIN_EMAIL)]
-    else:
-        recipient = recipient.split(",")
-
-    filename = f"{file.name}_{file.created_at.strftime('%Y%m%d_%H%M%S')}.{ExportedFile.FileType.CSV.value}"
-
-    email = EmailMultiAlternatives(
-        subject=_("{filename} ist bereit").format(
-            filename=f"{file.name}.{ExportedFile.FileType.CSV.value}"
-        ),
-        body=_(
-            "Hallo Admin,<br/><br/>im Anhang findest du die aktuelle {filename}.<br/><br/><br/>(Automatisch von Tapir versendet)"
-        ).format(filename=filename),
-        to=recipient,
-        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
-    )
-    email.content_subtype = "html"
-    email.attach(filename, file.file)
-    email.send()
-
-
-def __begin_csv_string(field_names: [str]):
-    output = CsvTextBuilder()
-    writer = csv.DictWriter(output, fieldnames=field_names, delimiter=";")
-    writer.writeheader()
-    return output, writer
-
-
-def export_file(
-    filename: str,
-    filetype: ExportedFile.FileType,
-    content: bytes,
-    send_email: bool,
-    to_email_custom: str | None = None,
-):
-    """
-    Exports binary data as a virtual file to the database. It can be automatically sent per email to the admin (or a custom email address) and it can be downloaded via UI later on.
-
-    :param filename: The base file name without a timestamp (e.g.: Kommissionierliste)
-    :param filetype: The type of the file (e.g. ExportedFile.FileType.CSV)
-    :param content: The binary data (convert a string like this: bytes("your string", "utf-8")
-    :param send_email: If true, an email will be send to the admin email address (Parameter: wirgarten.site.admin_email) or the 'to_email_custom' address if specified
-    :param to_email_custom: Comma seperated list of recipient email addresses (e.g. "tim@example.com,john@example.com")
-    """
-
-    file = ExportedFile.objects.create(name=filename, type=filetype, file=content)
-
-    if send_email:
-        __send_email(file, to_email_custom)
-
-
-KEY_PRODUCT = "Produkt"
-KEY_QUANTITY = "Anzahl"
-KEY_VARIANT = "Variante"
-KEY_PICKUPLOCATION = "Abholort"
-KEY_STREET = "Straße"
-KEY_CITY = "Ort"
 
 
 @shared_task
@@ -88,6 +18,13 @@ def export_pick_list_csv():
     """
     Sums the quantity of product variants per pickup location and exports the list as CSV.
     """
+
+    KEY_PRODUCT = "Produkt"
+    KEY_QUANTITY = "Anzahl"
+    KEY_VARIANT = "Variante"
+    KEY_PICKUPLOCATION = "Abholort"
+    KEY_STREET = "Straße"
+    KEY_CITY = "Ort"
 
     sums = (
         Subscription.objects.filter(product__type__pickup_enabled=True)
@@ -105,7 +42,7 @@ def export_pick_list_csv():
         )
     )
 
-    output, writer = __begin_csv_string(
+    output, writer = begin_csv_string(
         [
             KEY_PICKUPLOCATION,
             KEY_STREET,
@@ -141,6 +78,9 @@ def export_supplier_list_csv():
     Sums the quantity of product variants exports a list as CSV per product type.
     """
 
+    KEY_PRODUCT = "Produkt"
+    KEY_QUANTITY = "Anzahl"
+
     def create_csv_string(product_type: str):
         product_type = all_product_types[product_type]
 
@@ -160,7 +100,7 @@ def export_supplier_list_csv():
             .annotate(quantity_sum=Sum("quantity"))
         )
 
-        output, writer = __begin_csv_string([KEY_PRODUCT, KEY_QUANTITY])
+        output, writer = begin_csv_string([KEY_PRODUCT, KEY_QUANTITY])
 
         for variant in sums:
             writer.writerow(
@@ -195,23 +135,22 @@ def windata_date_format(due_date):
     return due_date.strftime("%d.%m.%Y")
 
 
-KEY_SEPA_AG_NAME = "AG Name"
-KEY_SEPA_AG_IBAN = "AG KontoNr bzw. AG IBAN"
-KEY_SEPA_AG_BIC = "AG BLZ bzw. AG BIC"
-KEY_SEPA_AMOUNT = "Betrag"
-KEY_SEPA_DUE_DATE = "Termin"
-KEY_SEPA_VWZ1 = "VWZ1"
-KEY_SEPA_VWZ2 = "VWZ2"
-KEY_SEPA_MANDATE_REF = "Mandat-ID"
-KEY_SEPA_MANDATE_DATE = "Mandat-Datum"
-
-
 @shared_task
 @transaction.atomic
 def export_sepa_payments():
     """
     Creates payments for now. This should usually only run once a month.
     """
+
+    KEY_SEPA_AG_NAME = "AG Name"
+    KEY_SEPA_AG_IBAN = "AG KontoNr bzw. AG IBAN"
+    KEY_SEPA_AG_BIC = "AG BLZ bzw. AG BIC"
+    KEY_SEPA_AMOUNT = "Betrag"
+    KEY_SEPA_DUE_DATE = "Termin"
+    KEY_SEPA_VWZ1 = "VWZ1"
+    KEY_SEPA_VWZ2 = "VWZ2"
+    KEY_SEPA_MANDATE_REF = "Mandat-ID"
+    KEY_SEPA_MANDATE_DATE = "Mandat-Datum"
 
     due_date = datetime.today().replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
@@ -258,7 +197,7 @@ def export_sepa_payments():
             "Textschlüssel bzw. Zahlart": "SEPA",
         }
 
-        output, writer = __begin_csv_string(
+        output, writer = begin_csv_string(
             [
                 KEY_SEPA_AG_NAME,
                 KEY_SEPA_AG_IBAN,
