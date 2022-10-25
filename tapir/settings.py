@@ -136,6 +136,15 @@ CELERY_BEAT_SCHEDULE = {
             # once a week, Tuesday at 00:00
         ),
     },
+    "export_sepa_payments": {
+        "task": "tapir.wirgarten.tasks.export_sepa_payments",
+        "schedule": celery.schedules.crontab(
+            day_of_month=15,
+            minute=0,
+            hour=0
+            # once a month, on 15th 0:00
+        ),
+    },
 }
 
 # Password validation

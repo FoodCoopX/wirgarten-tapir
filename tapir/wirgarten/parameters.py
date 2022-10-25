@@ -33,6 +33,8 @@ class ParameterCategory:
 
 class Parameter:
     SITE_NAME = f"{PREFIX}.site.name"
+    SITE_STREET = f"{PREFIX}.site.street"
+    SITE_CITY = f"{PREFIX}.site.city"
     SITE_EMAIL = f"{PREFIX}.site.email"
     SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
@@ -48,6 +50,9 @@ class Parameter:
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
+    PAYMENT_IBAN = f"{PREFIX}.payment.iban"
+    PAYMENT_BIC = f"{PREFIX}.payment.bic"
+    PAYMENT_CREDITOR_ID = f"{PREFIX}.payment.creditor_id"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
 
 
@@ -59,6 +64,24 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value="WirGarten Lüneburg eG",
             description="Der Name des WirGarten Standorts. Beispiel: 'WirGarten Lüneburg eG'",
+            category=ParameterCategory.SITE,
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_STREET,
+            label="Straße u. Hausnummer",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Vögelser Str. 25",
+            description="Die Straße und Hausnummer des WirGarten Standorts. Beispiel: 'Vögelser Str. 25'",
+            category=ParameterCategory.SITE,
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_CITY,
+            label="Postleitzahl u. Ort",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="21339 Lüneburg",
+            description="Die PLZ und Ort des WirGarten Standorts. Beispiel: '21339 Lüneburg'",
             category=ParameterCategory.SITE,
         )
 
@@ -194,6 +217,35 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=15,
             description="Der Tag im Monat an dem Beitragszahlungen für Abonnements fällig sind.",
+            category=ParameterCategory.PAYMENT,
+        )
+
+        # PAYMENT_CREDITOR_ID = f"{PREFIX}.payment.creditor_id"
+
+        parameter_definition(
+            key=Parameter.PAYMENT_IBAN,
+            label="Empfänger IBAN",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="DE60 2406 0300 2801 8818 00",
+            description="IBAN des Empfänger Kontos für Beitragszahlungen.",
+            category=ParameterCategory.PAYMENT,
+        )
+
+        parameter_definition(
+            key=Parameter.PAYMENT_BIC,
+            label="Empfänger BIC",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="GENODEF1NBU",
+            description="BIC des Empfänger Kontos für Beitragszahlungen.",
+            category=ParameterCategory.PAYMENT,
+        )
+
+        parameter_definition(
+            key=Parameter.PAYMENT_CREDITOR_ID,
+            label="Gläubiger-ID",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="TODO",
+            description="Die Gläubiger-ID der Genossenschaft.",
             category=ParameterCategory.PAYMENT,
         )
 

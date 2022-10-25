@@ -1,14 +1,17 @@
 import csv
+import itertools
 from datetime import datetime
 from importlib.resources import _
 
 from celery import shared_task
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import ProductType, Subscription, ExportedFile
+from tapir.wirgarten.models import ProductType, Subscription, ExportedFile, Payment
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.views.member import get_sub_total
 
 
 class CsvTextBuilder(object):
@@ -186,3 +189,113 @@ def export_supplier_list_csv():
                     Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
                 ),
             )
+
+
+def windata_date_format(due_date):
+    return due_date.strftime("%d.%m.%Y")
+
+
+KEY_SEPA_AG_NAME = "AG Name"
+KEY_SEPA_AG_IBAN = "AG KontoNr bzw. AG IBAN"
+KEY_SEPA_AG_BIC = "AG BLZ bzw. AG BIC"
+KEY_SEPA_AMOUNT = "Betrag"
+KEY_SEPA_DUE_DATE = "Termin"
+KEY_SEPA_VWZ1 = "VWZ1"
+KEY_SEPA_VWZ2 = "VWZ2"
+KEY_SEPA_MANDATE_REF = "Mandat-ID"
+KEY_SEPA_MANDATE_DATE = "Mandat-Datum"
+
+
+@shared_task
+@transaction.atomic
+def export_sepa_payments():
+    """
+    Creates payments for now. This should usually only run once a month.
+    """
+
+    due_date = datetime.today().replace(
+        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    )
+    payments = []
+
+    for mandate_ref, subs in itertools.groupby(
+        iterable=Subscription.objects.filter(
+            start_date__lte=due_date, end_date__gte=due_date
+        ),
+        key=lambda x: x.mandate_ref,
+    ):
+        amount = round(sum(map(lambda x: get_sub_total(x), subs)), 2)
+
+        print("mandate_ref: ", mandate_ref)
+
+        payments.append(
+            Payment(
+                due_date=due_date,
+                amount=amount,
+                mandate_ref=mandate_ref,
+                status=Payment.PaymentStatus.DUE,
+            )
+        )
+
+    try:
+        payments = Payment.objects.bulk_create(payments)
+
+        print(f"{len(payments)} Payments for {due_date} persisted")
+
+        site_name = get_parameter_value(Parameter.SITE_NAME)
+        static_values = {
+            "Beg/Zahlpfl Name": site_name,
+            "Beg/Zahlpfl Strasse": get_parameter_value(Parameter.SITE_STREET),
+            "Beg/Zahlpfl Ort": get_parameter_value(Parameter.SITE_CITY),
+            "Beg/Zahlpfl KontoNr bzw. IBAN": get_parameter_value(
+                Parameter.PAYMENT_IBAN
+            ),
+            "Beg/Zahlpfl BLZ bzw. BIC": get_parameter_value(Parameter.PAYMENT_BIC),
+            "Währung": "EUR",
+            "AG Gläubiger-ID": get_parameter_value(Parameter.PAYMENT_CREDITOR_ID),
+            "Sequenz": "RCUR",
+            "zahlweise": "M",
+            "Textschlüssel bzw. Zahlart": "SEPA",
+        }
+
+        output, writer = __begin_csv_string(
+            [
+                KEY_SEPA_AG_NAME,
+                KEY_SEPA_AG_IBAN,
+                KEY_SEPA_AG_BIC,
+                KEY_SEPA_AMOUNT,
+                KEY_SEPA_DUE_DATE,
+                KEY_SEPA_VWZ1,
+                KEY_SEPA_VWZ2,
+                KEY_SEPA_MANDATE_REF,
+                KEY_SEPA_MANDATE_DATE,
+            ]
+            + list(static_values.keys())
+        )
+        for payment in payments:
+            row = static_values.copy()
+
+            row[
+                KEY_SEPA_AG_NAME
+            ] = f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}"
+            row[KEY_SEPA_AG_IBAN] = payment.mandate_ref.member.iban
+            row[KEY_SEPA_AG_BIC] = payment.mandate_ref.member.bic
+            row[KEY_SEPA_AMOUNT] = payment.amount
+            row[KEY_SEPA_DUE_DATE] = windata_date_format(due_date)
+            row[KEY_SEPA_VWZ1] = payment.mandate_ref.pk
+            row[KEY_SEPA_MANDATE_REF] = payment.mandate_ref.pk
+            row[KEY_SEPA_MANDATE_DATE] = windata_date_format(
+                payment.mandate_ref.member.sepa_consent
+            )
+
+            writer.writerow(row)
+
+        export_file(
+            filename="SEPA-Payments",
+            filetype=ExportedFile.FileType.CSV,
+            content=bytes("".join(output.csv_string), "utf-8"),
+            send_email=True,
+        )
+
+    except Exception:
+        print("Payments for this month already exist, skipping!")

@@ -90,15 +90,14 @@ def generate_future_payments(subs: list):
                     {
                         "due_date": next_payment_date,
                         "mandate_ref": mandate_ref,
-                        "amount": "{:.2f}".format(
+                        "amount": round(
                             sum(
                                 map(
-                                    lambda x: x.quantity
-                                    * float(x.product.price)
-                                    * (1 + x.solidarity_price),
+                                    lambda x: get_sub_total(x),
                                     values,
                                 )
-                            )
+                            ),
+                            2,
                         ),
                         "subs": active_subs,
                         "status": Payment.PaymentStatus.UPCOMING,
@@ -108,6 +107,10 @@ def generate_future_payments(subs: list):
         next_payment_date += relativedelta(months=1)
 
     return payments
+
+
+def get_sub_total(sub):
+    return sub.quantity * float(sub.product.price) * (1 + sub.solidarity_price)
 
 
 def get_subs_or_shares(mandate_ref: MandateReference, date: date):
@@ -121,7 +124,7 @@ def get_subs_or_shares(mandate_ref: MandateReference, date: date):
         return list(
             map(
                 lambda x: {
-                    "amount": "{:.2f}".format(x.share_price),
+                    "amount": round(x.share_price, 2),
                     "quantity": x.quantity,
                     "product": {
                         "name": _("Genossenschaftsanteile"),
@@ -141,7 +144,7 @@ def get_previous_payments(member_id):
             lambda x: {
                 "due_date": x.due_date,
                 "mandate_ref": x.mandate_ref,
-                "amount": "{:.2f}".format(x.amount),
+                "amount": round(x.amount, 2),
                 "subs": get_subs_or_shares(x.mandate_ref, x.due_date),
                 "status": x.status,
             },
