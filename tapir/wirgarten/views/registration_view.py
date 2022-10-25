@@ -17,6 +17,7 @@ from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
+from tapir.wirgarten.forms.registration.no_harvest_shares import NoHarvestSharesForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.personal_data import PersonalDataForm
 from tapir.wirgarten.forms.registration.pickup_location import PickupLocationForm
@@ -38,6 +39,7 @@ from tapir.wirgarten.parameters import Parameter
 MANDATE_REF_ALPHABET = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 STEP_HARVEST_SHARES = "Harvest Shares"
+STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
 STEP_COOP_SHARES = "Cooperative Shares"
 STEP_ADDITIONAL_SHARES = "Additional Shares"
 STEP_BESTELLCOOP = "BestellCoop"
@@ -49,6 +51,7 @@ STEP_CONSENTS = "Consent"
 
 FORM_TITLES = {
     STEP_HARVEST_SHARES: _("Ernteanteile"),
+    STEP_NO_HARVEST_SHARES_AVAILABLE: _("Ernteanteile"),
     STEP_COOP_SHARES: _("Genossenschaft"),
     STEP_ADDITIONAL_SHARES: _("Zusatzabos"),
     STEP_BESTELLCOOP: _("BestellCoop"),
@@ -61,6 +64,7 @@ FORM_TITLES = {
 
 FORMS = [
     (STEP_HARVEST_SHARES, HarvestShareForm),
+    (STEP_NO_HARVEST_SHARES_AVAILABLE, NoHarvestSharesForm),
     (STEP_COOP_SHARES, CooperativeShareForm),
     (STEP_ADDITIONAL_SHARES, ChickenShareForm),
     (STEP_BESTELLCOOP, BestellCoopForm),
@@ -72,7 +76,15 @@ FORMS = [
 ]
 
 
-def show_all_steps(wizard):
+def show_harvest_shares(wizard=None) -> bool:
+    return get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
+
+
+def dont_show_harvest_shares(wizard=None) -> bool:
+    return not show_harvest_shares(wizard)
+
+
+def show_dependent_steps(wizard) -> bool:
     if (
         "step_data" in wizard.storage.data
         and STEP_HARVEST_SHARES in wizard.storage.data["step_data"]
@@ -84,9 +96,11 @@ def show_all_steps(wizard):
 
 
 CONDITIONS = {
-    STEP_ADDITIONAL_SHARES: show_all_steps,
-    STEP_BESTELLCOOP: show_all_steps,
-    STEP_PICKUP_LOCATION: show_all_steps,
+    STEP_HARVEST_SHARES: show_harvest_shares,
+    STEP_NO_HARVEST_SHARES_AVAILABLE: dont_show_harvest_shares,
+    STEP_ADDITIONAL_SHARES: show_dependent_steps,
+    STEP_BESTELLCOOP: show_dependent_steps,
+    STEP_PICKUP_LOCATION: show_dependent_steps,
 }
 
 PRODUCT_TYPE_HARVEST_SHARES = "Ernteanteile"
@@ -282,10 +296,7 @@ class RegistrationWizardView(CookieWizardView):
         self.end_date = self.growing_period.end_date
 
     def get_template_names(self):
-        if (
-            self.steps.current == STEP_HARVEST_SHARES
-            and not self.is_harvest_share_subscribable()
-        ):
+        if self.steps.current == STEP_NO_HARVEST_SHARES_AVAILABLE:
             return ["wirgarten/registration/steps/harvest_shares_no_subscription.html"]
         if self.steps.current == STEP_SUMMARY:
             return ["wirgarten/registration/steps/summary.html"]
@@ -311,9 +322,10 @@ class RegistrationWizardView(CookieWizardView):
     def get_form_initial(self, step=None):
         initial = self.initial_dict
         if step == STEP_COOP_SHARES:
-            data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
-            for key, val in data.items():
-                initial[key] = val
+            if show_harvest_shares():
+                data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
+                for key, val in data.items():
+                    initial[key] = val
         elif step == STEP_SUMMARY:
             initial["general"] = {
                 "start_date": self.start_date,
