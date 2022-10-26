@@ -60,7 +60,7 @@ class ParameterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ParameterForm, self).__init__(*args, **kwargs)
 
-        params = TapirParameter.objects.order_by("category", "key")
+        params = TapirParameter.objects.order_by("category", "-order_priority", "key")
 
         categories = list(set(map(lambda p: p.category, params)))
         categories.sort()

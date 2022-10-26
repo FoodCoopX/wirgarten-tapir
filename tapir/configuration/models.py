@@ -17,6 +17,7 @@ class TapirParameter(models.Model):
     description = models.CharField(max_length=512)
     category = models.CharField(max_length=256)
     datatype = models.CharField(max_length=8)
+    order_priority = models.IntegerField(null=False, default=-1)
     value = models.CharField(max_length=4096, null=True)
     options: [] = None
 

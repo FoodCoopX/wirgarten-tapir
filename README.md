@@ -150,6 +150,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="WirGarten Lüneburg eG",
             description="Der Name des WirGarten Standorts. Beispiel: 'WirGarten Lüneburg eG'",
             category=ParameterCategory.SITE,
+            order_priority=1000,
         )
 
         parameter_definition(
@@ -158,6 +159,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="lueneburg@wirgarten.com",
             description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
             category=ParameterCategory.SITE,
+            order_priority=900,
         )
         
         parameter_definition(
@@ -181,6 +183,10 @@ which elements are defined as `(value, label)` pairs, \
 with `value` of type `TapirParameterDatatype` \
 and `label` of type `string`. \
 The programmer has to make sure, the value of `value` is **never** `None`
+
+if `order_priority` (type `int`) is provided, the item will be placed \
+at the beginning of the category, with high `order_prority` values first.
+Items which do not provide `order_priority` will be ordered alphabetically after those which provide the attribute.
 
 
 
