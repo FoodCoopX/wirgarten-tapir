@@ -6,18 +6,22 @@
 
 {% block content %}
 <div style="margin-top: 2em" class="container">
-    <div class="card">
-        <div class="card-header">
-            <div id="search-input" style="display:grid; grid-template-columns: 2fr 1fr">
-                <div>
-                    <h4>{% translate "Konfiguration" %}</h4>
-                </div>
-                <div>
-                    <input type="text" class="form-control" placeholder="Search..."/>
+    <div style="width: calc(100% - 24em); z-index:1200; margin-top: 60px; position: fixed; top: 0">
+        <div class="card">
+            <div class="card-header">
+                <div id="search-input" style="display:grid; grid-template-columns: 4fr 2fr">
+                    <div style="display: flex; flex-direction: row">
+                        <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
+                        <button class="btn tapir-btn btn-primary" type="submit">Save</button>
+                    </div>
+                    <div>
+                        <input type="text" class="form-control" placeholder="Search..."/>
+                    </div>
                 </div>
             </div>
-
         </div>
+    </div>
+    <div class="card" style="margin-top: 62px">
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
@@ -40,7 +44,6 @@
 
                 {% endfor %}
 
-                <button class="btn tapir-btn btn-primary" type="submit">Save</button>
             </form>
         </div>
     </div>
