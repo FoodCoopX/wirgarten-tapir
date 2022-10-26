@@ -168,11 +168,25 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
-            label="Solipreise möglich",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description="Wenn aktiv, dann ist es möglich bei der Auswahl der Ernteanteile einen niedrigeren Preis als den Richtpreis zu wählen.",
+            label="Solidarpreise möglich",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Aktiviert oder deaktiviert niedrigere Preise für Ernteanteile oder aktiviert die automatische Berechnung.",
             category=ParameterCategory.HARVEST,
+            options=[
+                (
+                    0,
+                    "Nur positive Solidarpreise möglich (Mitglieder können keinen niedrigeren Preis wählen)",
+                ),
+                (
+                    1,
+                    "Negative Solidarpreise möglich (Mitglieder können einen niedrigeren Preis wählen)",
+                ),
+                (
+                    2,
+                    "Automatische Berechnung (niedrigere Preise sind möglich, wenn genügend Mitglieder mehr zahlen)",
+                ),
+            ],
         )
 
         parameter_definition(

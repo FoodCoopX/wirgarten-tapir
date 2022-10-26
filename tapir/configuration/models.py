@@ -16,7 +16,7 @@ class TapirParameter(models.Model):
     label = models.CharField(max_length=256, null=False)
     description = models.CharField(max_length=512)
     category = models.CharField(max_length=256)
-    datatype = models.CharField(max_length=8, editable=False)
+    datatype = models.CharField(max_length=8)
     value = models.CharField(max_length=4096, null=True)
     options: [] = None
 

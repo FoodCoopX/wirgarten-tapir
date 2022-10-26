@@ -68,7 +68,9 @@ def parameter_definition(
         param.label = label
         param.description = description
         param.category = category
-        param.datatype = datatype.value
+        if param.datatype != datatype.value:
+            param.datatype = datatype.value
+            param.value = initial_value  # only update value with initial value if the datatype changed!
 
         print("\t[update] ", key)
 
