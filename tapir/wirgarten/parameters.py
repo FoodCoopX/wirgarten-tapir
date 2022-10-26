@@ -65,6 +65,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="WirGarten Lüneburg eG",
             description="Der Name des WirGarten Standorts. Beispiel: 'WirGarten Lüneburg eG'",
             category=ParameterCategory.SITE,
+            order_priority=1000,
         )
 
         parameter_definition(
@@ -74,6 +75,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Vögelser Str. 25",
             description="Die Straße und Hausnummer des WirGarten Standorts. Beispiel: 'Vögelser Str. 25'",
             category=ParameterCategory.SITE,
+            order_priority=900,
         )
 
         parameter_definition(
@@ -83,6 +85,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="21339 Lüneburg",
             description="Die PLZ und Ort des WirGarten Standorts. Beispiel: '21339 Lüneburg'",
             category=ParameterCategory.SITE,
+            order_priority=800,
         )
 
         parameter_definition(
@@ -119,6 +122,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=2,
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
             category=ParameterCategory.COOP,
+            order_priority=1000,
         )
 
         parameter_definition(
@@ -128,6 +132,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=50.0,
             description="Der Preis eines Genossenschaftsanteils in Euro.",
             category=ParameterCategory.COOP,
+            order_priority=900,
         )
 
         parameter_definition(
@@ -217,15 +222,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
-            label="Automatische Email an Admin",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
-            category=ParameterCategory.PICK_LIST,
-        )
-
-        parameter_definition(
             key=Parameter.PAYMENT_DUE_DAY,
             label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
             datatype=TapirParameterDatatype.INTEGER,
@@ -234,8 +230,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.PAYMENT,
         )
 
-        # PAYMENT_CREDITOR_ID = f"{PREFIX}.payment.creditor_id"
-
         parameter_definition(
             key=Parameter.PAYMENT_IBAN,
             label="Empfänger IBAN",
@@ -243,6 +237,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="DE60 2406 0300 2801 8818 00",
             description="IBAN des Empfänger Kontos für Beitragszahlungen.",
             category=ParameterCategory.PAYMENT,
+            order_priority=1000,
         )
 
         parameter_definition(
@@ -252,6 +247,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="GENODEF1NBU",
             description="BIC des Empfänger Kontos für Beitragszahlungen.",
             category=ParameterCategory.PAYMENT,
+            order_priority=900,
         )
 
         parameter_definition(
@@ -261,6 +257,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="TODO",
             description="Die Gläubiger-ID der Genossenschaft.",
             category=ParameterCategory.PAYMENT,
+            order_priority=800,
         )
 
         parameter_definition(
@@ -285,4 +282,5 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 (1, "zeichenbar"),
                 (0, "nicht zeichenbar"),
             ],
+            order_priority=1000,
         )

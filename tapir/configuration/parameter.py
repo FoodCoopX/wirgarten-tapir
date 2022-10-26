@@ -42,6 +42,7 @@ def parameter_definition(
     datatype: TapirParameterDatatype,
     initial_value: str | int | float | bool,
     options: [tuple] = None,
+    order_priority: int = -1,
 ):
     try:
         if type(initial_value) == str:
@@ -72,6 +73,8 @@ def parameter_definition(
             param.datatype = datatype.value
             param.value = initial_value  # only update value with initial value if the datatype changed!
 
+        param.order_priority = order_priority
+
         print("\t[update] ", key)
 
         param.save()
@@ -83,6 +86,7 @@ def parameter_definition(
             label=label,
             description=description,
             category=category,
+            order_priority=order_priority,
             datatype=datatype.value,
             value=str(initial_value),
         )
