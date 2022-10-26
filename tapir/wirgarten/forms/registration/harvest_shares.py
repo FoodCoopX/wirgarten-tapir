@@ -44,6 +44,18 @@ def get_solidarity_total() -> float:
         return solidarity_total["total"]
 
 
+def is_separate_coop_shares_allowed() -> bool:
+    return get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES)
+
+
+def is_minimum_harvest_shares_reached(data, products) -> bool:
+    for chk_key in products.keys():
+        if data[chk_key] > 0:
+            return True
+
+    return False
+
+
 class HarvestShareForm(forms.Form):
     intro_text_skip_hr = True
 
@@ -92,3 +104,23 @@ class HarvestShareForm(forms.Form):
                 self.products,
             )
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if is_separate_coop_shares_allowed():
+            if not is_minimum_harvest_shares_reached(cleaned_data, self.products):
+                is_first: bool = True
+                for product_name in self.products.keys():
+                    if is_first:
+                        self.add_error(
+                            product_name,
+                            _(
+                                "Die Zeichnung von mindestens einem der Ernteprodukte ist erforderlich."
+                            ),
+                        )
+                        is_first = False
+                    else:
+                        self.add_error(
+                            product_name,
+                            _(""),
+                        )

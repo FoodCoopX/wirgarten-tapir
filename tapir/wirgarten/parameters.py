@@ -42,6 +42,7 @@ class Parameter:
     COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
+    COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
@@ -283,4 +284,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 (0, "nicht zeichenbar"),
             ],
             order_priority=1000,
+        )
+
+        parameter_definition(
+            key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+            label="Genossenschaftsanteile unabhängig von Ernteanteilen zeichenbar",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Genossenschaftsanteile sind vom Mitglied unabhängig von Ernteanteilen zeichenbar.",
+            category=ParameterCategory.COOP,
+            options=[
+                (True, "unabhängig zeichenbar"),
+                (False, "nicht unabhängig zeichenbar"),
+            ],
+            order_priority=800,
         )
