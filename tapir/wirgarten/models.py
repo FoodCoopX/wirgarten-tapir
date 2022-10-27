@@ -55,6 +55,19 @@ class ProductType(TapirModel):
     pickup_enabled = models.BooleanField(null=False, default=False)
 
 
+class DeliveryExceptionPeriod(TapirModel):
+    """
+    Defines a period in which no delivery of a certain product takes place.
+    """
+
+    start_date = models.DateField(null=False)
+    end_date = models.DateField(null=False)
+    product_type = models.ForeignKey(
+        ProductType, null=True, on_delete=models.DO_NOTHING
+    )
+    comment = models.CharField(max_length=128, null=False, default="")
+
+
 class ProductCapacity(TapirModel):
     """
     This is used to configure how much of a ProductType can be sold in a growing period.
