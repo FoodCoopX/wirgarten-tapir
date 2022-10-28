@@ -279,7 +279,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
             category=ParameterCategory.HARVEST,
             options=[
-                # (2, "Automatik"), # TODO: implement automatism logic
+                # (2, "Automatik"), # FIXME: implement automatism logic
                 (1, "zeichenbar"),
                 (0, "nicht zeichenbar"),
             ],

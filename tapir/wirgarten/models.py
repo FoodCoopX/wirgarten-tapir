@@ -52,8 +52,10 @@ class ProductType(TapirModel):
     This is the type of the product, e.g. harvest share, chicken share, ...
     """
 
-    name = models.CharField(max_length=128, null=False)
-    pickup_enabled = models.BooleanField(null=False, default=False)
+    name = models.CharField(max_length=128, null=False, verbose_name=_("Produkt Name"))
+    pickup_enabled = models.BooleanField(
+        null=False, default=False, verbose_name=_("Pickup")
+    )
 
 
 class DeliveryExceptionPeriod(TapirModel):

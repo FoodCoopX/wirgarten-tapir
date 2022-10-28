@@ -65,6 +65,11 @@ def add_admin_links(groups):
         url=reverse_lazy("configuration:parameters"),
     )
     admin_group.add_link(
+        display_name=_("Anbauperiode & Produkte"),
+        material_icon="inventory",
+        url=reverse_lazy("wirgarten:product"),
+    )
+    admin_group.add_link(
         display_name=_("Exportierte Dateien"),
         material_icon="attach_file",
         url=reverse_lazy("wirgarten:exported_files_list"),

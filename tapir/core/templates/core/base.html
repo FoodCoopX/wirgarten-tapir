@@ -61,10 +61,8 @@
 
         <main role="main" class="col-md-9 ms-sm-auto col-lg-10 px-4">
             <!-- make it a bit wider than the default to fit the shift stuff -->
-            <div class="container" style="max-width: 1500px;">
-                {% bootstrap_messages %}
-                {% block content %}{% endblock %}
-            </div>
+            {% bootstrap_messages %}
+            {% block content %}{% endblock %}
         </main>
     </div>
 </div>
