@@ -6,6 +6,5 @@ from tapir.accounts.models import TapirUser, LdapPerson
 class LdapEnabledTestCase(LdapBaseTestCase):
             
     def test_person_creation(self):
-        pass
-        #LdapPerson.objects.create(uid='asd', sn='sn', cn='cn')
-        #self.assertTrue(LdapPerson.objects.filter(uid='asd'))
+        LdapPerson.objects.create(uid='asd', sn='sn', cn='cn')
+        self.assertTrue(LdapPerson.objects.filter(uid='asd'))
