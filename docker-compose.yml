@@ -1,7 +1,9 @@
 version: "3.9"
 services:
   openldap:
-    image: "osixia/openldap"
+    build:
+      context: ./docker/openldap
+      dockerfile: Dockerfile
     environment:
       LDAP_ORGANISATION: "WirGarten Lüneburg"
       LDAP_DOMAIN: "lueneburg.wirgarten.com"
@@ -9,13 +11,15 @@ services:
       LDAP_READONLY_USER: "true"
     ports:
       - "389:389"
+      - "1000:1000"
+      - "5000:5000"
     volumes:
       - ./ldap_testdata.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-testdata.ldif
     # Required so that the container doesn't modify the testdata ldif
-    command: --copy-service
+    command: python3 /app/main.py && --copy-service
 
   web:
-    build: .
+    build: .    
     command: bash -c "poetry install &&
                       poetry run python manage.py compilemessages --ignore \".venv\" &&
                       poetry run python manage.py runserver_plus 0.0.0.0:80"
