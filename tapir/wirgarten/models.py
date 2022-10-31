@@ -8,6 +8,7 @@ from localflavor.generic.models import IBANField, BICField
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
+from tapir.log.models import UpdateModelLogEntry
 
 
 class PickupLocation(TapirModel):
@@ -183,7 +184,6 @@ class Payment(TapirModel):
     """
 
     class PaymentStatus(models.TextChoices):
-        UPCOMING = "UPCOMING", _("Bevorstehend")
         PAID = "PAID", _("Bezahlt")
         DUE = "DUE", _("Offen")
 
@@ -198,6 +198,7 @@ class Payment(TapirModel):
         null=False,
         default=PaymentStatus.DUE,
     )
+    edited = models.BooleanField(default=False, null=False)
 
     class Meta:
         constraints = [
@@ -232,3 +233,29 @@ class TaxRate(TapirModel):
     tax_rate = models.FloatField(null=False)
     valid_from = models.DateField(null=False, default=partial(datetime.date.today))
     valid_to = models.DateField(null=True)
+
+
+class EditFuturePaymentLogEntry(UpdateModelLogEntry):
+    """
+    This log entry is created whenever an admin manually changes the amount of a future payment.
+    """
+
+    comment = models.CharField(null=False, blank=False, max_length=256)
+
+    def populate(
+        self,
+        old_frozen=None,
+        new_frozen=None,
+        old_model=None,
+        new_model=None,
+        comment=None,
+        **kwargs
+    ):
+        super(EditFuturePaymentLogEntry, self).populate(
+            old_frozen=old_frozen,
+            new_frozen=new_frozen,
+            old_model=old_model,
+            new_model=new_model,
+        )
+        self.comment = comment
+        return self
