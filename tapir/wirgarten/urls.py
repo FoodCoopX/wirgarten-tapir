@@ -10,6 +10,7 @@ from tapir.wirgarten.views.member import (
     MemberDetailView,
     MemberPaymentsView,
     MemberDeliveriesView,
+    get_payment_amount_edit_form,
 )
 
 app_name = "wirgarten"
@@ -38,6 +39,11 @@ urlpatterns = [
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
     path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
+    path(
+        "payments/<int:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",
+        get_payment_amount_edit_form,
+        name="member_payments_edit",
+    ),
     path(
         "deliveries/<int:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
     ),

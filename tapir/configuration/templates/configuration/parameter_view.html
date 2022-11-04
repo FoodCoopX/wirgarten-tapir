@@ -6,26 +6,26 @@
 
 {% block content %}
 <div style="margin-top: 2em" class="container">
-    <div style="width: calc(100% - 24em); z-index:1200; margin-top: 60px; position: fixed; top: 0">
-        <div class="card">
-            <div class="card-header">
-                <div id="search-input" style="display:grid; grid-template-columns: 4fr 2fr">
-                    <div style="display: flex; flex-direction: row">
-                        <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
-                        <button class="btn tapir-btn btn-primary" type="submit">Save</button>
-                    </div>
-                    <div>
-                        <input type="text" class="form-control" placeholder="Search..."/>
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="width: calc(100% - 24em); z-index:1200; margin-top: 60px; position: fixed; top: 0">
+            <div class="card">
+                <div class="card-header">
+                    <div id="search-input" style="display:grid; grid-template-columns: 4fr 2fr">
+                        <div style="display: flex; flex-direction: row">
+                            <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
+                            <button class="btn tapir-btn btn-primary" type="submit">Save</button>
+                        </div>
+                        <div>
+                            <input type="text" class="form-control" placeholder="Search..."/>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="card" style="margin-top: 62px">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-
+        <div class="card" style="margin-top: 62px">
+            <div class="card-body">
                 {% for category in form.categories %}
                 <div class="parameter-category">
                     <h5>{% translate category %}</h5>
@@ -43,10 +43,9 @@
                 </div>
 
                 {% endfor %}
-
-            </form>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <script src="{% static 'configuration/js/search.js' %}"></script>

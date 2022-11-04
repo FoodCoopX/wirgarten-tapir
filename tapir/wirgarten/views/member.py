@@ -1,14 +1,20 @@
 import itertools
+from copy import copy
 from datetime import date
 from importlib.resources import _
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import generic
 from django_filters import FilterSet, CharFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.forms.member.forms import PaymentAmountEditForm
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -17,6 +23,7 @@ from tapir.wirgarten.models import (
     Deliveries,
     GrowingPeriod,
     MandateReference,
+    EditFuturePaymentLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 
@@ -35,10 +42,12 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
     ordering = ["date_joined"]
     permission_required = "coop.manage"
+    template_name = "wirgarten/member/member_filter.html"
 
 
 class MemberDetailView(generic.DetailView):
     model = Member
+    template_name = "wirgarten/member/member_detail.html"
 
     def get_context_data(self, object):
         context = super(MemberDetailView, self).get_context_data()
@@ -71,7 +80,9 @@ def get_due_day():
     return due_day
 
 
-def generate_future_payments(subs: list):
+def generate_future_payments(subs: list, prev_payments: list):
+    prev_payments = set(map(lambda p: (p["mandate_ref"], p["due_date"]), prev_payments))
+
     payments = []
     next_payment_date = get_next_payment_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
@@ -85,32 +96,55 @@ def generate_future_payments(subs: list):
 
             for mandate_ref, values in groups:
                 values = list(values)
+                due_date = next_payment_date.isoformat()
 
-                payments.append(
-                    {
-                        "due_date": next_payment_date.isoformat(),
-                        "mandate_ref": mandate_ref,
-                        "amount": round(
-                            sum(
-                                map(
-                                    lambda x: get_sub_total(x),
-                                    values,
-                                )
-                            ),
-                            2,
-                        ),
-                        "subs": active_subs,
-                        "status": Payment.PaymentStatus.UPCOMING,
-                    }
-                )
+                if (mandate_ref, due_date) not in prev_payments:
+                    amount = get_payment_amount_for_subs(values)
+
+                    payments.append(
+                        {
+                            "due_date": due_date,
+                            "mandate_ref": mandate_ref,
+                            "amount": amount,
+                            "calculated_amount": amount,
+                            "subs": active_subs,
+                            "status": Payment.PaymentStatus.DUE,
+                            "edited": False,
+                            "upcoming": True,
+                        }
+                    )
 
         next_payment_date += relativedelta(months=1)
 
     return payments
 
 
-def get_sub_total(sub):
-    return sub.quantity * float(sub.product.price) * (1 + sub.solidarity_price)
+def get_payment_amount_for_subs(subs: [Subscription]) -> float:
+    return round(
+        sum(
+            map(
+                lambda x: get_sub_total(x),
+                subs,
+            )
+        ),
+        2,
+    )
+
+
+def get_sub_total(position):
+    if type(position) == Subscription:
+        position = {
+            "quantity": position.quantity,
+            "product": {
+                "price": position.product.price,
+            },
+            "solidarity_price": position.solidarity_price,
+        }
+    return (
+        position["quantity"]
+        * float(position["product"]["price"])
+        * (1 + position.get("solidarity_price", 0.0))
+    )
 
 
 def get_subs_or_shares(mandate_ref: MandateReference, date: date):
@@ -138,23 +172,31 @@ def get_subs_or_shares(mandate_ref: MandateReference, date: date):
         return subs
 
 
-def get_previous_payments(member_id):
+def payment_to_dict(payment: Payment) -> dict:
+    subs = get_subs_or_shares(payment.mandate_ref, payment.due_date)
+    return {
+        "due_date": payment.due_date.isoformat(),
+        "mandate_ref": payment.mandate_ref,
+        "amount": float(round(payment.amount, 2)),
+        "calculated_amount": get_payment_amount_for_subs(subs),
+        "subs": subs,
+        "status": payment.status,
+        "edited": payment.edited,
+        "upcoming": (date.today() - payment.due_date).days < 0,
+    }
+
+
+def get_previous_payments(member_id) -> [dict]:
     return list(
         map(
-            lambda x: {
-                "due_date": x.due_date.isoformat(),
-                "mandate_ref": x.mandate_ref,
-                "amount": round(x.amount, 2),
-                "subs": get_subs_or_shares(x.mandate_ref, x.due_date),
-                "status": x.status,
-            },
+            lambda x: payment_to_dict(x),
             Payment.objects.filter(mandate_ref__member_id=member_id),
         )
     )
 
 
 class MemberPaymentsView(generic.TemplateView, generic.base.ContextMixin):
-    template_name = "wirgarten/member_payments.html"
+    template_name = "wirgarten/member/member_payments.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -162,13 +204,19 @@ class MemberPaymentsView(generic.TemplateView, generic.base.ContextMixin):
 
         subs = Subscription.objects.filter(member=member_id)
 
-        context["payments"] = sorted(
-            get_previous_payments(member_id) + generate_future_payments(subs),
-            key=lambda x: x["due_date"],
-        )
+        context["payments"] = self.get_payments_row(member_id, subs)
         context["member"] = Member.objects.get(pk=member_id)
 
         return context
+
+    def get_payments_row(self, member_id, subs):
+        prev_payments = get_previous_payments(member_id)
+        future_payments = generate_future_payments(subs, prev_payments)
+
+        return sorted(
+            prev_payments + future_payments,
+            key=lambda x: x["due_date"] + x["mandate_ref"].ref,
+        )
 
 
 def get_next_delivery_date():
@@ -221,7 +269,7 @@ def get_previous_deliveries(member: Member):
 
 
 class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
-    template_name = "wirgarten/member_deliveries.html"
+    template_name = "wirgarten/member/member_deliveries.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -249,3 +297,59 @@ def get_grouped_subscribtions_for_member(member: Member):
         subscriptions[product_type].append(sub)
 
     return subscriptions
+
+
+@transaction.atomic
+def get_payment_amount_edit_form(request, **kwargs):
+    if request.method == "POST":
+        form = PaymentAmountEditForm(request.POST, **kwargs)
+        if form.is_valid():
+            if not hasattr(form, "payment"):
+                new_payment = Payment.objects.create(
+                    due_date=form.payment_due_date,
+                    amount=form.data["amount"],
+                    mandate_ref_id=form.mandate_ref_id,
+                    edited=True,
+                )
+            else:
+                new_payment = copy(form.payment)
+                new_payment.amount = form.data["amount"]
+                new_payment.edited = True
+                new_payment.save()
+
+            create_payment_edit_logentry(form, kwargs, new_payment, request)
+
+            return HttpResponseRedirect(
+                reverse_lazy(
+                    "wirgarten:member_payments",
+                    kwargs={"pk": kwargs["member_id"]},
+                    current_app="wirgarten",
+                )
+            )
+
+    else:
+        form = PaymentAmountEditForm(None, **kwargs)
+        return render(
+            request, "wirgarten/member/member_payments_edit_form.html", {"form": form}
+        )
+
+
+def create_payment_edit_logentry(form, kwargs, new_payment, request):
+    member = Member.objects.get(pk=kwargs["member_id"])
+    comment = form.data["comment"]
+    if hasattr(form, "payment"):
+        EditFuturePaymentLogEntry().populate(
+            old_model=form.payment,
+            new_model=new_payment,
+            actor=request.user,
+            user=member,
+            comment=comment,
+        ).save()
+    else:
+        EditFuturePaymentLogEntry().populate(
+            old_frozen={},
+            new_model=new_payment,
+            actor=request.user,
+            user=member,
+            comment=comment,
+        ).save()
