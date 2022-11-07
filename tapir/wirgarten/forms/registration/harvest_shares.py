@@ -107,7 +107,7 @@ class HarvestShareForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        if is_separate_coop_shares_allowed():
+        if not is_separate_coop_shares_allowed():
             if not is_minimum_harvest_shares_reached(cleaned_data, self.products):
                 is_first: bool = True
                 for product_name in self.products.keys():
