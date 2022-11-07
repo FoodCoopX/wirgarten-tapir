@@ -1,0 +1,27 @@
+[
+  {
+    "model": "wirgarten.ProductCapacity",
+    "pk": "3GaqKvjm3y",
+    "fields": {
+      "product_type": "jW3l0EcsVM",
+      "period": "0tb7z5RrTL",
+      "capacity": 45000.0
+    }
+  },{
+    "model": "wirgarten.ProductCapacity",
+    "pk": "wkQZ5mEInp",
+    "fields": {
+      "product_type": "Wv0JEzFQFa",
+      "period": "0tb7z5RrTL",
+      "capacity": 8000.0
+    }
+  },{
+    "model": "wirgarten.ProductCapacity",
+    "pk": "iOrXOQTZxy",
+    "fields": {
+      "product_type": "iOrXOQTZxy",
+      "period": "0tb7z5RrTL",
+      "capacity": 3000.0
+    }
+  }
+]

@@ -336,7 +336,6 @@ class RegistrationWizardView(CookieWizardView):
             )
             initial["coop_shares"] = self.get_cleaned_data_for_step(STEP_COOP_SHARES)
 
-            # TODO: check if steps exists
             if is_harvest_shares_selected(
                 self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
             ):

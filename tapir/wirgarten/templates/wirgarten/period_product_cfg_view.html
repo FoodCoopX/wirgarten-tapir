@@ -1,0 +1,235 @@
+{% extends "core/base.html" %}
+
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load static %}
+{% load wirgarten %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'wirgarten/css/products.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container pt-3">
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate 'Produkt Konfiguration' %}</h4>
+        </div>
+
+        <div class="card-body" style="max-height:calc(100vh - 9em); overflow: auto">
+            <div style="display:grid; grid-template-columns: 5fr 2em 2fr; grid-template-rows: 0fr 0fr 0fr">
+                <div style="grid-column: 1/4;" class="card my-1">
+                    <div style="display: flex;flex-direction: row" class="card-header">
+                        <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}:</h5>
+                        <button onclick="getGrowingPeriodAddForm()"
+                                class="btn btn-outline-info material-icons mx-1 px-2"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal">
+                            add
+                        </button>
+                        <button onclick="getGrowingPeriodCopyForm()"
+                                class="need-growing-period btn btn-outline-warning material-icons mx-1 px-2"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                                disabled>
+                            folder_copy
+                        </button>
+                        <div style="width: 3em"></div>
+                        <button onclick="deleteGrowingPeriod()"
+                                class="need-growing-period btn btn-outline-danger material-icons mx-1 px-2"
+                                disabled>
+                            delete
+                        </button>
+                    </div>
+                    <div style="overflow: auto" class="card-body">
+                        <div id="list_growing_periods" class="list-group">
+                            {% for period in growing_periods %}
+                            <button style="display: flex" id="btn_period_{{period.id}}"
+                                    onclick="select_period('{{period.id}}', '{{ pe_pt_map }}')"
+                                    class="list-group-item list-group-item-action">
+                                <div style="display:grid; grid-template-columns: 4em 7em 3em 4em 1fr">
+                                    <p style="width: 100%; margin: auto; grid-column: 1/2">{% translate 'Start' %}:</p>
+                                    <strong style="width: 100%; margin: auto; grid-column: 2/3">{{ period|get_value:'start_date' }}</strong>
+                                    <p style="width: 100%; margin: auto; grid-column: 4/5">{% translate 'Ende' %}:</p>
+                                    <strong style="width: 100%; margin: auto; grid-column: 5/6">{{ period|get_value:'end_date' }} </strong>
+                                </div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div style="display: flex;flex-direction: row" class="card-header">
+                        <h5 style="margin: auto; width: 100%">{% translate 'Produkt Typen' %}:</h5>
+                        <button onclick="getProductTypeAddForm()"
+                                class="btn btn-outline-info material-icons mx-1 px-2"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal">
+                            add
+                        </button>
+                        <button onclick="getProductTypeEditForm()"
+                                class="need-product-type btn btn-outline-warning material-icons mx-1 px-2"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                                disabled>
+                            edit
+                        </button>
+                        <div style="width: 3em"></div>
+                        <button onclick="deleteProductType()"
+                                class="need-product-type btn btn-outline-danger material-icons mx-1 px-2" disabled>
+                            delete
+                        </button>
+                    </div>
+                    <div style="overflow: auto" class="card-body">
+                        <div id="list_product_types" class="list-group">
+                            {% for product_type in product_types %}
+                            <button style="display: none"
+                                    id="btn_prtype_{{product_type.id}}"
+                                    onclick="select_product_type('{{product_type.id}}', '{{ pt_p_map }}')"
+                                    class="list-group-item list-group-item-action">
+                                <div style="display: grid; grid-template-columns: 47% 13% 22% 18%">
+                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">{% translate product_type.name %}</strong>
+                                    {% if product_type.pickup_enabled %}
+                                    <div style="margin: auto; display: flex; flex-direction: row; grid-column: 2/3">
+                                        <div class="material-icons">shopping_bag</div>
+                                        <div class="material-icons" style="color: green">check</div>
+                                    </div>
+                                    {% else %}
+                                    <div style="margin: auto; display: flex; flex-direction: row; grid-column: 2/3">
+                                        <div class="material-icons">shopping_bag</div>
+                                        <div class="material-icons" style="color: red">close</div>
+                                    </div>
+                                    {% endif %}
+                                    <div style="margin: auto; display: flex; flex-direction: row; grid-column: 3/4">
+                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">price_change</div>
+                                        <p style="margin: auto">{{ capacity|get_value:product_type.id }} €</p>
+                                    </div>
+                                    <div style="margin: auto; display: flex; flex-direction: row; grid-column: 4/5">
+                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">account_balance</div>
+                                        <p style="margin: auto">{{ tax_rates|get_value:product_type.id }} %</p>
+                                    </div>
+                                </div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-icons" style="margin: auto">
+                    arrow_forward
+                </div>
+                <div class="card">
+                    <div style="display: flex;flex-direction: row" class="card-header">
+                        <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}:</h5>
+                        <button onclick="getProductAddForm()"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                                class="need-product-type btn btn-outline-info material-icons mx-1 px-2" disabled>add
+                        </button>
+                        <button onclick="getProductEditForm()"
+                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                                class="need-product btn btn-outline-warning material-icons mx-1 px-2" disabled>edit
+                        </button>
+                        <div style="width: 3em"></div>
+                        <button onclick="deleteProduct()" class="need-product btn btn-outline-danger material-icons mx-1 px-2" disabled>
+                            delete
+                        </button>
+                    </div>
+                    <div style="overflow: auto" class="card-body">
+                        <div id="list_product" class="list-group">
+                            {% for product in products %}
+                            <button style="display: none" id="btn_prod_{{product.id}}"
+                                    onclick="select_product('{{product.id}}')"
+                                    class="list-group-item list-group-item-action">
+                                <div style="display:grid; grid-template-columns: 60% 40%">
+                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">{% translate product.name %}</strong>
+                                    <p style="margin: auto; grid-column: 2/3">{{ product.price }} €</p>
+                                </div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div style="grid-column: 1/4;" class="card my-1">
+                    <div style="display: flex;flex-direction: row" class="card-header">
+                        <h5 style="margin: auto; width: 100%">{% translate 'Details' %}:</h5>
+                    </div>
+                    <div id="list_details_growing_periods">
+                        {% for period in growing_periods %}
+                        <div id="details_growing_period_{{period.id}}"
+                             style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr"
+                             class="card-body">
+                            <div style="padding-bottom: 1em; display: grid; grid-template-columns: 10em 10em 1fr">
+                                <div style="grid-column: 1/2">{% translate 'Anbauperiode' %}</div>
+                                <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>{{ period|get_value:'start_date' }}</strong></div>
+                                <div style="grid-column: 3/4">{% translate 'Bis' %}: <strong>{{ period|get_value:'end_date' }}</strong></div>
+                            </div>
+                            <div style="overflow: auto;" class="list_details_product_types">
+                                {% for product_type in product_types %}
+                                <div id="details_product_type_{{product_type.id}}{{period.id}}" style="display:none; grid-template-columns: 1fr 1fr">
+                                    <div>
+                                        <div style="grid-column: 1/2; display: grid;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
+                                            <p style="grid-area: 1/1/2/2">Product Type:</p>
+                                            <strong style="grid-area: 1/2/2/3">{{ product_type.name }}</strong>
+                                            <p style="grid-area: 2/1/3/2">Pickup enabled:</p>
+                                            {% if product_type.pickup_enabled %}
+                                            <strong style="grid-column: 2/2/3/3">YES</strong>
+                                            {% else %}
+                                            <strong style="grid-column: 2/2/3/3">NO</strong>
+                                            {% endif %}
+                                            <p style="grid-column: 3/2/4/3">Tax-Rate:</p>
+                                            <strong style="grid-column: 3/2/4/3">{{ tax_rates|get_value:product_type.id }} %</strong>
+                                        </div>
+                                    </div>
+                                    <div class="list_details_products" style="grid-column: 2/3; flex-direction: column">
+                                    {% for product in products %}
+                                        {% if product.type.id == product_type.id %}
+                                        <div id="details_product_{{product.id}}{{period.id}}" style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
+                                            <p style="grid-area: 1/1/2/2">Product:</p>
+                                            <strong style="grid-area: 1/2/2/3">{{ product.name }}</strong>
+                                            <p style="grid-column: 2/1/3/2">Price:</p>
+                                            <strong style="grid-column: 2/2/3/3">{{ product.price }}</strong>
+                                            <p style="grid-area: 3/1/4/2">is deleted:</p>
+                                            {% if product.deleted %}
+                                            <strong style="grid-column: 3/2/4/3">YES</strong>
+                                            {% else %}
+                                            <strong style="grid-column: 3/2/4/3">NO</strong>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<form id="modalForm" method="post" >
+    {% csrf_token %}
+    <div class="modal fade" id="productTypeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLabel">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div id="productModalContainer"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</form>
+<script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
+<script>
+    init('{{ pt_p_map | safe }}', '{{ pe_pt_map | safe }}');
+</script>
+
+{% endblock %}
