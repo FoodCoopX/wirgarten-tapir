@@ -74,6 +74,11 @@ def add_admin_links(groups):
         material_icon="attach_file",
         url=reverse_lazy("wirgarten:exported_files_list"),
     )
+    admin_group.add_link(
+        display_name=_("Lastschrift"),
+        material_icon="money",
+        url=reverse_lazy("wirgarten:payment_transactions"),
+    )
 
     members_group = SidebarLinkGroup(name=_("Mitglieder"))
     members_group.add_link(

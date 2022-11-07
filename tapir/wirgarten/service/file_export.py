@@ -52,7 +52,7 @@ def export_file(
     content: bytes,
     send_email: bool,
     to_email_custom: str | None = None,
-):
+) -> ExportedFile:
     """
     Exports binary data as a virtual file to the database. It can be automatically sent per email to the admin (or a custom email address) and it can be downloaded via UI later on.
 
@@ -67,3 +67,5 @@ def export_file(
 
     if send_email:
         __send_email(file, to_email_custom)
+
+    return file

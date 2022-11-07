@@ -255,7 +255,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.PAYMENT_CREDITOR_ID,
             label="Gläubiger-ID",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="TODO",
+            initial_value="DE98ZZZ00001996599",
             description="Die Gläubiger-ID der Genossenschaft.",
             category=ParameterCategory.PAYMENT,
             order_priority=800,

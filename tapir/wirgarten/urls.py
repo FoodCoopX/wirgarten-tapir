@@ -28,8 +28,10 @@ from tapir.wirgarten.views.member import (
     get_payment_amount_edit_form,
 )
 from tapir.wirgarten.views.product_cfg import ProductCfgView
+from tapir.wirgarten.views.payments import PaymentTransactionListView
 
 app_name = "wirgarten"
+
 
 urlpatterns = [
     path(
@@ -89,4 +91,5 @@ urlpatterns = [
     path(
         "deliveries/<int:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
     ),
+    path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
 ]
