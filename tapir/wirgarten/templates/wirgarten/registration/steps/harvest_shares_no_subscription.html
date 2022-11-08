@@ -1,7 +1,6 @@
 {% extends "wirgarten/registration/registration_wizard.html" %}
-
 {% load wirgarten %}
-
+{% load i18n %}
 {% block cardbody %}
 
 <div id="warning_no_harvest_shares">
@@ -9,14 +8,14 @@
     <!-- HARVEST SHARES: NO SUBSCRIPTION -->
     <div class="card summary-card-active">
         <div class="card-header">
-            <h5 class="card-title">Keine Ernteanteile zeichenbar</h5>
+            <h5 class="card-title">{% translate 'Keine Ernteanteile zeichenbar' %}</h5>
         </div>
         <div class="card-body">
-            <p>Leider sind im Moment keine Ernteanteile zeichenbar.</p>
-            <p>Der restliche Registrierungsprozess, sowie das erwerben von Genossenschaftsanteilen stehen ihnen weiterhin zur Verfügung.</p>
+            <p>Im Moment können keine weiteren Ernteanteile gezeichnet werden.</p>
+            <p>Gerne kannst du dich auf unsere Warteliste setzen lassen und wir informieren dich, sobald wieder freie Ernteanteile verfügbar sind.</p>
         </div>
         <div class="card-footer">
-            <p>Bei weiteren Fragen wenden sie sich bitte ann *BLANK*</p>
+            <p>Hier gehts zur <button class="btn btn-success mx-3" disabled>Warteliste</button></p>
         </div>
     </div>
 
