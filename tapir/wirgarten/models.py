@@ -9,6 +9,7 @@ from localflavor.generic.models import IBANField, BICField
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry
+from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 
 
 class PickupLocation(TapirModel):
@@ -53,8 +54,12 @@ class ProductType(TapirModel):
     """
 
     name = models.CharField(max_length=128, null=False, verbose_name=_("Produkt Name"))
-    pickup_enabled = models.BooleanField(
-        null=False, default=False, verbose_name=_("Pickup")
+    delivery_cycle = models.CharField(
+        max_length=16,
+        choices=DeliveryCycle,
+        null=False,
+        default=NO_DELIVERY,
+        verbose_name=_("Lieferzyklus"),
     )
 
 

@@ -19,7 +19,7 @@ def save_product_type(form: ProductTypeForm):
         # product
         pt = ProductType.objects.get(id=form["id"])
         pt.name = form["name"]
-        pt.pickup_enabled = form["pickup_enabled"]
+        pt.delivery_cycle = form["delivery_cycle"]
         print("\t[update] ProductType ", form["id"])
         pt.save()
     except ObjectDoesNotExist:
@@ -66,7 +66,7 @@ def create_product_type(form: ProductTypeForm, period_id):
     print("\t[create] ProductType ")
     pt = ProductType.objects.create(
         name=form["name"],
-        pickup_enabled=form["pickup_enabled"],
+        delivery_cycle=form["delivery_cycle"],
     )
     # tax rate
     TaxRate.objects.create(
