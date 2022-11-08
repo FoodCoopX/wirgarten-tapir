@@ -36,8 +36,6 @@ from tapir.wirgarten.models import (
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
 
-MANDATE_REF_ALPHABET = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
 STEP_COOP_SHARES = "Cooperative Shares"
@@ -220,7 +218,7 @@ def save_cooperative_shares(form_dict, member: Member, start_date):
         member=member,
         quantity=quantity,
         share_price=share_price,
-        entry_date=start_date,  # FIXME: entry_date must be the first day after the notice period!
+        entry_date=start_date,
         mandate_ref=mandate_ref,
     )
 
@@ -266,15 +264,6 @@ def save_mandate_ref(member: Member, coop_shares: bool):
     return MandateReference.objects.create(
         ref=ref, member=member, start_ts=datetime.now()
     )
-
-
-def generate_mandate_ref(member: Member, coop_shares: bool):
-    if coop_shares:
-        return (
-            f"""{str(member.id).zfill(10)}/{generate(MANDATE_REF_ALPHABET, 19)}/GENO"""
-        )
-    else:
-        return f"""{str(member.id).zfill(10)}/{generate(MANDATE_REF_ALPHABET, 24)}"""
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")

@@ -26,6 +26,11 @@ from tapir.wirgarten.models import (
     EditFuturePaymentLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.tasks import export_sepa_payments
+from tapir.wirgarten.service.products import (
+    get_subs_or_shares_for_mandate_ref,
+    get_total_price_for_subs,
+)
 
 
 class MemberFilter(FilterSet):
@@ -99,7 +104,7 @@ def generate_future_payments(subs: list, prev_payments: list):
                 due_date = next_payment_date.isoformat()
 
                 if (mandate_ref, due_date) not in prev_payments:
-                    amount = get_payment_amount_for_subs(values)
+                    amount = get_total_price_for_subs(values)
 
                     payments.append(
                         {
@@ -119,66 +124,13 @@ def generate_future_payments(subs: list, prev_payments: list):
     return payments
 
 
-def get_payment_amount_for_subs(subs: [Subscription]) -> float:
-    return round(
-        sum(
-            map(
-                lambda x: get_sub_total(x),
-                subs,
-            )
-        ),
-        2,
-    )
-
-
-def get_sub_total(position):
-    if type(position) == Subscription:
-        position = {
-            "quantity": position.quantity,
-            "product": {
-                "price": position.product.price,
-            },
-            "solidarity_price": position.solidarity_price,
-        }
-    return (
-        position["quantity"]
-        * float(position["product"]["price"])
-        * (1 + position.get("solidarity_price", 0.0))
-    )
-
-
-def get_subs_or_shares(mandate_ref: MandateReference, date: date):
-    subs = Subscription.objects.filter(
-        mandate_ref=mandate_ref,
-        start_date__lte=date,
-        end_date__gt=date,
-    )
-
-    if subs.count() == 0:
-        return list(
-            map(
-                lambda x: {
-                    "amount": round(x.share_price, 2),
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                },
-                ShareOwnership.objects.filter(mandate_ref=mandate_ref),
-            )
-        )
-    else:
-        return subs
-
-
 def payment_to_dict(payment: Payment) -> dict:
-    subs = get_subs_or_shares(payment.mandate_ref, payment.due_date)
+    subs = get_subs_or_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
     return {
         "due_date": payment.due_date.isoformat(),
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
-        "calculated_amount": get_payment_amount_for_subs(subs),
+        "calculated_amount": get_total_price_for_subs(subs),
         "subs": subs,
         "status": payment.status,
         "edited": payment.edited,
@@ -299,25 +251,11 @@ def get_grouped_subscribtions_for_member(member: Member):
     return subscriptions
 
 
-@transaction.atomic
 def get_payment_amount_edit_form(request, **kwargs):
     if request.method == "POST":
         form = PaymentAmountEditForm(request.POST, **kwargs)
         if form.is_valid():
-            if not hasattr(form, "payment"):
-                new_payment = Payment.objects.create(
-                    due_date=form.payment_due_date,
-                    amount=form.data["amount"],
-                    mandate_ref_id=form.mandate_ref_id,
-                    edited=True,
-                )
-            else:
-                new_payment = copy(form.payment)
-                new_payment.amount = form.data["amount"]
-                new_payment.edited = True
-                new_payment.save()
-
-            create_payment_edit_logentry(form, kwargs, new_payment, request)
+            save_payment(form, kwargs, request)
 
             return HttpResponseRedirect(
                 reverse_lazy(
@@ -332,6 +270,24 @@ def get_payment_amount_edit_form(request, **kwargs):
         return render(
             request, "wirgarten/member/member_payments_edit_form.html", {"form": form}
         )
+
+
+@transaction.atomic
+def save_payment(form, kwargs, request):
+    if not hasattr(form, "payment"):
+        new_payment = Payment.objects.create(
+            due_date=form.payment_due_date,
+            amount=form.data["amount"],
+            mandate_ref_id=form.mandate_ref_id,
+            edited=True,
+        )
+    else:
+        new_payment = copy(form.payment)
+        new_payment.amount = form.data["amount"]
+        new_payment.edited = True
+        new_payment.save()
+
+    create_payment_edit_logentry(form, kwargs, new_payment, request)
 
 
 def create_payment_edit_logentry(form, kwargs, new_payment, request):

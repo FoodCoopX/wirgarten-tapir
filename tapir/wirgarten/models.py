@@ -185,9 +185,22 @@ class ExportedFile(TapirModel):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
 
 
+class PaymentTransaction(TapirModel):
+    """
+    A payment transaction. This is usually created once a month by a task, when the payments are due.
+    The relevant payments must reference the transaction in the same step.
+    """
+
+    created_at = models.DateTimeField(
+        null=False, default=partial(datetime.datetime.now)
+    )
+    file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
+
+
 class Payment(TapirModel):
     """
-    A payment. Usually payments are created in DB when they are due.
+    A payment. Usually payments are created in DB when they are due, but also when the admin edits a future payment.
+    If the sepa_payments reference is set, the payment cannot be changed anymore, because it was exported for the bank already.
     """
 
     class PaymentStatus(models.TextChoices):
@@ -206,6 +219,9 @@ class Payment(TapirModel):
         default=PaymentStatus.DUE,
     )
     edited = models.BooleanField(default=False, null=False)
+    transaction = models.ForeignKey(
+        PaymentTransaction, on_delete=models.DO_NOTHING, null=True
+    )
 
     class Meta:
         constraints = [

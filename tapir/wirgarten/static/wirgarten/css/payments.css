@@ -1,0 +1,7 @@
+tr.active {
+    background-color: var(--primary);
+}
+
+tr.transaction-row{
+    cursor:pointer;
+}
