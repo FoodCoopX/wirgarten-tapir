@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import socket
+import requests
 
 import factory.random
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -214,3 +215,109 @@ class TapirFactoryTestBase(LdapEnabledTestCase):
         user = TapirUserFactory.create(is_in_member_office=False)
         self.login_as_user(user)
         return user
+
+
+from django.conf import settings
+
+"""
+class LdapBaseTestCase(TestCase):
+    databases = '__all__'
+    
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # basic setup. In the future this will be determined by the request itself.
+        # only proof of concept
+        requests.get('http://openldap:1000/start')
+        settings.DATABASES['ldap']['USER'] = 'cn=testadmin,dc=lueneburg,dc=wirgarten,dc=com'
+        settings.DATABASES['ldap']['PASSWORD'] = '7sYTyHOhEHrnOq8l6taa'
+        settings.DATABASES['ldap']['NAME'] = 'ldap://openldap:5000'
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        requests.get('http://openldap:1000/stop')
+
+    def setUp(self):
+        super().setUp()
+        from tapir.accounts.models import TapirUser, LdapPerson
+
+"""
+from django.test import TransactionTestCase
+from django.test.runner import DiscoverRunner
+from unittest.suite import TestSuite
+
+class UnitTestRunner(DiscoverRunner):
+
+    def setup_databases(self, **kwargs):
+        print("SETUP DATABASES")
+        ret = super().setup_databases(**kwargs)
+        if getattr(self, 's._tests', []):
+            requests.get('http://openldap:1000/start')
+            settings.DATABASES['ldap']['USER'] = 'cn=testadmin,dc=lueneburg,dc=wirgarten,dc=com'
+            settings.DATABASES['ldap']['PASSWORD'] = '7sYTyHOhEHrnOq8l6taa'
+            settings.DATABASES['ldap']['NAME'] = 'ldap://openldap:5000'
+            from tapir.accounts.models import LdapPerson
+            if admin := LdapPerson.objects.filter(uid='admin').first():
+                admin.change_password('admin')
+                admin.save()
+        return ret
+
+    def teardown_databases(self, old_config, **kwargs):
+        ret = super().teardown_databases(old_config, **kwargs)
+        if getattr(self, 'has_ldap_tests', False):
+            import time
+            time.sleep(2)
+            requests.get('http://openldap:1000/stop')
+        return ret
+    
+    def build_suite(self, *args, **kwargs):
+        suite = super().build_suite(*args, **kwargs)
+        self._tests = []
+        for t in suite._tests:
+            if not self.is_ldaptest(t):
+                continue
+            self._tests.append(t)
+        suite._tests = self._tests
+        return suite
+        
+    def is_ldaptest(self, test):
+        return issubclass(test.__class__, LdapBaseTestCase)
+
+
+"""
+class LdapBaseTestCase(TestCase):
+    databases = '__all__'
+    
+    def setUp(self):
+        super().setUp()
+        # basic setup. In the future this will be determined by the request itself.
+        # only proof of concept
+        requests.get('http://openldap:1000/start')
+        settings.DATABASES['ldap']['USER'] = 'cn=testadmin,dc=lueneburg,dc=wirgarten,dc=com'
+        settings.DATABASES['ldap']['PASSWORD'] = '7sYTyHOhEHrnOq8l6taa'
+        settings.DATABASES['ldap']['NAME'] = 'ldap://openldap:5000'
+
+    def tearDown(self):
+        super().tearDown()
+        requests.get('http://openldap:1000/stop')
+"""
+
+class LdapBaseTestCase(TestCase):
+    databases = '__all__'
+
+    '''
+    def tearDown(self):
+        super().tearDown()
+        from tapir.accounts.models import TapirUser, LdapPerson
+        print(LdapPerson.objects.all())
+        #LdapPerson.objects.all().delete()
+    '''
+
+    def setUp(self) -> None:
+        super().setUp()
+        from tapir.accounts.models import LdapPerson
+        LdapPerson.objects.exclude(uid='admin').delete()
+        
+    
+        

@@ -18,7 +18,14 @@ admin = {
         'uid': ['admin'],
     },
 }
-initial_data = {**people, **admin}
+member_office = {
+    'cn=member-office,ou=groups,dc=lueneburg,dc=wirgarten,dc=com': {
+        "objectClass": ['groupOfNames', 'top'],
+        'cn': 'member-office',
+        'member': 'uid=admin,ou=people,dc=lueneburg,dc=wirgarten,dc=com'
+    }
+}
+initial_data = {**people, **admin, **member_office}
 
 s = None
 
