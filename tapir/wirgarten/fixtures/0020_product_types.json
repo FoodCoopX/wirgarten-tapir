@@ -4,7 +4,7 @@
     "pk": "jW3l0EcsVM",
     "fields": {
       "name": "Ernteanteile",
-      "pickup_enabled": true
+      "delivery_cycle": "monthly"
     }
   },
   {
@@ -12,7 +12,7 @@
     "pk": "Wv0JEzFQFa",
     "fields": {
       "name": "Hühneranteile",
-      "pickup_enabled": true
+      "delivery_cycle": "odd_weeks"
     }
   },
   {
@@ -20,7 +20,7 @@
     "pk": "iOrXOQTZxy",
     "fields": {
       "name": "BestellCoop",
-      "pickup_enabled": false
+      "delivery_cycle": "no_delivery"
     }
   }
 ]

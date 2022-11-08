@@ -2,6 +2,7 @@ from importlib.resources import _
 
 from django import forms
 
+from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 from tapir.wirgarten.models import (
     ProductType,
     Product,
@@ -23,7 +24,7 @@ class ProductTypeForm(forms.Form):
         initial_id = "-"
         initial_period_id = "-"
         initial_name = ""
-        initial_pickup_enabled = False
+        initial_delivery_cycle = NO_DELIVERY
         initial_capacity = None
         initial_tax_rate = 0
 
@@ -48,7 +49,7 @@ class ProductTypeForm(forms.Form):
                 initial_capacity = 0
 
             initial_name = product_type.name
-            initial_pickup_enabled = product_type.pickup_enabled
+            initial_delivery_cycle = product_type.delivery_cycle
 
         self.fields["id"] = forms.CharField(
             initial=initial_id, widget=forms.HiddenInput()
@@ -62,8 +63,11 @@ class ProductTypeForm(forms.Form):
         self.fields["capacity"] = forms.FloatField(
             initial=initial_capacity, required=True, label=_("Produkt Kapazität (in €)")
         )
-        self.fields["pickup_enabled"] = forms.BooleanField(
-            initial=initial_pickup_enabled, required=False, label=_("Pickup")
+        self.fields["delivery_cycle"] = forms.ChoiceField(
+            initial=initial_delivery_cycle,
+            required=True,
+            label=_("Liefer-/Abholzyklus"),
+            choices=DeliveryCycle,
         )
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
