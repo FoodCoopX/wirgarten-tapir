@@ -1,7 +1,6 @@
 import itertools
 from copy import copy
 from datetime import date
-from importlib.resources import _
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -22,11 +21,9 @@ from tapir.wirgarten.models import (
     Payment,
     Deliveries,
     GrowingPeriod,
-    MandateReference,
     EditFuturePaymentLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.tasks import export_sepa_payments
 from tapir.wirgarten.service.products import (
     get_subs_or_shares_for_mandate_ref,
     get_total_price_for_subs,

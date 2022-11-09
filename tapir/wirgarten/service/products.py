@@ -1,7 +1,12 @@
 from datetime import date
 from importlib.resources import _
 
-from tapir.wirgarten.models import Subscription, ShareOwnership, MandateReference
+from tapir.wirgarten.models import (
+    Subscription,
+    ShareOwnership,
+    MandateReference,
+    ProductCapacity,
+)
 
 
 def get_total_price_for_subs(subs: [Subscription]) -> float:
@@ -75,3 +80,9 @@ def get_subs_or_shares_for_mandate_ref(
         )
     else:
         return subs
+
+
+def get_active_product_types(reference_date: date = date.today()):
+    return ProductCapacity.objects.filter(
+        period__start_date__lte=reference_date, period__end_date__gte=reference_date
+    ).values("product_type__id")

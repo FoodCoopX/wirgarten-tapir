@@ -44,26 +44,19 @@ def parameter_definition(
     options: [tuple] = None,
     order_priority: int = -1,
 ):
-    try:
-        if type(initial_value) == str:
-            assert datatype == TapirParameterDatatype.STRING
-        elif type(initial_value) == int:
-            assert datatype == TapirParameterDatatype.INTEGER
-        elif type(initial_value) == float:
-            assert datatype == TapirParameterDatatype.DECIMAL
-        elif type(initial_value) == bool:
-            assert datatype == TapirParameterDatatype.BOOLEAN
-    except AssertionError:
-        raise TypeError(
-            "Parameter '{key}' is defined with datatype '{datatype}', \
-            but the initial value is of type '{actual_type}': {value}".format(
-                key=key,
-                datatype=datatype,
-                value=initial_value,
-                actual_type=type(initial_value),
-            )
-        )
+    __validate_initial_value(datatype, initial_value, key)
 
+    param = __create_or_update_parameter(
+        category, datatype, description, initial_value, key, label, order_priority
+    )
+
+    param.options = options
+    cache.parameters[param.key] = param
+
+
+def __create_or_update_parameter(
+    category, datatype, description, initial_value, key, label, order_priority
+):
     try:
         param = TapirParameter.objects.get(pk=key)
         param.label = label
@@ -90,6 +83,26 @@ def parameter_definition(
             datatype=datatype.value,
             value=str(initial_value),
         )
+    return param
 
-    param.options = options
-    cache.parameters[param.key] = param
+
+def __validate_initial_value(datatype, initial_value, key):
+    try:
+        if type(initial_value) == str:
+            assert datatype == TapirParameterDatatype.STRING
+        elif type(initial_value) == int:
+            assert datatype == TapirParameterDatatype.INTEGER
+        elif type(initial_value) == float:
+            assert datatype == TapirParameterDatatype.DECIMAL
+        elif type(initial_value) == bool:
+            assert datatype == TapirParameterDatatype.BOOLEAN
+    except AssertionError:
+        raise TypeError(
+            "Parameter '{key}' is defined with datatype '{datatype}', \
+            but the initial value is of type '{actual_type}': {value}".format(
+                key=key,
+                datatype=datatype,
+                value=initial_value,
+                actual_type=type(initial_value),
+            )
+        )
