@@ -63,6 +63,19 @@ class ProductType(TapirModel):
     )
 
 
+class PickupLocationCapability(TapirModel):
+    """
+    The availability of a product at a certain pickup location.
+    """
+
+    product_type = models.ForeignKey(
+        ProductType, null=False, on_delete=models.DO_NOTHING
+    )
+    pickup_location = models.ForeignKey(
+        PickupLocation, null=False, on_delete=models.DO_NOTHING
+    )
+
+
 class DeliveryExceptionPeriod(TapirModel):
     """
     Defines a period in which no delivery of a certain product takes place.

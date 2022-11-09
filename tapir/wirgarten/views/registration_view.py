@@ -315,6 +315,17 @@ class RegistrationWizardView(CookieWizardView):
                 data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
                 for key, val in data.items():
                     initial[key] = val
+        elif step == STEP_PICKUP_LOCATION:
+            # TODO: has to be implemented with product_type.id not name when the wizard generically handles all products
+            initial["product_types"] = []
+            if is_harvest_shares_selected(
+                self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
+            ):
+                initial["product_types"].append("Ernteanteile")
+            if is_chicken_shares_selected(
+                self.get_cleaned_data_for_step(STEP_ADDITIONAL_SHARES)
+            ):
+                initial["product_types"].append("Hühneranteile")
         elif step == STEP_SUMMARY:
             initial["general"] = {
                 "start_date": self.start_date,
@@ -369,5 +380,12 @@ class RegistrationWizardConfirmView(generic.TemplateView):
 def is_harvest_shares_selected(harvest_share_form_data):
     for key, val in harvest_share_form_data.items():
         if key.startswith("harvest_shares_") and val > 0:
+            return True
+    return False
+
+
+def is_chicken_shares_selected(chicken_share_form_data):
+    for key, val in chicken_share_form_data.items():
+        if key.startswith("chicken_shares_") and val > 0:
             return True
     return False
