@@ -1,5 +1,5 @@
 var initMap = coords => {
-    const pickupLocationSelect = document.getElementById('id_Pickup Location-pickup_location');
+    const pickupLocationSelect = document.getElementById('id_pickup_location');
 
     const markers = {};
     const idToCoords = (id) => coords[id].split(',')

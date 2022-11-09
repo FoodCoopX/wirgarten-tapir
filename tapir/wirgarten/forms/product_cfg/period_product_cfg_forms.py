@@ -9,6 +9,8 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     GrowingPeriod,
     TaxRate,
+    PickupLocation,
+    PickupLocationCapability,
 )
 from tapir.utils.forms import DateInput
 
@@ -27,6 +29,7 @@ class ProductTypeForm(forms.Form):
         initial_delivery_cycle = NO_DELIVERY
         initial_capacity = None
         initial_tax_rate = 0
+        product_type = None
 
         if KW_PROD_TYPE_ID in kwargs and KW_PERIOD_ID in kwargs:
             initial_id = kwargs[KW_PROD_TYPE_ID]
@@ -69,6 +72,15 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
+        for location in PickupLocation.objects.all():
+            initial_value = None
+            if product_type is not None:
+                initial_value = PickupLocationCapability.objects.filter(
+                    pickup_location=location, product_type=product_type
+                ).exists()
+            self.fields["plc_" + location.id] = forms.BooleanField(
+                label=location.name, required=False, initial=initial_value
+            )
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
             required=True,
