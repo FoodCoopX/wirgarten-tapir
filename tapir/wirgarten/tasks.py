@@ -1,5 +1,4 @@
 import itertools
-from copy import copy
 from datetime import datetime
 
 from celery import shared_task
@@ -13,11 +12,16 @@ from tapir.wirgarten.models import (
     Subscription,
     ProductType,
     PaymentTransaction,
+    Product,
+    PickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
 from tapir.wirgarten.service.payment import is_mandate_ref_for_coop_shares
-from tapir.wirgarten.service.products import get_total_price_for_sub_or_share_ownership
+from tapir.wirgarten.service.products import (
+    get_total_price_for_sub_or_share_ownership,
+    get_active_product_types,
+)
 
 
 @shared_task
@@ -30,46 +34,61 @@ def export_pick_list_csv():
     KEY_QUANTITY = "Anzahl"
     KEY_VARIANT = "Variante"
     KEY_PICKUPLOCATION = "Abholort"
-    KEY_STREET = "Straße"
-    KEY_CITY = "Ort"
 
-    sums = (
-        Subscription.objects.filter(product__type__pickup_enabled=True)
+    pickup_locations = {v.id: v for v in PickupLocation.objects.all()}
+
+    product_types = {
+        v.id: v
+        for v in ProductType.objects.filter(
+            name__in=get_parameter_value(Parameter.PICK_LIST_PRODUCT_TYPES).split(","),
+            id__in=get_active_product_types(),
+        )
+    }
+
+    products = {v.id: v for v in Product.objects.filter(type__in=product_types.keys())}
+
+    subs = {}
+
+    for s in (
+        Subscription.objects.filter(product__type__in=product_types.keys())
         .values(
-            "member__pickup_location__name",
-            "member__pickup_location__street",
-            "member__pickup_location__postcode",
-            "member__pickup_location__city",
-            "product__type__name",
-            "product__name",
+            "member__pickup_location__id",
+            "product__type__id",
+            "product__id",
         )
         .annotate(quantity_sum=Sum("quantity"))
-        .order_by(
-            "member__pickup_location__name", "product__type__name", "product__name"
+        .order_by("member__pickup_location__id", "product__type__id", "product__id")
+    ):
+        subs[s["member__pickup_location__id"]] = subs.get(
+            s["member__pickup_location__id"], {}
         )
-    )
+        subs[s["member__pickup_location__id"]][s["product__type__id"]] = subs[
+            s["member__pickup_location__id"]
+        ].get("product__type__id", {})
+        subs[s["member__pickup_location__id"]][s["product__type__id"]][
+            s["product__id"]
+        ] = s["quantity_sum"]
 
     output, writer = begin_csv_string(
         [
             KEY_PICKUPLOCATION,
-            KEY_STREET,
-            KEY_CITY,
             KEY_PRODUCT,
             KEY_VARIANT,
             KEY_QUANTITY,
         ]
     )
-    for row in sums:
-        writer.writerow(
-            {
-                KEY_PICKUPLOCATION: row["member__pickup_location__name"],
-                KEY_STREET: row["member__pickup_location__street"],
-                KEY_CITY: f"""{row["member__pickup_location__postcode"]} {row["member__pickup_location__city"]}""",
-                KEY_PRODUCT: row["product__type__name"],
-                KEY_VARIANT: row["product__name"],
-                KEY_QUANTITY: row["quantity_sum"],
-            }
-        )
+
+    for pl_id, pl in pickup_locations.items():
+        for pt_id, pt in product_types.items():
+            for p_id, p in products.items():
+                writer.writerow(
+                    {
+                        KEY_PICKUPLOCATION: pl.name,
+                        KEY_PRODUCT: pt.name,
+                        KEY_VARIANT: p.name,
+                        KEY_QUANTITY: subs.get(pl_id, {}).get(pt_id, {}).get(p_id, 0),
+                    }
+                )
 
     export_file(
         filename="Kommissionierliste",
@@ -79,7 +98,6 @@ def export_pick_list_csv():
     )
 
 
-@shared_task
 def export_supplier_list_csv():
     """
     Sums the quantity of product variants exports a list as CSV per product type.

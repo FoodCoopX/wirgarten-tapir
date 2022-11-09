@@ -44,12 +44,13 @@ class Parameter:
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
-    BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"
+    BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"  # FIXME: this is obsolete and should be retrieved by the product
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     HARVEST_SHARES_SUBSCRIBABLE = f"{PREFIX}.harvest.harvest_shares_subscribable"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
+    PICK_LIST_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
     PAYMENT_IBAN = f"{PREFIX}.payment.iban"
     PAYMENT_BIC = f"{PREFIX}.payment.bic"
@@ -197,7 +198,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.SUPPLIER_LIST_PRODUCT_TYPES,
-            label="Produkte für Lieferentenlisten",
+            label="Produkte für Lieferantenlisten",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Hühneranteile",
             description="Komma-separierte Liste der Zusatzabos für die eine Lieferantenliste erzeugt werden soll.",
@@ -210,6 +211,15 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit den Lieferantenlisten an den Admin versandt.",
+            category=ParameterCategory.SUPPLIER_LIST,
+        )
+
+        parameter_definition(
+            key=Parameter.PICK_LIST_PRODUCT_TYPES,
+            label="Produkte für Kommisionierliste",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ernteanteile",
+            description="Komma-separierte Liste der Zusatzabos für die eine Kommissionierliste erzeugt werden soll.",
             category=ParameterCategory.SUPPLIER_LIST,
         )
 
