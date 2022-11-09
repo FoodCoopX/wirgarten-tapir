@@ -41,7 +41,7 @@ def get_solidarity_total() -> float:
             )
         )
 
-        return solidarity_total["total"]
+        return solidarity_total.get("total", 0.0) or 0.0
 
 
 def is_separate_coop_shares_allowed() -> bool:
