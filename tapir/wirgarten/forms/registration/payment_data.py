@@ -1,4 +1,4 @@
-from importlib.resources import _
+from django.utils.translation import gettext_lazy as _
 
 from django import forms
 from localflavor.exceptions import ValidationError
@@ -35,7 +35,6 @@ class PaymentDataForm(forms.Form):
             return
 
         if field_name in ["account_owner", "iban", "bic"]:
-            print(self.instance)
             return getattr(self.instance, field_name)
         else:
             return super().get_initial_for_field(field, field_name)

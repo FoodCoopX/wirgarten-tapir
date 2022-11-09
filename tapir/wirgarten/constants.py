@@ -1,3 +1,5 @@
+import inspect
+
 from django.utils.translation import gettext_lazy as _
 
 DeliveryCycle = [
@@ -16,6 +18,26 @@ class ProductTypes:
 
 
 class Permission:
+    permission_strings = False
+
+    @staticmethod
+    def all() -> [str]:
+        if not Permission.permission_strings:
+            perms = []
+            internal_classes = [
+                member[1]
+                for member in inspect.getmembers(Permission)
+                if inspect.isclass(member[1])
+            ]
+            for clazz in internal_classes:
+                for field in filter(lambda x: not x.startswith("_"), dir(clazz)):
+                    perm = getattr(clazz, field)
+                    if type(perm) is str:
+                        perms.append(perm)
+
+            Permission.permission_strings = perms
+        return Permission.permission_strings
+
     class Coop:
         VIEW = "coop.view"
         MANAGE = "coop.manage"

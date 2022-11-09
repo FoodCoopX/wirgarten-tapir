@@ -19,16 +19,22 @@
 
         {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning %}
 
+        {% if email_change_request %}
+        <div id="email-change-verify" class="alert alert-success">
+            <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
+            <p>Wir haben dir eine Mail geschickt an <strong>{{email_change_request.new_email}}</strong>.<br/>
+                Bitte klicke den Link um deine Änderung wirksam zu machen.</p>
+        </div>
+        {% endif %}
+
         <div id="member-personal-data" class="card" style="margin-bottom:1em">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Persönliche Daten" %}
-                {% if perms.accounts.manage %}
                 <button class="btn tapir-btn btn-outline-primary"
                         onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
                         id="tapir_user_edit_button">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
-                {% endif %}
             </h5>
             <div class="card-body">
                 <div class="row m-1">
@@ -37,7 +43,15 @@
                 </div>
                 <div class="row m-1">
                     <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                    {% if email_change_request %}
+                    <div class="col-8" id="tapir_user_changed_email">
+                        <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span><br/>
+                        <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
+                                class="badge bg-danger">Nicht verifiziert</span></span>
+                    </div>
+                    {% else %}
                     <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+                    {% endif %}
                 </div>
                 <div class="row m-1">
                     <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
@@ -70,14 +84,13 @@
                     </div>
                 </div>
 
-                <div class="d-flex m-1 mt-4">
-                    <div class="d-flex justify-content-end gap-2">
-                        {% if object.pk == request.user.pk %}
-                        <a class="btn tapir-btn btn-outline-info ms-1" href="{% url 'password_change' %}"><span
+                {% if object.pk == request.user.pk %}
+                <div>
+                        <hr/>
+                        <a style="float: right" class="btn tapir-btn btn-outline-primary ms-1" href="{% url 'password_change' %}"><span
                                 class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-                        {% endif %}
-                    </div>
                 </div>
+                {% endif %}
             </div>
 
         </div>
@@ -123,7 +136,8 @@
                             <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span><br/>
                             <div style="margin-top:0.5em; line-height:1.1em">
                                 {% for sub in val %}
-                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A" {% endif %}>
+                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A"
+                                      {% endif %}>
                                     <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                 ({% if sub.solidarity_price > 0%}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
@@ -193,12 +207,10 @@
         <div id="member-pickup-location" class="card">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Abholung" %}
-                {% if perms.accounts.manage %}
                 <button class="btn tapir-btn btn-outline-primary"
                         onclick="FormModal.load('{% url 'wirgarten:member_pickup_location_choice' object.pk %}', 'Abholort ändern')">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
-                {% endif %}
             </h5>
             <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr;">
                 <div style="overflow-y: scroll; max-height: 30em; margin-right:1em;">
@@ -231,12 +243,10 @@
             <div id="member-payment-data" class="card">
                 <h5 class="card-header d-flex justify-content-between align-items-center">
                     {% translate "Bankverbindung" %}
-                    {% if perms.accounts.manage %}
                     <button class="btn tapir-btn btn-outline-primary"
                             onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
                         <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                     </button>
-                    {% endif %}
                 </h5>
                 <div class="card-body">
                     <div class="row m-1">
@@ -303,6 +313,10 @@
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
     {% endif %}
+
+
+
+
 </script>
 
 {% endblock %}

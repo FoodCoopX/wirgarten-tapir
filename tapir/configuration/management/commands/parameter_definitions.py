@@ -9,8 +9,8 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
-        print("Importing parameter definitions:")
+        self.stdout.write("Importing parameter definitions:")
 
         for cls in TapirParameterDefinitionImporter.__subclasses__():
-            print(" - " + cls.__module__ + "." + cls.__name__)
+            self.stdout.write(" - " + cls.__module__ + "." + cls.__name__)
             cls.import_definitions(cls)

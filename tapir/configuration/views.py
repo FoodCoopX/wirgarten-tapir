@@ -9,7 +9,7 @@ from tapir.configuration.models import TapirParameter
 
 class ParameterView(PermissionRequiredMixin, generic.FormView):
     template_name = "configuration/parameter_view.html"
-    permission_required = "coop.admin"
+    permission_required = "coop.manage"
     form_class = ParameterForm
 
     def get_success_url(self, **kwargs):

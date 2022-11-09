@@ -1,5 +1,5 @@
 from datetime import date
-from importlib.resources import _
+from django.utils.translation import gettext_lazy as _
 
 from django import forms
 from django.db import transaction
@@ -82,7 +82,6 @@ class HarvestShareForm(forms.Form):
             ): p
             for p in harvest_share_products
         }
-
         self.field_order = list(self.products.keys()) + ["solidarity_price"]
         self.n_columns = len(self.products)
         self.colspans = {"solidarity_price": self.n_columns}
@@ -94,7 +93,6 @@ class HarvestShareForm(forms.Form):
                 ",", "."
             )
         )
-
         for prod in harvest_share_products:
             self.fields[
                 f"{HARVEST_SHARE_FIELD_PREFIX}{prod.name.lower()}"

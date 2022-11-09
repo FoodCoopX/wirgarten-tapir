@@ -1,5 +1,5 @@
-from datetime import datetime
-from importlib.resources import _
+from datetime import datetime, timezone
+from django.utils.translation import gettext_lazy as _
 
 from django.core.validators import (
     EmailValidator,
@@ -17,6 +17,7 @@ from django.forms import (
     IntegerField,
 )
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField, DateInput
 from tapir.wirgarten.models import Payment, Member, ShareOwnership
@@ -54,6 +55,27 @@ class PersonalDataForm(ModelForm):
         widgets = {"birthdate": DateInput()}
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
+
+    def is_valid(self):
+        # this is kind of problematic: in the registration wizard the form field key contains the step name
+        # FIXME: cleanup and constans for keys!!
+        email = (
+            self.data["Personal Details-email"]
+            if "Personal Details-email" in self.data
+            else self.data["email"]
+        )
+
+        duplicate_email_query = Member.objects.filter(email=email)
+        if self.instance and self.instance.id:
+            duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
+
+        if duplicate_email_query.exists():
+            self.add_error(
+                "email", _("Ein Nutzer mit dieser Email Adresse existiert bereits.")
+            )
+            return False
+
+        return super().is_valid()
 
 
 class PaymentAmountEditForm(Form):
@@ -247,7 +269,7 @@ class TrialCancellationForm(Form):
                 if value
             ]
         )
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
         for sub in subs_to_cancel:
             sub.cancellation_ts = now
             sub.end_date = self.next_trial_end_date

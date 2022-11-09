@@ -1,5 +1,4 @@
-from importlib.resources import _
-
+from django.utils.translation import gettext_lazy as _
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
@@ -7,15 +6,6 @@ from django.core.validators import (
     URLValidator,
 )
 from localflavor.generic.validators import IBANValidator, BICValidator
-
-from tapir.configuration.models import (
-    TapirParameterDatatype,
-    TapirParameterDefinitionImporter,
-)
-from tapir.configuration.parameter import parameter_definition, ParameterMeta
-from tapir.wirgarten.constants import ProductTypes
-from tapir.wirgarten.models import ProductType
-from tapir.wirgarten.validators import validate_format_string, validate_html
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -102,8 +92,19 @@ class Parameter:
     )
 
 
+from tapir.configuration.models import (
+    TapirParameterDatatype,
+    TapirParameterDefinitionImporter,
+)
+
+
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
+        from tapir.configuration.parameter import parameter_definition, ParameterMeta
+        from tapir.wirgarten.constants import ProductTypes
+        from tapir.wirgarten.models import ProductType
+        from tapir.wirgarten.validators import validate_format_string, validate_html
+
         parameter_definition(
             key=Parameter.SITE_NAME,
             label="Standort Name",

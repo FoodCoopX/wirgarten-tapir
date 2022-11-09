@@ -15,10 +15,12 @@
         <div class="card-header" style="display: flex; flex-direction:row;">
             <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
 
+            {% if perms.coop.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
             <div style="width: 3em"></div>
             {% include 'wirgarten/generic/action-button.html' with onclick='handleDelete()' id='delete-location' title='Abholort löschen' disabled=True type='danger' icon='delete'%}
+            {% endif %}
         </div>
         <div class="card-body"
              style="height: calc(100vh - 9em); display:grid; grid-gap: 1em; grid-template-columns: 2fr 1fr">

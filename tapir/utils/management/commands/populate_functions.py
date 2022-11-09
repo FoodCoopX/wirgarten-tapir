@@ -2,22 +2,23 @@ import json
 import os
 import pathlib
 import random
+
+from django.db import transaction
+
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
-from tapir.accounts.models import TapirUser
+
+from tapir.accounts.models import TapirUser, EmailChangeRequest
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
     ShareOwnership,
-    Subscription,
     Product,
     ProductType,
     GrowingPeriod,
     MandateReference,
     Payment,
-    PickupLocation,
 )
 from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
@@ -25,7 +26,6 @@ from tapir.utils.models import copy_user_info
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.delivery import get_active_pickup_locations
 from tapir.wirgarten.service.member import (
-    create_member,
     buy_cooperative_shares,
     get_or_create_mandate_ref,
     get_next_contract_start_date,
@@ -43,10 +43,10 @@ def get_test_users():
     return json.loads(json_string)["results"]
 
 
-USER_COUNT = 200
+USER_COUNT = 50
 
 
-@transaction.atomic
+# @transaction.atomic
 def populate_users():
     # Users generated with https://randomuser.me
     print(f"Creating {USER_COUNT} users, this may take a while")
@@ -58,32 +58,35 @@ def populate_users():
             print(str(index + 1) + f"/{USER_COUNT}")
         json_user = JsonUser(parsed_user)
 
-        is_superuser = False
         if json_user.get_username() == "roberto.cortes":
-            is_superuser = True
+            wirgarten_user = TapirUser(is_superuser=True, is_staff=True)
+            copy_user_info(json_user, wirgarten_user)
+            wirgarten_user.save(initial_password="roberto.cortes")
+        else:
+            pickup_locations = get_active_pickup_locations()
+            wirgarten_user = Member(
+                # username=json_user.get_username(),
+                is_staff=False,
+                is_active=True,
+                date_joined=json_user.date_joined,
+                password=json_user.get_username(),
+                is_superuser=False,
+                iban="DE02100500000054540402",
+                bic="BELADEBE",
+                account_owner=json_user.get_full_name(),
+                sepa_consent=json_user.date_joined,
+                privacy_consent=json_user.date_joined,
+                withdrawal_consent=json_user.date_joined,
+                pickup_location=pickup_locations[
+                    random.randint(0, len(pickup_locations) - 1)
+                ],
+            )
+            copy_user_info(json_user, wirgarten_user)
+            wirgarten_user.save()
 
-        pickup_locations = get_active_pickup_locations()
-        wirgarten_user = Member(
-            username=json_user.get_username(),
-            is_staff=False,
-            is_active=True,
-            date_joined=json_user.date_joined,
-            password=json_user.get_username(),
-            is_superuser=is_superuser,
-            iban="DE02100500000054540402",
-            bic="BELADEBE",
-            account_owner=json_user.get_full_name(),
-            sepa_consent=json_user.date_joined,
-            privacy_consent=json_user.date_joined,
-            withdrawal_consent=json_user.date_joined,
-            pickup_location=pickup_locations[
-                random.randint(0, len(pickup_locations) - 1)
-            ],
-        )
-        copy_user_info(json_user, wirgarten_user)
-        wirgarten_user = create_member(wirgarten_user)
-        min_shares = create_subscriptions(wirgarten_user)
-        create_shareownership(wirgarten_user, min_shares)
+            min_shares = create_subscriptions(wirgarten_user)
+            create_shareownership(wirgarten_user, min_shares)
+
     print("Created Wirgarten test users")
 
 
@@ -103,7 +106,7 @@ def create_subscriptions(wirgarten_user):
     growing_period = GrowingPeriod.objects.get(
         start_date__lte=today, end_date__gte=today
     )
-    mandate_ref = get_or_create_mandate_ref(wirgarten_user.tapiruser_ptr_id, False)
+    mandate_ref = get_or_create_mandate_ref(wirgarten_user, False)
     start_date = get_next_contract_start_date(today)
     end_date = growing_period.end_date
 
@@ -152,7 +155,7 @@ def create_subscriptions(wirgarten_user):
 
         product = Product.objects.get(type=product_type, name=product_name)
         Subscription.objects.create(
-            member_id=wirgarten_user.tapiruser_ptr_id,
+            member=wirgarten_user,
             product=product,
             period=growing_period,
             quantity=quantity_int,
@@ -171,7 +174,9 @@ def clear_data():
     ShareOwnership.objects.all().delete()
     Payment.objects.all().delete()
     MandateReference.objects.all().delete()
+    EmailChangeRequest.objects.all().delete()
     Member.objects.all().delete()
+    TapirUser.objects.all().delete()
     print("Done")
 
 

@@ -1,8 +1,9 @@
 import csv
-from importlib.resources import _
+from django.utils.translation import gettext_lazy as _
 
 from django.core.mail import EmailMultiAlternatives
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.parameters import Parameter
@@ -32,7 +33,7 @@ def __send_email(file: ExportedFile, recipient: str | None = None):
             "Hallo Admin,<br/><br/>im Anhang findest du die aktuelle {filename}.<br/><br/><br/>(Automatisch von Tapir versendet)"
         ).format(filename=filename),
         to=recipient,
-        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+        from_email=settings.EMAIL_HOST_SENDER,
     )
     email.content_subtype = "html"
     email.attach(filename, file.file)

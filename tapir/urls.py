@@ -18,12 +18,20 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django.views import generic
 
 from tapir.settings import ENABLE_SILK_PROFILING
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 
+handler403 = "tapir.wirgarten.views.default_redirect.handle_403"
+
 urlpatterns = [
-    path("", wirgarten_redirect_view),
+    path("", wirgarten_redirect_view, name="index"),
+    path(
+        "login",
+        generic.TemplateView.as_view(template_name="accounts/keycloak.html"),
+        name="login",
+    ),
     path("admin/", admin.site.urls),
     path("accounts/", include("tapir.accounts.urls")),
     path("log/", include("tapir.log.urls")),

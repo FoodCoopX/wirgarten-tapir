@@ -4,10 +4,24 @@
 <div id="cancellation-confirmation" style="display:none" class="alert alert-success">
     <h4 class="alert-heading">Kündigung eingegangen</h4>
     <p>Deine Kündigung des Ernteanteils, sowie ggf. etwaiger Zusatzabos und der Mitgliedschaft in der BestellCoop zum
-        <strong>{% if contract_end_date %}{{contract_end_date}}{% else %}{{next_trial_end_date|format_date}}{% endif %}</strong> ist eingangen und hiermit bestätigt.</p>
+        <strong>{% if contract_end_date %}{{contract_end_date}}{% else %}{{next_trial_end_date|format_date}}{% endif %}</strong> ist eingangen und hiermit bestätigt.
+    </p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar</button>
+        <button type="button" class="btn btn-primary"
+                onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar
+        </button>
+    </div>
+</div>
+
+<div id="email-changed-confirmation" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading">Deine Email Adresse wurde geändert</h4>
+    <p>Wir kontaktieren dich jetzt nur noch über <strong>{{object.email}}</strong></p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary"
+                onclick="document.getElementById('email-changed-confirmation').style.display='none'">Alles klar
+        </button>
     </div>
 </div>
 
@@ -97,10 +111,15 @@
 
 <script>
     const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
+    const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
     const params = Tapir.getUrlParams();
     if(params.cancelled && cancellationConfirmationElem){
         cancellationConfirmationElem.style.display = 'block';
     }
+    if(params.email_changed) {
+        emailChangedConfirmationElem.style.display = 'block';
+    }
+
     Tapir.replaceUrlParams({})
 
     const handleCancellation = () => {
@@ -121,4 +140,5 @@
     const handleRenewChangeConditions = () => {
         alert("NOT YET IMPLEMENTED")
     }
+
 </script>

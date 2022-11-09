@@ -6,7 +6,7 @@ class PermissionOrSelfRequiredMixin(PermissionRequiredMixin):
         return super(PermissionOrSelfRequiredMixin, self).get_permission_required()
 
     def has_permission(self):
-        return (
+        return self.request.user is not None and (
             self.request.user.pk == self.get_user_pk()
             or super(PermissionOrSelfRequiredMixin, self).has_permission()
         )
