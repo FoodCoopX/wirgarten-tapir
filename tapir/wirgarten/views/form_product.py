@@ -50,9 +50,7 @@ def get_product_edit_form(request, **kwargs):
     else:
         form = ProductForm(**kwargs)
 
-    return render(
-        request, "wirgarten/product_cfg/period_product_cfg.html", {"form": form}
-    )
+    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
 
 
 @require_http_methods(["GET", "POST"])
@@ -75,9 +73,7 @@ def get_product_add_form(request, **kwargs):
     else:
         form = ProductForm(**kwargs)
 
-    return render(
-        request, "wirgarten/product_cfg/period_product_cfg.html", {"form": form}
-    )
+    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
 
 
 @require_http_methods(["GET"])

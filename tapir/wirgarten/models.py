@@ -151,7 +151,18 @@ class MandateReference(models.Model):
     end_ts = models.DateTimeField(null=True)
 
 
-class Subscription(TapirModel):
+class Payable:
+    """
+    Interface to define how to calculate the total amount.
+    """
+
+    def get_total_price(self):
+        raise NotImplementedError(
+            "You need to implement get_total_amount() if you use the PayableMixin!"
+        )
+
+
+class Subscription(TapirModel, Payable):
     """
     A subscription for a member.
     """
@@ -168,8 +179,11 @@ class Subscription(TapirModel):
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
 
+    def get_total_price(self):
+        return self.quantity * self.product.price * (1 + self.solidarity_price)
 
-class ShareOwnership(TapirModel):
+
+class ShareOwnership(TapirModel, Payable):
     """
     Tracks the number of coop shares of a member.
     """
@@ -181,6 +195,9 @@ class ShareOwnership(TapirModel):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
+
+    def get_total_price(self):
+        return self.quantity * self.share_price
 
 
 class ExportedFile(TapirModel):

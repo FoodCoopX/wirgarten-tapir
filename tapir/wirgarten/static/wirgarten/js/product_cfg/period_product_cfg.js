@@ -6,26 +6,21 @@ const init = (pt_p_map_json, pe_pt_map_json) => {
     activateDetails();
 }
 
-// Helper
-const stringifyUrlParams = (params) => {
-   return '?' + Object.entries(params)
-                    .filter(p => p[0] && p[1])
-                    .map(p => `${p[0]}=${p[1]}` )
-                    .join('&')
+const resizeModal = () => {
+        var frame = document.getElementById("productModalContainer");
+
+        // Adjusting the iframe height onload event
+        frame.onload = () => {
+            frame.style.height = '0px' // for some reason this is necessary
+            frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
+            frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
+        }
 }
 
-const getUrlParams = () =>
-    Object.fromEntries(
-        window.location.search.substring(1)
-        .split('&')
-        .map(kv => kv.split('=')))
-
-const replaceUrlParams = (params) =>
-    history.replaceState({}, null, window.location.pathname + stringifyUrlParams(params));
 
 // page logic
 const activateDetails = () => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     const type_list = Array.from(document.getElementsByClassName('list_details_product_types'));
     type_list.forEach(item =>  {
         const sChildren = Array.from(item.children);
@@ -56,7 +51,7 @@ const activateDetails = () => {
 }
 
 const activateGrowingPeriodList = (pe_pt_map_json) => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     const children = Array.from(document.getElementById('list_growing_periods').children);
     children.forEach(child => {
         child.classList.remove("active");
@@ -70,7 +65,7 @@ const activateGrowingPeriodList = (pe_pt_map_json) => {
 }
 
 const activateProductTypeList = (pt_p_map_json) => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     const children = Array.from(document.getElementById('list_product_types').children);
     children.forEach(child => {
         child.classList.remove("active");
@@ -83,7 +78,7 @@ const activateProductTypeList = (pt_p_map_json) => {
 }
 
 const activateProductList = () => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     const items = document.getElementById('list_product').children;
     const children = Array.from(items);
     children.forEach(child => {
@@ -181,7 +176,7 @@ const manageProductTypeDependentButtons = (params) => {
 }
 
 const manageButtons = () => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     manageGrowingPeriodDependentButtons(params);
     manageProductTypeDependentButtons(params);
     manageProductDependentButtons(params);
@@ -189,46 +184,43 @@ const manageButtons = () => {
 
 // dynamic Forms
 const AddModal = (url, title) => {
-    document.getElementById("modalForm").action = url;
-    fetch(url).then(form => {
-        form.text().then(html => {
-            document.getElementById("productModalContainer").innerHTML = html;
-        });
-    })
+    const xframe = document.getElementById("productModalContainer")
+    xframe.src = url;
+
     document.getElementById("modalLabel").innerHTML = title;
 }
 
 const getProductTypeEditForm = () => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     if (params.prodTypeId) {
-        const url = `/wirgarten/product/${params.prodTypeId}/${params.periodId}/typeedit${stringifyUrlParams(params)}`;
+        const url = `/wirgarten/product/${params.prodTypeId}/${params.periodId}/typeedit${Tapir.stringifyUrlParams(params)}`;
         AddModal(url, "Produkt Typ editieren");
     }
 }
 
 const getProductTypeAddForm = () => {
-    const params = getUrlParams();
-    const url = `/wirgarten/product/${params.periodId}/typeadd${stringifyUrlParams(params)}`;
+    const params = Tapir.getUrlParams();
+    const url = `/wirgarten/product/${params.periodId}/typeadd${Tapir.stringifyUrlParams(params)}`;
     AddModal(url, "Neuen Produkt Typ hinzufügen");
 }
 
 const getProductEditForm = () => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     if (params.prodId) {
-        const url = `/wirgarten/product/${params.prodId}/edit${stringifyUrlParams(params)}`;
+        const url = `/wirgarten/product/${params.prodId}/edit${Tapir.stringifyUrlParams(params)}`;
         AddModal(url, "Produkt editieren");
     }
 }
 
 const getProductAddForm = () => {
-    const params = getUrlParams();
-    const url = `/wirgarten/product/${params.prodTypeId}/add${stringifyUrlParams(params)}`;
+    const params = Tapir.getUrlParams();
+    const url = `/wirgarten/product/${params.prodTypeId}/add${Tapir.stringifyUrlParams(params)}`;
     AddModal(url, "Neues Produkt hinzufügen");
 }
 
 const getGrowingPeriodAddForm = () => {
-    const params = getUrlParams();
-    const url = `/wirgarten/product/periodadd${stringifyUrlParams(params)}`;
+    const params = Tapir.getUrlParams();
+    const url = `/wirgarten/product/periodadd${Tapir.stringifyUrlParams(params)}`;
     const title = `Neue Anbauperiode anlegen. Ohne Produkte
      Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode Anzuwenden,
      damit Produkte und weitere Einstellungen übernommen werden. Diese sind noch nachträglich editierbar.`;
@@ -236,61 +228,61 @@ const getGrowingPeriodAddForm = () => {
 }
 
 const getGrowingPeriodCopyForm = () => {
-    const params = getUrlParams();
-    const url = `/wirgarten/product/${params.periodId}/periodcopy${stringifyUrlParams(params)}`;
+    const params = Tapir.getUrlParams();
+    const url = `/wirgarten/product/${params.periodId}/periodcopy${Tapir.stringifyUrlParams(params)}`;
     AddModal(url, "Neue Anbauperiode anlegen. Produkte werden übernommen.");
 }
 
 // actions
 const select_period = (periodId, pe_pt_map_json) => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     if(params.periodId !== periodId) {
         params.prodTypeId = null;
         params.prodId = null;
     }
     params.periodId = periodId;
-    replaceUrlParams(params);
+    Tapir.replaceUrlParams(params);
     activateGrowingPeriodList(pe_pt_map_json);
     activateDetails();
     manageButtons();
 }
 
 const select_product_type = (productTypeId, pt_p_map_json) => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     if(params.prodTypeId !== productTypeId) {
         params.prodId = null;
     }
     params.prodTypeId = productTypeId;
-    replaceUrlParams(params);
+    Tapir.replaceUrlParams(params);
     activateProductTypeList(pt_p_map_json);
     activateDetails();
     manageButtons();
 }
 
 const select_product = (productId) => {
-    const params = getUrlParams();
+    const params = Tapir.getUrlParams();
     params.prodId = productId;
-    replaceUrlParams(params);
+    Tapir.replaceUrlParams(params);
     activateProductList();
     activateDetails();
     manageButtons();
 }
 
 const deleteProduct = () => {
-    const params = getUrlParams();
-    const url = `product/${params.prodId}/delete${stringifyUrlParams({...params, prodId: undefined})}`;
+    const params = Tapir.getUrlParams();
+    const url = `product/${params.prodId}/delete${Tapir.stringifyUrlParams({...params, prodId: undefined})}`;
     window.location.replace(url)
 }
 
 const deleteProductType = () => {
-    const params = getUrlParams();
-    const url = `product/${params.prodTypeId}/${params.periodId}/typedelete${stringifyUrlParams({...params, prodTypeId: undefined})}`;
+    const params = Tapir.getUrlParams();
+    const url = `product/${params.prodTypeId}/${params.periodId}/typedelete${Tapir.stringifyUrlParams({...params, prodTypeId: undefined})}`;
     window.location.replace(url)
 }
 
 const deleteGrowingPeriod = () => {
-    const params = getUrlParams();
-    const url = `product/${params.periodId}/perioddelete${stringifyUrlParams({...params, periodId: undefined})}`;
+    const params = Tapir.getUrlParams();
+    const url = `product/${params.periodId}/perioddelete${Tapir.stringifyUrlParams({...params, periodId: undefined})}`;
     window.location.replace(url)
 }
 

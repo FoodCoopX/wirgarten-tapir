@@ -7,8 +7,6 @@ from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
 
 
 class PickupLocationChoiceField(forms.ModelChoiceField):
-
-    # TODO: additional products are only available at some pickup locations, so the corresponding query must be used depending on which products are selected
     def __init__(self, queryset, **kwargs):
         super().__init__(queryset=queryset, **kwargs)
 
@@ -27,10 +25,10 @@ class PickupLocationForm(forms.Form):
         initial = kwargs["initial"]
         filtered_pickup_locations = PickupLocation.objects.all()
         # TODO: fix product_type__name to __id, when wizard is rdy
-        for product_type_id in initial["product_types"]:
+        for product_type_name in initial["product_types"]:
             filtered_pickup_locations = filtered_pickup_locations.filter(
                 id__in=PickupLocationCapability.objects.filter(
-                    product_type__name=product_type_id
+                    product_type__name=product_type_name
                 ).values("pickup_location__id")
             )
 

@@ -1,6 +1,7 @@
 import itertools
 from copy import copy
 from datetime import date
+from importlib.resources import _
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -22,10 +23,15 @@ from tapir.wirgarten.models import (
     Deliveries,
     GrowingPeriod,
     EditFuturePaymentLogEntry,
+    MandateReference,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.payment import (
+    get_next_payment_date,
+    is_mandate_ref_for_coop_shares,
+    get_active_subscriptions_grouped_by_product_type,
+)
 from tapir.wirgarten.service.products import (
-    get_subs_or_shares_for_mandate_ref,
     get_total_price_for_subs,
 )
 
@@ -54,32 +60,14 @@ class MemberDetailView(generic.DetailView):
     def get_context_data(self, object):
         context = super(MemberDetailView, self).get_context_data()
         context["object"] = self.object
-        context["subscriptions"] = get_grouped_subscribtions_for_member(self.object)
+        context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
+            self.object
+        )
 
         shares = ShareOwnership.objects.filter(member=self.object)[0]
         context["coop_shares"] = f"""{shares.quantity} × {shares.share_price} €"""
 
         return context
-
-
-def get_next_payment_date():
-    now = date.today()
-    due_day = get_due_day()
-
-    if now.day < due_day:
-        next_payment = now.replace(day=due_day)
-    else:
-        next_payment = now.replace(day=due_day) + relativedelta(months=1)
-    return next_payment
-
-
-def get_due_day():
-    due_day = get_parameter_value(Parameter.PAYMENT_DUE_DAY)
-    if due_day > 31:
-        due_day = 31
-    if due_day < 1:
-        due_day = 1
-    return due_day
 
 
 def generate_future_payments(subs: list, prev_payments: list):
@@ -119,6 +107,31 @@ def generate_future_payments(subs: list, prev_payments: list):
         next_payment_date += relativedelta(months=1)
 
     return payments
+
+
+def get_subs_or_shares_for_mandate_ref(
+    mandate_ref: MandateReference, reference_date: date
+):
+    if is_mandate_ref_for_coop_shares(mandate_ref):
+        return list(
+            map(
+                lambda x: {
+                    "amount": round(x.share_price, 2),
+                    "quantity": x.quantity,
+                    "product": {
+                        "name": _("Genossenschaftsanteile"),
+                        "price": x.share_price,
+                    },
+                },
+                ShareOwnership.objects.filter(mandate_ref=mandate_ref),
+            )
+        )
+    else:
+        return Subscription.objects.filter(
+            mandate_ref=mandate_ref,
+            start_date__lte=reference_date,
+            end_date__gt=reference_date,
+        )
 
 
 def payment_to_dict(payment: Payment) -> dict:
@@ -234,18 +247,6 @@ class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
         ) + generate_future_deliveries(subs, member)
 
         return context
-
-
-def get_grouped_subscribtions_for_member(member: Member):
-    subscriptions = {}
-    for sub in Subscription.objects.filter(member=member):
-        product_type = sub.product.type.name
-        if product_type not in subscriptions:
-            subscriptions[product_type] = []
-
-        subscriptions[product_type].append(sub)
-
-    return subscriptions
 
 
 def get_payment_amount_edit_form(request, **kwargs):

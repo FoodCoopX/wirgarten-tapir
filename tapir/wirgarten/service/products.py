@@ -1,11 +1,16 @@
 from datetime import date
-from importlib.resources import _
+
+from django.db import transaction
 
 from tapir.wirgarten.models import (
     Subscription,
-    ShareOwnership,
-    MandateReference,
     ProductCapacity,
+    GrowingPeriod,
+    ProductType,
+)
+from tapir.wirgarten.validators import (
+    validate_growing_period_overlap,
+    validate_date_range,
 )
 
 
@@ -19,7 +24,7 @@ def get_total_price_for_subs(subs: [Subscription]) -> float:
     return round(
         sum(
             map(
-                lambda x: get_total_price_for_sub_or_share_ownership(x),
+                lambda x: x.get_total_price(),
                 subs,
             )
         ),
@@ -27,62 +32,58 @@ def get_total_price_for_subs(subs: [Subscription]) -> float:
     )
 
 
-def get_total_price_for_sub_or_share_ownership(position: Subscription | ShareOwnership):
+def get_active_product_types(reference_date: date = date.today()) -> iter:
     """
-    Gets the total price of one subscription or a share ownership.
+    Returns the product types which are active for the given reference date.
 
-    :param position: the subscription or share ownership instance
-    :return: quantity * price of one unit
+    :param reference_date: default: today()
+    :return: the QuerySet of ProductTypes filtered for the given reference date
     """
 
-    if type(position) == Subscription:
-        position = {
-            "quantity": position.quantity,
-            "product": {
-                "price": position.product.price,
-            },
-            "solidarity_price": position.solidarity_price,
-        }
-    elif type(position) == ShareOwnership:
-        position = {
-            "quantity": position.quantity,
-            "product": {"price": position.share_price},
-        }
-    return (
-        position["quantity"]
-        * float(position["product"]["price"])
-        * (1 + position.get("solidarity_price", 0.0))
-    )
-
-
-def get_subs_or_shares_for_mandate_ref(
-    mandate_ref: MandateReference, reference_date: date
-):
-    subs = Subscription.objects.filter(
-        mandate_ref=mandate_ref,
-        start_date__lte=reference_date,
-        end_date__gt=reference_date,
-    )
-
-    if subs.count() == 0:
-        return list(
-            map(
-                lambda x: {
-                    "amount": round(x.share_price, 2),
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                },
-                ShareOwnership.objects.filter(mandate_ref=mandate_ref),
-            )
+    return ProductType.objects.filter(
+        id__in=ProductCapacity.objects.filter(
+            period__start_date__lte=reference_date, period__end_date__gte=reference_date
         )
-    else:
-        return subs
+    )
 
 
-def get_active_product_types(reference_date: date = date.today()):
-    return ProductCapacity.objects.filter(
-        period__start_date__lte=reference_date, period__end_date__gte=reference_date
-    ).values("product_type__id")
+@transaction.atomic
+def create_growing_period(start_date: date, end_date: date) -> GrowingPeriod:
+    """
+    Creates a new growing period with the given start and end dates
+
+    :param start_date: the start of the growing period
+    :param end_date: the end of the growing period
+    :return: the persisted instance
+    """
+
+    validate_date_range(start_date, end_date)
+    validate_growing_period_overlap(start_date, end_date)
+
+    return GrowingPeriod.objects.create(
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@transaction.atomic
+def copy_growing_period(growing_period_id: str, start_date: date, end_date: date):
+    """
+    Creates a new growing period and copies all product capacities from the given growing period.
+
+    :param growing_period_id: the original growing period id
+    :param start_date: the start of the new growing period
+    :param end_date: the end of the new growing period
+    """
+
+    new_growing_period = create_growing_period(start_date=start_date, end_date=end_date)
+    ProductCapacity.objects.bulk_create(
+        map(
+            lambda x: ProductCapacity(
+                period_id=new_growing_period.id,
+                product_type=x.product_type,
+                capacity=x.capacity,
+            ),
+            ProductCapacity.objects.filter(period_id=growing_period_id),
+        )
+    )

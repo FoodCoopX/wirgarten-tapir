@@ -8,10 +8,10 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
-from nanoid import generate
 
 from tapir.accounts.models import LdapPerson
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -35,6 +35,8 @@ from tapir.wirgarten.models import (
 
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.payment import generate_mandate_ref
+from tapir.wirgarten.service.products import get_active_product_types
 
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
@@ -101,10 +103,6 @@ CONDITIONS = {
     STEP_PICKUP_LOCATION: show_dependent_steps,
 }
 
-PRODUCT_TYPE_HARVEST_SHARES = "Ernteanteile"
-PRODUCT_TYPE_CHICKEN_SHARES = "Hühneranteile"
-PRODUCT_TYPE_BESTELLCOOP = "BestellCoop"
-
 
 def save_subscriptions(
     form_dict,
@@ -114,7 +112,7 @@ def save_subscriptions(
     growing_period: GrowingPeriod,
 ):
     mandate_ref = save_mandate_ref(member, False)
-    product_type = ProductType.objects.get(name=PRODUCT_TYPE_HARVEST_SHARES)
+    product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
     has_shares = False
     for key, quantity in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
         if key.startswith("harvest_shares_") and quantity > 0:
@@ -191,7 +189,7 @@ def save_additional_shares(
     growing_period: GrowingPeriod,
     mandate_ref: MandateReference,
 ):
-    product_type = ProductType.objects.get(name=PRODUCT_TYPE_CHICKEN_SHARES)
+    product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
     for key, quantity in form_dict[STEP_ADDITIONAL_SHARES].cleaned_data.items():
         if quantity > 0 and key.startswith("chicken_shares_"):
             product = Product.objects.get(
@@ -239,8 +237,9 @@ def save_bestellcoop(
     mandate_ref: MandateReference,
 ):
     if form_dict[STEP_BESTELLCOOP].cleaned_data["bestellcoop"]:
-        product_type = ProductType.objects.get(name=PRODUCT_TYPE_BESTELLCOOP)
-        product = Product.objects.get(type=product_type, name="Mitgliedschaft")
+        product = Product.objects.get(
+            type=get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
+        )
 
         Subscription.objects.create(
             member=member,
@@ -315,6 +314,12 @@ class RegistrationWizardView(CookieWizardView):
                 data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
                 for key, val in data.items():
                     initial[key] = val
+        elif step == STEP_BESTELLCOOP:
+            product = Product.objects.get(
+                type__in=get_active_product_types(), name="Mitgliedschaft"
+            )
+
+            initial["bestellcoop_price"] = product.price
         elif step == STEP_PICKUP_LOCATION:
             # TODO: has to be implemented with product_type.id not name when the wizard generically handles all products
             initial["product_types"] = []

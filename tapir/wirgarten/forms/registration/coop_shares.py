@@ -19,7 +19,7 @@ class CooperativeShareForm(forms.Form):
             """harvest_shares_{variation}""".format(
                 variation=p.product_ptr.name.lower()
             ): p.__dict__
-            for p in HarvestShareProduct.objects.all()
+            for p in HarvestShareProduct.objects.all()  # FIXME: filter to active ones (service)
         }
 
         default_min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)

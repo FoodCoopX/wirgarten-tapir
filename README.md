@@ -77,7 +77,6 @@ A few definitions to help newcomers understand the model classes.
 |----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ShareOwnership | Represents a person that is owning at least one share.                                                                                                                                                     |
 | TapirUser      | Represents a person with a user account. Accounts are linked between Tapir and the Wiki for example. Gets created when the member becomes active (part of the shift system etc.), but can become inactive. |  
- 
 
 ### Translations
 
@@ -160,6 +159,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
             category=ParameterCategory.SITE,
             order_priority=900,
+            meta=ParameterMeta(
+                validators=[EmailValidator()]
+            )
         )
         
         parameter_definition(
@@ -169,26 +171,34 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=1,
             description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
             category=ParameterCategory.HARVEST,
-            options=[
-                ( 2, "automatisch"),
-                ( 1, "zeichenbar"),
-                ( 0, "nicht zeichenbar"),
-            ]
+            meta=ParameterMeta(
+                options=[
+                    ( 2, "automatisch"),
+                    ( 1, "zeichenbar"),
+                    ( 0, "nicht zeichenbar"),
+                ]
+            )
         )
         
         # [...]
 ```
+
+if `order_priority` (type `int`) is provided, the item will be placed \
+at the beginning of the category, with high `order_prority` values first.
+Items which do not provide `order_priority` will be ordered alphabetically after those which provide the attribute.
+
+#### ParameterMeta
+
+The `meta` attribute can be set for advanced configuration.
+
 `options` is defined as array of 2-tuple \
 which elements are defined as `(value, label)` pairs, \
 with `value` of type `TapirParameterDatatype` \
 and `label` of type `string`. \
 The programmer has to make sure, the value of `value` is **never** `None`
 
-if `order_priority` (type `int`) is provided, the item will be placed \
-at the beginning of the category, with high `order_prority` values first.
-Items which do not provide `order_priority` will be ordered alphabetically after those which provide the attribute.
-
-
+`validators` is an array of `callable`s, this means you can pass any function or Django Validator. Useful Django
+valdators are `EmailValidator`, `MinValueValidator`, `MaxValueValidator`, `RegexValidator`, `URLValidator`.
 
 #### UI
 
