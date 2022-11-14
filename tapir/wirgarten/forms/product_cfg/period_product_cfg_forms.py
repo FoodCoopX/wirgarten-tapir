@@ -1,7 +1,11 @@
+import datetime
 from importlib.resources import _
 
+from dateutil.relativedelta import relativedelta
 from django import forms
+from django.core.exceptions import ValidationError
 
+from tapir.utils.forms import DateInput
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 from tapir.wirgarten.models import (
     ProductType,
@@ -12,8 +16,10 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
 )
-from tapir.utils.forms import DateInput
-
+from tapir.wirgarten.validators import (
+    validate_date_range,
+    validate_growing_period_overlap,
+)
 
 KW_PROD_ID = "prodId"
 KW_PROD_TYPE_ID = "prodTypeId"
@@ -123,20 +129,62 @@ class GrowingPeriodForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(GrowingPeriodForm, self).__init__(*args)
 
-        initial_id = "-"
+        today = datetime.date.today()
+        initial = {
+            "id": "-",
+            "start_date": today + relativedelta(days=1),
+            "end_date": today + relativedelta(years=1),
+        }
+
         if KW_PERIOD_ID in kwargs:
-            initial_id = kwargs[KW_PERIOD_ID]
+            period = GrowingPeriod.objects.get(id=kwargs[KW_PERIOD_ID])
+            new_start_date = period.end_date + relativedelta(days=1)
+            self.update_initial(initial, new_start_date)
+            initial["id"] = period.id
+        else:
+            try:
+                period = GrowingPeriod.objects.order_by("-end_date").first()
+                new_start_date = period.end_date + relativedelta(days=1)
+                self.update_initial(initial, new_start_date)
+            except GrowingPeriod.DoesNotExist:
+                pass
 
         self.fields["id"] = forms.CharField(
-            initial=initial_id, required=False, widget=forms.HiddenInput()
+            initial=initial["id"], required=False, widget=forms.HiddenInput()
         )
-        self.fields["start_date"] = forms.CharField(
+        self.fields["start_date"] = forms.DateField(
             required=True,
             label=_("Von"),
             widget=DateInput(),
+            initial=initial["start_date"],
         )
-        self.fields["end_date"] = forms.CharField(
+        self.fields["end_date"] = forms.DateField(
             required=True,
             label=_("Bis"),
             widget=DateInput(),
+            initial=initial["end_date"],
+        )
+
+    def is_valid(self):
+        super(GrowingPeriodForm, self).is_valid()
+
+        start = self.cleaned_data["start_date"]
+        end = self.cleaned_data["end_date"]
+
+        try:
+            validate_date_range(start_date=start, end_date=end)
+        except ValidationError as e:
+            self.add_error(field="start_date", error=e)
+
+        try:
+            validate_growing_period_overlap(start_date=start, end_date=end)
+        except ValidationError as e:
+            self.add_error(field="start_date", error=e)
+
+    def update_initial(self, initial, new_start_date):
+        initial.update(
+            {
+                "start_date": new_start_date,
+                "end_date": new_start_date + relativedelta(years=1, days=-1),
+            }
         )

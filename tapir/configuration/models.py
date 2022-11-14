@@ -19,7 +19,12 @@ class TapirParameter(models.Model):
     datatype = models.CharField(max_length=8)
     order_priority = models.IntegerField(null=False, default=-1)
     value = models.CharField(max_length=4096, null=True)
-    options: [] = None
+    options: [tuple] = None
+    validators: [callable] = []
+
+    def full_clean(self):
+        for validator in self.validators:
+            validator(self.value)
 
     def get_value(self):
         if self.datatype == TapirParameterDatatype.INTEGER.value:

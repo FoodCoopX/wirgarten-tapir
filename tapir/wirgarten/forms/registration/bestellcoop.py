@@ -12,3 +12,10 @@ class BestellCoopForm(forms.Form):
 
     intro_template = "wirgarten/registration/steps/bestellcoop.intro.html"
     outro_template = "wirgarten/registration/steps/bestellcoop.outro.html"
+
+    def __init__(self, **kwargs):
+        super(BestellCoopForm, self).__init__()
+        self.bestellcoop_price = kwargs["initial"]["bestellcoop_price"]
+
+    def is_valid(self):
+        return True

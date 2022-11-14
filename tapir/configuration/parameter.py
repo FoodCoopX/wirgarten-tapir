@@ -7,8 +7,14 @@ from tapir.configuration.models import (
 )
 
 
-class ParameterCache:
-    parameters = {str: TapirParameter}
+class ParameterMeta:
+    def __init__(self, options: [tuple] = None, validators: [callable] = []):
+        self.options = options
+        self.validators = validators
+
+
+class ParameterMetaInfo:
+    parameters = {str: ParameterMeta}
     initialized = False
 
     def initialize(self):
@@ -17,13 +23,19 @@ class ParameterCache:
         self.initialized = True
 
 
-cache = ParameterCache()
+meta_info = ParameterMetaInfo()
 
 
-def get_parameter_options(key: str):
-    if not cache.initialized:
-        cache.initialize()
-    return cache.parameters[key].options
+def get_parameter_meta(key: str) -> ParameterMeta | None:
+    if not meta_info.initialized:
+        meta_info.initialize()
+
+    if key not in meta_info.parameters:
+        print("\t[delete] ", key)
+        TapirParameter.objects.get(key=key).delete()
+        return None
+
+    return meta_info.parameters[key]
 
 
 def get_parameter_value(key: str):
@@ -41,21 +53,32 @@ def parameter_definition(
     category: str,
     datatype: TapirParameterDatatype,
     initial_value: str | int | float | bool,
-    options: [tuple] = None,
     order_priority: int = -1,
+    meta: ParameterMeta = ParameterMeta(),
 ):
-    __validate_initial_value(datatype, initial_value, key)
+    __validate_initial_value(datatype, initial_value, key, meta.validators)
 
     param = __create_or_update_parameter(
-        category, datatype, description, initial_value, key, label, order_priority
+        category,
+        datatype,
+        description,
+        initial_value,
+        key,
+        label,
+        order_priority,
     )
 
-    param.options = options
-    cache.parameters[param.key] = param
+    meta_info.parameters[param.key] = meta
 
 
 def __create_or_update_parameter(
-    category, datatype, description, initial_value, key, label, order_priority
+    category,
+    datatype,
+    description,
+    initial_value,
+    key,
+    label,
+    order_priority,
 ):
     try:
         param = TapirParameter.objects.get(pk=key)
@@ -83,10 +106,11 @@ def __create_or_update_parameter(
             datatype=datatype.value,
             value=str(initial_value),
         )
+
     return param
 
 
-def __validate_initial_value(datatype, initial_value, key):
+def __validate_initial_value(datatype, initial_value, key, validators):
     try:
         if type(initial_value) == str:
             assert datatype == TapirParameterDatatype.STRING
@@ -106,3 +130,6 @@ def __validate_initial_value(datatype, initial_value, key):
                 actual_type=type(initial_value),
             )
         )
+
+    for validator in validators:
+        validator(initial_value)

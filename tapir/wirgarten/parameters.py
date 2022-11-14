@@ -1,19 +1,27 @@
-import datetime
+from importlib.resources import _
+
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator,
+    EmailValidator,
+    URLValidator,
+)
+from localflavor.generic.validators import IBANValidator, BICValidator
 
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
-from tapir.configuration.parameter import parameter_definition
+from tapir.configuration.parameter import parameter_definition, ParameterMeta
 
 OPTIONS_WEEKDAYS = [
-    (0, "Montag"),
-    (1, "Dienstag"),
-    (2, "Mittwoch"),
-    (3, "Donnerstag"),
-    (4, "Freitag"),
-    (5, "Samstag"),
-    (6, "Sonntag"),
+    (0, _("Montag")),
+    (1, _("Dienstag")),
+    (2, _("Mittwoch")),
+    (3, _("Donnerstag")),
+    (4, _("Freitag")),
+    (5, _("Samstag")),
+    (6, _("Sonntag")),
 ]
 
 PREFIX = "wirgarten"
@@ -23,7 +31,6 @@ class ParameterCategory:
     SITE = "Standort"
     COOP = "Genossenschaft"
     CHICKEN = "Hühneranteile"
-    BESTELLCOOP = "BestellCoop"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
     PICK_LIST = "Kommissionierliste"
@@ -44,7 +51,6 @@ class Parameter:
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
-    BESTELLCOOP_PRICE = f"{PREFIX}.bestellcoop.price"  # FIXME: this is obsolete and should be retrieved by the product
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     HARVEST_SHARES_SUBSCRIBABLE = f"{PREFIX}.harvest.harvest_shares_subscribable"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
@@ -97,6 +103,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="lueneburg@wirgarten.com",
             description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
             category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[EmailValidator()]),
         )
 
         parameter_definition(
@@ -106,6 +113,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="tapiradmin@wirgarten.com",
             description="Die Admin Email-Adresse des WirGarten Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
             category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[EmailValidator()]),
         )
 
         parameter_definition(
@@ -115,6 +123,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="https://lueneburg.wirgarten.com/datenschutzerklaerung",
             description="Der Link zur Datenschutzerklärung. Beispiel: 'https://lueneburg.wirgarten.com/datenschutzerklaerung'",
             category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(
@@ -125,6 +134,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
             category=ParameterCategory.COOP,
             order_priority=1000,
+            meta=ParameterMeta(validators=[MinValueValidator(limit_value=0)]),
         )
 
         parameter_definition(
@@ -135,6 +145,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Preis eines Genossenschaftsanteils in Euro.",
             category=ParameterCategory.COOP,
             order_priority=900,
+            meta=ParameterMeta(validators=[MinValueValidator(limit_value=1)]),
         )
 
         parameter_definition(
@@ -144,6 +155,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="https://lueneburg.wirgarten.com/satzung",
             description="Der Link zur Satzung der Genossenschaft.",
             category=ParameterCategory.COOP,
+            meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(
@@ -153,6 +165,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
             description="Der Link zu weiteren Infos über die Genossenschaft/Mitgliedschaft.",
             category=ParameterCategory.COOP,
+            meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(
@@ -160,17 +173,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Maximale Anzahl Hühneranteile pro Mitglied",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=5,
-            description="Die maximale Anzahl Hühneranteile (pro Produkt) die pro Mitglied/Interessent gewählt werden kann.",
+            description="Die maximale Anzahl Hühneranteile (pro Variante) die pro Mitglied/Interessent gewählt werden kann.",
             category=ParameterCategory.CHICKEN,
-        )
-
-        parameter_definition(
-            key=Parameter.BESTELLCOOP_PRICE,
-            label="Monatlicher Preis für BestellCoop Mitgliedschaft",
-            datatype=TapirParameterDatatype.DECIMAL,
-            initial_value=3.0,
-            description="Der monatliche Preis der BestellCoop Mitgliedschaft in Euro.",
-            category=ParameterCategory.BESTELLCOOP,
         )
 
         parameter_definition(
@@ -180,20 +184,22 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=2,
             description="Aktiviert oder deaktiviert niedrigere Preise für Ernteanteile oder aktiviert die automatische Berechnung.",
             category=ParameterCategory.HARVEST,
-            options=[
-                (
-                    0,
-                    "Nur positive Solidarpreise möglich (Mitglieder können keinen niedrigeren Preis wählen)",
-                ),
-                (
-                    1,
-                    "Negative Solidarpreise möglich (Mitglieder können einen niedrigeren Preis wählen)",
-                ),
-                (
-                    2,
-                    "Automatische Berechnung (niedrigere Preise sind möglich, wenn genügend Mitglieder mehr zahlen)",
-                ),
-            ],
+            meta=ParameterMeta(
+                options=[
+                    (
+                        0,
+                        "Nur positive Solidarpreise möglich (Mitglieder können keinen niedrigeren Preis wählen)",
+                    ),
+                    (
+                        1,
+                        "Negative Solidarpreise möglich (Mitglieder können einen niedrigeren Preis wählen)",
+                    ),
+                    (
+                        2,
+                        "Automatische Berechnung (niedrigere Preise sind möglich, wenn genügend Mitglieder mehr zahlen)",
+                    ),
+                ]
+            ),
         )
 
         parameter_definition(
@@ -239,16 +245,23 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=15,
             description="Der Tag im Monat an dem Beitragszahlungen für Abonnements fällig sind.",
             category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(
+                validators=[
+                    MinValueValidator(limit_value=1),
+                    MaxValueValidator(limit_value=31),
+                ]
+            ),
         )
 
         parameter_definition(
             key=Parameter.PAYMENT_IBAN,
             label="Empfänger IBAN",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="DE60 2406 0300 2801 8818 00",
+            initial_value="DE60240603002801881800",
             description="IBAN des Empfänger Kontos für Beitragszahlungen.",
             category=ParameterCategory.PAYMENT,
             order_priority=1000,
+            meta=ParameterMeta(validators=[IBANValidator()]),
         )
 
         parameter_definition(
@@ -259,6 +272,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="BIC des Empfänger Kontos für Beitragszahlungen.",
             category=ParameterCategory.PAYMENT,
             order_priority=900,
+            meta=ParameterMeta(validators=[BICValidator()]),
         )
 
         parameter_definition(
@@ -278,7 +292,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=2,
             description="Der Wochentag an dem die Ware zum Abholort geliefert wird.",
             category=ParameterCategory.DELIVERY,
-            options=OPTIONS_WEEKDAYS,
+            meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
         )
 
         parameter_definition(
@@ -288,11 +302,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=1,
             description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
             category=ParameterCategory.HARVEST,
-            options=[
-                # (2, "Automatik"), # FIXME: implement automatism logic
-                (1, "zeichenbar"),
-                (0, "nicht zeichenbar"),
-            ],
+            meta=ParameterMeta(
+                options=[
+                    # (2, "Automatik"), # FIXME: implement automatism logic
+                    (1, "zeichenbar"),
+                    (0, "nicht zeichenbar"),
+                ]
+            ),
             order_priority=1000,
         )
 
@@ -303,9 +319,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=False,
             description="Genossenschaftsanteile sind vom Mitglied unabhängig von Ernteanteilen zeichenbar.",
             category=ParameterCategory.COOP,
-            options=[
-                (True, "unabhängig zeichenbar"),
-                (False, "nicht unabhängig zeichenbar"),
-            ],
+            meta=ParameterMeta(
+                options=[
+                    (True, "unabhängig zeichenbar"),
+                    (False, "nicht unabhängig zeichenbar"),
+                ]
+            ),
             order_priority=800,
         )

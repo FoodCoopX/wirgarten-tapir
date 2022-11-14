@@ -1,4 +1,3 @@
-from django import forms
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.urls import reverse_lazy
@@ -12,7 +11,13 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
     template_name = "configuration/parameter_view.html"
     permission_required = "coop.admin"
     form_class = ParameterForm
-    success_url = reverse_lazy("configuration:parameters")
+
+    def get_success_url(self, **kwargs):
+        return (
+            reverse_lazy("configuration:parameters")
+            + "?"
+            + self.request.environ["QUERY_STRING"]
+        )
 
     @transaction.atomic
     def form_valid(self, form):

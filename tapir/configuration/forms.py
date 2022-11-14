@@ -3,22 +3,28 @@ from importlib.resources import _
 from django import forms
 
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
-from tapir.configuration.parameter import get_parameter_options
+from tapir.configuration.parameter import (
+    get_parameter_meta,
+)
 
 
 def create_field(param: TapirParameter):
     description = f"""<small><i>{param.key}</i></small><br/>{_(param.description)}"""
 
-    param_options = get_parameter_options(param.key)
+    param_meta = get_parameter_meta(param.key)
+    if param_meta is None:
+        return None
+
     param_value = param.get_value()
 
-    if param_options is not None:
+    if param_meta.options is not None:
         return forms.ChoiceField(
             label=_(param.label),
             help_text=description,
-            choices=param_options,
+            choices=param_meta.options,
             required=True,
             initial=param_value,
+            validators=param_meta.validators,
         )
     elif param.datatype == TapirParameterDatatype.STRING.value:
         return forms.CharField(
@@ -26,6 +32,7 @@ def create_field(param: TapirParameter):
             help_text=description,
             required=True,
             initial=param_value,
+            validators=param_meta.validators,
         )
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
@@ -33,6 +40,7 @@ def create_field(param: TapirParameter):
             help_text=description,
             required=True,
             initial=param_value,
+            validators=param_meta.validators,
         )
     elif param.datatype == TapirParameterDatatype.DECIMAL.value:
         return forms.DecimalField(
@@ -40,6 +48,7 @@ def create_field(param: TapirParameter):
             help_text=description,
             required=True,
             initial=param_value,
+            validators=param_meta.validators,
         )
     elif param.datatype == TapirParameterDatatype.BOOLEAN.value:
         return forms.BooleanField(
@@ -47,6 +56,7 @@ def create_field(param: TapirParameter):
             help_text=description,
             required=False,
             initial=param_value,
+            validators=param_meta.validators,
         )
     else:
         raise NotImplementedError(
@@ -68,7 +78,9 @@ class ParameterForm(forms.Form):
         self.categories = categories
 
         for param in params:
-            self.fields[param.key] = create_field(param)
+            field = create_field(param)
+            if field is not None:
+                self.fields[param.key] = field
 
         def get_category(name):
             for p in params:

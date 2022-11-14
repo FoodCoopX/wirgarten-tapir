@@ -27,7 +27,7 @@ def get_solidarity_total() -> float:
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
-        return 1000.0  # FIXME: configuration property: max solidarity discount for one user
+        return 1000.0
     elif val == 2:  # automatic calculation
         today = datetime.date.today()
         solidarity_total = (

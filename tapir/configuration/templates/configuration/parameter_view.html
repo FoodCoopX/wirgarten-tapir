@@ -5,28 +5,24 @@
 {% load static %}
 
 {% block content %}
-<div style="margin-top: 2em" class="container">
-    <form method="post">
+<div style="margin-top: 2em; margin-bottom: 1em" class="container">
+    <form id="form" method="post">
         {% csrf_token %}
 
-        <div style="width: calc(100% - 24em); z-index:1200; margin-top: 60px; position: fixed; top: 0">
-            <div class="card">
-                <div class="card-header">
-                    <div id="search-input" style="display:grid; grid-template-columns: 4fr 2fr">
-                        <div style="display: flex; flex-direction: row">
-                            <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
-                            <button class="btn tapir-btn btn-primary" type="submit">Save</button>
-                        </div>
-                        <div>
-                            <input type="text" class="form-control" placeholder="Search..."/>
-                        </div>
-
-                    </div>
+        <div class="card" style="max-height: calc(100vh - 7em)">
+            <div class="card-header" style="display: flex">
+                <div>
+                    <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
                 </div>
+                <div>
+                    <button class="btn tapir-btn btn-primary" type="submit">Save</button>
+                </div>
+                <div style="margin-left:auto" id="search-input">
+                    <input type="text" class="form-control" placeholder="Search..."/>
+                </div>
+
             </div>
-        </div>
-        <div class="card" style="margin-top: 62px">
-            <div class="card-body">
+            <div class="card-body" style="overflow-y: scroll">
                 {% for category in form.categories %}
                 <div class="parameter-category">
                     <h5>{% translate category %}</h5>
@@ -40,7 +36,6 @@
                     {% endif %}
 
                     {% endfor %}
-                    <hr/>
                 </div>
 
                 {% endfor %}
@@ -49,6 +44,7 @@
     </form>
 </div>
 
+<script src="{% static 'core/js/url-functions.js' %}"></script>
 <script src="{% static 'configuration/js/search.js' %}"></script>
 {% endblock %}
 

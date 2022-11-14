@@ -1,42 +1,20 @@
-from django.views.decorators.http import require_http_methods
-from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
-    ProductTypeForm,
     GrowingPeriodForm,
 )
 from tapir.wirgarten.models import (
-    ProductCapacity,
     GrowingPeriod,
 )
-
+from tapir.wirgarten.service.products import create_growing_period, copy_growing_period
 
 PAGE_ROOT = "wirgarten:product"
 KW_PERIOD_ID = "periodId"
-
-
-def create_period(form: ProductTypeForm):
-    # period
-    print("\t[create] GrowingPeriod\n")
-    gp = GrowingPeriod.objects.create(
-        start_date=form["start_date"],
-        end_date=form["end_date"],
-    )
-    return gp
-
-
-def copy_create_period(form: ProductTypeForm):
-    gp = create_period(form)
-    capacities = ProductCapacity.objects.filter(period_id=form["id"])
-    for capacity in capacities:
-        cp = ProductCapacity.objects.create(
-            period_id=gp.id,
-            product_type=capacity.product_type,
-            capacity=capacity.capacity,
-        )
-        print("\n\t[create] Capacity\n", cp.id)
 
 
 @require_http_methods(["GET", "POST"])
@@ -49,7 +27,11 @@ def get_period_copy_form(request, **kwargs):
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            copy_create_period(form.cleaned_data)
+            copy_growing_period(
+                growing_period_id=form.cleaned_data["id"],
+                start_date=form.cleaned_data["start_date"],
+                end_date=form.cleaned_data["end_date"],
+            )
             # redirect to a new URL:
             return HttpResponseRedirect(
                 reverse_lazy(PAGE_ROOT) + "?" + request.environ["QUERY_STRING"]
@@ -59,9 +41,7 @@ def get_period_copy_form(request, **kwargs):
     else:
         form = GrowingPeriodForm(**kwargs)
 
-    return render(
-        request, "wirgarten/product_cfg/period_product_cfg.html", {"form": form}
-    )
+    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
 
 
 @require_http_methods(["GET", "POST"])
@@ -73,7 +53,10 @@ def get_period_add_form(request, **kwargs):
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            create_period(form.cleaned_data)
+            create_growing_period(
+                start_date=form.cleaned_data["start_date"],
+                end_date=form.cleaned_data["end_date"],
+            )
             # redirect to a new URL:
             return HttpResponseRedirect(
                 reverse_lazy(PAGE_ROOT) + "?" + request.environ["QUERY_STRING"]
@@ -83,9 +66,7 @@ def get_period_add_form(request, **kwargs):
     else:
         form = GrowingPeriodForm(**kwargs)
 
-    return render(
-        request, "wirgarten/product_cfg/period_product_cfg.html", {"form": form}
-    )
+    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
 
 
 @require_http_methods(["GET"])

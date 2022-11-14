@@ -1,5 +1,5 @@
 import itertools
-from datetime import datetime
+from datetime import datetime, date
 
 from celery import shared_task
 from django.db import transaction
@@ -19,7 +19,6 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
 from tapir.wirgarten.service.payment import is_mandate_ref_for_coop_shares
 from tapir.wirgarten.service.products import (
-    get_total_price_for_sub_or_share_ownership,
     get_active_product_types,
 )
 
@@ -41,7 +40,7 @@ def export_pick_list_csv():
         v.id: v
         for v in ProductType.objects.filter(
             name__in=get_parameter_value(Parameter.PICK_LIST_PRODUCT_TYPES).split(","),
-            id__in=get_active_product_types(),
+            id__in=map(lambda x: x.id, get_active_product_types()),
         )
     }
 
@@ -137,7 +136,7 @@ def export_supplier_list_csv():
 
         return "".join(output.csv_string)
 
-    all_product_types = {pt.name: pt for pt in ProductType.objects.all()}
+    all_product_types = {pt.name: pt for pt in get_active_product_types()}
     include_product_types = get_parameter_value(
         Parameter.SUPPLIER_LIST_PRODUCT_TYPES
     ).split(",")
@@ -186,7 +185,7 @@ def export_sepa_payments():
     KEY_SEPA_ZAHLWEISE = "zahlweise"
     KEY_SEPA_ZAHLART = "Textschlüssel bzw. Zahlart"
 
-    def generate_current_payments(due_date):
+    def generate_payments(due_date: date):
         payments = []
 
         for mandate_ref, subs in itertools.groupby(
@@ -201,7 +200,7 @@ def export_sepa_payments():
                 amount = round(
                     sum(
                         map(
-                            lambda x: get_total_price_for_sub_or_share_ownership(x),
+                            lambda x: x.get_total_price(),
                             subs,
                         )
                     ),
@@ -226,7 +225,7 @@ def export_sepa_payments():
     existing_payments = list(
         Payment.objects.filter(transaction__isnull=True, due_date__lte=due_date)
     )
-    payments = Payment.objects.bulk_create(generate_current_payments(due_date))
+    payments = Payment.objects.bulk_create(generate_payments(due_date))
 
     payments.extend(existing_payments)
 

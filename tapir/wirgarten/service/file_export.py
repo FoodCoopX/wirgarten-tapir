@@ -4,7 +4,7 @@ from importlib.resources import _
 from django.core.mail import EmailMultiAlternatives
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import ProductType, Subscription, ExportedFile, Payment
+from tapir.wirgarten.models import ExportedFile
 from tapir.wirgarten.parameters import Parameter
 
 
@@ -39,9 +39,17 @@ def __send_email(file: ExportedFile, recipient: str | None = None):
     email.send()
 
 
-def begin_csv_string(field_names: [str]):
+def begin_csv_string(field_names: [str], delimiter: str = ";"):
+    """
+    Call this to start writing your CSV file.
+
+    :param field_names: the field names which will be written in the header and used for the data map
+    :param delimiter: the CSV delimiter to use. Default: ';'
+    :return: output: the CsvTextBuilder, writer: the DictWriter
+    """
+
     output = CsvTextBuilder()
-    writer = csv.DictWriter(output, fieldnames=field_names, delimiter=";")
+    writer = csv.DictWriter(output, fieldnames=field_names, delimiter=delimiter)
     writer.writeheader()
     return output, writer
 
