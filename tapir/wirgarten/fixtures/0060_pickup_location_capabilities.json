@@ -1,0 +1,50 @@
+[
+  {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "VSTezc7RGD",
+    "fields": {
+      "product_type": "jW3l0EcsVM",
+      "pickup_location": "qdaLYBx8Y0"
+    }
+  },
+  {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "L8BS2O5q1D",
+    "fields": {
+      "product_type": "Wv0JEzFQFa",
+      "pickup_location": "qdaLYBx8Y0"
+    }
+  },
+   {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "B37bOddYjh",
+    "fields": {
+      "product_type": "iOrXOQTZxy",
+      "pickup_location": "qdaLYBx8Y0"
+    }
+  },
+   {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "iVy9OSHPNk",
+    "fields": {
+      "product_type": "jW3l0EcsVM",
+      "pickup_location": "AQbONXHloB"
+    }
+  },
+  {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "L-8TZF39C6",
+    "fields": {
+      "product_type": "Wv0JEzFQFa",
+      "pickup_location": "AQbONXHloB"
+    }
+  },
+   {
+    "model": "wirgarten.PickupLocationCapability",
+    "pk": "ob6LeDimBD",
+    "fields": {
+      "product_type": "iOrXOQTZxy",
+      "pickup_location": "AQbONXHloB"
+    }
+  }
+]

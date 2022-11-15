@@ -1,0 +1,157 @@
+.dashboard-tile {
+    text-align: center;
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+.dashboard-tile-number > .material-icons {
+     font-size: 0.7em;
+}
+
+.dashboard-tile-number{
+    font-size: 3em;
+    font-weight: strong;
+    height:1.5em;
+}
+
+.dashboard-tile > a {
+    text-decoration: none !important;
+    color: #000000
+}
+
+.dashboard-tile-status > span{
+    font-size: 4em;
+}
+
+.positive > span {
+    color: #32822d ;
+}
+
+.negative {
+    color: darkred;
+}
+
+.alert-tile {
+    padding:1em;
+}
+
+ .dashboard-container {
+    display: grid;
+    grid-gap: 1em;
+    margin: 1em;
+}
+
+
+@media (max-width: 767px) {
+    .dashboard-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .harvest-shares-tile{
+        grid-area: span 3 / span 2;
+    }
+
+    .harvest-share-variants-tile {
+        grid-area: span 3 / span 2;
+    }
+
+    .next-payment-tile{
+        grid-area: span 1 / span 2;
+    }
+
+    .product-distribution-tile{
+        grid-area: span 3 / span 2;
+    }
+
+    .alert-tile{
+        grid-area: span 1 / span 2;
+        padding:1em;
+    }
+}
+
+@media (min-width: 768px) {
+
+    .dashboard-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .harvest-shares-tile{
+        grid-area: span 2 / span 2;
+    }
+
+    .harvest-share-variants-tile {
+        grid-area: span 3 / span 2;
+    }
+
+    .next-payment-tile{
+        grid-area: span 1 / span 2;
+    }
+
+    .product-distribution-tile{
+        grid-area: span 3 / span 3;
+    }
+
+    .alert-tile{
+        grid-area: span 1 / span 3;
+    }
+
+ }
+
+@media (min-width: 992px) {
+
+    .dashboard-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+     .harvest-shares-tile{
+        grid-area: span 3 / span 2;
+    }
+
+    .harvest-share-variants-tile {
+        grid-area: span 3 / span 2;
+    }
+
+    .next-payment-tile{
+        grid-area: span 1 / span 2;
+    }
+
+    .product-distribution-tile{
+        grid-area: span 3 / span 4;
+    }
+
+    .alert-tile{
+        grid-area: span 1 / span 6;
+    }
+ }
+
+@media (min-width: 1200px) {
+
+     .dashboard-container {
+        grid-template-columns: repeat(6, 1fr) !important;
+    }
+
+    .harvest-shares-tile{
+        grid-area: span 3 / span 2;
+    }
+
+    .harvest-share-variants-tile {
+        grid-area: span 3 / span 2;
+    }
+
+    .next-payment-tile{
+        grid-area: span 1 / span 2;
+    }
+
+    .product-distribution-tile{
+        grid-area: span 3 / span 4;
+    }
+
+    .alert-tile{
+        grid-area: span 1 / span 6;
+    }
+ }

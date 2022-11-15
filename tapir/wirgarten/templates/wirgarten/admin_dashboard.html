@@ -1,0 +1,214 @@
+{% extends "core/base.html" %}
+
+{% load i18n %}
+{% load wirgarten %}
+{% load static %}
+
+{% block head %}
+<title xmlns="http://www.w3.org/1999/html">{% block title %}Admin Dashboard{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'wirgarten/css/admin_dashboard.css' %}">
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container container">
+    <!--div class="dashboard-tile card alert-warning alert-tile">
+       <h4>WARNUNG:</h4>
+
+    </div-->
+
+    <div class="dashboard-tile card harvest-shares-tile">
+        <a href="{% url 'wirgarten:product' %}">
+            <div class="card-body">
+                <h4>{{harvest_shares_used_percent}} % Ernteanteile vergeben</h4>
+                <strong>{{harvest_shares_m_equivalents}} M-Anteile</strong> verfügbar
+                <canvas style="padding: 1em" id="harvest-share-capacity-chart"></canvas>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card">
+        <a href="{% url 'wirgarten:member_list' %}">
+            <div class="card-body">
+                <div class="dashboard-tile-number">
+                    <strong>{{active_members}}</strong>
+                    <span class="material-icons">groups</span>
+                </div>
+                <small>aktive <strong>Mitglieder</strong></small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-number">
+                <strong>{{cancellations_during_trial}}</strong>
+                <span class="material-icons">
+                    {% if cancellations_during_trial == 0 %}
+                    mood
+                    {% else %}
+                    sentiment_very_dissatisfied
+                    {% endif %}
+                </span>
+            </div>
+            <small><strong>Kündingungen</strong> (Probezeitraum)</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-number">
+                <strong>{{waiting_list_coop_shares}}</strong>
+                <span class="material-icons">schedule</span>
+            </div>
+            <small><strong>Geno-Anteile</strong><br/>Warteliste</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-number">
+                <strong>{{waiting_list_harvest_shares}}</strong>
+                <span class="material-icons">schedule</span>
+            </div>
+            <small><strong>Ernteverträge</strong><br/>Warteliste</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card next-payment-tile">
+        <a href="{% url 'wirgarten:payment_transactions' %}">
+            <div class="card-body">
+                <div class="dashboard-tile-number">
+                    + <strong>{{next_payment_amount}}</strong> €
+                </div>
+                <small>nächster <strong>Zahlungseingang</strong> ({{next_payment_date}})</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card next-payment-tile">
+        <div class="card-body">
+            <div style="color: var(--secondary)" class="dashboard-tile-number">
+                + <strong>{{solidarity_overplus}}</strong> €
+            </div>
+            <small><strong>Solidar Überschuss</strong> / Monat</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card">
+        <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
+            <div class="card-body">
+                {% if status_seperate_coop_shares %}
+                <div class="dashboard-tile-status positive">
+                    <span class="material-icons">task_alt</span>
+                </div>
+                {% else %}
+                <div class="dashboard-tile-status negative">
+                    <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+                </div>
+                {% endif %}
+                <small><strong>Geno-Anteile</strong><br/>{% if not status_seperate_coop_shares %} <strong>nicht</strong>
+                    {% endif %} separat zeichenbar</small>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card">
+        <a href="{% url 'configuration:parameters' %}?q=wirgarten.harvest.negative_soliprice_enabled">
+            <div class="card-body">
+                {% if status_negative_soli_price_allowed is 0 %}
+                <div class="dashboard-tile-status negative">
+                    <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+                </div>
+                {% else %}
+                <div class="dashboard-tile-status positive">
+                    <span class="material-icons">task_alt</span>
+                </div>
+                {% endif %}
+                <small><strong>Solidarpreise</strong><br/>{% if status_negative_soli_price_allowed is 0 %}
+                    <strong>nicht</strong>{% endif %} möglich {% if status_negative_soli_price_allowed is 2 %} (auto)
+                    {% endif %}</small>
+            </div>
+        </a>
+    </div>
+
+    <!-- FIXME: add links to the parameters as soon as they are created!! -->
+    <div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-status">
+                <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+            </div>
+            <small><strong>BestellCoop</strong><br/>unterj. Mitgliedschaft</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-status positive">
+                <span class="material-icons">task_alt</span>
+            </div>
+            <small><strong>Zusatzabos</strong><br/>unterj. zeichenbar</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card product-distribution-tile">
+        <a href="{% url 'wirgarten:product' %}">
+            <div class="card-body">
+                <h4>Verteilung der Verträge</h4>
+                <canvas id="product-distribution-chart"></canvas>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card harvest-share-variants-tile">
+        <a href="{% url 'wirgarten:product' %}">
+            <div class="card-body">
+                <h4>Top Ernteanteile Varianten</h4>
+                <canvas id="harvest-share-variants-chart"></canvas>
+            </div>
+        </a>
+    </div>
+</div>
+
+<script src="{% static 'wirgarten/js/chart.js' %}"></script>
+<script>
+  new Chart(document.getElementById('harvest-share-capacity-chart'), {
+    type: 'pie',
+    data: {
+      labels: ['Vergeben', 'Verfügbar'],
+      datasets: [{
+        label: 'Ernteanteile in €',
+        data: [{{harvest_shares_used}}, {{harvest_shares_free}}],
+        borderWidth: 1,
+        backgroundColor: ["#B4656F", "#32822d"]
+      }]
+    }
+  });
+
+  new Chart(document.getElementById('harvest-share-variants-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{harvest_share_variants_labels | safe}},
+      datasets: [{
+        label: '# Anteile pro Variante',
+        data: {{ harvest_share_variants_data | safe}},
+        borderWidth: 1
+      }]
+    }
+  });
+
+
+  new Chart(document.getElementById('product-distribution-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{contract_distribution_labels | safe}},
+      datasets: [{
+        label: "Anzahl der Mitglieder",
+        data: {{contract_distribution_data | safe}},
+        borderWidth: 1,
+         backgroundColor: ["#42CAFD", "#66B3BA", "#8EB19D", "#F6EFA6", "#F0D2D1"]
+      }]
+    }
+  });
+</script>
+{% endblock %}

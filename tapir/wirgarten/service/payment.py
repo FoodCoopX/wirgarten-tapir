@@ -1,12 +1,16 @@
+import itertools
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
+from django.db import models
+from django.db.models import Sum, F
 from nanoid import generate
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
-from tapir.wirgarten.models import MandateReference, Subscription, Member
+from tapir.wirgarten.models import MandateReference, Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.products import get_active_subscriptions
 
 MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -85,3 +89,91 @@ def get_active_subscriptions_grouped_by_product_type(member: Member) -> dict:
         subscriptions[product_type].append(sub)
 
     return subscriptions
+
+
+def generate_new_payments(due_date: date) -> [Payment]:
+    """
+    Generates payments for the given due date. If a payment for this date and mandate_ref is already persisted, it will be skipped.
+    The generated payments are not persisted!
+
+    :param due_date: The date on which the payment will be due.
+    :return: the list of new Payments
+    """
+
+    payments = []
+
+    for mandate_ref, subs in itertools.groupby(
+        iterable=Subscription.objects.filter(
+            start_date__lte=due_date, end_date__gte=due_date
+        ).order_by("mandate_ref"),
+        key=lambda x: x.mandate_ref,
+    ):
+        if not Payment.objects.filter(
+            mandate_ref=mandate_ref, due_date=due_date
+        ).exists():
+            amount = round(
+                sum(
+                    map(
+                        lambda x: x.get_total_price(),
+                        subs,
+                    )
+                ),
+                2,
+            )
+
+            payments.append(
+                Payment(
+                    due_date=due_date,
+                    amount=amount,
+                    mandate_ref=mandate_ref,
+                    status=Payment.PaymentStatus.DUE,
+                )
+            )
+
+    return payments
+
+
+def get_existing_payments(due_date: date) -> [Payment]:
+    """
+    Gets already persisted payments for the given due date
+
+    :param due_date: the date on which the payments are due
+    :return: the list of persisted payments for the given date
+    """
+
+    return list(
+        Payment.objects.filter(transaction__isnull=True, due_date__lte=due_date)
+    )
+
+
+def get_total_payment_amount(due_date: date) -> [Payment]:
+    """
+    Returns the total € amount for all due payments on this date.
+
+    :param due_date: the date on which the payments are due
+    :return: the list of existing and projected payments for the given date
+    """
+    payments = generate_new_payments(due_date)
+    payments.extend(get_existing_payments(due_date))
+    return sum(map(lambda x: x.amount, payments))
+
+
+def get_solidarity_overplus(reference_date: date = date.today()):
+    """
+    Returns the total solidarity price sum for the active subscriptions during the reference date.
+
+    :param reference_date: the date for which the subscription is active
+    :return: the total solidarity overplus amount
+    """
+
+    return (
+        get_active_subscriptions(reference_date)
+        .values("quantity", "product__price", "solidarity_price")
+        .aggregate(
+            total=Sum(
+                F("quantity") * F("product__price") * F("solidarity_price"),
+                output_field=models.DecimalField(),
+            )
+        )
+        .get("total", 0.0)
+    )

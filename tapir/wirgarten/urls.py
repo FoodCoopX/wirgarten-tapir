@@ -5,6 +5,7 @@ from tapir.wirgarten.views import (
     RegistrationWizardConfirmView,
     exported_files,
 )
+from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
 from tapir.wirgarten.views.form_period import (
     get_period_add_form,
     get_period_copy_form,
@@ -31,7 +32,6 @@ from tapir.wirgarten.views.product_cfg import ProductCfgView
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 
 app_name = "wirgarten"
-
 
 urlpatterns = [
     path(
@@ -69,6 +69,11 @@ urlpatterns = [
         "register/confirm",
         RegistrationWizardConfirmView.as_view(),
         name="draftuser_confirm_registration",
+    ),
+    path(
+        "admin/dashboard",
+        AdminDashboardView.as_view(),
+        name="admin_dashboard",
     ),
     path(
         "admin/exportedfiles",

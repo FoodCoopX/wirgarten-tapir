@@ -43,7 +43,7 @@ def get_active_product_types(reference_date: date = date.today()) -> iter:
     return ProductType.objects.filter(
         id__in=ProductCapacity.objects.filter(
             period__start_date__lte=reference_date, period__end_date__gte=reference_date
-        )
+        ).values("product_type__id")
     )
 
 
@@ -87,3 +87,35 @@ def copy_growing_period(growing_period_id: str, start_date: date, end_date: date
             ProductCapacity.objects.filter(period_id=growing_period_id),
         )
     )
+
+
+def get_active_product_capacities(reference_date: date = date.today()):
+    """
+    Gets the active product capacities for the given reference date.
+
+    :param reference_date: the date on which the capacity must be active
+    :return: queryset of active product capacities
+    """
+    return ProductCapacity.objects.filter(
+        period__start_date__lte=reference_date, period__end_date__gte=reference_date
+    )
+
+
+def get_future_subscriptions(reference_date: date = date.today()):
+    """
+    Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
+
+    :param reference_date: the date on which the capacity must be active
+    :return: queryset of active and future subscriptions
+    """
+    return Subscription.objects.filter(end_date__gte=reference_date)
+
+
+def get_active_subscriptions(reference_date: date = date.today()):
+    """
+    Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
+
+    :param reference_date: the date on which the subscription must be active
+    :return: queryset of active subscription
+    """
+    return get_future_subscriptions().filter(start_date__lte=reference_date)
