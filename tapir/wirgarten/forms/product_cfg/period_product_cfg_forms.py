@@ -171,15 +171,19 @@ class GrowingPeriodForm(forms.Form):
         start = self.cleaned_data["start_date"]
         end = self.cleaned_data["end_date"]
 
+        error_field = "start_date"
+
         try:
             validate_date_range(start_date=start, end_date=end)
         except ValidationError as e:
-            self.add_error(field="start_date", error=e)
+            self.add_error(field=error_field, error=e)
 
         try:
             validate_growing_period_overlap(start_date=start, end_date=end)
         except ValidationError as e:
-            self.add_error(field="start_date", error=e)
+            self.add_error(field=error_field, error=e)
+
+        return not self.has_error(field=error_field)
 
     def update_initial(self, initial, new_start_date):
         initial.update(
