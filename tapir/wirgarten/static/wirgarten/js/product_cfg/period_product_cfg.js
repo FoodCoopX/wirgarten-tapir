@@ -4,17 +4,16 @@ const init = (pt_p_map_json, pe_pt_map_json) => {
     activateProductList();
     manageButtons();
     activateDetails();
-}
 
-const resizeModal = () => {
-        var frame = document.getElementById("productModalContainer");
+    const frame = document.getElementById("productModalContainer");
 
-        // Adjusting the iframe height onload event
-        frame.onload = () => {
-            frame.style.height = '0px' // for some reason this is necessary
-            frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
-            frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
-        }
+    // Adjusting the iframe height onload event
+    frame.onload = () => {
+        console.log(frame.style)
+        frame.style.height = '0px' // for some reason this is necessary
+        frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
+        frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
+    }
 }
 
 
