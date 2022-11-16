@@ -180,7 +180,7 @@ class Subscription(TapirModel, Payable):
     )
 
     def get_total_price(self):
-        return self.quantity * self.product.price * (1 + self.solidarity_price)
+        return self.quantity * float(self.product.price) * (1 + self.solidarity_price)
 
 
 class ShareOwnership(TapirModel, Payable):

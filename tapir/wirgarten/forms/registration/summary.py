@@ -5,6 +5,7 @@ from django import forms
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.products import get_active_product_types
 
 
 class SummaryForm(forms.Form):
@@ -108,7 +109,9 @@ class SummaryForm(forms.Form):
 
         self.bestellcoop = {"sign_up": False}
         if "bestellcoop" in initial:
-            price = get_parameter_value(Parameter.BESTELLCOOP_PRICE)
+            price = Product.objects.get(
+                type=get_active_product_types().get(name="BestellCoop")
+            ).price  # FIXME: name must be configurable
             sign_up = initial["bestellcoop"]["bestellcoop"]
             self.bestellcoop["sign_up"] = sign_up
             self.bestellcoop["price"] = "{:.2f}".format(price)

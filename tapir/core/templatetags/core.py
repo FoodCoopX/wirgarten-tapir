@@ -60,6 +60,11 @@ def get_sidebar_link_groups(request):
 def add_admin_links(groups):
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(
+        display_name=_("Dashboard"),
+        material_icon="dashboard",
+        url=reverse_lazy("wirgarten:admin_dashboard"),
+    )
+    admin_group.add_link(
         display_name=_("Konfiguration"),
         material_icon="settings",
         url=reverse_lazy("configuration:parameters"),

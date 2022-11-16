@@ -20,7 +20,7 @@ class PickupLocationForm(forms.Form):
     outro_template = "wirgarten/registration/steps/pickup_location.outro.html"
 
     def __init__(self, *args, **kwargs):
-        super(PickupLocationForm, self).__init__(*args)
+        super(PickupLocationForm, self).__init__(*args, **kwargs)
 
         initial = kwargs["initial"]
         filtered_pickup_locations = PickupLocation.objects.all()

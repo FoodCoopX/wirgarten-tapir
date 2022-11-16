@@ -2,9 +2,6 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
-from django.utils.decorators import method_decorator
-from django.views.decorators.clickjacking import xframe_options_exempt
-
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
     GrowingPeriodForm,
 )

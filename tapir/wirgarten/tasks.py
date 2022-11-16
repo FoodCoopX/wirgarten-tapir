@@ -17,7 +17,11 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
-from tapir.wirgarten.service.payment import is_mandate_ref_for_coop_shares
+from tapir.wirgarten.service.payment import (
+    is_mandate_ref_for_coop_shares,
+    generate_new_payments,
+    get_existing_payments,
+)
 from tapir.wirgarten.service.products import (
     get_active_product_types,
 )
@@ -185,48 +189,12 @@ def export_sepa_payments():
     KEY_SEPA_ZAHLWEISE = "zahlweise"
     KEY_SEPA_ZAHLART = "Textschlüssel bzw. Zahlart"
 
-    def generate_payments(due_date: date):
-        payments = []
-
-        for mandate_ref, subs in itertools.groupby(
-            iterable=Subscription.objects.filter(
-                start_date__lte=due_date, end_date__gte=due_date
-            ).order_by("mandate_ref"),
-            key=lambda x: x.mandate_ref,
-        ):
-            if not Payment.objects.filter(
-                mandate_ref=mandate_ref, due_date=due_date
-            ).exists():
-                amount = round(
-                    sum(
-                        map(
-                            lambda x: x.get_total_price(),
-                            subs,
-                        )
-                    ),
-                    2,
-                )
-
-                payments.append(
-                    Payment(
-                        due_date=due_date,
-                        amount=amount,
-                        mandate_ref=mandate_ref,
-                        status=Payment.PaymentStatus.DUE,
-                    )
-                )
-
-        return payments
-
     due_date = datetime.today().replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
 
-    existing_payments = list(
-        Payment.objects.filter(transaction__isnull=True, due_date__lte=due_date)
-    )
-    payments = Payment.objects.bulk_create(generate_payments(due_date))
-
+    existing_payments = get_existing_payments(due_date)
+    payments = Payment.objects.bulk_create(generate_new_payments(due_date))
     payments.extend(existing_payments)
 
     site_name = get_parameter_value(Parameter.SITE_NAME)

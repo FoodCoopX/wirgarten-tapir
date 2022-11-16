@@ -2,12 +2,11 @@ import datetime
 from importlib.resources import _
 
 from django import forms
-from django.db import models
-from django.db.models import Sum, F
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import HarvestShareProduct, Subscription
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.payment import get_solidarity_overplus
 
 SOLIDARITY_PRICES = [
     (0.0, _("Ich möchte keinen Solidarpreis zahlen")),
@@ -29,19 +28,7 @@ def get_solidarity_total() -> float:
     elif val == 1:  # enabled
         return 1000.0
     elif val == 2:  # automatic calculation
-        today = datetime.date.today()
-        solidarity_total = (
-            Subscription.objects.filter(start_date__lte=today, end_date__gte=today)
-            .values("quantity", "product__price", "solidarity_price")
-            .aggregate(
-                total=Sum(
-                    F("quantity") * F("product__price") * F("solidarity_price"),
-                    output_field=models.DecimalField(),
-                )
-            )
-        )
-
-        return solidarity_total.get("total", 0.0) or 0.0
+        return get_solidarity_overplus() or 0.0
 
 
 def is_separate_coop_shares_allowed() -> bool:
