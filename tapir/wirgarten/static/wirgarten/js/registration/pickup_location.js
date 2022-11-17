@@ -1,27 +1,61 @@
-var initMap = coords => {
+// FIXME: maybe we need a new field in product type for the icon
+const PRODUCT_TYPE_ICONS = {
+    "Ernteanteile": "🌾",
+    "Hühneranteile": "🐔"
+}
+
+var initMap = (data, productTypes) => {
     const pickupLocationSelect = document.getElementById('id_pickup_location');
+    pickupLocationSelect.required = true;
 
     const markers = {};
-    const idToCoords = (id) => coords[id].split(',')
+    const idToCoords = (id) => data[id]["coords"].split(',')
     const map = L.map('map').setView(idToCoords(pickupLocationSelect.options[0].value), 10);
 
-    for(let i = 0; i < pickupLocationSelect.options.length; i++) {
-        const option = pickupLocationSelect.options[i]
-        const marker = L.marker(idToCoords(option.value)).addTo(map);
-        marker.bindPopup("<b>" + option.innerText.replaceAll(",","<br/>").replaceAll(" (","<br/><br/>(").replace("<br/>","</b><br/>") );
-        marker.locationId = option.value;
-        marker.on("click", e => handleSelect(e.target.locationId));
+    const possibleLocations = Array.from(pickupLocationSelect.options).map(o => o.value)
 
-        markers[option.value] = marker;
+     const setMarkerColor = (marker) => {
+         if(!possibleLocations.includes(marker.locationId)){
+            marker._icon.style.webkitFilter = "grayscale()"
+        } else {
+         marker._icon.style.webkitFilter = ""
+        }
+    }
+
+    for(const [id, pl] of Object.entries(data)) {
+        const marker = L.marker(idToCoords(id)).addTo(map);
+        const missingCapabilities = productTypes.filter(v => !pl.capabilities.includes(v))
+        marker.bindPopup(`<div style="text-align: center">
+        <strong>${pl.name}</strong>
+            <br/>
+                ${pl.street}, ${pl.city}<br/></br>
+                <small>${pl.info}</small><br/>
+                <br/>
+                ${pl.capabilities.map(c =>
+                    `<span title="${c}" style="font-size:2.5em; text-decoration:strikethrough;">${PRODUCT_TYPE_ICONS[c]}</span>`
+                ).join(" ")}
+
+                ${missingCapabilities.length == 0 ? '' : `<br/><span style="color:darkred">Folgende Produkte sind hier leider <strong>nicht</strong> abholbar: ${missingCapabilities.join(" ")}<br/></span>`}
+
+            </div>
+            `);
+        marker.locationId = id;
+        marker.riseOnHover = true;
+        marker.on("click", e => handleSelect(e.target.locationId));
+        setMarkerColor(marker)
+
+        markers[id] = marker;
       }
 
     const handleSelect = (id) => {
         pickupLocationSelect.value = id;
 
-        map.flyTo(idToCoords(id), 14);
+        target = idToCoords(id)
+        target[0] = parseFloat(target[0]) + 0.002
+        map.flyTo(target, 14 )
 
         // reset marker colors
-        Object.values(markers).forEach(m => m._icon.style.webkitFilter = "");
+        Object.values(markers).forEach(setMarkerColor);
 
         const marker = markers[id];
         marker.openPopup();
