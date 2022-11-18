@@ -9,10 +9,10 @@
   },
    {
     "model": "wirgarten.GrowingPeriod",
-    "pk": "nxh40tXEYm",
+    "pk": "kBI59V-xw8",
     "fields": {
       "start_date": "2023-03-01",
-      "end_date": "2024-02-28"
+      "end_date": "2024-02-29"
     }
   }
 ]
