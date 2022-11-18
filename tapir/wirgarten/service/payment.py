@@ -111,14 +111,16 @@ def generate_new_payments(due_date: date) -> [Payment]:
         if not Payment.objects.filter(
             mandate_ref=mandate_ref, due_date=due_date
         ).exists():
-            amount = round(
-                sum(
-                    map(
-                        lambda x: x.get_total_price(),
-                        subs,
-                    )
-                ),
-                2,
+            amount = float(
+                round(
+                    sum(
+                        map(
+                            lambda x: x.get_total_price(),
+                            subs,
+                        )
+                    ),
+                    2,
+                )
             )
 
             payments.append(
@@ -155,7 +157,7 @@ def get_total_payment_amount(due_date: date) -> [Payment]:
     """
     payments = generate_new_payments(due_date)
     payments.extend(get_existing_payments(due_date))
-    return sum(map(lambda x: x.amount, payments))
+    return sum(map(lambda x: float(x.amount), payments))
 
 
 def get_solidarity_overplus(reference_date: date = date.today()):
