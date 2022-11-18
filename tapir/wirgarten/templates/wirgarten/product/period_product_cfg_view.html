@@ -125,11 +125,11 @@
                     <div style="display: flex;flex-direction: row" class="card-header">
                         <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}:</h5>
                         <button onclick="getProductAddForm()"
-                              
+
                                 class="need-product-type btn btn-outline-info material-icons mx-1 px-2" disabled>add
                         </button>
                         <button onclick="getProductEditForm()"
-                              
+
                                 class="need-product btn btn-outline-warning material-icons mx-1 px-2" disabled>edit
                         </button>
                         <div style="width: 3em"></div>
@@ -219,7 +219,6 @@
 
 {% include 'wirgarten/generic/modal/form-modal.html' %}
 
-<script src="{% static 'core/js/url-functions.js' %}"></script>
 <script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
 <script>
     init('{{ pt_p_map | safe }}', '{{ pe_pt_map | safe }}');

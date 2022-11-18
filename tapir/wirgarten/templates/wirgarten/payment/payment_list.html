@@ -19,7 +19,7 @@
     <div style="display:grid; grid-template-columns: 1fr 2fr; grid-gap: 1em">
         <div class="card">
             <div class="card-header">
-                <h4>{% translate "Lastschrift" %}</h4>
+                <h4>{% translate "Zahlungseingang" %}</h4>
             </div>
             <div class="card-body">
                 <table class="table"
@@ -32,7 +32,7 @@
 
                     <tbody>
                     {% for transaction in object_list %}
-                    <tr id="transaction-{{transaction.id}}" class="transaction-row"
+                    <tr id="transaction-{{transaction.id}}" class="tr-clickable transaction-row"
                         onclick="handleSelectTransaction('{{ transaction.id }}')">
                         <td class="align-middle">{{ transaction.created_at }}</td>
                         <td class="align-middle">{{ transaction.number_of_payments }}</td>
@@ -65,7 +65,7 @@
 
                     {% for transaction in object_list %}
                     {% for payment in transaction.payments %}
-                    <tr class="transaction-payment-row transaction-payments-{{ transaction.id }}">
+                    <tr href="{% url 'wirgarten:member_payments' payment.mandate_ref.member.pk %}" class="tr-href transaction-payment-row transaction-payments-{{ transaction.id }}">
                         <td class="align-middle">{{ payment.due_date }}</td>
                         <td class="align-middle">{{ payment.mandate_ref.ref }}</td>
                         <td class="align-middle">{{ payment.mandate_ref.member }}</td>
@@ -82,8 +82,11 @@
 </div>
 
 <script>
+    const transactionPaymentRows = document.getElementsByClassName("transaction-payment-row")
+    const transactionRows = document.getElementsByClassName("transaction-row")
+
     const activateSelection = (id) => {
-        for (elem of document.getElementsByClassName("transaction-row")) {
+        for (elem of transactionRows) {
             if(elem.id === `transaction-${id}`){
                 elem.classList.add('active')
             } else {
@@ -95,7 +98,7 @@
     const handleSelectTransaction = (transactionId) => {
         activateSelection(transactionId)
 
-        for (elem of document.getElementsByClassName(`transaction-payment-row`)){
+        for (elem of transactionPaymentRows){
             if(elem.classList.contains(`transaction-payments-${transactionId}`)){
                elem.style.display = 'table-row'
             } else {
@@ -104,9 +107,7 @@
         }
     }
 
-
-
-
+    handleSelectTransaction(transactionRows[0].id.replace("transaction-", ""))
 </script>
 
 {% endblock %}

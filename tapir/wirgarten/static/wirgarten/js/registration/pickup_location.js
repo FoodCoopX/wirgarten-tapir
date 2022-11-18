@@ -1,18 +1,15 @@
-// FIXME: maybe we need a new field in product type for the icon
-const PRODUCT_TYPE_ICONS = {
-    "Ernteanteile": "🌾",
-    "Hühneranteile": "🐔"
-}
-
-var initMap = (data, productTypes) => {
+var initMap = (data, productTypes = [], callback = false) => {
+    // FIXME: the select box from the widget should be decoupled from the map
     const pickupLocationSelect = document.getElementById('id_pickup_location');
-    pickupLocationSelect.required = true;
+    if(pickupLocationSelect) pickupLocationSelect.required = true;
 
     const markers = {};
-    const idToCoords = (id) => data[id]["coords"].split(',')
-    const map = L.map('map').setView(idToCoords(pickupLocationSelect.options[0].value), 10);
+    const idToCoords = (id) => {
+        return data[id]["coords"].split(',')
+    }
+    const map = L.map('map').setView(idToCoords(Object.entries(data)[0][0]), 12);
 
-    const possibleLocations = Array.from(pickupLocationSelect.options).map(o => o.value)
+    const possibleLocations = pickupLocationSelect ? Array.from(pickupLocationSelect.options).map(o => o.value) : Object.keys(data)
 
      const setMarkerColor = (marker) => {
          if(!possibleLocations.includes(marker.locationId)){
@@ -24,31 +21,31 @@ var initMap = (data, productTypes) => {
 
     for(const [id, pl] of Object.entries(data)) {
         const marker = L.marker(idToCoords(id)).addTo(map);
-        const missingCapabilities = productTypes.filter(v => !pl.capabilities.includes(v))
+        console.log("pl", pl)
+        const missingCapabilities = productTypes.filter(v => !pl.capabilities.map(it => it.name).includes(v))
         marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>
             <br/>
                 ${pl.street}, ${pl.city}<br/></br>
-                <small>${pl.info}</small><br/>
+                <small>${pl.info.replace(',', ', <br/>')}</small><br/>
                 <br/>
                 ${pl.capabilities.map(c =>
-                    `<span title="${c}" style="font-size:2.5em; text-decoration:strikethrough;">${PRODUCT_TYPE_ICONS[c]}</span>`
+                    `<span title="${c}" style="font-size:2.5em; text-decoration:strikethrough;">${c.icon}</span>`
                 ).join(" ")}
 
                 ${missingCapabilities.length == 0 ? '' : `<br/><span style="color:darkred">Folgende Produkte sind hier leider <strong>nicht</strong> abholbar: ${missingCapabilities.join(" ")}<br/></span>`}
-
             </div>
             `);
         marker.locationId = id;
         marker.riseOnHover = true;
-        marker.on("click", e => handleSelect(e.target.locationId));
+        marker.on("click", e => select(e.target.locationId, callback));
         setMarkerColor(marker)
 
         markers[id] = marker;
       }
 
-    const handleSelect = (id) => {
-        pickupLocationSelect.value = id;
+    const select = (id, callback) => {
+        if(pickupLocationSelect) pickupLocationSelect.value = id;
 
         target = idToCoords(id)
         target[0] = parseFloat(target[0]) + 0.002
@@ -60,6 +57,10 @@ var initMap = (data, productTypes) => {
         const marker = markers[id];
         marker.openPopup();
         marker._icon.style.webkitFilter = "hue-rotate(160deg)";
+
+        if(callback){
+            callback(id)
+        }
      }
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -67,6 +68,10 @@ var initMap = (data, productTypes) => {
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    handleSelect(pickupLocationSelect.options[0].value);
-    pickupLocationSelect.addEventListener("change", ({ target }) =>  handleSelect(target.value));
+    if(pickupLocationSelect){
+        select(pickupLocationSelect.options[0].value);
+        pickupLocationSelect.addEventListener("change", ({ target }) =>  select(target.value));
+    }
+
+    return (id) => select(id, false)
 }
