@@ -7,6 +7,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     GrowingPeriod,
     ProductType,
+    Payable,
 )
 from tapir.wirgarten.validators import (
     validate_growing_period_overlap,
@@ -14,7 +15,7 @@ from tapir.wirgarten.validators import (
 )
 
 
-def get_total_price_for_subs(subs: [Subscription]) -> float:
+def get_total_price_for_subs(subs: [Payable]) -> float:
     """
     Returns the total amount of one payment for the given list of subs.
 
@@ -87,6 +88,8 @@ def copy_growing_period(growing_period_id: str, start_date: date, end_date: date
             ProductCapacity.objects.filter(period_id=growing_period_id),
         )
     )
+
+    return new_growing_period
 
 
 def get_active_product_capacities(reference_date: date = date.today()):

@@ -27,6 +27,8 @@ KW_PERIOD_ID = "periodId"
 
 
 class ProductTypeForm(forms.Form):
+    template_name = "wirgarten/product/product_type_form.html"
+
     def __init__(self, *args, **kwargs):
         super(ProductTypeForm, self).__init__(*args)
         initial_id = "-"

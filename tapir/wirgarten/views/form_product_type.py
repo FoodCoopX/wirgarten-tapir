@@ -1,13 +1,14 @@
-from django.views.decorators.http import require_http_methods
-from django.core.exceptions import ObjectDoesNotExist
+import re
 from datetime import date
-from django.urls import reverse_lazy
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import ProductTypeForm
 from tapir.wirgarten.models import ProductType, ProductCapacity, TaxRate, Product  #
-
+from tapir.wirgarten.views.modal import get_form_modal
 
 PAGE_ROOT = "wirgarten:product"
 KW_PROD_TYPE_ID = "prodTypeId"
@@ -82,50 +83,42 @@ def create_product_type(form: ProductTypeForm, period_id):
         capacity=form["capacity"],
     )
 
+    return pt
+
 
 @require_http_methods(["GET", "POST"])
 def get_product_type_edit_form(request, **kwargs):
-    # if this is a POST request we need to process the form data
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = ProductTypeForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            # process the data in form.cleaned_data as required
-            save_product_type(form.cleaned_data)
-            # redirect to a new URL:
-            return HttpResponseRedirect(
-                reverse_lazy(PAGE_ROOT) + "?" + request.environ["QUERY_STRING"]
-            )
-
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        form = ProductTypeForm(**kwargs)
-
-    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
+    return get_form_modal(
+        request=request,
+        form=ProductTypeForm,
+        handler=lambda form: save_product_type(form.cleaned_data),
+        redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
+        **kwargs,
+    )
 
 
 @require_http_methods(["GET", "POST"])
 def get_product_type_add_form(request, **kwargs):
-    # if this is a POST request we need to process the form data
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = ProductTypeForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            # process the data in form.cleaned_data as required
-            form.cleaned_data["period_id"] = kwargs[KW_PERIOD_ID]
-            create_product_type(form.cleaned_data, kwargs[KW_PERIOD_ID])
-            # redirect to a new URL:
-            return HttpResponseRedirect(
-                reverse_lazy(PAGE_ROOT) + "?" + request.environ["QUERY_STRING"]
+    def handler(form):
+        form.cleaned_data["period_id"] = kwargs[KW_PERIOD_ID]
+        return create_product_type(form.cleaned_data, kwargs[KW_PERIOD_ID])
+
+    def redirect_url(data):
+        new_query_string = (
+            re.sub(
+                f"{KW_PROD_TYPE_ID}=([\d\w]*)&?", "", request.environ["QUERY_STRING"]
             )
+            + f"&{KW_PROD_TYPE_ID}={data.id}"
+        )
+        return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"
 
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        form = ProductTypeForm(**kwargs)
-
-    return render(request, "wirgarten/product_cfg/modal_form.html", {"form": form})
+    return get_form_modal(
+        request=request,
+        form=ProductTypeForm,
+        handler=handler,
+        redirect_url_resolver=redirect_url,
+        **kwargs,
+    )
 
 
 @require_http_methods(["GET"])

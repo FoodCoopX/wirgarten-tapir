@@ -259,7 +259,7 @@ def get_next_start_date(ref_date=date.today()):
 
 
 def save_mandate_ref(member: Member, coop_shares: bool):
-    ref = generate_mandate_ref(member, coop_shares)
+    ref = generate_mandate_ref(member.id, coop_shares)
     return MandateReference.objects.create(
         ref=ref, member=member, start_ts=datetime.now()
     )

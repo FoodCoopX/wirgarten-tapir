@@ -4,18 +4,7 @@ const init = (pt_p_map_json, pe_pt_map_json) => {
     activateProductList();
     manageButtons();
     activateDetails();
-
-    const frame = document.getElementById("productModalContainer");
-
-    // Adjusting the iframe height onload event
-    frame.onload = () => {
-        console.log(frame.style)
-        frame.style.height = '0px' // for some reason this is necessary
-        frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
-        frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
-    }
 }
-
 
 // page logic
 const activateDetails = () => {
@@ -181,40 +170,32 @@ const manageButtons = () => {
     manageProductDependentButtons(params);
 }
 
-// dynamic Forms
-const AddModal = (url, title) => {
-    const xframe = document.getElementById("productModalContainer")
-    xframe.src = url;
-
-    document.getElementById("modalLabel").innerHTML = title;
-}
-
 const getProductTypeEditForm = () => {
     const params = Tapir.getUrlParams();
     if (params.prodTypeId) {
         const url = `/wirgarten/product/${params.prodTypeId}/${params.periodId}/typeedit${Tapir.stringifyUrlParams(params)}`;
-        AddModal(url, "Produkt Typ editieren");
+        FormModal.load(url, "Produkt Typ editieren");
     }
 }
 
 const getProductTypeAddForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/${params.periodId}/typeadd${Tapir.stringifyUrlParams(params)}`;
-    AddModal(url, "Neuen Produkt Typ hinzufügen");
+    FormModal.load(url, "Neuen Produkt Typ hinzufügen");
 }
 
 const getProductEditForm = () => {
     const params = Tapir.getUrlParams();
     if (params.prodId) {
         const url = `/wirgarten/product/${params.prodId}/edit${Tapir.stringifyUrlParams(params)}`;
-        AddModal(url, "Produkt editieren");
+        FormModal.load(url, "Produkt editieren");
     }
 }
 
 const getProductAddForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/${params.prodTypeId}/add${Tapir.stringifyUrlParams(params)}`;
-    AddModal(url, "Neues Produkt hinzufügen");
+    FormModal.load(url, "Neues Produkt hinzufügen");
 }
 
 const getGrowingPeriodAddForm = () => {
@@ -223,13 +204,13 @@ const getGrowingPeriodAddForm = () => {
     const title = `Neue Anbauperiode anlegen. Ohne Produkte
      Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode Anzuwenden,
      damit Produkte und weitere Einstellungen übernommen werden. Diese sind noch nachträglich editierbar.`;
-    AddModal(url, title);
+    FormModal.load(url, title);
 }
 
 const getGrowingPeriodCopyForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/${params.periodId}/periodcopy${Tapir.stringifyUrlParams(params)}`;
-    AddModal(url, "Neue Anbauperiode anlegen. Produkte werden übernommen.");
+    FormModal.load(url, "Neue Anbauperiode anlegen. Produkte werden übernommen.");
 }
 
 // actions
