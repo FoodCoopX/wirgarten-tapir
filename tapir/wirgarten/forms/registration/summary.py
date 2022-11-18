@@ -109,9 +109,11 @@ class SummaryForm(forms.Form):
 
         self.bestellcoop = {"sign_up": False}
         if "bestellcoop" in initial:
-            price = Product.objects.get(
-                type=get_active_product_types().get(name="BestellCoop")
-            ).price  # FIXME: name must be configurable
+            price = float(
+                Product.objects.get(
+                    type=get_active_product_types().get(name="BestellCoop")
+                ).price
+            )  # FIXME: name must be configurable
             sign_up = initial["bestellcoop"]["bestellcoop"]
             self.bestellcoop["sign_up"] = sign_up
             self.bestellcoop["price"] = "{:.2f}".format(price)
