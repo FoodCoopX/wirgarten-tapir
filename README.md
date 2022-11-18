@@ -209,9 +209,9 @@ The parameters are grouped by the category.
 ![image](https://user-images.githubusercontent.com/12133154/190416712-4f3b3a8f-3d49-4a51-bd87-50cff131985d.png)
 
 ### Modal Forms
-TODO: screenshot
-
 We have the possibility to use Django Forms in Bootstrap modals.
+
+![image](https://user-images.githubusercontent.com/12133154/202764995-b89bad3d-417e-4120-84b1-1eacd9a14356.png)
 
 **Example:**
 #### 1) Define the view
