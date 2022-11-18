@@ -208,29 +208,55 @@ The parameters are grouped by the category.
 
 ![image](https://user-images.githubusercontent.com/12133154/190416712-4f3b3a8f-3d49-4a51-bd87-50cff131985d.png)
 
-### Welcome Desk Authentication
+### Modal Forms
+TODO: screenshot
 
-All users logging in at the welcome desk are granted more permissions. This magic uses SSL client certificates. The web
-server requests and checks the client certificate and subsequently sets a header that is then checked
-by `tapir.accounts.middleware.ClientPermsMiddleware`.
+We have the possibility to use Django Forms in Bootstrap modals.
 
-Here are some quick one-liners for key management:
-
+**Example:**
+#### 1) Define the view
+views.py
+``` python
+# make sure your function signature is the same -> your_function(request, **kwargs)
+def get_product_type_edit_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        
+        # your form class (not instance!!)
+        form=ProductTypeForm, 
+        
+        # the handler is called if the form is submitted and valid
+        handler=lambda form: save_product_type(form.cleaned_data), # the handler will be called on success
+        
+        # This callback function creates the redirect url.
+        # The result of the handler function is passed, so you could include the ID for newly generated entities
+        redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
+        **kwargs,
 ```
-# Create a new CA - only the first time. The public key in the cer file is distributed to the webserver, the private key is to be kept secret!
-openssl req -newkey rsa:4096 -keyform PEM -keyout members.supercoop.de.key -x509 -days 3650 -outform PEM -nodes -out members.supercoop.de.cer -subj="/C=DE/O=SuperCoop Berlin eG/CN=members.supercoop.de"
 
-
-# Create a new key
-export CERT_HOSTNAME=welcome-desk-1
-openssl genrsa -out $CERT_HOSTNAME.members.supercoop.de.key 4096
-openssl req -new -key $CERT_HOSTNAME.members.supercoop.de.key -out $CERT_HOSTNAME.members.supercoop.de.req -sha256 -subj "/C=DE/O=SuperCoop Berlin eG/CN=welcome-desk.members.supercoop.de"
-openssl x509 -req -in $CERT_HOSTNAME.members.supercoop.de.req -CA members.supercoop.de.cer -CAkey members.supercoop.de.key -CAcreateserial -extensions client -days 3650 -outform PEM -out $CERT_HOSTNAME.members.supercoop.de.cer -sha256
-
-# Create a PKCS12 bundle consumable by the browser
-openssl pkcs12 -export -inkey $CERT_HOSTNAME.members.supercoop.de.key -in $CERT_HOSTNAME.members.supercoop.de.cer -out $CERT_HOSTNAME.members.supercoop.de.p12
-
-# Remove CSR and bundled private/public key files
-rm $CERT_HOSTNAME.members.supercoop.de.key $CERT_HOSTNAME.members.supercoop.de.cer $CERT_HOSTNAME.members.supercoop.de.req
+#### 2) Add URL routing for the view
+urls.py
+``` python
+    # [...]
+    
+    path(
+        "product/<str:periodId>/typeadd",
+        get_product_type_edit_form, # this is the function from above
+        name="product_type_edit",
+    ),
+    
+    # [...]
 ```
 
+#### 3) Include the modal in your template
+my-template.html
+``` python
+{% include 'wirgarten/generic/modal/form-modal.html' %}
+```
+
+#### 4) Show the modal on button click
+``` html
+  <button onclick="FormModal.load(view_url, title)">
+    Open Modal        
+  </button>
+```

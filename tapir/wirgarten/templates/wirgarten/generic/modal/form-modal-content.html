@@ -1,0 +1,42 @@
+{% extends 'wirgarten/base.html' %}
+
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load static %}
+{% load wirgarten %}
+
+{% block content %}
+<form id="form" method="post" onsubmit="showLoadingSpinner()">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% if form.template_name %}
+        {% include form.template_name %}
+        {% else %}
+        <div class="form-fields">
+            {% for field in form %}
+            <div class="form-field" id="{{ field.name }}">
+                {% bootstrap_field field %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeModal()">
+            {% translate 'Abbrechen'%}
+        </button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+</form>
+<script>
+    const closeModal = () => {
+        parent.postMessage({type:"modal-close"}, "*")
+    }
+
+    const showLoadingSpinner = () => {
+        parent.postMessage({type:"modal-loading-spinner"}, "*")
+    }
+</script>
+
+{% endblock %}
+

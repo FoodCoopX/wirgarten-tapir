@@ -1,0 +1,21 @@
+{% load static %}
+{% load i18n %}
+
+<div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="modalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div id="modal-loading-indicator" class="modal-body">
+                {% include 'wirgarten/generic/loading-spinner.html' %}
+            </div>
+
+            <iframe scrolling="no" id="content-frame"></iframe>
+        </div>
+    </div>
+</div>
+<script src="{% static 'wirgarten/js/form-modal.js' %}"></script>

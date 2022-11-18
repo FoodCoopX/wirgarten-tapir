@@ -1,0 +1,23 @@
+{% load django_bootstrap5 %}
+
+<div class="form-fields">
+    {% for field in form %}
+    <div class="form-field" id="{{ field.name }}">
+        {% bootstrap_field field %}
+    </div>
+    {% endfor %}
+</div>
+<script>
+    const handleDeliveryCycleChange = (value) => {
+        for (field of document.getElementsByClassName("form-field")){
+            if(field.id.startsWith("plc_")){
+                field.style.display = value === "no_delivery" ? "none" : "block"
+            }
+        }
+        parent.postMessage({type:"modal-content-resized"}, "*")
+    }
+
+    const select = document.getElementById("id_delivery_cycle")
+    select.addEventListener("change", (e) => handleDeliveryCycleChange(e.target.value))
+    handleDeliveryCycleChange(select.value);
+</script>

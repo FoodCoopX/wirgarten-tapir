@@ -116,21 +116,34 @@ def get_subs_or_shares_for_mandate_ref(
         return list(
             map(
                 lambda x: {
-                    "amount": round(x.share_price, 2),
                     "quantity": x.quantity,
                     "product": {
                         "name": _("Genossenschaftsanteile"),
                         "price": x.share_price,
                     },
+                    "total_price": x.get_total_price(),
                 },
                 ShareOwnership.objects.filter(mandate_ref=mandate_ref),
             )
         )
     else:
-        return Subscription.objects.filter(
-            mandate_ref=mandate_ref,
-            start_date__lte=reference_date,
-            end_date__gt=reference_date,
+        return list(
+            map(
+                lambda x: {
+                    "quantity": x.quantity,
+                    "product": {
+                        "name": x.product.name,
+                        "type": {"name": x.product.type.name},
+                        "price": x.product.price,
+                    },
+                    "total_price": x.get_total_price(),
+                },
+                Subscription.objects.filter(
+                    mandate_ref=mandate_ref,
+                    start_date__lte=reference_date,
+                    end_date__gt=reference_date,
+                ),
+            )
         )
 
 
@@ -140,7 +153,7 @@ def payment_to_dict(payment: Payment) -> dict:
         "due_date": payment.due_date.isoformat(),
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
-        "calculated_amount": get_total_price_for_subs(subs),
+        "calculated_amount": round(sum(map(lambda x: x["total_price"], subs)), 2),
         "subs": subs,
         "status": payment.status,
         "edited": payment.edited,
@@ -266,7 +279,7 @@ def get_payment_amount_edit_form(request, **kwargs):
     else:
         form = PaymentAmountEditForm(None, **kwargs)
         return render(
-            request, "wirgarten/member/member_payments_edit_form.html", {"form": form}
+            request, "wirgarten/member/member_payments_edit_form.html", {"modal": form}
         )
 
 

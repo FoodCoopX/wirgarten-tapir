@@ -1,0 +1,25 @@
+#content-frame {
+   -webkit-transition-property: min-height, max-height;
+  -moz-transition-property: min-height, max-height;
+  -ms-transition-property: min-height, max-height;
+  -o-transition-property: min-height, max-height;
+  transition-property: min-height, max-height;
+  
+  -webkit-transition-duration: .5s;
+  -moz-transition-duration: .5s;
+  -ms-transition-duration: .5s;
+  -o-transition-duration: .5s;
+  transition-duration: .5s;
+
+  -webkit-transition-timing-function: ease-out;
+  -moz-transition-timing-function: ease-out;
+  -ms-transition-timing-function: ease-out;
+  -o-transition-timing-function: ease-out;
+  transition-timing-function: ease-out;
+}
+
+#modal-loading-indicator{
+    display: flex;
+    justify-content: center !important;
+    margin: 1em;
+}

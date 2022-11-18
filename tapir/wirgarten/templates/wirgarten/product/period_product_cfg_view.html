@@ -23,12 +23,11 @@
                         <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}:</h5>
                         <button onclick="getGrowingPeriodAddForm()"
                                 class="btn btn-outline-info material-icons mx-1 px-2"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal">
+                              >
                             add
                         </button>
                         <button onclick="getGrowingPeriodCopyForm()"
                                 class="need-growing-period btn btn-outline-warning material-icons mx-1 px-2"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
                                 disabled>
                             folder_copy
                         </button>
@@ -47,9 +46,13 @@
                                     class="list-group-item list-group-item-action">
                                 <div style="display:grid; grid-template-columns: 4em 7em 3em 4em 1fr">
                                     <p style="width: 100%; margin: auto; grid-column: 1/2">{% translate 'Start' %}:</p>
-                                    <strong style="width: 100%; margin: auto; grid-column: 2/3">{{ period|get_value:'start_date' }}</strong>
+                                    <strong style="width: 100%; margin: auto; grid-column: 2/3">
+                                        {{ period|get_value:'start_date' }}
+                                    </strong>
                                     <p style="width: 100%; margin: auto; grid-column: 4/5">{% translate 'Ende' %}:</p>
-                                    <strong style="width: 100%; margin: auto; grid-column: 5/6">{{ period|get_value:'end_date' }} </strong>
+                                    <strong style="width: 100%; margin: auto; grid-column: 5/6">
+                                        {{ period|get_value:'end_date' }}
+                                    </strong>
                                 </div>
                             </button>
                             {% endfor %}
@@ -61,12 +64,11 @@
                         <h5 style="margin: auto; width: 100%">{% translate 'Produkt Typen' %}:</h5>
                         <button onclick="getProductTypeAddForm()"
                                 class="btn btn-outline-info material-icons mx-1 px-2"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal">
+                              >
                             add
                         </button>
                         <button onclick="getProductTypeEditForm()"
                                 class="need-product-type btn btn-outline-warning material-icons mx-1 px-2"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
                                 disabled>
                             edit
                         </button>
@@ -84,7 +86,8 @@
                                     onclick="select_product_type('{{product_type.id}}', '{{ pt_p_map }}')"
                                     class="list-group-item list-group-item-action">
                                 <div style="display: grid; grid-template-columns: 47% 13% 22% 18%">
-                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">{% translate product_type.name %}</strong>
+                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">
+                                        {% translate product_type.name %}</strong>
                                     {% if product_type.delivery_cycle != 'no_delivery' %}
                                     <div style="margin: auto; display: flex; flex-direction: row; grid-column: 2/3">
                                         <div class="material-icons">shopping_bag</div>
@@ -97,11 +100,15 @@
                                     </div>
                                     {% endif %}
                                     <div style="margin: auto; display: flex; flex-direction: row; grid-column: 3/4">
-                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">price_change</div>
+                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">
+                                            price_change
+                                        </div>
                                         <p style="margin: auto">{{ capacity|get_value:product_type.id }} €</p>
                                     </div>
                                     <div style="margin: auto; display: flex; flex-direction: row; grid-column: 4/5">
-                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">account_balance</div>
+                                        <div style="padding-right: 0.5em; margin: auto" class="material-icons">
+                                            account_balance
+                                        </div>
                                         <p style="margin: auto">{{ tax_rates|get_value:product_type.id }} %</p>
                                     </div>
                                 </div>
@@ -118,15 +125,16 @@
                     <div style="display: flex;flex-direction: row" class="card-header">
                         <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}:</h5>
                         <button onclick="getProductAddForm()"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                              
                                 class="need-product-type btn btn-outline-info material-icons mx-1 px-2" disabled>add
                         </button>
                         <button onclick="getProductEditForm()"
-                                data-bs-toggle="modal" data-bs-target="#productTypeModal"
+                              
                                 class="need-product btn btn-outline-warning material-icons mx-1 px-2" disabled>edit
                         </button>
                         <div style="width: 3em"></div>
-                        <button onclick="deleteProduct()" class="need-product btn btn-outline-danger material-icons mx-1 px-2" disabled>
+                        <button onclick="deleteProduct()"
+                                class="need-product btn btn-outline-danger material-icons mx-1 px-2" disabled>
                             delete
                         </button>
                     </div>
@@ -137,7 +145,9 @@
                                     onclick="select_product('{{product.id}}')"
                                     class="list-group-item list-group-item-action">
                                 <div style="display:grid; grid-template-columns: 60% 40%">
-                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">{% translate product.name %}</strong>
+                                    <strong style="width: 100%; margin: auto; grid-column: 1/2">
+                                        {% translate product.name %}
+                                    </strong>
                                     <p style="margin: auto; grid-column: 2/3">{{ product.price }} €</p>
                                 </div>
                             </button>
@@ -156,12 +166,15 @@
                              class="card-body">
                             <div style="padding-bottom: 1em; display: grid; grid-template-columns: 10em 10em 1fr">
                                 <div style="grid-column: 1/2">{% translate 'Anbauperiode' %}</div>
-                                <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>{{ period|get_value:'start_date' }}</strong></div>
-                                <div style="grid-column: 3/4">{% translate 'Bis' %}: <strong>{{ period|get_value:'end_date' }}</strong></div>
+                                <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>
+                                    {{period|get_value:'start_date' }}</strong></div>
+                                <div style="grid-column: 3/4">{% translate 'Bis' %}: <strong>
+                                    {{period|get_value:'end_date' }}</strong></div>
                             </div>
                             <div style="overflow: auto;" class="list_details_product_types">
                                 {% for product_type in product_types %}
-                                <div id="details_product_type_{{product_type.id}}{{period.id}}" style="display:none; grid-template-columns: 1fr 1fr">
+                                <div id="details_product_type_{{product_type.id}}{{period.id}}"
+                                     style="display:none; grid-template-columns: 1fr 1fr">
                                     <div>
                                         <div style="grid-column: 1/2; display: grid;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                             <p style="grid-area: 1/1/2/2">Product Type:</p>
@@ -169,13 +182,15 @@
                                             <p style="grid-area: 2/1/3/2">Liefer-/Abholzyklus:</p>
                                             <strong style="grid-column: 2/2/3/3">{{product_type.delivery_cycle}}</strong>
                                             <p style="grid-column: 3/2/4/3">Tax-Rate:</p>
-                                            <strong style="grid-column: 3/2/4/3">{{ tax_rates|get_value:product_type.id }} %</strong>
+                                            <strong style="grid-column: 3/2/4/3">{{tax_rates|get_value:product_type.id}}
+                                                %</strong>
                                         </div>
                                     </div>
                                     <div class="list_details_products" style="grid-column: 2/3; flex-direction: column">
-                                    {% for product in products %}
+                                        {% for product in products %}
                                         {% if product.type.id == product_type.id %}
-                                        <div id="details_product_{{product.id}}{{period.id}}" style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
+                                        <div id="details_product_{{product.id}}{{period.id}}"
+                                             style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                             <p style="grid-area: 1/1/2/2">Product:</p>
                                             <strong style="grid-area: 1/2/2/3">{{ product.name }}</strong>
                                             <p style="grid-column: 2/1/3/2">Price:</p>
@@ -188,7 +203,7 @@
                                             {% endif %}
                                         </div>
                                         {% endif %}
-                                    {% endfor %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -201,19 +216,9 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="productTypeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Modal title</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <iframe id="productModalContainer"></iframe>
-        </div>
-    </div>
-</div>
+
+{% include 'wirgarten/generic/modal/form-modal.html' %}
+
 <script src="{% static 'core/js/url-functions.js' %}"></script>
 <script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
 <script>

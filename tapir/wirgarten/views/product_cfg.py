@@ -13,7 +13,7 @@ from tapir.wirgarten.models import (
 
 
 class ProductCfgView(generic.TemplateView):
-    template_name = "wirgarten/period_product_cfg_view.html"
+    template_name = "wirgarten/product/period_product_cfg_view.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
