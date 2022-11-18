@@ -172,6 +172,8 @@
 
 <script src="{% static 'wirgarten/js/chart.js' %}"></script>
 <script>
+  const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
+
   new Chart(document.getElementById('harvest-share-capacity-chart'), {
     type: 'pie',
     data: {
@@ -180,7 +182,7 @@
         label: 'Ernteanteile in €',
         data: [{{harvest_shares_used}}, {{harvest_shares_free}}],
         borderWidth: 1,
-        backgroundColor: ["#B4656F", "#32822d"]
+        backgroundColor: COLORS
       }]
     }
   });
@@ -192,7 +194,8 @@
       datasets: [{
         label: '# Anteile pro Variante',
         data: {{ harvest_share_variants_data | safe}},
-        borderWidth: 1
+        borderWidth: 1,
+        backgroundColor: COLORS
       }]
     }
   });
@@ -206,7 +209,7 @@
         label: "Anzahl der Mitglieder",
         data: {{contract_distribution_data | safe}},
         borderWidth: 1,
-         backgroundColor: ["#42CAFD", "#66B3BA", "#8EB19D", "#F6EFA6", "#F0D2D1"]
+        backgroundColor: COLORS
       }]
     }
   });
