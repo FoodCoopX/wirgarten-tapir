@@ -277,9 +277,9 @@ def get_payment_amount_edit_form(request, **kwargs):
             )
 
     else:
-        form = PaymentAmountEditForm(None, **kwargs)
+        form = PaymentAmountEditForm(**kwargs)
         return render(
-            request, "wirgarten/member/member_payments_edit_form.html", {"modal": form}
+            request, "wirgarten/member/member_payments_edit_form.html", {"form": form}
         )
 
 

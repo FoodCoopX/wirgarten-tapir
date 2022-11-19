@@ -11,15 +11,15 @@ from tapir.wirgarten.views.form_period import (
     get_period_copy_form,
     delete_period,
 )
-from tapir.wirgarten.views.form_product_type import (
-    get_product_type_edit_form,
-    get_product_type_add_form,
-    delete_product_type,
-)
 from tapir.wirgarten.views.form_product import (
     get_product_edit_form,
     get_product_add_form,
     delete_product,
+)
+from tapir.wirgarten.views.form_product_type import (
+    get_product_type_edit_form,
+    get_product_type_add_form,
+    delete_product_type,
 )
 from tapir.wirgarten.views.member import (
     MemberListView,
@@ -28,11 +28,16 @@ from tapir.wirgarten.views.member import (
     MemberDeliveriesView,
     get_payment_amount_edit_form,
 )
-from tapir.wirgarten.views.product_cfg import ProductCfgView
 from tapir.wirgarten.views.payments import PaymentTransactionListView
+from tapir.wirgarten.views.pickup_location_config import (
+    PickupLocationCfgView,
+    get_pickup_location_add_form,
+    get_pickup_location_edit_form,
+    delete_pickup_location,
+)
+from tapir.wirgarten.views.product_cfg import ProductCfgView
 
 app_name = "wirgarten"
-
 urlpatterns = [
     path(
         "product",
@@ -85,6 +90,26 @@ urlpatterns = [
         exported_files.download,
         name="exported_files_download",
     ),
+    path(
+        "admin/pickuplocations",
+        PickupLocationCfgView.as_view(),
+        name="pickup_locations",
+    ),
+    path(
+        "admin/pickuplocations/add",
+        get_pickup_location_add_form,
+        name="pickup_locations_add",
+    ),
+    path(
+        "admin/pickuplocations/edit/<str:id>",
+        get_pickup_location_edit_form,
+        name="pickup_locations_edit",
+    ),
+    path(
+        "admin/pickuplocations/delete/<str:id>",
+        delete_pickup_location,
+        name="pickup_locations_delete",
+    ),
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
     path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
@@ -93,8 +118,8 @@ urlpatterns = [
         get_payment_amount_edit_form,
         name="member_payments_edit",
     ),
+    path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
         "deliveries/<int:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
     ),
-    path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
 ]

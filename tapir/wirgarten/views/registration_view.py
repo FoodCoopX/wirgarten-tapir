@@ -20,7 +20,7 @@ from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.no_harvest_shares import NoHarvestSharesForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.personal_data import PersonalDataForm
-from tapir.wirgarten.forms.registration.pickup_location import PickupLocationForm
+from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
     Subscription,
@@ -68,7 +68,7 @@ FORMS = [
     (STEP_COOP_SHARES, CooperativeShareForm),
     (STEP_ADDITIONAL_SHARES, ChickenShareForm),
     (STEP_BESTELLCOOP, BestellCoopForm),
-    (STEP_PICKUP_LOCATION, PickupLocationForm),
+    (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
     (STEP_SUMMARY, SummaryForm),
     (STEP_PERSONAL_DETAILS, PersonalDataForm),
     (STEP_PAYMENT_DETAILS, PaymentDataForm),

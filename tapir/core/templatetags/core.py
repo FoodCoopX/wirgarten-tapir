@@ -26,28 +26,28 @@ def get_sidebar_link_groups(request):
     if request.user.has_perm("coop.admin"):
         add_admin_links(groups)
 
-    misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
-    groups.append(misc_group)
-    misc_group.add_link(
-        display_name=_("Wiki"),
-        material_icon="feed",
-        url="https://wiki.supercoop.de",
-    )
-    misc_group.add_link(
-        display_name=_("Member manual"),
-        material_icon="menu_book",
-        url="https://wiki.supercoop.de/wiki/Member_Manual",
-    )
-    misc_group.add_link(
-        display_name=_("Shop opening hours"),
-        material_icon="access_time",
-        url="https://wiki.supercoop.de/wiki/%C3%96ffnungszeiten",
-    )
-    misc_group.add_link(
-        display_name=_("Contact the member office"),
-        material_icon="email",
-        url="mailto:mitglied@supercoop.de",
-    )
+    # misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
+    # groups.append(misc_group)
+    # misc_group.add_link(
+    #    display_name=_("Wiki"),
+    #    material_icon="feed",
+    #    url="https://wiki.supercoop.de",
+    # )
+    # misc_group.add_link(
+    #    display_name=_("Member manual"),
+    #    material_icon="menu_book",
+    #    url="https://wiki.supercoop.de/wiki/Member_Manual",
+    # )
+    # misc_group.add_link(
+    #    display_name=_("Shop opening hours"),
+    #    material_icon="access_time",
+    #    url="https://wiki.supercoop.de/wiki/%C3%96ffnungszeiten",
+    # )
+    # misc_group.add_link(
+    #    display_name=_("Contact the member office"),
+    #    material_icon="email",
+    #    url="mailto:mitglied@supercoop.de",
+    # )
     #   misc_group.add_link(
     #       display_name=_("About tapir"),
     #       material_icon="help",
@@ -58,6 +58,13 @@ def get_sidebar_link_groups(request):
 
 
 def add_admin_links(groups):
+    debug_group = SidebarLinkGroup(name=_("Debug"))
+    debug_group.add_link(
+        display_name=_("Exportierte Dateien"),
+        material_icon="attach_file",
+        url=reverse_lazy("wirgarten:exported_files_list"),
+    )
+
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(
         display_name=_("Dashboard"),
@@ -71,17 +78,17 @@ def add_admin_links(groups):
     )
     admin_group.add_link(
         display_name=_("Anbauperiode & Produkte"),
-        material_icon="inventory",
+        material_icon="agriculture",
         url=reverse_lazy("wirgarten:product"),
     )
     admin_group.add_link(
-        display_name=_("Exportierte Dateien"),
-        material_icon="attach_file",
-        url=reverse_lazy("wirgarten:exported_files_list"),
+        display_name=_("Abholorte"),
+        material_icon="add_location_alt",
+        url=reverse_lazy("wirgarten:pickup_locations"),
     )
     admin_group.add_link(
         display_name=_("Lastschrift"),
-        material_icon="money",
+        material_icon="account_balance",
         url=reverse_lazy("wirgarten:payment_transactions"),
     )
 
@@ -94,3 +101,4 @@ def add_admin_links(groups):
 
     groups.append(members_group)
     groups.append(admin_group)
+    groups.append(debug_group)
