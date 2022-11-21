@@ -2,15 +2,13 @@ import itertools
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
-from django.db import models
-from django.db.models import Sum, F
 from nanoid import generate
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
 from tapir.wirgarten.models import MandateReference, Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_active_subscriptions
+from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
 
 MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -168,14 +166,13 @@ def get_solidarity_overplus(reference_date: date = date.today()):
     :return: the total solidarity overplus amount
     """
 
-    return (
-        get_active_subscriptions(reference_date)
-        .values("quantity", "product__price", "solidarity_price")
-        .aggregate(
-            total=Sum(
-                F("quantity") * F("product__price") * F("solidarity_price"),
-                output_field=models.DecimalField(),
-            )
+    return sum(
+        map(
+            lambda sub: sub["quantity"]
+            * sub["solidarity_price"]
+            * float(get_product_price(sub["product"]).price),
+            get_active_subscriptions(reference_date).values(
+                "quantity", "product", "solidarity_price"
+            ),
         )
-        .get("total", 0.0)
     )

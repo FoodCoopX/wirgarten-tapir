@@ -4,7 +4,7 @@
     "pk": "jW3l0EcsVM",
     "fields": {
       "name": "Ernteanteile",
-      "delivery_cycle": "monthly"
+      "delivery_cycle": "weekly"
     }
   },
   {

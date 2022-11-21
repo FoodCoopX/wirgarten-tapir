@@ -15,6 +15,7 @@ from tapir.wirgarten.models import (
     TaxRate,
     PickupLocation,
     PickupLocationCapability,
+    ProductPrice,
 )
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -22,7 +23,7 @@ from tapir.wirgarten.validators import (
 )
 
 KW_PROD_ID = "prodId"
-KW_PROD_TYPE_ID = "prodTypeId"
+KW_CAPACITY_ID = "capacityId"
 KW_PERIOD_ID = "periodId"
 
 
@@ -31,45 +32,52 @@ class ProductTypeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ProductTypeForm, self).__init__(*args)
-        initial_id = "-"
-        initial_period_id = "-"
         initial_name = ""
         initial_delivery_cycle = NO_DELIVERY
-        initial_capacity = None
         initial_tax_rate = 0
+        initial_capacity = 0.0
         product_type = None
 
-        if KW_PROD_TYPE_ID in kwargs and KW_PERIOD_ID in kwargs:
-            initial_id = kwargs[KW_PROD_TYPE_ID]
+        if KW_PERIOD_ID in kwargs:
             initial_period_id = kwargs[KW_PERIOD_ID]
-            product_type = ProductType.objects.get(id=initial_id)
-            try:
-                self.tax_rate = TaxRate.objects.get(
-                    product_type=product_type, valid_to=None
-                )
-                initial_tax_rate = self.tax_rate.tax_rate
-            except TaxRate.DoesNotExist:
-                initial_tax_rate = 0.19  # FIXME: default value in tapir paramenter
-            try:
-                self.capacity = ProductCapacity.objects.get(
-                    period__id=kwargs[KW_PERIOD_ID],
-                    product_type__id=kwargs[KW_PROD_TYPE_ID],
-                )
+
+            if KW_CAPACITY_ID in kwargs:  # update existing product type
+                self.capacity = ProductCapacity.objects.get(id=kwargs[KW_CAPACITY_ID])
                 initial_capacity = self.capacity.capacity
-            except ProductCapacity.DoesNotExist:
-                initial_capacity = 0
+                product_type = ProductType.objects.get(id=self.capacity.product_type.id)
 
-            initial_name = product_type.name
-            initial_delivery_cycle = product_type.delivery_cycle
+                try:
+                    self.tax_rate = TaxRate.objects.get(
+                        product_type=product_type, valid_to=None
+                    )
+                    initial_tax_rate = self.tax_rate.tax_rate
+                except TaxRate.DoesNotExist:
+                    initial_tax_rate = 0.19  # FIXME: default value in tapir paramenter
 
-        self.fields["id"] = forms.CharField(
-            initial=initial_id, widget=forms.HiddenInput()
-        )
-        self.fields["periodId"] = forms.CharField(
-            initial=initial_period_id, widget=forms.HiddenInput()
-        )
+                initial_name = product_type.name
+                initial_delivery_cycle = product_type.delivery_cycle
+
+            else:  # create NEW -> lets choose from existing product types
+                prod_types_without_capacity = [(None, _("--- Neu anlegen ---"))]
+                prod_types_without_capacity.extend(
+                    list(
+                        map(
+                            lambda pt: (pt.id, _(pt.name)),
+                            ProductType.objects.exclude(
+                                id__in=ProductCapacity.objects.filter(
+                                    period__id=initial_period_id
+                                ).values("product_type__id")
+                            ),
+                        )
+                    )
+                )
+
+                self.fields["product_type"] = forms.ChoiceField(
+                    choices=prod_types_without_capacity, required=False
+                )
+
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=True, label=_("Produkt Name")
+            initial=initial_name, required=False, label=_("Produkt Name")
         )
         self.fields["capacity"] = forms.FloatField(
             initial=initial_capacity, required=True, label=_("Produkt Kapazität (in €)")
@@ -80,6 +88,22 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
+
+        self.fields["tax_rate"] = forms.FloatField(
+            initial=initial_tax_rate,
+            required=True,
+            label=_("Mehrwertsteuersatz"),  # FIXME: format
+        )
+
+        if product_type is not None:
+            next_month = datetime.date.today() + relativedelta(day=1, months=1)
+            self.fields["tax_rate_change_date"] = forms.DateField(
+                required=True,
+                label=_("Neuer Mehrwertsteuersatz gültig ab"),
+                widget=DateInput(),
+                initial=next_month,
+            )
+
         for location in PickupLocation.objects.all():
             initial_value = None
             if product_type is not None:
@@ -89,11 +113,6 @@ class ProductTypeForm(forms.Form):
             self.fields["plc_" + location.id] = forms.BooleanField(
                 label=location.name, required=False, initial=initial_value
             )
-        self.fields["tax_rate"] = forms.FloatField(
-            initial=initial_tax_rate,
-            required=True,
-            label=_("Mehrwertsteuersatz"),  # FIXME: format
-        )
 
 
 class ProductForm(forms.Form):
@@ -108,10 +127,14 @@ class ProductForm(forms.Form):
         if KW_PROD_ID in kwargs:
             initial_id = kwargs[KW_PROD_ID]
             product = Product.objects.get(id=initial_id)
+            prices = ProductPrice.objects.filter(product=product).order_by(
+                "-valid_from"
+            )
             initial_name = product.name
-            initial_price = product.price
-        if KW_PROD_TYPE_ID in kwargs:
-            initial_type_id = kwargs[KW_PROD_TYPE_ID]
+            period = GrowingPeriod.objects.get(id=kwargs[KW_PERIOD_ID])
+            for price in prices:
+                if price.valid_from < period.end_date:
+                    initial_price = price.price
 
         self.fields["id"] = forms.CharField(
             initial=initial_id, widget=forms.HiddenInput()

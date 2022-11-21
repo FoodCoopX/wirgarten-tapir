@@ -4,7 +4,6 @@
     "pk": "UicJzTMc9y",
     "fields": {
       "name": "S",
-      "price": 45,
       "type": "jW3l0EcsVM"
     }
   },
@@ -13,7 +12,6 @@
     "pk": "tF4a0ZonVw",
     "fields": {
       "name": "M",
-      "price": 67.5,
       "type": "jW3l0EcsVM"
     }
   },
@@ -22,7 +20,6 @@
     "pk": "MBq0SqtZ6X",
     "fields": {
       "name": "L",
-      "price": 90,
       "type": "jW3l0EcsVM"
     }
   },
@@ -31,7 +28,6 @@
     "pk": "ItpIuRUgoy",
     "fields": {
       "name": "XL",
-      "price": 112.5,
       "type": "jW3l0EcsVM"
     }
   },
@@ -68,7 +64,6 @@
     "pk": "NGAwHvrHjD",
     "fields": {
       "name": "Volle",
-      "price": 18,
       "type": "Wv0JEzFQFa"
     }
   },
@@ -77,7 +72,6 @@
     "pk": "w6FlqZ1wSQ",
     "fields": {
       "name": "Halbe",
-      "price": 9.5,
       "type": "Wv0JEzFQFa"
     }
   },
@@ -86,7 +80,6 @@
     "pk": "CgmCfyN3q1",
     "fields": {
       "name": "Mitgliedschaft",
-      "price": 3,
       "type": "iOrXOQTZxy"
     }
   }

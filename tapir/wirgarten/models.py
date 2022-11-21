@@ -1,6 +1,7 @@
 import datetime
 from functools import partial
 
+from dateutil.utils import today
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils.translation import gettext_lazy as _
@@ -61,6 +62,14 @@ class ProductType(TapirModel):
         default=NO_DELIVERY,
         verbose_name=_("Lieferzyklus"),
     )
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["name"],
+                name="unique_product_Type",
+            )
+        ]
 
 
 class PickupLocationCapability(TapirModel):
@@ -126,10 +135,29 @@ class Product(TapirModel):
         ProductType, on_delete=models.DO_NOTHING, editable=False, null=False
     )
     name = models.CharField(max_length=128, editable=True, null=False)
-    price = models.DecimalField(
-        decimal_places=2, max_digits=6, editable=False, null=False
+    deleted = models.BooleanField(default=False)
+
+
+class ProductPrice(TapirModel):
+    """
+    Price for a product. A product is only valid to use if it has a price.
+    """
+
+    product = models.ForeignKey(
+        Product, on_delete=models.DO_NOTHING, editable=False, null=False
     )
-    deleted = models.IntegerField(default=0)
+    price = models.DecimalField(
+        decimal_places=2, max_digits=8, editable=False, null=False
+    )
+    valid_from = models.DateField(null=False, editable=False)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["product", "valid_from"],
+                name="unique_product_price_date",
+            )
+        ]
 
 
 class HarvestShareProduct(Product):
@@ -180,7 +208,18 @@ class Subscription(TapirModel, Payable):
     )
 
     def get_total_price(self):
-        return self.quantity * float(self.product.price) * (1 + self.solidarity_price)
+        return (
+            self.quantity
+            * float(
+                ProductPrice.objects.filter(
+                    product=self.product, valid_from__lte=today()
+                )
+                .order_by("-valid_from")
+                .first()
+                .price
+            )
+            * (1 + self.solidarity_price)
+        )
 
 
 class ShareOwnership(TapirModel, Payable):

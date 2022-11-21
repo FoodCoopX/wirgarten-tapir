@@ -36,7 +36,7 @@ from tapir.wirgarten.models import (
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import generate_mandate_ref
-from tapir.wirgarten.service.products import get_active_product_types
+from tapir.wirgarten.service.products import get_active_product_types, get_product_price
 
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
@@ -319,7 +319,7 @@ class RegistrationWizardView(CookieWizardView):
                 type__in=get_active_product_types(), name="Mitgliedschaft"
             )
 
-            initial["bestellcoop_price"] = product.price
+            initial["bestellcoop_price"] = get_product_price(product).price
         elif step == STEP_PICKUP_LOCATION:
             # TODO: has to be implemented with product_type.id not name when the wizard generically handles all products
             initial["product_types"] = []

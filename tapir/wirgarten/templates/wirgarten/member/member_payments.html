@@ -84,8 +84,9 @@
                         </p>
                     </td>
 
-                    {% if perms.coop.manage and payment.upcoming %} <!-- FIXME: use new permission (payments.manage) -->
+                    {% if perms.coop.manage %} <!-- FIXME: use new permission (payments.manage) -->
                     <td>
+                        {% if payment.upcoming %}
                         <button type="button"
                                 onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}')"
                                 class="btn btn-outline-danger" data-bs-toggle="modal"
@@ -130,6 +131,7 @@
                                 </div>
                             </div>
                         </form>
+                        {% endif %}
                     </td>
                     {% endif %}
                 </tr>

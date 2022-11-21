@@ -3,7 +3,12 @@ from django.db.models import Count, Sum
 from django.views import generic
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Member, Subscription, HarvestShareProduct
+from tapir.wirgarten.models import (
+    Member,
+    Subscription,
+    HarvestShareProduct,
+    ProductPrice,
+)
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -51,7 +56,14 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         # sum without solidarity_price
         context["harvest_shares_used"] = sum(
             map(
-                lambda x: x.quantity * float(x.product.price), active_harvest_share_subs
+                lambda x: x.quantity
+                * float(
+                    ProductPrice.objects.filter(product=x.product)
+                    .order_by("-valid_from")
+                    .first()
+                    .price
+                ),
+                active_harvest_share_subs,
             )
         )
         context["harvest_shares_free"] = (
@@ -64,7 +76,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             1,
         )
         base_variant_price = float(
-            HarvestShareProduct.objects.get(type=harvest_share_type, name="M").price
+            ProductPrice.objects.filter(
+                product=HarvestShareProduct.objects.get(
+                    type=harvest_share_type, name="M"
+                )
+            )
+            .first()
+            .price
         )
         context["harvest_shares_m_equivalents"] = round(
             context["harvest_shares_free"] / base_variant_price

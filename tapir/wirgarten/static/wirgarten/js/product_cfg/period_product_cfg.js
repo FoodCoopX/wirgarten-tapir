@@ -1,6 +1,6 @@
-const init = (pt_p_map_json, pe_pt_map_json) => {
-    activateGrowingPeriodList(pe_pt_map_json)
-    activateProductTypeList(pt_p_map_json)
+const init = (c_p_map_json, pe_c_map_json) => {
+    activateGrowingPeriodList(pe_c_map_json)
+    activateCapacityList(c_p_map_json)
     activateProductList();
     manageButtons();
     activateDetails();
@@ -8,6 +8,9 @@ const init = (pt_p_map_json, pe_pt_map_json) => {
 
 // page logic
 const activateDetails = () => {
+    // FIXME
+    return;
+
     const params = Tapir.getUrlParams();
     const type_list = Array.from(document.getElementsByClassName('list_details_product_types'));
     type_list.forEach(item =>  {
@@ -38,89 +41,71 @@ const activateDetails = () => {
     }
 }
 
-const activateGrowingPeriodList = (pe_pt_map_json) => {
+const activateGrowingPeriodList = (pe_c_map_json) => {
     const params = Tapir.getUrlParams();
     const children = Array.from(document.getElementById('list_growing_periods').children);
     children.forEach(child => {
-        child.classList.remove("active");
+        const id = `period-${params.periodId}`;
+        if(child.id === id){
+            child.classList.add("active");
+        } else {
+            child.classList.remove("active");
+        }
     });
 
-    if(params.periodId) {
-        document.getElementById(`btn_period_${params.periodId}`).classList.add("active");
-
-        setupProductTypeList(params.periodId, pe_pt_map_json);
-    }
+    setupCapacityList(params.periodId, pe_c_map_json);
 }
 
-const activateProductTypeList = (pt_p_map_json) => {
+const activateCapacityList = (c_p_map_json) => {
     const params = Tapir.getUrlParams();
-    const children = Array.from(document.getElementById('list_product_types').children);
+    const children = Array.from(document.getElementById('list_capacities').children);
+    const id = `c-${params.capacityId}`;
     children.forEach(child => {
-        child.classList.remove("active");
+        if(child.id === id){
+            child.classList.add("active");
+        } else {
+            child.classList.remove("active");
+        }
     });
 
-    if(params.prodTypeId) {
-        document.getElementById(`btn_prtype_${params.prodTypeId}`).classList.add("active");
-        setupProductList(params.prodTypeId, pt_p_map_json);
-    }
+    setupProductList(params.capacityId, c_p_map_json);
 }
 
 const activateProductList = () => {
     const params = Tapir.getUrlParams();
     const items = document.getElementById('list_product').children;
     const children = Array.from(items);
+    const id = `p-${params.prodId}`
     children.forEach(child => {
-        child.classList.remove("active");
+         if(child.id === id){
+            child.classList.add("active");
+        } else {
+            child.classList.remove("active");
+        }
     });
-
-    if(params.prodId)
-        document.getElementById(`btn_prod_${params.prodId}`).classList.add("active");
 }
 
-const setupProductTypeList = (periodId, pe_pt_map_json) => {
-    const pe_pt_map = JSON.parse(pe_pt_map_json);
+const setupCapacityList = (periodId, pe_c_map_json) => {
+    const pe_c_map = JSON.parse(pe_c_map_json);
 
-    const listItemsTypes = document.getElementById("list_product_types").children;
+    const listItemsTypes = document.getElementById("list_capacities").children;
+    const displayIds = (periodId && pe_c_map[periodId]) ? pe_c_map[periodId].map(id => `c-${id}`) : []
+
     Array.from(listItemsTypes).forEach(item =>  {
-        item.style['display'] = 'none';
+        item.style['display'] = displayIds.includes(item.id) ? 'table-row' : 'none';
         item.classList.remove("active");
     })
-    const listItemsProds = document.getElementById("list_product").children;
-    Array.from(listItemsProds).forEach(item =>  {
-        item.style['display'] = 'none';
-        item.classList.remove("active");
-    })
-    if (pe_pt_map[periodId] != undefined) {
-        pe_pt_map[periodId].forEach(productTypeId => {
-            const sActiveElement = "btn_prtype_" + productTypeId;
-            // sort to front to prevent artifacts
-            let elem = document.getElementById(sActiveElement);
-            let parent = elem.parentElement;
-            parent.removeChild(elem);
-            parent.prepend(elem);
-            elem.style.display = "grid";
-        });
-    }
 }
 
-const setupProductList = (productTypeId, pt_p_map_json) => {
-    const pt_p_map = JSON.parse(pt_p_map_json);
+const setupProductList = (capacityId, c_p_map_json) => {
+    const c_p_map = JSON.parse(c_p_map_json);
 
     const listItems = document.getElementById("list_product").children;
+    const displayIds = (capacityId && c_p_map[capacityId]) ? c_p_map[capacityId].map(id => `p-${id}`) : []
     Array.from(listItems).forEach(item =>  {
-        item.style['display'] = 'none';
+        item.style['display'] = displayIds.includes(item.id) ? 'table-row' : 'none' ;
         item.classList.remove("active");
     })
-    if (pt_p_map[productTypeId] != undefined)
-        pt_p_map[productTypeId].forEach(productId => {
-            // console.log(" -ptId: ", productTypeId, " -pId: ", productId)
-            const sActiveElement = "btn_prod_" + productId;
-            let elem = document.getElementById(sActiveElement);
-            let parent = elem.parentElement;
-            parent.removeChild(elem);
-            parent.prepend(elem);
-            elem.style.display = "grid";
-        });
 }
 
 const manageProductDependentButtons = (params) => {
@@ -139,62 +124,60 @@ const manageProductDependentButtons = (params) => {
 
 const manageGrowingPeriodDependentButtons = (params) => {
     const buttons = Array.from(document.getElementsByClassName("need-growing-period"));
-    if (params.periodId) {
-        buttons.forEach(btn => {
-            btn.removeAttribute("disabled");
-        })
-    } else {
-        buttons.forEach(btn => {
-            btn.setAttribute("disabled", "true");
-        })
-    }
+    buttons.forEach(btn => {
+        const deleteCondition = !btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && allowedActions["period"][params.periodId]["delete"])
+        if(params.periodId && deleteCondition){
+            btn.removeAttribute("disabled")
+        } else {
+            btn.setAttribute("disabled",   "true");
+        }
+    })
 }
 
-const manageProductTypeDependentButtons = (params) => {
+const manageCapacityDependentButtons = (params) => {
     const buttons = Array.from(document.getElementsByClassName("need-product-type"));
-    if (params.prodTypeId) {
-        buttons.forEach(btn => {
-            btn.removeAttribute("disabled");
-        })
-    } else {
-        buttons.forEach(btn => {
-            btn.setAttribute("disabled", "true");
-        })
-    }
+    buttons.forEach(btn => {
+        const deleteCondition = !btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && (allowedActions["period"][params.periodId]["delete"] || (allowedActions["capacity"][params.capacityId] ? allowedActions["capacity"][params.capacityId]["delete"] : false)))
+        if (params.capacityId && deleteCondition) {
+                btn.removeAttribute("disabled");
+        } else {
+                btn.setAttribute("disabled", "true");
+        }
+    })
 }
 
 const manageButtons = () => {
     const params = Tapir.getUrlParams();
     manageGrowingPeriodDependentButtons(params);
-    manageProductTypeDependentButtons(params);
+    manageCapacityDependentButtons(params);
     manageProductDependentButtons(params);
 }
 
-const getProductTypeEditForm = () => {
+const getCapacityEditForm = () => {
     const params = Tapir.getUrlParams();
-    if (params.prodTypeId) {
-        const url = `/wirgarten/product/${params.prodTypeId}/${params.periodId}/typeedit${Tapir.stringifyUrlParams(params)}`;
-        FormModal.load(url, "Produkt Typ editieren");
+    if (params.capacityId) {
+        const url = `/wirgarten/product/${params.periodId}/${params.capacityId}/typeedit${Tapir.stringifyUrlParams(params)}`;
+        FormModal.load(url, "Vertrag / Kapazität editieren");
     }
 }
 
-const getProductTypeAddForm = () => {
+const getCapacityAddForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/${params.periodId}/typeadd${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Neuen Produkt Typ hinzufügen");
+    FormModal.load(url, "Vertrag / Kapazität hinzufügen");
 }
 
 const getProductEditForm = () => {
     const params = Tapir.getUrlParams();
     if (params.prodId) {
-        const url = `/wirgarten/product/${params.prodId}/edit${Tapir.stringifyUrlParams(params)}`;
+        const url = `/wirgarten/product/${params.periodId}/${params.capacityId}/${params.prodId}/edit${Tapir.stringifyUrlParams(params)}`;
         FormModal.load(url, "Produkt editieren");
     }
 }
 
 const getProductAddForm = () => {
     const params = Tapir.getUrlParams();
-    const url = `/wirgarten/product/${params.prodTypeId}/add${Tapir.stringifyUrlParams(params)}`;
+    const url = `/wirgarten/product/${params.periodId}/${params.capacityId}/add${Tapir.stringifyUrlParams(params)}`;
     FormModal.load(url, "Neues Produkt hinzufügen");
 }
 
@@ -214,27 +197,29 @@ const getGrowingPeriodCopyForm = () => {
 }
 
 // actions
-const select_period = (periodId, pe_pt_map_json) => {
+const select_period = (periodId, pe_c_map_json) => {
     const params = Tapir.getUrlParams();
     if(params.periodId !== periodId) {
-        params.prodTypeId = null;
+        params.capacityId = null;
         params.prodId = null;
     }
     params.periodId = periodId;
     Tapir.replaceUrlParams(params);
-    activateGrowingPeriodList(pe_pt_map_json);
+    activateGrowingPeriodList(pe_c_map_json);
+    setupProductList(null, "{}");
     activateDetails();
     manageButtons();
 }
 
-const select_product_type = (productTypeId, pt_p_map_json) => {
+const select_capacity = (capacityId, productTypeId, pt_p_map_json) => {
     const params = Tapir.getUrlParams();
-    if(params.prodTypeId !== productTypeId) {
+    if(params.capacityId !== capacityId) {
         params.prodId = null;
     }
-    params.prodTypeId = productTypeId;
+    params.capacityId = capacityId;
     Tapir.replaceUrlParams(params);
-    activateProductTypeList(pt_p_map_json);
+
+    activateCapacityList(pt_p_map_json);
     activateDetails();
     manageButtons();
 }
@@ -250,13 +235,13 @@ const select_product = (productId) => {
 
 const deleteProduct = () => {
     const params = Tapir.getUrlParams();
-    const url = `product/${params.prodId}/delete${Tapir.stringifyUrlParams({...params, prodId: undefined})}`;
+    const url = `product/${params.periodId}/${params.capacityId}/${params.prodId}/delete${Tapir.stringifyUrlParams({...params, prodId: undefined})}`;
     window.location.replace(url)
 }
 
-const deleteProductType = () => {
+const deleteCapacity = () => {
     const params = Tapir.getUrlParams();
-    const url = `product/${params.prodTypeId}/${params.periodId}/typedelete${Tapir.stringifyUrlParams({...params, prodTypeId: undefined})}`;
+    const url = `product/${params.periodId}/${params.capacityId}/typedelete${Tapir.stringifyUrlParams({...params, capacityId: undefined})}`;
     window.location.replace(url)
 }
 

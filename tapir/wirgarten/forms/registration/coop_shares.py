@@ -3,11 +3,16 @@ from importlib.resources import _
 from django import forms
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.forms.registration import HARVEST_SHARE_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.products import get_available_product_types
 
 
 class CooperativeShareForm(forms.Form):
+    intro_template = "wirgarten/registration/steps/coop_shares.intro.html"
+    outro_template = "wirgarten/registration/steps/coop_shares.outro.html"
+
     min_shares: int = 0
 
     def __init__(self, *args, **kwargs):
@@ -15,17 +20,17 @@ class CooperativeShareForm(forms.Form):
         initial = kwargs["initial"]
 
         # FIXME: query already executed on first form. Maybe execute it once in the wizard view and pass result to the forms?
-        self.harvest_shares_products = {
-            """harvest_shares_{variation}""".format(
-                variation=p.product_ptr.name.lower()
-            ): p.__dict__
-            for p in HarvestShareProduct.objects.all()  # FIXME: filter to active ones (service)
-        }
+        self.harvest_shares_products = list(
+            HarvestShareProduct.objects.filter(
+                deleted=False, type_id__in=get_available_product_types()
+            )
+        )
 
         default_min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
-        for key, val in self.harvest_shares_products.items():
+        for prod in self.harvest_shares_products:
+            key = HARVEST_SHARE_FIELD_PREFIX + prod.name.lower()
             if key in initial:
-                self.min_shares += initial[key] * val["min_coop_shares"]
+                self.min_shares += initial[key] * prod.min_coop_shares
         if self.min_shares < default_min_shares:
             self.min_shares = default_min_shares
 
@@ -43,15 +48,3 @@ class CooperativeShareForm(forms.Form):
             ),
             required=True,
         )
-
-        self.harvest_share_prices = (
-            ",".join(
-                map(
-                    lambda k: k + ":" + str(self.harvest_shares_products[k]["price"]),
-                    self.harvest_shares_products.keys(),
-                )
-            ),
-        )
-
-    intro_template = "wirgarten/registration/steps/coop_shares.intro.html"
-    outro_template = "wirgarten/registration/steps/coop_shares.outro.html"
