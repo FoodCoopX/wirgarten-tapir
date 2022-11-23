@@ -33,6 +33,7 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
+    get_product_price,
 )
 
 
@@ -70,7 +71,7 @@ class MemberDetailView(generic.DetailView):
         return context
 
 
-def generate_future_payments(subs: list, prev_payments: list):
+def generate_future_payments(subs, prev_payments: list):
     prev_payments = set(map(lambda p: (p["mandate_ref"], p["due_date"]), prev_payments))
 
     payments = []
@@ -97,7 +98,7 @@ def generate_future_payments(subs: list, prev_payments: list):
                             "mandate_ref": mandate_ref,
                             "amount": amount,
                             "calculated_amount": amount,
-                            "subs": active_subs,
+                            "subs": list(map(sub_to_dict, active_subs)),
                             "status": Payment.PaymentStatus.DUE,
                             "edited": False,
                             "upcoming": True,
@@ -129,15 +130,7 @@ def get_subs_or_shares_for_mandate_ref(
     else:
         return list(
             map(
-                lambda x: {
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": x.product.name,
-                        "type": {"name": x.product.type.name},
-                        "price": x.product.price,
-                    },
-                    "total_price": x.get_total_price(),
-                },
+                lambda x: sub_to_dict(x),
                 Subscription.objects.filter(
                     mandate_ref=mandate_ref,
                     start_date__lte=reference_date,
@@ -147,6 +140,20 @@ def get_subs_or_shares_for_mandate_ref(
         )
 
 
+def sub_to_dict(x):
+    price = get_product_price(x.product, x.start_date).price
+    return {
+        "quantity": x.quantity,
+        "product": {
+            "name": x.product.name,
+            "type": {"name": x.product.type.name},
+            "price": price,
+        },
+        "solidarity_price": x.solidarity_price,
+        "total_price": float(price) * x.solidarity_price * x.quantity,
+    }
+
+
 def payment_to_dict(payment: Payment) -> dict:
     subs = get_subs_or_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
     return {
@@ -154,7 +161,7 @@ def payment_to_dict(payment: Payment) -> dict:
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
         "calculated_amount": round(sum(map(lambda x: x["total_price"], subs)), 2),
-        "subs": subs,
+        "subs": list(map(sub_to_dict, subs)),
         "status": payment.status,
         "edited": payment.edited,
         "upcoming": (date.today() - payment.due_date).days < 0,

@@ -5,6 +5,7 @@ from django import forms
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Product, ProductType
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.products import get_product_price
 
 
 def has_chicken_shares(cleaned_data):
@@ -15,13 +16,21 @@ def has_chicken_shares(cleaned_data):
 
 
 class ChickenShareForm(forms.Form):
+    intro_template = "wirgarten/registration/steps/chicken_shares.intro.html"
+    outro_template = "wirgarten/registration/steps/chicken_shares.outro.html"
+
     def __init__(self, *args, **kwargs):
         super(ChickenShareForm, self).__init__(*args, **kwargs)
 
-        product_type = ProductType.objects.get(name="Hühneranteile")
         self.products = {
-            """chicken_shares_{variation}""".format(variation=p.name): p.__dict__
-            for p in Product.objects.filter(deleted=0, type=product_type)
+            """chicken_shares_{variation}""".format(variation=p.name): p
+            for p in Product.objects.filter(
+                deleted=False, type=ProductType.objects.get(name="Hühneranteile")
+            )
+        }
+
+        prices = {
+            prod.id: get_product_price(prod).price for prod in self.products.values()
         }
 
         self.field_order = list(self.products.keys()) + ["consent"]
@@ -39,7 +48,7 @@ class ChickenShareForm(forms.Form):
                         variation=k.replace("chicken_shares_", "")
                     )
                 ),
-                help_text="""{:.2f} € / Monat""".format(v["price"]),
+                help_text="""{:.2f} € / Monat""".format(prices[v.id]),
             )
         self.fields["consent"] = forms.BooleanField(
             label=_(
@@ -53,13 +62,10 @@ class ChickenShareForm(forms.Form):
 
         self.chicken_share_prices = ",".join(
             map(
-                lambda k: k + ":" + str(self.products[k]["price"]),
+                lambda k: k + ":" + str(prices[self.products[k].id]),
                 self.products.keys(),
             )
         )
-
-    intro_template = "wirgarten/registration/steps/chicken_shares.intro.html"
-    outro_template = "wirgarten/registration/steps/chicken_shares.outro.html"
 
     def clean(self):
         cleaned_data = super().clean()

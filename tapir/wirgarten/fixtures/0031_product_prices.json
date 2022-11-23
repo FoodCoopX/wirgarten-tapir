@@ -1,0 +1,65 @@
+[
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "aFXBgZITJP",
+    "fields": {
+      "product": "UicJzTMc9y",
+      "price": 45,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "NxK5MJVk45",
+    "fields": {
+      "product": "tF4a0ZonVw",
+      "price": 67.5,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "JuQJraJjcJ",
+    "fields": {
+      "product": "MBq0SqtZ6X",
+      "price": 90,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "wpdfvWfGmW",
+    "fields": {
+      "product": "ItpIuRUgoy",
+      "price": 112.5,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "bYns6GbEFZ",
+    "fields": {
+      "product": "NGAwHvrHjD",
+      "price": 18,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "2tIXpqkaZm",
+    "fields": {
+      "product": "w6FlqZ1wSQ",
+      "price": 9.5,
+      "valid_from" : "2022-01-01"
+    }
+  },
+  {
+    "model": "wirgarten.ProductPrice",
+    "pk": "CAH9LckbKj",
+    "fields": {
+      "product": "CgmCfyN3q1",
+      "price": 3,
+      "valid_from" : "2022-01-01"
+    }
+  }
+]

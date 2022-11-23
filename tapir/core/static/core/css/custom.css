@@ -167,6 +167,7 @@ body {
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
     box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
+    animation: fadeIn 0.8s;
 }
 
 tr.tr-href, tr.tr-clickable{
@@ -180,15 +181,11 @@ tr.tr-href.active, tr.tr-clickable.active{
 }
 
 tr.tr-href:hover:not(.active), tr.tr-clickable:hover:not(.active){
-    background: var(--bs-gray-200);
+    background: var(--bs-gray-100);
 }
 
 .card {
     animation: fadeIn 0.3s;
-}
-
-.photo {
-    animation: fadeIn 0.8s;
 }
 
 @keyframes fadeIn {

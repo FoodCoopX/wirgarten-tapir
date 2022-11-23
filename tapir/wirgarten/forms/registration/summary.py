@@ -5,7 +5,11 @@ from django import forms
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_active_product_types
+from tapir.wirgarten.service.products import (
+    get_active_product_types,
+    get_product_price,
+    get_available_product_types,
+)
 
 
 class SummaryForm(forms.Form):
@@ -23,19 +27,26 @@ class SummaryForm(forms.Form):
         self.harvest_shares = dict()
         self.harvest_shares_info = dict()
 
+        # FIXME: 3rd time the harvest share products query gets executed in the wizard...
         harvest_share_products = {
             """harvest_shares_{variation}""".format(
                 variation=p.product_ptr.name.lower()
-            ): p.__dict__
-            for p in HarvestShareProduct.objects.all()
+            ): p
+            for p in list(
+                HarvestShareProduct.objects.filter(
+                    deleted=False, type_id__in=get_available_product_types()
+                )
+            )
         }
 
         for key, val in initial["harvest_shares"].items():
             if key.startswith("harvest_shares"):
                 self.harvest_shares[key] = {
                     "amount": val,
-                    "price": "{:.2f}".format(harvest_share_products[key]["price"]),
-                    "name": _(harvest_share_products[key]["name"] + "-Ernteanteile"),
+                    "price": "{:.2f}".format(
+                        get_product_price(harvest_share_products[key]).price
+                    ),
+                    "name": _(harvest_share_products[key].name + "-Ernteanteile"),
                 }
             else:
                 self.harvest_shares_info[key] = val
@@ -81,7 +92,7 @@ class SummaryForm(forms.Form):
         self.chicken_shares_info = dict({"has_shares": False, "start_date": start_date})
         if "additional_shares" in initial:
             chicken_share_products = {
-                """chicken_shares_{variation}""".format(variation=p.name): p.__dict__
+                """chicken_shares_{variation}""".format(variation=p.name): p
                 for p in Product.objects.filter(
                     type=ProductType.objects.get(name="Hühneranteile")
                 )
@@ -91,10 +102,10 @@ class SummaryForm(forms.Form):
                 if key.startswith("chicken_shares"):
                     self.chicken_shares[key] = {
                         "amount": val,
-                        "price": "{:.2f}".format(chicken_share_products[key]["price"]),
-                        "name": _(
-                            chicken_share_products[key]["name"] + " Hühneranteile"
+                        "price": "{:.2f}".format(
+                            get_product_price(chicken_share_products[key]).price
                         ),
+                        "name": _(chicken_share_products[key].name + " Hühneranteile"),
                     }
 
             chicken_total = sum(
@@ -110,8 +121,10 @@ class SummaryForm(forms.Form):
         self.bestellcoop = {"sign_up": False}
         if "bestellcoop" in initial:
             price = float(
-                Product.objects.get(
-                    type=get_active_product_types().get(name="BestellCoop")
+                get_product_price(
+                    Product.objects.get(
+                        type=get_active_product_types().get(name="BestellCoop")
+                    )
                 ).price
             )  # FIXME: name must be configurable
             sign_up = initial["bestellcoop"]["bestellcoop"]

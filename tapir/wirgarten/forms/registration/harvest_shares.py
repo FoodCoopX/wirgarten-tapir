@@ -1,12 +1,15 @@
-import datetime
 from importlib.resources import _
 
 from django import forms
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import HarvestShareProduct, Subscription
+from tapir.wirgarten.models import HarvestShareProduct
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import get_solidarity_overplus
+from tapir.wirgarten.service.products import (
+    get_product_price,
+    get_available_product_types,
+)
 
 SOLIDARITY_PRICES = [
     (0.0, _("Ich möchte keinen Solidarpreis zahlen")),
@@ -43,6 +46,9 @@ def is_minimum_harvest_shares_reached(data, products) -> bool:
     return False
 
 
+HARVEST_SHARE_FIELD_PREFIX = "harvest_shares_"
+
+
 class HarvestShareForm(forms.Form):
     intro_text_skip_hr = True
 
@@ -52,11 +58,20 @@ class HarvestShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(HarvestShareForm, self).__init__(*args, **kwargs)
 
+        harvest_share_products = list(
+            HarvestShareProduct.objects.filter(
+                deleted=False, type_id__in=get_available_product_types()
+            )
+        )
+        prices = {
+            prod.id: get_product_price(prod).price for prod in harvest_share_products
+        }
+
         self.products = {
             """harvest_shares_{variation}""".format(
                 variation=p.product_ptr.name.lower()
-            ): p.__dict__
-            for p in HarvestShareProduct.objects.all()
+            ): p
+            for p in harvest_share_products
         }
 
         self.field_order = list(self.products.keys()) + ["solidarity_price"]
@@ -65,18 +80,16 @@ class HarvestShareForm(forms.Form):
 
         self.solidarity_total = get_solidarity_total()
 
-        for k, v in self.products.items():
-            self.fields[k] = forms.IntegerField(
+        for prod in harvest_share_products:
+            self.fields[
+                f"{HARVEST_SHARE_FIELD_PREFIX}{prod.name.lower()}"
+            ] = forms.IntegerField(
                 required=True,
                 max_value=10,
                 min_value=0,
                 initial=0,
-                label=_(
-                    """{variation}-Ernteanteile""".format(
-                        variation=k.replace("harvest_shares_", "").upper()
-                    )
-                ),
-                help_text="""{:.2f} € / Monat""".format(v["price"]),
+                label=_(f"{prod.name}-Ernteanteile"),
+                help_text="""{:.2f} € / Monat""".format(prices[prod.id]),
             )
 
         self.fields["solidarity_price"] = forms.ChoiceField(
@@ -87,8 +100,11 @@ class HarvestShareForm(forms.Form):
 
         self.harvest_shares = ",".join(
             map(
-                lambda k: k + ":" + str(self.products[k]["price"]),
-                self.products,
+                lambda p: HARVEST_SHARE_FIELD_PREFIX
+                + p.name.lower()
+                + ":"
+                + str(prices[p.id]),
+                harvest_share_products,
             )
         )
 
