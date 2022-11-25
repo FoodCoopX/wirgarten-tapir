@@ -129,7 +129,9 @@ class PickupLocationEditForm(forms.Form):
         )
 
         self.product_types = list(
-            get_active_product_types().exclude(delivery_cycle=NO_DELIVERY[0])
+            get_active_product_types()
+            .exclude(delivery_cycle=NO_DELIVERY[0])
+            .order_by("name")
         )
 
         for pt in self.product_types:
@@ -153,4 +155,6 @@ class PickupLocationEditForm(forms.Form):
             for ptc in get_active_pickup_location_capabilities().filter(
                 pickup_location=self.pickup_location
             ):
-                self.fields["pt_" + ptc.product_type.id].initial = True
+                key = "pt_" + ptc.product_type.id
+                if key in self.fields:
+                    self.fields[key].initial = True
