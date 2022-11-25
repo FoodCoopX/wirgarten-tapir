@@ -140,17 +140,20 @@ def get_subs_or_shares_for_mandate_ref(
         )
 
 
-def sub_to_dict(x):
-    price = get_product_price(x.product, x.start_date).price
+def sub_to_dict(sub):
+    if type(sub) is dict:
+        return sub
+
+    price = get_product_price(sub.product, sub.start_date).price
     return {
-        "quantity": x.quantity,
+        "quantity": sub.quantity,
         "product": {
-            "name": x.product.name,
-            "type": {"name": x.product.type.name},
+            "name": sub.product.name,
+            "type": {"name": sub.product.type.name},
             "price": price,
         },
-        "solidarity_price": x.solidarity_price,
-        "total_price": float(price) * x.solidarity_price * x.quantity,
+        "solidarity_price": sub.solidarity_price,
+        "total_price": float(price) * sub.solidarity_price * sub.quantity,
     }
 
 
