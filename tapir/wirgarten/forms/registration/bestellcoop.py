@@ -2,6 +2,9 @@ from importlib.resources import _
 
 from django import forms
 
+from tapir.wirgarten.models import Product
+from tapir.wirgarten.service.products import get_product_price
+
 
 class BestellCoopForm(forms.Form):
     bestellcoop = forms.BooleanField(
@@ -15,7 +18,9 @@ class BestellCoopForm(forms.Form):
 
     def __init__(self, **kwargs):
         super(BestellCoopForm, self).__init__(**kwargs)
-        self.bestellcoop_price = kwargs["initial"]["bestellcoop_price"]
+        prod = Product.objects.filter(type__name="BestellCoop")[0]
+
+        self.bestellcoop_price = get_product_price(prod).price
 
     def is_valid(self):
         super(BestellCoopForm, self).is_valid()

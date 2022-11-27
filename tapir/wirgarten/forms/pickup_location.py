@@ -90,6 +90,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
             ),
+            label=kwargs["label"],
         )
 
     def label_from_instance(self, obj):

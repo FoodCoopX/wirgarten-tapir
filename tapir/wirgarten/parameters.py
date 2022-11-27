@@ -30,7 +30,7 @@ PREFIX = "wirgarten"
 class ParameterCategory:
     SITE = "Standort"
     COOP = "Genossenschaft"
-    CHICKEN = "Hühneranteile"
+    ADDITIONAL_SHARES = "Zusatzabos"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
     PICK_LIST = "Kommissionierliste"
@@ -51,6 +51,8 @@ class Parameter:
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
+    CHICKEN_SHARES_SUBSCRIBABLE = f"{PREFIX}.chicken.is_subscribable"
+    BESTELLCOOP_SUBSCRIBABLE = f"{PREFIX}.bestellcoop.is_subscribable"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     HARVEST_SHARES_SUBSCRIBABLE = f"{PREFIX}.harvest.harvest_shares_subscribable"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
@@ -174,7 +176,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=5,
             description="Die maximale Anzahl Hühneranteile (pro Variante) die pro Mitglied/Interessent gewählt werden kann.",
-            category=ParameterCategory.CHICKEN,
+            category=ParameterCategory.ADDITIONAL_SHARES,
         )
 
         parameter_definition(
@@ -226,7 +228,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ernteanteile",
             description="Komma-separierte Liste der Zusatzabos für die eine Kommissionierliste erzeugt werden soll.",
-            category=ParameterCategory.SUPPLIER_LIST,
+            category=ParameterCategory.PICK_LIST,
         )
 
         parameter_definition(
@@ -299,17 +301,49 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.HARVEST_SHARES_SUBSCRIBABLE,
             label="Ernteanteile zeichenbar",
             datatype=TapirParameterDatatype.INTEGER,
-            initial_value=1,
-            description="Wenn aktiv, dann sind Enteateile von Mitgliedern zeichenbar.",
+            initial_value=2,
+            description="Wenn aktiv, dann sind Ernteateile von Mitgliedern zeichenbar.",
             category=ParameterCategory.HARVEST,
             meta=ParameterMeta(
                 options=[
-                    # (2, "Automatik"), # FIXME: implement automatism logic
-                    (1, "zeichenbar"),
+                    (2, "Automatik (zeichenbar abhängig von Kapaziät)"),
+                    # (1, "zeichenbar"),
                     (0, "nicht zeichenbar"),
                 ]
             ),
             order_priority=1000,
+        )
+
+        parameter_definition(
+            key=Parameter.CHICKEN_SHARES_SUBSCRIBABLE,
+            label="Hühneranteile zeichenbar",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Wenn aktiv, dann sind Hühneranteile von Mitgliedern zeichenbar.",
+            category=ParameterCategory.ADDITIONAL_SHARES,
+            meta=ParameterMeta(
+                options=[
+                    (2, "Automatik (zeichenbar abhängig von Kapazität)"),
+                    # (1, "zeichenbar"),
+                    (0, "nicht zeichenbar"),
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.BESTELLCOOP_SUBSCRIBABLE,
+            label="BestellCoop Mitgliedschaft möglich",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Wenn aktiv, dann können neue BestellCoop Mitgliedschaften gebucht werden.",
+            category=ParameterCategory.ADDITIONAL_SHARES,
+            meta=ParameterMeta(
+                options=[
+                    (2, "Automatik (möglich abhängig von Kapaziät)"),
+                    # (1, "zeichenbar"),
+                    (0, "keine Anmeldung möglich"),
+                ]
+            ),
         )
 
         parameter_definition(

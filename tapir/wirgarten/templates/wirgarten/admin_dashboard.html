@@ -17,17 +17,14 @@
 
     </div-->
 
-    <div class="dashboard-tile card harvest-shares-tile">
-        <a href="{% url 'wirgarten:product' %}">
-            <div class="card-body">
-                <h4>{{harvest_shares_used_percent}} % Ernteanteile vergeben</h4>
-                <strong>{{harvest_shares_m_equivalents}} M-Anteile</strong> verfügbar
-                <canvas style="padding: 1em" id="harvest-share-capacity-chart"></canvas>
-            </div>
-        </a>
+    <div class="dashboard-tile card capacity-tile clickable">
+        <div class="card-body">
+            <h4>Kapazitäten</h4>
+            <canvas height="10000px" width="10000px" id="product-capacity-chart"></canvas>
+        </div>
     </div>
 
-    <div class="dashboard-tile card">
+    <div class="dashboard-tile card clickable">
         <a href="{% url 'wirgarten:member_list' %}">
             <div class="card-body">
                 <div class="dashboard-tile-number">
@@ -75,7 +72,7 @@
         </div>
     </div>
 
-    <div class="dashboard-tile card next-payment-tile">
+    <div class="dashboard-tile card next-payment-tile clickable">
         <a href="{% url 'wirgarten:payment_transactions' %}">
             <div class="card-body">
                 <div class="dashboard-tile-number">
@@ -95,7 +92,7 @@
         </div>
     </div>
 
-    <div class="dashboard-tile card">
+    <div class="dashboard-tile card clickable">
         <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
             <div class="card-body">
                 {% if status_seperate_coop_shares %}
@@ -113,12 +110,12 @@
         </a>
     </div>
 
-    <div class="dashboard-tile card">
+    <div class="dashboard-tile card clickable">
         <a href="{% url 'configuration:parameters' %}?q=wirgarten.harvest.negative_soliprice_enabled">
             <div class="card-body">
                 {% if status_negative_soli_price_allowed is 0 %}
                 <div class="dashboard-tile-status negative">
-                    <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+                    <span class="material-icons">hide_source</span>
                 </div>
                 {% else %}
                 <div class="dashboard-tile-status positive">
@@ -132,26 +129,47 @@
         </a>
     </div>
 
-    <!-- FIXME: add links to the parameters as soon as they are created!! -->
-    <div class="dashboard-tile card">
-        <div class="card-body">
-            <div class="dashboard-tile-status">
-                <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+    <div class="dashboard-tile card clickable">
+        <a href="{% url 'configuration:parameters' %}?q=wirgarten.bestellcoop.is_subscribable">
+            <div class="card-body">
+                {% if status_bestellcoop_allowed is 0 %}
+                <div class="dashboard-tile-status negative">
+                    <span class="material-icons">hide_source</span>
+                </div>
+                {% else %}
+                <div class="dashboard-tile-status positive">
+                    <span class="material-icons">task_alt</span>
+                </div>
+                {% endif %}
+                <small><strong>BestellCoop</strong><br/>Mitgliedschaft
+                    {% if status_bestellcoop_allowed is 0 %}
+                    <strong>nicht</strong>{% endif %} möglich {% if status_bestellcoop_allowed is 2 %} (auto)
+                    {% endif %}</small>
             </div>
-            <small><strong>BestellCoop</strong><br/>unterj. Mitgliedschaft</small>
-        </div>
+        </a>
     </div>
 
-    <div class="dashboard-tile card">
-        <div class="card-body">
-            <div class="dashboard-tile-status positive">
-                <span class="material-icons">task_alt</span>
+    <div class="dashboard-tile card clickable">
+        <a href="{% url 'configuration:parameters' %}?q=wirgarten.chicken.is_subscribable">
+            <div class="card-body">
+                {% if status_chickenshares_allowed is 0 %}
+                <div class="dashboard-tile-status negative">
+                    <span class="material-icons">hide_source</span>
+                </div>
+                {% else %}
+                <div class="dashboard-tile-status positive">
+                    <span class="material-icons">task_alt</span>
+                </div>
+                {% endif %}
+                <small><strong>Hühneranteile</strong><br/>
+                    {% if status_chickenshares_allowed is 0 %}
+                    <strong>nicht</strong>{% endif %} zeichenbar {% if status_chickenshares_allowed is 2 %} (auto)
+                    {% endif %}</small>
             </div>
-            <small><strong>Zusatzabos</strong><br/>unterj. zeichenbar</small>
-        </div>
+        </a>
     </div>
 
-    <div class="dashboard-tile card product-distribution-tile">
+    <div class="dashboard-tile card product-distribution-tile clickable">
         <a href="{% url 'wirgarten:product' %}">
             <div class="card-body">
                 <h4>Verteilung der Verträge</h4>
@@ -160,7 +178,7 @@
         </a>
     </div>
 
-    <div class="dashboard-tile card harvest-share-variants-tile">
+    <div class="dashboard-tile card harvest-share-variants-tile clickable">
         <a href="{% url 'wirgarten:product' %}">
             <div class="card-body">
                 <h4>Top Ernteanteile Varianten</h4>
@@ -174,16 +192,45 @@
 <script>
   const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
 
-  new Chart(document.getElementById('harvest-share-capacity-chart'), {
-    type: 'pie',
+  const capacityChart = document.getElementById('product-capacity-chart');
+  new Chart(capacityChart, {
+    type: 'bar',
     data: {
-      labels: ['Vergeben', 'Verfügbar'],
-      datasets: [{
-        label: 'Ernteanteile in €',
-        data: [{{harvest_shares_used}}, {{harvest_shares_free}}],
-        borderWidth: 1,
-        backgroundColor: COLORS
-      }]
+      links: {{capacity_links | safe}},
+      labels: {{capacity_labels | safe}},
+      datasets: [
+          {
+            label: 'Verfügbar',
+            data: {{free_capacity | safe}},
+            backgroundColor: COLORS[1]
+          },
+          {
+            label: 'Vergeben',
+            data: {{used_capacity | safe}},
+            backgroundColor: COLORS[0]
+          }
+      ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        },
+        onClick: (event, elements, chart) => {
+          if (elements.length) {
+            const element = elements[0]; // use the first one
+            const url = chart.data.links[element.index];
+            window.location.href = url;
+          }
+        },
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
+        },
     }
   });
 
@@ -213,5 +260,10 @@
       }]
     }
   });
+
+
+
+
+
 </script>
 {% endblock %}

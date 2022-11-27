@@ -9,6 +9,7 @@ from tapir.wirgarten.service.payment import get_solidarity_overplus
 from tapir.wirgarten.service.products import (
     get_product_price,
     get_available_product_types,
+    get_free_product_capacity,
 )
 
 SOLIDARITY_PRICES = [
@@ -67,6 +68,10 @@ class HarvestShareForm(forms.Form):
             prod.id: get_product_price(prod).price for prod in harvest_share_products
         }
 
+        harvest_share_products = sorted(
+            harvest_share_products, key=lambda x: prices[x.id]
+        )
+
         self.products = {
             """harvest_shares_{variation}""".format(
                 variation=p.product_ptr.name.lower()
@@ -79,6 +84,10 @@ class HarvestShareForm(forms.Form):
         self.colspans = {"solidarity_price": self.n_columns}
 
         self.solidarity_total = get_solidarity_total()
+
+        self.free_capacity = get_free_product_capacity(
+            harvest_share_products[0].type.id
+        )
 
         for prod in harvest_share_products:
             self.fields[
