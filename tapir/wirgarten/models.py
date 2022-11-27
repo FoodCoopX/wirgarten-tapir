@@ -3,7 +3,7 @@ from functools import partial
 
 from dateutil.utils import today
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import UniqueConstraint, Index
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 
@@ -109,6 +109,8 @@ class ProductCapacity(TapirModel):
     )
     capacity = models.DecimalField(decimal_places=2, max_digits=20, null=False)
 
+    indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
+
 
 class Member(TapirUser):
     """
@@ -137,6 +139,8 @@ class Product(TapirModel):
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
 
+    indexes = [Index(fields=["type"], name="idx_product_type")]
+
 
 class ProductPrice(TapirModel):
     """
@@ -158,6 +162,7 @@ class ProductPrice(TapirModel):
                 name="unique_product_price_date",
             )
         ]
+        indexes = [Index(fields=["product"], name="idx_productprice_product")]
 
 
 class HarvestShareProduct(Product):
@@ -177,6 +182,9 @@ class MandateReference(models.Model):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     start_ts = models.DateTimeField(null=False)
     end_ts = models.DateTimeField(null=True)
+
+    class Meta:
+        indexes = [Index(fields=["member"], name="idx_mandatereference_mamber")]
 
 
 class Payable:
@@ -234,6 +242,9 @@ class ShareOwnership(TapirModel, Payable):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
+
+    class Meta:
+        indexes = [Index(fields=["member"], name="idx_shareownership_member")]
 
     def get_total_price(self):
         return self.quantity * self.share_price
@@ -299,11 +310,12 @@ class Payment(TapirModel):
                 name="unique_mandate_ref_date",
             )
         ]
+        indexes = [Index(fields=["mandate_ref"], name="idx_payment_mandate_ref")]
 
 
 class Deliveries(TapirModel):
     """
-    History of deliveries. Usually gets
+    History of deliveries.
     """
 
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
@@ -325,6 +337,15 @@ class TaxRate(TapirModel):
     tax_rate = models.FloatField(null=False)
     valid_from = models.DateField(null=False, default=partial(datetime.date.today))
     valid_to = models.DateField(null=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["product_type", "valid_from"],
+                name="unique_tax_rate_product_type_valid_from",
+            )
+        ]
+        indexes = [Index(fields=["product_type"], name="idx_tax_rate_product_type")]
 
 
 class EditFuturePaymentLogEntry(UpdateModelLogEntry):

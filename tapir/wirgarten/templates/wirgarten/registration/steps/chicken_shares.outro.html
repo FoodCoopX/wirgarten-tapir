@@ -6,4 +6,4 @@
 {% endblock %}
 
 <span style="float:right; font-size:1.25rem">= <strong><span id="additional_shares_total">0.00</span> €</strong> / Monat</span>
-<script>initSummary({{ 'wirgarten.chicken.max_shares'|parameter }}, '{{form.chicken_share_prices}}'.split(','))</script>
+<script>initSummary({{ 'wirgarten.chicken.max_shares'|parameter }}, '{{form.chicken_share_prices}}'.split(','), {{form.free_capacity}})</script>

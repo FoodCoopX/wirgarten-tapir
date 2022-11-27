@@ -1,12 +1,15 @@
+import itertools
+from datetime import date
+
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Sum
+from django.urls import reverse_lazy
 from django.views import generic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
     Member,
     Subscription,
-    HarvestShareProduct,
     ProductPrice,
 )
 from tapir.wirgarten.parameters import Parameter
@@ -44,49 +47,50 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             name=HARVEST_SHARES_PRODUCT_TYPE_NAME
         )
 
-        harvest_share_capacity = get_active_product_capacities().get(
-            product_type=harvest_share_type
-        )
-        active_harvest_share_subs = get_future_subscriptions().filter(
-            product__type=harvest_share_type
+        active_capacities = {
+            c.product_type.id: c for c in get_active_product_capacities()
+        }
+        active_subs = get_future_subscriptions().order_by("-product__type")
+        sorted_subs = sorted(
+            active_subs,
+            key=lambda s: s.product.type.name == HARVEST_SHARES_PRODUCT_TYPE_NAME,
+            reverse=True,
         )
 
-        # FIXME: these queries are not perfect yet
+        today = date.today()
 
-        # sum without solidarity_price
-        context["harvest_shares_used"] = sum(
-            map(
-                lambda x: x.quantity
-                * float(
-                    ProductPrice.objects.filter(product=x.product)
-                    .order_by("-valid_from")
-                    .first()
-                    .price
-                ),
-                active_harvest_share_subs,
-            )
-        )
-        context["harvest_shares_free"] = (
-            float(harvest_share_capacity.capacity) - context["harvest_shares_used"]
-        )
-        context["harvest_shares_used_percent"] = round(
-            context["harvest_shares_used"]
-            / (context["harvest_shares_used"] + context["harvest_shares_free"])
-            * 100,
-            1,
-        )
-        base_variant_price = float(
-            ProductPrice.objects.filter(
-                product=HarvestShareProduct.objects.get(
-                    type=harvest_share_type, name="M"
+        context["capacity_links"] = []
+        context["capacity_labels"] = []
+        context["used_capacity"] = []
+        context["free_capacity"] = []
+        for product_type, subs in itertools.groupby(
+            sorted_subs, key=lambda x: x.product.type
+        ):
+            active_capacity = active_capacities[product_type.id]
+            total = float(active_capacity.capacity)
+            used = sum(
+                map(
+                    lambda x: x.quantity
+                    * float(
+                        ProductPrice.objects.filter(
+                            product=x.product, valid_from__lte=today
+                        )
+                        .order_by("-valid_from")
+                        .first()
+                        .price
+                    ),
+                    subs,
                 )
             )
-            .first()
-            .price
-        )
-        context["harvest_shares_m_equivalents"] = round(
-            context["harvest_shares_free"] / base_variant_price
-        )
+            context["used_capacity"].append(used / total * 100)
+            context["free_capacity"].append(100 - (used / total * 100))
+            context["capacity_links"].append(
+                f"{reverse_lazy('wirgarten:product')}?periodId={active_capacity.period.id}&capacityId={active_capacity.id}"
+            )
+            # TODO: show free capacity as quantity of base product shares
+            context["capacity_labels"].append(
+                [product_type.name, f"{format_currency(total - used)} € frei"]
+            )
 
         context["active_members"] = len(Member.objects.all())
         context["cancellations_during_trial"] = len(
@@ -109,6 +113,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["status_negative_soli_price_allowed"] = get_parameter_value(
             Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
         )
+        context["status_bestellcoop_allowed"] = get_parameter_value(
+            Parameter.BESTELLCOOP_SUBSCRIBABLE
+        )
+        context["status_chickenshares_allowed"] = get_parameter_value(
+            Parameter.CHICKEN_SHARES_SUBSCRIBABLE
+        )
 
         (
             context["contract_distribution_data"],
@@ -118,7 +128,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
-        ) = self.get_harvest_share_variants_chart_data(active_harvest_share_subs)
+        ) = self.get_harvest_share_variants_chart_data(
+            active_subs.filter(product__type=harvest_share_type)
+        )
 
         return context
 

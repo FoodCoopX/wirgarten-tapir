@@ -412,3 +412,25 @@ def create_or_update_default_tax_rate(
             valid_from=date.today(),
             valid_to=None,
         )
+
+
+def get_free_product_capacity(
+    product_type_id: str, reference_date: date = date.today()
+):
+    total_capacity = (
+        get_active_product_capacities(reference_date)
+        .get(product_type_id=product_type_id)
+        .capacity
+    )
+
+    used_capacity = sum(
+        map(
+            lambda sub: get_product_price(sub.product, reference_date).price
+            * sub.quantity,
+            get_future_subscriptions(reference_date).filter(
+                product__type_id=product_type_id
+            ),
+        )
+    )
+
+    return total_capacity - used_capacity

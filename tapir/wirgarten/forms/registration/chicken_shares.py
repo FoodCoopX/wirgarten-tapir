@@ -5,7 +5,10 @@ from django import forms
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Product, ProductType
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_product_price
+from tapir.wirgarten.service.products import (
+    get_product_price,
+    get_free_product_capacity,
+)
 
 
 def has_chicken_shares(cleaned_data):
@@ -22,16 +25,17 @@ class ChickenShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ChickenShareForm, self).__init__(*args, **kwargs)
 
+        product_type = ProductType.objects.get(name="Hühneranteile")
         self.products = {
             """chicken_shares_{variation}""".format(variation=p.name): p
-            for p in Product.objects.filter(
-                deleted=False, type=ProductType.objects.get(name="Hühneranteile")
-            )
+            for p in Product.objects.filter(deleted=False, type=product_type)
         }
 
         prices = {
             prod.id: get_product_price(prod).price for prod in self.products.values()
         }
+
+        self.free_capacity = get_free_product_capacity(product_type.id)
 
         self.field_order = list(self.products.keys()) + ["consent"]
         self.n_columns = len(self.products)

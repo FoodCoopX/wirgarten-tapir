@@ -7,6 +7,14 @@
           -ms-user-select: none; /* Internet Explorer/Edge */
               user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
+
+    transition: box-shadow .2s;
+}
+
+.dashboard-tile.clickable:hover {
+    -webkit-box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+    -moz-box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
 }
 
 .dashboard-tile-number > .material-icons {
@@ -33,7 +41,7 @@
 }
 
 .negative {
-    color: darkred;
+    color: var(--bs-danger);
 }
 
 .alert-tile {
@@ -52,8 +60,8 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .harvest-shares-tile{
-        grid-area: span 3 / span 2;
+    .capacity-tile{
+        grid-area: span 2 / span 2;
     }
 
     .harvest-share-variants-tile {
@@ -80,7 +88,7 @@
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .harvest-shares-tile{
+    .capacity-tile{
         grid-area: span 2 / span 2;
     }
 
@@ -108,7 +116,7 @@
         grid-template-columns: repeat(5, 1fr);
     }
 
-     .harvest-shares-tile{
+     .capacity-tile{
         grid-area: span 3 / span 2;
     }
 
@@ -135,7 +143,7 @@
         grid-template-columns: repeat(6, 1fr) !important;
     }
 
-    .harvest-shares-tile{
+    .capacity-tile{
         grid-area: span 3 / span 2;
     }
 

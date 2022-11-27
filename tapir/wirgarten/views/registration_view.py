@@ -31,12 +31,17 @@ from tapir.wirgarten.models import (
     ShareOwnership,
     MandateReference,
     Payment,
+    ProductPrice,
 )
 
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import generate_mandate_ref
-from tapir.wirgarten.service.products import get_active_product_types, get_product_price
+from tapir.wirgarten.service.products import (
+    get_active_product_types,
+    get_product_price,
+    get_free_product_capacity,
+)
 
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
@@ -76,8 +81,49 @@ FORMS = [
 ]
 
 
+def is_product_type_available(product_type: ProductType) -> bool:
+    return get_free_product_capacity(
+        product_type_id=product_type.id
+    ) > get_cheapest_product_price(product_type)
+
+
+def get_cheapest_product_price(product_type: ProductType):
+    today = date.today()
+    return (
+        ProductPrice.objects.filter(product__type=product_type, valid_from__lte=today)
+        .order_by("price")
+        .values("price")[0:1][0]["price"]
+    )
+
+
+def show_bestellcoop() -> bool:
+    param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name="BestellCoop")
+        )
+    )
+
+
+def show_chicken_shares() -> bool:
+    param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name="Hühneranteile")
+        )
+    )
+
+
 def show_harvest_shares(wizard=None) -> bool:
-    return get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
+    param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name="Ernteanteile")
+        )
+    )
 
 
 def dont_show_harvest_shares(wizard=None) -> bool:
@@ -98,8 +144,8 @@ def show_dependent_steps(wizard) -> bool:
 CONDITIONS = {
     STEP_HARVEST_SHARES: show_harvest_shares,
     STEP_NO_HARVEST_SHARES_AVAILABLE: dont_show_harvest_shares,
-    STEP_ADDITIONAL_SHARES: show_dependent_steps,
-    STEP_BESTELLCOOP: show_dependent_steps,
+    STEP_ADDITIONAL_SHARES: lambda x: show_dependent_steps(x) and show_chicken_shares(),
+    STEP_BESTELLCOOP: lambda x: show_dependent_steps(x) and show_bestellcoop(),
     STEP_PICKUP_LOCATION: show_dependent_steps,
 }
 
@@ -142,6 +188,7 @@ def save_subscriptions(
         )
 
 
+# FIXME: move CRUD logic to services!
 def save_member(form_dict):
     member = form_dict[STEP_PERSONAL_DETAILS].instance
 
@@ -283,6 +330,9 @@ class RegistrationWizardView(CookieWizardView):
         ).first()
         self.end_date = self.growing_period.end_date
 
+    def has_step(self, step):
+        return step in self.storage.data["step_data"]
+
     def get_template_names(self):
         if self.steps.current == STEP_NO_HARVEST_SHARES_AVAILABLE:
             return ["wirgarten/registration/steps/harvest_shares_no_subscription.html"]
@@ -290,44 +340,22 @@ class RegistrationWizardView(CookieWizardView):
             return ["wirgarten/registration/steps/summary.html"]
         return ["wirgarten/registration/registration_form.html"]
 
-    def harvest_share_subscribable_auto(self):
-        # FIXME: implement automatism logic
-        print(
-            "Defaults to False. Function 'harvest_share_sbscribable_auto' not implemented yet."
-        )
-        return False
-
-    def is_harvest_share_subscribable(self) -> bool:
-        status = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
-        if status == 0:
-            return False
-        elif status == 1:
-            return True
-
-        return self.harvest_share_subscribable_auto()
-
     # gather data from dependent forms
     def get_form_initial(self, step=None):
         initial = self.initial_dict
         if step == STEP_COOP_SHARES:
-            if show_harvest_shares():
+            if self.has_step(STEP_HARVEST_SHARES):
                 data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
                 for key, val in data.items():
                     initial[key] = val
-        elif step == STEP_BESTELLCOOP:
-            product = Product.objects.get(
-                type__in=get_active_product_types(), name="Mitgliedschaft"
-            )
-
-            initial["bestellcoop_price"] = get_product_price(product).price
         elif step == STEP_PICKUP_LOCATION:
             # TODO: has to be implemented with product_type.id not name when the wizard generically handles all products
             initial["product_types"] = []
-            if is_harvest_shares_selected(
+            if self.has_step(STEP_HARVEST_SHARES) and is_harvest_shares_selected(
                 self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
             ):
                 initial["product_types"].append("Ernteanteile")
-            if is_chicken_shares_selected(
+            if self.has_step(STEP_ADDITIONAL_SHARES) and is_chicken_shares_selected(
                 self.get_cleaned_data_for_step(STEP_ADDITIONAL_SHARES)
             ):
                 initial["product_types"].append("Hühneranteile")
@@ -336,30 +364,39 @@ class RegistrationWizardView(CookieWizardView):
                 "start_date": self.start_date,
                 "end_date": self.end_date,
             }
-            initial["harvest_shares"] = self.get_cleaned_data_for_step(
-                STEP_HARVEST_SHARES
-            )
+            if self.has_step(STEP_HARVEST_SHARES):
+                initial["harvest_shares"] = self.get_cleaned_data_for_step(
+                    STEP_HARVEST_SHARES
+                )
+
+                if is_harvest_shares_selected(
+                    self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
+                ):
+                    if self.has_step(STEP_ADDITIONAL_SHARES):
+                        initial["additional_shares"] = self.get_cleaned_data_for_step(
+                            STEP_ADDITIONAL_SHARES
+                        )
+                    if self.has_step(STEP_BESTELLCOOP):
+                        initial["bestellcoop"] = self.get_cleaned_data_for_step(
+                            STEP_BESTELLCOOP
+                        )
+                    initial["pickup_location"] = self.get_cleaned_data_for_step(
+                        STEP_PICKUP_LOCATION
+                    )
+            else:
+                initial["harvest_shares"] = {}
+
             initial["coop_shares"] = self.get_cleaned_data_for_step(STEP_COOP_SHARES)
 
-            if is_harvest_shares_selected(
-                self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
-            ):
-                initial["additional_shares"] = self.get_cleaned_data_for_step(
-                    STEP_ADDITIONAL_SHARES
-                )
-                initial["bestellcoop"] = self.get_cleaned_data_for_step(
-                    STEP_BESTELLCOOP
-                )
-                initial["pickup_location"] = self.get_cleaned_data_for_step(
-                    STEP_PICKUP_LOCATION
-                )
         return initial
 
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
 
-        if is_harvest_shares_selected(form_dict[STEP_HARVEST_SHARES].cleaned_data):
+        if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
+            form_dict[STEP_HARVEST_SHARES].cleaned_data
+        ):
             save_subscriptions(
                 form_dict,
                 member,
