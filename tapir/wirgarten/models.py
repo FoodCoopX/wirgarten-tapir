@@ -9,7 +9,7 @@ from localflavor.generic.models import IBANField, BICField
 
 from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
-from tapir.log.models import UpdateModelLogEntry
+from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 
 
@@ -353,6 +353,8 @@ class EditFuturePaymentLogEntry(UpdateModelLogEntry):
     This log entry is created whenever an admin manually changes the amount of a future payment.
     """
 
+    template_name = "wirgarten/log/edit_future_payment_log_entry.html"
+
     comment = models.CharField(null=False, blank=False, max_length=256)
 
     def populate(
@@ -371,4 +373,19 @@ class EditFuturePaymentLogEntry(UpdateModelLogEntry):
             new_model=new_model,
         )
         self.comment = comment
+        return self
+
+
+class TransferCoopSharesLogEntry(LogEntry):
+    template_name = "wirgarten/log/transfer_coop_shares_log_entry.html"
+
+    target_member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    quantity = models.PositiveSmallIntegerField()
+
+    def populate(
+        self, actor=None, user=None, target_member=None, quantity=None, **kwargs
+    ):
+        super(TransferCoopSharesLogEntry, self).populate(actor=actor, user=user)
+        self.target_member = target_member
+        self.quantity = quantity
         return self

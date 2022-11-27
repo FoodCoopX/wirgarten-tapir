@@ -3,8 +3,11 @@
         initSelected();
 }
 
-const locationRows = document.getElementsByClassName("location-row");
 const initSelected = () => {
+    const deleteButton = document.getElementById("delete-location")
+const editButton = document.getElementById("edit-location")
+const locationRows = document.getElementsByClassName("location-row");
+
     const params = Tapir.getUrlParams();
     if(params.selected){
         PickupLocationMap.selectLocation(params.selected);
@@ -18,7 +21,8 @@ const initSelected = () => {
             }
         }
 
-        document.getElementById("delete-location").disabled=!canDelete[params.selected]
+        deleteButton.disabled=!canDelete[params.selected];
+        editButton.disabled=false;
     }
 }
 

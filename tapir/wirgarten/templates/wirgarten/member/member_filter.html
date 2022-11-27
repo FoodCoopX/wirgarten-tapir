@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load core %}
 {% load static %}
+{% load django_bootstrap5 %}
 
 {% block title %}
 {% translate "Mitglieder" %}
@@ -10,29 +11,67 @@
 
 {% block content %}
 
-<div style="margin-top: 2em" class="container">
+<div style="margin-top: 2em; grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
     <div class="card">
-        <div class="card-header">
-            <h4>{% translate "Mitglieder" %}</h4>
+        <div class="card-header" style="display: flex; justify-content: space-between">
+            <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
+            <span style="display: flex; flex-direction:row;">
+                <button title="Mitglied anlegen"
+                        onclick="alert('Not yet implemented!')"
+                        class="btn btn-outline-success material-icons mx-1 px-2"
+                >
+                    person_add
+                </button>
+                <button title="Mitgliedsdaten ändern"
+                        onclick="alert('Not yet implemented!')"
+                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
+                        disabled
+                >
+                    manage_accounts
+                </button>
+                 <button title="Details anzeigen"
+                        onclick="handleShowMemberDetailsPage()"
+                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
+                        disabled
+                >
+                    info
+                </button>
+                <button title="Genossenschaftsanteile übertragen"
+                        onclick="handleTransferCoopShares()"
+                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
+                        disabled
+                >
+                    move_down
+                </button>
+
+                <div style="width: 3em"></div>
+                <button id="delete-location"
+                        title="Mitglied löschen"
+                        onclick="alert('Not yet implemented!')"
+                        data-bs-toggle="modal" data-bs-target="#delete-confirmation"
+                        class="needs-member btn btn-outline-danger material-icons mx-1 px-2"
+                        disabled
+                >
+                    delete
+                </button>
+            </span>
         </div>
         <div class="card-body">
-            <form method="get">
-                {{ filter.form.as_p }}
-                <input type="submit"/>
-            </form>
-            <hr/>
             <table class="table"
                    aria-label="{% translate 'List of applicants' %}">
                 <thead>
-                <th>{% translate "Vorname" %}</th>
-                <th>{% translate "Nachname" %}</th>
-                <th>{% translate "Geburtstag" %}</th>
-                <th>{% translate "Email" %}</th>
-                <th>{% translate "Beitrittsdatum" %}</th>
+                <tr>
+                    <th>{% translate "Vorname" %}</th>
+                    <th>{% translate "Nachname" %}</th>
+                    <th>{% translate "Geburtstag" %}</th>
+                    <th>{% translate "Email" %}</th>
+                    <th>{% translate "Beitrittsdatum" %}</th>
+                </tr>
                 </thead>
                 {% for member in filter.qs %}
 
-                <tr class="tr-href" href="/wirgarten/members/{{member.id}}">
+                <tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}')"
+                    class="tr-clickable member-row">
                     <td class="align-middle">{{ member.first_name }}</td>
                     <td class="align-middle">{{ member.last_name }}</td>
                     <td class="align-middle">{{ member.birthdate }}</td>
@@ -43,6 +82,65 @@
             </table>
         </div>
     </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate "Filter" %}</h4>
+        </div>
+        <div class="card-body">
+            <form method="get">
+                {% for field in filter.form %}
+                {% bootstrap_field field %}
+                {% endfor %}
+                <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
+                    {% translate 'Suchen' %}
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
+
+{% include 'wirgarten/generic/modal/form-modal.html' %}
+
+<script>
+    const memberRows = document.getElementsByClassName('member-row');
+    const buttons = document.getElementsByClassName('needs-member');
+
+    const activateRow = (memberId) => {
+        const params = Tapir.getUrlParams();
+
+        for(row of memberRows){
+            if(row.id === `member-${params.member}`){
+                row.classList.add('active');
+            } else {
+                row.classList.remove('active');
+            }
+        }
+
+        for(btn of buttons){
+            btn.disabled = false;
+        }
+    }
+
+    const handleSelectMember = (memberId) => {
+        const params = Tapir.getUrlParams();
+        params.member = memberId;
+        Tapir.replaceUrlParams(params);
+
+        activateRow();
+    }
+
+    const handleShowMemberDetailsPage = () => {
+        const params = Tapir.getUrlParams();
+        window.location.href = `/wirgarten/members/${params.member}`;
+    }
+
+    const handleTransferCoopShares = () => {
+        const params = Tapir.getUrlParams();
+        FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
+    }
+
+    activateRow();
+</script>
 
 {% endblock %}

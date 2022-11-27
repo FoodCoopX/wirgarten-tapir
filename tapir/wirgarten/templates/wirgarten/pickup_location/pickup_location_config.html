@@ -9,9 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<script src="{% static 'wirgarten/js/pickup-location-config.js' %} ">
-
-</script>
+<script src="{% static 'wirgarten/js/pickup-location-config.js' %} "></script>
 <div style="margin-top: 2em">
     <div class="card">
         <div class="card-header" style="display: flex; flex-direction:row;">
@@ -20,11 +18,13 @@
                     onclick="FormModal.load('{% url 'wirgarten:pickup_locations_add' %}', 'Abholort hinzufügen')"
                     class="btn btn-outline-success material-icons mx-1 px-2"
             >
-                add
+                add_location_alt
             </button>
-            <button title="Abholort ändern"
+            <button id="edit-location"
+                    title="Abholort ändern"
                     onclick="handleEdit()"
                     class="btn btn-outline-primary material-icons mx-1 px-2"
+                    disabled
             >
                 edit
             </button>
@@ -33,6 +33,7 @@
                     title="Abholort löschen"
                     data-bs-toggle="modal" data-bs-target="#delete-confirmation"
                     class="btn btn-outline-danger material-icons mx-1 px-2"
+                    disabled
             >
                 delete
             </button>
