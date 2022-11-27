@@ -12,9 +12,13 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django_filters import FilterSet, CharFilter
 from django_filters.views import FilterView
+from django.views.decorators.http import require_http_methods
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.forms.member.forms import PaymentAmountEditForm
+from tapir.wirgarten.forms.member.forms import (
+    PaymentAmountEditForm,
+    CoopShareTransferForm,
+)
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -26,6 +30,7 @@ from tapir.wirgarten.models import (
     MandateReference,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import transfer_coop_shares
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
     is_mandate_ref_for_coop_shares,
@@ -35,6 +40,7 @@ from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_product_price,
 )
+from tapir.wirgarten.views.modal import get_form_modal
 
 
 class MemberFilter(FilterSet):
@@ -272,6 +278,7 @@ class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
         return context
 
 
+@require_http_methods(["GET", "POST"])
 def get_payment_amount_edit_form(request, **kwargs):
     if request.method == "POST":
         form = PaymentAmountEditForm(request.POST, **kwargs)
@@ -330,3 +337,19 @@ def create_payment_edit_logentry(form, kwargs, new_payment, request):
             user=member,
             comment=comment,
         ).save()
+
+
+@require_http_methods(["GET", "POST"])
+def get_coop_share_transfer_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        form=CoopShareTransferForm,
+        handler=lambda x: transfer_coop_shares(
+            origin_member=kwargs["pk"],
+            target_member=x.cleaned_data["receiver"],
+            quantity=x.cleaned_data["quantity"],
+            actor=request.user,
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        **kwargs,
+    )

@@ -12,6 +12,7 @@ from tapir.wirgarten.views.member import (
     MemberPaymentsView,
     MemberDeliveriesView,
     get_payment_amount_edit_form,
+    get_coop_share_transfer_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -119,6 +120,11 @@ urlpatterns = [
     ),
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
+    path(
+        "members/<int:pk>/coopsharestransfer",
+        get_coop_share_transfer_form,
+        name="member_coopshare_transfer",
+    ),
     path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(
         "payments/<int:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",
