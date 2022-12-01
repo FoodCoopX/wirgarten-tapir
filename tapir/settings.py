@@ -148,6 +148,10 @@ CELERY_BEAT_SCHEDULE = {
             # once a month, on 15th 0:00
         ),
     },
+    "export_harvest_share_subscriber_emails": {
+        "task": "export_harvest_share_subscriber_emails",
+        "schedule": celery.schedules.crontab(day_of_week="monday", minute=0, hour=0),
+    },
 }
 
 # Password validation

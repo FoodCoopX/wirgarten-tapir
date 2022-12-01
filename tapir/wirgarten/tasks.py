@@ -1,11 +1,12 @@
 import itertools
-from datetime import datetime, date
+from datetime import datetime
 
 from celery import shared_task
 from django.db import transaction
 from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     ExportedFile,
     Payment,
@@ -24,6 +25,7 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_active_product_types,
+    get_active_subscriptions,
 )
 
 
@@ -159,8 +161,44 @@ def export_supplier_list_csv():
             )
 
 
-def windata_date_format(due_date):
-    return due_date.strftime("%d.%m.%Y")
+@shared_task
+def export_harvest_share_subscriber_emails():
+    """
+    Exports the names and email addresses of members with active harvest share subscriptions.
+    The exported list will be used by the newsletter sender (everyone in the list gets the newsleter).
+    """
+
+    KEY_FIRST_NAME = "Vorname"
+    KEY_LAST_NAME = "Nachname"
+    KEY_VARIANTS = "Ernteanteile"
+    KEY_EMAIL = "Email"
+
+    def create_csv_string():
+        output, writer = begin_csv_string(
+            [KEY_FIRST_NAME, KEY_LAST_NAME, KEY_VARIANTS, KEY_EMAIL]
+        )
+        for member, subs in itertools.groupby(
+            get_active_subscriptions()
+            .filter(product__type__name=ProductTypes.HARVEST_SHARES)
+            .order_by("member_id"),
+            lambda x: x.member,
+        ):
+            writer.writerow(
+                {
+                    KEY_FIRST_NAME: member.first_name,
+                    KEY_LAST_NAME: member.last_name,
+                    KEY_VARIANTS: ", ".join(map(lambda s: s.product.name, subs)),
+                    KEY_EMAIL: member.email,
+                }
+            )
+        return "".join(output.csv_string)
+
+    export_file(
+        filename="Erntepost_Empfänger",
+        filetype=ExportedFile.FileType.CSV,
+        content=bytes(create_csv_string(), "utf-8"),
+        send_email=True,
+    )
 
 
 @shared_task
@@ -169,6 +207,10 @@ def export_sepa_payments():
     """
     Creates payments for now. This should usually only run once a month.
     """
+
+    def windata_date_format(due_date):
+        return due_date.strftime("%d.%m.%Y")
+
     KEY_SEPA_ZAHLPFL_NAME = "Beg/Zahlpfl Name"
     KEY_SEPA_ZAHLPFL_STREET = "Beg/Zahlpfl Strasse"
     KEY_SEPA_ZAHLPFL_CITY = "Beg/Zahlpfl Ort"
