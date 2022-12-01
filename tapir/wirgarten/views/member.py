@@ -41,6 +41,7 @@ from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_product_price,
 )
+from tapir.wirgarten.tasks import export_harvest_share_subscriber_emails
 from tapir.wirgarten.views.modal import get_form_modal
 
 
@@ -286,10 +287,47 @@ class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
 
 @require_http_methods(["GET", "POST"])
 def get_payment_amount_edit_form(request, **kwargs):
+    @transaction.atomic
+    def save_future_payment_change():
+        def create_payment_edit_logentry(new_payment):
+            member = Member.objects.get(pk=kwargs["member_id"])
+            comment = form.data["comment"]
+            if hasattr(form, "payment"):
+                EditFuturePaymentLogEntry().populate(
+                    old_model=form.payment,
+                    new_model=new_payment,
+                    actor=request.user,
+                    user=member,
+                    comment=comment,
+                ).save()
+            else:
+                EditFuturePaymentLogEntry().populate(
+                    old_frozen={},
+                    new_model=new_payment,
+                    actor=request.user,
+                    user=member,
+                    comment=comment,
+                ).save()
+
+        if not hasattr(form, "payment"):
+            new_payment = Payment.objects.create(
+                due_date=form.payment_due_date,
+                amount=form.data["amount"],
+                mandate_ref_id=form.mandate_ref_id,
+                edited=True,
+            )
+        else:
+            new_payment = copy(form.payment)
+            new_payment.amount = form.data["amount"]
+            new_payment.edited = True
+            new_payment.save()
+
+        create_payment_edit_logentry(new_payment)
+
     if request.method == "POST":
         form = PaymentAmountEditForm(request.POST, **kwargs)
         if form.is_valid():
-            save_payment(form, kwargs, request)
+            save_future_payment_change()
 
             return HttpResponseRedirect(
                 reverse_lazy(
@@ -304,45 +342,6 @@ def get_payment_amount_edit_form(request, **kwargs):
         return render(
             request, "wirgarten/member/member_payments_edit_form.html", {"form": form}
         )
-
-
-# FIXME: move to service
-@transaction.atomic
-def save_payment(form, kwargs, request):
-    def create_payment_edit_logentry(new_payment):
-        member = Member.objects.get(pk=kwargs["member_id"])
-        comment = form.data["comment"]
-        if hasattr(form, "payment"):
-            EditFuturePaymentLogEntry().populate(
-                old_model=form.payment,
-                new_model=new_payment,
-                actor=request.user,
-                user=member,
-                comment=comment,
-            ).save()
-        else:
-            EditFuturePaymentLogEntry().populate(
-                old_frozen={},
-                new_model=new_payment,
-                actor=request.user,
-                user=member,
-                comment=comment,
-            ).save()
-
-    if not hasattr(form, "payment"):
-        new_payment = Payment.objects.create(
-            due_date=form.payment_due_date,
-            amount=form.data["amount"],
-            mandate_ref_id=form.mandate_ref_id,
-            edited=True,
-        )
-    else:
-        new_payment = copy(form.payment)
-        new_payment.amount = form.data["amount"]
-        new_payment.edited = True
-        new_payment.save()
-
-    create_payment_edit_logentry(new_payment)
 
 
 @require_http_methods(["GET", "POST"])
