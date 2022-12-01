@@ -12,6 +12,7 @@ from formtools.wizard.views import CookieWizardView
 from tapir.accounts.models import LdapPerson
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.forms.member.forms import PersonalDataForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -19,7 +20,6 @@ from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.no_harvest_shares import NoHarvestSharesForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
-from tapir.wirgarten.forms.registration.personal_data import PersonalDataForm
 from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
@@ -36,10 +36,15 @@ from tapir.wirgarten.models import (
 
 # Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import (
+    create_mandate_ref,
+    create_member,
+    buy_cooperative_shares,
+    get_next_contract_start_date,
+)
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    get_product_price,
     get_free_product_capacity,
 )
 
@@ -157,7 +162,7 @@ def save_subscriptions(
     end_date: date,
     growing_period: GrowingPeriod,
 ):
-    mandate_ref = save_mandate_ref(member, False)
+    mandate_ref = create_mandate_ref(member, False)
     product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
     has_shares = False
     for key, quantity in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
@@ -188,7 +193,6 @@ def save_subscriptions(
         )
 
 
-# FIXME: move CRUD logic to services!
 def save_member(form_dict):
     member = form_dict[STEP_PERSONAL_DETAILS].instance
 
@@ -206,26 +210,7 @@ def save_member(form_dict):
     member.withdrawal_consent = now
     member.privacy_consent = now
 
-    # FIXME: username must be guaranteed unique! Otherwise we get duplicate key error
-    #  Do we even need a username? Why not login with email?
-    member.username = member.first_name.lower() + "." + member.last_name.lower()
-
-    save_ldap_person(member)
-
-    member.save()
-    return member
-
-
-def save_ldap_person(member):
-    if member.has_ldap():
-        ldap_user = member.get_ldap()
-    else:
-        ldap_user = LdapPerson(uid=member.username)
-
-    ldap_user.sn = member.last_name or member.username
-    ldap_user.cn = member.get_full_name() or member.username
-    ldap_user.mail = member.email
-    ldap_user.save()
+    return create_member(member)
 
 
 def save_additional_shares(
@@ -253,28 +238,6 @@ def save_additional_shares(
             )
 
 
-def save_cooperative_shares(form_dict, member: Member, start_date):
-    mandate_ref = save_mandate_ref(member, True)
-    share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
-    quantity = form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
-    due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
-
-    ShareOwnership.objects.create(
-        member=member,
-        quantity=quantity,
-        share_price=share_price,
-        entry_date=start_date,
-        mandate_ref=mandate_ref,
-    )
-
-    Payment.objects.create(
-        due_date=due_date,
-        amount=share_price * quantity,
-        mandate_ref=mandate_ref,
-        status=Payment.PaymentStatus.DUE,
-    )
-
-
 def save_bestellcoop(
     form_dict,
     member,
@@ -299,19 +262,6 @@ def save_bestellcoop(
         )
 
 
-def get_next_start_date(ref_date=date.today()):
-    now = ref_date
-    y, m = divmod(now.year * 12 + now.month, 12)
-    return date(y, m + 1, 1)
-
-
-def save_mandate_ref(member: Member, coop_shares: bool):
-    ref = generate_mandate_ref(member.id, coop_shares)
-    return MandateReference.objects.create(
-        ref=ref, member=member, start_ts=datetime.now()
-    )
-
-
 @method_decorator(xframe_options_exempt, name="dispatch")
 @method_decorator(xframe_options_exempt, name="post")
 class RegistrationWizardView(CookieWizardView):
@@ -324,7 +274,7 @@ class RegistrationWizardView(CookieWizardView):
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardView, self).__init__(*args, **kwargs)
 
-        self.start_date = get_next_start_date()
+        self.start_date = get_next_contract_start_date()
         self.growing_period = GrowingPeriod.objects.filter(
             start_date__lte=self.start_date, end_date__gte=self.start_date
         ).first()
@@ -406,8 +356,12 @@ class RegistrationWizardView(CookieWizardView):
             )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-        actual_coop_start = get_next_start_date(self.start_date)
-        save_cooperative_shares(form_dict, member, actual_coop_start)
+        actual_coop_start = get_next_contract_start_date(self.start_date)
+        buy_cooperative_shares(
+            form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
+            member,
+            actual_coop_start,
+        )
 
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:draftuser_confirm_registration")

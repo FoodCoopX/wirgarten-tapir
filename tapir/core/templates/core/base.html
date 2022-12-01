@@ -40,15 +40,15 @@
 
 <nav class="navbar navbar-expand-sm navbar-dark bg-dark sticky-top shadow px-3">
     <span class="navbar-brand">
-        <img alt="Wirgarten Lünegurg Logo" height=30" src="{% static 'core/images/Logo_white.webp' %}">
+        <img alt="Wirgarten Lüneburg Logo" height=30" src="{% static 'core/images/Logo_white.webp' %}">
     </span>
 
     {% if request.user.is_authenticated %}
         <a class="text-light nav-link"
-           href="{% url "accounts:user_me" %}">{{ request.user.first_name }} {{ request.user.last_name }}</a>
-        <a class="text-light nav-link" href="{% url "logout" %}" id="logout">Logout</a>
+           href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a>
+        <a class="text-light nav-link" href="{% url 'logout' %}" id="logout">Logout</a>
     {% else %}
-        <a class="text-light nav-link" href="{% url "login" %}">Login</a>
+        <a class="text-light nav-link" href="{% url 'login' %}">Login</a>
     {% endif %}
 </nav>
 
