@@ -2,6 +2,7 @@ from importlib.resources import _
 
 from django.forms import (
     Form,
+    ModelForm,
     BooleanField,
     DecimalField,
     CharField,
@@ -9,7 +10,36 @@ from django.forms import (
     IntegerField,
 )
 
+from tapir.utils.forms import TapirPhoneNumberField, DateInput
 from tapir.wirgarten.models import Payment, Member, ShareOwnership
+
+
+class PersonalDataForm(ModelForm):
+    n_columns = 2
+
+    def __init__(self, *args, **kwargs):
+        super(PersonalDataForm, self).__init__(*args, **kwargs)
+        for k, v in self.fields.items():
+            if k != "street_2":
+                v.required = True
+
+    class Meta:
+        model = Member
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "street",
+            "street_2",
+            "postcode",
+            "city",
+            "country",
+            "birthdate",
+        ]
+        widgets = {"birthdate": DateInput()}
+
+    phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
 
 class PaymentAmountEditForm(Form):

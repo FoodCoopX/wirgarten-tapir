@@ -18,6 +18,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.member.forms import (
     PaymentAmountEditForm,
     CoopShareTransferForm,
+    PersonalDataForm,
 )
 from tapir.wirgarten.models import (
     Member,
@@ -30,7 +31,7 @@ from tapir.wirgarten.models import (
     MandateReference,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.member import transfer_coop_shares
+from tapir.wirgarten.service.member import transfer_coop_shares, create_member
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
     is_mandate_ref_for_coop_shares,
@@ -71,8 +72,13 @@ class MemberDetailView(generic.DetailView):
             self.object
         )
 
-        shares = ShareOwnership.objects.filter(member=self.object)[0]
-        context["coop_shares"] = f"""{shares.quantity} × {shares.share_price} €"""
+        shares = list(ShareOwnership.objects.filter(member=self.object))
+
+        if len(shares) > 0:
+            quantity = sum(map(lambda s: s.quantity, shares))
+            context[
+                "coop_shares"
+            ] = f"{quantity} × {shares[0].share_price} €"  # FIXME: what if share price differs? Can this ever happen?
 
         return context
 
@@ -300,8 +306,29 @@ def get_payment_amount_edit_form(request, **kwargs):
         )
 
 
+# FIXME: move to service
 @transaction.atomic
 def save_payment(form, kwargs, request):
+    def create_payment_edit_logentry(new_payment):
+        member = Member.objects.get(pk=kwargs["member_id"])
+        comment = form.data["comment"]
+        if hasattr(form, "payment"):
+            EditFuturePaymentLogEntry().populate(
+                old_model=form.payment,
+                new_model=new_payment,
+                actor=request.user,
+                user=member,
+                comment=comment,
+            ).save()
+        else:
+            EditFuturePaymentLogEntry().populate(
+                old_frozen={},
+                new_model=new_payment,
+                actor=request.user,
+                user=member,
+                comment=comment,
+            ).save()
+
     if not hasattr(form, "payment"):
         new_payment = Payment.objects.create(
             due_date=form.payment_due_date,
@@ -315,28 +342,7 @@ def save_payment(form, kwargs, request):
         new_payment.edited = True
         new_payment.save()
 
-    create_payment_edit_logentry(form, kwargs, new_payment, request)
-
-
-def create_payment_edit_logentry(form, kwargs, new_payment, request):
-    member = Member.objects.get(pk=kwargs["member_id"])
-    comment = form.data["comment"]
-    if hasattr(form, "payment"):
-        EditFuturePaymentLogEntry().populate(
-            old_model=form.payment,
-            new_model=new_payment,
-            actor=request.user,
-            user=member,
-            comment=comment,
-        ).save()
-    else:
-        EditFuturePaymentLogEntry().populate(
-            old_frozen={},
-            new_model=new_payment,
-            actor=request.user,
-            user=member,
-            comment=comment,
-        ).save()
+    create_payment_edit_logentry(new_payment)
 
 
 @require_http_methods(["GET", "POST"])
@@ -345,11 +351,22 @@ def get_coop_share_transfer_form(request, **kwargs):
         request=request,
         form=CoopShareTransferForm,
         handler=lambda x: transfer_coop_shares(
-            origin_member=kwargs["pk"],
-            target_member=x.cleaned_data["receiver"],
+            origin_member_id=kwargs["pk"],
+            target_member_id=x.cleaned_data["receiver"],
             quantity=x.cleaned_data["quantity"],
             actor=request.user,
         ),
+        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def get_member_personal_data_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        form=PersonalDataForm,
+        handler=lambda x: create_member(x.instance),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )

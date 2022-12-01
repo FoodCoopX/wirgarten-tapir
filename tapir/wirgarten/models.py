@@ -117,15 +117,17 @@ class Member(TapirUser):
     A member of WirGarten. Usually a member has coop shares and optionally other subscriptions.
     """
 
-    account_owner = models.CharField(_("Account owner"), max_length=150)
-    iban = IBANField(_("IBAN"))
-    bic = BICField(_("BIC"))
-    sepa_consent = models.DateTimeField(_("SEPA Consent"))
+    account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
+    iban = IBANField(_("IBAN"), null=True)
+    bic = BICField(_("BIC"), null=True)
+    sepa_consent = models.DateTimeField(_("SEPA Consent"), null=True)
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=True
     )
-    withdrawal_consent = models.DateTimeField(_("Right of withdrawal consent"))
-    privacy_consent = models.DateTimeField(_("Privacy consent"))
+    withdrawal_consent = models.DateTimeField(
+        _("Right of withdrawal consent"), null=True
+    )
+    privacy_consent = models.DateTimeField(_("Privacy consent"), null=True)
 
 
 class Product(TapirModel):
@@ -389,3 +391,11 @@ class TransferCoopSharesLogEntry(LogEntry):
         self.target_member = target_member
         self.quantity = quantity
         return self
+
+
+class ReceivedCoopSharesLogEntry(TransferCoopSharesLogEntry):
+    """
+    Same as TransferCoopSharesLogEntry, but user and target_member are switched. Then you have a log entry for both sides of the transaction.
+    """
+
+    template_name = "wirgarten/log/received_coop_shares_log_entry.html"

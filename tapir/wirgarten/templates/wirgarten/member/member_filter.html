@@ -17,7 +17,7 @@
             <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
             <span style="display: flex; flex-direction:row;">
                 <button title="Mitglied anlegen"
-                        onclick="alert('Not yet implemented!')"
+                        onclick="FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen')"
                         class="btn btn-outline-success material-icons mx-1 px-2"
                 >
                     person_add
@@ -106,19 +106,21 @@
     const memberRows = document.getElementsByClassName('member-row');
     const buttons = document.getElementsByClassName('needs-member');
 
-    const activateRow = (memberId) => {
+    const activateRow = () => {
         const params = Tapir.getUrlParams();
 
-        for(row of memberRows){
-            if(row.id === `member-${params.member}`){
-                row.classList.add('active');
-            } else {
-                row.classList.remove('active');
+        if(params.member){
+            for(row of memberRows){
+                if(row.id === `member-${params.member}`){
+                    row.classList.add('active');
+                } else {
+                    row.classList.remove('active');
+                }
             }
-        }
 
-        for(btn of buttons){
-            btn.disabled = false;
+            for(btn of buttons){
+                btn.disabled = false;
+            }
         }
     }
 
