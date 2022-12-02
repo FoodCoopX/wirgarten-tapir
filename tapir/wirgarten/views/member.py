@@ -398,12 +398,28 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
     )
 
 
+@require_http_methods(["GET", "POST"])
+def get_coop_shares_waiting_list_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        form=WaitingListForm,
+        handler=lambda x: create_wait_list_entry(
+            first_name=x.cleaned_data["first_name"],
+            last_name=x.cleaned_data["last_name"],
+            email=x.cleaned_data["email"],
+            type=WaitingListEntry.WaitingListType.COOP_SHARES,
+        ),
+        **kwargs,
+    )
+
+
 class WaitingListFilter(FilterSet):
     type = ChoiceFilter(
         label=_("Warteliste"),
         lookup_expr="exact",
         choices=WaitingListEntry.WaitingListType.choices,
         empty_label=None,
+        initial=0,
     )
     # member = BooleanFilter(label=_("Mitgliedschaft"), lookup_expr="isnull", exclude=True,
     #                       widget=forms.Select(attrs={'class': 'form-control'},
@@ -412,6 +428,17 @@ class WaitingListFilter(FilterSet):
     first_name = CharFilter(label=_("Vorname"), lookup_expr="icontains")
     last_name = CharFilter(label=_("Nachname"), lookup_expr="icontains")
     email = CharFilter(label=_("Email"), lookup_expr="icontains")
+
+    def __init__(self, data=None, *args, **kwargs):
+        # if filterset is bound, use initial values as defaults
+        if data is not None:
+            # get a mutable copy of the QueryDict
+            data = data.copy()
+
+            if not data["type"]:
+                data["type"] = WaitingListEntry.WaitingListType.HARVEST_SHARES
+
+        super().__init__(data, *args, **kwargs)
 
     class Meta:
         model = WaitingListEntry
