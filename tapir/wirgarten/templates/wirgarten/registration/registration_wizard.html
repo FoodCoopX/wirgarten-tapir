@@ -59,28 +59,8 @@
                 {%endblock%}
 
             </div>
-            <div class="card-footer">
-                 <span>
-                     {% if wizard.steps.prev %}
-                <button title="Zurück zum Anfang" style="height:2.3em" formnovalidate="formnovalidate"
-                        name="wizard_goto_step"
-                        class="btn tapir-btn btn-secondary control-btn"
-                        type="submit"
-                        value="{{ wizard.steps.first }}">
-                    <span class="material-icons">first_page</span>
-                    <!-- {% translate 'first step' %}-->
-                </button>
-                <button title="Zurück" style="height:2.3em" formnovalidate="formnovalidate" name="wizard_goto_step"
-                        class="btn tapir-btn btn-secondary control-btn"
-                        type="submit"
-                        value="{{ wizard.steps.prev }}">
-                    <span class="material-icons">arrow_back</span>
-                    <!--{% translate 'Back' %}-->
-                </button>
-                {% endif %}
-                    </span>
-
-                <button id="wizard-continue-btn" title="Weiter" style="float:right" type="submit"
+            <div id="wizard-buttons" class="card-footer">
+                  <button id="wizard-continue-btn" title="Weiter" style="float:right" type="submit"
                         class="btn tapir-btn btn-primary control-btn">
                     <span class="material-icons">arrow_forward</span>
                     {% if wizard.steps.current == wizard.steps.last %}
@@ -89,6 +69,27 @@
                     {% translate 'Weiter' %}
                     {% endif %}
                 </button>
+
+                     {% if wizard.steps.prev %}
+                 <button tabindex="-1" title="Zurück zum Anfang" style="height:2.3em" formnovalidate="formnovalidate"
+                        name="wizard_goto_step"
+                        class="btn tapir-btn btn-secondary control-btn hidden-default"
+                        type="submit"
+                        value="{{ wizard.steps.first }}">
+                    <span class="material-icons">first_page</span>
+                    <!-- {% translate 'first step' %}-->
+                </button>
+
+                 <button title="Zurück" style="height:2.3em" formnovalidate="formnovalidate" name="wizard_goto_step"
+                        class="btn tapir-btn btn-secondary control-btn hidden-default" tabindex="-1"
+                        type="submit"
+                        value="{{ wizard.steps.prev }}">
+                    <span class="material-icons">arrow_back</span>
+                    <!--{% translate 'Back' %}-->
+                </button>
+                {% endif %}
+
+
             </div>
         </div>
     </div>
@@ -100,6 +101,7 @@
             parent.postMessage('registration-page-change', '*');
         })
     }
+
 
 
 
