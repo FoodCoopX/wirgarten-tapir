@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from importlib.resources import _
 
 from django.db import transaction
@@ -9,7 +9,6 @@ from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
-from tapir.accounts.models import LdapPerson
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.member.forms import PersonalDataForm
@@ -28,13 +27,10 @@ from tapir.wirgarten.models import (
     Product,
     GrowingPeriod,
     Member,
-    ShareOwnership,
     MandateReference,
-    Payment,
     ProductPrice,
 )
 
-# Wizard Steps Keys
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     create_mandate_ref,
@@ -42,12 +38,12 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     get_next_contract_start_date,
 )
-from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_free_product_capacity,
 )
 
+# Wizard Steps Keys
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
 STEP_COOP_SHARES = "Cooperative Shares"

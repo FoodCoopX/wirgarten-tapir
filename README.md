@@ -248,13 +248,7 @@ urls.py
     # [...]
 ```
 
-#### 3) Include the modal in your template
-my-template.html
-``` python
-{% include 'wirgarten/generic/modal/form-modal.html' %}
-```
-
-#### 4) Show the modal on button click
+#### 3) Show the modal on button click
 ``` html
   <button onclick="FormModal.load(view_url, title)">
     Open Modal        

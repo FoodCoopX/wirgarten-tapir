@@ -11,6 +11,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     ProductPrice,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import (
@@ -96,12 +97,20 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
-        context[
-            "waiting_list_coop_shares"
-        ] = 0  # FIXME: add as soon as we have the waiting list
-        context[
-            "waiting_list_harvest_shares"
-        ] = 0  # FIXME: add as soon as we have the waiting list
+
+        waiting_list_counts = {
+            r["type"]: r["count"]
+            for r in WaitingListEntry.objects.all()
+            .values("type")
+            .annotate(count=Count("type"))
+        }
+
+        context["waiting_list_coop_shares"] = waiting_list_counts.get(
+            WaitingListEntry.WaitingListType.COOP_SHARES, 0
+        )
+        context["waiting_list_harvest_shares"] = waiting_list_counts.get(
+            WaitingListEntry.WaitingListType.HARVEST_SHARES, 0
+        )
         context["next_payment_date"] = get_next_payment_date()
         context["next_payment_amount"] = format_currency(
             get_total_payment_amount(context["next_payment_date"])

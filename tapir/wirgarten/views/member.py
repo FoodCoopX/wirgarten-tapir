@@ -1,24 +1,30 @@
 import itertools
+import mimetypes
 from copy import copy
-from datetime import date
+from datetime import date, datetime
 from importlib.resources import _
+
+from django.contrib.auth.decorators import permission_required
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_GET
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
-from django_filters import FilterSet, CharFilter
-from django_filters.views import FilterView
 from django.views.decorators.http import require_http_methods
+from django_filters import FilterSet, CharFilter, BooleanFilter, ChoiceFilter
+from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.member.forms import (
     PaymentAmountEditForm,
     CoopShareTransferForm,
     PersonalDataForm,
+    WaitingListForm,
 )
 from tapir.wirgarten.models import (
     Member,
@@ -29,9 +35,15 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     EditFuturePaymentLogEntry,
     MandateReference,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.member import transfer_coop_shares, create_member
+from tapir.wirgarten.service.file_export import begin_csv_string
+from tapir.wirgarten.service.member import (
+    transfer_coop_shares,
+    create_member,
+    create_wait_list_entry,
+)
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
     is_mandate_ref_for_coop_shares,
@@ -41,7 +53,7 @@ from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_product_price,
 )
-from tapir.wirgarten.tasks import export_harvest_share_subscriber_emails
+from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
 from tapir.wirgarten.views.modal import get_form_modal
 
 
@@ -369,3 +381,84 @@ def get_member_personal_data_form(request, **kwargs):
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
+
+
+@require_http_methods(["GET", "POST"])
+def get_harvest_shares_waiting_list_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        form=WaitingListForm,
+        handler=lambda x: create_wait_list_entry(
+            first_name=x.cleaned_data["first_name"],
+            last_name=x.cleaned_data["last_name"],
+            email=x.cleaned_data["email"],
+            type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
+        ),
+        **kwargs,
+    )
+
+
+class WaitingListFilter(FilterSet):
+    type = ChoiceFilter(
+        label=_("Warteliste"),
+        lookup_expr="exact",
+        choices=WaitingListEntry.WaitingListType.choices,
+        empty_label=None,
+    )
+    # member = BooleanFilter(label=_("Mitgliedschaft"), lookup_expr="isnull", exclude=True,
+    #                       widget=forms.Select(attrs={'class': 'form-control'},
+    #                                           choices=[(None, "Alle"), (True, "Nur Mitglieder"),
+    #                                                    (False, "Nur Interessenten")]), )
+    first_name = CharFilter(label=_("Vorname"), lookup_expr="icontains")
+    last_name = CharFilter(label=_("Nachname"), lookup_expr="icontains")
+    email = CharFilter(label=_("Email"), lookup_expr="icontains")
+
+    class Meta:
+        model = WaitingListEntry
+        fields = ["type", "first_name", "last_name", "email"]
+
+
+class WaitingListView(PermissionRequiredMixin, FilterView):
+    filterset_class = WaitingListFilter
+    ordering = ["created_at"]
+    permission_required = "coop.manage"
+    template_name = "wirgarten/waitlist/waitlist_filter.html"
+
+
+@require_GET
+@csrf_protect
+@permission_required(EXPORT_PERMISSION)
+def export_waitinglist(request, **kwargs):
+    waitlist_type = request.environ["QUERY_STRING"].replace("type=", "")
+    if not waitlist_type:
+        return  # unknown waitlist type, can never happen from UI
+
+    waitlist_type_label = list(
+        filter(
+            lambda x: x[0] == waitlist_type, WaitingListEntry.WaitingListType.choices
+        )
+    )[0][1]
+
+    KEY_FIRST_NAME = "Vorname"
+    KEY_LAST_NAME = "Nachname"
+    KEY_EMAIL = "Email"
+    KEY_SINCE = "Wartet seit"
+
+    output, writer = begin_csv_string(
+        [KEY_FIRST_NAME, KEY_LAST_NAME, KEY_EMAIL, KEY_SINCE]
+    )
+    for entry in WaitingListEntry.objects.filter(type=waitlist_type):
+        writer.writerow(
+            {
+                KEY_FIRST_NAME: entry.first_name,
+                KEY_LAST_NAME: entry.last_name,
+                KEY_EMAIL: entry.email,
+                KEY_SINCE: entry.created_at,
+            }
+        )
+
+    filename = f"Warteliste-{waitlist_type_label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    mime_type, _ = mimetypes.guess_type(filename)
+    response = HttpResponse("".join(output.csv_string), content_type=mime_type)
+    response["Content-Disposition"] = "attachment; filename=%s" % filename
+    return response

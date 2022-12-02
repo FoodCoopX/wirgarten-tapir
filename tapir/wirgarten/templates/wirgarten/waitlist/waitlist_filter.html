@@ -1,0 +1,102 @@
+{% extends "core/base.html" %}
+
+{% load i18n %}
+{% load core %}
+{% load static %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+{% translate "Mitglieder" %}
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-top: 2em; grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between">
+            <h4>{% translate "Warteliste" %} <span id="waitlist-type"></span>:&nbsp;&nbsp;{{filter.qs | length}}</h4>
+            <span style="display: flex; flex-direction:row;">
+                <button title="Liste exportieren"
+                        onclick="handleExportWaitlist()"
+                        class="btn btn-outline-success material-icons mx-1 px-2"
+                >
+                    download
+                </button>
+            </span>
+        </div>
+        <div class="card-body">
+            <table class="table"
+                   aria-label="{% translate 'Warteliste Einträge' %}">
+                <thead>
+                <tr>
+                    <th style="text-align:center">{% translate "Vorname" %}</th>
+                    <th style="text-align:center">{% translate "Nachname" %}</th>
+                    <th style="text-align:center">{% translate "Email" %}</th>
+                    <th style="text-align:center">{% translate "Datum" %}</th>
+                    <th style="text-align:center">{% translate "Mitglied" %}</th>
+                </tr>
+                </thead>
+                {% for entry in filter.qs %}
+
+                <tr id="entry-{{entry.id}}"
+                    class="tr-clickable entry-row">
+                    <td style="text-align:center">{{ entry.first_name }}</td>
+                    <td style="text-align:center">{{ entry.last_name }}</td>
+                    <td style="text-align:center">{{ entry.email }}</td>
+                    <td style="text-align:center">{{ entry.created_at }}</td>
+                    <td style="text-align:center">
+                        {% if entry.member %}
+                        <span title="Ja" style="color: var(--secondary); font-size: 1.5em" class="material-icons">task_alt</span>
+                        {% else %}
+                        <span title="Nein" style="color: var(--bs-danger); font-size: 1.5em" class="material-icons">hide_source</span>
+                        {% endif %}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate "Filter" %}</h4>
+        </div>
+        <div class="card-body">
+            <form id="filter-form" method="get">
+                {% for field in filter.form %}
+                {% bootstrap_field field %}
+                {% endfor %}
+                <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
+                    {% translate 'Suchen' %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const typeLabel = document.getElementById("waitlist-type");
+    const typeSelect = document.getElementById("id_type");
+    const filterForm = document.getElementById("filter-form");
+
+    const handleSelectType = (submit = false) => {
+        const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+        typeLabel.innerHTML = selectedOption.innerHTML;
+
+        const params = Tapir.getUrlParams();
+        params.type = selectedOption.value;
+        Tapir.replaceUrlParams(params);
+
+        if(submit) filterForm.submit();
+    }
+
+    typeSelect.addEventListener("change", handleSelectType);
+
+    handleSelectType()
+
+    const handleExportWaitlist = () => {
+        const params = Tapir.getUrlParams();
+        window.location.href="{% url 'wirgarten:export_waitlist' %}?type=" + params.type;
+    }
+</script>
+
+{% endblock %}

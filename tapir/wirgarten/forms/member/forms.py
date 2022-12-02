@@ -10,8 +10,10 @@ from django.forms import (
     IntegerField,
 )
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField, DateInput
 from tapir.wirgarten.models import Payment, Member, ShareOwnership
+from tapir.wirgarten.parameters import Parameter
 
 
 class PersonalDataForm(ModelForm):
@@ -116,4 +118,25 @@ class CoopShareTransferForm(Form):
         self.fields["security_check"] = BooleanField(
             label=_("Ich weiß was ich tue und bin mir der Konsequenzen bewusst."),
             required=True,
+        )
+
+
+class WaitingListForm(Form):
+    n_columns = 2
+    colspans = {"email": 2, "privacy_consent": 2}
+
+    def __init__(self, *args, **kwargs):
+        super(WaitingListForm, self).__init__(*args, **kwargs)
+        self.fields["first_name"] = CharField(label=_("Vorname"))
+        self.fields["last_name"] = CharField(label=_("Nachname"))
+        self.fields["email"] = CharField(label=_("Email"))
+        self.fields["privacy_consent"] = BooleanField(
+            label=_("Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."),
+            required=True,
+            help_text=_(
+                'Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen der Mitgliederverwaltung und geben sie nicht an Dritte weiter. Unsere Datenschutzerklärung kannst du hier einsehen: <a target="_blank" href="{privacy_link}">Datenschutzerklärung - {site_name}</a>'
+            ).format(
+                site_name=get_parameter_value(Parameter.SITE_NAME),
+                privacy_link=get_parameter_value(Parameter.SITE_PRIVACY_LINK),
+            ),
         )

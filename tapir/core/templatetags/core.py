@@ -98,6 +98,11 @@ def add_admin_links(groups):
         material_icon="groups",
         url=reverse_lazy("wirgarten:member_list"),
     )
+    members_group.add_link(
+        display_name=_("Warteliste"),
+        material_icon="schedule",
+        url=reverse_lazy("wirgarten:waitinglist"),
+    )
 
     groups.append(members_group)
     groups.append(admin_group)

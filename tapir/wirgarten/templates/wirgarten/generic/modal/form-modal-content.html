@@ -14,7 +14,7 @@
         {% else %}
         <div style="display: grid; grid-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);" class="form-fields">
             {% for field in form %}
-            <div style="grid-column:span {{wizard.form.colspans|get_value:field.name|default:1}}" class="form-field" id="{{ field.name }}">
+            <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field" id="{{ field.name }}">
                 {% bootstrap_field field %}
             </div>
             {% endfor %}
