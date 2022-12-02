@@ -12,14 +12,14 @@ from formtools.wizard.views import CookieWizardView
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.member.forms import PersonalDataForm
+from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
+from tapir.wirgarten.forms.registration.empty_form import EmptyForm
 from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
-from tapir.wirgarten.forms.registration.no_harvest_shares import NoHarvestSharesForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
-from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
     Subscription,
@@ -30,7 +30,6 @@ from tapir.wirgarten.models import (
     MandateReference,
     ProductPrice,
 )
-
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     create_mandate_ref,
@@ -47,6 +46,7 @@ from tapir.wirgarten.service.products import (
 STEP_HARVEST_SHARES = "Harvest Shares"
 STEP_NO_HARVEST_SHARES_AVAILABLE = "No Harvest Shares Available"
 STEP_COOP_SHARES = "Cooperative Shares"
+STEP_NO_COOP_SHARES_AVAILABLE = "No Cooperative Shares Available"
 STEP_ADDITIONAL_SHARES = "Additional Shares"
 STEP_BESTELLCOOP = "BestellCoop"
 STEP_PICKUP_LOCATION = "Pickup Location"
@@ -59,6 +59,7 @@ FORM_TITLES = {
     STEP_HARVEST_SHARES: _("Ernteanteile"),
     STEP_NO_HARVEST_SHARES_AVAILABLE: _("Ernteanteile"),
     STEP_COOP_SHARES: _("Genossenschaft"),
+    STEP_NO_COOP_SHARES_AVAILABLE: _("Genossenschaft"),
     STEP_ADDITIONAL_SHARES: _("Zusatzabos"),
     STEP_BESTELLCOOP: _("BestellCoop"),
     STEP_PICKUP_LOCATION: _("Abholort"),
@@ -70,8 +71,9 @@ FORM_TITLES = {
 
 FORMS = [
     (STEP_HARVEST_SHARES, HarvestShareForm),
-    (STEP_NO_HARVEST_SHARES_AVAILABLE, NoHarvestSharesForm),
+    (STEP_NO_HARVEST_SHARES_AVAILABLE, EmptyForm),
     (STEP_COOP_SHARES, CooperativeShareForm),
+    (STEP_NO_COOP_SHARES_AVAILABLE, EmptyForm),
     (STEP_ADDITIONAL_SHARES, ChickenShareForm),
     (STEP_BESTELLCOOP, BestellCoopForm),
     (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
@@ -131,7 +133,7 @@ def dont_show_harvest_shares(wizard=None) -> bool:
     return not show_harvest_shares(wizard)
 
 
-def show_dependent_steps(wizard) -> bool:
+def has_selected_harvest_shares(wizard) -> bool:
     if (
         "step_data" in wizard.storage.data
         and STEP_HARVEST_SHARES in wizard.storage.data["step_data"]
@@ -142,12 +144,25 @@ def show_dependent_steps(wizard) -> bool:
         return False
 
 
+def show_coop_shares(x):
+    return get_parameter_value(
+        Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+    ) or has_selected_harvest_shares(x)
+
+
+def dont_show_coop_shares(x):
+    return not show_coop_shares(x)
+
+
 CONDITIONS = {
     STEP_HARVEST_SHARES: show_harvest_shares,
     STEP_NO_HARVEST_SHARES_AVAILABLE: dont_show_harvest_shares,
-    STEP_ADDITIONAL_SHARES: lambda x: show_dependent_steps(x) and show_chicken_shares(),
-    STEP_BESTELLCOOP: lambda x: show_dependent_steps(x) and show_bestellcoop(),
-    STEP_PICKUP_LOCATION: show_dependent_steps,
+    STEP_COOP_SHARES: show_coop_shares,
+    STEP_NO_COOP_SHARES_AVAILABLE: dont_show_coop_shares,
+    STEP_ADDITIONAL_SHARES: lambda x: has_selected_harvest_shares(x)
+    and show_chicken_shares(),
+    STEP_BESTELLCOOP: lambda x: has_selected_harvest_shares(x) and show_bestellcoop(),
+    STEP_PICKUP_LOCATION: has_selected_harvest_shares,
 }
 
 
@@ -282,7 +297,9 @@ class RegistrationWizardView(CookieWizardView):
     def get_template_names(self):
         if self.steps.current == STEP_NO_HARVEST_SHARES_AVAILABLE:
             return ["wirgarten/registration/steps/harvest_shares_no_subscription.html"]
-        if self.steps.current == STEP_SUMMARY:
+        elif self.steps.current == STEP_NO_COOP_SHARES_AVAILABLE:
+            return ["wirgarten/registration/steps/coop_shares_not_available.html"]
+        elif self.steps.current == STEP_SUMMARY:
             return ["wirgarten/registration/steps/summary.html"]
         return ["wirgarten/registration/registration_form.html"]
 
@@ -332,7 +349,11 @@ class RegistrationWizardView(CookieWizardView):
             else:
                 initial["harvest_shares"] = {}
 
-            initial["coop_shares"] = self.get_cleaned_data_for_step(STEP_COOP_SHARES)
+            initial["coop_shares"] = (
+                self.get_cleaned_data_for_step(STEP_COOP_SHARES)
+                if self.has_step(STEP_COOP_SHARES)
+                else {"cooperative_shares": 0}
+            )
 
         return initial
 

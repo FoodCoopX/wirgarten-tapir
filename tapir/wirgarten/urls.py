@@ -19,6 +19,7 @@ from tapir.wirgarten.views.member import (
     WaitingListFilter,
     WaitingListView,
     export_waitinglist,
+    get_coop_shares_waiting_list_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -126,11 +127,7 @@ urlpatterns = [
     ),
     path(
         "admin/waitinglist",
-        WaitingListView.as_view(
-            queryset=WaitingListEntry.objects.filter(
-                type=WaitingListEntry.WaitingListType.HARVEST_SHARES
-            )
-        ),
+        WaitingListView.as_view(),
         name="waitinglist",
     ),
     path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
@@ -138,6 +135,11 @@ urlpatterns = [
         "register/waitlist/hs",
         get_harvest_shares_waiting_list_form,
         name="waitlist_harvestshares",
+    ),
+    path(
+        "register/waitlist/cs",
+        get_coop_shares_waiting_list_form,
+        name="waitlist_coopshares",
     ),
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/create", get_member_personal_data_form, name="member_create"),

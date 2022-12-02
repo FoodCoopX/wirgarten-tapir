@@ -9,6 +9,9 @@ from django.forms import (
     ChoiceField,
     IntegerField,
 )
+from django.core.validators import (
+    EmailValidator,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField, DateInput
@@ -129,7 +132,9 @@ class WaitingListForm(Form):
         super(WaitingListForm, self).__init__(*args, **kwargs)
         self.fields["first_name"] = CharField(label=_("Vorname"))
         self.fields["last_name"] = CharField(label=_("Nachname"))
-        self.fields["email"] = CharField(label=_("Email"))
+        self.fields["email"] = CharField(
+            label=_("Email"), validators=[EmailValidator()]
+        )
         self.fields["privacy_consent"] = BooleanField(
             label=_("Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."),
             required=True,
