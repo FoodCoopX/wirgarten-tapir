@@ -58,3 +58,8 @@
 .indicator-line.active {
   background: #3a802f;
 }
+
+.wizard-buttons{
+    display: flex;
+    flex-direction: row-reverse;
+}
