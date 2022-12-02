@@ -1,22 +1,35 @@
 {% extends "wirgarten/registration/registration_wizard.html" %}
+
 {% load wirgarten %}
 {% load i18n %}
+{% load django_bootstrap5 %}
+
 {% block cardbody %}
 
-<div id="warning_no_harvest_shares">
-
-    <!-- HARVEST SHARES: NO SUBSCRIPTION -->
-    <div class="card summary-card-active">
-        <div class="card-header">
-            <h5 class="card-title">{% translate 'Keine Ernteanteile zeichenbar' %}</h5>
-        </div>
-        <div class="card-body">
-            <p>Im Moment können keine weiteren Ernteanteile gezeichnet werden.</p>
-            <p>Gerne kannst du dich auf unsere Warteliste setzen lassen und wir informieren dich, sobald wieder freie Ernteanteile verfügbar sind.</p>
-        </div>
-        <div class="card-footer">
-            <p>Hier gehts zur <button class="btn btn-success mx-3" disabled>Warteliste</button></p>
-        </div>
+<div id="warning_no_harvest_shares" style="text-align: center; padding: 2em;">
+    <h4 class="card-title warning">{% translate 'Im Moment können leider keine Ernteanteile gezeichnet werden.' %}</h4>
+    Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und<br/>wir informieren dich, sobald
+    wieder Ernteanteile verfügbar sind.</p>
+    <button id="waitlist-btn" class="btn btn-secondary" type="button"
+            onClick="FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', 'Warteliste Ernteanteile')">
+        Warteliste
+    </button>
+    <div id="waitlist-success" class="alert alert-success" role="alert"
+         style="width: fit-content; margin: auto; display: none">
+        <strong>Danke</strong>, wir informieren dich wenn neue Ernteanteile verfügbar sind!
     </div>
+</div>
+
+<script>
+    const btn = document.getElementById("waitlist-btn");
+    const successMsg = document.getElementById("waitlist-success");
+
+    FormModal.addCallback((e) => {
+       if(e.data.type === "modal-save-successful"){
+            btn.style.display='none';
+            successMsg.style.display='block';
+       }
+    });
+</script>
 
 {% endblock %}

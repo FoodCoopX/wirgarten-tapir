@@ -6,10 +6,21 @@ const showLoadingIndicator = (show) => {
 }
 
 const setFrameSize = () => {
-    const newHeight = frame.contentWindow.document.getElementsByTagName("form")[0].getBoundingClientRect().height
-    frame.style.minHeight = frame.style.maxHeight = newHeight + 'px';
-    frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
+    const form = frame.contentWindow.document.getElementsByTagName("form")
+    if(form.length > 0){
+        const newHeight = form[0].getBoundingClientRect().height
+        frame.style.minHeight = frame.style.maxHeight = newHeight + 'px';
+        frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
+    }
 }
+
+const eventMethod = window.addEventListener
+            ? "addEventListener"
+            : "attachEvent";
+const eventer = window[eventMethod];
+const messageEvent = eventMethod === "attachEvent"
+        ? "onmessage"
+        : "message";
 
  const FormModal = {
         load: (url, title) => {
@@ -33,12 +44,16 @@ const setFrameSize = () => {
         close: () => {
           const modalInstance = bootstrap.Modal.getInstance(document.getElementById('form-modal'));
           modalInstance.hide();
+        },
+
+        addCallback: (callback) => {
+            eventer(messageEvent, callback);
         }
     }
 
 MSG_HANDLERS = [
         ["modal-close", () => FormModal.close()],
-        ["modal-save-successful", (data) => window.location.replace(data.url)],
+        ["modal-save-successful", (data) => data.url && data.url != 'None' ? window.location.replace(data.url) : FormModal.close()],
         ["modal-loading-spinner", () => {
             frame.style.minHeight = frame.style.maxHeight = "0px";
             showLoadingIndicator(true)
@@ -47,14 +62,6 @@ MSG_HANDLERS = [
     ]
 
 const initMessageHandlers = () => {
-    const eventMethod = window.addEventListener
-                ? "addEventListener"
-                : "attachEvent";
-    const eventer = window[eventMethod];
-    const messageEvent = eventMethod === "attachEvent"
-            ? "onmessage"
-            : "message";
-
     const handleMessage = (event, msgType, handler) => {
         if(event.data.type === msgType){
             handler(event.data.data);

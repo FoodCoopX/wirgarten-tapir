@@ -1,5 +1,6 @@
 from django.urls import path
 
+from tapir.wirgarten.models import WaitingListEntry
 from tapir.wirgarten.views import (
     RegistrationWizardView,
     RegistrationWizardConfirmView,
@@ -14,6 +15,10 @@ from tapir.wirgarten.views.member import (
     get_payment_amount_edit_form,
     get_coop_share_transfer_form,
     get_member_personal_data_form,
+    get_harvest_shares_waiting_list_form,
+    WaitingListFilter,
+    WaitingListView,
+    export_waitinglist,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -118,6 +123,21 @@ urlpatterns = [
         "admin/pickuplocations/delete/<str:id>",
         delete_pickup_location,
         name="pickup_locations_delete",
+    ),
+    path(
+        "admin/waitinglist",
+        WaitingListView.as_view(
+            queryset=WaitingListEntry.objects.filter(
+                type=WaitingListEntry.WaitingListType.HARVEST_SHARES
+            )
+        ),
+        name="waitinglist",
+    ),
+    path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
+    path(
+        "register/waitlist/hs",
+        get_harvest_shares_waiting_list_form,
+        name="waitlist_harvestshares",
     ),
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/create", get_member_personal_data_form, name="member_create"),

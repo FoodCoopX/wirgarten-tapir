@@ -379,6 +379,10 @@ class EditFuturePaymentLogEntry(UpdateModelLogEntry):
 
 
 class TransferCoopSharesLogEntry(LogEntry):
+    """
+    Documents the transfer of coop shares from 'user' to 'target_member'.
+    """
+
     template_name = "wirgarten/log/transfer_coop_shares_log_entry.html"
 
     target_member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
@@ -399,3 +403,17 @@ class ReceivedCoopSharesLogEntry(TransferCoopSharesLogEntry):
     """
 
     template_name = "wirgarten/log/received_coop_shares_log_entry.html"
+
+
+class WaitingListEntry(TapirModel):
+    class WaitingListType(models.TextChoices):
+        HARVEST_SHARES = "HARVEST_SHARES", _("Ernteanteile")
+        COOP_SHARES = "COOP_SHARES", _("Genossenschaftsanteile")
+
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    first_name = models.CharField(null=False, blank=False, max_length=256)
+    last_name = models.CharField(null=False, blank=False, max_length=256)
+    email = models.CharField(null=False, blank=False, max_length=256)
+    type = models.CharField(choices=WaitingListType.choices, null=False, max_length=32)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    privacy_consent = models.DateTimeField(null=False)

@@ -3,7 +3,9 @@ from django.views.decorators.http import require_http_methods
 
 
 @require_http_methods(["GET", "POST"])
-def get_form_modal(request, form, handler, redirect_url_resolver, **kwargs):
+def get_form_modal(
+    request, form, handler, redirect_url_resolver=(lambda x: None), **kwargs
+):
     # if this is a POST request we need to process the modal data
     if request.method == "POST":
         # create a modal instance and populate it with data from the request:

@@ -12,6 +12,7 @@ from tapir.wirgarten.models import (
     Member,
     ReceivedCoopSharesLogEntry,
     Payment,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import generate_mandate_ref
@@ -165,4 +166,24 @@ def buy_cooperative_shares(
         amount=share_price * quantity,
         mandate_ref=so.mandate_ref,
         status=Payment.PaymentStatus.DUE,
+    )
+
+
+def create_wait_list_entry(
+    first_name: str, last_name: str, email: str, type: WaitingListEntry.WaitingListType
+):
+    """
+    Create a wait list entry for a non-member.
+
+    :param first_name: the first name of the interested person
+    :param last_name: the last name of the interested person
+    :param email: the contact email address
+    :return: the newly created WaitListEntry
+    """
+    return WaitingListEntry.objects.create(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        privacy_consent=datetime.now(),
+        type=type,
     )

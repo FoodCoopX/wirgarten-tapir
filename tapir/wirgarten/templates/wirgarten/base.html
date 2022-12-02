@@ -10,9 +10,12 @@
 
 <!-- jQuery is required by select2, so load it here at the top -->
 <link rel="stylesheet" href="{% static 'wirgarten/css/base.css' %}">
-
 <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
 {% endblock %}
 
+{% include 'wirgarten/generic/modal/form-modal.html' %}
+
 {% block content %}
 {% endblock %}
+
+<script src="{% static 'core/bootstrap/5.1.3/js/bootstrap.bundle.min.js' %}"></script>

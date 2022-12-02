@@ -22,19 +22,21 @@
                 >
                     person_add
                 </button>
+                <div style="width: 1em"></div>
+                <button title="Details anzeigen"
+                        onclick="handleShowMemberDetailsPage()"
+                        class="needs-member btn btn-outline-warning material-icons mx-1 px-2"
+                        disabled
+                >
+                    info
+                </button>
+                <div style="width: 1em"></div>
                 <button title="Mitgliedsdaten ändern"
                         onclick="alert('Not yet implemented!')"
                         class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
                         disabled
                 >
                     manage_accounts
-                </button>
-                 <button title="Details anzeigen"
-                        onclick="handleShowMemberDetailsPage()"
-                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
-                        disabled
-                >
-                    info
                 </button>
                 <button title="Genossenschaftsanteile übertragen"
                         onclick="handleTransferCoopShares()"
@@ -44,7 +46,7 @@
                     move_down
                 </button>
 
-                <div style="width: 3em"></div>
+                <div style="width: 1em"></div>
                 <button id="delete-location"
                         title="Mitglied löschen"
                         onclick="alert('Not yet implemented!')"
