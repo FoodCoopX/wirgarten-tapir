@@ -1,0 +1,26 @@
+#member-detail-container{
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-gap: 1em;
+    margin-top: 2em;
+}
+
+#member-contracts{
+    grid-row: span 2;
+}
+
+.contract-tile-number{
+    font-size: 3em;
+    height:1.5em;
+}
+
+.contract-tile-number > .material-icons {
+     font-size: 0.7em;
+}
+
+#contract-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap:1em;
+    text-align: center;
+}
