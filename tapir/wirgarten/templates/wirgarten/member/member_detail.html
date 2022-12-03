@@ -75,6 +75,26 @@
                 </div>
             </div>
         </div>
+
+         {% if perms.accounts.manage %}
+                <div class="card-footer" style="display:flex; flex-direction: row; justify-content: left">
+                    <div style="margin-right:1em">
+                        <a style="width:100%" class="btn tapir-btn btn-outline-primary"
+                           href="{% url 'wirgarten:member_payments' object.pk %}"
+                           id="tapir_user_payment_row">
+                            <span class="material-icons">payments</span>{% translate 'Zahlungen' %}
+                        </a>
+                    </div>
+                    <div>
+                        <a style="width:100%" class="btn tapir-btn btn-outline-primary"
+                           href="{% url 'wirgarten:member_deliveries' object.pk %}"
+                           id="tapir_user_delivery_row">
+                            <span class="material-icons">local_shipping</span>{% translate 'Lieferungen' %}
+                        </a>
+                    </div>
+                </div>
+
+                {% endif %}
     </div>
 
     <div id="member-contracts">
@@ -132,12 +152,15 @@
                 <div class="card-footer" style="display:flex;justify-content:space-between">
                     <span><strong>{{ sub_totals|get_value:type|default:'0.00' }}</strong> <small>€ / Monat</small>
                     </span>
+                    {% if type == 'Ernteanteile' %}
                     <button title="Anteile erhöhen"
-                            onclick="alert('not yet implemented!')"
+                            onclick="FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}',
+                            {% if harvest_shares_available %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste' {% endif %})"
                             class="btn btn-outline-success material-icons mx-1 px-2"
                     >
                         add
                     </button>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

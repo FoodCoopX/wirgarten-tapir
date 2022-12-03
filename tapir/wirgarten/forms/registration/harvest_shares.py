@@ -1,15 +1,33 @@
+from datetime import date
 from importlib.resources import _
 
 from django import forms
+from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import HarvestShareProduct
+from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.models import (
+    HarvestShareProduct,
+    Subscription,
+    ProductType,
+    Product,
+    GrowingPeriod,
+    MandateReference,
+)
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.payment import get_solidarity_overplus
+from tapir.wirgarten.service.member import (
+    get_next_contract_start_date,
+    create_mandate_ref,
+)
+from tapir.wirgarten.service.payment import (
+    get_solidarity_overplus,
+    is_mandate_ref_for_coop_shares,
+)
 from tapir.wirgarten.service.products import (
     get_product_price,
     get_available_product_types,
     get_free_product_capacity,
+    get_future_subscriptions,
 )
 
 SOLIDARITY_PRICES = [
@@ -104,3 +122,50 @@ class HarvestShareForm(forms.Form):
                 harvest_share_products,
             )
         )
+
+    @transaction.atomic
+    def save(
+        self,
+        member_id,
+        mandate_ref: MandateReference = None,
+        growing_period: GrowingPeriod = None,
+    ):
+        product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+
+        today = date.today()
+        if not growing_period:
+            growing_period = GrowingPeriod.objects.get(
+                start_date__lte=today, end_date__gte=today
+            )
+
+        if not mandate_ref:
+            for row in (
+                get_future_subscriptions()
+                .filter(member_id=member_id)
+                .values("mandate_ref")
+            ):
+                if not is_mandate_ref_for_coop_shares(row["mandate_ref"]):
+                    mandate_ref = MandateReference.objects.get(ref=row["mandate_ref"])
+                    break
+
+            if not mandate_ref:
+                mandate_ref = create_mandate_ref(member_id, False)
+
+        start_date = get_next_contract_start_date(today)
+        end_date = growing_period.end_date
+
+        for key, quantity in self.cleaned_data.items():
+            if key.startswith("harvest_shares_") and quantity > 0:
+                product = Product.objects.get(
+                    type=product_type, name=key.replace("harvest_shares_", "").upper()
+                )
+                Subscription.objects.create(
+                    member_id=member_id,
+                    product=product,
+                    period=growing_period,
+                    quantity=quantity,
+                    start_date=start_date,
+                    end_date=end_date,
+                    solidarity_price=self.cleaned_data["solidarity_price"],
+                    mandate_ref=mandate_ref,
+                )

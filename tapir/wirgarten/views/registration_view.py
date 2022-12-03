@@ -40,6 +40,8 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_free_product_capacity,
+    is_product_type_available,
+    is_harvest_shares_available,
 )
 
 # Wizard Steps Keys
@@ -84,27 +86,12 @@ FORMS = [
 ]
 
 
-def is_product_type_available(product_type: ProductType) -> bool:
-    return get_free_product_capacity(
-        product_type_id=product_type.id
-    ) > get_cheapest_product_price(product_type)
-
-
-def get_cheapest_product_price(product_type: ProductType):
-    today = date.today()
-    return (
-        ProductPrice.objects.filter(product__type=product_type, valid_from__lte=today)
-        .order_by("price")
-        .values("price")[0:1][0]["price"]
-    )
-
-
 def show_bestellcoop() -> bool:
     param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name="BestellCoop")
+            get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
         )
     )
 
@@ -114,19 +101,13 @@ def show_chicken_shares() -> bool:
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name="Hühneranteile")
+            get_active_product_types().get(name=ProductTypes.CHICKEN_SHARES)
         )
     )
 
 
 def show_harvest_shares(wizard=None) -> bool:
-    param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            get_active_product_types().get(name="Ernteanteile")
-        )
-    )
+    return is_harvest_shares_available()
 
 
 def dont_show_harvest_shares(wizard=None) -> bool:
@@ -164,44 +145,6 @@ CONDITIONS = {
     STEP_BESTELLCOOP: lambda x: has_selected_harvest_shares(x) and show_bestellcoop(),
     STEP_PICKUP_LOCATION: has_selected_harvest_shares,
 }
-
-
-def save_subscriptions(
-    form_dict,
-    member: Member,
-    start_date: date,
-    end_date: date,
-    growing_period: GrowingPeriod,
-):
-    mandate_ref = create_mandate_ref(member, False)
-    product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
-    has_shares = False
-    for key, quantity in form_dict[STEP_HARVEST_SHARES].cleaned_data.items():
-        if key.startswith("harvest_shares_") and quantity > 0:
-            product = Product.objects.get(
-                type=product_type, name=key.replace("harvest_shares_", "").upper()
-            )
-            Subscription.objects.create(
-                member=member,
-                product=product,
-                period=growing_period,
-                quantity=quantity,
-                start_date=start_date,
-                end_date=end_date,
-                solidarity_price=form_dict[STEP_HARVEST_SHARES].cleaned_data[
-                    "solidarity_price"
-                ],
-                mandate_ref=mandate_ref,
-            )
-            has_shares = True
-
-    if has_shares:
-        save_additional_shares(
-            form_dict, member, start_date, end_date, growing_period, mandate_ref
-        )
-        save_bestellcoop(
-            form_dict, member, start_date, end_date, growing_period, mandate_ref
-        )
 
 
 def save_member(form_dict):
@@ -364,12 +307,28 @@ class RegistrationWizardView(CookieWizardView):
         if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
             form_dict[STEP_HARVEST_SHARES].cleaned_data
         ):
-            save_subscriptions(
+            mandate_ref = create_mandate_ref(member, False)
+            form_dict[STEP_HARVEST_SHARES].save(
+                member_id=member.id,
+                mandate_ref=mandate_ref,
+                growing_period=self.growing_period,
+            )
+
+            save_additional_shares(
                 form_dict,
                 member,
                 self.start_date,
                 self.end_date,
                 self.growing_period,
+                mandate_ref,
+            )
+            save_bestellcoop(
+                form_dict,
+                member,
+                self.start_date,
+                self.end_date,
+                self.growing_period,
+                mandate_ref,
             )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month

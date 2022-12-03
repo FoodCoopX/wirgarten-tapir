@@ -25,6 +25,7 @@ from tapir.wirgarten.forms.member.forms import (
     PersonalDataForm,
     WaitingListForm,
 )
+from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     Member,
@@ -53,6 +54,7 @@ from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_product_price,
     get_active_product_types,
+    is_harvest_shares_available,
 )
 from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
 from tapir.wirgarten.views.modal import get_form_modal
@@ -113,6 +115,8 @@ class MemberDetailView(generic.DetailView):
         )
 
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
+
+        context["harvest_shares_available"] = is_harvest_shares_available()
 
         return context
 
@@ -422,6 +426,7 @@ def update_member(
 @require_http_methods(["GET", "POST"])
 def get_member_personal_data_edit_form(request, **kwargs):
     pk = kwargs.pop("pk")
+
     return get_form_modal(
         request=request,
         form=PersonalDataForm,
@@ -445,18 +450,18 @@ def get_member_personal_data_edit_form(request, **kwargs):
     )
 
 
-def update_payment_data(member: Member, account_owner: str, iban: str, bic: str):
-    member.account_owner = account_owner
-    member.iban = iban
-    member.bic = bic
-    member.sepa_consent = datetime.now()
-    member.save()
-    return member
-
-
 @require_http_methods(["GET", "POST"])
 def get_member_payment_data_edit_form(request, **kwargs):
     instance = Member.objects.get(pk=kwargs.pop("pk"))
+
+    def update_payment_data(member: Member, account_owner: str, iban: str, bic: str):
+        member.account_owner = account_owner
+        member.iban = iban
+        member.bic = bic
+        member.sepa_consent = datetime.now()
+        member.save()
+        return member
+
     return get_form_modal(
         request=request,
         form=PaymentDataForm,
@@ -515,7 +520,38 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
     )
 
 
-class WaitingListFilter(FilterSet):
+@require_http_methods(["GET", "POST"])
+def get_add_harvest_shares_form(request, **kwargs):
+    member_id = kwargs.pop("pk")
+
+    if not is_harvest_shares_available():
+        # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
+        member = Member.objects.get(pk=member_id)
+        wl_kwargs = kwargs.copy()
+        wl_kwargs["initial"] = {
+            "first_name": member.first_name,
+            "last_name": member.last_name,
+            "email": member.email,
+            "privacy_consent": (member.privacy_consent is not None),
+        }
+        return get_harvest_shares_waiting_list_form(request, **wl_kwargs)
+
+    return get_form_modal(
+        request=request,
+        form=HarvestShareForm,
+        handler=lambda x: x.save(
+            member_id=member_id,
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": member_id}
+        ),
+        **kwargs,
+    )
+
+
+class WaitingListFilter(PermissionRequiredMixin, FilterSet):
+    permission_required = "coop.manage"
+
     type = ChoiceFilter(
         label=_("Warteliste"),
         lookup_expr="exact",

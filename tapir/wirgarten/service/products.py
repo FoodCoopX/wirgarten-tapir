@@ -4,6 +4,7 @@ from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
     Subscription,
     ProductCapacity,
@@ -14,6 +15,7 @@ from tapir.wirgarten.models import (
     Product,
     TaxRate,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.validators import (
     validate_growing_period_overlap,
     validate_date_range,
@@ -434,3 +436,31 @@ def get_free_product_capacity(
     )
 
     return total_capacity - used_capacity
+
+
+def get_cheapest_product_price(
+    product_type: ProductType, reference_date: date = date.today()
+):
+    return (
+        ProductPrice.objects.filter(
+            product__type=product_type, valid_from__lte=reference_date
+        )
+        .order_by("price")
+        .values("price")[0:1][0]["price"]
+    )
+
+
+def is_product_type_available(product_type: ProductType) -> bool:
+    return get_free_product_capacity(
+        product_type_id=product_type.id
+    ) > get_cheapest_product_price(product_type)
+
+
+def is_harvest_shares_available() -> bool:
+    param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name="Ernteanteile")
+        )
+    )
