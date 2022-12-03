@@ -218,7 +218,7 @@ class Subscription(TapirModel, Payable):
     )
 
     def get_total_price(self):
-        return (
+        return round(
             self.quantity
             * float(
                 ProductPrice.objects.filter(
@@ -228,7 +228,8 @@ class Subscription(TapirModel, Payable):
                 .first()
                 .price
             )
-            * (1 + self.solidarity_price)
+            * (1 + self.solidarity_price),
+            2,
         )
 
 
@@ -244,6 +245,7 @@ class ShareOwnership(TapirModel, Payable):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
 
     class Meta:
         indexes = [Index(fields=["member"], name="idx_shareownership_member")]

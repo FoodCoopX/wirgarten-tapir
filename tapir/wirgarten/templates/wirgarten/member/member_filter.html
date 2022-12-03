@@ -32,7 +32,7 @@
                 </button>
                 <div style="width: 1em"></div>
                 <button title="Mitgliedsdaten ändern"
-                        onclick="alert('Not yet implemented!')"
+                        onclick="handleEditMemberDetails()"
                         class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
                         disabled
                 >
@@ -128,20 +128,35 @@
 
     const handleSelectMember = (memberId) => {
         const params = Tapir.getUrlParams();
-        params.member = memberId;
-        Tapir.replaceUrlParams(params);
 
-        activateRow();
+        if(params.member === memberId){
+            handleShowMemberDetailsPage();
+        } else {
+            params.member = memberId;
+            Tapir.replaceUrlParams(params);
+
+            activateRow();
+        }
     }
 
     const handleShowMemberDetailsPage = () => {
         const params = Tapir.getUrlParams();
-        window.location.href = `/wirgarten/members/${params.member}`;
+        window.open(`/wirgarten/members/${params.member}`, '_blank');
     }
 
     const handleTransferCoopShares = () => {
         const params = Tapir.getUrlParams();
         FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
+    }
+
+    const handleEditMemberDetails = () => {
+        const params = Tapir.getUrlParams();
+        FormModal.load(`/wirgarten/members/${params.member}/edit`, 'Persönliche Daten ändern')
+        FormModal.addCallback((e) => {
+            if(e.data.type === "modal-save-successful"){
+                window.location.replace(window.location.href)
+            }
+        })
     }
 
     activateRow();

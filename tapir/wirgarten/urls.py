@@ -14,12 +14,14 @@ from tapir.wirgarten.views.member import (
     MemberDeliveriesView,
     get_payment_amount_edit_form,
     get_coop_share_transfer_form,
-    get_member_personal_data_form,
+    get_member_personal_data_create_form,
     get_harvest_shares_waiting_list_form,
     WaitingListFilter,
     WaitingListView,
     export_waitinglist,
     get_coop_shares_waiting_list_form,
+    get_member_personal_data_edit_form,
+    get_member_payment_data_edit_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -142,7 +144,15 @@ urlpatterns = [
         name="waitlist_coopshares",
     ),
     path("members", MemberListView.as_view(), name="member_list"),
-    path("members/create", get_member_personal_data_form, name="member_create"),
+    path("members/create", get_member_personal_data_create_form, name="member_create"),
+    path(
+        "members/<int:pk>/edit", get_member_personal_data_edit_form, name="member_edit"
+    ),
+    path(
+        "members/<int:pk>/editpaymentdetails",
+        get_member_payment_data_edit_form,
+        name="member_edit_payment_details",
+    ),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(
         "members/<int:pk>/coopsharestransfer",

@@ -4,19 +4,18 @@ from copy import copy
 from datetime import date, datetime
 from importlib.resources import _
 
-from django.contrib.auth.decorators import permission_required
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_GET
-
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
-from django_filters import FilterSet, CharFilter, BooleanFilter, ChoiceFilter
+from django_filters import FilterSet, CharFilter, ChoiceFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
@@ -26,6 +25,7 @@ from tapir.wirgarten.forms.member.forms import (
     PersonalDataForm,
     WaitingListForm,
 )
+from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -52,6 +52,7 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_total_price_for_subs,
     get_product_price,
+    get_active_product_types,
 )
 from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
 from tapir.wirgarten.views.modal import get_form_modal
@@ -84,14 +85,34 @@ class MemberDetailView(generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object
         )
+        context["sub_quantities"] = {
+            k: sum(map(lambda x: x.quantity, v))
+            for k, v in context["subscriptions"].items()
+        }
+        context["sub_totals"] = {
+            k: sum(map(lambda x: x.get_total_price(), v))
+            for k, v in context["subscriptions"].items()
+        }
 
-        shares = list(ShareOwnership.objects.filter(member=self.object))
+        product_types = get_active_product_types()
+        for pt in product_types:
+            if pt.name not in context["subscriptions"]:
+                context["subscriptions"][pt.name] = [{"quantity": 0}]
+                context["sub_quantities"][pt.name] = 0
 
-        if len(shares) > 0:
-            quantity = sum(map(lambda s: s.quantity, shares))
-            context[
-                "coop_shares"
-            ] = f"{quantity} × {shares[0].share_price} €"  # FIXME: what if share price differs? Can this ever happen?
+        share_ownerships = list(ShareOwnership.objects.filter(member=self.object))
+        context["coop_shares"] = list(
+            map(
+                lambda s: {
+                    "quantity": s.quantity,
+                    "share_price": s.share_price,
+                    "timestamp": s.created_at.strftime("%d.%m.%Y"),
+                },
+                share_ownerships,
+            )
+        )
+
+        context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
         return context
 
@@ -372,8 +393,89 @@ def get_coop_share_transfer_form(request, **kwargs):
     )
 
 
+def update_member(
+    member_id,
+    first_name,
+    last_name,
+    email,
+    phone_number,
+    street,
+    street_2,
+    postcode,
+    city,
+    birthdate,
+):
+    instance = Member.objects.get(pk=member_id)
+    instance.first_name = first_name
+    instance.last_name = last_name
+    instance.email = email
+    instance.phone_number = phone_number
+    instance.street = street
+    instance.street_2 = street_2
+    instance.postcode = postcode
+    instance.city = city
+    instance.birthdate = birthdate
+    instance.save()
+    return instance
+
+
 @require_http_methods(["GET", "POST"])
-def get_member_personal_data_form(request, **kwargs):
+def get_member_personal_data_edit_form(request, **kwargs):
+    pk = kwargs.pop("pk")
+    return get_form_modal(
+        request=request,
+        form=PersonalDataForm,
+        instance=Member.objects.get(pk=pk),
+        handler=lambda x: update_member(
+            member_id=pk,
+            first_name=x.cleaned_data["first_name"],
+            last_name=x.cleaned_data["last_name"],
+            email=x.cleaned_data["email"],
+            phone_number=x.cleaned_data["phone_number"],
+            street=x.cleaned_data["street"],
+            street_2=x.cleaned_data["street_2"],
+            postcode=x.cleaned_data["postcode"],
+            city=x.cleaned_data["city"],
+            birthdate=x.cleaned_data["birthdate"],
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": x.id}
+        ),
+        **kwargs,
+    )
+
+
+def update_payment_data(member: Member, account_owner: str, iban: str, bic: str):
+    member.account_owner = account_owner
+    member.iban = iban
+    member.bic = bic
+    member.sepa_consent = datetime.now()
+    member.save()
+    return member
+
+
+@require_http_methods(["GET", "POST"])
+def get_member_payment_data_edit_form(request, **kwargs):
+    instance = Member.objects.get(pk=kwargs.pop("pk"))
+    return get_form_modal(
+        request=request,
+        form=PaymentDataForm,
+        instance=instance,
+        handler=lambda x: update_payment_data(
+            member=instance,
+            account_owner=x.cleaned_data["account_owner"],
+            iban=x.cleaned_data["iban"],
+            bic=x.cleaned_data["bic"],
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": x.id}
+        ),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=PersonalDataForm,

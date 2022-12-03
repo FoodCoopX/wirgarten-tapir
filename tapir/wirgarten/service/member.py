@@ -41,21 +41,21 @@ def transfer_coop_shares(
         quantity = origin_ownership.quantity
 
     try:
-        target_ownership = ShareOwnership.objects.get(member_id=target_member_id)
-        target_ownership.quantity += quantity
-        target_ownership.save()
+        existing_ownership = ShareOwnership.objects.get(member_id=target_member_id)
+        mandate_ref = existing_ownership.mandate_ref
     except ShareOwnership.DoesNotExist:
         mandate_ref = create_mandate_ref(target_member_id, True)
-        actual_coop_start = get_next_contract_start_date(
-            date.today() + relativedelta(months=1)
-        )
-        target_ownership = ShareOwnership.objects.create(
-            member_id=target_member_id,
-            quantity=quantity,
-            share_price=origin_ownership.share_price,
-            entry_date=actual_coop_start,
-            mandate_ref=mandate_ref,
-        )
+
+    actual_coop_start = get_next_contract_start_date(
+        date.today() + relativedelta(months=1)
+    )
+    new_ownership = ShareOwnership.objects.create(
+        member_id=target_member_id,
+        quantity=quantity,
+        share_price=origin_ownership.share_price,
+        entry_date=actual_coop_start,
+        mandate_ref=mandate_ref,
+    )
 
     # TODO: can we delete the ShareOwnership if quantity == 0 ?
     origin_ownership.quantity -= quantity
@@ -65,14 +65,14 @@ def transfer_coop_shares(
     TransferCoopSharesLogEntry().populate(
         actor=actor,
         user=origin_ownership.member,
-        target_member=target_ownership.member,
+        target_member=new_ownership.member,
         quantity=quantity,
     ).save()
 
     # log entry for the user who RECEIVED the shares
     ReceivedCoopSharesLogEntry().populate(
         actor=actor,
-        user=target_ownership.member,
+        user=new_ownership.member,
         target_member=origin_ownership.member,
         quantity=quantity,
     ).save()

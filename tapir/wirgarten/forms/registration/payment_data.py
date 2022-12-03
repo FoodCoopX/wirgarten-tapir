@@ -13,8 +13,11 @@ class PaymentDataForm(forms.Form):
     iban = forms.CharField(label=_("IBAN"))
     bic = forms.CharField(label=_("BIC"))
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, instance=None, **kwargs):
         super(PaymentDataForm, self).__init__(*args, **kwargs)
+
+        self.instance = instance
+
         self.fields["sepa_consent"] = forms.BooleanField(
             label=_(
                 """Ich ermächtige die {site_name} die gezeichneten Geschäftsanteile sowie die monatlichen Beträge für den 
@@ -32,6 +35,7 @@ class PaymentDataForm(forms.Form):
             return
 
         if field_name in ["account_owner", "iban", "bic"]:
+            print(self.instance)
             return getattr(self.instance, field_name)
         else:
             return super().get_initial_for_field(field, field_name)
