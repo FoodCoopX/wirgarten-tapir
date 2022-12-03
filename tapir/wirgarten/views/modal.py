@@ -33,7 +33,7 @@ def get_form_modal(
 
     # if a GET (or any other method) we'll create a blank modal
     else:
-        form = form(instance=instance, **kwargs)
+        form = form(instance=instance, **kwargs) if instance else form(**kwargs)
 
     return render(
         request, "wirgarten/generic/modal/form-modal-content.html", {"form": form}
