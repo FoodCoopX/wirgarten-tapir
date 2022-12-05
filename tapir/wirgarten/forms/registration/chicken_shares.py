@@ -1,10 +1,24 @@
+from datetime import date
 from importlib.resources import _
 
 from django import forms
+from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Product, ProductType
+from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.models import (
+    Product,
+    ProductType,
+    Member,
+    Subscription,
+    MandateReference,
+    GrowingPeriod,
+)
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import (
+    get_or_create_mandate_ref,
+    get_next_contract_start_date,
+)
 from tapir.wirgarten.service.products import (
     get_product_price,
     get_free_product_capacity,
@@ -25,17 +39,17 @@ class ChickenShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ChickenShareForm, self).__init__(*args, **kwargs)
 
-        product_type = ProductType.objects.get(name="Hühneranteile")
+        self.product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
         self.products = {
             """chicken_shares_{variation}""".format(variation=p.name): p
-            for p in Product.objects.filter(deleted=False, type=product_type)
+            for p in Product.objects.filter(deleted=False, type=self.product_type)
         }
 
         prices = {
             prod.id: get_product_price(prod).price for prod in self.products.values()
         }
 
-        self.free_capacity = get_free_product_capacity(product_type.id)
+        self.free_capacity = get_free_product_capacity(self.product_type.id)
 
         self.field_order = list(self.products.keys()) + ["consent"]
         self.n_columns = len(self.products)
@@ -70,6 +84,40 @@ class ChickenShareForm(forms.Form):
                 self.products.keys(),
             )
         )
+
+    @transaction.atomic
+    def save(
+        self,
+        member_id,
+        mandate_ref: MandateReference = None,
+        growing_period: GrowingPeriod = None,
+    ):
+        today = date.today()
+        if not growing_period:
+            growing_period = GrowingPeriod.objects.get(
+                start_date__lte=today, end_date__gte=today
+            )
+
+        if not mandate_ref:
+            mandate_ref = get_or_create_mandate_ref(member_id, False)
+
+        start_date = get_next_contract_start_date(today)
+        end_date = growing_period.end_date
+
+        for key, quantity in self.cleaned_data.items():
+            if quantity > 0 and key.startswith("chicken_shares_"):
+                product = Product.objects.get(
+                    type=self.product_type, name=key.replace("chicken_shares_", "")
+                )
+                Subscription.objects.create(
+                    member_id=member_id,
+                    product=product,
+                    quantity=quantity,
+                    period=growing_period,
+                    start_date=start_date,
+                    end_date=end_date,
+                    mandate_ref=mandate_ref,
+                )
 
     def clean(self):
         cleaned_data = super().clean()

@@ -30,8 +30,9 @@ const init = () => {
     // apply search query from url
     const params = Tapir.getUrlParams()
     if(params.q){
-        search.getElementsByClassName('form-control')[0].value = params.q
-        handleSearch(params.q)
+        const query = decodeURIComponent(params.q)
+        search.getElementsByClassName('form-control')[0].value = query
+        handleSearch(query)
     }
 
     // scroll to the first field with an error

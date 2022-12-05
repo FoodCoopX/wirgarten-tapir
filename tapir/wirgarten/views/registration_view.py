@@ -10,7 +10,6 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.member.forms import PersonalDataForm
 from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
@@ -22,13 +21,7 @@ from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
-    Subscription,
-    ProductType,
-    Product,
     GrowingPeriod,
-    Member,
-    MandateReference,
-    ProductPrice,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
@@ -38,10 +31,9 @@ from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
 )
 from tapir.wirgarten.service.products import (
-    get_active_product_types,
-    get_free_product_capacity,
-    is_product_type_available,
     is_harvest_shares_available,
+    is_bestellcoop_available,
+    is_chicken_shares_available,
 )
 
 # Wizard Steps Keys
@@ -86,26 +78,6 @@ FORMS = [
 ]
 
 
-def show_bestellcoop() -> bool:
-    param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
-        )
-    )
-
-
-def show_chicken_shares() -> bool:
-    param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            get_active_product_types().get(name=ProductTypes.CHICKEN_SHARES)
-        )
-    )
-
-
 def show_harvest_shares(wizard=None) -> bool:
     return is_harvest_shares_available()
 
@@ -141,8 +113,9 @@ CONDITIONS = {
     STEP_COOP_SHARES: show_coop_shares,
     STEP_NO_COOP_SHARES_AVAILABLE: dont_show_coop_shares,
     STEP_ADDITIONAL_SHARES: lambda x: has_selected_harvest_shares(x)
-    and show_chicken_shares(),
-    STEP_BESTELLCOOP: lambda x: has_selected_harvest_shares(x) and show_bestellcoop(),
+    and is_chicken_shares_available(),
+    STEP_BESTELLCOOP: lambda x: has_selected_harvest_shares(x)
+    and is_bestellcoop_available(),
     STEP_PICKUP_LOCATION: has_selected_harvest_shares,
 }
 
@@ -165,55 +138,6 @@ def save_member(form_dict):
     member.privacy_consent = now
 
     return create_member(member)
-
-
-def save_additional_shares(
-    form_dict,
-    member: Member,
-    start_date: date,
-    end_date: date,
-    growing_period: GrowingPeriod,
-    mandate_ref: MandateReference,
-):
-    product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
-    for key, quantity in form_dict[STEP_ADDITIONAL_SHARES].cleaned_data.items():
-        if quantity > 0 and key.startswith("chicken_shares_"):
-            product = Product.objects.get(
-                type=product_type, name=key.replace("chicken_shares_", "")
-            )
-            Subscription.objects.create(
-                member=member,
-                product=product,
-                quantity=quantity,
-                period=growing_period,
-                start_date=start_date,
-                end_date=end_date,
-                mandate_ref=mandate_ref,
-            )
-
-
-def save_bestellcoop(
-    form_dict,
-    member,
-    start_date: date,
-    end_date: date,
-    growing_period: GrowingPeriod,
-    mandate_ref: MandateReference,
-):
-    if form_dict[STEP_BESTELLCOOP].cleaned_data["bestellcoop"]:
-        product = Product.objects.get(
-            type=get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
-        )
-
-        Subscription.objects.create(
-            member=member,
-            product=product,
-            quantity=1,
-            start_date=start_date,
-            end_date=end_date,
-            period=growing_period,
-            mandate_ref=mandate_ref,
-        )
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")
@@ -314,30 +238,26 @@ class RegistrationWizardView(CookieWizardView):
                 growing_period=self.growing_period,
             )
 
-            save_additional_shares(
-                form_dict,
-                member,
-                self.start_date,
-                self.end_date,
-                self.growing_period,
-                mandate_ref,
-            )
-            save_bestellcoop(
-                form_dict,
-                member,
-                self.start_date,
-                self.end_date,
-                self.growing_period,
-                mandate_ref,
-            )
+            if self.has_step(STEP_ADDITIONAL_SHARES):
+                form_dict[STEP_ADDITIONAL_SHARES].save(
+                    member_id=member.id,
+                    mandate_ref=mandate_ref,
+                    growing_period=self.growing_period,
+                )
+            if self.has_step(STEP_BESTELLCOOP):
+                form_dict[STEP_BESTELLCOOP].save(
+                    member_id=member.id,
+                    mandate_ref=mandate_ref,
+                    growing_period=self.growing_period,
+                )
 
-        # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-        actual_coop_start = get_next_contract_start_date(self.start_date)
-        buy_cooperative_shares(
-            form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
-            member,
-            actual_coop_start,
-        )
+            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
+            actual_coop_start = get_next_contract_start_date(self.start_date)
+            buy_cooperative_shares(
+                form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
+                member,
+                actual_coop_start,
+            )
 
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:draftuser_confirm_registration")

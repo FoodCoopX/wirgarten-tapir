@@ -16,6 +16,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import generate_mandate_ref
+from tapir.wirgarten.service.products import get_future_subscriptions
 
 
 @transaction.atomic
@@ -91,6 +92,28 @@ def create_mandate_ref(member: int | str | Member, coop_shares: bool):
     return MandateReference.objects.create(
         ref=ref, member_id=member_id, start_ts=datetime.now()
     )
+
+
+def get_or_create_mandate_ref(
+    member: int | str | Member, coop_shares: bool
+) -> MandateReference:
+    if coop_shares:
+        raise NotImplementedError()
+
+    member_id = member.id if type(member) is Member else member
+    for row in (
+        get_future_subscriptions()
+        .filter(member_id=member_id)
+        .order_by("-start_date")
+        .values("mandate_ref")[:1]
+    ):
+        mandate_ref = MandateReference.objects.get(ref=row["mandate_ref"])
+        break
+
+    if not mandate_ref:
+        mandate_ref = create_mandate_ref(member_id, False)
+
+    return mandate_ref
 
 
 @transaction.atomic

@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Subscription,
     ProductCapacity,
@@ -461,6 +462,26 @@ def is_harvest_shares_available() -> bool:
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name="Ernteanteile")
+            get_active_product_types().get(name=ProductTypes.HARVEST_SHARES)
+        )
+    )
+
+
+def is_bestellcoop_available() -> bool:
+    param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
+        )
+    )
+
+
+def is_chicken_shares_available() -> bool:
+    param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
+    return param == 1 or (
+        param == 2
+        and is_product_type_available(
+            get_active_product_types().get(name=ProductTypes.CHICKEN_SHARES)
         )
     )
