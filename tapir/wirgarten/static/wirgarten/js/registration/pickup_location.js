@@ -1,4 +1,5 @@
-var initMap = (data, productTypes = [], callback = false) => {
+var initMap = (data, productTypes = [], callback = false, selected = undefined) => {
+    console.log(selected)
     // FIXME: the select box from the widget should be decoupled from the map
     const pickupLocationSelect = document.getElementById('id_pickup_location');
     if(pickupLocationSelect) pickupLocationSelect.required = true;
@@ -21,7 +22,6 @@ var initMap = (data, productTypes = [], callback = false) => {
 
     for(const [id, pl] of Object.entries(data)) {
         const marker = L.marker(idToCoords(id)).addTo(map);
-        console.log("pl", pl)
         const missingCapabilities = productTypes.filter(v => !pl.capabilities.map(it => it.name).includes(v))
         marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>
@@ -44,7 +44,7 @@ var initMap = (data, productTypes = [], callback = false) => {
         markers[id] = marker;
       }
 
-    const select = (id, callback) => {
+    const select = (id, callback = false) => {
         if(pickupLocationSelect) pickupLocationSelect.value = id;
 
         target = idToCoords(id)
@@ -73,5 +73,9 @@ var initMap = (data, productTypes = [], callback = false) => {
         pickupLocationSelect.addEventListener("change", ({ target }) =>  select(target.value));
     }
 
-    return (id) => select(id, false)
+    if(selected !== undefined){
+        select(selected)
+    }
+
+    return (id) => select(id)
 }

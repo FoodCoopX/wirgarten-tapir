@@ -19,11 +19,16 @@ from django_filters import FilterSet, CharFilter, ChoiceFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.forms.member.forms import (
     PaymentAmountEditForm,
     CoopShareTransferForm,
     PersonalDataForm,
     WaitingListForm,
+)
+from tapir.wirgarten.forms.pickup_location import (
+    PickupLocationChoiceForm,
+    get_pickup_locations_map_data,
 )
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
@@ -37,6 +42,7 @@ from tapir.wirgarten.models import (
     EditFuturePaymentLogEntry,
     MandateReference,
     WaitingListEntry,
+    PickupLocationCapability,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import begin_csv_string
@@ -55,6 +61,7 @@ from tapir.wirgarten.service.products import (
     get_product_price,
     get_active_product_types,
     is_harvest_shares_available,
+    get_future_subscriptions,
 )
 from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
 from tapir.wirgarten.views.modal import get_form_modal
@@ -117,6 +124,16 @@ class MemberDetailView(generic.DetailView):
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
         context["harvest_shares_available"] = is_harvest_shares_available()
+
+        if self.object.pickup_location:
+            context["pickup_location_map_data"] = get_pickup_locations_map_data(
+                [self.object.pickup_location],
+                PickupLocationCapability.objects.filter(
+                    pickup_location=self.object.pickup_location
+                ),
+            )
+
+        context["deliveries"] = generate_future_deliveries(self.object)
 
         return context
 
@@ -264,14 +281,24 @@ def get_next_delivery_date():
     return next_delivery
 
 
-def generate_future_deliveries(subs, member: Member):
+def generate_future_deliveries(member: Member):
     deliveries = []
     next_delivery_date = get_next_delivery_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
+    subs = get_future_subscriptions().filter(member=member)
     while next_delivery_date <= last_growing_period.end_date:
+        _, week_num, _ = next_delivery_date.isocalendar()
+        even_week = week_num % 2 == 0
+
         active_subs = subs.filter(
-            start_date__lte=next_delivery_date, end_date__gte=next_delivery_date
+            start_date__lte=next_delivery_date,
+            end_date__gte=next_delivery_date,
+            product__type__delivery_cycle__in=[
+                WEEKLY[0],
+                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
+            ],
         )
+
         if active_subs.count() > 0:
             deliveries.append(
                 {
@@ -310,14 +337,12 @@ class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
         context = super().get_context_data(**kwargs)
         member_id = kwargs["pk"]
 
-        subs = Subscription.objects.filter(member=member_id)
-
         member = Member.objects.get(pk=member_id)
 
         context["member"] = member
         context["deliveries"] = get_previous_deliveries(
             member
-        ) + generate_future_deliveries(subs, member)
+        ) + generate_future_deliveries(member)
 
         return context
 
@@ -397,35 +422,34 @@ def get_coop_share_transfer_form(request, **kwargs):
     )
 
 
-def update_member(
-    member_id,
-    first_name,
-    last_name,
-    email,
-    phone_number,
-    street,
-    street_2,
-    postcode,
-    city,
-    birthdate,
-):
-    instance = Member.objects.get(pk=member_id)
-    instance.first_name = first_name
-    instance.last_name = last_name
-    instance.email = email
-    instance.phone_number = phone_number
-    instance.street = street
-    instance.street_2 = street_2
-    instance.postcode = postcode
-    instance.city = city
-    instance.birthdate = birthdate
-    instance.save()
-    return instance
-
-
 @require_http_methods(["GET", "POST"])
 def get_member_personal_data_edit_form(request, **kwargs):
     pk = kwargs.pop("pk")
+
+    def update_member(
+        member_id,
+        first_name,
+        last_name,
+        email,
+        phone_number,
+        street,
+        street_2,
+        postcode,
+        city,
+        birthdate,
+    ):
+        instance = Member.objects.get(pk=member_id)
+        instance.first_name = first_name
+        instance.last_name = last_name
+        instance.email = email
+        instance.phone_number = phone_number
+        instance.street = street
+        instance.street_2 = street_2
+        instance.postcode = postcode
+        instance.city = city
+        instance.birthdate = birthdate
+        instance.save()
+        return instance
 
     return get_form_modal(
         request=request,
@@ -474,6 +498,32 @@ def get_member_payment_data_edit_form(request, **kwargs):
         ),
         redirect_url_resolver=lambda x: reverse_lazy(
             "wirgarten:member_detail", kwargs={"pk": x.id}
+        ),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def get_pickup_location_choice_form(request, **kwargs):
+    member = Member.objects.get(pk=kwargs.pop("pk"))
+    kwargs["initial"] = {
+        "product_types": get_active_subscriptions_grouped_by_product_type(
+            member
+        ).keys(),
+    }
+    if member.pickup_location:
+        kwargs["initial"]["initial"] = member.pickup_location.id
+
+    def update_pickup_location(pickup_location_id):
+        member.pickup_location_id = pickup_location_id
+        member.save()
+
+    return get_form_modal(
+        request=request,
+        form=PickupLocationChoiceForm,
+        handler=lambda x: update_pickup_location(x.cleaned_data["pickup_location"]),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": member.id}
         ),
         **kwargs,
     )
@@ -559,18 +609,12 @@ class WaitingListFilter(PermissionRequiredMixin, FilterSet):
         empty_label=None,
         initial=0,
     )
-    # member = BooleanFilter(label=_("Mitgliedschaft"), lookup_expr="isnull", exclude=True,
-    #                       widget=forms.Select(attrs={'class': 'form-control'},
-    #                                           choices=[(None, "Alle"), (True, "Nur Mitglieder"),
-    #                                                    (False, "Nur Interessenten")]), )
     first_name = CharFilter(label=_("Vorname"), lookup_expr="icontains")
     last_name = CharFilter(label=_("Nachname"), lookup_expr="icontains")
     email = CharFilter(label=_("Email"), lookup_expr="icontains")
 
     def __init__(self, data=None, *args, **kwargs):
-        # if filterset is bound, use initial values as defaults
         if data is not None:
-            # get a mutable copy of the QueryDict
             data = data.copy()
 
             if not data["type"]:

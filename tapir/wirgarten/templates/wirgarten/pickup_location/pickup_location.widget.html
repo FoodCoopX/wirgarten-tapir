@@ -6,4 +6,4 @@
   </optgroup>{% endif %}{% endfor %}
 </select>
 </div>
-{% include 'wirgarten/pickup_location/pickup_location_map.html' with data=widget.attrs.data selected_product_types=widget.attrs.selected_product_types %}
+{% include 'wirgarten/pickup_location/pickup_location_map.html' with data=widget.attrs.data selected_product_types=widget.attrs.selected_product_types selected=widget.attrs.initial %}

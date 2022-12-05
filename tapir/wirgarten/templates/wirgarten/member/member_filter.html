@@ -25,11 +25,26 @@
                 <div style="width: 1em"></div>
                 <button title="Details anzeigen"
                         onclick="handleShowMemberDetailsPage()"
-                        class="needs-member btn btn-outline-warning material-icons mx-1 px-2"
+                        class="needs-member btn btn-outline-info material-icons mx-1 px-2"
                         disabled
                 >
                     info
                 </button>
+                <button title="Zahlungsreihe"
+                        onclick="handleShowPayments()"
+                        class="needs-member btn btn-outline-info material-icons mx-1 px-2"
+                        disabled
+                >
+                    payments
+                </button>
+                 <button title="Lieferreihe"
+                         onclick="handleShowDeliveries()"
+                         class="needs-member btn btn-outline-info material-icons mx-1 px-2"
+                         disabled
+                 >
+                    local_shipping
+                </button>
+
                 <div style="width: 1em"></div>
                 <button title="Mitgliedsdaten ändern"
                         onclick="handleEditMemberDetails()"
@@ -144,6 +159,16 @@
         window.open(`/wirgarten/members/${params.member}`, '_blank');
     }
 
+    const handleShowPayments = () => {
+        const params = Tapir.getUrlParams();
+        window.location.href = `/wirgarten/payments/${params.member}`;
+    }
+
+    const handleShowDeliveries = () => {
+        const params = Tapir.getUrlParams();
+        window.location.href = `/wirgarten/deliveries/${params.member}`;
+    }
+
     const handleTransferCoopShares = () => {
         const params = Tapir.getUrlParams();
         FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
@@ -160,6 +185,8 @@
     }
 
     activateRow();
+
+
 </script>
 
 {% endblock %}
