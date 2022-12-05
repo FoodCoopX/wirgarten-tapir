@@ -23,6 +23,7 @@ from tapir.wirgarten.views.member import (
     get_member_personal_data_edit_form,
     get_member_payment_data_edit_form,
     get_coop_shares_waiting_list_form,
+    get_pickup_location_choice_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -153,6 +154,11 @@ urlpatterns = [
         "members/<int:pk>/editpaymentdetails",
         get_member_payment_data_edit_form,
         name="member_edit_payment_details",
+    ),
+    path(
+        "members/<int:pk>/editpickuplocation",
+        get_pickup_location_choice_form,
+        name="member_pickup_location_choice",
     ),
     path(
         "members/<int:pk>/addharvestshares",

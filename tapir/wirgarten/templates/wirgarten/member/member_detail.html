@@ -1,4 +1,4 @@
-{% extends "accounts/base.html" %}
+{% extends "core/base.html" %}
 
 {% load django_bootstrap5 %}
 {% load static %}
@@ -15,202 +15,227 @@
 
 {% block content %}
 <div id="member-detail-container">
-    <div id="member-personal-data" class="card">
-        <h5 class="card-header d-flex justify-content-between align-items-center">
-            {% translate "Persönliche Daten" %}
-            {% if perms.accounts.manage %}
-            <button class="btn tapir-btn btn-outline-primary"
-                    onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
-                    id="tapir_user_edit_button">
-                <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-            </button>
-            {% endif %}
-        </h5>
-        <div class="card-body">
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
-                <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
-                <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
-                <div class="col-8" id="tapir_user_phone_number">
-                    {% if object.phone_number %}
-                    {{ object.phone_number|format_phone_number }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
+    <div id="member-detail-left-column">
+        <div id="member-personal-data" class="card" style="margin-bottom:1em">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Persönliche Daten" %}
+                {% if perms.accounts.manage %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
+                        id="tapir_user_edit_button">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+                {% endif %}
+            </h5>
+            <div class="card-body">
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
+                    <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
                 </div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
-                <div class="col-8" id="tapir_user_birthdate">
-                    {% if object.birthdate %}
-                    {{ object.birthdate|date:"d.m.Y" }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                    <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
                 </div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
-                <div class="col-8" id="tapir_user_address">
-                    {% if object.street and object.city %}
-                    {{ object.get_display_address }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
+                    <div class="col-8" id="tapir_user_phone_number">
+                        {% if object.phone_number %}
+                        {{ object.phone_number|format_phone_number }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
+                    <div class="col-8" id="tapir_user_birthdate">
+                        {% if object.birthdate %}
+                        {{ object.birthdate|date:"d.m.Y" }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
+                    <div class="col-8" id="tapir_user_address">
+                        {% if object.street and object.city %}
+                        {{ object.get_display_address }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex m-1 mt-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        {% if object.pk == request.user.pk %}
+                        <a class="btn tapir-btn btn-outline-info ms-1" href="{% url 'password_change' %}"><span
+                                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <div class="d-flex m-1 mt-4">
-                <div class="d-flex justify-content-end gap-2">
-                    {% if object.pk == request.user.pk %}
-                    <a class="btn tapir-btn btn-outline-info ms-1" href="{% url 'password_change' %}"><span
-                            class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-                    {% endif %}
-                </div>
-            </div>
         </div>
 
-         {% if perms.accounts.manage %}
-                <div class="card-footer" style="display:flex; flex-direction: row; justify-content: left">
-                    <div style="margin-right:1em">
-                        <a style="width:100%" class="btn tapir-btn btn-outline-primary"
-                           href="{% url 'wirgarten:member_payments' object.pk %}"
-                           id="tapir_user_payment_row">
-                            <span class="material-icons">payments</span>{% translate 'Zahlungen' %}
-                        </a>
-                    </div>
-                    <div>
-                        <a style="width:100%" class="btn tapir-btn btn-outline-primary"
-                           href="{% url 'wirgarten:member_deliveries' object.pk %}"
-                           id="tapir_user_delivery_row">
-                            <span class="material-icons">local_shipping</span>{% translate 'Lieferungen' %}
-                        </a>
-                    </div>
-                </div>
-
-                {% endif %}
-    </div>
-
-    <div id="member-contracts">
-
-        <div id="contract-tiles">
-            <div class="card">
-                <div class="card-body">
-                    <div class="contract-tile-number">
-                        <strong>{{ coop_shares_total }}</strong> ×
-                    </div>
-                    <strong>Genossenschaftsanteile</strong>
-                    <hr/>
-                    {% for entry in coop_shares %}
-                    <small>
-                        {{entry.timestamp}}:&nbsp;&nbsp;&nbsp;{{ entry.quantity }} × {{ entry.share_price}}
-                    </small><br/>
-                    {% endfor %}
-                </div>
-                <div class="card-footer">
-                    <button title="Anteile erhöhen"
-                            onclick="alert('not yet implemented!')"
-                            class="btn btn-outline-success material-icons mx-1 px-2"
-                            style="float:right"
-                    >
-                        add
-                    </button>
-                </div>
-            </div>
-
-
-            {% for type in subscriptions.keys %}
-            <div class="card">
-                <div class="card-body">
-                    <div class="contract-tile-number">
-                        <strong>{{ sub_quantities|get_value:type }}</strong> ×
-                    </div>
-                    <strong>{% translate type %}</strong>
-                    {% if sub_quantities|get_value:type > 0 %}
-                    <hr/>
-                    <small>
-                        {% for key, val in subscriptions.items %}
-                        {% if key == type %}
-                        <span>{{ val.0.start_date }} - {{ val.0.end_date }}</span><br/>
-                        <div style="margin-top:0.5em; line-height:1.1em">
-                            {% for sub in val %}
-                            <span><strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong></span>
-                            <br/>
-                            {% endfor %}
+        <div id="member-contracts">
+            <div id="contract-tiles">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="contract-tile-number">
+                            <strong>{{ coop_shares_total }}</strong> ×
                         </div>
-                        {% endif %}
+                        <strong>Genossenschaftsanteile</strong>
+                        <hr/>
+                        {% for entry in coop_shares %}
+                        <small>
+                            {{entry.timestamp}}:&nbsp;&nbsp;&nbsp;{{ entry.quantity }} × {{ entry.share_price}}
+                        </small><br/>
                         {% endfor %}
-                    </small>
-                    {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <button title="Anteile erhöhen"
+                                onclick="alert('not yet implemented!')"
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                style="float:right"
+                        >
+                            add
+                        </button>
+                    </div>
                 </div>
-                <div class="card-footer" style="display:flex;justify-content:space-between">
+
+
+                {% for type in subscriptions.keys %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="contract-tile-number">
+                            <strong>{{ sub_quantities|get_value:type }}</strong> ×
+                        </div>
+                        <strong>{% translate type %}</strong>
+                        {% if sub_quantities|get_value:type > 0 %}
+                        <hr/>
+                        <small>
+                            {% for key, val in subscriptions.items %}
+                            {% if key == type %}
+                            <span>{{ val.0.start_date }} - {{ val.0.end_date }}</span><br/>
+                            <div style="margin-top:0.5em; line-height:1.1em">
+                                {% for sub in val %}
+                                <span><strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong></span>
+                                <br/>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </small>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer" style="display:flex;justify-content:space-between">
                     <span><strong>{{ sub_totals|get_value:type|default:'0.00' }}</strong> <small>€ / Monat</small>
                     </span>
-                    {% if type == 'Ernteanteile' %}
-                    <button title="Anteile erhöhen"
-                            onclick="FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}',
+                        {% if type == 'Ernteanteile' %}
+                        <button title="Anteile erhöhen"
+                                onclick="FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}',
                             {% if harvest_shares_available %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste' {% endif %})"
-                            class="btn btn-outline-success material-icons mx-1 px-2"
-                    >
-                        add
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                        >
+                            add
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <div id="member-detail-right-column">
+        <div id="member-pickup-location" class="card">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Abholung" %}
+                {% if perms.accounts.manage %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        onclick="FormModal.load('{% url 'wirgarten:member_pickup_location_choice' object.pk %}', 'Abholort ändern')">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+                {% endif %}
+            </h5>
+            <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr;">
+                <div style="overflow-y: scroll; max-height: 30em; margin-right:1em;">
+                    {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True %}
+                </div>
+                <div>
+                    {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=pickup_location_map_data selected=object.pickup_location.id %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; grid-gap: 1em;">
+
+                <div class="card">
+                    <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
+                    <div class="card-body" style="text-align: center;">
+                        <div class="contract-tile-number">
+                            <strong>123,45</strong> €
+                        </div>
+                        <strong>Nächste Zahlung</strong><br/>
+                        <small>
+                            am 12.15.15
+                        </small><br/>
+                    </div>
+                    </a>
+                </div>
+
+
+            <div id="member-payment-data" class="card">
+                <h5 class="card-header d-flex justify-content-between align-items-center">
+                    {% translate "Bankverbindung" %}
+                    {% if perms.accounts.manage %}
+                    <button class="btn tapir-btn btn-outline-primary"
+                            onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
+                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                     </button>
                     {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-
-    <div id="member-payment-data" class="card">
-        <h5 class="card-header d-flex justify-content-between align-items-center">
-            {% translate "Bankverbindung" %}
-            {% if perms.accounts.manage %}
-            <button class="btn tapir-btn btn-outline-primary"
-                    onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
-                <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-            </button>
-            {% endif %}
-        </h5>
-        <div class="card-body">
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
-                <div class="col-8" id="tapir_user_account_owner">
-                    {% if object.account_owner %}
-                    {{ object.account_owner }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
-                <div class="col-8" id="tapir_user_iban">
-                    {% if object.iban %}
-                    {{ object.iban }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="row m-1">
-                <div class="col-4 fw-bold text-end">{% translate "BIC" %}:</div>
-                <div class="col-8" id="tapir_user_bic">
-                    {% if object.bic %}
-                    {{ object.bic }}
-                    {% else %}
-                    <span class="text-danger">{% translate "Missing" %}</span>
-                    {% endif %}
+                </h5>
+                <div class="card-body">
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
+                        <div class="col-8" id="tapir_user_account_owner">
+                            {% if object.account_owner %}
+                            {{ object.account_owner }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
+                        <div class="col-8" id="tapir_user_iban">
+                            {% if object.iban %}
+                            {{ object.iban }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "BIC" %}:</div>
+                        <div class="col-8" id="tapir_user_bic">
+                            {% if object.bic %}
+                            {{ object.bic }}
+                            {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 
 {% if perms.accounts.manage %}

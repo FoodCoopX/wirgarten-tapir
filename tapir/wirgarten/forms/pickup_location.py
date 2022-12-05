@@ -22,6 +22,7 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
 
 
 def pickup_location_to_dict(location_capabilities, pickup_location):
+    # FIXME: Icons should be configured with the ProductType ?
     PRODUCT_TYPE_ICONS = {"Ernteanteile": "🌾", "Hühneranteile": "🐔"}
 
     return {
@@ -55,6 +56,7 @@ class PickupLocationWidget(forms.Select):
         pickup_locations,
         location_capabilities,
         selected_product_types,
+        initial,
         *args,
         **kwargs,
     ):
@@ -64,6 +66,7 @@ class PickupLocationWidget(forms.Select):
         self.attrs["data"] = get_pickup_locations_map_data(
             pickup_locations, location_capabilities
         )
+        self.attrs["initial"] = initial
 
 
 class PickupLocationChoiceField(forms.ModelChoiceField):
@@ -73,7 +76,19 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         location_capabilities = get_active_pickup_location_capabilities()
         pickup_locations = get_active_pickup_locations(location_capabilities)
 
-        selected_product_types = initial["product_types"]
+        all_prod_types_with_delivery = (
+            get_active_product_types()
+            .exclude(delivery_cycle=NO_DELIVERY)
+            .values("name")
+        )
+        selected_product_types = list(
+            (
+                pt
+                for pt in initial["product_types"]
+                if pt in all_prod_types_with_delivery
+            )
+        )
+
         possible_locations = pickup_locations
         for pt_name in selected_product_types:
             possible_locations = possible_locations.filter(
@@ -89,6 +104,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 pickup_locations=pickup_locations,
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
+                initial=initial.get("initial", None),
             ),
             label=kwargs["label"],
         )

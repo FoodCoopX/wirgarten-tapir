@@ -1,12 +1,26 @@
 #member-detail-container{
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 1em;
     margin-top: 2em;
 }
 
-#member-contracts{
+#member-detail-left-column {
     grid-row: span 2;
+    display:flex;
+    flex-direction: column;
+}
+
+#member-detail-right-column{
+    grid-column:span 2;
+}
+
+#member-contracts{
+    margin-bottom: 1em;
+}
+
+#member-pickup-location{
+    margin-bottom: 1em;
 }
 
 .contract-tile-number{
@@ -20,7 +34,7 @@
 
 #contract-tiles {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     grid-gap:1em;
     text-align: center;
 }
