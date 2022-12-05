@@ -8,12 +8,15 @@
 
 <div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
      aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="modalLabel"></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                         aria-label="Close"></button>
+            </div>
+            <div id="modalInfo" class="modal-body" style="padding-bottom:0px">
+                <div id="modalInfoContent" class="alert" style="margin-bottom:0px;"></div>
             </div>
             <div id="modal-loading-indicator" class="modal-body">
                 {% include 'wirgarten/generic/loading-spinner.html' %}

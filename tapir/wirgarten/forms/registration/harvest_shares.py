@@ -18,6 +18,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     create_mandate_ref,
+    get_or_create_mandate_ref,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
@@ -139,17 +140,7 @@ class HarvestShareForm(forms.Form):
             )
 
         if not mandate_ref:
-            for row in (
-                get_future_subscriptions()
-                .filter(member_id=member_id)
-                .values("mandate_ref")
-            ):
-                if not is_mandate_ref_for_coop_shares(row["mandate_ref"]):
-                    mandate_ref = MandateReference.objects.get(ref=row["mandate_ref"])
-                    break
-
-            if not mandate_ref:
-                mandate_ref = create_mandate_ref(member_id, False)
+            mandate_ref = get_or_create_mandate_ref(member_id, False)
 
         start_date = get_next_contract_start_date(today)
         end_date = growing_period.end_date

@@ -4,6 +4,7 @@ from copy import copy
 from datetime import date, datetime
 from importlib.resources import _
 
+from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -19,7 +20,7 @@ from django_filters import FilterSet, CharFilter, ChoiceFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
+from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS, ProductTypes
 from tapir.wirgarten.forms.member.forms import (
     PaymentAmountEditForm,
     CoopShareTransferForm,
@@ -31,6 +32,8 @@ from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
 )
 from tapir.wirgarten.forms.registration import HarvestShareForm
+from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
+from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     Member,
@@ -62,6 +65,8 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     is_harvest_shares_available,
     get_future_subscriptions,
+    is_chicken_shares_available,
+    is_bestellcoop_available,
 )
 from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
 from tapir.wirgarten.views.modal import get_form_modal
@@ -123,7 +128,11 @@ class MemberDetailView(generic.DetailView):
 
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
-        context["harvest_shares_available"] = is_harvest_shares_available()
+        context["available_product_types"] = {
+            ProductTypes.HARVEST_SHARES: is_harvest_shares_available(),
+            ProductTypes.CHICKEN_SHARES: is_chicken_shares_available(),
+            ProductTypes.BESTELLCOOP: is_bestellcoop_available(),
+        }
 
         if self.object.pickup_location:
             context["pickup_location_map_data"] = get_pickup_locations_map_data(
@@ -135,16 +144,36 @@ class MemberDetailView(generic.DetailView):
 
         context["deliveries"] = generate_future_deliveries(self.object)
 
+        # FIXME: it should be easier than this to get the next payments, refactor to service somehow
+        prev_payments = get_previous_payments(self.object.pk)
+        now = datetime.now()
+        for payment in prev_payments:
+            if parser.parse(payment["due_date"]) > now:
+                context["next_payment"] = payment
+            else:
+                break
+
+        next_payments = generate_future_payments(self.object.pk, prev_payments, 1)
+
+        if len(next_payments) > 0:
+            if "next_payment" not in context or (
+                next_payments[0]["due_date"] < context["next_payment"]["due_date"]
+            ):
+                context["next_payment"] = next_payments[0]
+
         return context
 
 
-def generate_future_payments(subs, prev_payments: list):
+def generate_future_payments(member_id, prev_payments: list, limit: int = None):
     prev_payments = set(map(lambda p: (p["mandate_ref"], p["due_date"]), prev_payments))
+    subs = get_future_subscriptions().filter(member_id=member_id)
 
     payments = []
     next_payment_date = get_next_payment_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
-    while next_payment_date <= last_growing_period.end_date:
+    while next_payment_date <= last_growing_period.end_date and (
+        limit is None or len(payments) < limit
+    ):
         active_subs = subs.filter(
             start_date__lte=next_payment_date, end_date__gte=next_payment_date
         )
@@ -242,7 +271,9 @@ def get_previous_payments(member_id) -> [dict]:
     return list(
         map(
             lambda x: payment_to_dict(x),
-            Payment.objects.filter(mandate_ref__member_id=member_id),
+            Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
+                "-due_date"
+            ),
         )
     )
 
@@ -254,16 +285,14 @@ class MemberPaymentsView(generic.TemplateView, generic.base.ContextMixin):
         context = super().get_context_data(**kwargs)
         member_id = kwargs["pk"]
 
-        subs = Subscription.objects.filter(member=member_id)
-
-        context["payments"] = self.get_payments_row(member_id, subs)
+        context["payments"] = self.get_payments_row(member_id)
         context["member"] = Member.objects.get(pk=member_id)
 
         return context
 
-    def get_payments_row(self, member_id, subs):
+    def get_payments_row(self, member_id):
         prev_payments = get_previous_payments(member_id)
-        future_payments = generate_future_payments(subs, prev_payments)
+        future_payments = generate_future_payments(member_id, prev_payments)
 
         return sorted(
             prev_payments + future_payments,
@@ -589,6 +618,46 @@ def get_add_harvest_shares_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=HarvestShareForm,
+        handler=lambda x: x.save(
+            member_id=member_id,
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": member_id}
+        ),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def get_add_chicken_shares_form(request, **kwargs):
+    member_id = kwargs.pop("pk")
+
+    if not is_chicken_shares_available():
+        raise Exception("Keine Hühneranteile verfügbar")
+
+    return get_form_modal(
+        request=request,
+        form=ChickenShareForm,
+        handler=lambda x: x.save(
+            member_id=member_id,
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": member_id}
+        ),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def get_add_bestellcoop_form(request, **kwargs):
+    member_id = kwargs.pop("pk")
+
+    if not is_bestellcoop_available():
+        raise Exception("BestellCoop nicht verfügbar")
+
+    return get_form_modal(
+        request=request,
+        form=BestellCoopForm,
         handler=lambda x: x.save(
             member_id=member_id,
         ),

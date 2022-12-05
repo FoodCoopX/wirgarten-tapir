@@ -105,7 +105,6 @@
                     </div>
                 </div>
 
-
                 {% for type in subscriptions.keys %}
                 <div class="card">
                     <div class="card-body">
@@ -121,7 +120,10 @@
                             <span>{{ val.0.start_date }} - {{ val.0.end_date }}</span><br/>
                             <div style="margin-top:0.5em; line-height:1.1em">
                                 {% for sub in val %}
-                                <span><strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong></span>
+                                <span><strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
+                                ({% if sub.solidarity_price > 0%}+{% endif %}
+                                {% widthratio sub.solidarity_price 1 100 %}%)
+                                {% endif %}</span>
                                 <br/>
                                 {% endfor %}
                             </div>
@@ -133,14 +135,43 @@
                     <div class="card-footer" style="display:flex;justify-content:space-between">
                     <span><strong>{{ sub_totals|get_value:type|default:'0.00' }}</strong> <small>€ / Monat</small>
                     </span>
+                        <!-- FIXME: hardcoded product type names :( -->
                         {% if type == 'Ernteanteile' %}
                         <button title="Anteile erhöhen"
                                 onclick="FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}',
-                            {% if harvest_shares_available %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste' {% endif %})"
+                            {% if available_product_types|get_value:type|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
                         </button>
+                        {% else %}
+
+                        {% if available_product_types|get_value:type|default:False %}
+                        {% if type == 'Hühneranteile' %}
+                        <button title="Anteile erhöhen"
+                                onclick="FormModal.load('{% url 'wirgarten:member_add_chicken_shares' object.pk %}',
+                            'Hühneranteile dazubuchen')"
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                        >
+                            add
+                        </button>
+                        {% endif %}
+                        {% if type == 'BestellCoop' and sub_quantities|get_value:type == 0 %}
+                        <button title="Anteile erhöhen"
+                                onclick="FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden'"
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                        >
+                            add
+                        </button>
+                        {% endif %}
+                        {% else %}
+                        <button title="Aktuell nicht verfügbar"
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                disabled
+                        >
+                            add
+                        </button>
+                        {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -175,19 +206,20 @@
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; grid-gap: 1em;">
 
-                <div class="card">
-                    <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
+            <div class="card">
+                <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
                     <div class="card-body" style="text-align: center;">
                         <div class="contract-tile-number">
-                            <strong>123,45</strong> €
+                            <strong>{{ next_payment.amount }}</strong> €
                         </div>
                         <strong>Nächste Zahlung</strong><br/>
                         <small>
-                            am 12.15.15
+                            am {{ next_payment.due_date }}<br/>
+                            {{ next_payment.mandate_ref.ref }}
                         </small><br/>
                     </div>
-                    </a>
-                </div>
+                </a>
+            </div>
 
 
             <div id="member-payment-data" class="card">

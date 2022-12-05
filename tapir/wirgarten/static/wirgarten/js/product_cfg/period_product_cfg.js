@@ -184,16 +184,14 @@ const getProductAddForm = () => {
 const getGrowingPeriodAddForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/periodadd${Tapir.stringifyUrlParams(params)}`;
-    const title = `Neue Anbauperiode anlegen. Ohne Produkte
-     Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode Anzuwenden,
-     damit Produkte und weitere Einstellungen übernommen werden. Diese sind noch nachträglich editierbar.`;
-    FormModal.load(url, title);
+    const title = 'Neue Anbauperiode anlegen';
+    FormModal.load(url, title, "Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode anzuwenden, damit Produkte und weitere Einstellungen übernommen werden. Diese sind nachträglich noch editierbar.", 'warning');
 }
 
 const getGrowingPeriodCopyForm = () => {
     const params = Tapir.getUrlParams();
     const url = `/wirgarten/product/${params.periodId}/periodcopy${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Neue Anbauperiode anlegen. Produkte werden übernommen.");
+    FormModal.load(url, "Neue Anbauperiode anlegen", "Produkte werden von der gewählten Anbauperiode übernommen.");
 }
 
 // actions

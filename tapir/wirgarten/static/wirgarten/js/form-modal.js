@@ -23,10 +23,34 @@ const messageEvent = eventMethod === "attachEvent"
         : "message";
 
  const FormModal = {
-        load: (url, title) => {
+        load: (url, title, info=undefined, infoType="info") => {
             showLoadingIndicator(true);
 
             document.getElementById("modalLabel").innerText=title;
+            const modalInfo = document.getElementById("modalInfo")
+            const modalInfoContent = document.getElementById("modalInfoContent")
+
+            console.log(info)
+
+            if(info === undefined || info.length < 1){
+                modalInfo.style.display="none";
+                if(modalInfoContent){
+                    modalInfoContent.innerText= "";
+                }
+            } else {
+                modalInfo.style.display="block";
+
+                if(modalInfoContent){
+                    modalInfoContent.innerText=info;
+
+                    for(clazz of modalInfoContent.classList){
+                        if(clazz.startsWith("alert-")){
+                            modalInfoContent.classList.remove(clazz);
+                        }
+                    }
+                    modalInfoContent.classList.add("alert-" + infoType);
+                }
+            }
 
             frame.style.minHeight = frame.style.maxHeight = "0px";
             frame.src=url
