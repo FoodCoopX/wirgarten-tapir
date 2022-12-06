@@ -48,12 +48,12 @@
     padding:1em;
 }
 
- .dashboard-container {
+.dashboard-container {
     display: grid;
     grid-gap: 1em;
     margin-top: 1em;
+    margin-bottom: 1em;
 }
-
 
 @media (max-width: 767px) {
     .dashboard-container {

@@ -232,20 +232,26 @@ const select_product = (productId) => {
 }
 
 const deleteProduct = () => {
-    const params = Tapir.getUrlParams();
-    const url = `product/${params.periodId}/${params.capacityId}/${params.prodId}/delete${Tapir.stringifyUrlParams({...params, prodId: undefined})}`;
-    window.location.replace(url)
+    ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Produkt wirklich löschen?', 'Löschen', 'danger', () => {
+        const params = Tapir.getUrlParams();
+        const url = `product/${params.periodId}/${params.capacityId}/${params.prodId}/delete${Tapir.stringifyUrlParams({...params, prodId: undefined})}`;
+        window.location.replace(url)
+    })
 }
 
 const deleteCapacity = () => {
-    const params = Tapir.getUrlParams();
-    const url = `product/${params.periodId}/${params.capacityId}/typedelete${Tapir.stringifyUrlParams({...params, capacityId: undefined})}`;
-    window.location.replace(url)
+    ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du den Produkttypen wirklich für diese Anbauperiode löschen?', 'Löschen', 'danger', () => {
+        const params = Tapir.getUrlParams();
+        const url = `product/${params.periodId}/${params.capacityId}/typedelete${Tapir.stringifyUrlParams({...params, capacityId: undefined})}`;
+        window.location.replace(url)
+    })
 }
 
 const deleteGrowingPeriod = () => {
-    const params = Tapir.getUrlParams();
-    const url = `product/${params.periodId}/perioddelete${Tapir.stringifyUrlParams({...params, periodId: undefined})}`;
-    window.location.replace(url)
+    ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du diese Anbauperiode wirklich löschen?', 'Löschen', 'danger', () => {
+        const params = Tapir.getUrlParams();
+        const url = `product/${params.periodId}/perioddelete${Tapir.stringifyUrlParams({...params, periodId: undefined})}`;
+        window.location.replace(url)
+    })
 }
 

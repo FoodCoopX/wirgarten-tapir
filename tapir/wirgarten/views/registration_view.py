@@ -10,6 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.member.forms import PersonalDataForm
 from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
@@ -184,11 +185,11 @@ class RegistrationWizardView(CookieWizardView):
             if self.has_step(STEP_HARVEST_SHARES) and is_harvest_shares_selected(
                 self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
             ):
-                initial["product_types"].append("Ernteanteile")
+                initial["product_types"].append(ProductTypes.HARVEST_SHARES)
             if self.has_step(STEP_ADDITIONAL_SHARES) and is_chicken_shares_selected(
                 self.get_cleaned_data_for_step(STEP_ADDITIONAL_SHARES)
             ):
-                initial["product_types"].append("Hühneranteile")
+                initial["product_types"].append(ProductTypes.CHICKEN_SHARES)
         elif step == STEP_SUMMARY:
             initial["general"] = {
                 "start_date": self.start_date,

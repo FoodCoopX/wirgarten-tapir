@@ -32,8 +32,10 @@ const handleEdit = () => {
 }
 
 const handleDelete = () => {
-      const id = Tapir.getUrlParams().selected;
-      if(canDelete[id]){
-        window.location.href =  `/wirgarten/admin/pickuplocations/delete/${id}`
-      }
+    ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du diesen Abholort wirklich löschen?', 'Löschen', 'danger', () => {
+        const id = Tapir.getUrlParams().selected;
+        if(canDelete[id]){
+            window.location.href =  `/wirgarten/admin/pickuplocations/delete/${id}`;
+        }
+    })
 }
