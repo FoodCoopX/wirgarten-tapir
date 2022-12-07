@@ -19,13 +19,19 @@
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
                 <div style="width: 1em"></div>
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
+                {% if perms.payments.view %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
+                {% endif %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
                 <div style="width: 1em"></div>
+                {% if perms.accounts.manage %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
+                {% if perms.coop.manage %}
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
+                {% endif %}
                 <div style="width: 1em"></div>
                 {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
+                {% endif %}
             </span>
         </div>
         <div class="card-body">
@@ -148,6 +154,8 @@
     }
 
     activateRow();
+
+
 
 
 </script>

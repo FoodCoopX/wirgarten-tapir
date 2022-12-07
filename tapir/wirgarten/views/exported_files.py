@@ -6,10 +6,8 @@ from django.views.decorators.http import require_GET
 from django.http import HttpResponse
 from django.views.generic import ListView
 
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ExportedFile
-
-# FIXME: correct permission?
-EXPORT_PERMISSION = "coop.admin"
 
 
 class ExportedFilesListView(ListView):
@@ -17,12 +15,12 @@ class ExportedFilesListView(ListView):
     ordering = "-created_at"
 
     paginate_by = 50
-    permission_required = EXPORT_PERMISSION
+    permission_required = Permission.Coop.VIEW
 
 
 @require_GET
 @csrf_protect
-@permission_required(EXPORT_PERMISSION)
+@permission_required(Permission.Coop.VIEW)
 def download(request, pk):
     entity = ExportedFile.objects.get(pk=pk)
     content = str(entity.file.tobytes(), "utf8")

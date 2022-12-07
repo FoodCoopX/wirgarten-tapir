@@ -6,7 +6,7 @@ from importlib.resources import _
 
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
@@ -15,12 +15,19 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
+from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django_filters import FilterSet, CharFilter, ChoiceFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS, ProductTypes
+from tapir.wirgarten.constants import (
+    WEEKLY,
+    EVEN_WEEKS,
+    ODD_WEEKS,
+    ProductTypes,
+    Permission,
+)
 from tapir.wirgarten.forms.member.forms import (
     PaymentAmountEditForm,
     CoopShareTransferForm,
@@ -70,7 +77,7 @@ from tapir.wirgarten.service.products import (
     is_chicken_shares_available,
     is_bestellcoop_available,
 )
-from tapir.wirgarten.views.exported_files import EXPORT_PERMISSION
+from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
 
 
@@ -87,16 +94,21 @@ class MemberFilter(FilterSet):
 class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
     ordering = ["date_joined"]
-    permission_required = "coop.manage"
+    permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/member/member_filter.html"
 
 
-class MemberDetailView(generic.DetailView):
+class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
     model = Member
     template_name = "wirgarten/member/member_detail.html"
+    permission_required = Permission.Accounts.VIEW
 
-    def get_context_data(self, object):
+    def get_user_pk(self):
+        return self.kwargs["pk"]
+
+    def get_context_data(self, **kwargs):
         context = super(MemberDetailView, self).get_context_data()
+
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object
@@ -280,8 +292,11 @@ def get_previous_payments(member_id) -> [dict]:
     )
 
 
-class MemberPaymentsView(generic.TemplateView, generic.base.ContextMixin):
+class MemberPaymentsView(
+    PermissionOrSelfRequiredMixin, generic.TemplateView, generic.base.ContextMixin
+):
     template_name = "wirgarten/member/member_payments.html"
+    permission_required = Permission.Payments.VIEW
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -361,8 +376,11 @@ def get_previous_deliveries(member: Member):
     )
 
 
-class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
+class MemberDeliveriesView(
+    PermissionOrSelfRequiredMixin, generic.TemplateView, generic.base.ContextMixin
+):
     template_name = "wirgarten/member/member_deliveries.html"
+    permission_required = Permission.Accounts.VIEW
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -379,6 +397,8 @@ class MemberDeliveriesView(generic.TemplateView, generic.base.ContextMixin):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Payments.MANAGE)
+@csrf_protect
 def get_payment_amount_edit_form(request, **kwargs):
     @transaction.atomic
     def save_future_payment_change():
@@ -438,6 +458,8 @@ def get_payment_amount_edit_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def get_coop_share_transfer_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -454,8 +476,12 @@ def get_coop_share_transfer_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@csrf_protect
+@login_required
 def get_member_personal_data_edit_form(request, **kwargs):
     pk = kwargs.pop("pk")
+
+    check_permission_or_self(pk, request)
 
     def update_member(
         member_id,
@@ -505,9 +531,19 @@ def get_member_personal_data_edit_form(request, **kwargs):
     )
 
 
+def check_permission_or_self(pk, request):
+    if not (request.user.pk == pk or request.user.has_perm(Permission.Accounts.MANAGE)):
+        raise PermissionDenied
+
+
 @require_http_methods(["GET", "POST"])
+@csrf_protect
+@login_required
 def get_member_payment_data_edit_form(request, **kwargs):
-    instance = Member.objects.get(pk=kwargs.pop("pk"))
+    member_id = kwargs.pop("pk")
+    check_permission_or_self(member_id, request)
+
+    instance = Member.objects.get(pk=member_id)
 
     def update_payment_data(member: Member, account_owner: str, iban: str, bic: str):
         member.account_owner = account_owner
@@ -535,8 +571,13 @@ def get_member_payment_data_edit_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@csrf_protect
+@login_required
 def get_pickup_location_choice_form(request, **kwargs):
-    member = Member.objects.get(pk=kwargs.pop("pk"))
+    member_id = kwargs.pop("pk")
+    check_permission_or_self(member_id, request)
+
+    member = Member.objects.get(pk=member_id)
     kwargs["initial"] = {
         "product_types": get_active_subscriptions_grouped_by_product_type(
             member
@@ -561,6 +602,8 @@ def get_pickup_location_choice_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Accounts.MANAGE)
+@csrf_protect
 def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -602,8 +645,12 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
 def get_add_harvest_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+
+    check_permission_or_self(member_id, request)
 
     if not is_harvest_shares_available():
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
@@ -631,8 +678,12 @@ def get_add_harvest_shares_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
 def get_add_chicken_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+
+    check_permission_or_self(member_id, request)
 
     if not is_chicken_shares_available():
         raise Exception("Keine Hühneranteile verfügbar")
@@ -651,8 +702,12 @@ def get_add_chicken_shares_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
 def get_add_bestellcoop_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+
+    check_permission_or_self(member_id, request)
 
     if not is_bestellcoop_available():
         raise Exception("BestellCoop nicht verfügbar")
@@ -671,8 +726,12 @@ def get_add_bestellcoop_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
 def get_add_coop_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+
+    check_permission_or_self(member_id, request)
 
     if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
@@ -699,9 +758,7 @@ def get_add_coop_shares_form(request, **kwargs):
     )
 
 
-class WaitingListFilter(PermissionRequiredMixin, FilterSet):
-    permission_required = "coop.manage"
-
+class WaitingListFilter(FilterSet):
     type = ChoiceFilter(
         label=_("Warteliste"),
         lookup_expr="exact",
@@ -732,13 +789,13 @@ class WaitingListFilter(PermissionRequiredMixin, FilterSet):
 class WaitingListView(PermissionRequiredMixin, FilterView):
     filterset_class = WaitingListFilter
     ordering = ["created_at"]
-    permission_required = "coop.manage"
+    permission_required = Permission.Accounts.MANAGE
     template_name = "wirgarten/waitlist/waitlist_filter.html"
 
 
 @require_GET
 @csrf_protect
-@permission_required(EXPORT_PERMISSION)
+@permission_required(Permission.Coop.MANAGE)
 def export_waitinglist(request, **kwargs):
     waitlist_type = request.environ["QUERY_STRING"].replace("type=", "")
     if not waitlist_type:
