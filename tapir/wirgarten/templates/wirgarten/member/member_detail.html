@@ -96,7 +96,7 @@
                     </div>
                     <div class="card-footer">
                         <button title="Anteile erhöhen"
-                                onclick="alert('not yet implemented!')"
+                                onclick="FormModal.load('{% url 'wirgarten:member_add_coop_shares' object.pk %}', {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                                 style="float:right"
                         >

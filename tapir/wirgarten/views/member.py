@@ -34,6 +34,7 @@ from tapir.wirgarten.forms.pickup_location import (
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
+from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     Member,
@@ -53,6 +54,7 @@ from tapir.wirgarten.service.member import (
     transfer_coop_shares,
     create_member,
     create_wait_list_entry,
+    buy_cooperative_shares,
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -668,6 +670,35 @@ def get_add_bestellcoop_form(request, **kwargs):
     )
 
 
+@require_http_methods(["GET", "POST"])
+def get_add_coop_shares_form(request, **kwargs):
+    member_id = kwargs.pop("pk")
+
+    if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
+        # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
+        member = Member.objects.get(pk=member_id)
+        wl_kwargs = kwargs.copy()
+        wl_kwargs["initial"] = {
+            "first_name": member.first_name,
+            "last_name": member.last_name,
+            "email": member.email,
+            "privacy_consent": (member.privacy_consent is not None),
+        }
+        return get_coop_shares_waiting_list_form(request, **wl_kwargs)
+
+    return get_form_modal(
+        request=request,
+        form=CooperativeShareForm,
+        handler=lambda x: buy_cooperative_shares(
+            x.cleaned_data["cooperative_shares"], member_id
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy(
+            "wirgarten:member_detail", kwargs={"pk": member_id}
+        ),
+        **kwargs,
+    )
+
+
 class WaitingListFilter(PermissionRequiredMixin, FilterSet):
     permission_required = "coop.manage"
 
@@ -683,7 +714,9 @@ class WaitingListFilter(PermissionRequiredMixin, FilterSet):
     email = CharFilter(label=_("Email"), lookup_expr="icontains")
 
     def __init__(self, data=None, *args, **kwargs):
-        if data is not None:
+        if data is None:
+            data = {"type": WaitingListEntry.WaitingListType.HARVEST_SHARES}
+        else:
             data = data.copy()
 
             if not data["type"]:

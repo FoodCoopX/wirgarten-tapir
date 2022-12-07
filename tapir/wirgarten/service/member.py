@@ -87,20 +87,25 @@ def create_mandate_ref(member: int | str | Member, coop_shares: bool):
     :param coop_shares: if true: the mandate ref is generated for coop shares, else: generated for products
     """
 
-    member_id = member.id if type(member) is Member else member
+    member_id = resolve_member_id(member)
     ref = generate_mandate_ref(member_id, coop_shares)
     return MandateReference.objects.create(
         ref=ref, member_id=member_id, start_ts=datetime.now()
     )
 
 
+def resolve_member_id(member):
+    return member.id if type(member) is Member else member
+
+
 def get_or_create_mandate_ref(
     member: int | str | Member, coop_shares: bool
 ) -> MandateReference:
-    if coop_shares:
-        raise NotImplementedError()
-
     member_id = member.id if type(member) is Member else member
+
+    if coop_shares:
+        raise NotImplementedError("Coop share mandate references can not be reused.")
+
     for row in (
         get_future_subscriptions()
         .filter(member_id=member_id)
@@ -157,7 +162,9 @@ def get_next_contract_start_date(ref_date=date.today()):
 
 @transaction.atomic
 def buy_cooperative_shares(
-    quantity: int, member: Member, start_date: date = get_next_contract_start_date()
+    quantity: int,
+    member: int | str | Member,
+    start_date: date = get_next_contract_start_date(),
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -167,22 +174,19 @@ def buy_cooperative_shares(
     :param start_date: the date on which the member officially enters the cooperative
     """
 
+    member_id = resolve_member_id(member)
+
     share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
     due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
 
-    try:
-        so = ShareOwnership.objects.get(member=member)
-        so.quantity += quantity
-        so.save()
-    except ShareOwnership.DoesNotExist:
-        mandate_ref = create_mandate_ref(member, True)
-        so = ShareOwnership.objects.create(
-            member=member,
-            quantity=quantity,
-            share_price=share_price,
-            entry_date=start_date,
-            mandate_ref=mandate_ref,
-        )
+    mandate_ref = create_mandate_ref(member_id, True)
+    so = ShareOwnership.objects.create(
+        member_id=member_id,
+        quantity=quantity,
+        share_price=share_price,
+        entry_date=start_date,
+        mandate_ref=mandate_ref,
+    )
 
     Payment.objects.create(
         due_date=due_date,

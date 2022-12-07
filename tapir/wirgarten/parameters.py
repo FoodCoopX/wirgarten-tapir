@@ -348,15 +348,15 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         parameter_definition(
             key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
-            label="Genossenschaftsanteile unabhängig von Ernteanteilen zeichenbar",
+            label="Genossenschaftsanteile separat von Ernteanteilen zeichenbar",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
-            description="Genossenschaftsanteile sind vom Mitglied unabhängig von Ernteanteilen zeichenbar.",
+            description="Genossenschaftsanteile sind vom Mitglied separat von Ernteanteilen zeichenbar.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
                 options=[
-                    (True, "unabhängig zeichenbar"),
-                    (False, "nicht unabhängig zeichenbar"),
+                    (True, "separat zeichenbar"),
+                    (False, "nicht separat zeichenbar"),
                 ]
             ),
             order_priority=800,
