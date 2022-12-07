@@ -30,8 +30,6 @@ const messageEvent = eventMethod === "attachEvent"
             const modalInfo = document.getElementById("modalInfo")
             const modalInfoContent = document.getElementById("modalInfoContent")
 
-            console.log(info)
-
             if(info === undefined || info.length < 1){
                 modalInfo.style.display="none";
                 if(modalInfoContent){

@@ -16,61 +16,16 @@
         <div class="card-header" style="display: flex; justify-content: space-between">
             <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
             <span style="display: flex; flex-direction:row;">
-                <button title="Mitglied anlegen"
-                        onclick="FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen')"
-                        class="btn btn-outline-success material-icons mx-1 px-2"
-                >
-                    person_add
-                </button>
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
                 <div style="width: 1em"></div>
-                <button title="Details anzeigen"
-                        onclick="handleShowMemberDetailsPage()"
-                        class="needs-member btn btn-outline-info material-icons mx-1 px-2"
-                        disabled
-                >
-                    info
-                </button>
-                <button title="Zahlungsreihe"
-                        onclick="handleShowPayments()"
-                        class="needs-member btn btn-outline-info material-icons mx-1 px-2"
-                        disabled
-                >
-                    payments
-                </button>
-                 <button title="Lieferreihe"
-                         onclick="handleShowDeliveries()"
-                         class="needs-member btn btn-outline-info material-icons mx-1 px-2"
-                         disabled
-                 >
-                    local_shipping
-                </button>
-
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
                 <div style="width: 1em"></div>
-                <button title="Mitgliedsdaten ändern"
-                        onclick="handleEditMemberDetails()"
-                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
-                        disabled
-                >
-                    manage_accounts
-                </button>
-                <button title="Genossenschaftsanteile übertragen"
-                        onclick="handleTransferCoopShares()"
-                        class="needs-member btn btn-outline-primary material-icons mx-1 px-2"
-                        disabled
-                >
-                    move_down
-                </button>
-
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
                 <div style="width: 1em"></div>
-                <button id="delete-location"
-                        title="Mitglied löschen"
-                        onclick="alert('Not yet implemented!')"
-                        data-bs-toggle="modal" data-bs-target="#delete-confirmation"
-                        class="needs-member btn btn-outline-danger material-icons mx-1 px-2"
-                        disabled
-                >
-                    delete
-                </button>
+                {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
             </span>
         </div>
         <div class="card-body">
@@ -152,6 +107,10 @@
         }
     }
 
+    const handleAddMember = () => {
+        FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen');
+    }
+
     const handleShowMemberDetailsPage = () => {
         const params = Tapir.getUrlParams();
         window.open(`/wirgarten/members/${params.member}`, '_blank');
@@ -179,6 +138,12 @@
             if(e.data.type === "modal-save-successful"){
                 window.location.replace(window.location.href)
             }
+        })
+    }
+
+    const handleDeleteMember = () => {
+        ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
+            alert("Not yet implemented!")
         })
     }
 
