@@ -1,13 +1,12 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views import generic
 
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import PaymentTransaction, Payment
 
 
 class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView):
-    permission_required = (
-        "coop.manage"  # FIXME: use payment permission as soon as it is available
-    )
+    permission_required = Permission.Payments.VIEW
     template_name = "wirgarten/payment/payment_list.html"
 
     def __init__(self):

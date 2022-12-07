@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -32,20 +33,15 @@ def format_currency(number):
     return number_str.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-HARVEST_SHARES_PRODUCT_TYPE_NAME = (
-    "Ernteanteile"  # FIXME: the name should be configurable somewhere
-)
-
-
 class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/admin_dashboard.html"
-    permission_required = "coop.admin"
+    permission_required = "coop.view"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         harvest_share_type = get_active_product_types().get(
-            name=HARVEST_SHARES_PRODUCT_TYPE_NAME
+            name=ProductTypes.HARVEST_SHARES
         )
 
         active_capacities = {
@@ -54,7 +50,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         active_subs = get_future_subscriptions().order_by("-product__type")
         sorted_subs = sorted(
             active_subs,
-            key=lambda s: s.product.type.name == HARVEST_SHARES_PRODUCT_TYPE_NAME,
+            key=lambda s: s.product.type.name == ProductTypes.HARVEST_SHARES,
             reverse=True,
         )
 
@@ -174,6 +170,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         contract_labels.append("nur Geno-Anteile")
         contract_data.append(
             context["active_members"]
-            - contract_types.get(HARVEST_SHARES_PRODUCT_TYPE_NAME, 0)
+            - contract_types.get(ProductTypes.HARVEST_SHARES, 0)
         )
         return contract_data, contract_labels

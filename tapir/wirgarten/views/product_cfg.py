@@ -7,7 +7,11 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import generic
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.decorators import permission_required
+from django.views.decorators.csrf import csrf_protect
 
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
     ProductTypeForm,
     ProductForm,
@@ -40,8 +44,9 @@ KW_PERIOD_ID = "periodId"
 KW_PROD_ID = "prodId"
 
 
-class ProductCfgView(generic.TemplateView):
+class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/product/period_product_cfg_view.html"
+    permission_required = Permission.Products.VIEW
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -165,6 +170,8 @@ class ProductCfgView(generic.TemplateView):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def get_product_type_capacity_edit_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -183,6 +190,8 @@ def get_product_type_capacity_edit_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def get_product_type_capacity_add_form(request, **kwargs):
     def handler(form):
         return create_product_type_capacity(
@@ -211,6 +220,8 @@ def get_product_type_capacity_add_form(request, **kwargs):
 
 
 @require_http_methods(["GET"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def delete_product_type(request, **kwargs):
     delete_product_type_capacity(kwargs[KW_CAPACITY_ID])
 
@@ -220,6 +231,8 @@ def delete_product_type(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def get_product_edit_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -236,6 +249,8 @@ def get_product_edit_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def get_product_add_form(request, **kwargs):
     def redirect_url(data):
         new_query_string = (
@@ -258,6 +273,8 @@ def get_product_add_form(request, **kwargs):
 
 
 @require_http_methods(["GET"])
+@permission_required(Permission.Products.MANAGE)
+@csrf_protect
 def delete_product_handler(request, **kwargs):
     delete_product(kwargs[KW_PROD_ID])
 
@@ -267,6 +284,8 @@ def delete_product_handler(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def get_period_add_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -281,6 +300,8 @@ def get_period_add_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def get_period_copy_form(request, **kwargs):
     return get_form_modal(
         request=request,
@@ -296,6 +317,8 @@ def get_period_copy_form(request, **kwargs):
 
 
 @require_http_methods(["GET"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def delete_period(request, **kwargs):
     delete_growing_period_with_capacities(kwargs[KW_PERIOD_ID])
     return HttpResponseRedirect(reverse_lazy(PAGE_ROOT))

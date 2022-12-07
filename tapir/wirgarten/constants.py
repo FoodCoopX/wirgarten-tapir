@@ -13,3 +13,22 @@ class ProductTypes:
     HARVEST_SHARES = "Ernteanteile"
     CHICKEN_SHARES = "Hühneranteile"
     BESTELLCOOP = "BestellCoop"
+
+
+class Permission:
+    class Coop:
+        VIEW = "coop.view"
+        MANAGE = "coop.manage"
+        # ADMIN = "coop.admin"
+
+    class Accounts:
+        VIEW = "accounts.view"
+        MANAGE = "accounts.manage"
+
+    class Payments:
+        VIEW = "payments.view"
+        MANAGE = "payments.manage"
+
+    class Products:
+        VIEW = "products.view"
+        MANAGE = "products.manage"

@@ -10,10 +10,12 @@
     <div class="card">
         <div style="display: flex; flex-direction: row;" class="card-header">
             <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}</h5>
+            {% if perms.coop.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Anbauperiode hinzufügen' type='dark' icon='add' %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Anbauperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' %}
             <div style="width: 3em"></div>
             {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Anbauperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete'%}
+            {% endif %}
         </div>
         <div style="overflow: auto" class="card-body">
             <table class="table">
@@ -51,10 +53,12 @@
     <div class="card">
         <div style="display: flex;flex-direction: row" class="card-header">
             <h5 style="margin: auto; width: 100%">{% translate 'Kapazitäten' %}</h5>
+            {% if perms.products.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityAddForm()' title='Produkttyp hinzufügen' disabled=True class='need-growing-period' type='success' icon='add' %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityEditForm()' title='Produkttyp/Kapazität bearbeiten' disabled=True class='need-product-type' type='primary' icon='edit' %}
             <div style="width: 3em"></div>
             {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete'%}
+            {% endif %}
         </div>
         <div style="overflow: auto" class="card-body">
             <table class="table">
@@ -86,10 +90,12 @@
     <div class="card">
         <div style="display: flex;flex-direction: row" class="card-header">
             <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
+            {% if perms.products.manage %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' %}
             {% include 'wirgarten/generic/action-button.html' with onclick='getProductEditForm()' title='Produkt bearbeiten' disabled=True class='need-product' type='primary' icon='edit' %}
             <div style="width: 3em"></div>
             {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete'%}
+            {% endif %}
         </div>
         <div style="overflow: auto" class="card-body">
             <table class="table">

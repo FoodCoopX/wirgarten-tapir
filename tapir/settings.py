@@ -229,17 +229,19 @@ REG_GROUP_BASE_DN = "ou=groups," + LDAP_BASE_DN
 REG_GROUP_OBJECT_CLASSES = ["groupOfNames"]
 
 # Groups are stored in the LDAP tree
+GROUP_ADMIN = "admin"
 GROUP_VORSTAND = "vorstand"
 GROUP_MEMBER_OFFICE = "member-office"
 # This is our own little stupid permission system. See explanation in accounts/models.py.
 PERMISSIONS = {
-    "coop.view": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
-    "coop.manage": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
+    "coop.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
+    "coop.manage": [GROUP_VORSTAND, GROUP_ADMIN],
     # TODO(Leon Handreke): Reserve this to a list of knowledgeable superusers
-    "coop.admin": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
-    "accounts.view": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
-    "accounts.manage": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
-    "welcomedesk.view": [GROUP_VORSTAND, GROUP_MEMBER_OFFICE],
+    "coop.admin": [GROUP_VORSTAND, GROUP_ADMIN],
+    "accounts.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
+    "accounts.manage": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
+    "payments.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
+    "payments.manage": [GROUP_VORSTAND, GROUP_ADMIN],
 }
 
 # Permissions granted to client presenting a given SSL client cert. Currently used for the welcome desk machines.

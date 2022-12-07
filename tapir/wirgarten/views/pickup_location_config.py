@@ -1,9 +1,13 @@
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy
 from django.views import generic
+from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.db import transaction
 
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
     pickup_location_to_dict,
@@ -17,8 +21,9 @@ from tapir.wirgarten.views.modal import get_form_modal
 PAGE_ROOT = reverse_lazy("wirgarten:pickup_locations")
 
 
-class PickupLocationCfgView(generic.TemplateView):
+class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/pickup_location/pickup_location_config.html"
+    permission_required = Permission.Coop.VIEW
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -36,6 +41,8 @@ class PickupLocationCfgView(generic.TemplateView):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def get_pickup_location_add_form(request, **kwargs):
     def create_pickup_location(form):
         coords = form.cleaned_data["coords"].split(",")
@@ -71,6 +78,8 @@ def get_pickup_location_add_form(request, **kwargs):
 
 
 @require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def get_pickup_location_edit_form(request, **kwargs):
     @transaction.atomic
     def update_pickup_location(form):
@@ -121,6 +130,8 @@ def get_pickup_location_edit_form(request, **kwargs):
 
 
 @require_http_methods(["GET"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
 def delete_pickup_location(request, **kwargs):
     try:
         pl = PickupLocation.objects.get(id=kwargs["id"])
