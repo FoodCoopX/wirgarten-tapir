@@ -26,6 +26,7 @@ from tapir.wirgarten.views.member import (
     get_pickup_location_choice_form,
     get_add_chicken_shares_form,
     get_add_bestellcoop_form,
+    get_add_coop_shares_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -176,6 +177,11 @@ urlpatterns = [
         "members/<int:pk>/addbestellcoop",
         get_add_bestellcoop_form,
         name="member_add_bestellcoop",
+    ),
+    path(
+        "members/<int:pk>/addcoopshares",
+        get_add_coop_shares_form,
+        name="member_add_coop_shares",
     ),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(
