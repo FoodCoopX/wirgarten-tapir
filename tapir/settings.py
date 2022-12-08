@@ -34,6 +34,15 @@ DEBUG = env("DEBUG", cast=bool, default=False)
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list, default=["*"])
 
+TAPIR_VERSION = env(
+    "TAPIR_VERSION", cast=str, default=os.environ.get("TAPIR_VERSION", "")
+)
+print(
+    f"Tapir Version: {TAPIR_VERSION}"
+    if TAPIR_VERSION
+    else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!"
+)
+
 ENABLE_SILK_PROFILING = False
 
 # Application definition
