@@ -1,9 +1,12 @@
+import io
+import re
 from datetime import date
 from importlib.resources import _
 
 from django.core.exceptions import ValidationError
 
 from tapir.wirgarten.models import GrowingPeriod
+from lxml import etree
 
 
 def validate_growing_period_overlap(start_date: date, end_date: date):
@@ -41,3 +44,62 @@ def validate_date_range(start_date: date, end_date: date):
         raise ValidationError(
             f"{_('The start date must not be the same as the end date!')} start: {start_date}, end: {end_date}"
         )
+
+
+def validate_format_string(value: str, allowed_vars: [str]):
+    """
+    Validates if a string with potential format brackets (e.g.: "{some_variable}") only uses variables from the given array of known vars.
+
+    :param value: the string to validate
+    :param allowed_vars: the array of known variables.
+    """
+
+    for match in re.findall("{[^{}]*}", value):
+        match = match[1 : len(match) - 1].strip()  # strip brackets
+        match = match.split(".")[
+            0
+        ].strip()  # if object, use only the part before the first dot
+        if match not in allowed_vars:
+            raise ValidationError(
+                f"Unknown variable '{match}'! Known variables: {allowed_vars}"
+            )
+
+
+def validate_html(html: str):
+    """
+    Validates if the given string is HTML conform and if all tags are closing.
+
+    :param html: the html string
+    """
+
+    def find_next_unclosed(text):
+        """Finds the next unclosed HTML tag"""
+        tag_stack = []
+        # Get an iterator of all tags in file.
+        tag_regex = re.compile(r"<(/?[^/>]*)>", re.DOTALL)
+        tags = tag_regex.finditer(text)
+        for tag in tags:
+            # If it is a closing tag check if it matches the last opening tag.
+            if re.match(r"</([^>]*)>", tag.group()):
+                top_tag = tag_stack[-1]
+                if top_tag.groups()[0] == tag.groups()[0][1:]:
+                    tag_stack.pop()
+                else:
+                    unclosed = tag_stack.pop()
+                    return (unclosed.start(), unclosed.end())
+            else:
+                tag_stack.append(tag)
+
+        if len(tag_stack) > 0:
+            unclosed = tag_stack.pop()
+            return (unclosed.start(), unclosed.end())
+
+    try:
+        etree.parse(io.StringIO(html), etree.HTMLParser(recover=False))
+    except Exception as e:
+        raise ValidationError("Invalid HTML! Details: " + str(e))
+
+    position = find_next_unclosed(html)
+    if position:
+        tag = html[position[0] : position[1]]
+        raise ValidationError(f"Unclosed HTML tag {tag} at {position}!")

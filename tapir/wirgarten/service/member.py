@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Sum
 
+from tapir import settings
 from tapir.accounts.models import TapirUser, LdapPerson
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
@@ -45,11 +46,7 @@ def transfer_coop_shares(
     if quantity > origin_ownerships_quantity:
         quantity = origin_ownerships_quantity
 
-    try:
-        existing_ownership = ShareOwnership.objects.get(member_id=target_member_id)
-        mandate_ref = existing_ownership.mandate_ref
-    except ShareOwnership.DoesNotExist:
-        mandate_ref = create_mandate_ref(target_member_id, True)
+    mandate_ref = create_mandate_ref(target_member_id, True)
 
     actual_coop_start = get_next_contract_start_date(
         date.today() + relativedelta(months=1)
@@ -57,7 +54,7 @@ def transfer_coop_shares(
     new_ownership = ShareOwnership.objects.create(
         member_id=target_member_id,
         quantity=quantity,
-        share_price=get_parameter_value(Parameter.COOP_SHARE_PRICE),
+        share_price=settings.COOP_SHARE_PRICE,
         entry_date=actual_coop_start,
         mandate_ref=mandate_ref,
     )
@@ -190,7 +187,7 @@ def buy_cooperative_shares(
 
     member_id = resolve_member_id(member)
 
-    share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
+    share_price = settings.COOP_SHARE_PRICE
     due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
 
     mandate_ref = create_mandate_ref(member_id, True)

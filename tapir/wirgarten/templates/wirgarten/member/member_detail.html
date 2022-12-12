@@ -16,6 +16,10 @@
 {% block content %}
 <div id="member-detail-container">
     <div id="member-detail-left-column">
+        {% if show_renewal_warning %}
+        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period %}
+        {% endif %}
+
         <div id="member-personal-data" class="card" style="margin-bottom:1em">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Persönliche Daten" %}
@@ -138,8 +142,7 @@
                         <!-- FIXME: hardcoded product type names :( -->
                         {% if type == 'Ernteanteile' %}
                         <button title="Anteile erhöhen"
-                                onclick="FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}',
-                            {% if available_product_types|get_value:type|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
+                                onclick="handleAddHarvestShares()"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -149,8 +152,7 @@
                         {% if available_product_types|get_value:type|default:False %}
                         {% if type == 'Hühneranteile' %}
                         <button title="Anteile erhöhen"
-                                onclick="FormModal.load('{% url 'wirgarten:member_add_chicken_shares' object.pk %}',
-                            'Hühneranteile dazubuchen')"
+                                onclick="handleAddChickenShares()"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -158,7 +160,7 @@
                         {% endif %}
                         {% if type == 'BestellCoop' and sub_quantities|get_value:type == 0 %}
                         <button title="Anteile erhöhen"
-                                onclick="FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden')"
+                                onclick="handleAddBestellCoop()"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -274,5 +276,26 @@
 <hr/>
 {% user_log_entry_list object %}
 {% endif %}
-{% endblock %}
 
+<script>
+    {% if add_shares_disallowed %}
+        const handleAddHarvestShares = handleRenewal
+        const handleAddChickenShares = handleRenewal
+        const handleAddBestellCoop = handleRenewal
+    {% else %}
+        const handleAddBestellCoop = () => {
+            FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden');
+        }
+
+        const handleAddChickenShares = () => {
+            FormModal.load('{% url 'wirgarten:member_add_chicken_shares' object.pk %}', 'Hühneranteile dazubuchen');
+        }
+
+        const handleAddHarvestShares = () => {
+            FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
+        }
+    {% endif %}
+
+</script>
+
+{% endblock %}

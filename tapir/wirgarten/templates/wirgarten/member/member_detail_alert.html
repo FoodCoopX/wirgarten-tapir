@@ -1,0 +1,114 @@
+{% load configuration %}
+
+{% if renewal_status == 'unknown' %}
+<div class="alert alert-warning">
+    <h4 class="alert-heading">{{renewal_alert.unknown.header|safe}}</h4>
+    <p>{{renewal_alert.unknown.content|safe}}</p>
+    <hr>
+    <div style="display:flex; justify-content:space-between;">
+        <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil kündigen</button>
+        <button type="button" class="btn btn-secondary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
+    </div>
+</div>
+{% elif renewal_status == 'cancelled' %}
+<div id="cancellation-confirmation" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading">Kündigung eingegangen</h4>
+    <p>Deine Kündigung des Ernteanteils, sowie etwaiger Zusatzabos und der Mitgliedschaft in der BestellCoop zum
+        <strong>{{contract_end_date}}</strong> ist eingangen und hiermit bestätigt.</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary" onclick="handleConfirmCancelConfirmation()">Alles klar</button>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <h4 class="alert-heading">{{renewal_alert.cancelled.header|safe}}</h4>
+    <p>{{renewal_alert.cancelled.content|safe}}</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-secondary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
+    </div>
+</div>
+{% elif renewal_status == 'renewed' %}
+<div class="alert alert-success">
+    <h4 class="alert-heading">{{renewal_alert.renewed.header|safe}}</h4>
+    <p>{{renewal_alert.renewed.content|safe}}</p>
+</div>
+{% endif %}
+
+<div class="modal fade" id="renew-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+     aria-labelledby="renewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="renewLabel">Ernteanteil verlängern</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Schön, dass du deinen Erntevertrag verlängern möchtest!<br/>
+                    Du kannst deine aktuellen Ernteanteile und Zusatzverträge verlängern, oder eine andere Konstellation wählen.
+                </p>
+                <hr/>
+                {% for type, subs in subscriptions.items %}
+                {% if subs|length > 0 and subs.0.product %}
+                <strong>{{type}}</strong>
+                <small>
+                    <ul>
+                        {% for sub in subs %}
+                        <li>{{sub.quantity}} × {{sub.product.name}}</li>
+                        {% endfor %}
+                    </ul>
+                </small>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between;">
+                <div>
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Abbrechen</button>
+                </div>
+                <div>
+                    <button type="button" style="margin-right:0.5em" class="btn btn-primary"
+                            onclick="handleRenewChangeConditions()">Auswahl ändern
+                    </button>
+                    <button type="button" class="btn btn-secondary"
+                            onclick="handleRenewSameConditions()">Verträge verlängern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
+    const params = Tapir.getUrlParams();
+    if(params.cancelled && cancellationConfirmationElem){
+        cancellationConfirmationElem.style.display = 'block';
+    }
+    Tapir.replaceUrlParams({})
+
+    const handleCancellation = () => {
+        ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich kündigen?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Jetzt kündigen', 'danger', () => {
+            window.location.replace("{% url 'wirgarten:member_cancel_contract' pk=member.id %}");
+        })
+    }
+
+    const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
+    const handleRenewal = () => {
+        renewalModal.show()
+    }
+
+    const handleRenewSameConditions = () => {
+        window.location.replace("{% url 'wirgarten:member_renew_same_conditions' pk=member.id %}");
+    }
+
+    const handleRenewChangeConditions = () => {
+        alert("NOT YET IMPLEMENTED")
+    }
+
+    const handleConfirmCancelConfirmation = () => {
+        if(cancellationConfirmationElem){
+            cancellationConfirmationElem.style.display = 'none'
+        }
+    }
+</script>

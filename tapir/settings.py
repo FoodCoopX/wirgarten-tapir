@@ -43,6 +43,12 @@ print(
     else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
 )
 
+### WIRGARTEN CONFIG ###
+
+COOP_SHARE_PRICE = 50.0
+
+##########################
+
 ENABLE_SILK_PROFILING = False
 
 # Application definition

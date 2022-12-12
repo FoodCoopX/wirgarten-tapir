@@ -3,6 +3,7 @@ from importlib.resources import _
 from django import forms
 from django.core.validators import MinValueValidator
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.registration import HARVEST_SHARE_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct
@@ -19,6 +20,8 @@ class CooperativeShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(CooperativeShareForm, self).__init__(*args, **kwargs)
         initial = kwargs.get("initial", {})
+
+        self.coop_share_price = settings.COOP_SHARE_PRICE
 
         self.harvest_shares_products = list(
             HarvestShareProduct.objects.filter(

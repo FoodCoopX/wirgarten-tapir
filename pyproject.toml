@@ -32,7 +32,7 @@ localflavor = "^1.9"
 cleo = "^0.8.1"
 tomlkit = "^0.10.1"
 nanoid = "^2.0"
-
+lxml= "^4.9.2"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"
