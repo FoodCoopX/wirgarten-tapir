@@ -40,7 +40,7 @@ TAPIR_VERSION = env(
 print(
     f"Tapir Version: {TAPIR_VERSION}"
     if TAPIR_VERSION
-    else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!"
+    else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
 )
 
 ENABLE_SILK_PROFILING = False
@@ -251,6 +251,8 @@ PERMISSIONS = {
     "accounts.manage": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
     "payments.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
     "payments.manage": [GROUP_VORSTAND, GROUP_ADMIN],
+    "products.view": [GROUP_VORSTAND, GROUP_ADMIN],
+    "products.manage": [GROUP_VORSTAND, GROUP_ADMIN],
 }
 
 # Permissions granted to client presenting a given SSL client cert. Currently used for the welcome desk machines.

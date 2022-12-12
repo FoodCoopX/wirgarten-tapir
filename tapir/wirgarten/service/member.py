@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from django.db.models import Sum
 
 from tapir.accounts.models import TapirUser, LdapPerson
 from tapir.configuration.parameter import get_parameter_value
@@ -32,14 +33,17 @@ def transfer_coop_shares(
     :param actor: who initiated the transfer (admin account)
     """
 
-    origin_ownership = ShareOwnership.objects.get(member_id=origin_member_id)
+    origin_ownerships = ShareOwnership.objects.filter(
+        member_id=origin_member_id
+    ).order_by("-created_at")
+    origin_ownerships_quantity = origin_ownerships.aggregate(sum=Sum("quantity"))["sum"]
 
     if quantity < 1:
         return False  # nothing to do
 
     # if quantity exceeds origin shares, just take all shares
-    if quantity > origin_ownership.quantity:
-        quantity = origin_ownership.quantity
+    if quantity > origin_ownerships_quantity:
+        quantity = origin_ownerships_quantity
 
     try:
         existing_ownership = ShareOwnership.objects.get(member_id=target_member_id)
@@ -53,19 +57,28 @@ def transfer_coop_shares(
     new_ownership = ShareOwnership.objects.create(
         member_id=target_member_id,
         quantity=quantity,
-        share_price=origin_ownership.share_price,
+        share_price=get_parameter_value(Parameter.COOP_SHARE_PRICE),
         entry_date=actual_coop_start,
         mandate_ref=mandate_ref,
     )
 
     # TODO: can we delete the ShareOwnership if quantity == 0 ?
-    origin_ownership.quantity -= quantity
-    origin_ownership.save()
+    quantity_to_transfer = quantity
+    while quantity_to_transfer > 0:
+        for oo in origin_ownerships:
+            if quantity_to_transfer < 1:
+                break
+            delta = min(quantity_to_transfer, oo.quantity)
+            oo.quantity -= delta
+            oo.save()
+            quantity_to_transfer -= delta
+
+    origin_member = Member.objects.get(pk=origin_member_id)
 
     # log entry for the user who SOLD the shares
     TransferCoopSharesLogEntry().populate(
         actor=actor,
-        user=origin_ownership.member,
+        user=origin_member,
         target_member=new_ownership.member,
         quantity=quantity,
     ).save()
@@ -74,7 +87,7 @@ def transfer_coop_shares(
     ReceivedCoopSharesLogEntry().populate(
         actor=actor,
         user=new_ownership.member,
-        target_member=origin_ownership.member,
+        target_member=origin_member,
         quantity=quantity,
     ).save()
 
@@ -106,6 +119,7 @@ def get_or_create_mandate_ref(
     if coop_shares:
         raise NotImplementedError("Coop share mandate references can not be reused.")
 
+    mandate_ref = False
     for row in (
         get_future_subscriptions()
         .filter(member_id=member_id)

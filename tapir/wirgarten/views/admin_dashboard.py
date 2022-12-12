@@ -47,12 +47,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         active_capacities = {
             c.product_type.id: c for c in get_active_product_capacities()
         }
+
         active_subs = get_future_subscriptions().order_by("-product__type")
-        sorted_subs = sorted(
-            active_subs,
-            key=lambda s: s.product.type.name == ProductTypes.HARVEST_SHARES,
-            reverse=True,
-        )
 
         today = date.today()
 
@@ -60,11 +56,22 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["capacity_labels"] = []
         context["used_capacity"] = []
         context["free_capacity"] = []
-        for product_type, subs in itertools.groupby(
-            sorted_subs, key=lambda x: x.product.type
+
+        pt_to_subs = {
+            product_type.id: list(subs)
+            for product_type, subs in itertools.groupby(
+                active_subs, key=lambda x: x.product.type
+            )
+        }
+        for capacity in sorted(
+            active_capacities.values(),
+            key=lambda c: c.product_type.name == ProductTypes.HARVEST_SHARES,
+            reverse=True,
         ):
-            active_capacity = active_capacities[product_type.id]
-            total = float(active_capacity.capacity)
+            product_type = capacity.product_type
+            subs = pt_to_subs.get(product_type.id, [])
+
+            total = float(capacity.capacity)
             used = sum(
                 map(
                     lambda x: x.quantity
@@ -82,7 +89,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context["used_capacity"].append(used / total * 100)
             context["free_capacity"].append(100 - (used / total * 100))
             context["capacity_links"].append(
-                f"{reverse_lazy('wirgarten:product')}?periodId={active_capacity.period.id}&capacityId={active_capacity.id}"
+                f"{reverse_lazy('wirgarten:product')}?periodId={capacity.period.id}&capacityId={capacity.id}"
             )
             # TODO: show free capacity as quantity of base product shares
             context["capacity_labels"].append(

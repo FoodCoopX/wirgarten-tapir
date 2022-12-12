@@ -125,8 +125,8 @@ const manageProductDependentButtons = (params) => {
 const manageGrowingPeriodDependentButtons = (params) => {
     const buttons = Array.from(document.getElementsByClassName("need-growing-period"));
     buttons.forEach(btn => {
-        const deleteCondition = !btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && allowedActions["period"][params.periodId]["delete"])
-        if(params.periodId && deleteCondition){
+        const deleteCondition = params.periodId && (!btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && allowedActions["period"][params.periodId]["delete"]))
+        if(deleteCondition){
             btn.removeAttribute("disabled")
         } else {
             btn.setAttribute("disabled",   "true");
@@ -137,8 +137,8 @@ const manageGrowingPeriodDependentButtons = (params) => {
 const manageCapacityDependentButtons = (params) => {
     const buttons = Array.from(document.getElementsByClassName("need-product-type"));
     buttons.forEach(btn => {
-        const deleteCondition = !btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && (allowedActions["period"][params.periodId]["delete"] || (allowedActions["capacity"][params.capacityId] ? allowedActions["capacity"][params.capacityId]["delete"] : false)))
-        if (params.capacityId && deleteCondition) {
+        const deleteCondition = params.capacityId && (!btn.classList.contains("delete-btn") || (btn.classList.contains("delete-btn") && (allowedActions["period"][params.periodId]["delete"] || (allowedActions["capacity"][params.capacityId] ? allowedActions["capacity"][params.capacityId]["delete"] : false))))
+        if (deleteCondition) {
                 btn.removeAttribute("disabled");
         } else {
                 btn.setAttribute("disabled", "true");

@@ -3,6 +3,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
+from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
 
 register = template.Library()
 
@@ -23,7 +24,7 @@ def sidebar_links(context):
 def get_sidebar_link_groups(request):
     groups = []
 
-    if request.user.has_perm("coop.admin"):
+    if request.user.has_perm(Permission.Coop.VIEW):
         add_admin_links(groups)
 
     # misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
