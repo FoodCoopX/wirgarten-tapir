@@ -9,8 +9,9 @@ const setFrameSize = () => {
     const form = frame.contentWindow.document.getElementsByTagName("form")
     if(form.length > 0){
         const newHeight = form[0].getBoundingClientRect().height
+        const newWidth = form[0].getBoundingClientRect().width
         frame.style.minHeight = frame.style.maxHeight = newHeight + 'px';
-        frame.style.width = frame.contentWindow.document.body.scrollWidth+'px';
+        frame.style.minWidth = frame.style.maxWidth = newWidth + 'px';
     }
 }
 

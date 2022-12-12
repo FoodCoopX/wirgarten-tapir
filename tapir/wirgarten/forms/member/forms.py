@@ -12,6 +12,7 @@ from django.forms import (
 from django.core.validators import (
     EmailValidator,
 )
+from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField, DateInput
@@ -91,7 +92,9 @@ class CoopShareTransferForm(Form):
         super(CoopShareTransferForm, self).__init__(*args)
         member_id = kwargs["pk"]
         orig_member = Member.objects.get(pk=member_id)
-        orig_share_ownership = ShareOwnership.objects.get(member_id=member_id)
+        orig_share_ownership_quantity = ShareOwnership.objects.filter(
+            member_id=member_id
+        ).aggregate(quantity_sum=Sum("quantity"))["quantity_sum"]
 
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
@@ -105,7 +108,7 @@ class CoopShareTransferForm(Form):
 
         self.fields["origin"] = CharField(
             label=_("Ursprünglicher Anteilseigner")
-            + f" ({orig_share_ownership.quantity} Anteile)",
+            + f" ({orig_share_ownership_quantity} Anteile)",
             disabled=True,
             initial=member_to_string(orig_member),
         )
@@ -114,9 +117,9 @@ class CoopShareTransferForm(Form):
         )
         self.fields["quantity"] = IntegerField(
             label=_("Anzahl der Anteile"),
-            initial=orig_share_ownership.quantity,
+            initial=orig_share_ownership_quantity,
             min_value=1,
-            max_value=orig_share_ownership.quantity,
+            max_value=orig_share_ownership_quantity,
         )
         self.fields["security_check"] = BooleanField(
             label=_("Ich weiß was ich tue und bin mir der Konsequenzen bewusst."),
