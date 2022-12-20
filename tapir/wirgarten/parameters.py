@@ -13,6 +13,7 @@ from tapir.configuration.models import (
     TapirParameterDefinitionImporter,
 )
 from tapir.configuration.parameter import parameter_definition, ParameterMeta
+from tapir.wirgarten.validators import validate_format_string, validate_html
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -36,6 +37,7 @@ class ParameterCategory:
     PICK_LIST = "Kommissionierliste"
     PAYMENT = "Zahlungen"
     DELIVERY = "Lieferung"
+    MEMBER_DASHBOARD = "Mitgliederbereich"
 
 
 class Parameter:
@@ -46,7 +48,6 @@ class Parameter:
     SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
-    COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
@@ -64,6 +65,24 @@ class Parameter:
     PAYMENT_BIC = f"{PREFIX}.payment.bic"
     PAYMENT_CREDITOR_ID = f"{PREFIX}.payment.creditor_id"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
+    MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
+        f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
+    )
+    MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT = (
+        f"{PREFIX}.member.dashboard.renewal_alert.unkown.content"
+    )
+    MEMBER_RENEWAL_ALERT_CANCELLED_HEADER = (
+        f"{PREFIX}.member.dashboard.renewal_alert.cancelled.header"
+    )
+    MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT = (
+        f"{PREFIX}.member.dashboard.renewal_alert.cancelled.content"
+    )
+    MEMBER_RENEWAL_ALERT_RENEWED_HEADER = (
+        f"{PREFIX}.member.dashboard.renewal_alert.renewed.header"
+    )
+    MEMBER_RENEWAL_ALERT_RENEWED_CONTENT = (
+        f"{PREFIX}.member.dashboard.renewal_alert.renewed.content"
+    )
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -137,17 +156,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.COOP,
             order_priority=1000,
             meta=ParameterMeta(validators=[MinValueValidator(limit_value=0)]),
-        )
-
-        parameter_definition(
-            key=Parameter.COOP_SHARE_PRICE,
-            label="Preis für einen Genossenschaftsanteil",
-            datatype=TapirParameterDatatype.DECIMAL,
-            initial_value=50.0,
-            description="Der Preis eines Genossenschaftsanteils in Euro.",
-            category=ParameterCategory.COOP,
-            order_priority=900,
-            meta=ParameterMeta(validators=[MinValueValidator(limit_value=1)]),
         )
 
         parameter_definition(
@@ -287,6 +295,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=800,
         )
 
+        # FIXME: obsolete
         parameter_definition(
             key=Parameter.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",
@@ -360,4 +369,97 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 ]
             ),
             order_priority=800,
+        )
+
+        MEMBER_RENEWAL_ALERT_VARS = [
+            "member",
+            "contract_end_date",
+            "next_period_start_date",
+            "next_period_end_date",
+        ]
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
+            label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{member.first_name}, dein Ernteanteil läuft bald aus!",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=1000,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
+            label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Als <strong>bestehendes Mitglied</strong> hast du <strong>Vorrang</strong> beim Zeichnen von Ernteanteilen und Zusatzabos. Ab sofort kannst du deine Verträge für die <strong>nächste Saison</strong> verlängern.<br/><small>Andernfalls enden deine Verträge automatisch am {contract_end_date}.</small>""",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=900,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
+            label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Schade, dass du gehst {member.first_name}!",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=800,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
+            label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Du wolltest keine neuen Ernteanteile für den Zeitraum <strong>{next_period.start_date} - {next_period.end_date}</strong> zeichnen. Hast du es dir anders überlegt? Dann verlängere jetzt hier deinen Erntevertrag.""",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=700,
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
+            label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Schön, dass du dabei bleibst {member.first_name}!",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=600,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
+            label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Deine Verträge wurden verlängert vom <strong>{next_period_start_date} - {next_period_end_date}</strong>.",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=500,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
+                    validate_html,
+                ]
+            ),
         )

@@ -27,6 +27,8 @@ from tapir.wirgarten.views.member import (
     get_add_chicken_shares_form,
     get_add_bestellcoop_form,
     get_add_coop_shares_form,
+    cancel_contract_at_period_end,
+    renew_contract_same_conditions,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -162,6 +164,16 @@ urlpatterns = [
         "members/<int:pk>/editpickuplocation",
         get_pickup_location_choice_form,
         name="member_pickup_location_choice",
+    ),
+    path(
+        "members/<int:pk>/cancelcontract",
+        cancel_contract_at_period_end,
+        name="member_cancel_contract",
+    ),
+    path(
+        "members/<int:pk>/renewcontract",
+        renew_contract_same_conditions,
+        name="member_renew_same_conditions",
     ),
     path(
         "members/<int:pk>/addharvestshares",

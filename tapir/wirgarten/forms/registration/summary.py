@@ -2,6 +2,7 @@ from importlib.resources import _
 
 from django import forms
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
@@ -79,7 +80,7 @@ class SummaryForm(forms.Form):
             )  # get pickup location text
 
         coop_shares_amount = initial["coop_shares"]["cooperative_shares"]
-        coop_share_price = get_parameter_value(Parameter.COOP_SHARE_PRICE)
+        coop_share_price = settings.COOP_SHARE_PRICE
         self.total_onetime = coop_shares_amount * coop_share_price
 
         self.coop_shares = {

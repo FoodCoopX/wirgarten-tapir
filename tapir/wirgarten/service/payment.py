@@ -70,7 +70,9 @@ def get_next_payment_date(reference_date: date = date.today()):
     return next_payment
 
 
-def get_active_subscriptions_grouped_by_product_type(member: Member) -> dict:
+def get_active_subscriptions_grouped_by_product_type(
+    member: Member, reference_date=date.today()
+) -> dict:
     """
     Get all active subscriptions for a member grouped by product types.
 
@@ -79,7 +81,7 @@ def get_active_subscriptions_grouped_by_product_type(member: Member) -> dict:
     """
 
     subscriptions = {}
-    for sub in Subscription.objects.filter(member=member):
+    for sub in get_active_subscriptions(reference_date).filter(member=member):
         product_type = sub.product.type.name
         if product_type not in subscriptions:
             subscriptions[product_type] = []
