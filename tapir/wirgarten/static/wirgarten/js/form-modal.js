@@ -7,11 +7,13 @@ const showLoadingIndicator = (show) => {
 
 const setFrameSize = () => {
     const form = frame.contentWindow.document.getElementsByTagName("form")
-    if(form.length > 0){
-        const newHeight = form[0].getBoundingClientRect().height
-        const newWidth = form[0].getBoundingClientRect().width
-        frame.style.minHeight = frame.style.maxHeight = newHeight + 'px';
-        frame.style.minWidth = frame.style.maxWidth = newWidth + 'px';
+    if(form.length > 0) {
+       if(form[0].offsetHeight && form[0].offsetWidth){
+           frame.style.minHeight = frame.style.maxHeight = form[0].offsetHeight + 'px';
+           frame.style.minWidth = frame.style.maxWidth = form[0].offsetWidth + 'px';
+       } else {
+            setTimeout(setFrameSize, 50);
+       }
     }
 }
 
@@ -51,7 +53,7 @@ const messageEvent = eventMethod === "attachEvent"
                 }
             }
 
-            frame.style.minHeight = frame.style.maxHeight = "0px";
+            frame.style.maxHeight = frame.style.minHeight = '0px';
             frame.src=url
 
             // Adjusting the iframe height onload event
@@ -75,13 +77,12 @@ const messageEvent = eventMethod === "attachEvent"
     }
 
 MSG_HANDLERS = [
-        ["modal-close", () => FormModal.close()],
+        ["modal-close", FormModal.close],
         ["modal-save-successful", (data) => data.url && data.url != 'None' ? window.location.replace(data.url) : FormModal.close()],
         ["modal-loading-spinner", () => {
-            frame.style.minHeight = frame.style.maxHeight = "0px";
             showLoadingIndicator(true)
         }],
-        ["modal-content-resized", () => setFrameSize()]
+        ["modal-content-resized", setFrameSize]
     ]
 
 const initMessageHandlers = () => {
