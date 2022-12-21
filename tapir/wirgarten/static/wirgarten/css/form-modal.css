@@ -1,5 +1,5 @@
 #content-frame {
-   -webkit-transition-property: min-height, max-height;
+  -webkit-transition-property: min-height, max-height;
   -moz-transition-property: min-height, max-height;
   -ms-transition-property: min-height, max-height;
   -o-transition-property: min-height, max-height;
