@@ -59,16 +59,14 @@ def transfer_coop_shares(
         mandate_ref=mandate_ref,
     )
 
-    # TODO: can we delete the ShareOwnership if quantity == 0 ?
     quantity_to_transfer = quantity
-    while quantity_to_transfer > 0:
-        for oo in origin_ownerships:
-            if quantity_to_transfer < 1:
-                break
-            delta = min(quantity_to_transfer, oo.quantity)
-            oo.quantity -= delta
-            oo.save()
-            quantity_to_transfer -= delta
+    for oo in origin_ownerships:
+        if quantity_to_transfer < 1:
+            break
+        delta = min(quantity_to_transfer, oo.quantity)
+        oo.quantity -= delta
+        quantity_to_transfer -= delta
+        oo.save()
 
     origin_member = Member.objects.get(pk=origin_member_id)
 
@@ -104,7 +102,7 @@ def create_mandate_ref(member: int | str | Member, coop_shares: bool):
     )
 
 
-def resolve_member_id(member):
+def resolve_member_id(member: int | str | Member):
     return member.id if type(member) is Member else member
 
 

@@ -1,6 +1,5 @@
 from django.urls import path
 
-from tapir.wirgarten.models import WaitingListEntry
 from tapir.wirgarten.views import (
     RegistrationWizardView,
     RegistrationWizardConfirmView,
@@ -16,7 +15,6 @@ from tapir.wirgarten.views.member import (
     get_coop_share_transfer_form,
     get_member_personal_data_create_form,
     get_harvest_shares_waiting_list_form,
-    WaitingListFilter,
     WaitingListView,
     export_waitinglist,
     get_add_harvest_shares_form,
@@ -29,6 +27,7 @@ from tapir.wirgarten.views.member import (
     get_add_coop_shares_form,
     cancel_contract_at_period_end,
     renew_contract_same_conditions,
+    SubscriptionListView,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -201,6 +200,7 @@ urlpatterns = [
         get_coop_share_transfer_form,
         name="member_coopshare_transfer",
     ),
+    path("contracts", SubscriptionListView.as_view(), name="subscription_list"),
     path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(
         "payments/<int:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",

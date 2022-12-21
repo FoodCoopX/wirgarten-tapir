@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load core %}
 {% load tapir_static %}
+{% load wirgarten %}
 {% load django_bootstrap5 %}
 
 {% block title %}
@@ -43,7 +44,7 @@
                     <th>{% translate "Nachname" %}</th>
                     <th>{% translate "Geburtstag" %}</th>
                     <th>{% translate "Email" %}</th>
-                    <th>{% translate "Beitrittsdatum" %}</th>
+                    <th>{% translate "Registriert am" %}</th>
                 </tr>
                 </thead>
                 {% for member in filter.qs %}
@@ -54,7 +55,7 @@
                     <td class="align-middle">{{ member.last_name }}</td>
                     <td class="align-middle">{{ member.birthdate }}</td>
                     <td class="align-middle">{{ member.email }}</td>
-                    <td class="align-middle">{{ member.date_joined }}</td>
+                    <td class="align-middle">{{ member.created_at|format_date }}</td>
                 </tr>
                 {% endfor %}
             </table>
