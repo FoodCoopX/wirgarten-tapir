@@ -17,18 +17,15 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
-    create_mandate_ref,
     get_or_create_mandate_ref,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
-    is_mandate_ref_for_coop_shares,
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
     get_available_product_types,
     get_free_product_capacity,
-    get_future_subscriptions,
 )
 
 SOLIDARITY_PRICES = [

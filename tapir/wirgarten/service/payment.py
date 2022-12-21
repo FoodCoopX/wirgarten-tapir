@@ -8,7 +8,11 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import ID_LENGTH
 from tapir.wirgarten.models import MandateReference, Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
+from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
+    get_product_price,
+    get_future_subscriptions,
+)
 
 MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -173,7 +177,7 @@ def get_solidarity_overplus(reference_date: date = date.today()):
             lambda sub: sub["quantity"]
             * sub["solidarity_price"]
             * float(get_product_price(sub["product"]).price),
-            get_active_subscriptions(reference_date).values(
+            get_future_subscriptions(reference_date).values(
                 "quantity", "product", "solidarity_price"
             ),
         )

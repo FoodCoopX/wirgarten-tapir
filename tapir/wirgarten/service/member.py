@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -98,7 +98,7 @@ def create_mandate_ref(member: int | str | Member, coop_shares: bool):
     member_id = resolve_member_id(member)
     ref = generate_mandate_ref(member_id, coop_shares)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=datetime.now()
+        ref=ref, member_id=member_id, start_ts=datetime.now(timezone.utc)
     )
 
 
@@ -107,7 +107,7 @@ def resolve_member_id(member: int | str | Member):
 
 
 def get_or_create_mandate_ref(
-    member: int | str | Member, coop_shares: bool
+    member: int | str | Member, coop_shares: bool = False
 ) -> MandateReference:
     member_id = member.id if type(member) is Member else member
 
