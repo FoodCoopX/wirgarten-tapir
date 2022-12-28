@@ -11,6 +11,7 @@ from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
+from tapir.wirgarten.utils import format_date
 
 
 class PickupLocation(TapirModel):
@@ -39,6 +40,9 @@ class PickupLocation(TapirModel):
             ),
         ]
 
+    def __str__(self):
+        return self.name
+
 
 class GrowingPeriod(TapirModel):
     """
@@ -47,6 +51,9 @@ class GrowingPeriod(TapirModel):
 
     start_date = models.DateField()
     end_date = models.DateField()
+
+    def __str__(self):
+        return f"{format_date(self.start_date)} - {format_date(self.end_date)}"
 
 
 class ProductType(TapirModel):
@@ -70,6 +77,9 @@ class ProductType(TapirModel):
                 name="unique_product_Type",
             )
         ]
+
+    def __str__(self):
+        return self.name
 
 
 class PickupLocationCapability(TapirModel):
@@ -128,6 +138,10 @@ class Member(TapirUser):
         _("Right of withdrawal consent"), null=True
     )
     privacy_consent = models.DateTimeField(_("Privacy consent"), null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
 
 
 class Product(TapirModel):
@@ -142,6 +156,9 @@ class Product(TapirModel):
     deleted = models.BooleanField(default=False)
 
     indexes = [Index(fields=["type"], name="idx_product_type")]
+
+    def __str__(self):
+        return f"{self.name} ({self.type.name})"
 
 
 class ProductPrice(TapirModel):
@@ -369,7 +386,7 @@ class EditFuturePaymentLogEntry(UpdateModelLogEntry):
         old_model=None,
         new_model=None,
         comment=None,
-        **kwargs
+        **kwargs,
     ):
         super(EditFuturePaymentLogEntry, self).populate(
             old_frozen=old_frozen,

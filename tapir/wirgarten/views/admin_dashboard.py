@@ -25,12 +25,7 @@ from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_future_subscriptions,
 )
-
-
-def format_currency(number):
-    format_str = "{{:,.{}f}}".format(2)
-    number_str = format_str.format(number)
-    return number_str.replace(",", "X").replace(".", ",").replace("X", ".")
+from tapir.wirgarten.utils import format_currency
 
 
 class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):

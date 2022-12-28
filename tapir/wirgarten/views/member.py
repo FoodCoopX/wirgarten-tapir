@@ -17,7 +17,13 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
-from django_filters import FilterSet, CharFilter, ChoiceFilter
+from django_filters import (
+    FilterSet,
+    CharFilter,
+    ChoiceFilter,
+    OrderingFilter,
+    ModelChoiceFilter,
+)
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
@@ -54,6 +60,9 @@ from tapir.wirgarten.models import (
     MandateReference,
     WaitingListEntry,
     PickupLocationCapability,
+    PickupLocation,
+    ProductType,
+    Product,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import begin_csv_string
@@ -83,19 +92,42 @@ from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
 
 
+# FIXME: this file needs some serious refactoring. Some of the functions should either be generalized service functions or private functions.
+
+
 class MemberFilter(FilterSet):
     first_name = CharFilter(lookup_expr="icontains")
     last_name = CharFilter(lookup_expr="icontains")
     email = CharFilter(lookup_expr="icontains")
+    o = OrderingFilter(
+        label=_("Sortierung"),
+        initial=0,
+        choices=(
+            ("-created_at", "⮟ Registriert am"),
+            ("created_at", "⮝ Registriert am"),
+        ),
+        required=True,
+        empty_label=None,
+    )
 
     class Meta:
         model = Member
         fields = ["first_name", "last_name", "email"]
 
+    def __init__(self, data=None, *args, **kwargs):
+        if data is None:
+            data = {"o": "-created_at"}
+        else:
+            data = data.copy()
+
+            if "o" not in data:
+                data["o"] = "-created_at"
+
+        super(MemberFilter, self).__init__(data, *args, **kwargs)
+
 
 class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
-    ordering = ["date_joined"]
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/member/member_filter.html"
 
@@ -971,3 +1003,71 @@ def export_waitinglist(request, **kwargs):
     response = HttpResponse("".join(output.csv_string), content_type=mime_type)
     response["Content-Disposition"] = "attachment; filename=%s" % filename
     return response
+
+
+class SubscriptionListFilter(FilterSet):
+    period = ModelChoiceFilter(
+        label=_("Anbauperiode"),
+        queryset=GrowingPeriod.objects.all().order_by("-start_date"),
+        required=True,
+    )
+    member = ModelChoiceFilter(
+        label=_("Mitglied"),
+        queryset=Member.objects.all()
+        .order_by("first_name")
+        .order_by("last_name")
+        .order_by("-created_at"),
+    )
+    member__pickup_location = ModelChoiceFilter(
+        label=_("Abholort"), queryset=PickupLocation.objects.all().order_by("name")
+    )
+    product__type = ModelChoiceFilter(
+        label=_("Vertragsart"), queryset=ProductType.objects.all().order_by("name")
+    )
+    product = ModelChoiceFilter(label=_("Variante"), queryset=Product.objects.all())
+    o = OrderingFilter(
+        label=_("Sortierung"),
+        initial=0,
+        choices=(
+            ("-created_at", "⮟ Abgeschlossen am"),
+            ("created_at", "⮝ Abgeschlossen am"),
+        ),
+        required=True,
+        empty_label=None,
+    )
+
+    class Meta:
+        model = Subscription
+        fields = []
+
+    def __init__(self, data=None, *args, **kwargs):
+        super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
+
+        def get_default_period_filter_value():
+            today = date.today()
+            return (
+                self.filters["period"]
+                .queryset.filter(start_date__lte=today, end_date__gte=today)
+                .first()
+                .id
+            )
+
+        if data is None:
+            data = {"o": "-created_at", "period": get_default_period_filter_value()}
+        else:
+            data = data.copy()
+
+            if "o" not in data:
+                data["o"] = "-created_at"
+
+            if "period" not in data:
+                data["period"] = get_default_period_filter_value()
+
+        super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
+
+
+class SubscriptionListView(PermissionRequiredMixin, FilterView):
+    filterset_class = SubscriptionListFilter
+    ordering = ["-created_at"]
+    permission_required = Permission.Accounts.VIEW
+    template_name = "wirgarten/subscription/subscription_filter.html"
