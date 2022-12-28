@@ -79,14 +79,6 @@ FORMS = [
 ]
 
 
-def show_harvest_shares(wizard=None) -> bool:
-    return is_harvest_shares_available()
-
-
-def dont_show_harvest_shares(wizard=None) -> bool:
-    return not show_harvest_shares(wizard)
-
-
 def has_selected_harvest_shares(wizard) -> bool:
     if (
         "step_data" in wizard.storage.data
@@ -96,29 +88,6 @@ def has_selected_harvest_shares(wizard) -> bool:
             if key.startswith("Harvest Shares-harvest_shares_") and int(val[0]) > 0:
                 return True
         return False
-
-
-def show_coop_shares(x):
-    return get_parameter_value(
-        Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
-    ) or has_selected_harvest_shares(x)
-
-
-def dont_show_coop_shares(x):
-    return not show_coop_shares(x)
-
-
-CONDITIONS = {
-    STEP_HARVEST_SHARES: show_harvest_shares,
-    STEP_NO_HARVEST_SHARES_AVAILABLE: dont_show_harvest_shares,
-    STEP_COOP_SHARES: show_coop_shares,
-    STEP_NO_COOP_SHARES_AVAILABLE: dont_show_coop_shares,
-    STEP_ADDITIONAL_SHARES: lambda x: has_selected_harvest_shares(x)
-    and is_chicken_shares_available(),
-    STEP_BESTELLCOOP: lambda x: has_selected_harvest_shares(x)
-    and is_bestellcoop_available(),
-    STEP_PICKUP_LOCATION: has_selected_harvest_shares,
-}
 
 
 def save_member(form_dict):
@@ -141,12 +110,45 @@ def save_member(form_dict):
     return create_member(member)
 
 
+def init_conditions():
+    try:
+        _show_harvest_shares = is_harvest_shares_available()
+        _coop_shares_without_harvest_shares_possible = get_parameter_value(
+            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+        )
+        _chicken_shares_available = is_chicken_shares_available()
+        _bestellcoop_available = is_bestellcoop_available()
+
+        return {
+            STEP_HARVEST_SHARES: _show_harvest_shares,
+            STEP_NO_HARVEST_SHARES_AVAILABLE: not _show_harvest_shares,
+            STEP_COOP_SHARES: (lambda x: has_selected_harvest_shares(x))
+            if not _coop_shares_without_harvest_shares_possible
+            else True,
+            STEP_NO_COOP_SHARES_AVAILABLE: (
+                (lambda x: not has_selected_harvest_shares(x))
+                if not _coop_shares_without_harvest_shares_possible
+                else False
+            ),
+            STEP_ADDITIONAL_SHARES: has_selected_harvest_shares
+            if _chicken_shares_available
+            else False,
+            STEP_BESTELLCOOP: has_selected_harvest_shares
+            if _bestellcoop_available
+            else False,
+            STEP_PICKUP_LOCATION: has_selected_harvest_shares,
+        }
+    except Exception as e:
+        print("Could not init registration wizard conditions: ", e)
+
+
 @method_decorator(xframe_options_exempt, name="dispatch")
 @method_decorator(xframe_options_exempt, name="post")
 class RegistrationWizardView(CookieWizardView):
     template_name = "wirgarten/registration/registration_wizard.html"
     form_list = FORMS
-    condition_dict = CONDITIONS
+
+    condition_dict = init_conditions()
 
     finish_button_label = _("Bestellung abschließen")
 

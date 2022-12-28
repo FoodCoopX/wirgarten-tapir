@@ -164,7 +164,7 @@ def get_total_payment_amount(due_date: date) -> [Payment]:
     return sum(map(lambda x: float(x.amount), payments))
 
 
-def get_solidarity_overplus(reference_date: date = date.today()):
+def get_solidarity_overplus(reference_date: date = date.today()) -> float:
     """
     Returns the total solidarity price sum for the active subscriptions during the reference date.
 

@@ -87,10 +87,12 @@ class HarvestShareForm(forms.Form):
         self.n_columns = len(self.products)
         self.colspans = {"solidarity_price": self.n_columns}
 
-        self.solidarity_total = get_solidarity_total()
+        self.solidarity_total = f"{get_solidarity_total()}".replace(",", ".")
 
-        self.free_capacity = get_free_product_capacity(
-            harvest_share_products[0].type.id
+        self.free_capacity = (
+            f"{get_free_product_capacity(harvest_share_products[0].type.id)}".replace(
+                ",", "."
+            )
         )
 
         for prod in harvest_share_products:
