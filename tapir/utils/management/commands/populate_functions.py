@@ -2,12 +2,31 @@ import json
 import os
 import pathlib
 import random
+from datetime import date
 
+from django.db import transaction
 from tapir.accounts.models import TapirUser
+from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.models import (
+    Member,
+    ShareOwnership,
+    Subscription,
+    Product,
+    ProductType,
+    GrowingPeriod,
+    MandateReference,
+    Payment,
+)
 from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.service.member import (
+    create_member,
+    buy_cooperative_shares,
+    get_or_create_mandate_ref,
+    get_next_contract_start_date,
+)
 
 
 def get_test_users():
@@ -21,56 +40,129 @@ def get_test_users():
     return json.loads(json_string)["results"]
 
 
-USER_COUNT = 400
+USER_COUNT = 50
 
 
+@transaction.atomic
 def populate_users():
     # Users generated with https://randomuser.me
     print(f"Creating {USER_COUNT} users, this may take a while")
+    random.seed("wirgarten")
 
     parsed_users = get_test_users()
     for index, parsed_user in enumerate(parsed_users[:USER_COUNT]):
-        if index % 50 == 0:
-            print(str(index) + f"/{USER_COUNT}")
+        if (index + 1) % 10 == 0:
+            print(str(index + 1) + f"/{USER_COUNT}")
         json_user = JsonUser(parsed_user)
-        randomizer = index + 1
 
-        is_company = randomizer % 70 == 0
-        is_investing = randomizer % 7 == 0 or is_company
+        is_superuser = False
+        if json_user.get_username() == "roberto.cortes":
+            is_superuser = True
+        wirgarten_user = Member(
+            username=json_user.get_username(),
+            is_staff=False,
+            is_active=True,
+            date_joined=json_user.date_joined,
+            password=json_user.get_username(),
+            is_superuser=is_superuser,
+            iban="DE02100500000054540402",
+            bic="BELADEBE",
+            account_owner=json_user.get_full_name(),
+            sepa_consent=json_user.date_joined,
+            privacy_consent=json_user.date_joined,
+            withdrawal_consent=json_user.date_joined,
+        )
+        copy_user_info(json_user, wirgarten_user)
+        wirgarten_user = create_member(wirgarten_user)
+        min_shares = create_subscriptions(wirgarten_user)
+        create_shareownership(wirgarten_user, min_shares)
+    print("Created Wirgarten test users")
 
-        tapir_user = None
-        if not is_company and not is_investing:
-            tapir_user = TapirUser.objects.create(
-                username=json_user.get_username(),
-            )
-            copy_user_info(json_user, tapir_user)
-            tapir_user.is_staff = False
-            tapir_user.is_active = True
-            tapir_user.date_joined = json_user.date_joined
-            tapir_user.password = tapir_user.username
-            tapir_user.save()
 
-    # start_date = json_user.date_joined
-    # end_date = None
-    # if randomizer % 40 == 0:
-    #     start_date = json_user.date_joined + datetime.timedelta(weeks=100 * 52)
-    # elif randomizer % 50 == 0:
-    #     end_date = json_user.date_joined + datetime.timedelta(weeks=100 * 52)
-    # elif randomizer % 60 == 0:
-    #     end_date = datetime.date(day=18, month=8, year=2020)
+def create_shareownership(wirgarten_user, min_shares):
+    shares = min_shares + random.randint(0, 3)
+    buy_cooperative_shares(quantity=shares, member=wirgarten_user)
 
-    print("Created fake users")
+
+def create_subscriptions(wirgarten_user):
+    product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+
+    today = date.today()
+    growing_period = GrowingPeriod.objects.get(
+        start_date__lte=today, end_date__gte=today
+    )
+    mandate_ref = get_or_create_mandate_ref(wirgarten_user.tapiruser_ptr_id, False)
+    start_date = get_next_contract_start_date(today)
+    end_date = growing_period.end_date
+
+    solidarity_price = 0.05
+    sp_int = random.randint(0, 12)
+    if sp_int == 8 or sp_int == 9:
+        solidarity_price = -0.5
+    if 7 >= sp_int >= 4:
+        solidarity_price = 0.0
+    if sp_int == 3:
+        solidarity_price = 0.10
+    if sp_int == 2:
+        solidarity_price = 0.15
+    if sp_int == 1:
+        solidarity_price = 0.20
+    if sp_int == 0:
+        solidarity_price = 0.25
+
+    already_subscribed = []
+    number_of_hs_subs = random.randint(1, 10)
+    if number_of_hs_subs > 3:
+        number_of_hs_subs = 1
+
+    min_shares = 0
+    for x in range(number_of_hs_subs):
+        product_int = random.randint(1, 4)
+        product_name = "S"
+        base_min_shares = 2
+        if product_int == 2:
+            product_name = "M"
+            base_min_shares = 3
+        if product_int == 3:
+            product_name = "L"
+            base_min_shares = 4
+        if product_int == 4:
+            product_name = "XL"
+            base_min_shares = 5
+
+        if product_name in already_subscribed:
+            continue
+
+        already_subscribed.append(product_name)
+
+        quantity_int = random.randint(1, 2)
+        min_shares += quantity_int * base_min_shares
+
+        product = Product.objects.get(type=product_type, name=product_name)
+        Subscription.objects.create(
+            member_id=wirgarten_user.tapiruser_ptr_id,
+            product=product,
+            period=growing_period,
+            quantity=quantity_int,
+            start_date=start_date,
+            end_date=end_date,
+            solidarity_price=solidarity_price,
+            mandate_ref=mandate_ref,
+        )
+    return min_shares
 
 
 def clear_data():
     print("Clearing data...")
     LogEntry.objects.all().delete()
     Subscription.objects.all().delete()
-    TapirUser.objects.filter(is_staff=False).delete()
+    ShareOwnership.objects.all().delete()
+    Payment.objects.all().delete()
+    MandateReference.objects.all().delete()
+    Member.objects.all().delete()
     print("Done")
 
 
 def reset_all_test_data():
-    random.seed("supercoop")
     clear_data()
     populate_users()

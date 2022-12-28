@@ -1,3 +1,5 @@
+import sys
+
 from django.core.management.base import BaseCommand
 
 from tapir.utils.management.commands.populate_functions import (
@@ -12,7 +14,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--users", help="Create 500 randomised users", action="store_true"
+            "--users", help="Create randomised users", action="store_true"
         )
         parser.add_argument(
             "--clear",
@@ -26,9 +28,16 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        def populate_all():
+            populate_users()
+
         if options["users"]:
             populate_users()
-        if options["clear"]:
+        elif options["clear"]:
             clear_data()
-        if options["reset_all"]:
-            reset_all_test_data()
+        elif options["reset_all"]:
+            clear_data()
+            populate_all()
+        else:
+            self.print_help("manage.py", "populate")
+            sys.exit(1)

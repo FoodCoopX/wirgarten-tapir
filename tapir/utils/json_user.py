@@ -56,6 +56,9 @@ class JsonUser:
     def get_username(self) -> str:
         return self.first_name.lower() + "." + self.last_name.lower()
 
+    def get_full_name(self) -> str:
+        return self.first_name + " " + self.last_name
+
     def get_display_name(self) -> str:
         return UserUtils.build_display_name(self.first_name, self.last_name)
 
