@@ -433,7 +433,7 @@ def create_or_update_default_tax_rate(
 def get_free_product_capacity(
     product_type_id: str, reference_date: date = date.today()
 ):
-    total_capacity = (
+    total_capacity = float(
         get_active_product_capacities(reference_date)
         .get(product_type_id=product_type_id)
         .capacity
@@ -441,7 +441,7 @@ def get_free_product_capacity(
 
     used_capacity = sum(
         map(
-            lambda sub: get_product_price(sub.product, reference_date).price
+            lambda sub: float(get_product_price(sub.product, reference_date).price)
             * sub.quantity,
             get_future_subscriptions(reference_date).filter(
                 product__type_id=product_type_id
@@ -470,12 +470,13 @@ def is_product_type_available(product_type: ProductType) -> bool:
     ) > get_cheapest_product_price(product_type)
 
 
+# FIXME: duplicate code. It would be nice to have generic parameters for each product type instead of hand written ones
 def is_harvest_shares_available() -> bool:
     param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name=ProductTypes.HARVEST_SHARES)
+            ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
         )
     )
 
@@ -485,7 +486,7 @@ def is_bestellcoop_available() -> bool:
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name=ProductTypes.BESTELLCOOP)
+            ProductType.objects.get(name=ProductTypes.BESTELLCOOP)
         )
     )
 
@@ -495,6 +496,6 @@ def is_chicken_shares_available() -> bool:
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            get_active_product_types().get(name=ProductTypes.CHICKEN_SHARES)
+            ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
         )
     )
