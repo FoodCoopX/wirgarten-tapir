@@ -238,7 +238,9 @@ class TrialCancellationForm(Form):
 
     @transaction.atomic
     def save(self):
-        cancel_coop = self.cleaned_data.pop("cancel_coop")
+        cancel_coop = "cancel_coop" in self.cleaned_data and self.cleaned_data.pop(
+            "cancel_coop"
+        )
         subs_to_cancel = self.subs.filter(
             id__in=[
                 key.replace("sub_", "")
