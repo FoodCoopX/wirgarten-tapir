@@ -250,6 +250,9 @@ class Subscription(TapirModel, Payable):
             2,
         )
 
+    def __str__(self):
+        return f"{self.quantity} × {self.product.name} {self.product.type.name}"
+
 
 class ShareOwnership(TapirModel, Payable):
     """

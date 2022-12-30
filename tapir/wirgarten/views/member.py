@@ -4,7 +4,6 @@ from copy import copy
 from datetime import date, datetime
 from importlib.resources import _
 
-from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -39,6 +38,7 @@ from tapir.wirgarten.forms.member.forms import (
     CoopShareTransferForm,
     PersonalDataForm,
     WaitingListForm,
+    TrialCancellationForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -65,12 +65,19 @@ from tapir.wirgarten.models import (
     Product,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import (
+    get_active_pickup_location_capabilities,
+    get_active_pickup_locations,
+)
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
     transfer_coop_shares,
     create_member,
     create_wait_list_entry,
     buy_cooperative_shares,
+    get_next_trial_end_date,
+    get_subscriptions_in_trial_period,
+    get_next_contract_start_date,
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -86,6 +93,7 @@ from tapir.wirgarten.service.products import (
     is_chicken_shares_available,
     is_bestellcoop_available,
     get_next_growing_period,
+    product_type_order_by,
 )
 from tapir.wirgarten.utils import format_date
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
@@ -151,7 +159,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             self.object, next_month
         )
         context["sub_quantities"] = {
-            k: sum(map(lambda x: x.quantity, v))
+            k: sum(
+                map(
+                    lambda x: x.quantity, filter(lambda x: x.cancellation_ts is None, v)
+                )
+            )
             for k, v in context["subscriptions"].items()
         }
         context["sub_totals"] = {
@@ -179,10 +191,29 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
+        over_next_contract_start_date = get_next_contract_start_date() + relativedelta(
+            months=1
+        )
+        additional_products_available = any(
+            sub.end_date > over_next_contract_start_date
+            for sub in context["subscriptions"][ProductTypes.HARVEST_SHARES]
+        )
+
         context["available_product_types"] = {
             ProductTypes.HARVEST_SHARES: is_harvest_shares_available(),
-            ProductTypes.CHICKEN_SHARES: is_chicken_shares_available(),
-            ProductTypes.BESTELLCOOP: is_bestellcoop_available(),
+            ProductTypes.CHICKEN_SHARES: additional_products_available
+            and is_chicken_shares_available(),
+            ProductTypes.BESTELLCOOP: additional_products_available
+            and (
+                not (
+                    len(context["subscriptions"][ProductTypes.BESTELLCOOP]) > 0
+                    and context["subscriptions"][ProductTypes.BESTELLCOOP][0].quantity
+                    > 0
+                )
+                or context["subscriptions"][ProductTypes.BESTELLCOOP][0].cancellation_ts
+                is not None
+            )
+            and is_bestellcoop_available(),
         }
 
         if self.object.pickup_location:
@@ -192,14 +223,19 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     pickup_location=self.object.pickup_location
                 ),
             )
+        else:
+            capabilities = get_active_pickup_location_capabilities()
+            context["pickup_location_map_data"] = get_pickup_locations_map_data(
+                get_active_pickup_locations(capabilities), capabilities
+            )
 
         context["deliveries"] = generate_future_deliveries(self.object)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         prev_payments = get_previous_payments(self.object.pk)
-        now = datetime.now()
+        now = date.today()
         for payment in prev_payments:
-            if parser.parse(payment["due_date"]) > now:
+            if payment["due_date"] >= now:
                 context["next_payment"] = payment
             else:
                 break
@@ -216,8 +252,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         #  - show_renewal_warning = less than 2 months before next period starts
         #  - add_shares_disallowed = less than 1 month
         #  - renewal_status = "unknown", "renewed", "cancelled"
-
         self.add_renewal_notice_context(context, next_month, today)
+
+        context["next_trial_end_date"] = get_next_trial_end_date()
+        if get_subscriptions_in_trial_period(self.object.pk).exists():
+            context["show_trial_period_notice"] = True
 
         return context
 
@@ -380,7 +419,7 @@ def generate_future_payments(member_id, prev_payments: list, limit: int = None):
 
             for mandate_ref, values in groups:
                 values = list(values)
-                due_date = next_payment_date.isoformat()
+                due_date = next_payment_date
 
                 if (mandate_ref, due_date) not in prev_payments:
                     amount = get_total_price_for_subs(values)
@@ -453,7 +492,7 @@ def sub_to_dict(sub):
 def payment_to_dict(payment: Payment) -> dict:
     subs = get_subs_or_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
     return {
-        "due_date": payment.due_date.isoformat(),
+        "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
         "calculated_amount": round(sum(map(lambda x: x["total_price"], subs)), 2),
@@ -496,7 +535,7 @@ class MemberPaymentsView(
 
         return sorted(
             prev_payments + future_payments,
-            key=lambda x: x["due_date"] + x["mandate_ref"].ref,
+            key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
         )
 
 
@@ -931,6 +970,23 @@ def get_add_coop_shares_form(request, **kwargs):
     )
 
 
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+def get_cancel_trial_form(request, **kwargs):
+    member_id = kwargs["pk"]
+    check_permission_or_self(member_id, request)
+
+    return get_form_modal(
+        request=request,
+        form=TrialCancellationForm,
+        handler=lambda x: x.save(),
+        redirect_url_resolver=lambda _: member_detail_url(member_id)
+        + "?cancelled=true",
+        **kwargs,
+    )
+
+
 class WaitingListFilter(FilterSet):
     type = ChoiceFilter(
         label=_("Warteliste"),
@@ -1022,7 +1078,8 @@ class SubscriptionListFilter(FilterSet):
         label=_("Abholort"), queryset=PickupLocation.objects.all().order_by("name")
     )
     product__type = ModelChoiceFilter(
-        label=_("Vertragsart"), queryset=ProductType.objects.all().order_by("name")
+        label=_("Vertragsart"),
+        queryset=ProductType.objects.all().order_by(*product_type_order_by()),
     )
     product = ModelChoiceFilter(label=_("Variante"), queryset=Product.objects.all())
     o = OrderingFilter(
@@ -1071,3 +1128,11 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
     ordering = ["-created_at"]
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/subscription/subscription_filter.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["next_trial_end_date"] = get_next_trial_end_date()
+        context["latest_trial_start_date"] = context[
+            "next_trial_end_date"
+        ] + relativedelta(day=1)
+        return context

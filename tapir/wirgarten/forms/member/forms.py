@@ -1,7 +1,15 @@
+from datetime import datetime
 from importlib.resources import _
 
+from django.core.mail import EmailMultiAlternatives
+from django.core.validators import (
+    EmailValidator,
+)
+from django.db import transaction
+from django.db.models import Sum
 from django.forms import (
     Form,
+    CheckboxInput,
     ModelForm,
     BooleanField,
     DecimalField,
@@ -9,15 +17,16 @@ from django.forms import (
     ChoiceField,
     IntegerField,
 )
-from django.core.validators import (
-    EmailValidator,
-)
-from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField, DateInput
 from tapir.wirgarten.models import Payment, Member, ShareOwnership
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import (
+    get_subscriptions_in_trial_period,
+    get_next_trial_end_date,
+)
+from tapir.wirgarten.utils import format_date
 
 
 class PersonalDataForm(ModelForm):
@@ -148,3 +157,123 @@ class WaitingListForm(Form):
                 privacy_link=get_parameter_value(Parameter.SITE_PRIVACY_LINK),
             ),
         )
+
+
+class TrialCancellationForm(Form):
+    KEY_PREFIX = "sub_"
+    BASE_PROD_TYPE_ATTR = "data-base-product-type"
+
+    template_name = "wirgarten/member/trial_cancellation_form.html"
+
+    def __init__(self, *args, **kwargs):
+        self.member_id = kwargs.pop("pk")
+        super(TrialCancellationForm, self).__init__(*args, **kwargs)
+
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        self.subs = get_subscriptions_in_trial_period(self.member_id)
+        self.next_trial_end_date = get_next_trial_end_date()
+
+        def is_new_member() -> bool:
+            try:
+                self.share_ownership = ShareOwnership.objects.get(
+                    member_id=self.member_id
+                )
+                return self.share_ownership.entry_date > self.next_trial_end_date
+            except (
+                ShareOwnership.DoesNotExist,
+                ShareOwnership.MultipleObjectsReturned,
+            ):
+                return (
+                    False  # new members should have exactly one share_ownership entity
+                )
+
+        for sub in self.subs:
+            key = f"{self.KEY_PREFIX}{sub.id}"
+            self.fields[key] = BooleanField(
+                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name}",
+                required=False,
+            )
+            if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:
+                self.fields[key].widget = CheckboxInput(
+                    attrs={"data-base-product-type": "true"}
+                )
+
+        if is_new_member():
+            self.fields["cancel_coop"] = BooleanField(
+                label="Mitgliedschaftsantrag zurückziehen", required=False
+            )
+
+    def is_valid(self):
+        all_base_product_types_selected = True
+        at_least_one_base_product_type_selected = False
+        at_least_one_additional_product_type_selected = False
+        for k, v in self.fields.items():
+            if k in self.data:
+                if self.BASE_PROD_TYPE_ATTR in v.widget.attrs:
+                    at_least_one_base_product_type_selected = True
+                    all_base_product_types_selected = False
+                else:
+                    at_least_one_additional_product_type_selected = True
+
+        if (
+            not at_least_one_base_product_type_selected
+            and not at_least_one_additional_product_type_selected
+        ):
+            self.add_error(
+                list(self.fields.keys())[0],
+                _(
+                    "Bitte wähle mindestens einen Vertrag aus, oder klick 'Abbrechen' falls du doch nicht kündigen möchtest."
+                ),
+            )
+        elif (
+            all_base_product_types_selected
+            and not at_least_one_additional_product_type_selected
+        ):
+            self.add_error(
+                list(self.fields.keys())[0],
+                _("Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."),
+            )
+
+        return not self._errors and super(TrialCancellationForm, self).is_valid()
+
+    @transaction.atomic
+    def save(self):
+        cancel_coop = self.cleaned_data.pop("cancel_coop")
+        subs_to_cancel = self.subs.filter(
+            id__in=[
+                key.replace("sub_", "")
+                for key, value in self.cleaned_data.items()
+                if value
+            ]
+        )
+        now = datetime.now()
+        for sub in subs_to_cancel:
+            sub.cancellation_ts = now
+            sub.end_date = self.next_trial_end_date
+            sub.save()
+
+        if cancel_coop and self.share_ownership:
+            Payment.objects.get(
+                mandate_ref=self.share_ownership.mandate_ref, due_date__gt=now
+            ).delete()
+            self.share_ownership.delete()  # TODO: create log entry
+
+        # send confirmation email
+        member = Member.objects.get(pk=self.member_id)
+        email = EmailMultiAlternatives(
+            subject=_("Kündigungsbestätigung"),
+            body=_(
+                f"Liebe/r {member.first_name},<br/><br/>"
+                f""
+                f"hiermit bestätigen wir dir die Kündigung deiner:<br/><br/>"
+                f""
+                f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>"
+                f""
+                f"zum <strong>{format_date(self.next_trial_end_date)}</strong>.<br/><br/>"
+                f"{get_parameter_value(Parameter.SITE_NAME)}"
+            ),
+            to=[member.email],
+            from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+        )
+        email.content_subtype = "html"
+        email.send()

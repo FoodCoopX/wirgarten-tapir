@@ -223,3 +223,19 @@ def create_wait_list_entry(
         privacy_consent=datetime.now(),
         type=type,
     )
+
+
+def get_next_trial_end_date(reference_date: date = date.today()):
+    return reference_date + relativedelta(day=1, months=2) + relativedelta(days=-1)
+
+
+def get_subscriptions_in_trial_period(member: int | str | Member):
+    member_id = resolve_member_id(member)
+    next_trial_end_date = get_next_trial_end_date()
+    return get_future_subscriptions().filter(
+        member_id=member_id,
+        cancellation_ts=None,
+        end_date__gt=next_trial_end_date,
+        start_date__lt=next_trial_end_date,
+        start_date__gt=next_trial_end_date + relativedelta(months=-1),
+    )

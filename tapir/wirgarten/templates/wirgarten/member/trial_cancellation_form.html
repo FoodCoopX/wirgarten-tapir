@@ -1,0 +1,60 @@
+{% load django_bootstrap5 %}
+{% load i18n %}
+{% load tapir_static %}
+
+<div class="form-fields">
+    <p>Bitte wähle aus, welche Verträge du kündigen möchtest.</p>
+    <div class="alert alert-warning">
+        <strong>Achtung:</strong> Wenn du alle Ernteanteile kündigst, kannst du auch keine Zusatzabos mehr beziehen.
+    </div>
+    {% for field in form %}
+    <div class="form-field" id="{{ field.name }}">
+        {% bootstrap_field field extra_attrs=field.extra_attrs %}
+    </div>
+    {% endfor %}
+</div>
+<script>
+    const baseProductCheckboxes = document.querySelectorAll('.form-check-input[data-base-product-type]:not(#id_cancel_coop)');
+    const additionalProductCheckboxes = document.querySelectorAll('.form-check-input:not([data-base-product-type]):not(#id_cancel_coop)');
+
+    for (const checkbox of baseProductCheckboxes) {
+        checkbox.addEventListener('change', () => {
+        if (Array.from(baseProductCheckboxes).every(it => it.checked)) {
+          for (const other of additionalProductCheckboxes) {
+            other.checked = true;
+            other.disabled = true;
+          }
+        } else {
+          for (const other of additionalProductCheckboxes) {
+            other.disabled = false;
+          }
+        }
+      });
+    }
+
+    const handleCheck = () => {
+        membershipCheckbox.disabled = !allCheckboxes.every(it => it.checked);
+        if(membershipCheckbox.disabled){
+            membershipCheckbox.checked = false;
+        }
+    }
+
+    const allCheckboxes = [...baseProductCheckboxes, ...additionalProductCheckboxes];
+    const membershipCheckbox = document.getElementById('id_cancel_coop');
+    allCheckboxes.forEach(it => it.addEventListener('change', handleCheck));
+
+
+    // remove disabled properties on submit (or the fields will be missing)
+    const form = document.querySelector('form');
+        form.addEventListener('submit', (event) => {
+            const disabledElements = form.querySelectorAll(':disabled');
+            disabledElements.forEach((element) => {
+            element.removeAttribute('disabled');
+        });
+    });
+
+
+    handleCheck();
+
+
+</script>

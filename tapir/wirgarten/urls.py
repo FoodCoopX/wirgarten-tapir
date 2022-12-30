@@ -28,6 +28,7 @@ from tapir.wirgarten.views.member import (
     cancel_contract_at_period_end,
     renew_contract_same_conditions,
     SubscriptionListView,
+    get_cancel_trial_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -193,6 +194,11 @@ urlpatterns = [
         "members/<int:pk>/addcoopshares",
         get_add_coop_shares_form,
         name="member_add_coop_shares",
+    ),
+    path(
+        "members/<int:pk>/canceltrial",
+        get_cancel_trial_form,
+        name="member_cancel_trial",
     ),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(

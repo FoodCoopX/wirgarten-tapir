@@ -10,7 +10,7 @@ search.addEventListener('input', (event) => {
 
 const handleSearch = (query) => {
     for(const param of document.getElementsByClassName('single-parameter')){
-        if(!param.outerText.toLowerCase().includes(query)){
+        if(!param.innerHTML.toLowerCase().includes(query)){
             param.style.display = 'none'
         } else {
             param.style.display = 'block'

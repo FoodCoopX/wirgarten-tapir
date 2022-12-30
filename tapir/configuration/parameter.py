@@ -40,7 +40,7 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
 
 def get_parameter_value(key: str):
     try:
-        param = TapirParameter.objects.get(pk=key)
+        param = TapirParameter.objects.get(key=key)
         return param.get_value()
     except ObjectDoesNotExist:
         raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))

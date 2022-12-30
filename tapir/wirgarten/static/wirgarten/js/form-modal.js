@@ -80,6 +80,7 @@ MSG_HANDLERS = [
         ["modal-close", FormModal.close],
         ["modal-save-successful", (data) => data.url && data.url != 'None' ? window.location.replace(data.url) : FormModal.close()],
         ["modal-loading-spinner", () => {
+            frame.style.minHeight = frame.style.maxHeight = '0px';
             showLoadingIndicator(true)
         }],
         ["modal-content-resized", setFrameSize]
