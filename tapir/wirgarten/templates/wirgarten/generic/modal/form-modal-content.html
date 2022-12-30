@@ -12,10 +12,19 @@
         {% if form.template_name %}
         {% include form.template_name %}
         {% else %}
-        <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);" class="form-fields">
+        <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
+             class="form-fields">
             {% for field in form %}
-            <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field" id="{{ field.name }}">
+            <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field"
+                 id="{{ field.name }}">
+                {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' or field.name == 'receiver' %}
+                <div class="mb-3 searchable-select">
+                    <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
+                    {{ field }}
+                </div>
+                {% else %}
                 {% bootstrap_field field %}
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -36,6 +45,7 @@
     const showLoadingSpinner = () => {
         parent.postMessage({type:"modal-loading-spinner"}, "*")
     }
+
 
 </script>
 

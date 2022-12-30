@@ -13,6 +13,8 @@ from tapir.configuration.models import (
     TapirParameterDefinitionImporter,
 )
 from tapir.configuration.parameter import parameter_definition, ParameterMeta
+from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.validators import validate_format_string, validate_html
 
 OPTIONS_WEEKDAYS = [
@@ -50,6 +52,7 @@ class Parameter:
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
+    COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     CHICKEN_SHARES_SUBSCRIBABLE = f"{PREFIX}.chicken.is_subscribable"
@@ -461,5 +464,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                     validate_html,
                 ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.COOP_BASE_PRODUCT_TYPE,
+            label="Basis Produkttyp",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
+            category=ParameterCategory.COOP,
+            meta=ParameterMeta(
+                options=map(lambda x: (x.id, x.name), ProductType.objects.all())
             ),
         )

@@ -22,9 +22,10 @@
                    aria-label="{% translate 'Warteliste Einträge' %}">
                 <thead>
                 <tr>
+                    <th></th>
                     <th>{% translate "Mitglied" %}</th>
                     <th style="text-align:center">{% translate "Abgeschlossen am" %}</th>
-                    <th style="text-align:center">{% translate "Vertragsstart" %}</th>
+                    <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
                     <th style="text-align:center">{% translate "Vertrag" %}</th>
                     <th style="text-align:center">{% translate "Variante" %}</th>
                     <th style="text-align:center">{% translate "Solidarpreis" %}</th>
@@ -38,9 +39,24 @@
                 {% for _ in range %}
                 <tr id="entry-{{entry.id}}"
                     class="tr-clickable entry-row">
+                    <td>
+                        {% if entry.cancellation_ts %}
+                        <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
+                              title="Gekündigt am {{entry.cancellation_ts|format_date}}"
+                              class="material-icons">free_cancellation</span>
+                        {% elif entry.start_date == latest_trial_start_date %}
+                        <span style="color:var(--bs-warning)" data-bs-toggle="tooltip" data-bs-placement="top"
+                              title="Probezeitraum läuft bis zum {{next_trial_end_date|format_date}}"
+                              class="material-icons">calendar_month</span>
+                        {% else %}
+                        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
+                              title="Vertrag läuft bis {{entry.end_date|format_date}}"
+                              class="material-icons">task_alt</span>
+                        {% endif %}
+                    </td>
                     <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
                     <td style="text-align:center">{{ entry.created_at|format_date }}</td>
-                    <td style="text-align:center">{{ entry.start_date|format_date }}</td>
+                    <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
                     <td style="text-align:center">{{ entry.product.type.name }}</td>
                     <td style="text-align:center">{{ entry.product.name }}</td>
                     <td style="text-align:center">{% if entry.solidarity_price > 0 %}{{ entry.solidarity_price|format_percent }}{% else %}-{% endif %}</td>

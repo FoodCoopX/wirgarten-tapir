@@ -1,4 +1,5 @@
 import itertools
+from collections import OrderedDict
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
@@ -84,7 +85,7 @@ def get_active_subscriptions_grouped_by_product_type(
     :return: a dict of product_type.name -> Subscription[]
     """
 
-    subscriptions = {}
+    subscriptions = OrderedDict()
     for sub in get_active_subscriptions(reference_date).filter(member=member):
         product_type = sub.product.type.name
         if product_type not in subscriptions:

@@ -60,7 +60,7 @@ class BestellCoopForm(forms.Form):
 
             if (
                 get_future_subscriptions(start_date)
-                .filter(member_id=member_id, product=self.product)
+                .filter(member_id=member_id, product=self.product, cancellation_ts=None)
                 .exists()
             ):
                 # TODO: Member already has a BestellCoop subscription,

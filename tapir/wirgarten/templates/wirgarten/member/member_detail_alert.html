@@ -1,5 +1,30 @@
 {% load configuration %}
+{% load wirgarten %}
 
+<div id="cancellation-confirmation" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading">Kündigung eingegangen</h4>
+    <p>Deine Kündigung des Ernteanteils, sowie ggf. etwaiger Zusatzabos und der Mitgliedschaft in der BestellCoop zum
+        <strong>{% if contract_end_date %}{{contract_end_date}}{% else %}{{next_trial_end_date|format_date}}{% endif %}</strong> ist eingangen und hiermit bestätigt.</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar</button>
+    </div>
+</div>
+
+{% if show_trial_period_notice %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">Probezeitraum</h4>
+    <p>Du hast bis zum
+        <strong>{{next_trial_end_date|format_date}}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
+    </p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-danger" onclick="handleTrialCancellation()">Jetzt kündigen</button>
+    </div>
+</div>
+{% endif %}
+
+{% if show_renewal_warning %}
 {% if renewal_status == 'unknown' %}
 <div class="alert alert-warning">
     <h4 class="alert-heading">{{renewal_alert.unknown.header|safe}}</h4>
@@ -11,16 +36,6 @@
     </div>
 </div>
 {% elif renewal_status == 'cancelled' %}
-<div id="cancellation-confirmation" style="display:none" class="alert alert-success">
-    <h4 class="alert-heading">Kündigung eingegangen</h4>
-    <p>Deine Kündigung des Ernteanteils, sowie etwaiger Zusatzabos und der Mitgliedschaft in der BestellCoop zum
-        <strong>{{contract_end_date}}</strong> ist eingangen und hiermit bestätigt.</p>
-    <hr>
-    <div style="float:right">
-        <button type="button" class="btn btn-primary" onclick="handleConfirmCancelConfirmation()">Alles klar</button>
-    </div>
-</div>
-
 <div class="alert alert-info">
     <h4 class="alert-heading">{{renewal_alert.cancelled.header|safe}}</h4>
     <p>{{renewal_alert.cancelled.content|safe}}</p>
@@ -78,6 +93,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <script>
     const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
@@ -104,11 +120,5 @@
 
     const handleRenewChangeConditions = () => {
         alert("NOT YET IMPLEMENTED")
-    }
-
-    const handleConfirmCancelConfirmation = () => {
-        if(cancellationConfirmationElem){
-            cancellationConfirmationElem.style.display = 'none'
-        }
     }
 </script>

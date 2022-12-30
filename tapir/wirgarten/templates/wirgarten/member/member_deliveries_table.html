@@ -9,10 +9,14 @@
         <th style="text-align:center">
             {% translate 'Produkte' %}
         </th>
+        {% if not hide_location %}
         <th style="text-align:center">
             {% translate 'Abholort' %}
         </th>
+        {% endif %}
+        {% if not hide_info %}
         <th></th>
+        {% endif %}
     </tr>
     </thead>
     <tbody style="overflow-y: auto">
@@ -30,7 +34,9 @@
             </p>
         </td>
         <td style="text-align:center">
+            {% if not hide_location %}
             <strong>{{delivery.pickup_location.name}}</strong><br/>
+            {% endif %}
             {% if not hide_info %}
             <small>{{delivery.pickup_location.street}}<br/>
                 {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}</small>

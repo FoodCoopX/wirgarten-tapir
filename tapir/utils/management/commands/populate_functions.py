@@ -4,6 +4,7 @@ import pathlib
 import random
 from datetime import date
 
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from tapir.accounts.models import TapirUser
 from tapir.wirgarten.constants import ProductTypes
@@ -16,11 +17,13 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     MandateReference,
     Payment,
+    PickupLocation,
 )
 from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.service.delivery import get_active_pickup_locations
 from tapir.wirgarten.service.member import (
     create_member,
     buy_cooperative_shares,
@@ -58,6 +61,8 @@ def populate_users():
         is_superuser = False
         if json_user.get_username() == "roberto.cortes":
             is_superuser = True
+
+        pickup_locations = get_active_pickup_locations()
         wirgarten_user = Member(
             username=json_user.get_username(),
             is_staff=False,
@@ -71,6 +76,9 @@ def populate_users():
             sepa_consent=json_user.date_joined,
             privacy_consent=json_user.date_joined,
             withdrawal_consent=json_user.date_joined,
+            pickup_location=pickup_locations[
+                random.randint(0, len(pickup_locations) - 1)
+            ],
         )
         copy_user_info(json_user, wirgarten_user)
         wirgarten_user = create_member(wirgarten_user)
@@ -81,7 +89,11 @@ def populate_users():
 
 def create_shareownership(wirgarten_user, min_shares):
     shares = min_shares + random.randint(0, 3)
-    buy_cooperative_shares(quantity=shares, member=wirgarten_user)
+    buy_cooperative_shares(
+        quantity=shares,
+        member=wirgarten_user,
+        start_date=get_next_contract_start_date() + relativedelta(months=1),
+    )
 
 
 def create_subscriptions(wirgarten_user):

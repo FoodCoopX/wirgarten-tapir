@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from django.db.models import Value, Case, When, IntegerField
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
@@ -41,6 +42,34 @@ def get_total_price_for_subs(subs: [Payable]) -> float:
     )
 
 
+def product_type_order_by(id_field: str = "id", name_field: str = "name"):
+    """
+    The result of the function is meant to be passed to the order_by clause of QuerySets referencing (directly or indirectly) product types.
+    The base product type which is configured via parameter is the first result. In case the parameter is not there, only the name field will be used to order.
+
+    It is basically a workaround to use this order by condition in a static way although it depends on the parameter to be there.
+
+    :param id_field: name/path of the "id" field. E.g. "product_type__id"
+    :param name_field: name/path of the "name" field. E.g. "product_type__name"
+    :return: an array of order conditions
+    """
+
+    try:
+        return [
+            Case(
+                When(
+                    **{id_field: get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)},
+                    then=Value(0),
+                ),
+                default=1,
+                output_field=IntegerField(),
+            ),
+            name_field,
+        ]
+    except KeyError:
+        return [name_field]
+
+
 def get_active_product_types(reference_date: date = date.today()) -> iter:
     """
     Returns the product types which are active for the given reference date.
@@ -53,7 +82,7 @@ def get_active_product_types(reference_date: date = date.today()) -> iter:
         id__in=ProductCapacity.objects.filter(
             period__start_date__lte=reference_date, period__end_date__gte=reference_date
         ).values("product_type__id")
-    )
+    ).order_by(*product_type_order_by())
 
 
 def get_available_product_types(reference_date: date = date.today()) -> iter:
@@ -148,7 +177,7 @@ def get_active_product_capacities(reference_date: date = date.today()):
     """
     return ProductCapacity.objects.filter(
         period__start_date__lte=reference_date, period__end_date__gte=reference_date
-    )
+    ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
 def get_future_subscriptions(reference_date: date = date.today()):
@@ -158,7 +187,9 @@ def get_future_subscriptions(reference_date: date = date.today()):
     :param reference_date: the date on which the capacity must be active
     :return: queryset of active and future subscriptions
     """
-    return Subscription.objects.filter(end_date__gte=reference_date)
+    return Subscription.objects.filter(end_date__gte=reference_date).order_by(
+        *product_type_order_by("product__type_id", "product__type__name")
+    )
 
 
 def get_active_subscriptions(reference_date: date = date.today()):

@@ -9,7 +9,7 @@ from tapir.configuration.parameter import (
 
 
 def create_field(param: TapirParameter):
-    description = f"""<small><i>{param.key}</i></small><br/>{_(param.description)}"""
+    description = f"""{_(param.description)}<br/><span name="param-key" style="display:none"><small><i>{param.key}</i></small></span>"""
 
     param_meta = get_parameter_meta(param.key)
     if param_meta is None:

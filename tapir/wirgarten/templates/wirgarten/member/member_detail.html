@@ -16,9 +16,8 @@
 {% block content %}
 <div id="member-detail-container">
     <div id="member-detail-left-column">
-        {% if show_renewal_warning %}
-        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period %}
-        {% endif %}
+
+        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning %}
 
         <div id="member-personal-data" class="card" style="margin-bottom:1em">
             <h5 class="card-header d-flex justify-content-between align-items-center">
@@ -54,7 +53,7 @@
                     <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
                     <div class="col-8" id="tapir_user_birthdate">
                         {% if object.birthdate %}
-                        {{ object.birthdate|date:"d.m.Y" }}
+                        {{ object.birthdate|format_date }}
                         {% else %}
                         <span class="text-danger">{% translate "Missing" %}</span>
                         {% endif %}
@@ -121,10 +120,11 @@
                         <small>
                             {% for key, val in subscriptions.items %}
                             {% if key == type %}
-                            <span>{{ val.0.start_date }} - {{ val.0.end_date }}</span><br/>
+                            <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span><br/>
                             <div style="margin-top:0.5em; line-height:1.1em">
                                 {% for sub in val %}
-                                <span><strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
+                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A" {% endif %}>
+                                    <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                 ({% if sub.solidarity_price > 0%}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
                                 {% endif %}</span>
@@ -140,7 +140,9 @@
                     <span><strong>{{ sub_totals|get_value:type|default:'0.00' }}</strong> <small>€ / Monat</small>
                     </span>
                         <!-- FIXME: hardcoded product type names :( -->
+                        {% if available_product_types|get_value:type|default:False %}
                         {% if type == 'Ernteanteile' %}
+                        {% if coop_shares_total > 0 %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddHarvestShares()"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
@@ -148,8 +150,14 @@
                             add
                         </button>
                         {% else %}
-
-                        {% if available_product_types|get_value:type|default:False %}
+                        <button title="Du musst Mitglied der Genossenschaft sein um Erteanteile zeichnen zu können."
+                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                disabled
+                        >
+                            add
+                        </button>
+                        {% endif %}
+                        {% endif %}
                         {% if type == 'Hühneranteile' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddChickenShares()"
@@ -158,7 +166,7 @@
                             add
                         </button>
                         {% endif %}
-                        {% if type == 'BestellCoop' and sub_quantities|get_value:type == 0 %}
+                        {% if type == 'BestellCoop' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddBestellCoop()"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
@@ -174,16 +182,12 @@
                             add
                         </button>
                         {% endif %}
-                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-
-
     </div>
-
 
     <div id="member-detail-right-column">
         <div id="member-pickup-location" class="card">
@@ -198,7 +202,7 @@
             </h5>
             <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr;">
                 <div style="overflow-y: scroll; max-height: 30em; margin-right:1em;">
-                    {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True %}
+                    {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True hide_location=True %}
                 </div>
                 <div>
                     {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=pickup_location_map_data selected=object.pickup_location.id %}
@@ -216,7 +220,7 @@
                         </div>
                         <strong>Nächste Zahlung</strong><br/>
                         <small>
-                            am {{ next_payment.due_date }}<br/>
+                            am {{ next_payment.due_date|format_date }}<br/>
                             {{ next_payment.mandate_ref.ref }}
                         </small><br/>
                     </div>
@@ -278,6 +282,10 @@
 {% endif %}
 
 <script>
+    const handleTrialCancellation = () => {
+        FormModal.load('{% url 'wirgarten:member_cancel_trial' object.pk %}', 'Verträge kündigen')
+    }
+
     {% if add_shares_disallowed %}
         const handleAddHarvestShares = handleRenewal
         const handleAddChickenShares = handleRenewal
@@ -295,6 +303,8 @@
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
     {% endif %}
+
+
 
 </script>
 
