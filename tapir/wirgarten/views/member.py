@@ -158,12 +158,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, next_month
         )
+
+        print(context["subscriptions"])
+
         context["sub_quantities"] = {
-            k: sum(
-                map(
-                    lambda x: x.quantity, filter(lambda x: x.cancellation_ts is None, v)
-                )
-            )
+            k: sum(map(lambda x: x.quantity, v))
             for k, v in context["subscriptions"].items()
         }
         context["sub_totals"] = {

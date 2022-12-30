@@ -75,27 +75,6 @@ def get_next_payment_date(reference_date: date = date.today()):
     return next_payment
 
 
-def get_active_subscriptions_grouped_by_product_type(
-    member: Member, reference_date=date.today()
-) -> dict:
-    """
-    Get all active subscriptions for a member grouped by product types.
-
-    :param member: the Member instance
-    :return: a dict of product_type.name -> Subscription[]
-    """
-
-    subscriptions = OrderedDict()
-    for sub in get_active_subscriptions(reference_date).filter(member=member):
-        product_type = sub.product.type.name
-        if product_type not in subscriptions:
-            subscriptions[product_type] = []
-
-        subscriptions[product_type].append(sub)
-
-    return subscriptions
-
-
 def generate_new_payments(due_date: date) -> [Payment]:
     """
     Generates payments for the given due date. If a payment for this date and mandate_ref is already persisted, it will be skipped.
@@ -138,6 +117,27 @@ def generate_new_payments(due_date: date) -> [Payment]:
             )
 
     return payments
+
+
+def get_active_subscriptions_grouped_by_product_type(
+    member: Member, reference_date=date.today()
+) -> dict:
+    """
+    Get all active subscriptions for a member grouped by product types.
+
+    :param member: the Member instance
+    :return: a dict of product_type.name -> Subscription[]
+    """
+
+    subscriptions = OrderedDict()
+    for sub in get_active_subscriptions(reference_date).filter(member=member):
+        product_type = sub.product.type.name
+        if product_type not in subscriptions:
+            subscriptions[product_type] = []
+
+        subscriptions[product_type].append(sub)
+
+    return subscriptions
 
 
 def get_existing_payments(due_date: date) -> [Payment]:
