@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Sum
+from django.core.mail import EmailMultiAlternatives
 
 from tapir import settings
 from tapir.accounts.models import TapirUser, LdapPerson
@@ -15,10 +16,13 @@ from tapir.wirgarten.models import (
     ReceivedCoopSharesLogEntry,
     Payment,
     WaitingListEntry,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
+from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
+from tapir.wirgarten.utils import format_date
 
 
 @transaction.atomic
@@ -226,16 +230,45 @@ def create_wait_list_entry(
 
 
 def get_next_trial_end_date(reference_date: date = date.today()):
-    return reference_date + relativedelta(day=1, months=2) + relativedelta(days=-1)
+    return reference_date + relativedelta(day=1, months=1) + relativedelta(days=-1)
 
 
 def get_subscriptions_in_trial_period(member: int | str | Member):
     member_id = resolve_member_id(member)
-    next_trial_end_date = get_next_trial_end_date()
+    today = date.today()
+    min_start_date = today + relativedelta(day=1, months=-1)
+
     return get_future_subscriptions().filter(
         member_id=member_id,
         cancellation_ts=None,
-        end_date__gt=next_trial_end_date,
-        start_date__lt=next_trial_end_date,
-        start_date__gt=next_trial_end_date + relativedelta(months=-1),
+        start_date__gt=min_start_date,
     )
+
+
+def send_cancellation_confirmation_email(
+    member: int | str | Member, contract_end_date: date, subs_to_cancel: [Subscription]
+):
+    member_id = resolve_member_id(member)
+    member = Member.objects.get(pk=member_id)
+    email = EmailMultiAlternatives(
+        subject=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT),
+        body=get_parameter_value(
+            Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
+        ).format(
+            member=member,
+            contract_end_date=format_date(contract_end_date),
+            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
+            site_name=get_parameter_value(Parameter.SITE_NAME),
+            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
+        ),
+        to=[member.email],
+        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+    )
+    email.content_subtype = "html"
+    email.send()
+
+    send_email_member_contract_end_reminder.apply_async(
+        eta=contract_end_date, args=[member_id]
+    )
+
+    # TODO: Log entry!

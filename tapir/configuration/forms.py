@@ -1,6 +1,7 @@
 from importlib.resources import _
 
 from django import forms
+from django.forms import Textarea
 
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import (
@@ -17,7 +18,7 @@ def create_field(param: TapirParameter):
 
     param_value = param.get_value()
 
-    if param_meta.options is not None:
+    if param_meta.options is not None and len(param_meta.options) > 0:
         return forms.ChoiceField(
             label=_(param.label),
             help_text=description,
@@ -33,6 +34,7 @@ def create_field(param: TapirParameter):
             required=True,
             initial=param_value,
             validators=param_meta.validators,
+            widget=Textarea if param_meta.textarea else None,
         )
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
