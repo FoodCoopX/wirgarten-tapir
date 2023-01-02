@@ -40,6 +40,7 @@ class ParameterCategory:
     PAYMENT = "Zahlungen"
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
+    EMAIL = "Email"
 
 
 class Parameter:
@@ -48,6 +49,7 @@ class Parameter:
     SITE_CITY = f"{PREFIX}.site.city"
     SITE_EMAIL = f"{PREFIX}.site.email"
     SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
+    SITE_ADMIN_NAME = f"{PREFIX}.site.admin_name"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
@@ -85,6 +87,18 @@ class Parameter:
     )
     MEMBER_RENEWAL_ALERT_RENEWED_CONTENT = (
         f"{PREFIX}.member.dashboard.renewal_alert.renewed.content"
+    )
+    EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
+        f"{PREFIX}.email.cancellation_confirmation.subject"
+    )
+    EMAIL_CANCELLATION_CONFIRMATION_CONTENT = (
+        f"{PREFIX}.email.cancellation_confirmation.content"
+    )
+    EMAIL_CONTRACT_END_REMINDER_SUBJECT = (
+        f"{PREFIX}.email.contract_end_reminder.subject"
+    )
+    EMAIL_CONTRACT_END_REMINDER_CONTENT = (
+        f"{PREFIX}.email.contract_end_reminder.content"
     )
 
 
@@ -138,6 +152,15 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Die Admin Email-Adresse des WirGarten Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[EmailValidator()]),
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_ADMIN_NAME,
+            label="Admin/Ansprechpartner Name",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="TODO",
+            description="Wird in der Grußformel von Emails verwendet. Bsp: 'Viele Grüße von XXXX aus deinem WirGarten Lüneburg'",
+            category=ParameterCategory.SITE,
         )
 
         parameter_definition(
@@ -392,7 +415,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 validators=[
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ]
+                ],
             ),
         )
 
@@ -406,8 +429,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=900,
             meta=ParameterMeta(
                 validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ]
+                    validate_html,
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
+                ],
+                textarea=True,
             ),
         )
 
@@ -430,10 +455,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="""Du wolltest keine neuen Ernteanteile für den Zeitraum <strong>{next_period.start_date} - {next_period.end_date}</strong> zeichnen. Hast du es dir anders überlegt? Dann verlängere jetzt hier deinen Erntevertrag.""",
+            initial_value="""Du wolltest keine neuen Ernteanteile für den Zeitraum <strong>{next_period_start_date} - {next_period_end_date}</strong> zeichnen. Hast du es dir anders überlegt? Dann verlängere jetzt hier deinen Erntevertrag.""",
             description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=700,
+            meta=ParameterMeta(
+                textarea=True,
+                validators=[
+                    validate_html,
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
+                ],
+            ),
         )
 
         parameter_definition(
@@ -463,7 +495,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 validators=[
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                     validate_html,
-                ]
+                ],
+                textarea=True,
             ),
         )
 
@@ -475,6 +508,83 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
-                options=map(lambda x: (x.id, x.name), ProductType.objects.all())
+                options=list(map(lambda x: (x.id, x.name), ProductType.objects.all()))
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT,
+            label="Betreff: Email 'Kündigungsbestätigung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Kündigungsbestätigung",
+            description="Betreff der Email, die bei Kündigung sofort an das Mitglied verschickt wird.",
+            category=ParameterCategory.EMAIL,
+            order_priority=10000,
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT,
+            label="Inhalt: Email 'Kündigungsbestätigung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Moin {member.first_name}, 
+
+wir finden es sehr schade, dass Du deinen Erntevertrag kündigen willst, was wir dir hiermit zum <strong>{contract_end_date}</strong> bestätigen.
+
+Wir freuen uns, wenn du uns mehr über deine Kündigungsgründe erzählen würdest. Das hilft uns immer zu schauen, ob und was wir verbessern können.
+Für uns wäre es zudem sehr hilfreich, wenn Du dich mal in deinem Freundes- und Bekanntenkreis umhört, ob jemand deinen Ernteanteil eventuell übernehmen will, damit die Genossenschaft ausreichend finanziert ist. 
+Du kannst deinen Erntevertrag dann auch schon vor Ablauf des Vertrages auf diese Person übertragen. Melde dich gerne einfach. 
+
+Viele Grüße von {admin_name} aus deinem {site_name}""",
+            description="Inhalt der Email (HTML), die bei Kündigung sofort an das Mitglied verschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_end_date}, {contract_list}.",
+            category=ParameterCategory.EMAIL,
+            order_priority=9900,
+            meta=ParameterMeta(
+                validators=[
+                    validate_html,
+                    lambda x: validate_format_string(
+                        x, ["member", "admin_name", "site_name", "contract_end_date"]
+                    ),
+                ],
+                textarea=True,
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT,
+            label="Betreff: Email 'Vertrags-/Lieferende'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Dein letzter Ernteanteil",
+            description="Betreff der Email, die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
+            category=ParameterCategory.EMAIL,
+            order_priority=8000,
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT,
+            label="Inhalt: Email 'Kündigungsbestätigung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Moin {member.first_name},
+
+du hast deinen Erntevertrag beim {site_name} gekündigt und hast diese Woche deinen letzten Ernteanteil abgeholt. 
+Wir finden es toll, dass du diese ersten, aufregenden Gemüse-Jahre mit uns gemeinsam bestritten und gestaltet hast und wir dich mit WirGarten-Gemüse versorgen konnten. 
+Vielen Dank für dein Vertrauen und deine Unterstützung, denn ohne dich wäre dies alles nicht möglich gewesen!
+
+Umso mehr bedauern wir es, dass du gehst! Wir würden uns sehr freuen, wenn du eines Tages doch wieder Lust hast, mit uns die Agrarwende im Kleinen weiter zu gestalten und du wieder regionales Gemüse aus dem WirGarten genießen willst. 
+Und toll fänden wir es auch, wenn du uns deinen Freund*innen und Bekannten weiterempfiehlst! 
+Aber auch ohne Ernteanteil freuen wir uns natürlich, dich bald mal wieder im WirGarten oder anderswo zu treffen. 
+
+Viele Grüße und alles Gute,
+{admin_name} aus deinem {site_name}""",
+            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}",
+            category=ParameterCategory.EMAIL,
+            order_priority=7900,
+            meta=ParameterMeta(
+                validators=[
+                    validate_html,
+                    lambda x: validate_format_string(
+                        x, ["member", "admin_name", "site_name"]
+                    ),
+                ],
+                textarea=True,
             ),
         )

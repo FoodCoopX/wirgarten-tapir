@@ -1,7 +1,6 @@
 from datetime import datetime
 from importlib.resources import _
 
-from django.core.mail import EmailMultiAlternatives
 from django.core.validators import (
     EmailValidator,
 )
@@ -25,8 +24,8 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
     get_next_trial_end_date,
+    send_cancellation_confirmation_email,
 )
-from tapir.wirgarten.utils import format_date
 
 
 class PersonalDataForm(ModelForm):
@@ -260,22 +259,6 @@ class TrialCancellationForm(Form):
             ).delete()
             self.share_ownership.delete()  # TODO: create log entry
 
-        # send confirmation email
-        member = Member.objects.get(pk=self.member_id)
-        email = EmailMultiAlternatives(
-            subject=_("Kündigungsbestätigung"),
-            body=_(
-                f"Liebe/r {member.first_name},<br/><br/>"
-                f""
-                f"hiermit bestätigen wir dir die Kündigung deiner:<br/><br/>"
-                f""
-                f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>"
-                f""
-                f"zum <strong>{format_date(self.next_trial_end_date)}</strong>.<br/><br/>"
-                f"{get_parameter_value(Parameter.SITE_NAME)}"
-            ),
-            to=[member.email],
-            from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+        send_cancellation_confirmation_email(
+            self.member_id, self.next_trial_end_date, subs_to_cancel
         )
-        email.content_subtype = "html"
-        email.send()

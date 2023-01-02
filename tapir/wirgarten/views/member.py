@@ -78,6 +78,7 @@ from tapir.wirgarten.service.member import (
     get_next_trial_end_date,
     get_subscriptions_in_trial_period,
     get_next_contract_start_date,
+    send_cancellation_confirmation_email,
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -158,8 +159,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, next_month
         )
-
-        print(context["subscriptions"])
 
         context["sub_quantities"] = {
             k: sum(map(lambda x: x.quantity, v))
@@ -247,10 +246,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             ):
                 context["next_payment"] = next_payments[0]
 
-        # Renewal notice:
-        #  - show_renewal_warning = less than 2 months before next period starts
-        #  - add_shares_disallowed = less than 1 month
-        #  - renewal_status = "unknown", "renewed", "cancelled"
         self.add_renewal_notice_context(context, next_month, today)
 
         context["next_trial_end_date"] = get_next_trial_end_date()
@@ -260,10 +255,17 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         return context
 
     def add_renewal_notice_context(self, context, next_month, today):
+        """
+        Renewal notice:
+         - show_renewal_warning = less than 3 months before next period starts
+         - add_shares_disallowed = less than 1 month
+         - renewal_status = "unknown", "renewed", "cancelled"
+        """
+
         next_growing_period = get_next_growing_period(today)
         if (
             next_growing_period
-            and (today + relativedelta(months=2)) > next_growing_period.start_date
+            and (today + relativedelta(months=3)) > next_growing_period.start_date
         ):
             context["next_period"] = next_growing_period
             context["add_shares_disallowed"] = (
@@ -271,8 +273,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )  # 1 month before
 
             harvest_share_subs = context["subscriptions"][ProductTypes.HARVEST_SHARES]
-
-            print("################# ", harvest_share_subs)
 
             if len(harvest_share_subs) < 1:
                 context["show_renewal_warning"] = False
@@ -392,9 +392,12 @@ def cancel_contract_at_period_end(request, **kwargs):
     #    raise PermissionDenied("A member can only cancel a contract themself.")
 
     now = datetime.now()
-    for sub in get_future_subscriptions().filter(member_id=member_id):
+    subs = list(get_future_subscriptions().filter(member_id=member_id))
+    for sub in subs:
         sub.cancellation_ts = now
         sub.save()
+
+    send_cancellation_confirmation_email(member_id, subs[0].end_date, subs)
 
     return HttpResponseRedirect(member_detail_url(member_id) + "?cancelled=true")
 

@@ -4,6 +4,7 @@ from datetime import datetime
 from celery import shared_task
 from django.db import transaction
 from django.db.models import Sum
+from django.core.mail import EmailMultiAlternatives
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
@@ -15,6 +16,7 @@ from tapir.wirgarten.models import (
     PaymentTransaction,
     Product,
     PickupLocation,
+    Member,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
@@ -27,6 +29,7 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
 )
+from tapir.wirgarten.utils import format_date
 
 
 @shared_task
@@ -311,3 +314,20 @@ def export_sepa_payments():
     for p in payments:
         p.transaction = transaction
         p.save()
+
+
+@shared_task
+def send_email_member_contract_end_reminder(member_id):
+    member = Member.objects.get(pk=member_id)
+    email = EmailMultiAlternatives(
+        subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
+        body=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT).format(
+            member=member,
+            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
+            site_name=get_parameter_value(Parameter.SITE_NAME),
+        ),
+        to=[member.email],
+        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+    )
+    email.content_subtype = "html"
+    email.send()

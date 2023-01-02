@@ -8,9 +8,12 @@ from tapir.configuration.models import (
 
 
 class ParameterMeta:
-    def __init__(self, options: [tuple] = None, validators: [callable] = []):
+    def __init__(
+        self, options: [tuple] = None, validators: [callable] = [], textarea=False
+    ):
         self.options = options
         self.validators = validators
+        self.textarea = textarea
 
 
 class ParameterMetaInfo:
