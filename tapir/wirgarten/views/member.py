@@ -22,8 +22,10 @@ from django_filters import (
     ChoiceFilter,
     OrderingFilter,
     ModelChoiceFilter,
+    BooleanFilter,
 )
 from django_filters.views import FilterView
+from django.forms import CheckboxInput
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import (
@@ -1064,6 +1066,12 @@ def export_waitinglist(request, **kwargs):
 
 
 class SubscriptionListFilter(FilterSet):
+    show_only_trial_period = BooleanFilter(
+        label=_("Nur Verträge in der Probezeit anzeigen"),
+        field_name="show_only_trial_period",
+        method="filter_show_only_trial_period",
+        widget=CheckboxInput,
+    )
     period = ModelChoiceFilter(
         label=_("Anbauperiode"),
         queryset=GrowingPeriod.objects.all().order_by("-start_date"),
@@ -1100,29 +1108,25 @@ class SubscriptionListFilter(FilterSet):
         fields = []
 
     def __init__(self, data=None, *args, **kwargs):
-        super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
-
         def get_default_period_filter_value():
             today = date.today()
             return (
-                self.filters["period"]
-                .queryset.filter(start_date__lte=today, end_date__gte=today)
+                GrowingPeriod.objects.filter(start_date__lte=today, end_date__gte=today)
                 .first()
                 .id
             )
 
-        if data is None:
-            data = {"o": "-created_at", "period": get_default_period_filter_value()}
-        else:
-            data = data.copy()
-
-            if "o" not in data:
-                data["o"] = "-created_at"
-
-            if "period" not in data:
-                data["period"] = get_default_period_filter_value()
+        data = data.copy() if data else {}
+        data.setdefault("o", "-created_at")
+        data.setdefault("period", get_default_period_filter_value())
 
         super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
+
+    def filter_show_only_trial_period(self, queryset, name, value):
+        if value:
+            min_start_date = date.today() + relativedelta(day=1, months=-1)
+            return queryset.filter(start_date__gt=min_start_date, cancellation_ts=None)
+        return queryset
 
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):

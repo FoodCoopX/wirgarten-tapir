@@ -235,6 +235,9 @@ class Subscription(TapirModel, Payable):
     )
     created_at = models.DateTimeField(auto_now_add=True, null=False)
 
+    class Meta:
+        indexes = [models.Index(fields=["period_id", "created_at"])]
+
     def get_total_price(self):
         return round(
             self.quantity

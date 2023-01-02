@@ -43,7 +43,7 @@ def get_test_users():
     return json.loads(json_string)["results"]
 
 
-USER_COUNT = 50
+USER_COUNT = 200
 
 
 @transaction.atomic
