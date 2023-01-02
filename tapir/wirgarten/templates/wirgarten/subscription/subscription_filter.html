@@ -38,7 +38,8 @@
                 {% with ''|center:entry.quantity as range %}
                 {% for _ in range %}
                 <tr id="entry-{{entry.id}}"
-                    class="tr-clickable entry-row">
+                    class="tr-clickable entry-row tr-href"
+                    href="{% url 'wirgarten:member_detail' entry.member_id %}">
                     <td>
                         {% if entry.cancellation_ts %}
                         <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
