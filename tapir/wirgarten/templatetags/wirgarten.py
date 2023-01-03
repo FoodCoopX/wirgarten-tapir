@@ -17,6 +17,12 @@ def get_value(dictionary, key):
         return None
 
 
+@register.filter
+def remove(value, arg):
+    """Removes the specified argument from the input string."""
+    value.pop(arg, None)
+
+
 @register.filter(name="get_step_title")
 def get_step_title(step):
     return FORM_TITLES.get(step, step)
