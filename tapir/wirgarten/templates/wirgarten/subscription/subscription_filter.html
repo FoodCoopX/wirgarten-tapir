@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends 'wirgarten/generic/filter-list.html' %}
 
 {% load i18n %}
 {% load core %}
@@ -6,94 +6,56 @@
 {% load tapir_static %}
 {% load django_bootstrap5 %}
 
-{% block title %}
-{% translate "Verträge" %}
+{% block card_header %}
+<h4>{% translate 'Verträge' %}</h4>
 {% endblock %}
 
-{% block content %}
+{% block table_head %}
+<tr>
+    <th></th>
+    <th>{% translate "Mitglied" %}</th>
+    <th style="text-align:center">{% translate "Abgeschlossen am" %}</th>
+    <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
+    <th style="text-align:center">{% translate "Vertrag" %}</th>
+    <th style="text-align:center">{% translate "Variante" %}</th>
+    <th style="text-align:center">{% translate "Solidarpreis" %}</th>
+    <th style="text-align:center">{% translate "Abholort" %}</th>
+</tr>
+{% endblock %}
 
-<div style="margin-top: 2em; grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between">
-            <h4>{% translate "Verträge" %}</h4>
-        </div>
-        <div class="card-body">
-            <table class="table"
-                   aria-label="{% translate 'Warteliste Einträge' %}">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>{% translate "Mitglied" %}</th>
-                    <th style="text-align:center">{% translate "Abgeschlossen am" %}</th>
-                    <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
-                    <th style="text-align:center">{% translate "Vertrag" %}</th>
-                    <th style="text-align:center">{% translate "Variante" %}</th>
-                    <th style="text-align:center">{% translate "Solidarpreis" %}</th>
-                    <th style="text-align:center">{% translate "Abholort" %}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for entry in filter.qs %}
+{% block table_body %}
+{% for entry in object_list %}
 
-                {% with ''|center:entry.quantity as range %}
-                {% for _ in range %}
-                <tr id="entry-{{entry.id}}"
-                    class="tr-clickable entry-row tr-href"
-                    href="{% url 'wirgarten:member_detail' entry.member_id %}">
-                    <td>
-                        {% if entry.cancellation_ts %}
-                        <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
-                              title="Gekündigt am {{entry.cancellation_ts|format_date}}"
-                              class="material-icons">free_cancellation</span>
-                        {% elif entry.start_date == latest_trial_start_date %}
-                        <span style="color:var(--bs-warning)" data-bs-toggle="tooltip" data-bs-placement="top"
-                              title="Probezeitraum läuft bis zum {{next_trial_end_date|format_date}}"
-                              class="material-icons">calendar_month</span>
-                        {% else %}
-                        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
-                              title="Vertrag läuft bis {{entry.end_date|format_date}}"
-                              class="material-icons">task_alt</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
-                    <td style="text-align:center">{{ entry.created_at|format_date }}</td>
-                    <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
-                    <td style="text-align:center">{{ entry.product.type.name }}</td>
-                    <td style="text-align:center">{{ entry.product.name }}</td>
-                    <td style="text-align:center">{% if entry.solidarity_price > 0 %}{{ entry.solidarity_price|format_percent }}{% else %}-{% endif %}</td>
-                    <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
-                </tr>
-                {% endfor %}
-                {% endwith %}
-
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h4>{% translate "Filter" %}</h4>
-        </div>
-        <div class="card-body">
-            <form id="filter-form" method="get">
-                {% for field in filter.form %}
-                {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' %}
-                <div class="mb-3 searchable-select">
-                    <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
-                    {{ field }}
-                </div>
-                {% else %}
-                {% bootstrap_field field %}
-                {% endif %}
-                {% endfor %}
-                <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
-                    {% translate 'Suchen' %}
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+{% with ''|center:entry.quantity as range %}
+{% for _ in range %}
+<tr id="entry-{{entry.id}}"
+    class="tr-clickable entry-row tr-href"
+    href="{% url 'wirgarten:member_detail' entry.member_id %}">
+    <td>
+        {% if entry.cancellation_ts %}
+        <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
+              title="Gekündigt am {{entry.cancellation_ts|format_date}}"
+              class="material-icons">free_cancellation</span>
+        {% elif entry.start_date == latest_trial_start_date %}
+        <span style="color:var(--bs-warning)" data-bs-toggle="tooltip" data-bs-placement="top"
+              title="Probezeitraum läuft bis zum {{next_trial_end_date|format_date}}"
+              class="material-icons">calendar_month</span>
+        {% else %}
+        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
+              title="Vertrag läuft bis {{entry.end_date|format_date}}"
+              class="material-icons">task_alt</span>
+        {% endif %}
+    </td>
+    <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
+    <td style="text-align:center">{{ entry.created_at|format_date }}</td>
+    <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
+    <td style="text-align:center">{{ entry.product.type.name }}</td>
+    <td style="text-align:center">{{ entry.product.name }}</td>
+    <td style="text-align:center">{% if entry.solidarity_price > 0 %}{{ entry.solidarity_price|format_percent }}{% else %}-{% endif %}</td>
+    <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
+</tr>
+{% endfor %}
+{% endwith %}
+{% endfor %}
 
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "wirgarten/generic/filter-list.html" %}
 
 {% load i18n %}
 {% load core %}
@@ -10,76 +10,54 @@
 {% translate "Mitglieder" %}
 {% endblock %}
 
-{% block content %}
+{% block card_header %}
+<h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
+<span style="display: flex; flex-direction:row;">
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
+    <div style="width: 1em"></div>
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
+    {% if perms.payments.view %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
+    {% endif %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
+    <div style="width: 1em"></div>
+    {% if perms.accounts.manage %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
+    {% if perms.coop.manage %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
+    {% endif %}
+    <div style="width: 1em"></div>
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
+    {% endif %}
+</span>
+{% endblock %}
 
-<div style="margin-top: 2em; grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between">
-            <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
-            <span style="display: flex; flex-direction:row;">
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
-                <div style="width: 1em"></div>
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
-                {% if perms.payments.view %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowPayments()' disabled=True title='Zahlungsreihe anzeigen' type='info' icon='payments' class='needs-member' %}
-                {% endif %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleShowDeliveries()' disabled=True title='Lieferreihe anzeigen' type='info' icon='local_shipping' class='needs-member' %}
-                <div style="width: 1em"></div>
-                {% if perms.accounts.manage %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
-                {% if perms.coop.manage %}
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
-                {% endif %}
-                <div style="width: 1em"></div>
-                {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
-                {% endif %}
-            </span>
-        </div>
-        <div class="card-body">
-            <table class="table"
-                   aria-label="{% translate 'List of applicants' %}">
-                <thead>
-                <tr>
-                    <th>{% translate "Vorname" %}</th>
-                    <th>{% translate "Nachname" %}</th>
-                    <th>{% translate "Geburtstag" %}</th>
-                    <th>{% translate "Email" %}</th>
-                    <th>{% translate "Registriert am" %}</th>
-                </tr>
-                </thead>
-                {% for member in filter.qs %}
+{% block table_head %}
+<tr>
+    <th>{% translate "Vorname" %}</th>
+    <th>{% translate "Nachname" %}</th>
+    <th>{% translate "Geburtstag" %}</th>
+    <th>{% translate "Email" %}</th>
+    <th>{% translate "Registriert am" %}</th>
+</tr>
+{% endblock %}
 
-                <tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}')"
-                    class="tr-clickable member-row">
-                    <td class="align-middle">{{ member.first_name }}</td>
-                    <td class="align-middle">{{ member.last_name }}</td>
-                    <td class="align-middle">{{ member.birthdate }}</td>
-                    <td class="align-middle">{{ member.email }}</td>
-                    <td class="align-middle">{{ member.created_at|format_date }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
+{% block table_body %}
+{% for member in object_list %}
 
-    <div class="card">
-        <div class="card-header">
-            <h4>{% translate "Filter" %}</h4>
-        </div>
-        <div class="card-body">
-            <form method="get">
-                {% for field in filter.form %}
-                {% bootstrap_field field %}
-                {% endfor %}
-                <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
-                    {% translate 'Suchen' %}
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+<tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}')"
+    class="tr-clickable member-row">
+    <td class="align-middle">{{ member.first_name }}</td>
+    <td class="align-middle">{{ member.last_name }}</td>
+    <td class="align-middle">{{ member.birthdate }}</td>
+    <td class="align-middle">{{ member.email }}</td>
+    <td class="align-middle">{{ member.created_at|format_date }}</td>
+</tr>
+{% endfor %}
+{% endblock %}
 
+{% block script %}
 <script>
     const memberRows = document.getElementsByClassName('member-row');
     const buttons = document.getElementsByClassName('needs-member');
@@ -161,10 +139,5 @@
     }
 
     activateRow();
-
-
-
-
 </script>
-
 {% endblock %}

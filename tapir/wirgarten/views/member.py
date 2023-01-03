@@ -141,6 +141,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/member/member_filter.html"
+    paginate_by = 20
 
 
 class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
@@ -1024,6 +1025,7 @@ class WaitingListView(PermissionRequiredMixin, FilterView):
     ordering = ["created_at"]
     permission_required = Permission.Accounts.MANAGE
     template_name = "wirgarten/waitlist/waitlist_filter.html"
+    paginated_by = 20
 
 
 @require_GET
@@ -1134,6 +1136,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
     ordering = ["-created_at"]
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/subscription/subscription_filter.html"
+    paginate_by = 20
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
