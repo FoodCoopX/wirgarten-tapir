@@ -1,6 +1,6 @@
-# Tapir Member & Shift Management System
+# Tapir Member & Subscription Management System
 
-Tapir is a member and shift management system to be used by [SuperCoop Berlin](https://supercoop.de).
+Tapir is a member and subscription management system to be used by [WirGarten e.V](https://www.wirgarten.com/).
 
 Tapir [has a trunk](https://www.youtube.com/watch?v=JgwBecM_E6Q), but not quite such a beautiful one as
 [Mme. l'élephan](https://github.com/elefan-grenoble/gestion-compte). Tapir is badass,
@@ -27,7 +27,7 @@ Next, set up the test database and load test data
     # Load admin (password: admin) account
     docker-compose exec web poetry run python manage.py loaddata admin_account
     
-    # Load lots of test users & shifts
+    # Load lots of test users
     docker-compose exec web poetry run python manage.py populate --reset_all
 
 ### Django Shell
@@ -48,12 +48,6 @@ Then, run the tests.
 
     docker-compose run web poetry run pytest
 
-To regenerate the test data fixtures:
-
-    docker-compose up --force-recreate
-    docker compose exec web poetry run python manage.py migrate
-    docker compose exec web poetry run python manage.py populate --reset_all
-    docker-compose exec web poetry run python manage.py dumpdata accounts.TapirUser shifts.ShiftTemplateGroup shifts.ShiftTemplate shifts.ShiftSlotTemplate shifts.ShiftAttendanceTemplate coop.ShareOwner coop.ShareOwnership > tapir/utils/fixtures/test_data.json
 
 #### Selenium Tests
 
@@ -64,7 +58,7 @@ secret
 
 [![models.png](models.png)](https://raw.githubusercontent.com/FoodCoopX/wirgarten-tapir/master/models.png)
 
-### Generate Class Diagram
+#### Generate Class Diagram
 
 Run the following command to generate a class diagram: \
 `docker-compose exec web sh -c "apt install -y graphviz graphviz-dev && poetry run pip install pygraphviz && poetry run python manage.py graph_models -a -g -o models.png"`
