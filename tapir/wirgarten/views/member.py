@@ -1145,3 +1145,41 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             "next_trial_end_date"
         ] + relativedelta(day=1)
         return context
+
+
+class CoopMemberFilter(FilterSet):
+    first_name = CharFilter(lookup_expr="icontains")
+    last_name = CharFilter(lookup_expr="icontains")
+    email = CharFilter(lookup_expr="icontains")
+    o = OrderingFilter(
+        label=_("Sortierung"),
+        initial=0,
+        choices=(
+            ("-created_at", "⮟ Registriert am"),
+            ("created_at", "⮝ Registriert am"),
+        ),
+        required=True,
+        empty_label=None,
+    )
+
+    class Meta:
+        model = Member
+        fields = ["first_name", "last_name", "email"]
+
+    def __init__(self, data=None, *args, **kwargs):
+        if data is None:
+            data = {"o": "-created_at"}
+        else:
+            data = data.copy()
+
+            if "o" not in data:
+                data["o"] = "-created_at"
+
+        super(CoopMemberFilter, self).__init__(data, *args, **kwargs)
+
+
+class CoopMemberListView(PermissionRequiredMixin, FilterView):
+    filterset_class = MemberFilter
+    permission_required = Permission.Accounts.VIEW
+    template_name = "wirgarten/member/coop_member_filter.html"
+    paginate_by = 20
