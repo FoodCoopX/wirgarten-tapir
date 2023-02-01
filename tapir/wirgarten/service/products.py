@@ -66,7 +66,7 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
             ),
             name_field,
         ]
-    except KeyError:
+    except Exception:
         return [name_field]
 
 

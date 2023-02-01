@@ -148,13 +148,12 @@ class RegistrationWizardView(CookieWizardView):
     template_name = "wirgarten/registration/registration_wizard.html"
     form_list = FORMS
 
-    condition_dict = init_conditions()
-
     finish_button_label = _("Bestellung abschließen")
 
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardView, self).__init__(*args, **kwargs)
 
+        self.condition_dict = init_conditions()
         self.start_date = get_next_contract_start_date()
         self.growing_period = GrowingPeriod.objects.filter(
             start_date__lte=self.start_date, end_date__gte=self.start_date
