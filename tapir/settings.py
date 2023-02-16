@@ -25,23 +25,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env(
+SECRET_KEY = env.str(
     "SECRET_KEY", default="fl%20e9dbkh4mosi5$i$!5&+f^ic5=7^92hrchl89x+)k0ctsn"
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG", cast=bool, default=False)
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list, default=["*"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
-TAPIR_VERSION = env(
-    "TAPIR_VERSION", cast=str, default=os.environ.get("TAPIR_VERSION", "")
-)
-print(
-    f"Tapir Version: {TAPIR_VERSION}"
-    if TAPIR_VERSION
-    else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
-)
+TAPIR_VERSION = env.str("TAPIR_VERSION", default="dev")
+if not DEBUG:
+    print(
+        f"Tapir Version: {TAPIR_VERSION}"
+        if TAPIR_VERSION
+        else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
+    )
 
 ### WIRGARTEN CONFIG ###
 
@@ -87,10 +86,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "tapir.accounts.middleware.ClientPermsMiddleware",
     "tapir.accounts.models.language_middleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "tapir.accounts.middleware.KeycloakMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
@@ -125,13 +124,7 @@ WSGI_APPLICATION = "tapir.wsgi.application"
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": env.db(default="postgresql://tapir:tapir@db:5432/tapir"),
-    "ldap": env.db_url(
-        "LDAP_URL",
-        default="ldap://cn=admin,dc=lueneburg,dc=wirgarten,dc=com:admin@openldap",
-    ),
 }
-
-DATABASE_ROUTERS = ["ldapdb.router.Router"]
 
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
@@ -208,16 +201,12 @@ elif EMAIL_ENV == "test":
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = env("EMAIL_HOST", default="smtp-relay.gmail.com")
-    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="mitglied@supercoop.de")
-    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+    EMAIL_HOST = env.str("EMAIL_HOST")
+    EMAIL_HOST_SENDER = env.str("EMAIL_HOST_SENDER")
+    EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-
-EMAIL_ADDRESS_MEMBER_OFFICE = "mitglied@supercoop.de"
-COOP_NAME = "WirGarten Lüneburg"
-FROM_EMAIL_MEMBER_OFFICE = f"{COOP_NAME} Mitgliederbüro <{EMAIL_ADDRESS_MEMBER_OFFICE}>"
-DEFAULT_FROM_EMAIL = FROM_EMAIL_MEMBER_OFFICE
 
 # DJANGO_ADMINS="Blake <blake@cyb.org>, Alice Judge <alice@cyb.org>"
 ADMINS = tuple(email.utils.parseaddr(x) for x in env.list("DJANGO_ADMINS", default=[]))
@@ -237,40 +226,9 @@ SELECT2_I18N_PATH = "core/select2/4.0.13/js/i18n"
 
 WEASYPRINT_BASEURL = "/"
 
-LDAP_BASE_DN = "dc=lueneburg,dc=wirgarten,dc=com"
-REG_PERSON_BASE_DN = "ou=people," + LDAP_BASE_DN
-REG_PERSON_OBJECT_CLASSES = ["inetOrgPerson", "organizationalPerson", "person"]
-REG_GROUP_BASE_DN = "ou=groups," + LDAP_BASE_DN
-REG_GROUP_OBJECT_CLASSES = ["groupOfNames"]
-
-# Groups are stored in the LDAP tree
-GROUP_ADMIN = "admin"
-GROUP_VORSTAND = "vorstand"
-GROUP_MEMBER_OFFICE = "member-office"
-# This is our own little stupid permission system. See explanation in accounts/models.py.
-PERMISSIONS = {
-    "coop.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
-    "coop.manage": [GROUP_VORSTAND, GROUP_ADMIN],
-    # TODO(Leon Handreke): Reserve this to a list of knowledgeable superusers
-    "coop.admin": [GROUP_VORSTAND, GROUP_ADMIN],
-    "accounts.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
-    "accounts.manage": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
-    "payments.view": [GROUP_VORSTAND, GROUP_ADMIN, GROUP_MEMBER_OFFICE],
-    "payments.manage": [GROUP_VORSTAND, GROUP_ADMIN],
-    "products.view": [GROUP_VORSTAND, GROUP_ADMIN],
-    "products.manage": [GROUP_VORSTAND, GROUP_ADMIN],
-}
-
-# Permissions granted to client presenting a given SSL client cert. Currently used for the welcome desk machines.
-LDAP_WELCOME_DESK_ID = "CN=welcome-desk.members.supercoop.de,O=SuperCoop Berlin eG,C=DE"
-CLIENT_PERMISSIONS = {
-    LDAP_WELCOME_DESK_ID: [
-        "welcomedesk.view",
-    ]
-}
-
 AUTH_USER_MODEL = "accounts.TapirUser"
-LOGIN_REDIRECT_URL = "accounts:user_me"
+# LOGIN_REDIRECT_URL = "index"
+LOGIN_URL = "login"
 
 SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
 
@@ -282,3 +240,22 @@ if ENABLE_SILK_PROFILING:
     SILKY_PYTHON_PROFILER = True
     SILKY_PYTHON_PROFILER_BINARY = True
     SILKY_META = True
+
+KEYCLOAK_ADMIN_CONFIG = dict(
+    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
+    CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
+    FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
+    REALM_NAME=env.str("KEYCLOAK_ADMIN_REALM_NAME", default="master"),
+    USER_REALM_NAME=env.str("KEYCLOAK_ADMIN_USER_REALM_NAME", default="tapir"),
+    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
+)
+
+CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
+
+# these are keycloak internal roles and will be filtered out automatically when fetching roles
+KEYCLOAK_NON_TAPIR_ROLES = [
+    "offline_access",
+    "uma_authorization",
+    "default-roles-tapir",
+]

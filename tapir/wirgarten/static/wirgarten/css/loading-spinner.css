@@ -2,8 +2,8 @@
   color: official;
   display: inline-block;
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
 }
 .lds-spinner div {
   transform-origin: 40px 40px;
@@ -124,4 +124,17 @@
   100% {
     opacity: 0;
   }
+}
+
+#loading-screen {
+    transition: opacity 0.25s;
+    opacity: 1;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    margin-top: 20%;
+    z-index: 1100;
+    background-color: #FFFFFF;
 }

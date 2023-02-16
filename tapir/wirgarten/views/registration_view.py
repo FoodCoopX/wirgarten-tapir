@@ -1,9 +1,9 @@
-from datetime import date
-from importlib.resources import _
+from django.utils.translation import gettext_lazy as _
 
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -27,7 +27,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     create_mandate_ref,
-    create_member,
     buy_cooperative_shares,
     get_next_contract_start_date,
 )
@@ -102,12 +101,13 @@ def save_member(form_dict):
     member.bic = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["bic"]
     member.is_active = False
 
-    now = date.today()
+    now = timezone.now()
     member.sepa_consent = now
     member.withdrawal_consent = now
     member.privacy_consent = now
 
-    return create_member(member)
+    member.save()
+    return member
 
 
 def init_conditions():

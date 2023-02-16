@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.core.mail import EmailMultiAlternatives
 
 from tapir import settings
-from tapir.accounts.models import TapirUser, LdapPerson
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
     ShareOwnership,
@@ -91,7 +91,7 @@ def transfer_coop_shares(
     ).save()
 
 
-def create_mandate_ref(member: int | str | Member, coop_shares: bool):
+def create_mandate_ref(member: str | Member, coop_shares: bool):
     """
     Generates and persists a new mandate reference for a member.
 
@@ -106,18 +106,17 @@ def create_mandate_ref(member: int | str | Member, coop_shares: bool):
     )
 
 
-def resolve_member_id(member: int | str | Member):
-    return member.id if type(member) is Member else member
+def resolve_member_id(member: str | Member | TapirUser) -> str:
+    return member.id if type(member) is not str and member.id else member
 
 
 def get_or_create_mandate_ref(
-    member: int | str | Member, coop_shares: bool = False
+    member: str | Member, coop_shares: bool = False
 ) -> MandateReference:
-    member_id = member.id if type(member) is Member else member
-
     if coop_shares:
         raise NotImplementedError("Coop share mandate references can not be reused.")
 
+    member_id = resolve_member_id(member)
     mandate_ref = False
     for row in (
         get_future_subscriptions()
@@ -132,32 +131,6 @@ def get_or_create_mandate_ref(
         mandate_ref = create_mandate_ref(member_id, False)
 
     return mandate_ref
-
-
-@transaction.atomic
-def create_member(member: Member):
-    """
-    Persists the given member instance together with the necessary Ldap objects.
-
-    :param member: the new member instance
-    """
-
-    if not member.username:
-        # FIXME: this leads to duplicate usernames (see #8)
-        member.username = member.first_name.lower() + "." + member.last_name.lower()
-
-    if member.has_ldap():
-        ldap_user = member.get_ldap()
-    else:
-        ldap_user = LdapPerson(uid=member.username)
-
-    ldap_user.sn = member.last_name or member.username
-    ldap_user.cn = member.get_full_name() or member.username
-    ldap_user.mail = member.email
-    ldap_user.save()
-
-    member.save()
-    return member
 
 
 def get_next_contract_start_date(ref_date=date.today()):
@@ -230,7 +203,7 @@ def create_wait_list_entry(
 
 
 def get_next_trial_end_date(reference_date: date = date.today()):
-    return reference_date + relativedelta(day=1, months=1) + relativedelta(days=-1)
+    return reference_date + relativedelta(day=1, months=2) + relativedelta(days=-1)
 
 
 def get_subscriptions_in_trial_period(member: int | str | Member):
@@ -262,7 +235,7 @@ def send_cancellation_confirmation_email(
             contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
         ),
         to=[member.email],
-        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+        from_email=settings.EMAIL_HOST_SENDER,
     )
     email.content_subtype = "html"
     email.send()

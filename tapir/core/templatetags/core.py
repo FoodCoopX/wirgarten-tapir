@@ -25,7 +25,7 @@ def get_sidebar_link_groups(request):
     groups = []
 
     if request.user.has_perm(Permission.Coop.VIEW):
-        add_admin_links(groups)
+        add_admin_links(groups, request)
 
     # misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
     # groups.append(misc_group)
@@ -58,7 +58,7 @@ def get_sidebar_link_groups(request):
     return groups
 
 
-def add_admin_links(groups):
+def add_admin_links(groups, request):
     debug_group = SidebarLinkGroup(name=_("Debug"))
     debug_group.add_link(
         display_name=_("Exportierte Dateien"),
@@ -72,44 +72,50 @@ def add_admin_links(groups):
         material_icon="dashboard",
         url=reverse_lazy("wirgarten:admin_dashboard"),
     )
-    admin_group.add_link(
-        display_name=_("Konfiguration"),
-        material_icon="settings",
-        url=reverse_lazy("configuration:parameters"),
-    )
-    admin_group.add_link(
-        display_name=_("Anbauperiode & Produkte"),
-        material_icon="agriculture",
-        url=reverse_lazy("wirgarten:product"),
-    )
-    admin_group.add_link(
-        display_name=_("Abholorte"),
-        material_icon="add_location_alt",
-        url=reverse_lazy("wirgarten:pickup_locations"),
-    )
-    admin_group.add_link(
-        display_name=_("Lastschrift"),
-        material_icon="account_balance",
-        url=reverse_lazy("wirgarten:payment_transactions"),
-    )
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        admin_group.add_link(
+            display_name=_("Konfiguration"),
+            material_icon="settings",
+            url=reverse_lazy("configuration:parameters"),
+        )
+    if request.user.has_perm(Permission.Products.VIEW):
+        admin_group.add_link(
+            display_name=_("Anbauperiode & Produkte"),
+            material_icon="agriculture",
+            url=reverse_lazy("wirgarten:product"),
+        )
+    if request.user.has_perm(Permission.Coop.VIEW):
+        admin_group.add_link(
+            display_name=_("Abholorte"),
+            material_icon="add_location_alt",
+            url=reverse_lazy("wirgarten:pickup_locations"),
+        )
+    if request.user.has_perm(Permission.Payments.VIEW):
+        admin_group.add_link(
+            display_name=_("Lastschrift"),
+            material_icon="account_balance",
+            url=reverse_lazy("wirgarten:payment_transactions"),
+        )
 
-    members_group = SidebarLinkGroup(name=_("Mitglieder"))
-    members_group.add_link(
-        display_name=(_("Mitglieder")),
-        material_icon="groups",
-        url=reverse_lazy("wirgarten:member_list"),
-    )
-    members_group.add_link(
-        display_name=_("Verträge"),
-        material_icon="history_edu",
-        url=reverse_lazy("wirgarten:subscription_list"),
-    )
-    members_group.add_link(
-        display_name=_("Warteliste"),
-        material_icon="schedule",
-        url=reverse_lazy("wirgarten:waitinglist"),
-    )
+    if request.user.has_perm(Permission.Accounts.VIEW):
+        members_group = SidebarLinkGroup(name=_("Mitglieder"))
+        members_group.add_link(
+            display_name=(_("Mitglieder")),
+            material_icon="groups",
+            url=reverse_lazy("wirgarten:member_list"),
+        )
+        members_group.add_link(
+            display_name=_("Verträge"),
+            material_icon="history_edu",
+            url=reverse_lazy("wirgarten:subscription_list"),
+        )
+        members_group.add_link(
+            display_name=_("Warteliste"),
+            material_icon="schedule",
+            url=reverse_lazy("wirgarten:waitinglist"),
+        )
 
-    groups.append(members_group)
+        groups.append(members_group)
     groups.append(admin_group)
+
     groups.append(debug_group)

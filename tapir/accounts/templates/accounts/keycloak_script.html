@@ -1,0 +1,101 @@
+{% load keycloak %}
+{% keycloak_config as conf %}
+
+<script src="{% keycloak_public_url %}/js/keycloak.js"></script>
+<script>
+            const getCookieValue = (name) => (
+                document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
+            )
+
+            const deleteCookie = (name) => {
+                document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+            }
+
+            const setCookie = (name, value) => {
+                document.cookie = "token=" + keycloak.token + "; path=/; SameSite=None; Secure";
+            }
+
+            const deleteAllCookies = () => {
+                const cookies = document.cookie.split(";");
+
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i];
+                    const eqPos = cookie.indexOf("=");
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                    deleteCookie(name);
+                }
+            }
+
+            const addLogoutFunction = () =>  {
+                  const logout = document.getElementById("logout")
+                  if(logout){
+                        logout.addEventListener('click', () => {
+                            console.log("Logging out...");
+                            deleteAllCookies();
+                            keycloak.logout({redirectUri: window.location.origin + "{% url 'login' %}"});
+                        });
+                  } else {
+                        setTimeout(addLogoutFunction, 100);
+                  }
+            }
+
+            const keycloak = new Keycloak({{ conf|safe }});
+
+            const hideLoadingScreen = () => {
+                    const loadingScreen = document.getElementById("loading-screen");
+                    if(loadingScreen){
+                        loadingScreen.style.opacity = 0;
+                        setTimeout(() => loadingScreen.style.display='none', 200);
+                    } else {
+                        setTimeout(hideLoadingScreen, 100);
+                    }
+            }
+
+            const savedToken = getCookieValue("token");
+            if(savedToken){
+                 hideLoadingScreen();
+            }
+
+            keycloak.init({
+                onLoad: 'check-sso',
+                silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
+                token: savedToken,
+                checkLoginIframe: true,
+                onTokenExpired: () => {
+                    console.log("Token expired, refreshing...");
+                    keycloak.updateToken(10)
+                        .then(() => {
+                            console.log("Token refreshed successfully");
+                            setCookie("token", keycloak.token);
+                        })
+                        .catch(() => {
+                            console.log("Failed to refresh token. User is logged out.");
+                        });
+                },
+            }).then((authenticated) => {
+                console.log("authenticated: ", authenticated)
+              if(!authenticated || !keycloak.token){
+                   deleteAllCookies();
+                   keycloak.login()
+              } else {
+                  hideLoadingScreen();
+
+                  const savedToken = getCookieValue("token");
+                  setCookie("token", keycloak.token);
+
+                  if(savedToken && !document.body.innerText){
+                      // default redirect if no body is loaded
+                      window.location.replace("{% url 'index' %}");
+                  }
+
+                  addLogoutFunction();
+
+                  if(!savedToken) window.location.reload()
+              }
+              console.log("Keycloak initialized successfully");
+            }).catch((err) => {
+                deleteAllCookies();
+                window.location.reload();
+                console.error("Failed to initialize Keycloak: " + JSON.stringify(err));
+            });
+</script>

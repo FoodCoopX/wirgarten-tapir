@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views import generic
 
 from tapir.wirgarten.views import (
     RegistrationWizardView,
@@ -153,69 +154,69 @@ urlpatterns = [
     path("members", MemberListView.as_view(), name="member_list"),
     path("members/create", get_member_personal_data_create_form, name="member_create"),
     path(
-        "members/<int:pk>/edit", get_member_personal_data_edit_form, name="member_edit"
+        "members/<str:pk>/edit", get_member_personal_data_edit_form, name="member_edit"
     ),
     path(
-        "members/<int:pk>/editpaymentdetails",
+        "members/<str:pk>/editpaymentdetails",
         get_member_payment_data_edit_form,
         name="member_edit_payment_details",
     ),
     path(
-        "members/<int:pk>/editpickuplocation",
+        "members/<str:pk>/editpickuplocation",
         get_pickup_location_choice_form,
         name="member_pickup_location_choice",
     ),
     path(
-        "members/<int:pk>/cancelcontract",
+        "members/<str:pk>/cancelcontract",
         cancel_contract_at_period_end,
         name="member_cancel_contract",
     ),
     path(
-        "members/<int:pk>/renewcontract",
+        "members/<str:pk>/renewcontract",
         renew_contract_same_conditions,
         name="member_renew_same_conditions",
     ),
     path(
-        "members/<int:pk>/addharvestshares",
+        "members/<str:pk>/addharvestshares",
         get_add_harvest_shares_form,
         name="member_add_harvest_shares",
     ),
     path(
-        "members/<int:pk>/addchickenshares",
+        "members/<str:pk>/addchickenshares",
         get_add_chicken_shares_form,
         name="member_add_chicken_shares",
     ),
     path(
-        "members/<int:pk>/addbestellcoop",
+        "members/<str:pk>/addbestellcoop",
         get_add_bestellcoop_form,
         name="member_add_bestellcoop",
     ),
     path(
-        "members/<int:pk>/addcoopshares",
+        "members/<str:pk>/addcoopshares",
         get_add_coop_shares_form,
         name="member_add_coop_shares",
     ),
     path(
-        "members/<int:pk>/canceltrial",
+        "members/<str:pk>/canceltrial",
         get_cancel_trial_form,
         name="member_cancel_trial",
     ),
-    path("members/<int:pk>", MemberDetailView.as_view(), name="member_detail"),
+    path("members/<str:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(
-        "members/<int:pk>/coopsharestransfer",
+        "members/<str:pk>/coopsharestransfer",
         get_coop_share_transfer_form,
         name="member_coopshare_transfer",
     ),
     path("contracts", SubscriptionListView.as_view(), name="subscription_list"),
-    path("payments/<int:pk>", MemberPaymentsView.as_view(), name="member_payments"),
+    path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(
-        "payments/<int:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",
+        "payments/<str:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",
         get_payment_amount_edit_form,
         name="member_payments_edit",
     ),
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
-        "deliveries/<int:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
+        "deliveries/<str:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
     ),
 ]
 app_name = "wirgarten"

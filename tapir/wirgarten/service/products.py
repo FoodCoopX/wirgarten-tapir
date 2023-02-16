@@ -66,7 +66,7 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
             ),
             name_field,
         ]
-    except Exception:
+    except BaseException:
         return [name_field]
 
 
@@ -479,7 +479,6 @@ def get_free_product_capacity(
             ),
         )
     )
-
     return total_capacity - used_capacity
 
 

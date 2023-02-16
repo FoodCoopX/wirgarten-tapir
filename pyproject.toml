@@ -5,12 +5,11 @@ description = ""
 authors = ["Leon Handreke <leonh@ndreke.de>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 Django = "~3.2.12"
-django-ldapdb = "^1.5.1"
 django-weasyprint = "^1.1.0.post2"
 django-extensions = "3.1.5"
-django-bootstrap-datepicker-plus = "^3.0.6"
+django-bootstrap-datepicker-plus = "^5.0.2"
 psycopg2-binary = "^2.9.3"
 django-tables2 = "^2.4.1"
 django-filter = "^2.4.0"
@@ -33,6 +32,10 @@ cleo = "^0.8.1"
 tomlkit = "^0.10.1"
 nanoid = "^2.0"
 lxml= "^4.9.2"
+python-keycloak = "^2.9.0"
+webtest = "^3.0.0"
+django-webtest = "^1.9.10"
+PyJWT = "2.6.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"

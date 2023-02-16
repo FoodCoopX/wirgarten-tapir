@@ -3,12 +3,14 @@ import json
 import os
 import pathlib
 import socket
+from io import StringIO
 
-import factory.random
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.db import DEFAULT_DB_ALIAS
 from django.test import TestCase, override_settings, Client
 from django.urls import reverse
+from django.contrib.auth.models import Permission as PermissionModel
+from django.contrib.contenttypes.models import ContentType
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import DesiredCapabilities
@@ -19,10 +21,13 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
-from tapir.accounts.models import TapirUser
 from tapir.accounts.templatetags.accounts import format_phone_number
-from tapir.accounts.tests.factories.factories import TapirUserFactory
 from tapir.utils.json_user import JsonUser
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.models import Product
+from django.utils import timezone
+from django.core.management import call_command
+from tapir.wirgarten.models import GrowingPeriod
 
 TAPIR_SELENIUM_BASE_FIXTURES = ["admin_account.json", "test_data.json"]
 
@@ -190,27 +195,48 @@ class TapirUserTestBase(TapirSeleniumTestBase):
         )
 
 
-class LdapEnabledTestCase(TestCase):
-    databases = {"ldap", DEFAULT_DB_ALIAS}
+class KeycloakTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.now = now = timezone.now()
+
+        fixtures = [
+            "0010_pickup_locations",
+            "0020_product_types",
+            "0021_tax_rates",
+            "0030_products",
+            "0031_product_prices",
+            "0040_growing_periods",
+            "0050_product_capacity",
+            "0060_pickup_location_capabilities",
+        ]
+        for fix in fixtures:
+            call_command(
+                "loaddata",
+                f"tapir/wirgarten/fixtures/{fix}",
+                app="wirgarten",
+                stdout=StringIO(),
+            )
+
+        call_command("parameter_definitions", stdout=StringIO())
+
+        permissions = [
+            (Permission.Products.VIEW, ContentType.objects.get_for_model(Product)),
+        ]
+        for codename, ct in permissions:
+            PermissionModel.objects.get_or_create(
+                content_type=ct,
+                codename=codename,
+            )
+
+        GrowingPeriod.objects.create(
+            start_date=now.replace(year=now.year - 1, month=3, day=1),
+            end_date=now.replace(year=now.year + 1, month=2, day=28),
+        )
 
 
-class TapirFactoryTestBase(LdapEnabledTestCase):
-    client: Client
+class KeycloakServiceTestCase(KeycloakTestCase):
+    """base class to interact with a running Keycloak service"""
 
-    def setUp(self) -> None:
-        factory.random.reseed_random(self.__class__.__name__)
-        self.client = Client()
-
-    def login_as_user(self, user: TapirUser):
-        success = self.client.login(username=user.username, password=user.username)
-        self.assertTrue(success, f"User {user.username} should be able to log in.")
-
-    def login_as_member_office_user(self) -> TapirUser:
-        user = TapirUserFactory.create(is_in_member_office=True)
-        self.login_as_user(user)
-        return user
-
-    def login_as_normal_user(self) -> TapirUser:
-        user = TapirUserFactory.create(is_in_member_office=False)
-        self.login_as_user(user)
-        return user
+    pass

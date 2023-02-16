@@ -327,7 +327,7 @@ def send_email_member_contract_end_reminder(member_id):
             site_name=get_parameter_value(Parameter.SITE_NAME),
         ),
         to=[member.email],
-        from_email=get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+        from_email=settings.EMAIL_HOST_SENDER,
     )
     email.content_subtype = "html"
     email.send()

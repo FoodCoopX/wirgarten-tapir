@@ -1,14 +1,18 @@
+import base64
 import itertools
+import json
 import mimetypes
 from copy import copy
-from datetime import date, datetime
-from importlib.resources import _
+from datetime import date, datetime, timezone
+from django.utils.translation import gettext_lazy as _
 
 from dateutil.relativedelta import relativedelta
+from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.forms import CheckboxInput
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
@@ -25,8 +29,9 @@ from django_filters import (
     BooleanFilter,
 )
 from django_filters.views import FilterView
-from django.forms import CheckboxInput
 
+from tapir import settings
+from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import (
     WEEKLY,
@@ -74,7 +79,6 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
     transfer_coop_shares,
-    create_member,
     create_wait_list_entry,
     buy_cooperative_shares,
     get_next_trial_end_date,
@@ -97,6 +101,7 @@ from tapir.wirgarten.service.products import (
     is_bestellcoop_available,
     get_next_growing_period,
     product_type_order_by,
+    get_active_subscriptions,
 )
 from tapir.wirgarten.utils import format_date
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
@@ -241,7 +246,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             else:
                 break
 
-        next_payments = generate_future_payments(self.object.pk, prev_payments, 1)
+        next_payments = generate_future_payments(self.object.id, prev_payments, 1)
 
         if len(next_payments) > 0:
             if "next_payment" not in context or (
@@ -252,8 +257,16 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         self.add_renewal_notice_context(context, next_month, today)
 
         context["next_trial_end_date"] = get_next_trial_end_date()
-        if get_subscriptions_in_trial_period(self.object.pk).exists():
+        if get_subscriptions_in_trial_period(self.object.id).exists():
             context["show_trial_period_notice"] = True
+
+        email_change_requests = EmailChangeRequest.objects.filter(
+            user_id=self.object.id
+        )
+        if email_change_requests.exists():
+            context["email_change_request"] = {
+                "new_email": email_change_requests[0].new_email
+            }
 
         return context
 
@@ -264,6 +277,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
          - add_shares_disallowed = less than 1 month
          - renewal_status = "unknown", "renewed", "cancelled"
         """
+        if not get_active_subscriptions().filter(member_id=self.object.id).exists():
+            return
 
         next_growing_period = get_next_growing_period(today)
         if (
@@ -299,7 +314,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["renewal_status"] = "cancelled"
             elif (
                 get_future_subscriptions(next_growing_period.start_date)
-                .filter(member_id=self.object.pk)
+                .filter(member_id=self.object.id)
                 .exists()
             ):
                 context["renewal_status"] = "renewed"
@@ -537,7 +552,6 @@ class MemberPaymentsView(
     def get_payments_row(self, member_id):
         prev_payments = get_previous_payments(member_id)
         future_payments = generate_future_payments(member_id, prev_payments)
-
         return sorted(
             prev_payments + future_payments,
             key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
@@ -711,7 +725,7 @@ def get_member_personal_data_edit_form(request, **kwargs):
     check_permission_or_self(pk, request)
 
     def update_member(
-        member_id,
+        instance,
         first_name,
         last_name,
         email,
@@ -722,16 +736,17 @@ def get_member_personal_data_edit_form(request, **kwargs):
         city,
         birthdate,
     ):
-        instance = Member.objects.get(pk=member_id)
         instance.first_name = first_name
         instance.last_name = last_name
         instance.email = email
+        instance.username = email
         instance.phone_number = phone_number
         instance.street = street
         instance.street_2 = street_2
         instance.postcode = postcode
         instance.city = city
         instance.birthdate = birthdate
+
         instance.save()
         return instance
 
@@ -739,18 +754,7 @@ def get_member_personal_data_edit_form(request, **kwargs):
         request=request,
         form=PersonalDataForm,
         instance=Member.objects.get(pk=pk),
-        handler=lambda x: update_member(
-            member_id=pk,
-            first_name=x.cleaned_data["first_name"],
-            last_name=x.cleaned_data["last_name"],
-            email=x.cleaned_data["email"],
-            phone_number=x.cleaned_data["phone_number"],
-            street=x.cleaned_data["street"],
-            street_2=x.cleaned_data["street_2"],
-            postcode=x.cleaned_data["postcode"],
-            city=x.cleaned_data["city"],
-            birthdate=x.cleaned_data["birthdate"],
-        ),
+        handler=lambda x: x.instance.save(),
         redirect_url_resolver=lambda _: member_detail_url(pk),
         **kwargs,
     )
@@ -833,7 +837,7 @@ def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=PersonalDataForm,
-        handler=lambda x: create_member(x.instance),
+        handler=lambda x: x.instance.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
     )
@@ -1145,3 +1149,53 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             "next_trial_end_date"
         ] + relativedelta(day=1)
         return context
+
+
+EMAIL_CHANGE_LINK_VALIDITY_MINUTES = 4 * 60
+
+
+@transaction.atomic
+def change_email(request, **kwargs):
+    data = json.loads(base64.b64decode(kwargs["token"]))
+    user_id = data["user"]
+    new_email = data["new_email"]
+    matching_change_request = EmailChangeRequest.objects.filter(
+        new_email=new_email, secret=data["secret"], user_id=user_id
+    ).order_by("-created_at")
+
+    link_validity = relativedelta(minutes=EMAIL_CHANGE_LINK_VALIDITY_MINUTES)
+    now = datetime.now(tz=timezone.utc)
+    if matching_change_request.exists() and now < (
+        matching_change_request[0].created_at + link_validity
+    ):
+        # token is valid -> actually change email
+        user = TapirUser.objects.get(id=user_id)
+        orig_email = user.email
+        user.change_email(new_email)
+
+        # delete other change requests for this user
+        EmailChangeRequest.objects.filter(user_id=user_id).delete()
+        # delete expired change requests
+        EmailChangeRequest.objects.filter(created_at__lte=now - link_validity).delete()
+
+        # send confirmation to old email address
+        email = EmailMultiAlternatives(
+            subject=_("Deine Email Adresse wurde geändert"),
+            body=_(
+                f"Hallo {user.first_name},<br/><br/>"
+                f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
+                f"""Falls du das nicht warst, ändere sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
+                f"<br/><br/>Grüße, dein WirGarten Team"
+            ),
+            to=[orig_email],
+            from_email=settings.EMAIL_HOST_SENDER,
+        )
+        email.content_subtype = "html"
+        email.send()
+
+        return HttpResponseRedirect(
+            reverse_lazy("wirgarten:member_detail", kwargs={"pk": user.id})
+            + "?email_changed=true"
+        )
+
+    return HttpResponseRedirect(reverse_lazy("link_expired"))

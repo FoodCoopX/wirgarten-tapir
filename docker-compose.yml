@@ -1,18 +1,16 @@
 version: "3.9"
 services:
-  openldap:
-    image: "osixia/openldap"
-    environment:
-      LDAP_ORGANISATION: "WirGarten Lüneburg"
-      LDAP_DOMAIN: "lueneburg.wirgarten.com"
-      LDAP_ADMIN_PASSWORD: "admin"
-      LDAP_READONLY_USER: "true"
+  keycloak:
+    build:
+      context: ./docker/keycloak
+      dockerfile: Dockerfile
     ports:
-      - "389:389"
+      - "8080:8080"
     volumes:
-      - ./ldap_testdata.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-testdata.ldif
-    # Required so that the container doesn't modify the testdata ldif
-    command: --copy-service
+      - ./docker/keycloak/import:/opt/keycloak/data/import
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
 
   web:
     build: .
@@ -25,9 +23,9 @@ services:
       VIRTUAL_HOST: localhost
       DEBUG: 1
     depends_on:
-      - openldap
       - db
       - selenium
+      - keycloak
 
   nginx-proxy:
     image: jwilder/nginx-proxy

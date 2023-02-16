@@ -1,5 +1,5 @@
 import datetime
-from importlib.resources import _
+from django.utils.translation import gettext_lazy as _
 
 from dateutil.relativedelta import relativedelta
 from django import forms

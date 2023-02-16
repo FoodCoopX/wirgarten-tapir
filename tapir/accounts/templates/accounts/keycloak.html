@@ -1,0 +1,14 @@
+{% load tapir_static %}
+
+<html>
+<head>
+    {% include 'accounts/keycloak_script.html' %}
+    <link rel="stylesheet" href="{% static 'core/css/custom.css' %}"/>
+    <link rel="stylesheet" href="{% static 'wirgarten/css/loading-spinner.css' %}"/>
+</head>
+<body>
+<div id="loading-screen">
+    {% include 'wirgarten/generic/loading-spinner.html' %}
+</div>
+</body>
+</html>

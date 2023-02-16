@@ -21,7 +21,7 @@ GENO_SUFFIX = "/GENO"
 SUBS_SUFFIX = "/PROD"
 
 
-def generate_mandate_ref(member_id: int | str, coop_shares: bool):
+def generate_mandate_ref(member_id: str, coop_shares: bool):
     """
     Generates a new mandate reference string.
 

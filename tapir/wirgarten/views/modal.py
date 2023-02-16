@@ -14,7 +14,11 @@ def get_form_modal(
     # if this is a POST request we need to process the modal data
     if request.method == "POST":
         # create a modal instance and populate it with data from the request:
-        form = form(request.POST, **kwargs)
+        form = (
+            form(request.POST, instance=instance, **kwargs)
+            if instance
+            else form(request.POST, **kwargs)
+        )
 
         # check whether it's valid:
         if form.is_valid():
@@ -29,7 +33,7 @@ def get_form_modal(
                 {"url": redirect_url},
             )
         else:
-            print("Form not valid!")
+            print("Form not valid! ", form.errors)
 
     # if a GET (or any other method) we'll create a blank modal
     else:
