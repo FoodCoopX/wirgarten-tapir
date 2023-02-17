@@ -155,7 +155,8 @@ class Product(TapirModel):
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
 
-    indexes = [Index(fields=["type"], name="idx_product_type")]
+    class Meta:
+        indexes = [Index(fields=["type"], name="idx_product_type")]
 
     def __str__(self):
         return f"{self.name} ({self.type.name})"
@@ -234,6 +235,7 @@ class Subscription(TapirModel, Payable):
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
     created_at = models.DateTimeField(auto_now_add=True, null=False)
+    consent_ts = models.DateTimeField(null=False)
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]

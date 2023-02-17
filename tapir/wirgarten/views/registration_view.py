@@ -237,20 +237,17 @@ class RegistrationWizardView(CookieWizardView):
             form_dict[STEP_HARVEST_SHARES].save(
                 member_id=member.id,
                 mandate_ref=mandate_ref,
-                growing_period=self.growing_period,
             )
 
             if self.has_step(STEP_ADDITIONAL_SHARES):
                 form_dict[STEP_ADDITIONAL_SHARES].save(
                     member_id=member.id,
                     mandate_ref=mandate_ref,
-                    growing_period=self.growing_period,
                 )
             if self.has_step(STEP_BESTELLCOOP):
                 form_dict[STEP_BESTELLCOOP].save(
                     member_id=member.id,
                     mandate_ref=mandate_ref,
-                    growing_period=self.growing_period,
                 )
 
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month

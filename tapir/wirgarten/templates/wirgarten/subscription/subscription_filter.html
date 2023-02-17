@@ -51,7 +51,7 @@
     <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
     <td style="text-align:center">{{ entry.product.type.name }}</td>
     <td style="text-align:center">{{ entry.product.name }}</td>
-    <td style="text-align:center">{% if entry.solidarity_price > 0 %}{{ entry.solidarity_price|format_percent }}{% else %}-{% endif %}</td>
+    <td style="text-align:center">{% if entry.solidarity_price != 0 %}{{ entry.solidarity_price|format_percent }}{% else %}-{% endif %}</td>
     <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
 </tr>
 {% endfor %}

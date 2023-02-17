@@ -197,6 +197,7 @@ USE_TZ = True
 EMAIL_ENV = env("EMAIL_ENV", default="dev")
 if EMAIL_ENV == "dev":
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    EMAIL_HOST_SENDER = "dev@example.com"
 elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from django.utils.translation import gettext_lazy as _
 
 from django import forms
@@ -27,9 +27,10 @@ from tapir.wirgarten.service.products import (
 
 def has_chicken_shares(cleaned_data):
     for key, val in cleaned_data.items():
-        if key.startswith("chicken_shares_") and val > 0:
+        print(key, val)
+        if key.startswith("chicken_shares_") and val is not None and val > 0:
             return True
-        return False
+    return False
 
 
 class ChickenShareForm(forms.Form):
@@ -37,7 +38,13 @@ class ChickenShareForm(forms.Form):
     outro_template = "wirgarten/registration/steps/chicken_shares.outro.html"
 
     def __init__(self, *args, **kwargs):
-        super(ChickenShareForm, self).__init__(*args, **kwargs)
+        super(ChickenShareForm, self).__init__(
+            *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
+        )
+        self.start_date = kwargs.get("start_date", get_next_contract_start_date())
+        self.growing_period = GrowingPeriod.objects.get(
+            start_date__lte=self.start_date, end_date__gt=self.start_date
+        )
 
         self.product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
         self.products = {
@@ -46,18 +53,21 @@ class ChickenShareForm(forms.Form):
         }
 
         prices = {
-            prod.id: get_product_price(prod).price for prod in self.products.values()
+            prod.id: get_product_price(prod, self.start_date).price
+            for prod in self.products.values()
         }
 
-        self.free_capacity = get_free_product_capacity(self.product_type.id)
+        self.free_capacity = get_free_product_capacity(
+            self.product_type.id, self.start_date
+        )
 
-        self.field_order = list(self.products.keys()) + ["consent"]
+        self.field_order = list(self.products.keys()) + ["consent_chicken_shares"]
         self.n_columns = len(self.products)
-        self.colspans = {"consent": self.n_columns}
+        self.colspans = {"consent_chicken_shares": self.n_columns}
 
         for k, v in self.products.items():
             self.fields[k] = forms.IntegerField(
-                required=True,
+                required=False,
                 max_value=get_parameter_value(Parameter.CHICKEN_MAX_SHARES),
                 min_value=0,
                 initial=0,
@@ -68,14 +78,15 @@ class ChickenShareForm(forms.Form):
                 ),
                 help_text="""{:.2f} € / Monat""".format(prices[v.id]),
             )
-        self.fields["consent"] = forms.BooleanField(
+        self.fields["consent_chicken_shares"] = forms.BooleanField(
             label=_(
                 "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
             ),
             help_text=_(
-                "Hast du die Vertragsgrundsätze gelesen und stimmst diesen zu?"
+                '<a href="https://lueneburg.wirgarten.com/vertragsgrundsaetze_huehneranteil" target="_blank">Vertragsgrundsätze - Hühneranteile</a>'
             ),
             required=False,
+            initial=False,
         )
 
         self.chicken_share_prices = ",".join(
@@ -86,23 +97,9 @@ class ChickenShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(
-        self,
-        member_id,
-        mandate_ref: MandateReference = None,
-        growing_period: GrowingPeriod = None,
-    ):
-        today = date.today()
-        if not growing_period:
-            growing_period = GrowingPeriod.objects.get(
-                start_date__lte=today, end_date__gte=today
-            )
-
+    def save(self, member_id, mandate_ref: MandateReference = None):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
-
-        start_date = get_next_contract_start_date(today)
-        end_date = growing_period.end_date
 
         for key, quantity in self.cleaned_data.items():
             if quantity > 0 and key.startswith("chicken_shares_"):
@@ -113,18 +110,23 @@ class ChickenShareForm(forms.Form):
                     member_id=member_id,
                     product=product,
                     quantity=quantity,
-                    period=growing_period,
-                    start_date=start_date,
-                    end_date=end_date,
+                    period=self.growing_period,
+                    start_date=self.start_date,
+                    end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
+                    consent_ts=datetime.now(),
                 )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        if has_chicken_shares(cleaned_data) and not cleaned_data.get("consent"):
+    def is_valid(self):
+        super().is_valid()
+
+        if has_chicken_shares(self.cleaned_data) and not self.cleaned_data.get(
+            "consent_chicken_shares", False
+        ):
             self.add_error(
-                "consent",
+                "consent_chicken_shares",
                 _(
                     "Du musst den Vertragsgrundsätzen zustimmen um Hühneranteile zu zeichnen."
                 ),
             )
+        return len(self.errors) == 0

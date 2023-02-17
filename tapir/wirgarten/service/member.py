@@ -1,9 +1,9 @@
 from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
+from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Sum
-from django.core.mail import EmailMultiAlternatives
 
 from tapir import settings
 from tapir.accounts.models import TapirUser
@@ -19,6 +19,7 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -202,8 +203,10 @@ def create_wait_list_entry(
     )
 
 
-def get_next_trial_end_date(reference_date: date = date.today()):
-    return reference_date + relativedelta(day=1, months=2) + relativedelta(days=-1)
+def get_next_trial_end_date(sub: Subscription = None):
+    return (
+        (sub.start_date if sub else date.today()) + relativedelta(day=1, months=1)
+    ) + relativedelta(days=-1)
 
 
 def get_subscriptions_in_trial_period(member: int | str | Member):
@@ -213,13 +216,13 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
 
     return get_future_subscriptions().filter(
         member_id=member_id,
-        cancellation_ts=None,
+        cancellation_ts__isnull=True,
         start_date__gt=min_start_date,
     )
 
 
 def send_cancellation_confirmation_email(
-    member: int | str | Member, contract_end_date: date, subs_to_cancel: [Subscription]
+    member: str | Member, contract_end_date: date, subs_to_cancel: [Subscription]
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -245,3 +248,33 @@ def send_cancellation_confirmation_email(
     )
 
     # TODO: Log entry!
+
+
+def send_order_confirmation(member: Member, subs: [Subscription]):
+    if not len(subs):
+        raise Exception(
+            "No subscriptions provided for sending order confirmation for member: ",
+            member,
+        )
+
+    contract_start_date = subs[0].start_date
+    email = EmailMultiAlternatives(
+        subject=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
+        ),
+        body=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
+        ).format(
+            member=member,
+            contract_start_date=format_date(contract_start_date),
+            contract_end_date=format_date(subs[0].end_date),
+            first_pickup_date=format_date(get_next_delivery_date(contract_start_date)),
+            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
+            site_name=get_parameter_value(Parameter.SITE_NAME),
+            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}<br/>",
+        ),
+        to=[member.email],
+        from_email=settings.EMAIL_HOST_SENDER,
+    )
+    email.content_subtype = "html"
+    email.send()

@@ -30,6 +30,7 @@ from tapir.wirgarten.views.member import (
     renew_contract_same_conditions,
     SubscriptionListView,
     get_cancel_trial_form,
+    get_renew_contracts_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -175,6 +176,11 @@ urlpatterns = [
         "members/<str:pk>/renewcontract",
         renew_contract_same_conditions,
         name="member_renew_same_conditions",
+    ),
+    path(
+        "members/<str:pk>/renewcontractwithchanges",
+        get_renew_contracts_form,
+        name="member_renew_changed_conditions",
     ),
     path(
         "members/<str:pk>/addharvestshares",

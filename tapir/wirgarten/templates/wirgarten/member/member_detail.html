@@ -86,9 +86,10 @@
 
                 {% if object.pk == request.user.pk %}
                 <div>
-                        <hr/>
-                        <a style="float: right" class="btn tapir-btn btn-outline-primary ms-1" href="{% url 'password_change' %}"><span
-                                class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                    <hr/>
+                    <a style="float: right" class="btn tapir-btn btn-outline-primary ms-1"
+                       href="{% url 'password_change' %}"><span
+                            class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
                 </div>
                 {% endif %}
             </div>
@@ -106,7 +107,7 @@
                         <hr/>
                         {% for entry in coop_shares %}
                         <small>
-                            {{entry.timestamp}}:&nbsp;&nbsp;&nbsp;{{ entry.quantity }} × {{ entry.share_price}}
+                            {{entry.timestamp}}:&nbsp;&nbsp;&nbsp;{{ entry.quantity }} × {{ entry.share_price|format_currency }}
                         </small><br/>
                         {% endfor %}
                     </div>
@@ -151,8 +152,10 @@
                         {% endif %}
                     </div>
                     <div class="card-footer" style="display:flex;justify-content:space-between">
-                    <span><strong>{{ sub_totals|get_value:type|default:'0.00' }}</strong> <small>€ / Monat</small>
+                        {% with sub_totals|get_value:type|default:0 as sub_total %}
+                        <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
                     </span>
+                        {% endwith %}
                         <!-- FIXME: hardcoded product type names :( -->
                         {% if available_product_types|get_value:type|default:False %}
                         {% if type == 'Ernteanteile' %}
@@ -313,6 +316,7 @@
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
     {% endif %}
+
 
 
 

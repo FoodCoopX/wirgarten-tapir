@@ -90,6 +90,12 @@ class Parameter:
     EMAIL_CONTRACT_END_REMINDER_CONTENT = (
         f"{PREFIX}.email.contract_end_reminder.content"
     )
+    EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT = (
+        f"{PREFIX}.email.contract_order_confirmation.subject"
+    )
+    EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT = (
+        f"{PREFIX}.email.contract_order_confirmation.content"
+    )
 
 
 from tapir.configuration.models import (
@@ -494,7 +500,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=500,
             meta=ParameterMeta(
                 validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
+                    lambda x: validate_format_string(
+                        x, MEMBER_RENEWAL_ALERT_VARS + ["contract_list"]
+                    ),
                     validate_html,
                 ],
                 textarea=True,
@@ -520,7 +528,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Kündigungsbestätigung",
             description="Betreff der Email, die bei Kündigung sofort an das Mitglied verschickt wird.",
             category=ParameterCategory.EMAIL,
-            order_priority=10000,
+            order_priority=9999,
         )
 
         parameter_definition(
@@ -538,12 +546,19 @@ Du kannst deinen Erntevertrag dann auch schon vor Ablauf des Vertrages auf diese
 Viele Grüße von {admin_name} aus deinem {site_name}""",
             description="Inhalt der Email (HTML), die bei Kündigung sofort an das Mitglied verschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_end_date}, {contract_list}.",
             category=ParameterCategory.EMAIL,
-            order_priority=9900,
+            order_priority=9998,
             meta=ParameterMeta(
                 validators=[
                     validate_html,
                     lambda x: validate_format_string(
-                        x, ["member", "admin_name", "site_name", "contract_end_date"]
+                        x,
+                        [
+                            "member",
+                            "admin_name",
+                            "site_name",
+                            "contract_end_date",
+                            "contract_list",
+                        ],
                     ),
                 ],
                 textarea=True,
@@ -557,12 +572,12 @@ Viele Grüße von {admin_name} aus deinem {site_name}""",
             initial_value="Dein letzter Ernteanteil",
             description="Betreff der Email, die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
             category=ParameterCategory.EMAIL,
-            order_priority=8000,
+            order_priority=7999,
         )
 
         parameter_definition(
             key=Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT,
-            label="Inhalt: Email 'Kündigungsbestätigung'",
+            label="Inhalt: Email 'Vertrags-/Lieferende'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Moin {member.first_name},
 
@@ -578,12 +593,71 @@ Viele Grüße und alles Gute,
 {admin_name} aus deinem {site_name}""",
             description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}",
             category=ParameterCategory.EMAIL,
-            order_priority=7900,
+            order_priority=7998,
             meta=ParameterMeta(
                 validators=[
                     validate_html,
                     lambda x: validate_format_string(
                         x, ["member", "admin_name", "site_name"]
+                    ),
+                ],
+                textarea=True,
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
+            label="Betreff: Email 'Bestellbestätigung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Bestellbestätigung",
+            description="Betreff der Email, die bei Vertragsabschluss/-verlängerung sofort an das Mitglied geschickt wird.",
+            category=ParameterCategory.EMAIL,
+            order_priority=6999,
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT,
+            label="Inhalt: Email 'Bestelllbestätigung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Liebe/r {member.first_name},
+
+wir freuen uns, dass du Teil unseres WirGarten wirst.
+
+Nachfolgend findest du alle wichtigen Vertragsdetails nochmal auf einen Blick.
+
+{contract_list}
+
+Vertragslaufzeit: {contract_start_date} - {contract_end_date}
+
+Solltest du Fragen oder Unklarheiten haben, kannst du dich jederzeit an deinen Ansprechpartner wenden.
+      
+Name: {admin_name}
+Telefonnummer: +49 176 34 45 81 48
+Email: lueneburg@wirgarten.com
+
+Dein erster Abholtermin ist am {first_pickup_date}.
+
+Schön, dass du jetzt mit dabei bist.
+
+Liebe Grüße aus deinem WirGarten”
+""",
+            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_list}, {first_pickup_date}, {contract_start_date}, {contract_end_date}",
+            category=ParameterCategory.EMAIL,
+            order_priority=6998,
+            meta=ParameterMeta(
+                validators=[
+                    validate_html,
+                    lambda x: validate_format_string(
+                        x,
+                        [
+                            "member",
+                            "admin_name",
+                            "site_name",
+                            "contract_list",
+                            "contract_start_date",
+                            "contract_end_date",
+                            "first_pickup_date",
+                        ],
                     ),
                 ],
                 textarea=True,
