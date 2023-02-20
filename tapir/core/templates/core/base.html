@@ -27,10 +27,10 @@
     <script>moment.locale('de')</script>
     <script src="{% static 'core/js/url-functions.js' %}"></script>
     <script src="{% static 'core/js/selectize.min.js' %}"></script>
+    {{ form.media }}
 
     {% block head %}{% endblock %}
 </head>
-
 <body>
 <div id="loading-screen">
     {% include 'wirgarten/generic/loading-spinner.html' %}

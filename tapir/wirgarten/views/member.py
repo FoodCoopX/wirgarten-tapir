@@ -724,31 +724,9 @@ def get_member_personal_data_edit_form(request, **kwargs):
 
     check_permission_or_self(pk, request)
 
-    def update_member(
-        instance,
-        first_name,
-        last_name,
-        email,
-        phone_number,
-        street,
-        street_2,
-        postcode,
-        city,
-        birthdate,
-    ):
-        instance.first_name = first_name
-        instance.last_name = last_name
-        instance.email = email
-        instance.username = email
-        instance.phone_number = phone_number
-        instance.street = street
-        instance.street_2 = street_2
-        instance.postcode = postcode
-        instance.city = city
-        instance.birthdate = birthdate
-
-        instance.save()
-        return instance
+    kwargs["can_edit_name_and_birthdate"] = request.user.has_perm(
+        Permission.Accounts.MANAGE
+    )
 
     return get_form_modal(
         request=request,
