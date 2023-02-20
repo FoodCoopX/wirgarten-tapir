@@ -6,11 +6,6 @@
 {% load wirgarten %}
 {% load accounts %}
 
-{% block head %}
-<script src="{% static 'wirgarten/js/moment.min.js' %}"></script>
-{% endblock %}
-
-
 {% block content %}
 <div style="margin:2em" class="container">
     <div class="card">
@@ -36,9 +31,9 @@
                 {% for payment in payments %}
                 <tr>
                     <td style="text-align:center">
-                        <strong id="date-{{payment.due_date}}-{{payment.mandate_ref}}">{{payment.due_date}}</strong><br/>
+                        <strong id="date-{{payment.due_date|format_date}}-{{payment.mandate_ref}}">{{payment.due_date}}</strong><br/>
                         <p style="line-height:1.25em"><small
-                                id="datediff-{{payment.due_date}}-{{payment.mandate_ref}}"></small></p>
+                                id="datediff-{{payment.due_date|format_date}}-{{payment.mandate_ref}}"></small></p>
                         <h5>
                             {%if payment.upcoming %}
                             <span
@@ -88,7 +83,7 @@
                     <td>
                         {% if payment.upcoming %}
                         <button type="button"
-                                onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}')"
+                                onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date|format_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}')"
                                 class="btn btn-outline-danger" data-bs-toggle="modal"
                                 data-bs-target="#adminEditAmountModal">
                             <span class="material-icons">edit</span>
@@ -148,8 +143,8 @@
     {% for payment in payments %}
     date = moment("{{payment.due_date}}");
     diff = now.to(date);
-    document.getElementById("datediff-{{payment.due_date}}-{{payment.mandate_ref}}").innerText = diff;
-    document.getElementById("date-{{payment.due_date}}-{{payment.mandate_ref}}").innerText = date.format("LL");
+    document.getElementById("datediff-{{payment.due_date|format_date}}-{{payment.mandate_ref}}").innerText = diff;
+    document.getElementById("date-{{payment.due_date|format_date}}-{{payment.mandate_ref}}").innerText = date.format("LL");
     {% endfor %}
 
     const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName) => {

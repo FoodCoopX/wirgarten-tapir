@@ -552,6 +552,7 @@ class MemberPaymentsView(
     def get_payments_row(self, member_id):
         prev_payments = get_previous_payments(member_id)
         future_payments = generate_future_payments(member_id, prev_payments)
+
         return sorted(
             prev_payments + future_payments,
             key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
