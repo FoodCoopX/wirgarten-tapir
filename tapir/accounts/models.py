@@ -22,12 +22,10 @@ from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir import utils
-from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import generate_id, ID_LENGTH, TapirModel
 from tapir.log.models import UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
-from tapir.wirgarten.parameters import Parameter
 
 log = logging.getLogger(__name__)
 
@@ -211,8 +209,6 @@ class TapirUser(KeycloakUser):
         max_length=16,
     )
 
-    # objects = TapirUserManager()
-
     @transaction.atomic
     def save(self, *args, **kwargs):
         self.username = self.email
@@ -233,25 +229,6 @@ class TapirUser(KeycloakUser):
 
     def get_absolute_url(self):
         return reverse("wirgarten:member_detail", args=[self.pk])
-
-    def get_email_from_template(
-        self, subject_template_names: list, email_template_names: list
-    ):
-        # TODO(Leon Handreke): Should this be in views? Check in the django source how they do it.
-        context = {
-            "site_url": settings.SITE_URL,
-            "uid": urlsafe_base64_encode(force_bytes(self.pk)),
-            "tapir_user": self,
-            "token": default_token_generator.make_token(self),
-        }
-        with translation.override(self.preferred_language):
-            subject = loader.render_to_string(subject_template_names, context)
-            # Email subject *must not* contain newlines
-            subject = "".join(subject.splitlines())
-            body = loader.render_to_string(email_template_names, context)
-        email = EmailMultiAlternatives(subject, body, to=[self.email])
-        email.content_subtype = "html"
-        return email
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)

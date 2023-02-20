@@ -6,11 +6,13 @@
 {% load wirgarten %}
 
 {% block head %}
-{{ wizard.form.media }}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'wirgarten/css/summary.css' %}">
 <link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
 <link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
+<script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
+{{ wizard.form.media }}
+{{ form.media }}
 {% endblock %}
 
 {% block content %}

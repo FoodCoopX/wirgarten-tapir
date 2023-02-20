@@ -1,4 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
+
+from bootstrap_datepicker_plus.widgets import DatePickerInput
+
+from dateutil.relativedelta import relativedelta
 from django.utils.translation import gettext_lazy as _
 
 from django.core.validators import (
@@ -33,10 +37,16 @@ class PersonalDataForm(ModelForm):
     n_columns = 2
 
     def __init__(self, *args, **kwargs):
+        can_edit_name_and_birthdate = kwargs.pop("can_edit_name_and_birthdate", True)
+
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
             if k != "street_2":
                 v.required = True
+
+        self.fields["first_name"].disabled = not can_edit_name_and_birthdate
+        self.fields["last_name"].disabled = not can_edit_name_and_birthdate
+        self.fields["birthdate"].disabled = not can_edit_name_and_birthdate
 
     class Meta:
         model = Member
@@ -52,20 +62,14 @@ class PersonalDataForm(ModelForm):
             "country",
             "birthdate",
         ]
-        widgets = {"birthdate": DateInput()}
+        widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
     def is_valid(self):
-        # this is kind of problematic: in the registration wizard the form field key contains the step name
-        # FIXME: cleanup and constans for keys!!
-        email = (
-            self.data["Personal Details-email"]
-            if "Personal Details-email" in self.data
-            else self.data["email"]
-        )
+        super().is_valid()
 
-        duplicate_email_query = Member.objects.filter(email=email)
+        duplicate_email_query = Member.objects.filter(email=self.cleaned_data["email"])
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
@@ -73,9 +77,20 @@ class PersonalDataForm(ModelForm):
             self.add_error(
                 "email", _("Ein Nutzer mit dieser Email Adresse existiert bereits.")
             )
-            return False
 
-        return super().is_valid()
+        birthdate = self.cleaned_data["birthdate"]
+        today = date.today()
+        if birthdate > today or birthdate < (today + relativedelta(years=-120)):
+            self.add_error("birthdate", _("Bitte wähle ein gültiges Datum aus."))
+        elif birthdate > (today + relativedelta(years=-18)):
+            self.add_error(
+                "birthdate",
+                _(
+                    "Du musst mindestens 18 Jahre alt sein um der Genossenschaft beizutreten."
+                ),
+            )
+
+        return len(self.errors) == 0
 
 
 class PaymentAmountEditForm(Form):

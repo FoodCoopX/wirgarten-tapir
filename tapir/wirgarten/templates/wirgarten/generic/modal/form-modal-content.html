@@ -6,6 +6,8 @@
 {% load wirgarten %}
 
 {% block content %}
+<script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
+{{ form.media }}
 <form id="form" method="post" onsubmit="showLoadingSpinner()">
     {% csrf_token %}
     <div class="modal-body">
