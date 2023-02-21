@@ -61,7 +61,7 @@ def populate_users():
         if json_user.get_username() == "roberto.cortes":
             wirgarten_user = TapirUser(is_superuser=True, is_staff=True)
             copy_user_info(json_user, wirgarten_user)
-            wirgarten_user.save(initial_password="roberto.cortes")
+            wirgarten_user.save()
         else:
             pickup_locations = get_active_pickup_locations()
             wirgarten_user = Member(
@@ -69,7 +69,7 @@ def populate_users():
                 is_staff=False,
                 is_active=True,
                 date_joined=json_user.date_joined,
-                password=json_user.get_username(),
+                initial_password=json_user.get_username(),
                 is_superuser=False,
                 iban="DE02100500000054540402",
                 bic="BELADEBE",
@@ -82,7 +82,7 @@ def populate_users():
                 ],
             )
             copy_user_info(json_user, wirgarten_user)
-            wirgarten_user.save()
+            wirgarten_user.save(initial_password=wirgarten_user.email.split("@")[0])
 
             min_shares = create_subscriptions(wirgarten_user)
             create_shareownership(wirgarten_user, min_shares)

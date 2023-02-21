@@ -5,19 +5,16 @@ from functools import partial
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.db import models, transaction
-from django.template import loader
 from django.urls import reverse
 from django.urls import reverse_lazy
 from django.utils import translation
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from keycloak import (
     KeycloakAdmin,
 )
+from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -142,7 +139,7 @@ class KeycloakUser(AbstractUser):
         if self.keycloak_id:
             try:
                 kk.delete_user(self.keycloak_id)
-            except Exception as e:
+            except KeycloakDeleteError as e:
                 print("Error deleting Keycloak user: ", e)
         super().delete(*args, **kwargs)
 

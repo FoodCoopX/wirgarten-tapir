@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./docker/keycloak/import:/opt/keycloak/data/import
+      - ./docker/keycloak/themes/wirgarten:/opt/keycloak/themes/wirgarten
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
