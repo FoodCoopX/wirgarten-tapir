@@ -1,24 +1,9 @@
-const soliElem = document.getElementById('id_Harvest Shares-solidarity_price');
+let soliElem = document.getElementById('id_Harvest Shares-solidarity_price_harvest_shares');
 const origOptions = [...soliElem.options]
 
 const calculatePrice = (harvest_share) => {
     const [key, price] = harvest_share.split(':');
     return document.getElementsByName('Harvest Shares-' +key)[0].value * price;
-};
-
-const filterSoliPriceOptions = (shares_total, solidarity_total) => {
-    options = [...origOptions].filter(o => {
-        const value = parseFloat(o.value)
-        return value >= 0 || (-value * shares_total) < solidarity_total;
-    })
-
-    for (let i = 0; i < soliElem.options.length; i++){
-        soliElem.options.remove(i);
-    }
-
-    for (let o of options){
-        soliElem.options.add(o);
-    }
 };
 
 var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
@@ -42,8 +27,32 @@ var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
 
         resultElem.innerText = calculateTotal().toFixed(2);
 
+        console.log(event)
         filterSoliPriceOptions(calculateTotalWithoutSoliPrice(), solidarity_total);
     }
+
+    const filterSoliPriceOptions = (shares_total, solidarity_total) => {
+        const selected = soliElem.value;
+        options = [...origOptions].filter(o => {
+            const value = parseFloat(o.value)
+            return value >= 0 || (-value * shares_total) < solidarity_total;
+        })
+
+        while(soliElem.firstChild){
+            soliElem.removeChild(soliElem.firstChild);
+        }
+
+        const newSelectEl = soliElem.cloneNode(true);
+
+        for (option of options){
+            newSelectEl.appendChild(option)
+        }
+
+        soliElem.parentNode.replaceChild(newSelectEl, soliElem);
+        soliElem = newSelectEl;
+        soliElem.value = selected;
+        soliElem.addEventListener("change", handleChange);
+    };
 
     let noCapacity = true;
     harvest_share_prices.split(',').forEach(harvest_share => {
@@ -64,8 +73,6 @@ var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
         soliElem.readOnly=true;
         document.getElementById('no-capacity-warning').style.display='block';
     }
-
-    soliElem.addEventListener('change', handleChange);
 
     handleChange();
 }

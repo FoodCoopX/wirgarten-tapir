@@ -1,8 +1,8 @@
-from datetime import date
-from django.utils.translation import gettext_lazy as _
+from datetime import datetime
 
 from django import forms
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
@@ -17,7 +17,6 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
-    get_active_product_types,
     get_future_subscriptions,
 )
 
@@ -29,37 +28,52 @@ class BestellCoopForm(forms.Form):
         required=False,
     )
 
+    consent_bestellcoop = forms.BooleanField(
+        label=_("Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."),
+        help_text=_(
+            '<a href="https://lueneburg.wirgarten.com/vertragsgrundsaetze_bestellcoop" target="_blank">Vertragsgrundsätze - BestellCoop</a>'
+        ),
+        required=False,
+        initial=False,
+    )
+
     intro_template = "wirgarten/registration/steps/bestellcoop.intro.html"
     outro_template = "wirgarten/registration/steps/bestellcoop.outro.html"
+    colspans = {}
+    n_columns = 1
 
     def __init__(self, *args, **kwargs):
-        super(BestellCoopForm, self).__init__(*args, **kwargs)
+        super(BestellCoopForm, self).__init__(
+            *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
+        )
+        self.start_date = kwargs.get("start_date", get_next_contract_start_date())
+        self.growing_period = GrowingPeriod.objects.get(
+            start_date__lte=self.start_date, end_date__gt=self.start_date
+        )
+
         self.product = Product.objects.filter(type__name=ProductTypes.BESTELLCOOP)[0]
-        self.bestellcoop_price = get_product_price(self.product).price
+        self.bestellcoop_price = get_product_price(self.product, self.start_date).price
 
     def is_valid(self):
         super(BestellCoopForm, self).is_valid()
-        return True
+
+        if self.cleaned_data.get("bestellcoop", False) and not self.cleaned_data.get(
+            "consent_bestellcoop", False
+        ):
+            self.add_error(
+                "consent_bestellcoop",
+                _(
+                    "Du musst den Vertragsgrundsätzen zustimmen um Mitglied der BestellCoop zu werden."
+                ),
+            )
+
+        return len(self.errors) == 0
 
     @transaction.atomic
-    def save(
-        self,
-        member_id,
-        mandate_ref: MandateReference = None,
-        growing_period: GrowingPeriod = None,
-    ):
+    def save(self, member_id, mandate_ref: MandateReference = None):
         if self.cleaned_data["bestellcoop"]:
-            today = date.today()
-            if not growing_period:
-                growing_period = GrowingPeriod.objects.get(
-                    start_date__lte=today, end_date__gte=today
-                )
-
-            start_date = get_next_contract_start_date(today)
-            end_date = growing_period.end_date
-
             if (
-                get_future_subscriptions(start_date)
+                get_future_subscriptions(self.start_date)
                 .filter(member_id=member_id, product=self.product, cancellation_ts=None)
                 .exists()
             ):
@@ -73,8 +87,9 @@ class BestellCoopForm(forms.Form):
                 member_id=member_id,
                 product=self.product,
                 quantity=1,
-                start_date=start_date,
-                end_date=end_date,
-                period=growing_period,
+                start_date=self.start_date,
+                end_date=self.growing_period.end_date,
+                period=self.growing_period,
                 mandate_ref=mandate_ref,
+                consent_ts=datetime.now(),
             )

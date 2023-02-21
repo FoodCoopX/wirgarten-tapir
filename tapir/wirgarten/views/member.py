@@ -46,6 +46,7 @@ from tapir.wirgarten.forms.member.forms import (
     PersonalDataForm,
     WaitingListForm,
     TrialCancellationForm,
+    SubscriptionRenewalForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -75,6 +76,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_active_pickup_locations,
+    get_next_delivery_date,
 )
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
@@ -256,9 +258,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         self.add_renewal_notice_context(context, next_month, today)
 
-        context["next_trial_end_date"] = get_next_trial_end_date()
-        if get_subscriptions_in_trial_period(self.object.id).exists():
+        subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
+        if subs_in_trial.exists():
             context["show_trial_period_notice"] = True
+            context["subscriptions_in_trial"] = subs_in_trial
+            context["next_trial_end_date"] = min(
+                subs_in_trial, key=lambda x: x.start_date
+            ).start_date + relativedelta(day=1, months=1, days=-1)
 
         email_change_requests = EmailChangeRequest.objects.filter(
             user_id=self.object.id
@@ -310,13 +316,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     harvest_share_subs,
                 )
             )
+            future_subs = get_future_subscriptions(
+                next_growing_period.start_date
+            ).filter(member_id=self.object.id, cancellation_ts__isnull=True)
             if cancelled:
                 context["renewal_status"] = "cancelled"
-            elif (
-                get_future_subscriptions(next_growing_period.start_date)
-                .filter(member_id=self.object.id)
-                .exists()
-            ):
+            elif future_subs.exists():
                 context["renewal_status"] = "renewed"
             else:
                 context["renewal_status"] = "unknown"
@@ -356,18 +361,24 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                         Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
                         contract_end_date,
                         next_growing_period,
+                        contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
                     ),
                 },
             }
 
     def format_param(
-        self, key: str, contract_end_date: str, next_growing_period: GrowingPeriod
+        self,
+        key: str,
+        contract_end_date: str,
+        next_growing_period: GrowingPeriod,
+        **kwargs,
     ):
         return get_parameter_value(key).format(
             member=self.object,
             contract_end_date=contract_end_date,
             next_period_start_date=format_date(next_growing_period.start_date),
             next_period_end_date=format_date(next_growing_period.end_date),
+            **kwargs,
         )
 
 
@@ -379,7 +390,9 @@ def renew_contract_same_conditions(request, **kwargs):
     member_id = kwargs["pk"]
     new_subs = []
     next_period = get_next_growing_period()
-    for sub in get_future_subscriptions().filter(member_id=member_id):
+    for sub in get_future_subscriptions().filter(
+        member_id=member_id, cancellation_ts=None
+    ):
         new_subs.append(
             Subscription(
                 member=sub.member,
@@ -415,9 +428,12 @@ def cancel_contract_at_period_end(request, **kwargs):
         sub.cancellation_ts = now
         sub.save()
 
-    send_cancellation_confirmation_email(member_id, subs[0].end_date, subs)
+    end_date = subs[0].end_date
+    send_cancellation_confirmation_email(member_id, end_date, subs)
 
-    return HttpResponseRedirect(member_detail_url(member_id) + "?cancelled=true")
+    return HttpResponseRedirect(
+        member_detail_url(member_id) + "?cancelled=" + format_date(end_date)
+    )
 
 
 def generate_future_payments(member_id, prev_payments: list, limit: int = None):
@@ -557,16 +573,6 @@ class MemberPaymentsView(
             prev_payments + future_payments,
             key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
         )
-
-
-def get_next_delivery_date():
-    now = date.today()
-    delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
-    if now.weekday() > delivery_day:
-        next_delivery = now + relativedelta(days=(7 - now.weekday() % 7) + delivery_day)
-    else:
-        next_delivery = now + relativedelta(days=delivery_day - now.weekday())
-    return next_delivery
 
 
 def generate_future_deliveries(member: Member):
@@ -855,6 +861,26 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
 @require_http_methods(["GET", "POST"])
 @login_required
 @csrf_protect
+def get_renew_contracts_form(request, **kwargs):
+    member_id = kwargs.pop("pk")
+    check_permission_or_self(member_id, request)
+
+    kwargs["start_date"] = get_next_growing_period().start_date
+
+    return get_form_modal(
+        request=request,
+        form=SubscriptionRenewalForm,
+        handler=lambda x: x.save(
+            member_id=member_id,
+        ),
+        redirect_url_resolver=lambda _: member_detail_url(member_id),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
 def get_add_harvest_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
@@ -969,8 +995,9 @@ def get_cancel_trial_form(request, **kwargs):
         request=request,
         form=TrialCancellationForm,
         handler=lambda x: x.save(),
-        redirect_url_resolver=lambda _: member_detail_url(member_id)
-        + "?cancelled=true",
+        redirect_url_resolver=lambda x: member_detail_url(member_id)
+        + "?cancelled="
+        + format_date(x),
         **kwargs,
     )
 

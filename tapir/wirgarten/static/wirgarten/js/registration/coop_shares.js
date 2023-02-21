@@ -1,5 +1,4 @@
 const initSummary = (min_shares, share_price) => {
-
     const resultElem = document.getElementById('cooperative_shares_total');
     const input = document.getElementsByName('Cooperative Shares-cooperative_shares')[0];
     input.min = input.value = min_shares;

@@ -99,7 +99,8 @@
 
     const handleShowMemberDetailsPage = () => {
         const params = Tapir.getUrlParams();
-        window.open(`/wirgarten/members/${params.member}`, '_blank');
+
+        window.location.href = `/wirgarten/members/${params.member}`;
     }
 
     const handleShowContractPage = () => {
@@ -139,5 +140,6 @@
     }
 
     activateRow();
+
 </script>
 {% endblock %}

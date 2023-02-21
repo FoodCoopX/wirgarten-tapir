@@ -3,8 +3,8 @@
 
 <div id="cancellation-confirmation" style="display:none" class="alert alert-success">
     <h4 class="alert-heading">Kündigung eingegangen</h4>
-    <p>Deine Kündigung des Ernteanteils, sowie ggf. etwaiger Zusatzabos und der Mitgliedschaft in der BestellCoop zum
-        <strong>{% if contract_end_date %}{{contract_end_date}}{% else %}{{next_trial_end_date|format_date}}{% endif %}</strong> ist eingangen und hiermit bestätigt.
+    <p>Deine Kündigung zum
+        <strong id="cancellation_date"></strong> ist eingangen und hiermit bestätigt.
     </p>
     <hr>
     <div style="float:right">
@@ -31,6 +31,9 @@
     <p>Du hast bis zum
         <strong>{{next_trial_end_date|format_date}}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
     </p>
+    {% for sub in subscriptions_in_trial %}
+    - {{sub}} <small>({{sub.start_date}} - {{sub.end_date}})</small><br/>
+    {% endfor %}
     <hr>
     <div style="float:right">
         <button type="button" class="btn btn-danger" onclick="handleTrialCancellation()">Jetzt kündigen</button>
@@ -45,7 +48,8 @@
     <p>{{renewal_alert.unknown.content|safe}}</p>
     <hr>
     <div style="display:flex; justify-content:space-between;">
-        <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil kündigen</button>
+        <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil nicht verlängern
+        </button>
         <button type="button" class="btn btn-secondary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
     </div>
 </div>
@@ -115,6 +119,8 @@
     const params = Tapir.getUrlParams();
     if(params.cancelled && cancellationConfirmationElem){
         cancellationConfirmationElem.style.display = 'block';
+        cancellationDateElem = document.getElementById("cancellation_date")
+        cancellationDateElem.innerText = params.cancelled;
     }
     if(params.email_changed) {
         emailChangedConfirmationElem.style.display = 'block';
@@ -123,7 +129,7 @@
     Tapir.replaceUrlParams({})
 
     const handleCancellation = () => {
-        ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich kündigen?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Jetzt kündigen', 'danger', () => {
+        ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
             window.location.replace("{% url 'wirgarten:member_cancel_contract' pk=member.id %}");
         })
     }
@@ -138,7 +144,10 @@
     }
 
     const handleRenewChangeConditions = () => {
-        alert("NOT YET IMPLEMENTED")
+         const modalInstance = bootstrap.Modal.getInstance(document.getElementById("renew-modal"));
+         modalInstance.hide();
+
+         FormModal.load('{% url 'wirgarten:member_renew_changed_conditions' object.pk %}', "Bitte wähle deine neuen Konditionen");
     }
 
 </script>

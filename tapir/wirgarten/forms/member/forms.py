@@ -1,10 +1,7 @@
 from datetime import datetime, timezone, date
 
 from bootstrap_datepicker_plus.widgets import DatePickerInput
-
 from dateutil.relativedelta import relativedelta
-from django.utils.translation import gettext_lazy as _
-
 from django.core.validators import (
     EmailValidator,
 )
@@ -20,17 +17,22 @@ from django.forms import (
     ChoiceField,
     IntegerField,
 )
+from django.utils.translation import gettext_lazy as _
 
-from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.utils.forms import TapirPhoneNumberField, DateInput
+from tapir.utils.forms import TapirPhoneNumberField
+from tapir.wirgarten.forms.registration import HarvestShareForm
+from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
+from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.models import Payment, Member, ShareOwnership
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
     get_next_trial_end_date,
     send_cancellation_confirmation_email,
+    send_order_confirmation,
 )
+from tapir.wirgarten.service.products import get_future_subscriptions
 
 
 class PersonalDataForm(ModelForm):
@@ -208,7 +210,7 @@ class TrialCancellationForm(Form):
 
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         self.subs = get_subscriptions_in_trial_period(self.member_id)
-        self.next_trial_end_date = get_next_trial_end_date()
+        self.next_trial_end_date = get_next_trial_end_date(self.subs[0])
 
         def is_new_member() -> bool:
             try:
@@ -300,3 +302,53 @@ class TrialCancellationForm(Form):
         send_cancellation_confirmation_email(
             self.member_id, self.next_trial_end_date, subs_to_cancel
         )
+
+        return subs_to_cancel[0].end_date
+
+
+class SubscriptionRenewalForm(Form):
+    template_name = "wirgarten/member/subscription_renewal_form.html"
+    n_columns = 4
+    colspans = {}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
+        )
+        self.start_date = kwargs["start_date"]
+
+        # FIXME: hardcoded product forms :(
+        self.product_forms = [
+            HarvestShareForm(*args, **kwargs, enable_validation=True),
+            ChickenShareForm(*args, **kwargs),
+            BestellCoopForm(*args, **kwargs),
+        ]
+        for form in self.product_forms:
+            for field_name, field in form.fields.items():
+                self.fields[field_name] = field
+
+    def is_valid(self):
+        super().is_valid()
+        for form in self.product_forms:
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        if field == "__all__":
+                            self.add_error(None, error)
+                        else:
+                            self.add_error(field, error)
+
+        return len(self.errors) == 0
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        for form in self.product_forms:
+            form.save(*args, **kwargs)
+
+        member_id = kwargs["member_id"]
+        subs = get_future_subscriptions(self.start_date).filter(
+            member_id=member_id, cancellation_ts__isnull=True
+        )
+
+        member = Member.objects.get(id=member_id)
+        send_order_confirmation(member, subs)

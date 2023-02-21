@@ -14,6 +14,11 @@
         {% if form.template_name %}
         {% include form.template_name %}
         {% else %}
+        {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+        <p style="color: #dc3545;">{{ error }}</p>
+        {% endfor %}
+        {% endif %}
         <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
              class="form-fields">
             {% for field in form %}
@@ -47,6 +52,10 @@
     const showLoadingSpinner = () => {
         parent.postMessage({type:"modal-loading-spinner"}, "*")
     }
+
+
+
+
 
 
 </script>

@@ -1,8 +1,8 @@
-from datetime import date
-from django.utils.translation import gettext_lazy as _
+from datetime import date, datetime
 
 from django import forms
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
@@ -41,14 +41,14 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_solidarity_total() -> float:
+def get_solidarity_total(reference_date: date = date.today()) -> float:
     val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
         return 1000.0
     elif val == 2:  # automatic calculation
-        return get_solidarity_overplus() or 0.0
+        return get_solidarity_overplus(reference_date) or 0.0
 
 
 HARVEST_SHARE_FIELD_PREFIX = "harvest_shares_"
@@ -61,15 +61,29 @@ class HarvestShareForm(forms.Form):
     outro_template = "wirgarten/registration/steps/harvest_shares.outro.html"
 
     def __init__(self, *args, **kwargs):
-        super(HarvestShareForm, self).__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k != "start_date" and k != "enable_validation"
+            },
+        )
+
+        self.require_at_least_one = kwargs.get("enable_validation", False)
+        self.start_date = kwargs.get("start_date", get_next_contract_start_date())
+        self.growing_period = GrowingPeriod.objects.get(
+            start_date__lte=self.start_date, end_date__gt=self.start_date
+        )
 
         harvest_share_products = list(
             HarvestShareProduct.objects.filter(
-                deleted=False, type_id__in=get_available_product_types()
+                deleted=False, type_id__in=get_available_product_types(self.start_date)
             )
         )
         prices = {
-            prod.id: get_product_price(prod).price for prod in harvest_share_products
+            prod.id: get_product_price(prod, self.start_date).price
+            for prod in harvest_share_products
         }
 
         harvest_share_products = sorted(
@@ -82,22 +96,27 @@ class HarvestShareForm(forms.Form):
             ): p
             for p in harvest_share_products
         }
-        self.field_order = list(self.products.keys()) + ["solidarity_price"]
+        self.field_order = list(self.products.keys()) + [
+            "solidarity_price_harvest_shares"
+        ]
         self.n_columns = len(self.products)
-        self.colspans = {"solidarity_price": self.n_columns}
+        self.colspans = {
+            "solidarity_price_harvest_shares": self.n_columns,
+            "consent_harvest_shares": self.n_columns,
+        }
 
-        self.solidarity_total = f"{get_solidarity_total()}".replace(",", ".")
+        self.solidarity_total = f"{get_solidarity_total(self.start_date)}".replace(
+            ",", "."
+        )
 
-        self.free_capacity = (
-            f"{get_free_product_capacity(harvest_share_products[0].type.id)}".replace(
-                ",", "."
-            )
+        self.free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, self.start_date)}".replace(
+            ",", "."
         )
         for prod in harvest_share_products:
             self.fields[
                 f"{HARVEST_SHARE_FIELD_PREFIX}{prod.name.lower()}"
             ] = forms.IntegerField(
-                required=True,
+                required=False,
                 max_value=10,
                 min_value=0,
                 initial=0,
@@ -105,10 +124,20 @@ class HarvestShareForm(forms.Form):
                 help_text="""{:.2f} € / Monat""".format(prices[prod.id]),
             )
 
-        self.fields["solidarity_price"] = forms.ChoiceField(
-            required=True,
+        self.fields["solidarity_price_harvest_shares"] = forms.ChoiceField(
+            required=False,
             label=_("Solidarpreis"),
             choices=SOLIDARITY_PRICES,
+        )
+        self.fields["consent_harvest_shares"] = forms.BooleanField(
+            label=_(
+                "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
+            ),
+            help_text=_(
+                '<a href="https://lueneburg.wirgarten.com/vertragsgrundsaetze_ernteanteil" target="_blank">Vertragsgrundsätze - Ernteanteile</a>'
+            ),
+            required=False,
+            initial=False,
         )
 
         self.harvest_shares = ",".join(
@@ -122,38 +151,59 @@ class HarvestShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(
-        self,
-        member_id,
-        mandate_ref: MandateReference = None,
-        growing_period: GrowingPeriod = None,
-    ):
+    def save(self, member_id, mandate_ref: MandateReference = None):
         product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
-
-        today = date.today()
-        if not growing_period:
-            growing_period = GrowingPeriod.objects.get(
-                start_date__lte=today, end_date__gte=today
-            )
 
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
-        start_date = get_next_contract_start_date(today)
-        end_date = growing_period.end_date
-
         for key, quantity in self.cleaned_data.items():
-            if key.startswith("harvest_shares_") and quantity > 0:
+            if (
+                key.startswith(HARVEST_SHARE_FIELD_PREFIX)
+                and quantity is not None
+                and quantity > 0
+            ):
                 product = Product.objects.get(
-                    type=product_type, name=key.replace("harvest_shares_", "").upper()
+                    type=product_type,
+                    name=key.replace(HARVEST_SHARE_FIELD_PREFIX, "").upper(),
                 )
                 Subscription.objects.create(
                     member_id=member_id,
                     product=product,
-                    period=growing_period,
+                    period=self.growing_period,
                     quantity=quantity,
-                    start_date=start_date,
-                    end_date=end_date,
-                    solidarity_price=self.cleaned_data["solidarity_price"],
+                    start_date=self.start_date,
+                    end_date=self.growing_period.end_date,
+                    solidarity_price=self.cleaned_data[
+                        "solidarity_price_harvest_shares"
+                    ],
                     mandate_ref=mandate_ref,
+                    consent_ts=datetime.now(),
                 )
+
+    def has_harvest_shares(self):
+        for key, quantity in self.cleaned_data.items():
+            if key.startswith(HARVEST_SHARE_FIELD_PREFIX) and (
+                quantity is not None and quantity > 0
+            ):
+                return True
+        return False
+
+    def is_valid(self):
+        super().is_valid()
+
+        has_harvest_shares = self.has_harvest_shares()
+        if has_harvest_shares and not self.cleaned_data.get(
+            "consent_harvest_shares", False
+        ):
+            self.add_error(
+                "consent_harvest_shares",
+                _(
+                    "Du musst den Vertragsgrundsätzen zustimmen um Ernteanteile zu zeichnen."
+                ),
+            )
+
+        if self.require_at_least_one and not has_harvest_shares:
+            self.add_error(None, _("Bitte wähle mindestens einen Ernteanteil!"))
+
+        return len(self.errors) == 0
