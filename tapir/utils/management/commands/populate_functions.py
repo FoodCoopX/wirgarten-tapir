@@ -69,7 +69,6 @@ def populate_users():
                 is_staff=False,
                 is_active=True,
                 date_joined=json_user.date_joined,
-                initial_password=json_user.get_username(),
                 is_superuser=False,
                 iban="DE02100500000054540402",
                 bic="BELADEBE",
