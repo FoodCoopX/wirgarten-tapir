@@ -1,4 +1,6 @@
 {% load keycloak %}
+{% load tapir_static %}
+
 {% keycloak_config as conf %}
 
 <script src="{% keycloak_public_url %}/js/keycloak.js"></script>
@@ -85,7 +87,8 @@
 
                   if(savedToken && !document.body.innerText){
                       // default redirect if no body is loaded
-                      window.location.replace("{% url 'index' %}");
+                      const params = Tapir.getUrlParams()
+                      window.location.replace(params.next || "{% url 'index' %}");
                   }
 
                   addLogoutFunction();
@@ -95,7 +98,9 @@
               console.log("Keycloak initialized successfully");
             }).catch((err) => {
                 deleteAllCookies();
-                window.location.reload();
-                console.error("Failed to initialize Keycloak: " + JSON.stringify(err));
+                keycloak.logout({redirectUri: window.location.href})
+                console.error("Failed to initialize Keycloak: ", JSON.stringify(err));
             });
+
+
 </script>

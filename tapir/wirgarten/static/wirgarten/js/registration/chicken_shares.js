@@ -1,7 +1,11 @@
-var initSummary = (max_shares, chicken_share_prices, capacity_total) => {
+var initChickenShareSummary = (max_shares, chicken_share_prices, capacity_total) => {
     const calculatePrice = (chicken_share) => {
         const [key, price] = chicken_share.split(':');
-        return document.getElementsByName('Additional Shares-' + key)[0].value * price;
+        let elem = document.getElementsByName('Additional Shares-' + key)[0];
+        if(!elem){
+            elem = document.getElementsByName(key)[0]
+        }
+        return elem.value * price;
     };
 
     const resultElem = document.getElementById('additional_shares_total');
@@ -28,9 +32,18 @@ var initSummary = (max_shares, chicken_share_prices, capacity_total) => {
 
     chicken_share_prices.forEach(chicken_share => {
         const [key,price] = chicken_share.split(":");
-        const input = document.getElementsByName('Additional Shares-' + key)[0];
+        let input = document.getElementsByName('Additional Shares-' + key)[0];
+        if(!input){
+            input = document.getElementsByName(key)[0]
+        }
 
         input.max = Math.max(0,Math.min(max_shares, Math.floor(capacity_total / price)))
+
+        if(input.max == 0){
+            input.readOnly=true;
+            input.value=0;
+        }
+
         input.addEventListener('change', handleChange);
     });
 

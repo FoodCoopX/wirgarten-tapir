@@ -21,6 +21,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
@@ -32,7 +33,12 @@ from tapir.wirgarten.service.member import (
     send_cancellation_confirmation_email,
     send_order_confirmation,
 )
-from tapir.wirgarten.service.products import get_future_subscriptions
+from tapir.wirgarten.service.products import (
+    get_future_subscriptions,
+    is_harvest_shares_available,
+    is_chicken_shares_available,
+    is_bestellcoop_available,
+)
 
 
 class PersonalDataForm(ModelForm):
@@ -239,7 +245,7 @@ class TrialCancellationForm(Form):
 
         if is_new_member():
             self.fields["cancel_coop"] = BooleanField(
-                label="Mitgliedschaftsantrag zurückziehen", required=False
+                label="Beitrittserklärung zur Genossenschaft widerrufen", required=False
             )
 
     def is_valid(self):
@@ -323,6 +329,13 @@ class SubscriptionRenewalForm(Form):
             ChickenShareForm(*args, **kwargs),
             BestellCoopForm(*args, **kwargs),
         ]
+
+        self.available_product_types = {
+            ProductTypes.HARVEST_SHARES: is_harvest_shares_available(self.start_date),
+            ProductTypes.CHICKEN_SHARES: is_chicken_shares_available(self.start_date),
+            ProductTypes.BESTELLCOOP: is_bestellcoop_available(self.start_date),
+        }
+
         for form in self.product_forms:
             for field_name, field in form.fields.items():
                 self.fields[field_name] = field

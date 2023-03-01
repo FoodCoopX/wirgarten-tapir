@@ -194,12 +194,19 @@ def create_wait_list_entry(
     :param email: the contact email address
     :return: the newly created WaitListEntry
     """
+
+    try:
+        member = Member.objects.get(email=email)
+    except Member.DoesNotExist:
+        member = None
+
     return WaitingListEntry.objects.create(
         first_name=first_name,
         last_name=last_name,
         email=email,
         privacy_consent=datetime.now(),
         type=type,
+        member=member,
     )
 
 

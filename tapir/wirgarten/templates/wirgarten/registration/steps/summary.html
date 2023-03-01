@@ -45,7 +45,7 @@
                 {% endfor %}
 
 
-                {% if wizard.form.harvest_shares_info.solidarity_price != 0 %}
+                {% if wizard.form.harvest_shares_info.solidarity_price_harvest_shares != 0 %}
                 <tr>
                     <td></td>
                     <td></td>
@@ -56,7 +56,7 @@
                 <tr>
                     <th>Solidarpreis</th>
                     <td style="text-align:right">
-                        {% widthratio wizard.form.harvest_shares_info.solidarity_price 1 100 %} %
+                        {% widthratio wizard.form.harvest_shares_info.solidarity_price_harvest_shares 1 100 %} %
                     </td>
                     <td style="text-align:right">{{wizard.form.harvest_shares_info.solidarity_price_diff}} € / Monat
                     </td>

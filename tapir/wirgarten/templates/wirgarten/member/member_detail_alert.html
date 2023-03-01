@@ -67,6 +67,22 @@
     <h4 class="alert-heading">{{renewal_alert.renewed.header|safe}}</h4>
     <p>{{renewal_alert.renewed.content|safe}}</p>
 </div>
+{% elif renewal_status == 'no_capacity' %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">{{renewal_alert.no_capacity.header|safe}}</h4>
+    <p>{{renewal_alert.no_capacity.content|safe}}</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary"
+                onclick="handleShowWaitlist()">Ja, ich möchte auf die Warteliste!
+        </button>
+    </div>
+</div>
+{% elif renewal_status == 'waitlist' %}
+<div class="alert alert-success">
+    <h4 class="alert-heading">Wir geben dir Bescheid!</h4>
+    <p>Du stehst auf der Warteliste für neue Ernteanteile.</p>
+</div>
 {% endif %}
 
 <div class="modal fade" id="renew-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -136,7 +152,11 @@
 
     const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
     const handleRenewal = () => {
+        {% if available_product_types|get_value:'Ernteanteile' %}
         renewalModal.show()
+        {% else %}
+        handleShowWaitlist();
+        {% endif %}
     }
 
     const handleRenewSameConditions = () => {
@@ -148,6 +168,10 @@
          modalInstance.hide();
 
          FormModal.load('{% url 'wirgarten:member_renew_changed_conditions' object.pk %}', "Bitte wähle deine neuen Konditionen");
+    }
+
+    const handleShowWaitlist = () => {
+         FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
 
 </script>

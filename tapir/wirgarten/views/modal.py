@@ -8,7 +8,7 @@ def get_form_modal(
     form,
     handler,
     instance=None,
-    redirect_url_resolver=(lambda x: None),
+    redirect_url_resolver=(lambda x: str),
     **kwargs
 ):
     # if this is a POST request we need to process the modal data
