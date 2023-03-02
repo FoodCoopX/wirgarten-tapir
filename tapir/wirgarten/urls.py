@@ -31,6 +31,7 @@ from tapir.wirgarten.views.member import (
     SubscriptionListView,
     get_cancel_trial_form,
     get_renew_contracts_form,
+    resend_verify_email,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -206,6 +207,11 @@ urlpatterns = [
         "members/<str:pk>/canceltrial",
         get_cancel_trial_form,
         name="member_cancel_trial",
+    ),
+    path(
+        "members/<str:pk>/resendverifyemail",
+        resend_verify_email,
+        name="member_resend_verify_email",
     ),
     path("members/<str:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(

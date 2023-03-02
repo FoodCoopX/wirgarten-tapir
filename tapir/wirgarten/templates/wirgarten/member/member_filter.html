@@ -10,6 +10,22 @@
 {% translate "Mitglieder" %}
 {% endblock %}
 
+{% block page_top %}
+<div id="success-alert" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading"></h4>
+    <button type="button" class="btn btn-primary"
+            onclick="document.getElementById('success-alert').style.display='none'">Alles klar
+    </button>
+</div>
+<div id="error-alert" style="display:none" class="alert alert-danger">
+    <h4 class="alert-heading">Es ist ein Fehler aufgetreten :(</h4>
+    <p class="alert-content"></p>
+    <button type="button" class="btn btn-primary"
+            onclick="document.getElementById('error-alert').style.display='none'">Alles klar
+    </button>
+</div>
+{% endblock %}
+
 {% block card_header %}
 <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
 <span style="display: flex; flex-direction:row;">
@@ -27,6 +43,7 @@
     {% if perms.coop.manage %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
     {% endif %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member needs-unverified-email' %}
     <div style="width: 1em"></div>
     {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
     {% endif %}
@@ -35,9 +52,7 @@
 
 {% block table_head %}
 <tr>
-    <th>{% translate "Vorname" %}</th>
-    <th>{% translate "Nachname" %}</th>
-    <th>{% translate "Geburtstag" %}</th>
+    <th>{% translate "Name" %}</th>
     <th>{% translate "Email" %}</th>
     <th>{% translate "Registriert am" %}</th>
 </tr>
@@ -46,12 +61,13 @@
 {% block table_body %}
 {% for member in object_list %}
 
-<tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}')"
+<tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}', '{{ member.email_verified }}'.toLowerCase())"
     class="tr-clickable member-row">
-    <td class="align-middle">{{ member.first_name }}</td>
-    <td class="align-middle">{{ member.last_name }}</td>
-    <td class="align-middle">{{ member.birthdate }}</td>
-    <td class="align-middle">{{ member.email }}</td>
+    <td class="align-middle">{{ member.first_name }} {{ member.last_name }}</td>
+    <td class="align-middle">{% if not member.email_verified %}<span title="Nicht verifiziert!"
+                                                                     style="color: var(--primary); font-size: 1.5em; vertical-align:middle"
+                                                                     class="material-icons">warning</span>&nbsp;&nbsp;{% endif %}{{ member.email }}
+    </td>
     <td class="align-middle">{{ member.created_at|format_date }}</td>
 </tr>
 {% endfor %}
@@ -61,6 +77,7 @@
 <script>
     const memberRows = document.getElementsByClassName('member-row');
     const buttons = document.getElementsByClassName('needs-member');
+    const verifyDependentButtons = document.getElementsByClassName('needs-unverified-email');
 
     const activateRow = () => {
         const params = Tapir.getUrlParams();
@@ -77,16 +94,21 @@
             for(btn of buttons){
                 btn.disabled = false;
             }
+
+            for(btn of verifyDependentButtons){
+                btn.disabled = params.verified === "true";
+            }
         }
     }
 
-    const handleSelectMember = (memberId) => {
+    const handleSelectMember = (memberId, emailVerified) => {
         const params = Tapir.getUrlParams();
 
         if(params.member === memberId){
             handleShowMemberDetailsPage();
         } else {
             params.member = memberId;
+            params.verified = emailVerified;
             Tapir.replaceUrlParams(params);
 
             activateRow();
@@ -133,6 +155,15 @@
         })
     }
 
+    const handleResendVerifyEmail = () => {
+        const params = Tapir.getUrlParams();
+        ConfirmationModal.open('Verifizierungs-Email erneut senden', 'Bist du dir sicher, dass du die Verifizierungs-Email erneut an dieses Mitglied senden möchtest?', 'Mail erneut senden', 'danger', () => {
+            const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
+            const newParams = {next: window.location.pathname + Tapir.stringifyUrlParams(params)};
+            window.location.replace(url + Tapir.stringifyUrlParams(newParams));
+        })
+    }
+
     const handleDeleteMember = () => {
         ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
             alert("Not yet implemented!")
@@ -140,6 +171,23 @@
     }
 
     activateRow();
+
+    const params = Tapir.getUrlParams();
+    if(params.resend_verify_email){
+        if(params.resend_verify_email === 'success'){
+            const alert = document.getElementById("success-alert");
+            alert.style.display = 'block';
+            alert.querySelectorAll(".alert-heading")[0].innerText="Verifizierungs-Email erfolgreich versendet!"
+        } else {
+            const alert = document.getElementById("error-alert");
+            alert.style.display = 'block';
+            alert.querySelectorAll(".alert-content")[0].innerText=decodeURIComponent(params.resend_verify_email);
+        }
+
+        params.resend_verify_email = undefined;
+        Tapir.replaceUrlParams(params);
+    }
+
 
 </script>
 {% endblock %}
