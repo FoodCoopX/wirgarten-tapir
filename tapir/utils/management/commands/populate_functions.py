@@ -61,7 +61,7 @@ def populate_users():
         if json_user.get_username() == "roberto.cortes":
             wirgarten_user = TapirUser(is_superuser=True, is_staff=True)
             copy_user_info(json_user, wirgarten_user)
-            wirgarten_user.save()
+            wirgarten_user.save(initial_password=wirgarten_user.email.split("@")[0])
         else:
             pickup_locations = get_active_pickup_locations()
             wirgarten_user = Member(
@@ -112,7 +112,7 @@ def create_subscriptions(wirgarten_user):
     solidarity_price = 0.05
     sp_int = random.randint(0, 12)
     if sp_int == 8 or sp_int == 9:
-        solidarity_price = -0.5
+        solidarity_price = -0.05
     if 7 >= sp_int >= 4:
         solidarity_price = 0.0
     if sp_int == 3:

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.core.mail import EmailMultiAlternatives
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
@@ -190,7 +191,7 @@ def export_harvest_share_subscriber_emails():
                 {
                     KEY_FIRST_NAME: member.first_name,
                     KEY_LAST_NAME: member.last_name,
-                    KEY_VARIANTS: ", ".join(map(lambda s: s.product.name, subs)),
+                    KEY_VARIANTS: ", ".join(subs),
                     KEY_EMAIL: member.email,
                 }
             )

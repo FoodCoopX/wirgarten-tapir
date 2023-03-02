@@ -29,11 +29,13 @@ from tapir.wirgarten.service.member import (
     create_mandate_ref,
     buy_cooperative_shares,
     get_next_contract_start_date,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     is_harvest_shares_available,
     is_bestellcoop_available,
     is_chicken_shares_available,
+    get_future_subscriptions,
 )
 
 # Wizard Steps Keys
@@ -256,6 +258,10 @@ class RegistrationWizardView(CookieWizardView):
                 form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
                 member,
                 actual_coop_start,
+            )
+
+            send_order_confirmation(
+                member, get_future_subscriptions().filter(member=member)
             )
 
         return HttpResponseRedirect(

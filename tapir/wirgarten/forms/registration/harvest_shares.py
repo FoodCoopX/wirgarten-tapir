@@ -29,7 +29,7 @@ from tapir.wirgarten.service.products import (
 )
 
 SOLIDARITY_PRICES = [
-    (0.0, _("Ich möchte keinen Solidarpreis zahlen")),
+    (0.0, _("Ich möchte den Richtpreis zahlen")),
     (0.25, "+ 25% 🤩"),
     (0.2, "+ 20% 😍"),
     (0.15, "+ 15% 🚀"),
@@ -128,6 +128,7 @@ class HarvestShareForm(forms.Form):
             required=False,
             label=_("Solidarpreis"),
             choices=SOLIDARITY_PRICES,
+            initial=0.05,
         )
         self.fields["consent_harvest_shares"] = forms.BooleanField(
             label=_(

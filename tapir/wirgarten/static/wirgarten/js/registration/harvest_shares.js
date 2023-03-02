@@ -1,12 +1,19 @@
-let soliElem = document.getElementById('id_Harvest Shares-solidarity_price_harvest_shares');
+let soliElem = document.getElementsByName('solidarity_price_harvest_shares')[0];
+if(!soliElem){
+    soliElem = document.getElementsByName('Harvest Shares-solidarity_price_harvest_shares')[0];
+}
 const origOptions = [...soliElem.options]
 
 const calculatePrice = (harvest_share) => {
     const [key, price] = harvest_share.split(':');
-    return document.getElementsByName('Harvest Shares-' +key)[0].value * price;
+    let elem = document.getElementsByName('Harvest Shares-' +key)[0]
+    if(!elem){
+        elem = document.getElementsByName(key)[0]
+    }
+    return elem.value * price;
 };
 
-var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
+var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
     const resultElem = document.getElementById('harvest_shares_total');
 
     const calculateTotalWithoutSoliPrice = () => harvest_share_prices.split(',').map(calculatePrice).reduce((a,b) => a + b);
@@ -27,7 +34,6 @@ var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
 
         resultElem.innerText = calculateTotal().toFixed(2);
 
-        console.log(event)
         filterSoliPriceOptions(calculateTotalWithoutSoliPrice(), solidarity_total);
     }
 
@@ -50,14 +56,23 @@ var initSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
 
         soliElem.parentNode.replaceChild(newSelectEl, soliElem);
         soliElem = newSelectEl;
-        soliElem.value = selected;
+
+        const optArr = Array.from(options)
+        const newSelected = optArr.some(o => o.value === selected) ? selected : optArr[optArr.length - 1].value;
+
+        soliElem.value = newSelected;
+
+        resultElem.innerText = calculateTotal().toFixed(2);
         soliElem.addEventListener("change", handleChange);
     };
 
     let noCapacity = true;
     harvest_share_prices.split(',').forEach(harvest_share => {
         const [key,price] = harvest_share.split(":");
-        const input = document.getElementsByName('Harvest Shares-' + key)[0];
+        let input = document.getElementsByName('Harvest Shares-' + key)[0];
+        if(!input){
+            input = document.getElementsByName(key)[0];
+        }
         input.addEventListener('change', e => handleChange(e, 10));
         input.min = 0;
         input.max = Math.max(0,Math.min(10, Math.floor(capacity_total / parseFloat(price))))

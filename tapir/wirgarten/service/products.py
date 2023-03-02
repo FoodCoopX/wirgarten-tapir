@@ -199,7 +199,7 @@ def get_active_subscriptions(reference_date: date = date.today()):
     :param reference_date: the date on which the subscription must be active
     :return: queryset of active subscription
     """
-    return get_future_subscriptions().filter(start_date__lte=reference_date)
+    return get_future_subscriptions().filter(start_date__gte=reference_date)
 
 
 @transaction.atomic
@@ -494,38 +494,40 @@ def get_cheapest_product_price(
     )
 
 
-def is_product_type_available(product_type: ProductType) -> bool:
+def is_product_type_available(
+    product_type: ProductType, reference_date: date = date.today()
+) -> bool:
     return get_free_product_capacity(
-        product_type_id=product_type.id
-    ) > get_cheapest_product_price(product_type)
+        product_type_id=product_type.id, reference_date=reference_date
+    ) > get_cheapest_product_price(product_type, reference_date)
 
 
 # FIXME: duplicate code. It would be nice to have generic parameters for each product type instead of hand written ones
-def is_harvest_shares_available() -> bool:
+def is_harvest_shares_available(reference_date: date = date.today()) -> bool:
     param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+            ProductType.objects.get(name=ProductTypes.HARVEST_SHARES), reference_date
         )
     )
 
 
-def is_bestellcoop_available() -> bool:
+def is_bestellcoop_available(reference_date: date = date.today()) -> bool:
     param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.BESTELLCOOP)
+            ProductType.objects.get(name=ProductTypes.BESTELLCOOP), reference_date
         )
     )
 
 
-def is_chicken_shares_available() -> bool:
+def is_chicken_shares_available(reference_date: date = date.today()) -> bool:
     param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
         and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
+            ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES), reference_date
         )
     )

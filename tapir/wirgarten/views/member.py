@@ -29,6 +29,7 @@ from django_filters import (
     BooleanFilter,
 )
 from django_filters.views import FilterView
+from django_filters import ChoiceFilter
 
 from tapir import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
@@ -87,6 +88,7 @@ from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
     get_next_contract_start_date,
     send_cancellation_confirmation_email,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -108,15 +110,82 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
+from django.db.models import Q, F, ExpressionWrapper
+from datetime import timedelta
+from django.db.models.functions import TruncMonth
+from django.db import models
 
 
 # FIXME: this file needs some serious refactoring. Some of the functions should either be generalized service functions or private functions.
+
+
+class ContractStatusFilter(ChoiceFilter):
+    def filter(self, qs, value):
+        # Filter members with an active subscription which is not cancelled
+        if value:
+            today = date.today()
+            qs = qs.filter(
+                subscription__start_date__lte=today,
+                subscription__end_date__gte=today,
+            )
+
+        if value == "Contract Renewed":
+            # Get the upcoming growing period
+            growing_period = get_next_growing_period()
+
+            # Filter members with at least one subscription starting in the upcoming growing period
+            qs = qs.filter(
+                subscription__start_date__gte=growing_period.start_date,
+                subscription__start_date__lte=growing_period.end_date,
+            )
+
+        elif value == "Contract Cancelled":
+            trial_period_end = ExpressionWrapper(
+                TruncMonth(F("subscription__start_date"))
+                + timedelta(
+                    days=relativedelta(months=1).days,
+                    seconds=relativedelta(months=1).seconds,
+                ),
+                output_field=models.DateField(),
+            )
+
+            qs = qs.annotate(trial_period_end=trial_period_end).filter(
+                subscription__cancellation_ts__gt=F("trial_period_end"),
+                subscription__cancellation_ts__isnull=False,
+            )
+
+        elif value == "Undecided":
+            growing_period = get_next_growing_period()
+
+            # Calculate the trial period start date
+            trial_period_start = date.today() + relativedelta(months=-1, day=1)
+
+            # Filter members with no active subscriptions that started within the last month
+            qs = qs.filter(subscription__start_date__lte=trial_period_start).exclude(
+                subscription__cancellation_ts__isnull=False,
+            )
+
+            qs = qs.exclude(
+                subscription__start_date__gte=growing_period.start_date,
+                subscription__start_date__lte=growing_period.end_date,
+            )
+
+        return qs.distinct()
 
 
 class MemberFilter(FilterSet):
     first_name = CharFilter(lookup_expr="icontains")
     last_name = CharFilter(lookup_expr="icontains")
     email = CharFilter(lookup_expr="icontains")
+    contract_status = ContractStatusFilter(
+        label="Verträge verlängert",
+        choices=(
+            ("Contract Renewed", "Verträge verlängert"),
+            ("Contract Cancelled", "Explizit nicht verlängert"),
+            ("Undecided", "Weder noch"),
+        ),
+    )
+
     o = OrderingFilter(
         label=_("Sortierung"),
         initial=0,
@@ -162,8 +231,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(MemberDetailView, self).get_context_data()
 
-        today = date.today()
-        next_month = today + relativedelta(months=1)
+        today = kwargs.get("start_date", date.today())
+        next_month = today + relativedelta(months=1, day=1)
 
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
@@ -208,9 +277,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         context["available_product_types"] = {
-            ProductTypes.HARVEST_SHARES: is_harvest_shares_available(),
+            ProductTypes.HARVEST_SHARES: is_harvest_shares_available(next_month),
             ProductTypes.CHICKEN_SHARES: additional_products_available
-            and is_chicken_shares_available(),
+            and is_chicken_shares_available(next_month),
             ProductTypes.BESTELLCOOP: additional_products_available
             and (
                 not (
@@ -221,7 +290,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 or context["subscriptions"][ProductTypes.BESTELLCOOP][0].cancellation_ts
                 is not None
             )
-            and is_bestellcoop_available(),
+            and is_bestellcoop_available(next_month),
         }
 
         if self.object.pickup_location:
@@ -319,12 +388,25 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             future_subs = get_future_subscriptions(
                 next_growing_period.start_date
             ).filter(member_id=self.object.id, cancellation_ts__isnull=True)
-            if cancelled:
-                context["renewal_status"] = "cancelled"
-            elif future_subs.exists():
-                context["renewal_status"] = "renewed"
+            has_future_subs = future_subs.exists()
+            if cancelled and not has_future_subs:
+                context[
+                    "renewal_status"
+                ] = "cancelled"  # --> show cancellation confirmation
+            elif has_future_subs:
+                context["renewal_status"] = "renewed"  # --> show renewal confirmation
             else:
-                context["renewal_status"] = "unknown"
+                if context["available_product_types"][ProductTypes.HARVEST_SHARES]:
+                    context["renewal_status"] = "unknown"  # --> show renewal notice
+                elif WaitingListEntry.objects.filter(
+                    email=self.object.email,
+                    type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
+                ).exists():
+                    context[
+                        "renewal_status"
+                    ] = "waitlist"  # --> show waitlist confirmation
+                else:
+                    context["renewal_status"] = "no_capacity"  # --> show waitlist
 
             context["renewal_alert"] = {
                 "unknown": {
@@ -362,6 +444,18 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                         contract_end_date,
                         next_growing_period,
                         contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
+                    ),
+                },
+                "no_capacity": {
+                    "header": self.format_param(
+                        Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
+                        contract_end_date,
+                        next_growing_period,
+                    ),
+                    "content": self.format_param(
+                        Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
+                        contract_end_date,
+                        next_growing_period,
                     ),
                 },
             }
@@ -408,7 +502,9 @@ def renew_contract_same_conditions(request, **kwargs):
         # reset cancellation date on existing sub
         sub.cancellation_ts = None
         sub.save()
+
     Subscription.objects.bulk_create(new_subs)
+    send_order_confirmation(Member.objects.get(id=member_id), new_subs)
 
     return HttpResponseRedirect(member_detail_url(member_id))
 
@@ -459,7 +555,6 @@ def generate_future_payments(member_id, prev_payments: list, limit: int = None):
 
                 if (mandate_ref, due_date) not in prev_payments:
                     amount = get_total_price_for_subs(values)
-
                     payments.append(
                         {
                             "due_date": due_date,
@@ -830,6 +925,14 @@ def get_member_personal_data_create_form(request, **kwargs):
 
 @require_http_methods(["GET", "POST"])
 def get_harvest_shares_waiting_list_form(request, **kwargs):
+    if request.user and Member.objects.filter(id=request.user.id).exists():
+        kwargs["initial"] = {
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "email": request.user.email,
+        }
+        kwargs["redirect_url_resolver"] = lambda _: member_detail_url(request.user.id)
+
     return get_form_modal(
         request=request,
         form=WaitingListForm,

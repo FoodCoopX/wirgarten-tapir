@@ -120,7 +120,7 @@ def generate_new_payments(due_date: date) -> [Payment]:
 
 
 def get_active_subscriptions_grouped_by_product_type(
-    member: Member, reference_date=date.today()
+    member: Member, reference_date: date = date.today()
 ) -> dict:
     """
     Get all active subscriptions for a member grouped by product types.

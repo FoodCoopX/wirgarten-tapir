@@ -102,7 +102,7 @@ class ChickenShareForm(forms.Form):
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
         for key, quantity in self.cleaned_data.items():
-            if quantity > 0 and key.startswith("chicken_shares_"):
+            if quantity and quantity > 0 and key.startswith("chicken_shares_"):
                 product = Product.objects.get(
                     type=self.product_type, name=key.replace("chicken_shares_", "")
                 )

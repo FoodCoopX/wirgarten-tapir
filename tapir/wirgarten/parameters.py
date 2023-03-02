@@ -78,6 +78,12 @@ class Parameter:
     MEMBER_RENEWAL_ALERT_RENEWED_CONTENT = (
         f"{PREFIX}.member.dashboard.renewal_alert.renewed.content"
     )
+    MEMBER_RENEWAL_ALERT_WAITLIST_HEADER = (
+        f"{PREFIX}.member.dashboard.renewal_alert.waitlist.header"
+    )
+    MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT = (
+        f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
+    )
     EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
         f"{PREFIX}.email.cancellation_confirmation.subject"
     )
@@ -418,7 +424,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="{member.first_name}, dein Ernteanteil läuft bald aus!",
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=1000,
+            order_priority=801,
             meta=ParameterMeta(
                 validators=[
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
@@ -433,7 +439,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="""Als <strong>bestehendes Mitglied</strong> hast du <strong>Vorrang</strong> beim Zeichnen von Ernteanteilen und Zusatzabos. Ab sofort kannst du deine Verträge für die <strong>nächste Saison</strong> verlängern.<br/><small>Andernfalls enden deine Verträge automatisch am {contract_end_date}.</small>""",
             description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=900,
+            order_priority=800,
             meta=ParameterMeta(
                 validators=[
                     validate_html,
@@ -450,7 +456,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Schade, dass du gehst {member.first_name}!",
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=800,
+            order_priority=701,
             meta=ParameterMeta(
                 validators=[
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
@@ -482,7 +488,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Schön, dass du dabei bleibst {member.first_name}!",
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=600,
+            order_priority=601,
             meta=ParameterMeta(
                 validators=[
                     lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
@@ -497,12 +503,44 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Deine Verträge wurden verlängert vom <strong>{next_period_start_date} - {next_period_end_date}</strong>.",
             description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            order_priority=500,
+            order_priority=600,
             meta=ParameterMeta(
                 validators=[
                     lambda x: validate_format_string(
                         x, MEMBER_RENEWAL_ALERT_VARS + ["contract_list"]
                     ),
+                    validate_html,
+                ],
+                textarea=True,
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
+            label="Überschrift: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Wir haben keine Ernteanteile mehr, {member.first_name}!",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=501,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
+                ]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
+            label="Text: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Deine Verträge enden am <strong>{contract_end_date}</strong>. Leider gibt es keine freien Ernteanteile mehr für die nächste Anbausaison. Wenn du möchtest, benachrichtigen wir dich sobald wir wieder freie Ernteanteile haben.",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=500,
+            meta=ParameterMeta(
+                validators=[
+                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                     validate_html,
                 ],
                 textarea=True,
