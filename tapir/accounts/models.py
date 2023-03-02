@@ -58,11 +58,16 @@ class KeycloakUser(AbstractUser):
         max_length=64, unique=True, primary_key=False, null=True
     )
 
+    def email_verified(self):
+        kk = self.get_keycloak_client()
+        kk_user = kk.get_user(self.keycloak_id)
+        return kk_user["emailVerified"]
+
     def get_keycloak_client(self):
-        # if not self._kk:
+        # FIXME: can we keep one instance? It seemed that the authorization expires, but not sure yet
+        # if not self._kk or self._kk.is_authenticated():
         config = settings.KEYCLOAK_ADMIN_CONFIG
 
-        #   self._kk = KeycloakAdmin(
         return KeycloakAdmin(
             server_url=config["SERVER_URL"] + "/auth",
             client_id=config["CLIENT_ID"],
@@ -72,7 +77,11 @@ class KeycloakUser(AbstractUser):
             verify=True,
         )
 
-    # return self._kk
+        # return self._kk
+
+    def send_verify_email(self):
+        kk = self.get_keycloak_client()
+        kk.send_verify_email(user_id=self.keycloak_id)
 
     def has_perm(self, perm, obj=None):
         return perm in self.roles
@@ -103,10 +112,10 @@ class KeycloakUser(AbstractUser):
                 if group:
                     data["groups"] = ["superuser"]
 
-            user_id = kk.create_user(data)
+            self.keycloak_id = kk.create_user(data)
 
             try:
-                kk.send_verify_email(user_id=user_id)
+                self.send_verify_email()
             except Exception as e:
                 # FIXME: schedule to try again later?
                 print(
@@ -115,22 +124,27 @@ class KeycloakUser(AbstractUser):
                     " (email: '{self.email}', id: '{self.id}', keycloak_id: '{user_id}'): ",
                 )
 
-            self.keycloak_id = user_id
         else:  # Update --> change of keycloak data if necessary
             original = type(self).objects.get(id=self.id)
             email_changed = original.email != self.email
             first_name_changed = original.first_name != self.first_name
             last_name_changed = original.last_name != self.last_name
 
+            kk = self.get_keycloak_client()
             if first_name_changed or last_name_changed:
-                kk = self.get_keycloak_client()
                 data = {"firstName": self.first_name, "lastName": self.last_name}
                 kk.update_user(user_id=self.keycloak_id, payload=data)
 
             if email_changed:
-                self.start_email_change_process(self.email)
-                # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
-                self.email = original.email
+                if self.email_verified():
+                    self.start_email_change_process(self.email)
+                    # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
+                    self.email = original.email
+                else:  # in this case, don't start the
+                    kk.update_user(
+                        user_id=self.keycloak_id, payload={"email": self.email}
+                    )
+                    self.send_verify_email()
 
         super().save(*args, **kwargs)
 

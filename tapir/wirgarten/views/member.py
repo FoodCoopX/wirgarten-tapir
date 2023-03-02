@@ -185,6 +185,9 @@ class MemberFilter(FilterSet):
             ("Undecided", "Weder noch"),
         ),
     )
+    email_verified = BooleanFilter(
+        label="Email verified", method="filter_email_verified"
+    )
 
     o = OrderingFilter(
         label=_("Sortierung"),
@@ -196,6 +199,13 @@ class MemberFilter(FilterSet):
         required=True,
         empty_label=None,
     )
+
+    def filter_email_verified(self, queryset, name, value):
+        new_queryset = queryset.all()
+        for member in queryset:
+            if member.email_verified() != value:
+                new_queryset = new_queryset.exclude(id=member.id)
+        return new_queryset
 
     class Meta:
         model = Member
@@ -1308,3 +1318,21 @@ def change_email(request, **kwargs):
         )
 
     return HttpResponseRedirect(reverse_lazy("link_expired"))
+
+
+@require_http_methods(["GET"])
+@permission_required(Permission.Accounts.MANAGE)
+@csrf_protect
+def resend_verify_email(request, **kwargs):
+    member_id = kwargs["pk"]
+    member = Member.objects.get(id=member_id)
+    result = False
+    try:
+        member.send_verify_email()
+        result = "success"
+    except Exception as e:
+        result = str(e)
+
+    next_url = request.environ["QUERY_STRING"].replace("next=", "")
+
+    return HttpResponseRedirect(next_url + "&resend_verify_email=" + result)

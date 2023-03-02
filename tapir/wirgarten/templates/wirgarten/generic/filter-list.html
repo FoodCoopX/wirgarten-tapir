@@ -8,7 +8,11 @@
 
 {% block content %}
 
-<div style="margin-top: 1em; grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
+<div style="margin-top: 1em;">
+{% block page_top %}{% endblock %}
+</div>
+
+<div style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between">
             {% block card_header %}{% endblock %}
