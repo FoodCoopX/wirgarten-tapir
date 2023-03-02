@@ -140,7 +140,7 @@ class KeycloakUser(AbstractUser):
                     self.start_email_change_process(self.email)
                     # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
                     self.email = original.email
-                else:  # in this case, don't start the
+                else:  # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
                     kk.update_user(
                         user_id=self.keycloak_id, payload={"email": self.email}
                     )
