@@ -6,7 +6,6 @@ from dateutil.relativedelta import relativedelta
 from nanoid import generate
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.models import ID_LENGTH
 from tapir.wirgarten.models import MandateReference, Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
@@ -36,7 +35,8 @@ def generate_mandate_ref(member_id: str, coop_shares: bool):
     :return: the mandate reference string
     """
 
-    prefix = f"""{str(member_id).zfill(ID_LENGTH)}/"""
+    member = Member.objects.get(id=member_id)
+    prefix = f"{member.last_name[:5]}{member.first_name[:5]}/".upper()
 
     def __generate_ref(suffix):
         return f"""{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix) - len(suffix))}{suffix}"""

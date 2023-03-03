@@ -1,6 +1,7 @@
 import datetime
 from functools import partial
 
+from dateutil.relativedelta import relativedelta
 from dateutil.utils import today
 from django.db import models
 from django.db.models import UniqueConstraint, Index
@@ -239,6 +240,9 @@ class Subscription(TapirModel, Payable):
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
+
+    def trial_end_date(self):
+        return self.start_date + relativedelta(months=1, day=1, days=-1)
 
     def get_total_price(self):
         return round(
