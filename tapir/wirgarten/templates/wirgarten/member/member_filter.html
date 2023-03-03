@@ -30,6 +30,7 @@
 <h4>{{filter.qs | length}} {% translate "Mitglieder" %}</h4>
 <span style="display: flex; flex-direction:row;">
     {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
     <div style="width: 1em"></div>
     {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
@@ -52,9 +53,14 @@
 
 {% block table_head %}
 <tr>
-    <th>{% translate "Name" %}</th>
-    <th>{% translate "Email" %}</th>
-    <th>{% translate "Registriert am" %}</th>
+    <th class="sort-header" data-sort="first_name">{% translate "Vorname" %}</th>
+    <th class="sort-header" data-sort="last_name">{% translate "Nachname" %}</th>
+    <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
+    <th>{% translate "Telefon" %}</th>
+    <th class="sort-header" data-sort="coop_shares_total_value">{% translate "Geschäftsguthaben" %}</th>
+    <th class="sort-header" data-sort="monthly_payment">{% translate "Umsatz/Monat" %}</th>
+    <th>{% translate "Abholort" %}</th>
+    <th class="sort-header" data-sort="created_at">{% translate "Eintritt" %}</th>
 </tr>
 {% endblock %}
 
@@ -63,12 +69,17 @@
 
 <tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}', '{{ member.email_verified }}'.toLowerCase())"
     class="tr-clickable member-row">
-    <td class="align-middle">{{ member.first_name }} {{ member.last_name }}</td>
-    <td class="align-middle">{% if not member.email_verified %}<span title="Nicht verifiziert!"
-                                                                     style="color: var(--primary); font-size: 1.5em; vertical-align:middle"
-                                                                     class="material-icons">warning</span>&nbsp;&nbsp;{% endif %}{{ member.email }}
+    <td>{{ member.first_name }}</td>
+    <td>{{ member.last_name }}</td>
+    <td>{% if not member.email_verified %}<span title="Nicht verifiziert!"
+                                                style="color: var(--primary); font-size: 1.5em; vertical-align:middle"
+                                                class="material-icons">warning</span>&nbsp;&nbsp;{% endif %}{{ member.email }}
     </td>
-    <td class="align-middle">{{ member.created_at|format_date }}</td>
+    <td>{{ member.phone_number }}</td>
+    <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
+    <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
+    <td class="align-middle">{{ member.pickup_location.name }}</td>
+    <td class="align-middle">{{ member.coop_entry_date|format_date }}</td>
 </tr>
 {% endfor %}
 {% endblock %}
@@ -113,6 +124,13 @@
 
             activateRow();
         }
+    }
+
+    const handleExport = () => {
+        const params = Tapir.getUrlParams();
+        const url = "{% url 'wirgarten:member_overview_export' %}"
+        const newParams = {...params, next: window.location.pathname + Tapir.stringifyUrlParams(params)};
+        window.location.href = url + Tapir.stringifyUrlParams(newParams);
     }
 
     const handleAddMember = () => {
@@ -187,7 +205,6 @@
         params.resend_verify_email = undefined;
         Tapir.replaceUrlParams(params);
     }
-
 
 </script>
 {% endblock %}

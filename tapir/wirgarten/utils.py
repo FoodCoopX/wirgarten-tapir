@@ -7,4 +7,6 @@ def format_date(date: datetime.date) -> str:
 
 
 def format_currency(number: int | float | Decimal):
+    if number is None:
+        return format_currency(0)
     return f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")

@@ -4,7 +4,7 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from dateutil.utils import today
 from django.db import models
-from django.db.models import UniqueConstraint, Index
+from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 
@@ -141,6 +141,39 @@ class Member(TapirUser):
     privacy_consent = models.DateTimeField(_("Privacy consent"), null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
 
+    def coop_shares_total_value(self):
+        return self.shareownership_set.aggregate(
+            total_value=Sum(F("quantity") * F("share_price"))
+        )["total_value"]
+
+    def monthly_payment(self):
+        from tapir.wirgarten.service.products import get_active_subscriptions
+
+        today = datetime.date.today()
+        return (
+            get_active_subscriptions()
+            .filter(member_id=self.id)
+            .annotate(
+                product_price=Case(
+                    When(
+                        product__productprice__valid_from__lte=today,
+                        then=F("product__productprice__price"),
+                    ),
+                    default=0.0,
+                    output_field=models.FloatField(),
+                ),
+            )
+            .aggregate(
+                total_value=Sum(
+                    F("product_price") * F("quantity") * (1 + F("solidarity_price"))
+                )
+            )["total_value"]
+        )
+
+    def coop_entry_date(self):
+        earliest_shareownership = self.shareownership_set.earliest("entry_date")
+        return earliest_shareownership.entry_date if earliest_shareownership else None
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
@@ -213,9 +246,9 @@ class Payable:
     Interface to define how to calculate the total amount.
     """
 
-    def get_total_price(self):
+    def total_price(self):
         raise NotImplementedError(
-            "You need to implement get_total_amount() if you use the PayableMixin!"
+            "You need to implement total_price() if you use the PayableMixin!"
         )
 
 
@@ -244,20 +277,26 @@ class Subscription(TapirModel, Payable):
     def trial_end_date(self):
         return self.start_date + relativedelta(months=1, day=1, days=-1)
 
-    def get_total_price(self):
-        return round(
-            self.quantity
-            * float(
-                ProductPrice.objects.filter(
-                    product=self.product, valid_from__lte=today()
-                )
-                .order_by("-valid_from")
-                .first()
-                .price
+    @property
+    def total_price(self):
+        today = datetime.date.today()
+        if not hasattr(self, "_total_price"):
+            product_prices = ProductPrice.objects.filter(
+                product_id=self.product_id, valid_from__lte=today
+            ).order_by("product_id", "-valid_from")
+            price = next(
+                (
+                    product_price.price
+                    for product_price in product_prices
+                    if product_price.product_id == self.product_id
+                ),
+                0.0,
             )
-            * (1 + self.solidarity_price),
-            2,
-        )
+            self._total_price = round(
+                float(self.quantity) * float(price) * float(1 + self.solidarity_price),
+                2,
+            )
+        return self._total_price
 
     def __str__(self):
         return f"{self.quantity} × {self.product.name} {self.product.type.name}"
@@ -280,7 +319,8 @@ class ShareOwnership(TapirModel, Payable):
     class Meta:
         indexes = [Index(fields=["member"], name="idx_shareownership_member")]
 
-    def get_total_price(self):
+    @property
+    def total_price(self):
         return self.quantity * self.share_price
 
 

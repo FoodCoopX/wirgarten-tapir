@@ -34,7 +34,7 @@ def get_total_price_for_subs(subs: [Payable]) -> float:
     return round(
         sum(
             map(
-                lambda x: x.get_total_price(),
+                lambda x: x.total_price,
                 subs,
             )
         ),
