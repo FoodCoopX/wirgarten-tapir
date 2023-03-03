@@ -246,7 +246,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
-            self.object, next_month
+            self.object, today
         )
 
         context["sub_quantities"] = {

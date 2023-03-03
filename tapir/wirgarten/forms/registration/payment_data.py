@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from django import forms
-from localflavor.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from localflavor.generic.validators import IBANValidator, BICValidator
 
 from tapir.configuration.parameter import get_parameter_value

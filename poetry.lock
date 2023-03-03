@@ -1278,21 +1278,6 @@ yaml = ["PyYAML (>=3.10)"]
 zookeeper = ["kazoo (>=1.3.1)"]
 
 [[package]]
-name = "localflavor"
-version = "1.9"
-description = "Country-specific validation helpers, ported from Django Localflavor"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "localflavor-1.9-py3-none-any.whl", hash = "sha256:02820a541d5fd0317265b7bacbc6a30a19492decc97205620545e4ae8eb8689c"},
-    {file = "localflavor-1.9.tar.gz", hash = "sha256:b051be69c778d02754be4a1c447d73107d80330e261e2eb77e17780e41e49272"},
-]
-
-[package.dependencies]
-six = ">=1.11.0"
-
-[[package]]
 name = "lxml"
 version = "4.9.2"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -2675,4 +2660,4 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "0f2d5ee22e085bcc65a7cb8e6fef74e913dde461bb764d09a40dda30d47ec24e"
+content-hash = "9db4fc7464479cca8204551297d923dc1327a4800117fac7e79bcc7bbb3375b1"
