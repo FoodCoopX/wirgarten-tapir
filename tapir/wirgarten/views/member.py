@@ -1263,10 +1263,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["next_trial_end_date"] = get_next_trial_end_date()
-        context["latest_trial_start_date"] = context[
-            "next_trial_end_date"
-        ] + relativedelta(day=1)
+        context["today"] = date.today()
         return context
 
 
