@@ -80,6 +80,8 @@ from tapir.wirgarten.models import (
     PickupLocation,
     ProductType,
     Product,
+    TransferCoopSharesLogEntry,
+    ReceivedCoopSharesLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -115,7 +117,7 @@ from tapir.wirgarten.service.products import (
     product_type_order_by,
     get_active_subscriptions,
 )
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, format_currency
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
 from django.db.models import Q, F, ExpressionWrapper, Sum, Case, F, When
@@ -1406,8 +1408,8 @@ class ExportMembersView(View):
         response = HttpResponse(content_type="text/csv")
         response[
             "Content-Disposition"
-        ] = f'attachment; filename="Mitglieder_gefiltert_{datetime.now().isoformat()[:19]}.csv"'
-        writer = csv.writer(response)
+        ] = f'attachment; filename="Mitglieder_gefiltert_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        writer = csv.writer(response, delimiter=";")
 
         # Write header row
         writer.writerow(
@@ -1442,10 +1444,10 @@ class ExportMembersView(View):
                     member.postcode,
                     member.city,
                     member.country,
-                    member.created_at.date(),
-                    member.coop_entry_date(),
-                    member.coop_shares_total_value,
-                    member.monthly_payment,
+                    format_date(member.created_at.date()),
+                    format_date(member.coop_entry_date()),
+                    format_currency(member.coop_shares_total_value),
+                    format_currency(member.monthly_payment),
                     member.pickup_location.name if member.pickup_location else "",
                 ]
             )
@@ -1476,3 +1478,181 @@ class ExportMembersView(View):
 
     def get_success_url(self):
         return reverse_lazy("member_list")
+
+
+@require_GET
+@csrf_protect
+@permission_required(Permission.Coop.VIEW)
+def export_coop_member_list(request, **kwargs):
+    KEY_MEMBER_NO = "Nr"
+    KEY_FIRST_NAME = "Vorname"
+    KEY_LAST_NAME = "Nachname"
+    KEY_ADDRESS = "Straße + Hausnr."
+    KEY_ADDRESS2 = "Adresse 2"
+    KEY_POSTCODE = "PLZ"
+    KEY_CITY = "Ort"
+    KEY_BIRTHDATE = "Geburtstag/Gründungsdatum"
+    KEY_TELEPHONE = "Telefon"
+    KEY_EMAIL = "Mailadresse"
+    KEY_COOP_SHARES_TOTAL = "GAnteile gesamt"
+    KEY_COOP_SHARES_TOTAL_EURO = "GAnteile in € gesamt"
+    KEY_COOP_SHARES_CANCELLATION_DATE = (
+        "Kündigungsdatum der Mitgliedschaft/ (einzelner) Geschäftsanteile"
+    )
+    KEY_COOP_SHARES_CANCELLATION_AMOUNT = "Wert der gekündigten Geschäftsanteile"
+    KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE = (
+        "Inkrafttreten der Kündigung der Mitgliedschaft/(einzelner) Geschäftsanteile"
+    )
+    KEY_COOP_SHARES_TRANSFER_EURO = "Übertragung Genossenschaftsanteile"
+    KEY_COOP_SHARES_TRANSFER_FROM_TO = "Übertragung an/von"
+    KEY_COOP_SHARES_TRANSFER_DATE = "Datum der Übertragung"
+    KEY_COOP_SHARES_PAYBACK_EURO = "Ausgezahltes Geschäftsguthaben"
+    KEY_COMMENT = "Kommentar"
+
+    # Determine maximum number of shares a member has
+    max_shares = max(
+        [entry.shareownership_set.count() for entry in Member.objects.all()]
+    )
+
+    # Generate column headers for each share ownership entry
+    share_cols = {}
+    for i in range(1, max_shares + 1):
+        share_cols[f"KEY_COOP_SHARES_{i}_EURO"] = f"GAnteile in € {i}. Zeichnung"
+        share_cols[f"KEY_COOP_SHARES_{i}_ENTRY_DATE"] = f"Eintrittsdatum {i}. Zeichnung"
+
+    output, writer = begin_csv_string(
+        [
+            KEY_MEMBER_NO,
+            KEY_FIRST_NAME,
+            KEY_LAST_NAME,
+            KEY_ADDRESS,
+            KEY_ADDRESS2,
+            KEY_POSTCODE,
+            KEY_CITY,
+            KEY_BIRTHDATE,
+            KEY_TELEPHONE,
+            KEY_EMAIL,
+            KEY_COOP_SHARES_TOTAL,
+            KEY_COOP_SHARES_TOTAL_EURO,
+            *share_cols.values(),
+            KEY_COOP_SHARES_CANCELLATION_DATE,
+            KEY_COOP_SHARES_CANCELLATION_AMOUNT,
+            KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE,
+            KEY_COOP_SHARES_TRANSFER_EURO,
+            KEY_COOP_SHARES_TRANSFER_FROM_TO,
+            KEY_COOP_SHARES_TRANSFER_DATE,
+            KEY_COOP_SHARES_PAYBACK_EURO,
+            KEY_COMMENT,
+        ]
+    )
+    for entry in Member.objects.all():
+        coop_shares = entry.shareownership_set.order_by("created_at")
+        last_cancelled_coop_shares = entry.shareownership_set.order_by(
+            "-membership_end_date"
+        )[:1][0]
+
+        transfered_to = ReceivedCoopSharesLogEntry.objects.filter(user_id=entry.id)
+        transfered_from = ReceivedCoopSharesLogEntry.objects.filter(
+            target_member_id=entry.id
+        )
+
+        data = {
+            KEY_MEMBER_NO: "",  # TODO: include Member #,
+            KEY_FIRST_NAME: entry.first_name,
+            KEY_LAST_NAME: entry.last_name,
+            KEY_ADDRESS: entry.street,
+            KEY_ADDRESS2: entry.street_2,
+            KEY_POSTCODE: entry.postcode,
+            KEY_CITY: entry.city,
+            KEY_BIRTHDATE: entry.birthdate,
+            KEY_TELEPHONE: entry.phone_number,
+            KEY_EMAIL: entry.email,
+            KEY_COOP_SHARES_TOTAL: entry.coop_shares_quantity(),
+            KEY_COOP_SHARES_TOTAL_EURO: format_currency(
+                entry.coop_shares_total_value()
+            ),
+            KEY_COOP_SHARES_CANCELLATION_DATE: format_date(
+                last_cancelled_coop_shares.cancellation_date
+            )
+            if last_cancelled_coop_shares.membership_end_date
+            else "",
+            KEY_COOP_SHARES_CANCELLATION_AMOUNT: format_currency(
+                last_cancelled_coop_shares.total_price
+            )
+            if last_cancelled_coop_shares.membership_end_date
+            else "",
+            KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: format_date(
+                last_cancelled_coop_shares.membership_end_date
+            )
+            if last_cancelled_coop_shares.membership_end_date
+            else "",
+            KEY_COOP_SHARES_PAYBACK_EURO: "",  # TODO: how??? Cancelled coop shares?
+            KEY_COMMENT: "",  # TODO: join comment log entries?
+        }
+
+        for i, share in enumerate(coop_shares, start=1):
+            data[share_cols[f"KEY_COOP_SHARES_{i}_EURO"]] = format_currency(
+                share.total_price
+            )
+            data[share_cols[f"KEY_COOP_SHARES_{i}_ENTRY_DATE"]] = format_date(
+                share.entry_date
+            )
+
+        transfer_euro_amount = (
+            abs(
+                (
+                    sum(map(lambda x: x.quantity, transfered_to))
+                    - sum(map(lambda x: x.quantity, transfered_from))
+                )
+            )
+            * settings.COOP_SHARE_PRICE
+        )
+        transfer_euro_string = (
+            "" if transfer_euro_amount == 0 else format_currency(transfer_euro_amount)
+        )
+
+        transfer_to_string = ", ".join(
+            map(
+                lambda x: f"von {x.target_member.first_name} {x.target_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)}  €",
+                transfered_to,
+            )
+        )
+        transfer_from_string = ", ".join(
+            map(
+                lambda x: f"an {x.user.first_name} {x.user.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
+                transfered_from,
+            )
+        )
+        transfer_to_date = ", ".join(
+            map(
+                lambda x: f"von {x.target_member.first_name} {x.target_member.last_name}: {format_date(x.created_date)}",
+                transfered_to,
+            )
+        )
+        transfer_from_date = ", ".join(
+            map(
+                lambda x: f"an {x.user.first_name} {x.user.last_name}: {format_date(x.created_date)}",
+                transfered_from,
+            )
+        )
+        data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
+        if not transfer_to_string or not transfer_from_string:
+            data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = (
+                transfer_to_string or transfer_from_string
+            )
+            data[KEY_COOP_SHARES_TRANSFER_DATE] = transfer_to_date or transfer_from_date
+        else:
+            data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = (
+                transfer_to_string + " | " + transfer_from_string
+            )
+            data[KEY_COOP_SHARES_TRANSFER_DATE] = (
+                transfer_to_date + " | " + transfer_from_date
+            )
+
+        writer.writerow(data)
+
+    filename = f"Mitgliederliste_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    mime_type, _ = mimetypes.guess_type(filename)
+    response = HttpResponse("".join(output.csv_string), content_type=mime_type)
+    response["Content-Disposition"] = "attachment; filename=%s" % filename
+    return response

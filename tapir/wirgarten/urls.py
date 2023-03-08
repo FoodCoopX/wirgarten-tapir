@@ -33,6 +33,7 @@ from tapir.wirgarten.views.member import (
     get_renew_contracts_form,
     resend_verify_email,
     ExportMembersView,
+    export_coop_member_list,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -218,6 +219,11 @@ urlpatterns = [
         "members/exportoverview",
         ExportMembersView.as_view(),
         name="member_overview_export",
+    ),
+    path(
+        "members/exportcoopmemberlist",
+        export_coop_member_list,
+        name="member_list_coop_export",
     ),
     path("members/<str:pk>", MemberDetailView.as_view(), name="member_detail"),
     path(
