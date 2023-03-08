@@ -99,7 +99,7 @@ def generate_new_payments(due_date: date) -> [Payment]:
                 round(
                     sum(
                         map(
-                            lambda x: x.get_total_price(),
+                            lambda x: x.total_price,
                             subs,
                         )
                     ),

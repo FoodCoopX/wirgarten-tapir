@@ -1,10 +1,16 @@
 import base64
+import csv
 import itertools
 import json
 import mimetypes
+import operator
 from copy import copy
 from datetime import date, datetime, timezone
+from functools import reduce
+from urllib.parse import parse_qs, urlencode
+
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import View
 
 from dateutil.relativedelta import relativedelta
 from django.core.mail import EmailMultiAlternatives
@@ -29,7 +35,7 @@ from django_filters import (
     BooleanFilter,
 )
 from django_filters.views import FilterView
-from django_filters import ChoiceFilter
+from django_filters import ChoiceFilter, Filter
 
 from tapir import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
@@ -49,6 +55,8 @@ from tapir.wirgarten.forms.member.forms import (
     TrialCancellationForm,
     SubscriptionRenewalForm,
 )
+from django.forms.widgets import Select
+
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
     get_pickup_locations_map_data,
@@ -110,13 +118,25 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
-from django.db.models import Q, F, ExpressionWrapper
+from django.db.models import Q, F, ExpressionWrapper, Sum, Case, F, When
 from datetime import timedelta
 from django.db.models.functions import TruncMonth
 from django.db import models
 
 
 # FIXME: this file needs some serious refactoring. Some of the functions should either be generalized service functions or private functions.
+
+
+class MultiFieldFilter(Filter):
+    def __init__(self, fields=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = fields or []
+
+    def filter(self, qs, value):
+        if value:
+            lookups = [Q(**{f"{field}__icontains": value}) for field in self.fields]
+            qs = qs.filter(reduce(operator.or_, lookups))
+        return qs
 
 
 class ContractStatusFilter(ChoiceFilter):
@@ -174,27 +194,45 @@ class ContractStatusFilter(ChoiceFilter):
 
 
 class MemberFilter(FilterSet):
-    first_name = CharFilter(lookup_expr="icontains")
-    last_name = CharFilter(lookup_expr="icontains")
-    email = CharFilter(lookup_expr="icontains")
+    search = MultiFieldFilter(
+        fields=["first_name", "last_name", "email"], label="Suche"
+    )
+    pickup_location = ModelChoiceFilter(
+        queryset=PickupLocation.objects.all().order_by("name"),
+        field_name="pickup_location__name",
+        label="Abholort",
+    )
     contract_status = ContractStatusFilter(
         label="Verträge verlängert",
         choices=(
             ("Contract Renewed", "Verträge verlängert"),
             ("Contract Cancelled", "Explizit nicht verlängert"),
-            ("Undecided", "Weder noch"),
+            ("Undecided", "Keine Reaktion"),
         ),
     )
     email_verified = BooleanFilter(
-        label="Email verified", method="filter_email_verified"
+        label="Email verifiziert",
+        method="filter_email_verified",
+        widget=Select(choices=[("", "-----------"), (True, "Ja"), (False, "Nein")]),
     )
 
     o = OrderingFilter(
         label=_("Sortierung"),
         initial=0,
         choices=(
+            ("-first_name", "⮟ Vorname"),
+            ("first_name", "⮝ Vorname"),
+            ("-last_name", "⮟ Nachname"),
+            ("last_name", "⮝ Nachname"),
+            ("-email", "⮟ Email"),
+            ("email", "⮝ Email"),
+            ("created_at", "⮝ Registriert am"),
             ("-created_at", "⮟ Registriert am"),
             ("created_at", "⮝ Registriert am"),
+            ("coop_shares_total_value", "⮝ Genoanteile"),
+            ("-coop_shares_total_value", "⮟ Genoanteile"),
+            ("monthly_payment", "⮝ Umsatz"),
+            ("-monthly_payment", "⮟ Umsatz"),
         ),
         required=True,
         empty_label=None,
@@ -206,10 +244,6 @@ class MemberFilter(FilterSet):
             if member.email_verified() != value:
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
-
-    class Meta:
-        model = Member
-        fields = ["first_name", "last_name", "email"]
 
     def __init__(self, data=None, *args, **kwargs):
         if data is None:
@@ -228,6 +262,36 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/member/member_filter.html"
     paginate_by = 20
+    model = Member
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        filter_query = self.request.GET.urlencode()
+        query_dict = parse_qs(filter_query)
+        query_dict.pop("page", None)
+        new_query_string = urlencode(query_dict, doseq=True)
+        context["filter_query"] = new_query_string
+        return context
+
+    def get_queryset(self):
+        today = date.today()
+        return Member.objects.annotate(
+            coop_shares_total_value=Sum(
+                F("shareownership__quantity") * F("shareownership__share_price")
+            ),
+            monthly_payment=Sum(
+                Case(
+                    When(
+                        subscription__product__productprice__valid_from__lte=today,
+                        then=F("subscription__product__productprice__price")
+                        * F("subscription__quantity")
+                        * (1 + F("subscription__solidarity_price")),
+                    ),
+                    default=0.0,
+                    output_field=models.FloatField(),
+                )
+            ),
+        )
 
 
 class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
@@ -254,7 +318,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for k, v in context["subscriptions"].items()
         }
         context["sub_totals"] = {
-            k: sum(map(lambda x: x.get_total_price(), v))
+            k: sum(map(lambda x: x.total_price, v))
             for k, v in context["subscriptions"].items()
         }
 
@@ -278,11 +342,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
-        over_next_contract_start_date = get_next_contract_start_date() + relativedelta(
-            months=1
-        )
         additional_products_available = any(
-            sub.end_date > over_next_contract_start_date
+            sub.end_date > get_next_contract_start_date()
             for sub in context["subscriptions"][ProductTypes.HARVEST_SHARES]
         )
 
@@ -372,7 +433,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         ):
             context["next_period"] = next_growing_period
             context["add_shares_disallowed"] = (
-                next_month > next_growing_period.start_date
+                next_month >= next_growing_period.start_date
             )  # 1 month before
 
             harvest_share_subs = context["subscriptions"][ProductTypes.HARVEST_SHARES]
@@ -595,7 +656,7 @@ def get_subs_or_shares_for_mandate_ref(
                         "name": _("Genossenschaftsanteile"),
                         "price": x.share_price,
                     },
-                    "total_price": x.get_total_price(),
+                    "total_price": x.total_price,
                 },
                 ShareOwnership.objects.filter(mandate_ref=mandate_ref),
             )
@@ -626,7 +687,7 @@ def sub_to_dict(sub):
             "price": price,
         },
         "solidarity_price": sub.solidarity_price,
-        "total_price": float(price) * sub.solidarity_price * sub.quantity,
+        "total_price": sub.total_price,
     }
 
 
@@ -1333,3 +1394,85 @@ def resend_verify_email(request, **kwargs):
     next_url = request.environ["QUERY_STRING"].replace("next=", "")
 
     return HttpResponseRedirect(next_url + "&resend_verify_email=" + result)
+
+
+class ExportMembersView(View):
+    def get(self, request, *args, **kwargs):
+        # Get queryset based on filters and ordering
+        filter_class = MemberFilter
+        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+
+        # Create response object with CSV content
+        response = HttpResponse(content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="Mitglieder_gefiltert_{datetime.now().isoformat()[:19]}.csv"'
+        writer = csv.writer(response)
+
+        # Write header row
+        writer.writerow(
+            [
+                "#",
+                "Vorname",
+                "Nachname",
+                "Email",
+                "Telefon",
+                "Adresse",
+                "PLZ",
+                "Ort",
+                "Land",
+                "Registriert am",
+                "Geno-Beitritt am",
+                "Geschäftsanteile (€)",
+                "Umsatz/Monat (€)",
+                "Abholort",
+            ]
+        )
+
+        # Write data rows
+        for member in queryset:
+            writer.writerow(
+                [
+                    "",
+                    member.first_name,
+                    member.last_name,
+                    member.email,
+                    member.phone_number,
+                    member.street + (", " + member.street_2) if member.street_2 else "",
+                    member.postcode,
+                    member.city,
+                    member.country,
+                    member.created_at.date(),
+                    member.coop_entry_date(),
+                    member.coop_shares_total_value,
+                    member.monthly_payment,
+                    member.pickup_location.name if member.pickup_location else "",
+                ]
+            )
+
+        return response
+
+    def get_queryset(self):
+        return Member.objects.annotate(
+            coop_shares_total_value=Sum(
+                F("shareownership__quantity") * F("shareownership__share_price")
+            ),
+            monthly_payment=Sum(
+                Case(
+                    When(
+                        subscription__product__productprice__valid_from__lte=date.today(),
+                        then=F("subscription__product__productprice__price")
+                        * F("subscription__quantity")
+                        * (1 + F("subscription__solidarity_price")),
+                    ),
+                    default=0.0,
+                    output_field=models.FloatField(),
+                )
+            ),
+        )
+
+    def get_filterset_class(self):
+        return MemberFilter
+
+    def get_success_url(self):
+        return reverse_lazy("member_list")
