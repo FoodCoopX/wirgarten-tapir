@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from dateutil.relativedelta import relativedelta
-from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -89,6 +88,7 @@ from tapir.wirgarten.service.delivery import (
     get_active_pickup_locations,
     get_next_delivery_date,
 )
+from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.service.member import (
     transfer_coop_shares,
@@ -1358,19 +1358,16 @@ def change_email(request, **kwargs):
         EmailChangeRequest.objects.filter(created_at__lte=now - link_validity).delete()
 
         # send confirmation to old email address
-        email = EmailMultiAlternatives(
+        send_email(
+            to_email=[orig_email],
             subject=_("Deine Email Adresse wurde geändert"),
-            body=_(
+            content=_(
                 f"Hallo {user.first_name},<br/><br/>"
                 f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
                 f"""Falls du das nicht warst, ändere sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
                 f"<br/><br/>Grüße, dein WirGarten Team"
             ),
-            to=[orig_email],
-            from_email=settings.EMAIL_HOST_SENDER,
         )
-        email.content_subtype = "html"
-        email.send()
 
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:member_detail", kwargs={"pk": user.id})
@@ -1386,7 +1383,6 @@ def change_email(request, **kwargs):
 def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
-    result = False
     try:
         member.send_verify_email()
         result = "success"

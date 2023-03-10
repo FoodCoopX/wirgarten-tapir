@@ -4,8 +4,7 @@ import logging
 from functools import partial
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, UserManager
-from django.core.mail import EmailMultiAlternatives
+from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
 from django.urls import reverse
 from django.urls import reverse_lazy
@@ -23,6 +22,7 @@ from tapir.core.models import generate_id, ID_LENGTH, TapirModel
 from tapir.log.models import UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
+from tapir.wirgarten.service.email import send_email
 
 log = logging.getLogger(__name__)
 
@@ -181,21 +181,17 @@ class KeycloakUser(AbstractUser):
                 }
             ).encode()
         ).decode()
-        email = EmailMultiAlternatives(
+
+        send_email(
+            to_email=[new_email],
             subject=_("Änderung deiner Email-Adresse"),
-            body=_(
-                f"Hallo {self.first_name},<br/><br/>"
-                f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
-                f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-                f"""<a target="_blank", href="{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={"token": email_change_token})}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
-                f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
-                f"<br/><br/>Grüße, dein WirGarten Team"
-            ),
-            to=[new_email],
-            from_email=settings.EMAIL_HOST_SENDER,
+            content=f"Hallo {self.first_name},<br/><br/>"
+            f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
+            f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
+            f"""<a target="_blank", href="{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={"token": email_change_token})}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
+            f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
+            f"<br/><br/>Grüße, dein WirGarten Team",
         )
-        email.content_subtype = "html"
-        email.send()
 
     class Meta:
         abstract = True
