@@ -146,6 +146,11 @@ class Member(TapirUser):
             total_value=Sum(F("quantity") * F("share_price"))
         )["total_value"]
 
+    def coop_shares_quantity(self):
+        return self.shareownership_set.aggregate(quantity=Sum(F("quantity")))[
+            "quantity"
+        ]
+
     def monthly_payment(self):
         from tapir.wirgarten.service.products import get_active_subscriptions
 
@@ -269,7 +274,9 @@ class Subscription(TapirModel, Payable):
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
     created_at = models.DateTimeField(auto_now_add=True, null=False)
-    consent_ts = models.DateTimeField(null=False)
+    consent_ts = models.DateTimeField(
+        null=True
+    )  # TODO this should probably be null=False
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
@@ -315,6 +322,8 @@ class ShareOwnership(TapirModel, Payable):
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
     created_at = models.DateTimeField(auto_now_add=True, null=False)
+    cancellation_ts = models.DateTimeField(null=True)
+    membership_end_date = models.DateField(null=True)
 
     class Meta:
         indexes = [Index(fields=["member"], name="idx_shareownership_member")]

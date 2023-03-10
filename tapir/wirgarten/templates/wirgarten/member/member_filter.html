@@ -31,6 +31,7 @@
 <span style="display: flex; flex-direction:row;">
     {% include 'wirgarten/generic/action-button.html' with onclick='handleAddMember()' title='Mitglied anlegen' type='success' icon='person_add' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleExportCoopMemberList()' title='Mitgliederliste nach GenG exportieren' type='success' icon='receipt_long' %}
     <div style="width: 1em"></div>
     {% include 'wirgarten/generic/action-button.html' with onclick='handleShowMemberDetailsPage()' disabled=True title='Mitgliederbereich anzeigen' type='info' icon='info' class='needs-member' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleShowContractPage()' disabled=True title='Verträge anzeigen' type='info' icon='history_edu' class='needs-member' %}
@@ -133,6 +134,10 @@
         window.location.href = url + Tapir.stringifyUrlParams(newParams);
     }
 
+    const handleExportCoopMemberList = () => {
+        window.location.href = "{% url 'wirgarten:member_list_coop_export' %}"
+    }
+
     const handleAddMember = () => {
         FormModal.load('{% url 'wirgarten:member_create' %}', 'Neues Mitglied anlegen');
     }
@@ -205,6 +210,7 @@
         params.resend_verify_email = undefined;
         Tapir.replaceUrlParams(params);
     }
+
 
 </script>
 {% endblock %}
