@@ -1,7 +1,6 @@
 from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Sum
 
@@ -20,6 +19,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -233,28 +233,26 @@ def send_cancellation_confirmation_email(
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
-    email = EmailMultiAlternatives(
+
+    send_email(
+        to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT),
-        body=get_parameter_value(
+        content=get_parameter_value(
             Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
         ).format(
-            member=member,
-            contract_end_date=format_date(contract_end_date),
-            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
-            site_name=get_parameter_value(Parameter.SITE_NAME),
-            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
+            **{
+                "member": member,
+                "contract_end_date": format_date(contract_end_date),
+                "admin_name": get_parameter_value(Parameter.SITE_ADMIN_NAME),
+                "site_name": get_parameter_value(Parameter.SITE_NAME),
+                "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
+            }
         ),
-        to=[member.email],
-        from_email=settings.EMAIL_HOST_SENDER,
     )
-    email.content_subtype = "html"
-    email.send()
 
     send_email_member_contract_end_reminder.apply_async(
         eta=contract_end_date, args=[member_id]
     )
-
-    # TODO: Log entry!
 
 
 def send_order_confirmation(member: Member, subs: [Subscription]):
@@ -265,11 +263,13 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
         )
 
     contract_start_date = subs[0].start_date
-    email = EmailMultiAlternatives(
+
+    send_email(
+        to_email=[member.email],
         subject=get_parameter_value(
             Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
         ),
-        body=get_parameter_value(
+        content=get_parameter_value(
             Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
         ).format(
             member=member,
@@ -280,8 +280,4 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
             site_name=get_parameter_value(Parameter.SITE_NAME),
             contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}<br/>",
         ),
-        to=[member.email],
-        from_email=settings.EMAIL_HOST_SENDER,
     )
-    email.content_subtype = "html"
-    email.send()

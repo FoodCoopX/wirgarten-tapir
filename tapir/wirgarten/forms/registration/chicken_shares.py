@@ -27,7 +27,6 @@ from tapir.wirgarten.service.products import (
 
 def has_chicken_shares(cleaned_data):
     for key, val in cleaned_data.items():
-        print(key, val)
         if key.startswith("chicken_shares_") and val is not None and val > 0:
             return True
     return False
