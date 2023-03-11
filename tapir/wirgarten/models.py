@@ -4,7 +4,7 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from dateutil.utils import today
 from django.db import models
-from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
+from django.db.models import UniqueConstraint, Index, F, Sum, Case, When, Q
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 
@@ -142,9 +142,11 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
 
     def coop_shares_total_value(self):
-        return self.shareownership_set.aggregate(
-            total_value=Sum(F("quantity") * F("share_price"))
-        )["total_value"]
+        today = datetime.date.today()
+        return self.shareownership_set.filter(
+            Q(entry_date__lte=today) & Q(membership_end_date__gte=today)
+            | Q(membership_end_date__isnull=True),
+        ).aggregate(total_value=Sum(F("quantity") * F("share_price")))["total_value"]
 
     def coop_shares_quantity(self):
         return self.shareownership_set.aggregate(quantity=Sum(F("quantity")))[
