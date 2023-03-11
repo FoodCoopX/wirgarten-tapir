@@ -1551,7 +1551,7 @@ def export_coop_member_list(request, **kwargs):
 
         today = date.today()
         if not coop_shares.filter(
-            entry_date__gte=today, membership_end_date__lte=today
+            entry_date__lte=today, membership_end_date__gte=today
         ).exists():
             continue
 
