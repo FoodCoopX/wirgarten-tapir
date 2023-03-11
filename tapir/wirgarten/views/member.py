@@ -284,7 +284,9 @@ class MemberListView(PermissionRequiredMixin, FilterView):
             monthly_payment=Sum(
                 Case(
                     When(
-                        subscription__product__productprice__valid_from__lte=today,
+                        Q(subscription__start_date__lte=today)
+                        & Q(subscription__end_date__gte=today)
+                        & Q(subscription__product__productprice__valid_from__lte=today),
                         then=F("subscription__product__productprice__price")
                         * F("subscription__quantity")
                         * (1 + F("subscription__solidarity_price")),
@@ -1545,7 +1547,18 @@ def export_coop_member_list(request, **kwargs):
         coop_shares = entry.shareownership_set.order_by("created_at")
         last_cancelled_coop_shares = entry.shareownership_set.order_by(
             "-membership_end_date"
-        )[:1][0]
+        )[:1]
+
+        today = date.today()
+        if not coop_shares.filter(
+            entry_date__gte=today, membership_end_date__lte=today
+        ).exists():
+            continue
+
+        if len(last_cancelled_coop_shares) > 0:
+            last_cancelled_coop_shares = last_cancelled_coop_shares[0]
+        else:
+            last_cancelled_coop_shares = None
 
         transfered_to = ReceivedCoopSharesLogEntry.objects.filter(user_id=entry.id)
         transfered_from = ReceivedCoopSharesLogEntry.objects.filter(
@@ -1570,17 +1583,20 @@ def export_coop_member_list(request, **kwargs):
             KEY_COOP_SHARES_CANCELLATION_DATE: format_date(
                 last_cancelled_coop_shares.cancellation_date
             )
-            if last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares
+            and last_cancelled_coop_shares.membership_end_date
             else "",
             KEY_COOP_SHARES_CANCELLATION_AMOUNT: format_currency(
                 last_cancelled_coop_shares.total_price
             )
-            if last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares
+            and last_cancelled_coop_shares.membership_end_date
             else "",
             KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: format_date(
                 last_cancelled_coop_shares.membership_end_date
             )
-            if last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares
+            and last_cancelled_coop_shares.membership_end_date
             else "",
             KEY_COOP_SHARES_PAYBACK_EURO: "",  # TODO: how??? Cancelled coop shares?
             KEY_COMMENT: "",  # TODO: join comment log entries?

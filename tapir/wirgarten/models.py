@@ -176,8 +176,13 @@ class Member(TapirUser):
         )
 
     def coop_entry_date(self):
-        earliest_shareownership = self.shareownership_set.earliest("entry_date")
-        return earliest_shareownership.entry_date if earliest_shareownership else None
+        try:
+            earliest_shareownership = self.shareownership_set.earliest("entry_date")
+            return (
+                earliest_shareownership.entry_date if earliest_shareownership else None
+            )
+        except ShareOwnership.DoesNotExist:
+            return None
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
