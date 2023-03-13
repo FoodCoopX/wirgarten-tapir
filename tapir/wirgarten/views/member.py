@@ -120,7 +120,17 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, format_currency
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
-from django.db.models import Q, F, ExpressionWrapper, Sum, Case, F, When
+from django.db.models import (
+    Q,
+    F,
+    ExpressionWrapper,
+    Sum,
+    Case,
+    F,
+    When,
+    Subquery,
+    OuterRef,
+)
 from datetime import timedelta
 from django.db.models.functions import TruncMonth
 from django.db import models
@@ -277,9 +287,17 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
     def get_queryset(self):
         today = date.today()
+
         return Member.objects.annotate(
-            coop_shares_total_value=Sum(
-                F("shareownership__quantity") * F("shareownership__share_price")
+            coop_shares_total_value=Subquery(
+                ShareOwnership.objects.filter(
+                    Q(membership_end_date__gte=today)
+                    | Q(membership_end_date__isnull=True),
+                    member_id=OuterRef("id"),
+                    entry_date__lte=today,
+                )
+                .annotate(total_value=Sum(F("quantity") * F("share_price")))
+                .values("total_value")[:1]
             ),
             monthly_payment=Sum(
                 Case(
@@ -1453,23 +1471,7 @@ class ExportMembersView(View):
         return response
 
     def get_queryset(self):
-        return Member.objects.annotate(
-            coop_shares_total_value=Sum(
-                F("shareownership__quantity") * F("shareownership__share_price")
-            ),
-            monthly_payment=Sum(
-                Case(
-                    When(
-                        subscription__product__productprice__valid_from__lte=date.today(),
-                        then=F("subscription__product__productprice__price")
-                        * F("subscription__quantity")
-                        * (1 + F("subscription__solidarity_price")),
-                    ),
-                    default=0.0,
-                    output_field=models.FloatField(),
-                )
-            ),
-        )
+        return MemberListView.get_queryset(self)
 
     def get_filterset_class(self):
         return MemberFilter
@@ -1551,7 +1553,8 @@ def export_coop_member_list(request, **kwargs):
 
         today = date.today()
         if not coop_shares.filter(
-            entry_date__lte=today, membership_end_date__gte=today
+            Q(membership_end_date__gte=today) | Q(membership_end_date=None),
+            entry_date__lte=today,
         ).exists():
             continue
 
