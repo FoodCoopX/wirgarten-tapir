@@ -6,35 +6,47 @@ import mimetypes
 import operator
 from copy import copy
 from datetime import date, datetime, timezone
+from datetime import timedelta
 from functools import reduce
 from urllib.parse import parse_qs, urlencode
-
-from django.utils.translation import gettext_lazy as _
-from django.views.generic import View
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.db import transaction
+from django.db.models import (
+    Q,
+    ExpressionWrapper,
+    Sum,
+    Case,
+    F,
+    When,
+    Subquery,
+    OuterRef,
+)
+from django.db.models.functions import TruncMonth
 from django.forms import CheckboxInput
+from django.forms.widgets import Select
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.decorators.http import require_http_methods
+from django.views.generic import View
+from django_filters import ChoiceFilter, Filter
 from django_filters import (
     FilterSet,
     CharFilter,
-    ChoiceFilter,
     OrderingFilter,
     ModelChoiceFilter,
     BooleanFilter,
 )
 from django_filters.views import FilterView
-from django_filters import ChoiceFilter, Filter
 
 from tapir import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
@@ -54,8 +66,6 @@ from tapir.wirgarten.forms.member.forms import (
     TrialCancellationForm,
     SubscriptionRenewalForm,
 )
-from django.forms.widgets import Select
-
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
     get_pickup_locations_map_data,
@@ -79,7 +89,6 @@ from tapir.wirgarten.models import (
     PickupLocation,
     ProductType,
     Product,
-    TransferCoopSharesLogEntry,
     ReceivedCoopSharesLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
@@ -94,7 +103,6 @@ from tapir.wirgarten.service.member import (
     transfer_coop_shares,
     create_wait_list_entry,
     buy_cooperative_shares,
-    get_next_trial_end_date,
     get_subscriptions_in_trial_period,
     get_next_contract_start_date,
     send_cancellation_confirmation_email,
@@ -120,20 +128,6 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, format_currency
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 from tapir.wirgarten.views.modal import get_form_modal
-from django.db.models import (
-    Q,
-    F,
-    ExpressionWrapper,
-    Sum,
-    Case,
-    F,
-    When,
-    Subquery,
-    OuterRef,
-)
-from datetime import timedelta
-from django.db.models.functions import TruncMonth
-from django.db import models
 
 
 # FIXME: this file needs some serious refactoring. Some of the functions should either be generalized service functions or private functions.
@@ -364,9 +358,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
 
-        additional_products_available = any(
-            sub.end_date > get_next_contract_start_date()
-            for sub in context["subscriptions"][ProductTypes.HARVEST_SHARES]
+        additional_products_available = (
+            get_future_subscriptions()
+            .filter(
+                member_id=self.object.id,
+                end_date__gt=get_next_contract_start_date(),
+                product__type_id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+            )
+            .exists()
         )
 
         context["available_product_types"] = {
