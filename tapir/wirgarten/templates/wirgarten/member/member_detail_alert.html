@@ -14,6 +14,17 @@
     </div>
 </div>
 
+<div id="not-renewed-confirmation" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading">Bestätigung</h4>
+    <p>Danke, dass du uns frühzeitig mitgeteilt hast, dass du <strong>deinen Ernteanteil nicht verlängerst</strong>!</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary"
+                onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar
+        </button>
+    </div>
+</div>
+
 <div id="email-changed-confirmation" style="display:none" class="alert alert-success">
     <h4 class="alert-heading">Deine Email Adresse wurde geändert</h4>
     <p>Wir kontaktieren dich jetzt nur noch über <strong>{{object.email}}</strong></p>
@@ -131,12 +142,16 @@
 
 <script>
     const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
+    const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
     const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
     const params = Tapir.getUrlParams();
     if(params.cancelled && cancellationConfirmationElem){
         cancellationConfirmationElem.style.display = 'block';
         cancellationDateElem = document.getElementById("cancellation_date")
         cancellationDateElem.innerText = params.cancelled;
+    }
+    if(params.notrenewed && notRenewedConfirmationElem){
+        notRenewedConfirmationElem.style.display = 'block';
     }
     if(params.email_changed) {
         emailChangedConfirmationElem.style.display = 'block';
@@ -173,5 +188,6 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
+
 
 </script>

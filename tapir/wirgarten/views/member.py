@@ -619,7 +619,7 @@ def cancel_contract_at_period_end(request, **kwargs):
     send_cancellation_confirmation_email(member_id, end_date, subs)
 
     return HttpResponseRedirect(
-        member_detail_url(member_id) + "?cancelled=" + format_date(end_date)
+        member_detail_url(member_id) + "?notrenewed=" + format_date(end_date)
     )
 
 
