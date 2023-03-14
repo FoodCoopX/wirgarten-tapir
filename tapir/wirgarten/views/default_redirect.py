@@ -54,6 +54,8 @@ def wirgarten_redirect_view(request):
     if user_type == RequestUserType.MEMBER:
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:member_detail", kwargs={"pk": request.user.id})
+            + "?"
+            + request.environ["QUERY_STRING"]
         )
 
     return handle_403(
