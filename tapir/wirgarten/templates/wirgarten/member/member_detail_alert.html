@@ -20,7 +20,7 @@
     <hr>
     <div style="float:right">
         <button type="button" class="btn btn-primary"
-                onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar
+                onclick="document.getElementById('not-renewed-confirmation').style.display='none'">Alles klar
         </button>
     </div>
 </div>
@@ -32,6 +32,17 @@
     <div style="float:right">
         <button type="button" class="btn btn-primary"
                 onclick="document.getElementById('email-changed-confirmation').style.display='none'">Alles klar
+        </button>
+    </div>
+</div>
+
+<div id="password-changed-confirmation" style="display:none" class="alert alert-success">
+    <h4 class="alert-heading">Das hat geklappt!</h4>
+    <p>Du hast dein Passwort erfolgreich aktualisiert.</p>
+    <hr>
+    <div style="float:right">
+        <button type="button" class="btn btn-primary"
+                onclick="document.getElementById('password-changed-confirmation').style.display='none'">Alles klar
         </button>
     </div>
 </div>
@@ -144,6 +155,7 @@
     const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
     const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
     const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
+    const passwordChangedConfirmationElem = document.getElementById("password-changed-confirmation");
     const params = Tapir.getUrlParams();
     if(params.cancelled && cancellationConfirmationElem){
         cancellationConfirmationElem.style.display = 'block';
@@ -155,6 +167,9 @@
     }
     if(params.email_changed) {
         emailChangedConfirmationElem.style.display = 'block';
+    }
+    if(params.passwordchanged){
+        passwordChangedConfirmationElem.style.display = 'block';
     }
 
     Tapir.replaceUrlParams({})
@@ -188,6 +203,8 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
+
+
 
 
 </script>
