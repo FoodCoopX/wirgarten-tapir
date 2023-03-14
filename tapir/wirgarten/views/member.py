@@ -577,9 +577,8 @@ def renew_contract_same_conditions(request, **kwargs):
     member_id = kwargs["pk"]
     new_subs = []
     next_period = get_next_growing_period()
-    for sub in get_future_subscriptions().filter(
-        member_id=member_id, cancellation_ts=None
-    ):
+
+    for sub in get_active_subscriptions().filter(member_id=member_id):
         new_subs.append(
             Subscription(
                 member=sub.member,
