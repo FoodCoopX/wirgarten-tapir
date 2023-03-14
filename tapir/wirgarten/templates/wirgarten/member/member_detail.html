@@ -299,11 +299,7 @@
         FormModal.load('{% url 'wirgarten:member_cancel_trial' object.pk %}', 'Verträge kündigen')
     }
 
-    {% if add_shares_disallowed %}
-        const handleAddHarvestShares = handleRenewal
-        const handleAddChickenShares = handleRenewal
-        const handleAddBestellCoop = handleRenewal
-    {% else %}
+
         const handleAddBestellCoop = () => {
             FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden');
         }
@@ -315,11 +311,6 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
-    {% endif %}
-
-
-
-
 
 </script>
 
