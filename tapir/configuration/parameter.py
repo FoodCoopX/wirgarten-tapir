@@ -98,7 +98,7 @@ def __create_or_update_parameter(
 
         param.save()
     except ObjectDoesNotExist:
-        print("\t[create] ", key)
+        print("******* [create] ", key)
 
         param = TapirParameter.objects.create(
             key=key,

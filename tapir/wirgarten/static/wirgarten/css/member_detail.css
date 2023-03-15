@@ -11,10 +11,6 @@
     flex-direction: column;
 }
 
-#member-detail-right-column{
-    grid-column:span 2;
-}
-
 #member-contracts{
     margin-bottom: 1em;
 }

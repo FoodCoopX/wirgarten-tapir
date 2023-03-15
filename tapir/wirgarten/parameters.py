@@ -40,6 +40,7 @@ class Parameter:
     SITE_EMAIL = f"{PREFIX}.site.email"
     SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
     SITE_ADMIN_NAME = f"{PREFIX}.site.admin_name"
+    SITE_ADMIN_TELEPHONE = f"{PREFIX}.site.admin_telephone"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
@@ -171,8 +172,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.SITE_ADMIN_NAME,
             label="Admin/Ansprechpartner Name",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="TODO",
-            description="Wird in der Grußformel von Emails verwendet. Bsp: 'Viele Grüße von XXXX aus deinem WirGarten Lüneburg'",
+            initial_value="Lukas Heidelberg",
+            description="Der Name des Ansprechpartners für Mitglieder",
+            category=ParameterCategory.SITE,
+        )
+        parameter_definition(
+            key=Parameter.SITE_ADMIN_TELEPHONE,
+            label="Admin/Ansprechpartner Telefonnummer",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="+49 176 34 45 81 48",
+            description="Die Kontakttelefonnummer für Mitglieder",
             category=ParameterCategory.SITE,
         )
 

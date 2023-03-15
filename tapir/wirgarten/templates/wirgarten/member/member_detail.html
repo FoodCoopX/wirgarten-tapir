@@ -27,75 +27,6 @@
         </div>
         {% endif %}
 
-        <div id="member-personal-data" class="card" style="margin-bottom:1em">
-            <h5 class="card-header d-flex justify-content-between align-items-center">
-                {% translate "Persönliche Daten" %}
-                <button class="btn tapir-btn btn-outline-primary"
-                        onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
-                        id="tapir_user_edit_button">
-                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                </button>
-            </h5>
-            <div class="card-body">
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
-                    <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
-                </div>
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
-                    {% if email_change_request %}
-                    <div class="col-8" id="tapir_user_changed_email">
-                        <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span><br/>
-                        <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
-                                class="badge bg-danger">Nicht verifiziert</span></span>
-                    </div>
-                    {% else %}
-                    <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
-                    {% endif %}
-                </div>
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
-                    <div class="col-8" id="tapir_user_phone_number">
-                        {% if object.phone_number %}
-                        {{ object.phone_number|format_phone_number }}
-                        {% else %}
-                        <span class="text-danger">{% translate "Missing" %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
-                    <div class="col-8" id="tapir_user_birthdate">
-                        {% if object.birthdate %}
-                        {{ object.birthdate|format_date }}
-                        {% else %}
-                        <span class="text-danger">{% translate "Missing" %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
-                    <div class="col-8" id="tapir_user_address">
-                        {% if object.street and object.city %}
-                        {{ object.get_display_address }}
-                        {% else %}
-                        <span class="text-danger">{% translate "Missing" %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                {% if object.pk == request.user.pk %}
-                <div>
-                    <hr/>
-                    <a style="float: right" class="btn tapir-btn btn-outline-primary ms-1"
-                       href="{% url 'password_change' %}"><span
-                            class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-                </div>
-                {% endif %}
-            </div>
-
-        </div>
-
         <div id="member-contracts">
             <div id="contract-tiles">
                 <div class="card">
@@ -206,7 +137,7 @@
         </div>
     </div>
 
-    <div id="member-detail-right-column">
+    <div id="member-detail-middle-column">
         <div id="member-pickup-location" class="card">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Abholung" %}
@@ -215,79 +146,168 @@
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
             </h5>
-            <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr;">
-                <div style="overflow-y: scroll; max-height: 30em; margin-right:1em;">
+            <div class="card-body">
+                <div style="overflow-y: scroll; max-height: 30em;">
                     {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True hide_location=True %}
-                </div>
-                <div>
-                    {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=pickup_location_map_data selected=object.pickup_location.id %}
                 </div>
             </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; grid-gap: 1em;">
 
-            <div class="card">
-                <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
-                    <div class="card-body" style="text-align: center;">
-                        <div class="contract-tile-number">
-                            <strong>{{ next_payment.amount }}</strong> €
-                        </div>
-                        <strong>Nächste Zahlung</strong><br/>
-                        <small>
-                            am {{ next_payment.due_date|format_date }}<br/>
-                            {{ next_payment.mandate_ref.ref }}
-                        </small><br/>
+        <div class="card">
+            <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
+                <div class="card-body" style="text-align: center;">
+                    <div class="contract-tile-number">
+                        <strong>{{ next_payment.amount }}</strong> €
                     </div>
-                </a>
+                    <strong>Nächste Zahlung</strong><br/>
+                    <small>
+                        am {{ next_payment.due_date|format_date }}<br/>
+                        {{ next_payment.mandate_ref.ref }}
+                    </small><br/>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div id="member-detail-right-column">
+        <div class="card">
+            <div class="row g-0">
+                <h5 class="card-header">
+                    Deine Ansprechpartner:in
+                </h5>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
+                        <br/><br/>
+                        <a class="card-text" style="text-decoration:none; color:inherit;"
+                           href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
+                           target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a></br>
+                        <a class="card-text" style="text-decoration:none; color:inherit;"
+                           href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
+                           target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <img src="https://lueneburg.wirgarten.com/wp-content/uploads/sites/4/2023/03/lukas-heidelberg-higher-res.jpg"
+                         class="card-img" alt="{{ 'wirgarten.site.admin_name'|parameter }}">
+                </div>
+            </div>
+        </div>
+
+
+        <div id="member-personal-data" class="card" style="margin-bottom:1em; margin-top:1em">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Persönliche Daten" %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
+                        id="tapir_user_edit_button">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+            </h5>
+            <div class="card-body">
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
+                    <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                    {% if email_change_request %}
+                    <div class="col-8" id="tapir_user_changed_email">
+                        <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span><br/>
+                        <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
+                                class="badge bg-danger">Nicht verifiziert</span></span>
+                    </div>
+                    {% else %}
+                    <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+                    {% endif %}
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
+                    <div class="col-8" id="tapir_user_phone_number">
+                        {% if object.phone_number %}
+                        {{ object.phone_number|format_phone_number }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
+                    <div class="col-8" id="tapir_user_birthdate">
+                        {% if object.birthdate %}
+                        {{ object.birthdate|format_date }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
+                    <div class="col-8" id="tapir_user_address">
+                        {% if object.street and object.city %}
+                        {{ object.get_display_address }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if object.pk == request.user.pk %}
+                <div>
+                    <hr/>
+                    <a style="float: right" class="btn tapir-btn btn-outline-primary ms-1"
+                       href="{% url 'password_change' %}"><span
+                            class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                </div>
+                {% endif %}
             </div>
 
+        </div>
 
-            <div id="member-payment-data" class="card">
-                <h5 class="card-header d-flex justify-content-between align-items-center">
-                    {% translate "Bankverbindung" %}
-                    <button class="btn tapir-btn btn-outline-primary"
-                            onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
-                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                    </button>
-                </h5>
-                <div class="card-body">
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
-                        <div class="col-8" id="tapir_user_account_owner">
-                            {% if object.account_owner %}
-                            {{ object.account_owner }}
-                            {% else %}
-                            <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
+        <div id="member-payment-data" class="card">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Bankverbindung" %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+            </h5>
+            <div class="card-body">
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
+                    <div class="col-8" id="tapir_user_account_owner">
+                        {% if object.account_owner %}
+                        {{ object.account_owner }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
                     </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
-                        <div class="col-8" id="tapir_user_iban">
-                            {% if object.iban %}
-                            {{ object.iban }}
-                            {% else %}
-                            <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
+                    <div class="col-8" id="tapir_user_iban">
+                        {% if object.iban %}
+                        {{ object.iban }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
                     </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "BIC" %}:</div>
-                        <div class="col-8" id="tapir_user_bic">
-                            {% if object.bic %}
-                            {{ object.bic }}
-                            {% else %}
-                            <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "BIC" %}:</div>
+                    <div class="col-8" id="tapir_user_bic">
+                        {% if object.bic %}
+                        {{ object.bic }}
+                        {% else %}
+                        <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
+
 
 {% if perms.accounts.manage %}
 <hr/>
@@ -311,6 +331,14 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
+
+
+
+
+
+
 
 </script>
 
