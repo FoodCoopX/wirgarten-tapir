@@ -1612,12 +1612,8 @@ def export_coop_member_list(request, **kwargs):
             )
 
         transfer_euro_amount = (
-            abs(
-                (
-                    sum(map(lambda x: x.quantity, transfered_to))
-                    - sum(map(lambda x: x.quantity, transfered_from))
-                )
-            )
+            sum(map(lambda x: x.quantity, transfered_to))
+            - sum(map(lambda x: x.quantity, transfered_from))
             * settings.COOP_SHARE_PRICE
         )
         transfer_euro_string = (
