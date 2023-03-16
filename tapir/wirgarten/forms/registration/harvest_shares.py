@@ -13,11 +13,13 @@ from tapir.wirgarten.models import (
     Product,
     GrowingPeriod,
     MandateReference,
+    Member,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     get_or_create_mandate_ref,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
@@ -152,12 +154,15 @@ class HarvestShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(self, member_id, mandate_ref: MandateReference = None):
+    def save(
+        self, member_id, mandate_ref: MandateReference = None, send_email: bool = False
+    ):
         product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
 
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
+        subs = []
         for key, quantity in self.cleaned_data.items():
             if (
                 key.startswith(HARVEST_SHARE_FIELD_PREFIX)
@@ -168,7 +173,7 @@ class HarvestShareForm(forms.Form):
                     type=product_type,
                     name=key.replace(HARVEST_SHARE_FIELD_PREFIX, "").upper(),
                 )
-                Subscription.objects.create(
+                sub = Subscription.objects.create(
                     member_id=member_id,
                     product=product,
                     period=self.growing_period,
@@ -181,6 +186,12 @@ class HarvestShareForm(forms.Form):
                     mandate_ref=mandate_ref,
                     consent_ts=datetime.now(),
                 )
+
+                subs.append(sub)
+
+        if send_email:
+            member = Member.objects.get(id=member_id)
+            send_order_confirmation(member, subs)
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
