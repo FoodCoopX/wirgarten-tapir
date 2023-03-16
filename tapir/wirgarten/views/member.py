@@ -1095,9 +1095,7 @@ def get_add_harvest_shares_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=HarvestShareForm,
-        handler=lambda x: x.save(
-            member_id=member_id,
-        ),
+        handler=lambda x: x.save(member_id=member_id, send_email=True),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
