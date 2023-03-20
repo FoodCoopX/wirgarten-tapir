@@ -1158,11 +1158,12 @@ def get_add_coop_shares_form(request, **kwargs):
         }
         return get_coop_shares_waiting_list_form(request, **wl_kwargs)
 
+    today = date.today()
     return get_form_modal(
         request=request,
         form=CooperativeShareForm,
         handler=lambda x: buy_cooperative_shares(
-            x.cleaned_data["cooperative_shares"], member_id
+            x.cleaned_data["cooperative_shares"], member_id, start_date=today
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,

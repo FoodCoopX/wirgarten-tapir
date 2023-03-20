@@ -211,7 +211,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <img src="https://lueneburg.wirgarten.com/wp-content/uploads/sites/4/2023/03/lukas-heidelberg-higher-res.jpg"
+                    <img src="{{ 'wirgarten.site.admin_image'|parameter}}"
                          class="card-img" alt="{{ 'wirgarten.site.admin_name'|parameter }}">
                 </div>
             </div>
@@ -354,6 +354,8 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
 
 
 
