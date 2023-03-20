@@ -1,10 +1,10 @@
-from django.utils.translation import gettext_lazy as _
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
     EmailValidator,
     URLValidator,
 )
+from django.utils.translation import gettext_lazy as _
 from localflavor.generic.validators import IBANValidator, BICValidator
 
 OPTIONS_WEEKDAYS = [
@@ -41,6 +41,7 @@ class Parameter:
     SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
     SITE_ADMIN_NAME = f"{PREFIX}.site.admin_name"
     SITE_ADMIN_TELEPHONE = f"{PREFIX}.site.admin_telephone"
+    SITE_ADMIN_IMAGE = f"{PREFIX}.site.admin_image"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
@@ -176,12 +177,22 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Name des Ansprechpartners für Mitglieder",
             category=ParameterCategory.SITE,
         )
+
         parameter_definition(
             key=Parameter.SITE_ADMIN_TELEPHONE,
             label="Admin/Ansprechpartner Telefonnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="+49 176 34 45 81 48",
             description="Die Kontakttelefonnummer für Mitglieder",
+            category=ParameterCategory.SITE,
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_ADMIN_IMAGE,
+            label="Admin/Ansprechpartner Foto",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="https://lueneburg.wirgarten.com/wp-content/uploads/sites/4/2023/03/lukas-heidelberg-higher-res.jpg",
+            description="Ein Foto der Kontaktperson für Mitglieder",
             category=ParameterCategory.SITE,
         )
 
@@ -656,7 +667,7 @@ Viele Grüße und alles Gute,
             key=Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Bestellbestätigung'",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Bestellbestätigung",
+            initial_value="Deine Vertragsdaten + Informationen zum Mitgliederbereich",
             description="Betreff der Email, die bei Vertragsabschluss/-verlängerung sofort an das Mitglied geschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=6999,
@@ -668,25 +679,21 @@ Viele Grüße und alles Gute,
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Liebe/r {member.first_name},
 
-wir freuen uns, dass du Teil unseres WirGarten wirst.
-
-Nachfolgend findest du alle wichtigen Vertragsdetails nochmal auf einen Blick.
+nachfolgend findest du alle wichtigen Vertragsdetails nochmal im Überblick:
 
 {contract_list}
 
-Vertragslaufzeit: {contract_start_date} - {contract_end_date}
+Wenn du <strong>Neumitglied</strong> bist, erhältst du in Kürze außerdem eine automatische Mail aus tapir (das ist unsere Mitglieder- und Ernteverwaltungssoftware), in der du gebeten wirst, dein Konto in tapir zu verifizieren. Bitte klicke einfach auf den Link und setze dann dein Passwort. Danach wirst du direkt in den Mitgliederbereich weitergeleitet. Im Mitgliederbereich findest du eine Übersicht über alle deine Verträge und kannst deine Daten, aber z.B. auch deinen Abholort, jederzeit ändern. Außerdem schicken wir dir  eine Willkommensmail mit allen wichtigen Informationen für Neumitglieder.
 
-Solltest du Fragen oder Unklarheiten haben, kannst du dich jederzeit an deinen Ansprechpartner wenden.
-      
-Name: {admin_name}
-Telefonnummer: +49 176 34 45 81 48
-Email: lueneburg@wirgarten.com
+Wenn du schon <strong>Mitglied im WirGarten Lüneburg bist</strong>, hast du bereits einen Zugang zum Mitgliederbereich. Wir melden uns dann kurz vor der ersten Abholung der neuen Vertragslaufzeit nochmal mit einer Infomail bei dir!
 
-Dein erster Abholtermin ist am {first_pickup_date}.
+Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
 
-Schön, dass du jetzt mit dabei bist.
+<strong>{admin_name}</strong>
+{admin_telephone}
+{site_email}
 
-Liebe Grüße aus deinem WirGarten”
+<img src="{admin_image}"/>
 """,
             description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_list}, {first_pickup_date}, {contract_start_date}, {contract_end_date}",
             category=ParameterCategory.EMAIL,
@@ -699,6 +706,9 @@ Liebe Grüße aus deinem WirGarten”
                         [
                             "member",
                             "admin_name",
+                            "admin_telephone",
+                            "admin_image",
+                            "site_email",
                             "site_name",
                             "contract_list",
                             "contract_start_date",

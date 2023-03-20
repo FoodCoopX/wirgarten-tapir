@@ -156,7 +156,9 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     share_price = settings.COOP_SHARE_PRICE
-    due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
+    due_date = get_next_contract_start_date().replace(
+        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    )  # payment is always due next month
 
     mandate_ref = create_mandate_ref(member_id, True)
     so = CoopShareTransaction.objects.create(
@@ -271,6 +273,9 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
             first_pickup_date=format_date(get_next_delivery_date(contract_start_date)),
             admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
             site_name=get_parameter_value(Parameter.SITE_NAME),
-            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}<br/>",
+            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+            admin_telephone=get_parameter_value(Parameter.SITE_ADMIN_TELEPHONE),
+            admin_image=get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
+            site_email=get_parameter_value(Parameter.SITE_EMAIL),
         ),
     )

@@ -327,6 +327,20 @@ class Subscription(TapirModel, Payable):
 
 
 class CoopShareTransaction(TapirModel, Payable):
+    """
+    The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
+
+    Attributes:
+        transaction_type (CharField): The type of transaction (PURCHASE, CANCELLATION, TRANSFER_OUT, TRANSFER_IN).
+        member (ForeignKey): The member associated with the transaction.
+        quantity (SmallIntegerField): The quantity of shares involved in the transaction. Must be positive for PURCHASE and TRANSFER_IN, and negative for CANCELLATION and TRANSFER_OUT.
+        share_price (DecimalField): The price of a single share at the time of the transaction.
+        timestamp (DateTimeField): The date and time when the transaction was created.
+        valid_at (DateField): The date when the transaction becomes valid.
+        mandate_ref (ForeignKey): The reference to a mandate associated with the transaction (optional).
+        transfer_member (ForeignKey): The member associated with the share transfer (TRANSFER_OUT, TRANSFER_IN transactions only).
+    """
+
     class CoopShareTransactionType(models.TextChoices):
         PURCHASE = "purchase", _("Zeichnung von Anteilen")
         CANCELLATION = "cancellation", _("Kündigung von Anteilen")
