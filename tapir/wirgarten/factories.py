@@ -6,7 +6,6 @@ from django.utils import timezone
 from tapir.wirgarten.models import (
     PickupLocation,
     Member,
-    ShareOwnership,
     MandateReference,
     Subscription,
     Product,
@@ -102,21 +101,6 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     solidarity_price = 0.3
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
-    )
-
-
-class ShareOwnershipFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = ShareOwnership
-
-    member = factory.SubFactory(MemberFactory)
-    quantity = 1
-    share_price = 10
-    entry_date = factory.LazyAttribute(lambda _: timezone.now())
-    mandate_ref = factory.SubFactory(
-        MandateReferenceFactory,
-        member=factory.SelfAttribute("..member"),
-        for_shares=True,
     )
 
 
