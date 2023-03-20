@@ -46,7 +46,7 @@ def format_date(value: date | datetime):
 
 
 @register.filter(name="format_currency")
-def format_currency(value: float | Decimal | int):
+def format_currency(value: float | Decimal | int | str):
     return utils.format_currency(value)
 
 

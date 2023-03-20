@@ -3,8 +3,6 @@ import os
 import pathlib
 import random
 
-from django.db import transaction
-
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
@@ -13,12 +11,13 @@ from tapir.accounts.models import TapirUser, EmailChangeRequest
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
-    ShareOwnership,
     Product,
     ProductType,
     GrowingPeriod,
     MandateReference,
     Payment,
+    CoopShareTransaction,
+    WaitingListEntry,
 )
 from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
@@ -170,7 +169,8 @@ def clear_data():
     print("Clearing data...")
     LogEntry.objects.all().delete()
     Subscription.objects.all().delete()
-    ShareOwnership.objects.all().delete()
+    CoopShareTransaction.objects.all().delete()
+    WaitingListEntry.objects.all().delete()
     Payment.objects.all().delete()
     MandateReference.objects.all().delete()
     EmailChangeRequest.objects.all().delete()

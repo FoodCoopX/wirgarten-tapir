@@ -25,6 +25,8 @@ from django.db.models import (
     When,
     Subquery,
     OuterRef,
+    Count,
+    Max,
 )
 from django.db.models.functions import TruncMonth
 from django.forms import CheckboxInput
@@ -78,7 +80,6 @@ from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
     Member,
     Subscription,
-    ShareOwnership,
     Payment,
     Deliveries,
     GrowingPeriod,
@@ -90,6 +91,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Product,
     ReceivedCoopSharesLogEntry,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -284,14 +286,14 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
         return Member.objects.annotate(
             coop_shares_total_value=Subquery(
-                ShareOwnership.objects.filter(
-                    Q(membership_end_date__gte=today)
-                    | Q(membership_end_date__isnull=True),
+                CoopShareTransaction.objects.filter(
                     member_id=OuterRef("id"),
-                    entry_date__lte=today,
+                    valid_at__lte=today,
                 )
+                .values("member_id")
                 .annotate(total_value=Sum(F("quantity") * F("share_price")))
-                .values("total_value")[:1]
+                .values("total_value"),
+                output_field=models.DecimalField(),
             ),
             monthly_payment=Sum(
                 Case(
@@ -344,19 +346,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["subscriptions"][pt.name] = []
                 context["sub_quantities"][pt.name] = 0
 
-        share_ownerships = list(ShareOwnership.objects.filter(member=self.object))
-        context["coop_shares"] = list(
-            map(
-                lambda s: {
-                    "quantity": s.quantity,
-                    "share_price": s.share_price,
-                    "timestamp": s.created_at.strftime("%d.%m.%Y"),
-                },
-                share_ownerships,
-            )
-        )
+        share_ownerships = list(CoopShareTransaction.objects.filter(member=self.object))
+        context["coop_shares"] = share_ownerships
 
-        context["coop_shares_total"] = sum(map(lambda x: x.quantity, share_ownerships))
+        context["coop_shares_total"] = self.object.coop_shares_quantity
 
         additional_products_available = (
             get_future_subscriptions()
@@ -678,7 +671,7 @@ def get_subs_or_shares_for_mandate_ref(
                     },
                     "total_price": x.total_price,
                 },
-                ShareOwnership.objects.filter(mandate_ref=mandate_ref),
+                CoopShareTransaction.objects.filter(member_id=mandate_ref.member.id),
             )
         )
     else:
@@ -1457,7 +1450,7 @@ class ExportMembersView(View):
                     member.city,
                     member.country,
                     format_date(member.created_at.date()),
-                    format_date(member.coop_entry_date()),
+                    format_date(member.coop_entry_date),
                     format_currency(member.coop_shares_total_value),
                     format_currency(member.monthly_payment),
                     member.pickup_location.name if member.pickup_location else "",
@@ -1506,9 +1499,16 @@ def export_coop_member_list(request, **kwargs):
     KEY_COMMENT = "Kommentar"
 
     # Determine maximum number of shares a member has
-    max_shares = max(
-        [entry.shareownership_set.count() for entry in Member.objects.all()]
-    )
+    max_shares = Member.objects.annotate(
+        purchase_transactions_count=Count(
+            "coopsharetransaction",
+            filter=models.Q(
+                coopsharetransaction__transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
+            ),
+        )
+    ).aggregate(max_purchase_transactions=Max("purchase_transactions_count"))[
+        "max_purchase_transactions"
+    ]
 
     # Generate column headers for each share ownership entry
     share_cols = {}
@@ -1542,26 +1542,28 @@ def export_coop_member_list(request, **kwargs):
         ]
     )
     for entry in Member.objects.all():
-        coop_shares = entry.shareownership_set.order_by("created_at")
-        last_cancelled_coop_shares = entry.shareownership_set.order_by(
-            "-membership_end_date"
-        )[:1]
-
-        today = date.today()
-        if not coop_shares.filter(
-            Q(membership_end_date__gte=today) | Q(membership_end_date=None),
-            entry_date__lte=today,
-        ).exists():
-            continue
-
+        coop_shares = entry.coopsharetransaction_set.filter(
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
+        ).order_by("timestamp")
+        last_cancelled_coop_shares = entry.coopsharetransaction_set.filter(
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION
+        ).order_by("-timestamp")
         if len(last_cancelled_coop_shares) > 0:
             last_cancelled_coop_shares = last_cancelled_coop_shares[0]
         else:
             last_cancelled_coop_shares = None
 
-        transfered_to = ReceivedCoopSharesLogEntry.objects.filter(user_id=entry.id)
-        transfered_from = ReceivedCoopSharesLogEntry.objects.filter(
-            target_member_id=entry.id
+        today = date.today()
+        # skip future members. TODO: check cancellation, when must old members be removed from the list?
+        if entry.coop_entry_date is None or entry.coop_entry_date > today:
+            continue
+
+        # FIXME: REPLACE
+        transfered_to = entry.coopsharetransaction_set.filter(
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
+        )
+        transfered_from = entry.coopsharetransaction_set.filter(
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
         )
 
         data = {
@@ -1572,10 +1574,10 @@ def export_coop_member_list(request, **kwargs):
             KEY_ADDRESS2: entry.street_2,
             KEY_POSTCODE: entry.postcode,
             KEY_CITY: entry.city,
-            KEY_BIRTHDATE: entry.birthdate,
+            KEY_BIRTHDATE: format_date(entry.birthdate),
             KEY_TELEPHONE: entry.phone_number,
             KEY_EMAIL: entry.email,
-            KEY_COOP_SHARES_TOTAL: entry.coop_shares_quantity(),
+            KEY_COOP_SHARES_TOTAL: entry.coop_shares_quantity,
             KEY_COOP_SHARES_TOTAL_EURO: format_currency(
                 entry.coop_shares_total_value()
             ),
@@ -1606,39 +1608,38 @@ def export_coop_member_list(request, **kwargs):
                 share.total_price
             )
             data[share_cols[f"KEY_COOP_SHARES_{i}_ENTRY_DATE"]] = format_date(
-                share.entry_date
+                share.valid_at
             )
 
         transfer_euro_amount = (
             sum(map(lambda x: x.quantity, transfered_to))
-            - sum(map(lambda x: x.quantity, transfered_from))
-            * settings.COOP_SHARE_PRICE
-        )
+            + sum(map(lambda x: x.quantity, transfered_from))
+        ) * settings.COOP_SHARE_PRICE
         transfer_euro_string = (
             "" if transfer_euro_amount == 0 else format_currency(transfer_euro_amount)
         )
 
         transfer_to_string = ", ".join(
             map(
-                lambda x: f"von {x.target_member.first_name} {x.target_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)}  €",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)}  €",
                 transfered_to,
             )
         )
         transfer_from_string = ", ".join(
             map(
-                lambda x: f"an {x.user.first_name} {x.user.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
                 transfered_from,
             )
         )
         transfer_to_date = ", ".join(
             map(
-                lambda x: f"von {x.target_member.first_name} {x.target_member.last_name}: {format_date(x.created_date)}",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
                 transfered_to,
             )
         )
         transfer_from_date = ", ".join(
             map(
-                lambda x: f"an {x.user.first_name} {x.user.last_name}: {format_date(x.created_date)}",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
                 transfered_from,
             )
         )

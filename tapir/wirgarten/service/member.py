@@ -2,13 +2,11 @@ from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Sum
 
 from tapir import settings
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
-    ShareOwnership,
     TransferCoopSharesLogEntry,
     MandateReference,
     Member,
@@ -16,6 +14,7 @@ from tapir.wirgarten.models import (
     Payment,
     WaitingListEntry,
     Subscription,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -39,10 +38,8 @@ def transfer_coop_shares(
     :param actor: who initiated the transfer (admin account)
     """
 
-    origin_ownerships = ShareOwnership.objects.filter(
-        member_id=origin_member_id
-    ).order_by("-created_at")
-    origin_ownerships_quantity = origin_ownerships.aggregate(sum=Sum("quantity"))["sum"]
+    origin_member = Member.objects.get(id=origin_member_id)
+    origin_ownerships_quantity = origin_member.coop_shares_quantity
 
     if quantity < 1:
         return False  # nothing to do
@@ -51,29 +48,24 @@ def transfer_coop_shares(
     if quantity > origin_ownerships_quantity:
         quantity = origin_ownerships_quantity
 
-    mandate_ref = create_mandate_ref(target_member_id, True)
-
-    actual_coop_start = get_next_contract_start_date(
-        date.today() + relativedelta(months=1)
-    )
-    new_ownership = ShareOwnership.objects.create(
+    today = date.today()
+    new_ownership = CoopShareTransaction.objects.create(
         member_id=target_member_id,
         quantity=quantity,
         share_price=settings.COOP_SHARE_PRICE,
-        entry_date=actual_coop_start,
-        mandate_ref=mandate_ref,
+        valid_at=today,
+        transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
+        transfer_member_id=origin_member_id,
     )
 
-    quantity_to_transfer = quantity
-    for oo in origin_ownerships:
-        if quantity_to_transfer < 1:
-            break
-        delta = min(quantity_to_transfer, oo.quantity)
-        oo.quantity -= delta
-        quantity_to_transfer -= delta
-        oo.save()
-
-    origin_member = Member.objects.get(pk=origin_member_id)
+    CoopShareTransaction.objects.create(
+        member_id=origin_member_id,
+        quantity=-quantity,
+        share_price=settings.COOP_SHARE_PRICE,
+        valid_at=today,
+        transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT,
+        transfer_member_id=target_member_id,
+    )
 
     # log entry for the user who SOLD the shares
     TransferCoopSharesLogEntry().populate(
@@ -167,12 +159,13 @@ def buy_cooperative_shares(
     due_date = start_date.replace(day=get_parameter_value(Parameter.PAYMENT_DUE_DAY))
 
     mandate_ref = create_mandate_ref(member_id, True)
-    so = ShareOwnership.objects.create(
+    so = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=quantity,
         share_price=share_price,
-        entry_date=start_date,
+        valid_at=start_date,
         mandate_ref=mandate_ref,
+        transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
     )
 
     Payment.objects.create(

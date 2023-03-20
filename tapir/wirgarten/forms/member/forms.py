@@ -25,7 +25,7 @@ from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
-from tapir.wirgarten.models import Payment, Member, ShareOwnership
+from tapir.wirgarten.models import Payment, Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
@@ -146,9 +146,7 @@ class CoopShareTransferForm(Form):
         super(CoopShareTransferForm, self).__init__(*args)
         member_id = kwargs["pk"]
         orig_member = Member.objects.get(pk=member_id)
-        orig_share_ownership_quantity = ShareOwnership.objects.filter(
-            member_id=member_id
-        ).aggregate(quantity_sum=Sum("quantity"))["quantity_sum"]
+        orig_share_ownership_quantity = orig_member.coop_shares_quantity
 
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
@@ -218,19 +216,13 @@ class TrialCancellationForm(Form):
         self.subs = get_subscriptions_in_trial_period(self.member_id)
         self.next_trial_end_date = get_next_trial_end_date(self.subs[0])
 
+        member = Member.objects.get(id=self.member_id)
+
         def is_new_member() -> bool:
-            try:
-                self.share_ownership = ShareOwnership.objects.get(
-                    member_id=self.member_id
-                )
-                return self.share_ownership.entry_date > self.next_trial_end_date
-            except (
-                ShareOwnership.DoesNotExist,
-                ShareOwnership.MultipleObjectsReturned,
-            ):
-                return (
-                    False  # new members should have exactly one share_ownership entity
-                )
+            return (
+                member.coop_entry_date is not None
+                and member.coop_entry_date > self.next_trial_end_date
+            )
 
         for sub in self.subs:
             key = f"{self.KEY_PREFIX}{sub.id}"

@@ -32,15 +32,38 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="contract-tile-number">
-                            <strong>{{ coop_shares_total }}</strong> ×
+                            <strong>{{ coop_shares_total|default:'0' }}</strong> ×
                         </div>
                         <strong>Genossenschaftsanteile</strong>
                         <hr/>
-                        {% for entry in coop_shares %}
                         <small>
-                            {{entry.timestamp}}:&nbsp;&nbsp;&nbsp;{{ entry.quantity }} × {{ entry.share_price|format_currency }}
-                        </small><br/>
-                        {% endfor %}
+                            <table style="width:100%">
+                                {% for entry in coop_shares %}
+                                <tr data-bs-toggle="tooltip" data-bs-placement="top" title="{{entry}}">
+                                    <td>
+                                    <span
+                                            class="material-icons" style="font-size:1em">
+                                {% if entry.transaction_type == 'purchase' %}
+                                add
+                                {% elif entry.transaction_type == 'cancellation' %}
+                                remove
+                                {% elif entry.transaction_type == 'transfer_in'  %}
+                                login
+                                {% elif entry.transaction_type == 'transfer_out'  %}
+                                logout
+                                {% endif %}
+                            </span>
+                                    </td>
+                                    <td>
+                                        {{entry.valid_at|format_date}}
+                                    </td>
+                                    <td style="text-align:right">
+                                        {{ entry.total_price|format_currency }} €
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </small>
                     </div>
                     <div class="card-footer">
                         <button title="Anteile erhöhen"
@@ -331,6 +354,24 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
