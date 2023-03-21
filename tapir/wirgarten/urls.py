@@ -34,6 +34,7 @@ from tapir.wirgarten.views.member import (
     resend_verify_email,
     ExportMembersView,
     export_coop_member_list,
+    get_coop_share_cancel_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -230,6 +231,11 @@ urlpatterns = [
         "members/<str:pk>/coopsharestransfer",
         get_coop_share_transfer_form,
         name="member_coopshare_transfer",
+    ),
+    path(
+        "members/<str:pk>/coopsharescancel",
+        get_coop_share_cancel_form,
+        name="member_coopshare_cancel",
     ),
     path("contracts", SubscriptionListView.as_view(), name="subscription_list"),
     path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),

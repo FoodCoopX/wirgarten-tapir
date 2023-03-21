@@ -84,6 +84,24 @@ def transfer_coop_shares(
     ).save()
 
 
+def cancel_coop_shares(
+    member: str | Member,
+    quantity: int,
+    cancellation_date: datetime | date,
+    valid_at: date,
+):
+    member_id = resolve_member_id(member)
+
+    CoopShareTransaction.objects.create(
+        member_id=member_id,
+        quantity=-quantity,
+        share_price=settings.COOP_SHARE_PRICE,
+        valid_at=valid_at,
+        timestamp=cancellation_date,
+        transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+    )
+
+
 def create_mandate_ref(member: str | Member, coop_shares: bool):
     """
     Generates and persists a new mandate reference for a member.

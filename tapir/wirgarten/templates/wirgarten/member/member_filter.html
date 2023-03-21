@@ -44,6 +44,7 @@
     {% include 'wirgarten/generic/action-button.html' with onclick='handleEditMemberDetails()' disabled=True title='Mitgliedsdaten ändern' type='primary' icon='manage_accounts' class='needs-member' %}
     {% if perms.coop.manage %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
     {% endif %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member needs-unverified-email' %}
     <div style="width: 1em"></div>
@@ -168,6 +169,11 @@
         FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
     }
 
+    const handleCancelCoopShares = () => {
+        const params = Tapir.getUrlParams();
+        FormModal.load(`/wirgarten/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
+    }
+
     const handleEditMemberDetails = () => {
         const params = Tapir.getUrlParams();
         FormModal.load(`/wirgarten/members/${params.member}/edit`, 'Persönliche Daten ändern')
@@ -210,6 +216,7 @@
         params.resend_verify_email = undefined;
         Tapir.replaceUrlParams(params);
     }
+
 
 
 </script>
