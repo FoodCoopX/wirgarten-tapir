@@ -80,7 +80,11 @@ class KeycloakUser(AbstractUser):
 
     def send_verify_email(self):
         kk = self.get_keycloak_client()
-        kk.send_verify_email(user_id=self.keycloak_id)
+        kk.send_verify_email(
+            user_id=self.keycloak_id,
+            redirect_uri=settings.SITE_URL,
+            client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
+        )
 
     def has_perm(self, perm, obj=None):
         return perm in self.roles

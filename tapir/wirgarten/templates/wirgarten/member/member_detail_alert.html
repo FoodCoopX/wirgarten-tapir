@@ -54,7 +54,7 @@
         <strong>{{next_trial_end_date|format_date}}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
     </p>
     {% for sub in subscriptions_in_trial %}
-    - {{sub}} <small>({{sub.start_date}} - {{sub.end_date}})</small><br/>
+    - {{sub}} {% if sub.start_date %}<small>({{sub.start_date}} - {{sub.end_date}})</small>{% endif %}<br/>
     {% endfor %}
     <hr>
     <div style="float:right">

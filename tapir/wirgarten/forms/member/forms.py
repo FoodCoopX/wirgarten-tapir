@@ -6,6 +6,7 @@ from django.core.validators import (
     EmailValidator,
 )
 from django.db import transaction
+from django.db.models import F, Sum
 from django.forms import (
     Form,
     CheckboxInput,
@@ -17,7 +18,6 @@ from django.forms import (
     ChoiceField,
     IntegerField,
 )
-from django.db.models import F, Sum
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -26,7 +26,7 @@ from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
-from tapir.wirgarten.models import Payment, Member
+from tapir.wirgarten.models import Payment, Member, CoopShareTransaction
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
@@ -284,7 +284,9 @@ class TrialCancellationForm(Form):
 
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         self.subs = get_subscriptions_in_trial_period(self.member_id)
-        self.next_trial_end_date = get_next_trial_end_date(self.subs[0])
+        self.next_trial_end_date = get_next_trial_end_date(
+            self.subs[0] if len(self.subs) > 0 else None
+        )
 
         member = Member.objects.get(id=self.member_id)
 
@@ -306,6 +308,12 @@ class TrialCancellationForm(Form):
                 )
 
         if is_new_member():
+            found = member.coopsharetransaction_set.filter(
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
+            )
+            if found.exists():
+                self.share_ownership = found[0]
+
             self.fields["cancel_coop"] = BooleanField(
                 label="Beitrittserklärung zur Genossenschaft widerrufen", required=False
             )
@@ -371,7 +379,9 @@ class TrialCancellationForm(Form):
             self.member_id, self.next_trial_end_date, subs_to_cancel
         )
 
-        return subs_to_cancel[0].end_date
+        return (
+            subs_to_cancel[0].end_date if subs_to_cancel else self.next_trial_end_date
+        )
 
 
 class SubscriptionRenewalForm(Form):
