@@ -90,8 +90,8 @@
 }
 
 :root {
-  --primary: #F49633;
-  --secondary: #32822d;
+  --primary: #32822d;
+  --secondary: #F49633;
   --platinum: #E9E7E5;
   --white: #ffffff;
   --black: #000000;
@@ -145,20 +145,54 @@ body {
     background-color: var(--primary);
     border-color: var(--primary);
 }
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
 
 .btn-secondary {
     background-color: var(--secondary);
     border-color: var(--secondary);
 }
 
-.btn-primary:hover {
+.btn-primary:hover, .btn-primary:focus {
     background-color: var(--primary);
     border-color: var(--primary);
     filter: brightness(90%);
 }
 
+.btn-secondary:hover, .btn-secondary:focus {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    filter: brightness(90%);
+}
+
+.btn-primary:disabled, .btn-primary.disabled {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    opacity: 0.65;
+}
+
+.btn-secondary:disabled, .btn-secondary.disabled {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    opacity: 0.65;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active, .btn-primary:not(:disabled):not(.disabled).active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    filter: brightness(75%);
+}
+
+.btn-secondary:not(:disabled):not(.disabled):active, .btn-secondary:not(:disabled):not(.disabled).active {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    filter: brightness(75%);
+}
+
 .is-valid{
-    border-color: var(--secondary) !important;
+    border-color: var(--primary) !important;
 }
 
 .photo {
@@ -238,7 +272,7 @@ tr.tr-href:hover:not(.active), tr.tr-clickable:hover:not(.active){
 }
 
 div.option.selected {
-    background-color: var(--secondary);
+    background-color: var(--primary);
 }
 
 .table td,

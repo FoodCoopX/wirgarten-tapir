@@ -8,7 +8,7 @@
     </p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-primary"
+        <button type="button" class="btn btn-secondary"
                 onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar
         </button>
     </div>
@@ -19,7 +19,7 @@
     <p>Danke, dass du uns frühzeitig mitgeteilt hast, dass du <strong>deinen Ernteanteil nicht verlängerst</strong>!</p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-primary"
+        <button type="button" class="btn btn-secondary"
                 onclick="document.getElementById('not-renewed-confirmation').style.display='none'">Alles klar
         </button>
     </div>
@@ -30,7 +30,7 @@
     <p>Wir kontaktieren dich jetzt nur noch über <strong>{{object.email}}</strong></p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-primary"
+        <button type="button" class="btn btn-secondary"
                 onclick="document.getElementById('email-changed-confirmation').style.display='none'">Alles klar
         </button>
     </div>
@@ -41,7 +41,7 @@
     <p>Du hast dein Passwort erfolgreich aktualisiert.</p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-primary"
+        <button type="button" class="btn btn-secondary"
                 onclick="document.getElementById('password-changed-confirmation').style.display='none'">Alles klar
         </button>
     </div>
@@ -72,7 +72,7 @@
     <div style="display:flex; justify-content:space-between;">
         <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil nicht verlängern
         </button>
-        <button type="button" class="btn btn-secondary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
+        <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
     </div>
 </div>
 {% elif renewal_status == 'cancelled' %}
@@ -81,7 +81,7 @@
     <p>{{renewal_alert.cancelled.content|safe}}</p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-secondary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
+        <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
     </div>
 </div>
 {% elif renewal_status == 'renewed' %}
@@ -132,16 +132,23 @@
                 </small>
                 {% endif %}
                 {% endfor %}
+                <div class="form-check">
+                    <input type="checkbox" name="sepa-payment-consent" onchange="handleRenewSepaConsent()"
+                           class="form-check-input" id="id_sepa-payment-consent"><label
+                        class="form-check-label"
+                        for="id_sepa-payment-consent">Ich nehme zur Kenntnis, dass die Beträge von meiner hinterlegter Bankverbindung per Lastschrift abgebucht werden.</label>
+                </div>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:space-between;">
                 <div>
                     <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Abbrechen</button>
                 </div>
                 <div>
-                    <button type="button" style="margin-right:0.5em" class="btn btn-primary"
+                    <button id="renewChangeConditionsBtn" type="button" style="margin-right:0.5em"
+                            class="btn btn-secondary" disabled="disabled"
                             onclick="handleRenewChangeConditions()">Auswahl ändern
                     </button>
-                    <button type="button" class="btn btn-secondary"
+                    <button id="renewSameConditionsBtn" disabled="disabled" type="button" class="btn btn-primary"
                             onclick="handleRenewSameConditions()">Verträge verlängern
                     </button>
                 </div>
@@ -152,6 +159,20 @@
 {% endif %}
 
 <script>
+    const handleRenewSepaConsent = () => {
+        const renewChangeBtn = document.getElementById("renewChangeConditionsBtn");
+        const renewSameBtn = document.getElementById("renewSameConditionsBtn");
+        const checkbox = document.getElementById('id_sepa-payment-consent');
+
+         if (checkbox.checked) {
+      renewChangeConditionsBtn.removeAttribute('disabled');
+      renewSameConditionsBtn.removeAttribute('disabled');
+    } else {
+      renewChangeConditionsBtn.setAttribute('disabled', 'disabled');
+      renewSameConditionsBtn.setAttribute('disabled', 'disabled');
+    }
+    }
+
     const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
     const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
     const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
@@ -203,6 +224,11 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
+
+
+
+
+
 
 
 
