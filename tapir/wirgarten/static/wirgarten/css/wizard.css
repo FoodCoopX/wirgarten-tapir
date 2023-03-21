@@ -26,7 +26,7 @@
 }
 
 .step.active .step-icon {
-  background: var(--secondary);
+  background: var(--primary);
 }
 
 .step p {
@@ -39,7 +39,7 @@
 }
 
 .step.active p {
-  color: var(--secondary);
+  color: var(--primary);
 }
 
 .step.step2 p,

@@ -10,7 +10,7 @@
     <h4 class="card-title warning">{% translate 'Im Moment können leider keine Ernteanteile gezeichnet werden.' %}</h4>
     Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und<br/>wir informieren dich, sobald
     wieder Ernteanteile verfügbar sind.</p>
-    <button id="waitlist-btn" class="btn btn-secondary" type="button"
+    <button id="waitlist-btn" class="btn btn-primary" type="button"
             onClick="FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', 'Warteliste Ernteanteile')">
         Okay, gebt mir Bescheid!
     </button>
@@ -30,6 +30,7 @@
             successMsg.style.display='block';
        }
     });
+
 </script>
 
 {% endblock %}
