@@ -43,6 +43,7 @@ class Parameter:
     SITE_ADMIN_TELEPHONE = f"{PREFIX}.site.admin_telephone"
     SITE_ADMIN_IMAGE = f"{PREFIX}.site.admin_image"
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
+    SITE_FAQ_LINK = f"{PREFIX}.site.faq_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
@@ -208,6 +209,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/datenschutzerklaerung",
             description="Der Link zur Datenschutzerklärung. Beispiel: 'https://lueneburg.wirgarten.com/datenschutzerklaerung'",
+            category=ParameterCategory.SITE,
+            meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        parameter_definition(
+            key=Parameter.SITE_FAQ_LINK,
+            label="Link zum Mitglieder-FAQ",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="https://lueneburg.wirgarten.com/faq",
+            description="Der Link zum FAQ für Mitglieder",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[URLValidator()]),
         )

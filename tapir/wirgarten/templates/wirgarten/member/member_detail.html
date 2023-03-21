@@ -8,8 +8,10 @@
 {% load wirgarten %}
 {% load configuration %}
 
+
 {% block head %}
 {{ block.super }}
+<title>{% block title %}Mitgliederbereich - {{ 'wirgarten.site.name' | parameter }}{% endblock %}</title>
 <link rel="stylesheet" href="{% static 'wirgarten/css/member_detail.css' %}">
 {% endblock %}
 
@@ -195,8 +197,12 @@
     <div id="member-detail-right-column">
         <div class="card">
             <div class="row g-0">
-                <h5 class="card-header">
+                <h5 class="card-header  d-flex justify-content-between align-items-center">
                     Deine Ansprechpartner:in
+                    <a class="btn tapir-btn btn-warning" target="_blank"
+                       href="{{ 'wirgarten.site.faq_link' | parameter }}">
+                        <span class="material-icons">link</span>{% translate 'Zum FAQ' %}
+                    </a>
                 </h5>
                 <div class="col-md-8">
                     <div class="card-body">
@@ -354,6 +360,10 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
+
+
 </script>
 
 {% endblock %}
