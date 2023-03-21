@@ -34,6 +34,7 @@ class ParameterCategory:
 
 
 class Parameter:
+    MEMBER_LOCK_FUNCTIONS = f"{PREFIX}.temporarily.lock_functions"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
     SITE_CITY = f"{PREFIX}.site.city"
@@ -791,4 +792,13 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
                 ],
                 textarea=True,
             ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_LOCK_FUNCTIONS,
+            label="TEMPORÄR: Sperre Funktionen im Mitgliederbereich",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung von Vertragsdaten, Zeichnen von Geno-Anteilen, Änderung Bankdaten, Änderung Abholort",
+            category=ParameterCategory.MEMBER_DASHBOARD,
         )
