@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block content %}
+{% with 'wirgarten.temporarily.lock_functions'|parameter|default:False as lock_functions %}<!-- TODO: remove the Parameter and all usages after June/July 2023 when it is not needed anymore -->
 <div id="member-detail-container">
     <div id="member-detail-left-column">
 
@@ -72,6 +73,7 @@
                                 onclick="FormModal.load('{% url 'wirgarten:member_add_coop_shares' object.pk %}', {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                                 style="float:right"
+                                {% if lock_functions %} disabled="disabled" {%endif%}
                         >
                             add
                         </button>
@@ -118,6 +120,7 @@
                         {% if coop_shares_total > 0 %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddHarvestShares()"
+                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -134,6 +137,7 @@
                         {% if type == 'Hühneranteile' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddChickenShares()"
+                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -142,6 +146,7 @@
                         {% if type == 'BestellCoop' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddBestellCoop()"
+                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success material-icons mx-1 px-2"
                         >
                             add
@@ -166,7 +171,7 @@
         <div id="member-pickup-location" class="card">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Abholung" %}
-                <button class="btn tapir-btn btn-outline-primary"
+                <button class="btn tapir-btn btn-outline-primary" {% if lock_functions %} disabled="disabled" {%endif%}
                         onclick="FormModal.load('{% url 'wirgarten:member_pickup_location_choice' object.pk %}', 'Abholort ändern')">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
@@ -296,7 +301,7 @@
         <div id="member-payment-data" class="card">
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Bankverbindung" %}
-                <button class="btn tapir-btn btn-outline-primary"
+                <button class="btn tapir-btn btn-outline-primary" {% if lock_functions %} disabled="disabled" {%endif%}
                         onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
@@ -364,6 +369,7 @@
 
 
 
-</script>
 
+</script>
+{% endwith %}
 {% endblock %}

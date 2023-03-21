@@ -9,4 +9,7 @@ register = template.Library()
 @register.filter(name="parameter")
 @stringfilter
 def parameter_value(key: str):
-    return get_parameter_value(key)
+    try:
+        return get_parameter_value(key)
+    except KeyError:
+        return None
