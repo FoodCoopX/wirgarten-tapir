@@ -3,9 +3,18 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import PickupLocationCapability, PickupLocation
+from tapir.wirgarten.constants import WEEKLY, ODD_WEEKS, EVEN_WEEKS
+from tapir.wirgarten.models import (
+    PickupLocationCapability,
+    PickupLocation,
+    Member,
+    GrowingPeriod,
+)
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_active_product_types
+from tapir.wirgarten.service.products import (
+    get_active_product_types,
+    get_future_subscriptions,
+)
 
 
 def get_active_pickup_location_capabilities():
@@ -35,3 +44,35 @@ def get_next_delivery_date(reference_date: date = date.today()):
             days=delivery_day - reference_date.weekday()
         )
     return next_delivery
+
+
+def generate_future_deliveries(member: Member):
+    deliveries = []
+    next_delivery_date = get_next_delivery_date()
+    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
+    subs = get_future_subscriptions().filter(member=member)
+    while next_delivery_date <= last_growing_period.end_date:
+        _, week_num, _ = next_delivery_date.isocalendar()
+        even_week = week_num % 2 == 0
+
+        active_subs = subs.filter(
+            start_date__lte=next_delivery_date,
+            end_date__gte=next_delivery_date,
+            product__type__delivery_cycle__in=[
+                WEEKLY[0],
+                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
+            ],
+        )
+
+        if active_subs.count() > 0:
+            deliveries.append(
+                {
+                    "delivery_date": next_delivery_date.isoformat(),
+                    "pickup_location": member.pickup_location,
+                    "subs": active_subs,
+                }
+            )
+
+        next_delivery_date += relativedelta(days=7)
+
+    return deliveries

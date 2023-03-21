@@ -579,6 +579,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
+        DEFAULT_EMAIL_VARS = [
+            "year_current",
+            "year_next",
+            "year_overnext",
+            "admin_name",
+            "admin_telephone",
+            "admin_image",
+            "site_name",
+            "site_email",
+        ]
+        DEFAULT_EMAIL_MEMBER_VARS = ["member", "last_pickup_date"]
+
         parameter_definition(
             key=Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Kündigungsbestätigung'",
@@ -611,12 +623,11 @@ Viele Grüße von {admin_name} aus deinem {site_name}""",
                     lambda x: validate_format_string(
                         x,
                         [
-                            "member",
-                            "admin_name",
-                            "site_name",
                             "contract_end_date",
                             "contract_list",
-                        ],
+                        ]
+                        + DEFAULT_EMAIL_MEMBER_VARS
+                        + DEFAULT_EMAIL_VARS,
                     ),
                 ],
                 textarea=True,
@@ -656,7 +667,7 @@ Viele Grüße und alles Gute,
                 validators=[
                     validate_html,
                     lambda x: validate_format_string(
-                        x, ["member", "admin_name", "site_name"]
+                        x, DEFAULT_EMAIL_MEMBER_VARS + DEFAULT_EMAIL_VARS
                     ),
                 ],
                 textarea=True,
@@ -704,17 +715,13 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
                     lambda x: validate_format_string(
                         x,
                         [
-                            "member",
-                            "admin_name",
-                            "admin_telephone",
-                            "admin_image",
-                            "site_email",
-                            "site_name",
                             "contract_list",
                             "contract_start_date",
                             "contract_end_date",
                             "first_pickup_date",
-                        ],
+                        ]
+                        + DEFAULT_EMAIL_MEMBER_VARS
+                        + DEFAULT_EMAIL_VARS,
                     ),
                 ],
                 textarea=True,

@@ -54,9 +54,6 @@ from tapir import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import (
-    WEEKLY,
-    EVEN_WEEKS,
-    ODD_WEEKS,
     ProductTypes,
     Permission,
 )
@@ -97,7 +94,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_active_pickup_locations,
-    get_next_delivery_date,
+    generate_future_deliveries,
 )
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string
@@ -772,38 +769,6 @@ class MemberPaymentsView(
             prev_payments + future_payments,
             key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
         )
-
-
-def generate_future_deliveries(member: Member):
-    deliveries = []
-    next_delivery_date = get_next_delivery_date()
-    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
-    subs = get_future_subscriptions().filter(member=member)
-    while next_delivery_date <= last_growing_period.end_date:
-        _, week_num, _ = next_delivery_date.isocalendar()
-        even_week = week_num % 2 == 0
-
-        active_subs = subs.filter(
-            start_date__lte=next_delivery_date,
-            end_date__gte=next_delivery_date,
-            product__type__delivery_cycle__in=[
-                WEEKLY[0],
-                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-            ],
-        )
-
-        if active_subs.count() > 0:
-            deliveries.append(
-                {
-                    "delivery_date": next_delivery_date.isoformat(),
-                    "pickup_location": member.pickup_location,
-                    "subs": active_subs,
-                }
-            )
-
-        next_delivery_date += relativedelta(days=7)
-
-    return deliveries
 
 
 def get_previous_deliveries(member: Member):
