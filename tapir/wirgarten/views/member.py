@@ -284,12 +284,14 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
     def get_queryset(self):
         today = date.today()
+        overnext_month = today + relativedelta(months=2)
 
         return Member.objects.annotate(
             coop_shares_total_value=Subquery(
                 CoopShareTransaction.objects.filter(
                     member_id=OuterRef("id"),
-                    valid_at__lte=today,
+                    valid_at__lte=overnext_month,
+                    # I do this to include new members in the list, which will join the coop soon
                 )
                 .values("member_id")
                 .annotate(total_value=Sum(F("quantity") * F("share_price")))
@@ -356,7 +358,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
-        additional_products_available = (
+        additional_products_available = self.object.coop_entry_date is not None and (
             get_future_subscriptions()
             .filter(
                 member_id=self.object.id,
@@ -424,6 +426,19 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             context["next_trial_end_date"] = min(
                 subs_in_trial, key=lambda x: x.start_date
             ).start_date + relativedelta(day=1, months=1, days=-1)
+        elif (
+            len(share_ownerships) == 1
+            and share_ownerships[0].transaction_type
+            == CoopShareTransaction.CoopShareTransactionType.PURCHASE
+            and share_ownerships[0].valid_at > now
+        ):
+            context["show_trial_period_notice"] = True
+            context["subscriptions_in_trial"] = [
+                "Beitrittserklärung zur Genossenschaft"
+            ]
+            context["next_trial_end_date"] = share_ownerships[
+                0
+            ].valid_at + relativedelta(days=-1)
 
         email_change_requests = EmailChangeRequest.objects.filter(
             user_id=self.object.id
