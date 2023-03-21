@@ -250,17 +250,11 @@ def send_cancellation_confirmation_email(
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT),
-        content=get_parameter_value(
-            Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
-        ).format(
-            **{
-                "member": member,
-                "contract_end_date": format_date(contract_end_date),
-                "admin_name": get_parameter_value(Parameter.SITE_ADMIN_NAME),
-                "site_name": get_parameter_value(Parameter.SITE_NAME),
-                "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
-            }
-        ),
+        content=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT),
+        variables={
+            "contract_end_date": format_date(contract_end_date),
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
+        },
     )
 
     send_email_member_contract_end_reminder.apply_async(
@@ -285,15 +279,9 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
         content=get_parameter_value(
             Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
         ).format(
-            member=member,
             contract_start_date=format_date(contract_start_date),
             contract_end_date=format_date(subs[0].end_date),
             first_pickup_date=format_date(get_next_delivery_date(contract_start_date)),
-            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
-            site_name=get_parameter_value(Parameter.SITE_NAME),
             contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
-            admin_telephone=get_parameter_value(Parameter.SITE_ADMIN_TELEPHONE),
-            admin_image=get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
-            site_email=get_parameter_value(Parameter.SITE_EMAIL),
         ),
     )

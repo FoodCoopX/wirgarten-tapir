@@ -321,11 +321,5 @@ def send_email_member_contract_end_reminder(member_id):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
-        content=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT
-        ).format(
-            member=member,
-            admin_name=get_parameter_value(Parameter.SITE_ADMIN_NAME),
-            site_name=get_parameter_value(Parameter.SITE_NAME),
-        ),
+        content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
     )

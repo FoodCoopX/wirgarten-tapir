@@ -22,7 +22,6 @@ from tapir.core.models import generate_id, ID_LENGTH, TapirModel
 from tapir.log.models import UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
-from tapir.wirgarten.service.email import send_email
 
 log = logging.getLogger(__name__)
 
@@ -181,6 +180,8 @@ class KeycloakUser(AbstractUser):
                 }
             ).encode()
         ).decode()
+
+        from tapir.wirgarten.service.email import send_email
 
         send_email(
             to_email=[new_email],
