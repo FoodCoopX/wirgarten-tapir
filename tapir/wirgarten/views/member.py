@@ -67,6 +67,7 @@ from tapir.wirgarten.forms.member.forms import (
     WaitingListForm,
     TrialCancellationForm,
     SubscriptionRenewalForm,
+    CoopShareCancelForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -108,6 +109,7 @@ from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     send_cancellation_confirmation_email,
     send_order_confirmation,
+    cancel_coop_shares,
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -345,7 +347,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["subscriptions"][pt.name] = []
                 context["sub_quantities"][pt.name] = 0
 
-        share_ownerships = list(CoopShareTransaction.objects.filter(member=self.object))
+        share_ownerships = list(
+            CoopShareTransaction.objects.filter(member=self.object).order_by(
+                "timestamp"
+            )
+        )
         context["coop_shares"] = share_ownerships
 
         context["coop_shares_total"] = self.object.coop_shares_quantity
@@ -895,6 +901,24 @@ def get_coop_share_transfer_form(request, **kwargs):
             target_member_id=x.cleaned_data["receiver"],
             quantity=x.cleaned_data["quantity"],
             actor=request.user,
+        ),
+        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@permission_required(Permission.Coop.MANAGE)
+@csrf_protect
+def get_coop_share_cancel_form(request, **kwargs):
+    return get_form_modal(
+        request=request,
+        form=CoopShareCancelForm,
+        handler=lambda x: cancel_coop_shares(
+            member=kwargs["pk"],
+            quantity=x.cleaned_data["quantity"],
+            cancellation_date=x.cleaned_data["cancellation_date"],
+            valid_at=x.cleaned_data["valid_at"],
         ),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
@@ -1582,22 +1606,19 @@ def export_coop_member_list(request, **kwargs):
                 entry.coop_shares_total_value()
             ),
             KEY_COOP_SHARES_CANCELLATION_DATE: format_date(
-                last_cancelled_coop_shares.cancellation_date
+                last_cancelled_coop_shares.timestamp
             )
-            if last_cancelled_coop_shares
-            and last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
             else "",
             KEY_COOP_SHARES_CANCELLATION_AMOUNT: format_currency(
                 last_cancelled_coop_shares.total_price
             )
-            if last_cancelled_coop_shares
-            and last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
             else "",
             KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: format_date(
-                last_cancelled_coop_shares.membership_end_date
+                last_cancelled_coop_shares.valid_at
             )
-            if last_cancelled_coop_shares
-            and last_cancelled_coop_shares.membership_end_date
+            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
             else "",
             KEY_COOP_SHARES_PAYBACK_EURO: "",  # TODO: how??? Cancelled coop shares?
             KEY_COMMENT: "",  # TODO: join comment log entries?

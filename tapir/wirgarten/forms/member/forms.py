@@ -6,17 +6,18 @@ from django.core.validators import (
     EmailValidator,
 )
 from django.db import transaction
-from django.db.models import Sum
 from django.forms import (
     Form,
     CheckboxInput,
     ModelForm,
     BooleanField,
+    DateField,
     DecimalField,
     CharField,
     ChoiceField,
     IntegerField,
 )
+from django.db.models import F, Sum
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -146,7 +147,11 @@ class CoopShareTransferForm(Form):
         super(CoopShareTransferForm, self).__init__(*args)
         member_id = kwargs["pk"]
         orig_member = Member.objects.get(pk=member_id)
-        orig_share_ownership_quantity = orig_member.coop_shares_quantity
+        self.orig_share_ownership_quantity = (
+            orig_member.coopsharetransaction_set.aggregate(quantity=Sum(F("quantity")))[
+                "quantity"
+            ]
+        )
 
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
@@ -160,7 +165,7 @@ class CoopShareTransferForm(Form):
 
         self.fields["origin"] = CharField(
             label=_("Ursprünglicher Anteilseigner")
-            + f" ({orig_share_ownership_quantity} Anteile)",
+            + f" ({self.orig_share_ownership_quantity} Anteile)",
             disabled=True,
             initial=member_to_string(orig_member),
         )
@@ -169,14 +174,79 @@ class CoopShareTransferForm(Form):
         )
         self.fields["quantity"] = IntegerField(
             label=_("Anzahl der Anteile"),
-            initial=orig_share_ownership_quantity,
+            initial=self.orig_share_ownership_quantity,
             min_value=1,
-            max_value=orig_share_ownership_quantity,
+            max_value=self.orig_share_ownership_quantity,
         )
         self.fields["security_check"] = BooleanField(
             label=_("Ich weiß was ich tue und bin mir der Konsequenzen bewusst."),
             required=True,
         )
+
+    def is_valid(self):
+        super().is_valid()
+        remaining_shares = (
+            self.orig_share_ownership_quantity - self.cleaned_data["quantity"]
+        )
+        min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
+        if remaining_shares > 0 and remaining_shares < min_shares:
+            self.add_error(
+                "quantity",
+                _(
+                    "Ein Mitglied muss mindestens {min_shares} Genossenschaftsanteile haben."
+                ).format(min_shares=min_shares),
+            )
+        return len(self.errors) == 0
+
+
+class CoopShareCancelForm(Form):
+    def __init__(self, *args, **kwargs):
+        member_id = kwargs.pop("pk")
+        super().__init__(*args, **kwargs)
+        member = Member.objects.get(pk=member_id)
+        self.original_share_quantity = member.coopsharetransaction_set.aggregate(
+            quantity=Sum(F("quantity"))
+        )["quantity"]
+        today = date.today()
+        valid_at = today + relativedelta(years=1, month=12, day=31)
+
+        self.fields["cancellation_date"] = DateField(
+            label=_("Kündigungsdatum"),
+            initial=today,
+            required=True,
+            widget=DatePickerInput,
+        )
+        self.fields["valid_at"] = DateField(
+            label=_("Kündigung gültig zum"),
+            initial=valid_at,
+            required=True,
+            widget=DatePickerInput,
+        )
+        self.fields["quantity"] = IntegerField(
+            label=_(
+                "Anzahl der gekündigten Anteile (Insgesamt: {share_quantity})"
+            ).format(share_quantity=self.original_share_quantity),
+            initial=self.original_share_quantity,
+            min_value=1,
+            max_value=self.original_share_quantity,
+        )
+        self.fields["security_check"] = BooleanField(
+            label=_("Ich weiß was ich tue und bin mir der Konsequenzen bewusst."),
+            required=True,
+        )
+
+    def is_valid(self):
+        super().is_valid()
+        remaining_shares = self.original_share_quantity - self.cleaned_data["quantity"]
+        min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
+        if remaining_shares > 0 and remaining_shares < min_shares:
+            self.add_error(
+                "quantity",
+                _(
+                    "Ein Mitglied muss mindestens {min_shares} Genossenschaftsanteile haben."
+                ).format(min_shares=min_shares),
+            )
+        return len(self.errors) == 0
 
 
 class WaitingListForm(Form):
