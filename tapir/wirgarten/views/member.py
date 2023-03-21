@@ -90,7 +90,6 @@ from tapir.wirgarten.models import (
     PickupLocation,
     ProductType,
     Product,
-    ReceivedCoopSharesLogEntry,
     CoopShareTransaction,
 )
 from tapir.wirgarten.parameters import Parameter
@@ -309,7 +308,7 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                     output_field=models.FloatField(),
                 )
             ),
-        )
+        ).filter(coop_shares_total_value__gt=0)
 
 
 class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
@@ -1622,25 +1621,25 @@ def export_coop_member_list(request, **kwargs):
 
         transfer_to_string = ", ".join(
             map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)}  €",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)}  €",
                 transfered_to,
             )
         )
         transfer_from_string = ", ".join(
             map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
                 transfered_from,
             )
         )
         transfer_to_date = ", ".join(
             map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
                 transfered_to,
             )
         )
         transfer_from_date = ", ".join(
             map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
                 transfered_from,
             )
         )
