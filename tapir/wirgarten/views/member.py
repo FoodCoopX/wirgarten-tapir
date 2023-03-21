@@ -104,7 +104,6 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     get_subscriptions_in_trial_period,
     get_next_contract_start_date,
-    send_cancellation_confirmation_email,
     send_order_confirmation,
     cancel_coop_shares,
 )
@@ -626,7 +625,13 @@ def cancel_contract_at_period_end(request, **kwargs):
         sub.save()
 
     end_date = subs[0].end_date
-    send_cancellation_confirmation_email(member_id, end_date, subs)
+
+    member = Member.objects.get(id=member_id)
+    send_email(
+        to_email=[member.email],
+        subject=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT),
+        content=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT),
+    )
 
     return HttpResponseRedirect(
         member_detail_url(member_id) + "?notrenewed=" + format_date(end_date)
