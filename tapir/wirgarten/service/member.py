@@ -278,10 +278,13 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
         ),
         content=get_parameter_value(
             Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
-        ).format(
-            contract_start_date=format_date(contract_start_date),
-            contract_end_date=format_date(subs[0].end_date),
-            first_pickup_date=format_date(get_next_delivery_date(contract_start_date)),
-            contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
         ),
+        variables={
+            "contract_start_date": format_date(contract_start_date),
+            "contract_end_date": format_date(subs[0].end_date),
+            "first_pickup_date": format_date(
+                get_next_delivery_date(contract_start_date)
+            ),
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+        },
     )
