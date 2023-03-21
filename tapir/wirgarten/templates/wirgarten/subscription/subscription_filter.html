@@ -37,11 +37,11 @@
               title="Gekündigt am {{entry.cancellation_ts|format_date}}"
               class="material-icons">free_cancellation</span>
         {% elif today <= entry.trial_end_date %}
-        <span style="color:var(--bs-warning)" data-bs-toggle="tooltip" data-bs-placement="top"
+        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
               title="Probezeitraum läuft bis zum {{entry.trial_end_date|format_date}}"
               class="material-icons">calendar_month</span>
         {% else %}
-        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
+        <span style="color:var(--primary)" data-bs-toggle="tooltip" data-bs-placement="top"
               title="Vertrag läuft bis {{entry.end_date|format_date}}"
               class="material-icons">task_alt</span>
         {% endif %}
