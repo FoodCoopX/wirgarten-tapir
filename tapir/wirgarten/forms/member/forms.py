@@ -353,8 +353,10 @@ class TrialCancellationForm(Form):
 
     @transaction.atomic
     def save(self):
-        cancel_coop = "cancel_coop" in self.cleaned_data and self.cleaned_data.pop(
-            "cancel_coop"
+        cancel_coop = (
+            "cancel_coop" in self.cleaned_data
+            and self.cleaned_data.pop("cancel_coop")
+            and self.share_ownership
         )
         subs_to_cancel = self.subs.filter(
             id__in=[
@@ -369,14 +371,14 @@ class TrialCancellationForm(Form):
             sub.end_date = self.next_trial_end_date
             sub.save()
 
-        if cancel_coop and self.share_ownership:
+        if cancel_coop:
             Payment.objects.get(
                 mandate_ref=self.share_ownership.mandate_ref, due_date__gt=now
             ).delete()
             self.share_ownership.delete()  # TODO: create log entry
 
         send_cancellation_confirmation_email(
-            self.member_id, self.next_trial_end_date, subs_to_cancel
+            self.member_id, self.next_trial_end_date, subs_to_cancel, cancel_coop
         )
 
         return (

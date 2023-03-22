@@ -242,10 +242,17 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
 
 
 def send_cancellation_confirmation_email(
-    member: str | Member, contract_end_date: date, subs_to_cancel: [Subscription]
+    member: str | Member,
+    contract_end_date: date,
+    subs_to_cancel: [Subscription],
+    revoke_coop_membership: bool = False,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
+
+    contract_list = f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}"
+    if revoke_coop_membership:
+        contract_list += "\n- Beitrittserklärung zur Genossenschaft"
 
     send_email(
         to_email=[member.email],
@@ -253,7 +260,7 @@ def send_cancellation_confirmation_email(
         content=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT),
         variables={
             "contract_end_date": format_date(contract_end_date),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}<br/>",
+            "contract_list": contract_list,
         },
     )
 
