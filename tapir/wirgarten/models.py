@@ -140,6 +140,17 @@ class Member(TapirUser):
     )
     privacy_consent = models.DateTimeField(_("Privacy consent"), null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
+    member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
+
+    @classmethod
+    def generate_member_no(cls):
+        max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
+        return (max_member_no or 0) + 1
+
+    def save(self, *args, **kwargs):
+        if not self.member_no:
+            self.member_no = self.generate_member_no()
+        super().save(*args, **kwargs)
 
     def coop_shares_total_value(self):
         today = datetime.date.today()

@@ -225,6 +225,8 @@ class MemberFilter(FilterSet):
         label=_("Sortierung"),
         initial=0,
         choices=(
+            ("-member_no", "⮟ Mitgliedsnummer"),
+            ("member_no", "⮝ Mitgliedsnummer"),
             ("-first_name", "⮟ Vorname"),
             ("first_name", "⮝ Vorname"),
             ("-last_name", "⮟ Nachname"),
@@ -1451,7 +1453,7 @@ class ExportMembersView(View):
         for member in queryset:
             writer.writerow(
                 [
-                    "",
+                    member.member_no,
                     member.first_name,
                     member.last_name,
                     member.email,
@@ -1552,7 +1554,7 @@ def export_coop_member_list(request, **kwargs):
             KEY_COMMENT,
         ]
     )
-    for entry in Member.objects.all():
+    for entry in Member.objects.order_by("member_no"):
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
         ).order_by("timestamp")
@@ -1569,7 +1571,6 @@ def export_coop_member_list(request, **kwargs):
         if entry.coop_entry_date is None or entry.coop_entry_date > today:
             continue
 
-        # FIXME: REPLACE
         transfered_to = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
         )
@@ -1578,7 +1579,7 @@ def export_coop_member_list(request, **kwargs):
         )
 
         data = {
-            KEY_MEMBER_NO: "",  # TODO: include Member #,
+            KEY_MEMBER_NO: entry.member_no,
             KEY_FIRST_NAME: entry.first_name,
             KEY_LAST_NAME: entry.last_name,
             KEY_ADDRESS: entry.street,

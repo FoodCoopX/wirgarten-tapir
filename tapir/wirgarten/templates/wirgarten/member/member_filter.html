@@ -55,6 +55,7 @@
 
 {% block table_head %}
 <tr>
+    <th class="sort-header" data-sort="member_no">#</th>
     <th class="sort-header" data-sort="first_name">{% translate "Vorname" %}</th>
     <th class="sort-header" data-sort="last_name">{% translate "Nachname" %}</th>
     <th class="sort-header" data-sort="email">{% translate "Email" %}</th>
@@ -71,6 +72,7 @@
 
 <tr id="member-{{member.id}}" onClick="handleSelectMember('{{member.id}}', '{{ member.email_verified }}'.toLowerCase())"
     class="tr-clickable member-row">
+    <td class="text-center">{{ member.member_no }}</td>
     <td>{{ member.first_name }}</td>
     <td>{{ member.last_name }}</td>
     <td>{% if not member.email_verified %}<span title="Nicht verifiziert!"
@@ -80,8 +82,8 @@
     <td>{{ member.phone_number }}</td>
     <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
     <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
-    <td class="align-middle">{{ member.pickup_location.name }}</td>
-    <td class="align-middle">{{ member.coop_entry_date|format_date }}</td>
+    <td>{{ member.pickup_location.name }}</td>
+    <td>{{ member.coop_entry_date|format_date }}</td>
 </tr>
 {% endfor %}
 {% endblock %}
@@ -216,6 +218,8 @@
         params.resend_verify_email = undefined;
         Tapir.replaceUrlParams(params);
     }
+
+
 
 
 

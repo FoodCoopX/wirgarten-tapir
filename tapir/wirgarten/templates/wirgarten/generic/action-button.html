@@ -6,10 +6,10 @@
         {% if title %}
         data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ title }}"
         {% endif %}
-        class="btn btn-outline-{{type|default:'success'}} material-icons mx-1 px-2 {{ class }}"
+        class="btn btn-outline-{{type|default:'success'}} mx-1 px-2 {{ class }}"
         {% if disabled %}
         disabled
         {% endif %}
 >
-    {{ icon }}
+    <span class="material-icons">{{ icon }}</span>
 </button>
