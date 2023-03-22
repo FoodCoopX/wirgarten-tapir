@@ -423,10 +423,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 subs_in_trial, key=lambda x: x.start_date
             ).start_date + relativedelta(day=1, months=1, days=-1)
         elif (
-            len(share_ownerships) == 1
-            and share_ownerships[0].transaction_type
-            == CoopShareTransaction.CoopShareTransactionType.PURCHASE
-            and share_ownerships[0].valid_at > now
+            self.object.coop_entry_date is not None
+            and self.object.coop_entry_date > today
+            and self.object.coopsharetransaction_set.aggregate(
+                quantity=Sum(F("quantity"))
+            )["quantity"]
+            > 0
         ):
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"] = [

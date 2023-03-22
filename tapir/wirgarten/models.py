@@ -143,14 +143,14 @@ class Member(TapirUser):
 
     def coop_shares_total_value(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(Q(valid_at__lte=today)).aggregate(
+        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
             total_value=Sum(F("quantity") * F("share_price"))
         )["total_value"]
 
     @property
     def coop_shares_quantity(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(Q(valid_at__lte=today)).aggregate(
+        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
             quantity=Sum(F("quantity"))
         )["quantity"]
 
