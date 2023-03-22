@@ -54,9 +54,8 @@
     {% include 'wirgarten/generic/modal/confirmation-modal.html' %}
 
     <div class="container-fluid">
-        <div class="row">
-            {% if request.user and "coop.view" in request.user.roles %} <!-- there are some default roles from keycloak, not sure if we even need them. This is crap... -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            {% if request.user and "coop.view" in request.user.roles %}
+            <nav id="sidebar" class="bg-light sidebar custom-sidebar">
                 <div class="sidebar-sticky">
                     {% block sidebar %}
                     {% sidebar_links %}
@@ -65,15 +64,24 @@
             </nav>
              {% endif %}
 
-            <main role="main" {% if request.user and "coop.view" in request.user.roles %}class="col-md-9 ms-sm-auto col-lg-10 px-4"{% else %}style="padding-left:2em;padding-right:2em"{% endif %}>
-                <!-- make it a bit wider than the default to fit the shift stuff -->
+            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:17em;"{%else%}style="padding-left:2em;padding-right:2em"{% endif %}>
                 {% bootstrap_messages %}
                 {% block content %}{% endblock %}
             </main>
 
-        </div>
     </div>
 </div>
+<script>
+  function adjustMainContentMargin() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarWidth = sidebar.offsetWidth;
+    mainContent.style.marginLeft = `calc(${sidebarWidth}px + 0.5em)`;
+  }
+
+  window.addEventListener('load', adjustMainContentMargin);
+  window.addEventListener('resize', adjustMainContentMargin);
+</script>
 </body>
 
 <script src="{% static 'wirgarten/js/table-functions.js' %}"></script>

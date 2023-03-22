@@ -71,11 +71,11 @@
                     <div class="card-footer">
                         <button title="Anteile erhöhen"
                                 onclick="FormModal.load('{% url 'wirgarten:member_add_coop_shares' object.pk %}', {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                                 style="float:right"
                                 {% if lock_functions %} disabled="disabled" {%endif%}
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                     </div>
                 </div>
@@ -121,16 +121,16 @@
                         <button title="Anteile erhöhen"
                                 onclick="handleAddHarvestShares()"
                                 {% if lock_functions %} disabled="disabled" {%endif%}
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                         {% else %}
                         <button title="Du musst Mitglied der Genossenschaft sein um Erteanteile zeichnen zu können."
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                                 disabled
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                         {% endif %}
                         {% endif %}
@@ -138,26 +138,26 @@
                         <button title="Anteile erhöhen"
                                 onclick="handleAddChickenShares()"
                                 {% if lock_functions %} disabled="disabled" {%endif%}
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                         {% endif %}
                         {% if type == 'BestellCoop' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddBestellCoop()"
                                 {% if lock_functions %} disabled="disabled" {%endif%}
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                         {% endif %}
                         {% else %}
                         <button title="Aktuell nicht verfügbar"
-                                class="btn btn-outline-success material-icons mx-1 px-2"
+                                class="btn btn-outline-success mx-1 px-2"
                                 disabled
                         >
-                            add
+                            <span class="material-icons">add</span>
                         </button>
                         {% endif %}
                     </div>
@@ -365,6 +365,8 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
 
 
 
