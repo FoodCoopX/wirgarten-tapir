@@ -35,6 +35,7 @@ class ParameterCategory:
 
 class Parameter:
     MEMBER_LOCK_FUNCTIONS = f"{PREFIX}.temporarily.lock_functions"
+    MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
     SITE_CITY = f"{PREFIX}.site.city"
@@ -800,5 +801,14 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung von Vertragsdaten, Zeichnen von Geno-Anteilen, Änderung Bankdaten, Änderung Abholort",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_BYPASS_KEYCLOAK,
+            label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
         )

@@ -4,14 +4,16 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import UniqueConstraint, Index, F, Sum, Case, When, Q
+from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField, BICField
 
 from tapir.accounts.models import TapirUser
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import format_date
 
 
@@ -150,6 +152,12 @@ class Member(TapirUser):
     def save(self, *args, **kwargs):
         if not self.member_no:
             self.member_no = self.generate_member_no()
+
+        if "bypass_keycloak" not in kwargs:
+            kwargs["bypass_keycloak"] = get_parameter_value(
+                Parameter.MEMBER_BYPASS_KEYCLOAK
+            )
+
         super().save(*args, **kwargs)
 
     def coop_shares_total_value(self):
@@ -207,7 +215,7 @@ class Member(TapirUser):
             return None
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.email})"
+        return f"[{self.member_no}] {self.first_name} {self.last_name} ({self.email})"
 
 
 class Product(TapirModel):
