@@ -1,0 +1,740 @@
+Nr,Abholort,Nachname,Vorname,Straße,Hausnr.,PLZ,Ort,Geburtstag/Gründungsdatum,Alter,Telefon,Mailadresse,Kontoinhaber,IBAN,consent_sepa,privacy_consent
+1,,Abdank,Mareike,Im tiefen Tal,53,21339,Lüneburg,1992-12-16,30,015737875439,m.dank@posteo.de,Mareike Abdank,DE94430609672019591700,2023-01-01,2023-01-01
+2,Edeka Bergmann,Adam,Aline,Vor dem Bardowicker Tore,15,21339,Lüneburg,1990-04-17,32,0157 75372782,aline.adam@web.de,"Adam, Aline",DE89600100700499688701,2023-01-01,2023-01-01
+3,Uni-Campus,Adam,Björn,Salzstraße,12a,21335,Lüneburg,1988-07-20,34,0160 6007441,mail@bjoernadam.de,Björn Adam,DE40430609672035147301,2023-01-01,2023-01-01
+5,Wohnprojekt Fluse,Beelmann,Mark,Lüner Weg,37,21337,Lüneburg,1972-09-05,50,04131 7077783,mark.beelmann@posteo.de,"Beelmann, Mark",DE94240603008537161000,2023-01-01,2023-01-01
+6,,Behrendt,Alena,Grabenkamp,38,21357,Bardowick,1969-09-24,53,04131225031,alena.behrendt@gmx.de,Alena Behrendt,DE97120300000012590345,2023-01-01,2023-01-01
+7,,Behrens,Hans-Christian,Volgershall,180,21339,Lüneburg,1964-12-05,58,04131 407742,hans-christian.behrens@web.de,Hans-Christian Behrens,DE61206905000000360287,2023-01-01,2023-01-01
+8,Wohnprojekt Fluse,Bendel,Daniel,Am Galgenberg,14,21337,Lüneburg,1981-08-05,41,04131 2202660,daniel.bendel@arcor.de,Daniel Bendel,DE77120300001031368804,2023-01-01,2023-01-01
+9,,Bielenberg,Jörn,Wettenbostel,5,29565,Wriedel,1972-08-03,50,017624343004,joernbielenberg@posteo.de,Jörn Bielenberg,DE64230527500004228928,2023-01-01,2023-01-01
+10,,Billotet-Schulz,Christa,Am Venusberg,16,21337,Lüneburg,1952-08-27,70,041318549198,bergmann007@gmx.de,Christa Billot-Schulz,DE09200800000880290700,2023-01-01,2023-01-01
+11,,Block,Frank,Dorfstraße,55,21365,Adendorf,1958-04-28,64,04131189503,bloxx@freenet.de,Frank Block,DE17240603000172392800,2023-01-01,2023-01-01
+12,,Block,Beate,Dorfstraße,55,21365,Adendorf,1963-05-24,59,04131189503,bloxx@freenet.de,Beate Block,DE17240603000172392800,2023-01-01,2023-01-01
+13,Garage am Finkenberg,Blumenbach,Christoph,Auf dem Meere ,21,21335,Lüneburg,1961-12-12,61,0171 7097151,christoph.blumenbach@t-online.de,Christoph Blumenbach,DE22240501100000143750,2023-01-01,2023-01-01
+15,,Bruns,Dirk,Langenstücken,120,21335,Lüneburg,1968-12-14,54,0171 2436697,d-bruns@web.de,Dr Dirk Bruns,DE83240501100030068704,2023-01-01,2023-01-01
+16,,BUND,BUND Elbe-Heide,Katzenstraße,2,21335,Lüneburg,,,04131 402877,info@bund-elbe-heide.de,BUND RV Elbe-Heide,DE09240501100006002299,2023-01-01,2023-01-01
+18,Wohnprojekt Fluse,Carstensen,Helga,Hohe Luft,9,21337,Lüneburg,1958-09-01,64,04131 696669,helgacarstensen@web.de,Helga Carstensen,DE97240501100000152876,2023-01-01,2023-01-01
+19,Edeka Bergmann,Dittrich,Ruth Fiona,Goethestraße,32,21335,Lüneburg,1956-07-21,66,041319982587,fionadi@web.de,Dittrich Ruth,DE87100100100399651111,2023-01-01,2023-01-01
+20,,Doerk,Hans-Ulrich,Auf dem Sommersberg,1,21403,Wendisch Evern,1954-05-12,68,04131 50138,rosemarie.doerk@arcor.de,Hans-Ulrich Doerk,DE92240501100000205831,2023-01-01,2023-01-01
+21,,Elmer,Anne,Dammstraße,16,21337,Lüneburg,1986-01-26,37,041317772121,anneelmer@yahoo.de,Anne Elmer,DE76240700240019717800,2023-01-01,2023-01-01
+23,,Friedrich,Beate,Brockwinkler Weg,72c,21339,Lüneburg,1981-04-26,41,041319279945,beate.friedrich@so36.net,Beate Friedrich,DE88206905000007552351,2023-01-01,2023-01-01
+24,,Fromm,C. Angelika,Brockwinkler Weg,72c,21339,Lüneburg,1945-01-07,78,04131 2969920,angelika.fromm@posteo.de,C. Angelika Fromm,DE57500105175404921134,2023-01-01,2023-01-01
+25,,Gollan,Imke,Hindenburgstraße,96,21335,Lüneburg,1984-04-28,38,0176 23995869,mail@imkegollan.de,Imke Gollan,DE64240501100060505609,2023-01-01,2023-01-01
+26,,Graf,Britta Maria,Hindenburgstraße,96,21335,Lüneburg,1982-03-27,41,0172 9717428,britta.graf@gmx.de,Britta Maria Graf,DE16200100200551426209,2023-01-01,2023-01-01
+27,,Grunenberg,Amelie,Gneisenaustraße,3,21335,Lüneburg,1990-11-23,32,0151 10245244,amelie.falk@googlemail.com,Amelie Grunenberg,DE69430609672058959600,2023-01-01,2023-01-01
+28,WirGarten Lüneburg,Günther,Marion,Schildsteinweg,60,21339,Lüneburg,1965-10-20,57,041312256146,mariguenther@arcor.de,Marion Günther,DE34 5001 0517 5401 6677 80,2023-01-01,2023-01-01
+29,,Hapke,Franziska,Töbingstraße,36,21339,Lüneburg,1956-05-16,66,0413138868,f-hapke@gmx.de,Thomas Hapke,DE83100100100401296109,2023-01-01,2023-01-01
+30,,Hartmann,Nina,Kochstrasse,1,29591,Römstedt,1981-11-01,41,0160 95648434,nina-hat-man@web.de,Nina Hartmann,DE09533500001014039747,2023-01-01,2023-01-01
+31,,Heilmann,Sebastian,Planckstraße,53,21335,Lüneburg,1983-12-12,39,041519991591,info@sebastianheilmann.de,Sebastian Heilmann,DE53430609672019208900,2023-01-01,2023-01-01
+32,,Hoffmann,Kaja,Vor dem Bardowicker Tore,15,21339,Lüneburg,1987-07-24,35,0151 20157718,kajaboll@aol.com,Kaja Hoffmann,DE73240501100065408312,2023-01-01,2023-01-01
+33,,Hölter,Kaja,Vor dem Bardowicker Tore,15,21339,Lüneburg,1977-11-26,45,01703476549,hannehoelter@googlemail.com,Hanne Hölter,DE94240501100065458762,2023-01-01,2023-01-01
+34,,Horns,Ingo,Bardowicker Wasserweg,19,21339,Lüneburg,1968-09-24,54,01736010383,ingo@crawgator.de,Ingo Horns,DE27206905000000317055,2023-01-01,2023-01-01
+35,,Horns-Wilde,Stefanie,Bardowicker Wasserweg,19,21339,Lüneburg,1967-05-12,55,0413133328,steffi@crawgator.de,Stefanie Horns-Wilde,DE12206905000000303454,2023-01-01,2023-01-01
+36,Paul-Gerhardt-Gemeinde,Jüntschke,Janine,Dahlenburger Landstrasse,155a,21337,Lüneburg,1988-02-16,35,04131 7573644,j.imke@hotmail.com,Janine Jüntschke ,DE45120300000016345472,2023-01-01,2023-01-01
+37,,Kaatz,Sabine,Kählerstraße,32,21614,Buxtehude,1959-11-30,63,,sabine.kaatz@gmx.de,Sabine Kaatz,DE21207500000000666198,2023-01-01,2023-01-01
+38,,Kaatz ,Richard,Henningstr.,16,21337,Lüneburg,1983-01-07,40,04131 9690135,richard.kaatz@posteo.de,Richard Kaatz,DE73430609672036909100,2023-01-01,2023-01-01
+39,Edeka Bergmann,Kalinke,Jürgen,Schillerstraße,15,21335,Lüneburg,1952-08-29,70,04131 390575,j.kalinke@gmx.de,jürgen Kalinke,DE02240603004208044411,2023-01-01,2023-01-01
+40,,Kling,Lena,Vor Mönchsgarten,2,21339,Lüneburg,1988-08-01,34,041317575626,lena.kling@posteo.de,Lena Kling,DE49430609674061294100,2023-01-01,2023-01-01
+41,,Kling,Peter,Vor Mönchsgarten,2,21339,Lüneburg,1985-09-14,37,041317575626,pekli@posteo.de,Peter Kling,DE49430609674061294100,2023-01-01,2023-01-01
+42,,Kohlbrenner,Jakob,Am Stintmarkt,12a,21335,Lüneburg,1992-05-02,30,015775353250,j.kohlbrenner@posteo.de,Jakob Kohlbrenner,DE54430609672043060600,2023-01-01,2023-01-01
+43,,Köppen,Katharina,Goethestraße,18,21335,Lüneburg,1980-09-16,42,04131 9991797,koeppen.katharina@gmx.de,Katharina Köppen,DE80200700240323463000,2023-01-01,2023-01-01
+45,,Lindemann,Christoph,Auf der Höhe,11,21339,Lüneburg,1986-05-22,36,015115715815,info@christophlindemann.de,Christoph Lindemann,DE17120300001037298427,2023-01-01,2023-01-01
+46,,Lippmann,Pascal,In den Kämpen,44,21447,Lüneburg,1989-09-23,33,0163 4842756,pascal@aus-handorf.de,Pascal Lippmann,DE84240603004708858300,2023-01-01,2023-01-01
+47,WirGarten Lüneburg,Lübberstedt,Frank,In der Viethiheide,9,21357,Bardowick,1974-06-03,48,04131 248530,frank.luebberstedt@yahoo.de,Frank Lübberstedt,DE69200411550427115100,2023-01-01,2023-01-01
+48,Wohnprojekt Fluse,Lüdtke,Sandrine,Zum Neetzekanal,32,21382,Brietlingen,1973-04-25,49,04133 410911,snl@gmx.de,Sandrine Lüdtke,DE31120300000015932601,2023-01-01,2023-01-01
+49,,Luhmann,Kathrin,In der Viethiheide,9,21357,Bardowick,1974-07-07,48,04131 248530,kati.luhmann@gmail.com,-,-,2023-01-01,2023-01-01
+52,,Pannenbäcker,Arno,Waldstraße,19,23714,Malente,1953-11-07,69,045232710,arno.pannenbaecker@t-online.de,Arno Pannenbäcker,DE42430609672044745900,2023-01-01,2023-01-01
+53,,Pannenbäcker,Ulrike,Waldstraße,19,23714,Malente,1962-02-22,61,045232710,ulrike.pannenbaecker@web.de,Ulrike Pannenbäcker,DE48213522400100323674,2023-01-01,2023-01-01
+54,,Pannenbäcker,Annette,Auestraße,2a,23701,Eutin,1961-02-09,62,0175 1851011,annette@pannenbaecker.org,Annette Pannenbäcker,DE47430609672019513200,2023-01-01,2023-01-01
+55,,Pannenbäcker,Jörg,Auestraße,2a,23701,Eutin,1959-04-30,63,04521 78462,joerg@pannenbaecker.org,Jörg Pannenbäcker,DE91430609672019515900,2023-01-01,2023-01-01
+56,Feldstraße (Rotes Feld),Pannenbäcker,Matti,Feldstraße,14,21335,Lüneburg,1991-05-07,31,0157 78908554,matti.pannenbaecker@wirgarten.com,Matti Pannenbäcker,DE98110101002113466012,2023-01-01,2023-01-01
+57,,Paulsen,Kaike,Alfred-Trebchen-Straße,20,21337,Lüneburg,1977-04-27,45,0179 7058141,kaike.paulsen@web.de,Kaike Paulsen,DE92120300001031020983,2023-01-01,2023-01-01
+58,Edeka Bergmann,Petersen,Mechthild,Niklas-Luhmann-Straße,21,21339,Lüneburg,1954-06-06,68,04131 6805406,dr.m.petersen@arcor.de,Dr.M.Petersen,DE06206905000000750247,2023-01-01,2023-01-01
+59,,Petersen,Helga,Blumenstraße,5,21403,Wendisch Evern,1963-09-11,59,04131 51863,helga.petersen@arcor.de,Helga Petersen,DE62500105175401011265,2023-01-01,2023-01-01
+60,,Poersch,Jürgen,Op'n Donnerloh,6,21449,Radbruch,1953-03-28,70,04178 899777,juergen.poersch@arcor.de,Jürgen Poersch,DE13500105175418599314,2023-01-01,2023-01-01
+61,,Puschmann,Susanne,Wilhelm-Reinecke-Straße,43,21335,Lüneburg,1959-06-13,63,0160 92156689,susannepuschmann@web.de,Susanne Puschmann,DE92240501100050279462,2023-01-01,2023-01-01
+62,Wohnprojekt Fluse,Rehrmann,Nicole,Lüner Weg,69,21337,Lüneburg,1968-12-28,54,04131 8842495,nicole.rehrmann@gmx.de,Nicole Rehrmann ,DE84500105175419551255,2023-01-01,2023-01-01
+63,,Reimann,Sebastian,Dorfsfeld,3,21335,Lüneburg,1993-03-10,30,0176 44479299,sebastian_reimann@hotmail.de,Sebastian Reimann,DE07268914841912039700,2023-01-01,2023-01-01
+64,,Richter,Ute,Niendorfer Weg,6,21403,Wendisch Evern,1958-08-06,64,04131 51131,utchen.richter@gmx.de,Ute Richter,DE97240501100000228148,2023-01-01,2023-01-01
+65,,Richter,Linde,Eichenmoorweg,14,21403,Wendisch Evern,1987-06-01,35,041312269581,linde.r@gmx.de,Linde Richter,DE87240501100017129123,2023-01-01,2023-01-01
+66,,Ritter,Olga,Klostergut Willerding,10b,21403,Wendisch Evern,1987-03-10,36,015786415591,o.c.ritter@web.de,Olga Ritter,DE09200505501091821082,2023-01-01,2023-01-01
+67,Wohnprojekt Fluse,Rückle,Sigrid,Am Bahndamm,12a,21365,Adendorf,1957-09-27,65,0175 9355556,sigrid.rueckle@gmx.de,Sigrid Rückle ,DE92200505501139797458,2023-01-01,2023-01-01
+68,WirGarten Lüneburg,Ruhnau,Christiane,Einemhofer Straße ,44,21449,Radbruch,1953-06-07,69,04178819066,ruhnau.christiane@web.de,Christiane Ruhnau,DE08200100200539374200,2023-01-01,2023-01-01
+69,Edeka Bergmann,Schlag,Lena Eileen,Ilmenaustrasse,7,21335,Lüneburg,1982-03-07,41,0157 81918060,lena.schlag@freenet.de,Lena Eileen Schlag,DE80 2004 1155 0207 4326 00,2023-01-01,2023-01-01
+70,Wohnprojekt Fluse,Schliwa,Hannah,Hindenburgstraße,3b,21335,Lüneburg,1985-10-16,37,0176 23399298,hannah.s@posteo.de,Hannah Schliwa ,DE17430609674044396500,2023-01-01,2023-01-01
+71,,Schnell,Henning,Witzendorffstraße,29,21339,Lüneburg,1965-12-13,57,0171 2879370,gihe.schnell@gmail.com,Henning Schnell,DE83290800100100111500,2023-01-01,2023-01-01
+72,,Schnell,Gisela,Witzendorffstraße,29,21339,Lüneburg,1965-05-15,57,0151 14274184,gihe.schnell@gmail.com,Gisela Schnell,DE19760260000509116000,2023-01-01,2023-01-01
+73,,Schrenk,Matthias,Marxener Straße,23,21385,Oldendorf,1965-08-18,57,01627953509,info@heide-kanu.de,Matthias Schrenk,DE49207500000006158125,2023-01-01,2023-01-01
+74,,Schrödl,Johanna,Feldstraße,14,21335,Lüneburg,1991-03-26,32,0157 71545752,johanna.schroedl@posteo.de,Johanna Schrödl,DE56430609672056697600,2023-01-01,2023-01-01
+75,,Schroeder,Karin,Erbstorfer Landstraße,8,21337,Lüneburg,1957-08-15,65,04131767023,,Karin Schroeder,DE96240501100050262609,2023-01-01,2023-01-01
+76,,Schroeder,Kai-Hendrik,Feldstraße,14,21335,Lüneburg,1993-10-23,29,015736383152,kai-hendrik.schroeder@outlook.com,Kai-Hendrik Schroeder,DE24240501100087086948,2023-01-01,2023-01-01
+77,Wohnprojekt Fluse,Schultz,Ramona,Gut Wienebüttel,1,21339,Lüneburg,1981-02-13,42,0179 7411838,ramona.schultz@mailbox.org,Ramona Schultz,de39130500001435065375,2023-01-01,2023-01-01
+78,Feldstraße (Rotes Feld),Schulz,Kathrin,Feldstraße,26,21335,Lüneburg,1954-04-07,68,04131 981529,kathz@posteo.de,Kathrin Schulz,DE08430609672021722301,2023-01-01,2023-01-01
+81,Wohnprojekt Fluse,Selm,Vasco,Lauensteinstraße,19,21339,Lüneburg,1985-06-27,37,0157 32706185,vasco.selm@mailbox.org,Hanna Selm,DE23 1101 0100 2811 6443 59,2023-01-01,2023-01-01
+82,,Selm,Hanna,Lauensteinstraße,19,21339,Lüneburg,1988-10-14,34,0163 7337537,hanna.selm@gmail.com,Hanna Selm,DE88430609672010108700,2023-01-01,2023-01-01
+83,,Sibum,Jens,Bühringsmoor,6,21357,Bardowick,1978-05-21,44,017672430581,jenssibum@web.de,Jens Sibum,DE46266500010102084886,2023-01-01,2023-01-01
+84,,Sieling,Jantje,Auf der Höhe,11,21339,Lüneburg,1985-09-15,37,0176 21250590,jantje.sieling@gmail.com,Jantje Sieling,DE45240603008535619000,2023-01-01,2023-01-01
+85,,Soetebeer,Ina,Hindenburgstraße,3b,21335,Lüneburg,1985-07-08,37,0176 43357435,ina.soetebeer@gmail.com,Ina Soetebeer,DE28430609672029690200,2023-01-01,2023-01-01
+86,,Starkgraff,Mariel,Ritterstraße,25,21335,Lüneburg,1991-05-12,31,015110741075,mariel@starkgraff.net,Mariel Starkgraff,DE20430609672038997300,2023-01-01,2023-01-01
+87,,Staszak,Victoria,Am Schützenplatz,16,21337,Lüneburg,1969-09-14,53,0157 50628950,v.staszak1@gmail.com,Victoria Staszak,DE78200400000249691700,2023-01-01,2023-01-01
+88,WirGarten Lüneburg,Täger,Eckehard,Am Brahmbusch,7,21407,Deutsch Evern,1959-01-09,64,04131 970051,eckehard.taeger@t-online.de,Sabine und Eckehard Täger,DE45 2405 0110 0057 1186 14,2023-01-01,2023-01-01
+89,,Täger,Sabine,Am Brahmbusch,7,21407,Deutsch Evern,1957-03-07,66,04131 970053,sabine.taeger@t-online.de,Sabine und Eckehard Täger,DE45 2405 0110 0057 1186 14,2023-01-01,2023-01-01
+90,,Temperton,Vicky,Volgerstraße,36,21335,Lüneburg,1971-01-24,52,0 157 37955599,vicky.temperton@leuphana.de,Victoria Temperton,DE42370605900003847497,2023-01-01,2023-01-01
+91,Uni-Campus,Thoma,Christiane,Am Dorfplatz,21,21335,Lüneburg,1965-08-25,57,04131 38559,christiane.ct@t-online.de,Christiane und Sabine Thoma,DE37240501100000186742,2023-01-01,2023-01-01
+92,,Thoma,Sabine,Am Dorfplatz,21,21335,Lüneburg,1968-03-12,55,04131 38559,sabine.thoma@superkabel.de,Sabine Thoma,DE03240501100060511557,2023-01-01,2023-01-01
+93,,Uhlig,Matthias,Broistedtstraße,28,21423,Winsen/Luhe,1951-12-23,71,0151 51158217,matthias.g.uhlig@t-online.de,-,-,2023-01-01,2023-01-01
+94,,Uhlig,Susanne,Broistedtstraße,28,21423,Winsen/Luhe,1961-12-28,61,0177 4902059,ms.uhlig@t-online.de,Susanne Uhlig,DE34200505501387409335,2023-01-01,2023-01-01
+95,Wohnprojekt Fluse,Valentin,Elske,Volgershall,118,21339,Lüneburg,1971-01-30,52,04131 266498,elskevalentin@web.de,Elske Valentin,DE98240603000522368700,2023-01-01,2023-01-01
+96,,Vogel,Dr. Arne,Soltauer Straße,91,21335,Lüneburg,1975-06-11,47,0177 5073124,arnevogel@gmx.net,Arne Vogel,DE59210700240055983100,2023-01-01,2023-01-01
+97,,Heidelberg,Lukas,Finkenberg ,1,21339,Lüneburg,1986-11-30,36,0177 9676767,lukas.heidelberg@posteo.de,Lukas Wagner,DE62430609674024009200,2023-01-01,2023-01-01
+98,,Warnck,Jana M.,Lüner Damm,17a,21337,Lüneburg,1987-05-05,35,01769418553,jana-m.warnck@gmx.de,Jana Warnck,DE66221914050021915040,2023-01-01,2023-01-01
+99,FrohNatur,Weibl,Ingrid,Auf dem Brink,5,21394,Südergellersen,1955-05-15,67,04135 8401,shiatsu@spuerwege.de,ingrid weibl,DE89206905000002766256,2023-01-01,2023-01-01
+100,,Weißbach,Michael,Feldstraße,13,21355,Lüneburg,1964-03-29,58,015141247787,info@raweissbach.de,Michael Weißbach,DE41200505501387462656,2023-01-01,2023-01-01
+101,,Weißbach,Karen,Feldstraße,13,21355,Lüneburg,1965-04-11,57,041319963659,karenweissbach@hotmail.com,Karen Weißbach,DE41200505501387462656,2023-01-01,2023-01-01
+102,,Wiese,Mona,Hindenburgstraße,96,21337,lüneburg,1992-11-22,30,015159148590,mona.wiese@posteo.de,Mona Wiese,DE51430609672053645100,2023-01-01,2023-01-01
+103,,Wilm,Liane,Röntgenstrasse,27,21335,Lüneburg,1962-05-19,60,0176 411 18 188,l-wilm@web.de,Liane Wilm,DE60240501100000481499,2023-01-01,2023-01-01
+104,Edeka Bergmann,Wilkens,Gesa,Auf der Höhe,18,21339,Lüneburg,1965-09-21,57,041319974063,gesa-miguel-wilkens@arcor.de,Gesa Wilkens,DE42 2405 0110 0065 6003 48,2023-01-01,2023-01-01
+105,,Zühlke,Hildegard,Brockwinkler Weg,72a,21339,Lüneburg,1952-11-08,70,0174 9036113,hildegard@zuehlke.net,Hildegard Zühlke,DE40201900030014218607,2023-01-01,2023-01-01
+106,,Schulze-Schlarmann,Judith,Sattlerstraße,8,21335,Lüneburg,1976-04-16,46,0178 3088559,judith.schulze-schlarmann@web.de,Herbert Schulze,DE64120300000012121653,2023-01-01,2023-01-01
+107,,Griemsmann,Thomas,Wohlenbüttler Straße,10,21385,Amelinghausen,1963-02-14,60,0176 30112118,thomas.griemsmann@outlook.com,Thomas Griemsmann,DE57240603002492143200,2023-01-01,2023-01-01
+109,Edeka Bergmann,Schwarz,Ute,Im Schießgraben,8,21335,Lüneburg,1957-03-02,66,04131 8559640,schwarz.ute23@gmx.de,Joachim Schwarz,DE84200100200329265206,2023-01-01,2023-01-01
+110,,Besting,Sandra,Robert-Brendel-Straße,10,21337,Lüneburg,1966-08-09,56,04131 84815,sandra@besting.de,Sandra Besting,DE13430609672037032400,2023-01-01,2023-01-01
+111,Feldstraße (Rotes Feld),Schoop,Ulrich,Barckhausenstraße,27,21335,Lüneburg,1958-08-30,64,0179 8884648,ulrich.schoop@web.de,Ulrich Schoop,DE09240501100050206945,2023-01-01,2023-01-01
+112,,Castro,Silvia,Barckhausenstraße,27,21335,Lüneburg,1966-05-05,56,0179 2002611,silvia.castro@web.de,Silvia Castro,DE43206905000100539204,2023-01-01,2023-01-01
+113,,Rogge,Caroline,Lerchenweg,4,21339,Lüneburg,1967-12-15,55,04131 188739,caroline-rogge@web.de,Caroline Rogge,DE78240501100050213560,2023-01-01,2023-01-01
+114,Wohnprojekt Fluse,Klement ,Anke,Grüner-Jäger-Weg,13,21365,Adendorf,1962-03-08,61,04131 187602,dieklements13@yahoo.com,Anke Klement,DE62200100200460765204,2023-01-01,2023-01-01
+115,,Besting,Lothar,Robert-Brendel-Straße,10,21337,Lüneburg,1966-12-01,56,04131 84815,lothar@besting.de,Lothar Besting,DE82300209000112661092,2023-01-01,2023-01-01
+116,,Peters ,Bernd,Volgershall,134,21339,Lüneburg,1965-03-14,58,04131 81508,info@fitbits.de,Bernd Peters,DE04206905000007512929,2023-01-01,2023-01-01
+117,Paul-Gerhardt-Gemeinde,Keitemeier,Nicole,Böttcherstraße,5,21400,Reinstorf,1974-06-05,48,04137 808555,die-keitis@web.de,Nicole Keitemeier,DE33 1203 0000 1065 8680 34,2023-01-01,2023-01-01
+118,,Backhaus,Renate,Im Westerfelde,65,21391,Reppenstedt,1943-12-23,79,04131 61662,renate.backhaus@t-online.de,Renate Backhaus,DE79240501100050232651,2023-01-01,2023-01-01
+119,,Friedrich,Isabella,St. Wilhadistraße,11,21357,Bardowick,1983-04-18,39,0179 7001576,usabella@yahoo.de,Isabella Friedrich,DE66265501050004023339,2023-01-01,2023-01-01
+120,,Winter,Simone,Rehrweg,10,21335,Lüneburg,1960-07-01,62,017627065380,enomiswinter@web.de,Simone Winter,DE23206905000000313344,2023-01-01,2023-01-01
+121,,Schön,Angelika,Zur Pferdekoppel,12,21400,Reinstorf,1954-07-30,68,0176 31066476,angelikaschoen1@web.de,Angelika Schön,DE56258501100042132852,2023-01-01,2023-01-01
+122,,Lisson,Peter,Schützenstraße,9,21337,Lüneburg,1953-12-15,69,04131 265579,prtu@outlook.de,Peter Lisson,DE13300209000302651093,2023-01-01,2023-01-01
+123,,Sifkovits,Claudia,Steinweg,1,21335,Lüneburg,1973-12-13,49,04131 9971452,clasi@posteo.de,Claudia Sifkovits,DE04200800000939764400,2023-01-01,2023-01-01
+124,,Kayser,Kerstin,Streitmoor,6,21339,Lüneburg,1957-08-11,65,04131 2193334,kerstin.kayser@t-online.de,Kerstin Kayser,DE55240501100065433856,2023-01-01,2023-01-01
+125,,Grundmann,Katja,Barckhausenstraße,12,21335,Lüneburg,1984-03-21,39,0175 8878201,katja_grundmann@gmx.de,Katja Grundmann,DE14500105175412048304,2023-01-01,2023-01-01
+126,,Nolte,Johanna,Lüneburger Straße,23,21335,Lüneburg,1985-10-20,37,0175 4884572,johannanolte@posteo.de,-,-,2023-01-01,2023-01-01
+127,,Pangert,Sven,Eichenweg,12,21354,Bleckede,1967-02-08,56,05852 390900,sven.pangert@web.de,Sven Pangert,DE10240603007103241000,2023-01-01,2023-01-01
+129,,Arnold,Nils,Brockwinkler Weg,72b,21339,Lüneburg,1977-01-14,46,0179 7718422,nils_arnold@web.de,Nils Arnold,DE94430609672061418100,2023-01-01,2023-01-01
+130,,Fricke-Arnold,Kristina,Brockwinkler Weg,72b,21339,Lüneburg,1978-05-10,44,0151 10781158,frickekristina@gmx.de,Kristina Fricke-Arnold,DE94430609672061318100,2023-01-01,2023-01-01
+131,LeNa Wohnprojekt,Hansen,Jörn Jochen,Brockwinkler Weg,72a,21339,Lüneburg,1958-06-28,64,04131 246377,dr.joernhansen@t-online.de,Dr. Jörn J. Hansen,DE13200300000070026807,2023-01-01,2023-01-01
+132,,Schulze,Anna Caroline,Obere Schrangenstraße,5,21335,Lüneburg,1987-03-29,35,0176 83028859,caroline-schulze@hotmail.de,Anna Caroline Schulze,DE70120300001019719036,2023-01-01,2023-01-01
+134,WirGarten Lüneburg,Kuderna,Sabine,Medebekskamp,16,21339,Lüneburg,1964-12-10,58,0152 02001471,sabine_kuderna@web.de,Sabine Kuderna,DE57206905000007562900,2023-01-01,2023-01-01
+135,,Hoffmann,Bettina,Klosterkamp ,11,21337,Lüneburg,1962-08-29,60,04131 50183,bettinahelmke@web.de,Bettina Hoffmann,DE90240603000661345400,2023-01-01,2023-01-01
+136,,Schulze,Hermann,Heinrich-Heine-Straße,8,21335,Lüneburg,1944-02-01,79,04131 47885,hermcaro@aol.com,Hermann Schulze,DE49240501100050312537,2023-01-01,2023-01-01
+137,FrohNatur,Vatter,Christian ,Marcus-Heinemann-Straße,23,21337,Lüneburg,1978-05-18,44,04131 7570000,chrischi0815@posteo.de,Christian Vatter,de14206905000007569785,2023-01-01,2023-01-01
+138,,Buchholz,Sigrun,Schomakerstraße,75,21339,Lüneburg,1963-01-04,60,04131 684165,info@sigrun-buchholz.de,Sigrun Buchholz,DE04206905000003995321,2023-01-01,2023-01-01
+139,Uni-Campus,Schulz,André,Häcklinger Weg,14,21335,Lüneburg,1978-09-04,44,0171 7550624,der@lebensbanker.de,André Schulz,DE18240501100054505532,2023-01-01,2023-01-01
+140,Wohnprojekt Fluse,Schattauer,Brigitta,Hohe Luft,15,21337,Lüneburg,1958-10-10,64,04131 855807,b.schattauer@gmx.de,Brigitta Schattauer,DE80500100600093158608,2023-01-01,2023-01-01
+141,Paul-Gerhardt-Gemeinde,Horn,Linda,Görlitzer Straße ,2,21337,Lüneburg,1972-08-05,50,04137 4689676,restauron@arcor.de,Linda Horn,DE83120300001077579884,2023-01-01,2023-01-01
+142,Paul-Gerhardt-Gemeinde,Quante,Ute,Blumenstraße,8,21403,Wendisch Evern,1962-05-25,60,04131 51588,ute.quante@web.de,Ute + Markus Quante,DE78240700240082165200,2023-01-01,2023-01-01
+143,,Schupp,Renate,Hauptstr.,18,29456,Hitzacker,1953-08-05,69,0177 8455062,renateschupp@posteo.de,Renate Schupp,DE87370601931010908015,2023-01-01,2023-01-01
+144,,Schmidt,Arne,Kurzer Weg,8,21357,Bardowick,1979-09-14,43,0170 5265400,arnespost@me.com,Arne Schmidt,DE20600100700126551701,2023-01-01,2023-01-01
+145,,Berger,Laurin,Görgestraße,2,21335,Lüneburg,1993-03-14,30,0157 38102754,laurin.berger@posteo.de,Laurin Berger,DE76430609674056631600,2023-01-01,2023-01-01
+146,,Spitschan,Dominik,Ernst-Braune-Straße,42,21339,Lüneburg,1984-09-12,38,0160 2615990,dominik@spitschan.de,Dominik Spitschan,DE51430609672027532700,2023-01-01,2023-01-01
+147,,Amri-Henkel,Andrea,Häcklinger Weg,86,21335,Lüneburg,1987-12-29,35,0178 7198506,Andrea.Henkel1@gmx.de,Andrea Amri-Henkel,DE23240501100065174666,2023-01-01,2023-01-01
+148,,Herrmann,Muriel,Brockwinkler Weg,72a,21339,Lüneburg,1979-06-12,43,04131 684194,ninamenlos@posteo.de,Antonia Herrmann,DE06430609678027630500,2023-01-01,2023-01-01
+149,,Kusgörd,Rita,Brockwinkler Weg,72c,21339,Lüneburg,1972-02-14,51,0179 5111211,rita.kusgoerd@posteo.de,Rita Kusgörd,DE90206905000003114953,2023-01-01,2023-01-01
+150,FrohNatur,Temperton,Katrin,Volgerstraße,36,21335,Lüneburg,1969-11-13,53,,katrintemperton@posteo.de,Katrin Temperton,DE73 4306 0967 1111 3060 00,2023-01-01,2023-01-01
+151,Edeka Bergmann,Freund,Eva,Hindenburgstraße,50,21339,Lüneburg,1983-06-14,39,04131 604520,ekfreund@web.de,Steven Blievernicht,DE24300209003211983826,2023-01-01,2023-01-01
+152,LeNa Wohnprojekt,Dammann,Heike,Brockwinkler Weg,72a,21339,Lüneburg,1966-04-01,56,0175 7416771,heike-dammann@gmx.de,Heike Dammann,DE34258501100004102943,2023-01-01,2023-01-01
+153,,Bauta,Stefan ,Brockwinkler Weg,72c,21339,Lüneburg,1971-09-22,51,04131 9279760,s.bauta@web.de,Stefan Bauta,DE83430609672034972800,2023-01-01,2023-01-01
+154,LeNa Wohnprojekt,Winkelmann,Tobias,Brockwinkler Weg,72a,21339,Lüneburg,1983-04-23,39,0157 75737055,tobiaswinkelmann@gmx.de,Julia Heubel,DE79430609672077645500,2023-01-01,2023-01-01
+155,,Richter,Christine,In der Kemnau,69,21339,Lüneburg,1964-04-18,58,04131 84187,ch.richter@kabelmail.de,Christine Richter,DE67200100200608493204,2023-01-01,2023-01-01
+156,,Rabe,Dietrich,In der Kemnau,69,21339,Lüneburg,1945-09-08,77,0171 4881426,corvabe@kabelmail.de,Dietrich Rabe,DE30240501100000481457,2023-01-01,2023-01-01
+157,,Marwege,Robin,Steckelberg,1,21400,Holzen,1985-06-23,37,0160 3236245,robin@marwege.de,Anja Humburg,DE28430609671111219801,2023-01-01,2023-01-01
+158,,Schulz,Maleen,Im Häcklinger Dorfe,4,21335,Lüneburg,1988-05-17,34,0173 3464920,maleenschulz88@aol.com,Torsten Masch,DE11300209000706731013,2023-01-01,2023-01-01
+159,WirGarten Lüneburg,Sorgatz,Rena ,Am Landwehrgraben,4,21357,Bardowick,1964-09-03,58,0178 1582622,sorgatzrena@mail.de,Sorgatz Rena,DE81206905000001703765,2023-01-01,2023-01-01
+160,Edeka Bergmann,Weitzel,Julia,Soltauer Straße,27,21335,Lüneburg,1979-06-09,43,0176 38178243,post@julia-weitzel.de,Julia Weitzel,DE02206905000002650355,2023-01-01,2023-01-01
+161,,Lachauer,Ursula,Brockwinkler Weg,72a,21339,Lüneburg,1951-02-06,72,015120747973,ulla.lachauer@gmx.de,Ursula Lachauer,DE88600400710551150600,2023-01-01,2023-01-01
+162,,Schrödl,Andreas,Tossumer Weg,4,31141,Hildesheim,1960-02-29,63,0176 45892011,an.schroedl@icloud.com,Andreas Schrödl,DE86259501300035050481,2023-01-01,2023-01-01
+163,WirGarten Lüneburg,Freyberg,Ulrich,Am Plaggenschlag,2,21339,Lüneburg,1945-02-08,78,04131 391198,ulrich.freyberg@freenet.de,Ulrich Freyberg,DE03240501100000407932,2023-01-01,2023-01-01
+164,,Wolters,Ulrike,Brockwinkler Weg,72a,21339,Lüneburg,1985-07-15,37,04131 92780800,ulrike.wolters@posteo.de,Ulrike Wolters,DE92200400000417250800,2023-01-01,2023-01-01
+165,,Schoene,Anja,Johanna-Stegen-Straße,9,21339,Lüneburg,1969-02-17,54,04131 6803366,schoene.anja@web.de,Anja Schoene,DE35200505501484401557,2023-01-01,2023-01-01
+167,,Heidelberg,Manuela,Finkenberg ,1,21339,Lüneburg,1987-03-19,36,0176 62382356,manuela.heidelberg@posteo.de,Manuela Heidelberg,DE65230707000754053700,2023-01-01,2023-01-01
+168,,Temperton,Sydney,Volgerstraße,36,21335,Lüneburg,2009-12-21,13,,,Katrin Teske-Temperton,DE42370605900003847497,2023-01-01,2023-01-01
+170,,Orion,Christina,Otto-Holst-Straße,5,21629,Neu Wulmstorf-Elstorf,1971-05-15,51,0175 3312606,christina.orion@posteo.de,Christina Orion,DE78430609672038574500,2023-01-01,2023-01-01
+171,Paul-Gerhardt-Gemeinde,Wortmann,Birgit,Breslauer Straße,32,21337,Lüneburg,1954-09-17,68,04131 81995,birgit-wortmann@web.de,Hans o. Birgit Wortmann,DE83240501100062103924,2023-01-01,2023-01-01
+172,,Eckers,Martin,Am Ebensberg,12g,21337,Lüneburg,1964-05-01,58,0160 97674601,martin.eckers@web.de,Martin Eckers,DE96500502011255437306,2023-01-01,2023-01-01
+174,Feldstraße (Rotes Feld),Schürmann,Angela,Rotenbleicherweg,37,21335,Lüneburg,1954-01-15,69,04131 9979417,angelaschuermann@gmx.de,Dr. Angela Schürmann,DE22206905000002227657,2023-01-01,2023-01-01
+175,Paul-Gerhardt-Gemeinde,Wellendorf,Hildegard,Graf-Schenk-v.-Stauffenberg-Straße,94,21337,Lüneburg,1945-12-02,77,0176 96995159,hildegard_wellendorf@web.de,Hildegard Wellendorf,DE18500105175402746514,2023-01-01,2023-01-01
+176,Garage am Finkenberg,Funck,Marion,Am Wacholderbusch,35,21335,Lüneburg,1965-08-02,57,0176 48530655,MFunck@posteo.de,Marion Funck,DE30370100500658085506,2023-01-01,2023-01-01
+178,,Wortmann,Tobias,Wulf-Werum-Straße,26,21337,Lüneburg,1979-12-21,43,04131 2267789,tobias-wortmann@web.de,Hans und Birgit Wortmann,DE83240501100062103924,2023-01-01,2023-01-01
+180,,Gonska,Laura,Humboldtstraße,71,22083,Hamburg,1994-07-19,28,0151 41281043,L-gonska@web.de,Clemens Rambow,DE23241510051200254157,2023-01-01,2023-01-01
+181,WirGarten Lüneburg,Borschke,Wiebke,Bernsteinstraße,4a,21339,Lüneburg,1960-03-26,63,01639712005,wiebke.borschke@gmx.de,Wiebke Borschke,DE05240501100000464156,2023-01-01,2023-01-01
+182,,Göhring,Andreas,Bunsenstraße,82,21337,Lüneburg,1961-11-11,61,01627959906,info@bauphysik-schimmel.de,Andreas Göhring,DE57240501100065278814,2023-01-01,2023-01-01
+183,,Kanitz,Dorothee,Bunsenstraße,82,21337,Lüneburg,1957-03-06,66,04131 244266,kanitz.d@gmx.de,Dorothee Kanitz,DE41240501100065042228,2023-01-01,2023-01-01
+184,,Scholl,Simon ,Von Kahr Str,24a,80997,München,1978-11-07,44,0178 7604422,simon@kartoffelkombinat.de,Simon Scholl,DE80430609678201497400,2023-01-01,2023-01-01
+186,,Meyer,Jürgen,Wendenstraße,1b,21400,Reinstorf,1971-03-21,52,0151 51002050,meyerjj@gmx.de,Jürgen Meyer,DE26240501100009110164,2023-01-01,2023-01-01
+187,,Hilbert,Nora,Alec-Moore-Straße,14,21339,Lüneburg,1990-01-14,33,0175 8784626,nora.hilbert@gmail.com,Nora Hilbert,DE64120300001016540260,2023-01-01,2023-01-01
+188,,Meyn,Philipp,Eichendorffstr.,7,21337,Lüneburg,1982-08-12,40,0179 7327700,p.meyn@gmx.de,Philipp Meyn,DE79120300001004579502,2023-01-01,2023-01-01
+189,,Mittelsten Scheid,Anna,Bei der Abtspferdetränke,1,21335,Lüneburg,1991-05-29,31,0173 3102380,anna.ms91@yahoo.de,Anna Mittelsten Scheid,DE09701500000095131108,2023-01-01,2023-01-01
+190,Uni-Campus,Schäfer,Angela,Großer Garten,20,21335,Lüneburg,1961-08-06,61,0151 70084478,angela.schaefer.ni@gmail.com,Angela Schäfer,DE78 4005 0150 0154 8776 82,2023-01-01,2023-01-01
+191,,Doerk,Hauke,Avenstraße,102b,80469,München,1984-02-11,39,0151 40320892,h4uk3@web.de,Hauke Doerk,DE17430609678218626600,2023-01-01,2023-01-01
+192,,Schulz,Horst-Dietrich,Finkenweg,35,21394,Westergellersen,1950-03-29,72,04135 7040,Horst-Dietrich.Schulz@vodafone.de,Horst-Dietrich Schulz,DE88240501100050146935,2023-01-01,2023-01-01
+193,,Overlach,Kathrin,Gerberstraße,16,21365,Adendorf,1977-02-25,46,01575 3123036,kathrin.overlach@yahoo.de,Kathrin Overlach,DE83120300000001838341,2023-01-01,2023-01-01
+194,Feldstraße (Rotes Feld),Friedmann,Martina,Am Klippstein,8b,21407,Deutsch Evern,1950-01-30,73,04131 7064356,martina.friedmann@vodafonemail.de,Martina Friedmann,DE35206905000000172963,2023-01-01,2023-01-01
+195,Wohnprojekt Fluse,Ried,Anette,Wedekindstraße,8,21337,Lüneburg,1961-05-27,61,04131 188010,anette.ried@web.de,Anette Ried,DE77206905000002527561,2023-01-01,2023-01-01
+196,,Behrendt,Siegfried,Schilfweg ,5,21629,Neu Wulmstorf,1955-01-13,68,0151 145 095 33,info@werthome.de,"Behrendt, Siegfried",DE22206905000000812621,2023-01-01,2023-01-01
+197,,Sandelmann,Sven,Eschenweg,8,21365,Adendorf,1979-11-25,43,04131 7063208,sven.sandelmann@web.de,Sandelmann,DE71120300001010210787,2023-01-01,2023-01-01
+198,,Ioannidou,Artemis,Max-Brauer-Allee,184a,22765,Hamburg,1969-11-21,53,040 431087,artemis@amarynda.com,Artemis Ioannidou,DE88660100750258408750,2023-01-01,2023-01-01
+199,,Kaatz,Klemens,Max-Brauer-Allee,184a,22765,Hamburg,1962-12-01,60,040 431087,post@klemenskaatz.de,Klemens Kaatz,DE88660100750258408750,2023-01-01,2023-01-01
+200,,Uhrig-Rust,Anja,Auf dem Brink,7,21394,Südergellersen,1970-08-15,52,04135 809715,anja.uhrig-rust@gmx.de,Anja Uhrig-Rust,DE62240603004050454900,2023-01-01,2023-01-01
+201,FrohNatur,Uhrig ,Christian,Auf dem Brink,7,21394,Südergellersen,1968-05-22,54,04135 809715,uhrig.christian@gmx.de,Christian Uhrig,DE62240603004050454900,2023-01-01,2023-01-01
+202,,Wiege,Eva,Hindenburgstraße ,67 b,21339,Lüneburg,1983-01-27,40,04131 7065427,ewiege@web.de,Eva Wiege,DE200300000032480806,2023-01-01,2023-01-01
+203,,Fischle,Kurt,Am Kreideberg,8,21339,Lüneburg,1966-08-25,56,04131/391303,kurt.fischle@web.de,Kurt Fischle,DE62250100300539874306,2023-01-01,2023-01-01
+204,Feldstraße (Rotes Feld),von Häfen,Gerd,Ernst-Bräune-Str,15,21339,Lüneburg,1954-05-20,68,015151031903,gerdvonhaefen@web.de,Gerhard von Häfen ,DE05206905000003114252,2023-01-01,2023-01-01
+205,,Reinefarth,Kerstin,Am Kreideberg,8,21339,Lüneburg,1962-02-27,61,04131/391303,reinekk@yahoo.de,Kerstin Reinefarth,DE53200100200591523209,2023-01-01,2023-01-01
+206,WirGarten Lüneburg,Aden-Meyer,Antje,In der Kemnau ,65,21339,Lüneburg,1958-11-13,64,04131681780,antje.lbg@gmx.de,Antje Aden-Meyer,DE32120300000012329421,2023-01-01,2023-01-01
+207,,Jochens,Birte,Hansestraße,86,21337,Lüneburg,1984-04-26,38,041317574429,birtejochens@gmail.com,Birte Jochens,DE63430609676008221200,2023-01-01,2023-01-01
+208,LeNa Wohnprojekt,Verlinden,Julia,Brockwinkler Weg,1a,21339,Lüneburg,1971-01-18,52,04131681108,julia.verlinden@gmx.de,Julia Verlinden,DE90240603000154064500,2023-01-01,2023-01-01
+209,WirGarten Lüneburg,Heinsohn,Ute,Am Plaggenschlag,31,21339,Lüneburg,1959-12-11,63,0413164417,ute.heinsohn@web.de,Ute Heinsohn,DE59240501100061503538,2023-01-01,2023-01-01
+210,WirGarten Lüneburg,Ruthemann-Poersch,Heike,Op'n Donnerloh ,6,21449,Radbruch,1961-06-07,61,04178-899777,heike.ruthemann@arcor.de,Heike Ruthemann-Poersch,DE13500105175418599314,2023-01-01,2023-01-01
+211,,Stallmann,Martin,Pferdewiese,8,21360,Vögelsen,1966-05-03,56,0152 33866180,martinstallmann@web.de,Martin Stallmann,DE19206905000000330973,2023-01-01,2023-01-01
+212,,Albrecht,Henning,Am Berge,37,21335,Lüneburg,1986-09-08,36,0172 1630768,henning_albrecht@gmx.de,Henning Albrecht,DE18258516600000232835,2023-01-01,2023-01-01
+213,Edeka Bergmann,Lücking,Marie-Luise,Hasenburger Berg,28,21335,Lüneburg,1962-09-19,60,0176 51612534,marie-luise13187@web.de,Marie-Luise Lücking,DE14206905000000983776,2023-01-01,2023-01-01
+214,,Ennen,Kathrin,Munstermannskamp,1,21335,Lüneburg,1969-08-31,53,0178 2020182,kathrin.ennen@busco.de,Busco GbR,DE68200505501387139742,2023-01-01,2023-01-01
+215,,Schulz,Mirka,Unter der Burg,41,21339,Lüneburg,1976-06-23,46,04131 605015,mirkaschulz@gmx.de,Mirka Schulz,DE43500105175407194290,2023-01-01,2023-01-01
+216,,Hölzen,Manfred,Wilhelm-Reinecke-Straße,36a,21335,Lüneburg,1964-12-03,58,04131 405524,manfred@mhoelzen.de,Manfred Hölzen,DE17280650610002130000,2023-01-01,2023-01-01
+217,Uni-Campus,Borchers,Sabine,Wilhelm-Reinecke-Straße,36a,21335,Lüneburg,1973-08-02,49,04131 7765884,sabine-borchers@web.de,Sabine Borchers,DE87259501300109001420,2023-01-01,2023-01-01
+218,,Wichmann,Timo,Alfred-Trebchen-Str.,2,21337,Lüneburg,1991-06-20,31,0157 87013800,t.w.gast.newsletter@magenta.de,Timo Lütjen,DE73200698120001815500,2023-01-01,2023-01-01
+220,Paul-Gerhardt-Gemeinde,Stilke,Bernhard,Hauptstr.,85,21357,Wittorf,1948-05-08,74,04133 220037,b-stilke@t-online.de,Bernhard Stilke,DE24200100200351818204,2023-01-01,2023-01-01
+221,,AKKA GmbH,AKKA GmbH,Im Dorfe,29,21358,Mechtersen,,,04178 1465,info@akka-bau.de,AKKA GmbH,DE41430609670000675200,2023-01-01,2023-01-01
+222,,Kliewer,Marina,Im Dorfe,29,21358,Mechtersen,1960-04-15,62,04178 818919,m.kliewer@akka-bau.de,Marina Kliewer,DE39430609670030591200,2023-01-01,2023-01-01
+223,,Kamenz,Wolfgang,Papenstr.,14,21335,Lüneburg,1976-02-22,47,0176 57310481,wolfgang.kamenz@gmail.com,Wolfgang Kamenz,DE26500105175412025196,2023-01-01,2023-01-01
+225,Edeka Bergmann,Jordan,Marthe Kristin,Theodor-Rumpel-Weg,10,22307,Hamburg,1986-09-23,36,0176 72932362,marthe.kristin.jordan@gmail.com,Kristin Jordan ,DE12430609671075433200,2023-01-01,2023-01-01
+226,,Cassens,Gerhard,Am Teich,22,21335,Lüneburg,1953-04-26,69,0171 3266285,gerhard.cassens@web.de,Gerhard Cassens,DE88240501100050319110,2023-01-01,2023-01-01
+227,,Thymian ,Marco,Auf dem Meere ,33,21335,Lüneburg ,1970-08-20,52,0171 3262988,marcowirg@thymian.de,Marco Thymian ,DE08300209002008701539,2023-01-01,2023-01-01
+228,,Hüttemann,Maren,Heinsen ,2b,21409,Embsen,1984-02-14,39,0176 23454085,marenhuettemann@gmx.de,Maren Hüttemann,DE76240501100065572091,2023-01-01,2023-01-01
+229,,Sieveking,Annelie,Jean-Leppien-Str.,15,21339,Lüneburg,1986-02-10,37,04131 2060753,annelie.sieveking@gmail.com,Annelie Sieveking,DE14430609674064293000,2023-01-01,2023-01-01
+230,,Owsinski,Stefanie,Brockwinkler Weg,72b,21339,Lüneburg,1975-11-06,47,0151 10173837,steph_anie_owsinski@posteo.de,Stefanie Owsinski,DE88430609672004912701,2023-01-01,2023-01-01
+231,Edeka Bergmann,Janssen,Henning,Salzbrückerstr.,8,21335,Lüneburg,1951-04-16,71,01788011326,janssenhenning@web.de,Henning Janssen,DE48500105175407750301,2023-01-01,2023-01-01
+232,WirGarten Lüneburg,Tödter,Christa,Am Klippstein ,4,21407,Deutsch Evern,2017-12-31,5,0174 2466277,christa.toedter@gmx.de,Christa Tödter,DE55240501100060103512,2023-01-01,2023-01-01
+233,,Neumann,Britta,Lüner Weg,50,21337,Lüneburg,1973-02-04,50,0173 9161333,brittaneumann@web.de,Britta Neumann,DE96206905000000599732,2023-01-01,2023-01-01
+234,,Kray,Tim-Oliver,Gumbinner Str. ,12b,21337,Lüneburg,1993-09-01,29,+4915146625557,t-nz@posteo.de,Tim-Oliver Kray,DE79430609674079919500,2023-01-01,2023-01-01
+235,WirGarten Lüneburg,Buchholz,Thomas,An der Eulenburg,18,21391,Reppenstedt,1970-04-06,52,04131 671677,grodner-buchholz@t-online.de,Thomas Buchholz,DE81241512350026504498,2023-01-01,2023-01-01
+236,,Heinelt,Jonas,Am Kreideberg,6A,21339,Lüneburg,1992-06-30,30,04131 7653092,jonas.h@posteo.de,Kathrin Heinelt,DE89500105175431183890,2023-01-01,2023-01-01
+237,,Kolb,Lino,Im Tiefen Tal,53,21339,Lüneburg,1992-05-04,30,0178 2979522,linokolb@posteo.de,Lino Kolb,DE51200411550531527000,2023-01-01,2023-01-01
+238,,Harms,Heike,Schwinder Straße,3,21423,Drage,1965-04-02,57,0160 97053707,hharms6542@gmail.com,Heike Harms,DE49200699650003248400,2023-01-01,2023-01-01
+239,,Zink,Irja,Am Stadtberg,6,21360,Vögelsen,1952-10-16,70,04131-129362,irjazz@gmx.de,Irja Zink,DE08201903010100304303,2023-01-01,2023-01-01
+240,,Faasch,Helmut,Mühlenstraße,19,21516,Müssen,1954-08-13,68,+49 (162) 2421751,faasch@uni.leuphana.de,Prof. Dr. Helmut Faasch,DE69270200001502113630,2023-01-01,2023-01-01
+241,,Bendel ,Hanna,Am Galgenberg,14,21335,Lüneburg,2014-09-25,8,,,-,-,2023-01-01,2023-01-01
+242,,Bendel ,Friederike,Am Galgenberg,14,21335,Lüneburg,2016-07-01,6,,,-,-,2023-01-01,2023-01-01
+243,,Brant,Inna,Von-Eichendorff-Straße ,20,21365,Adendorf ,1986-11-18,36,0157 70357218,inna.dirlam@freenet.de,inna Brant,DE74207500000000676981,2023-01-01,2023-01-01
+244,,Schimming,Holger,Faschweg,16,21382,Brietlingen,1981-01-05,42,0176 23740221,holger-schimming@gmx.de,Holger Schimming,DE62280690520121105600,2023-01-01,2023-01-01
+245,,Schimming,Susanne,Faschweg,16,21382,Brietlingen,1983-09-06,39,0176 23740221,susanne-schimming@gmx.de,Susanne Schimming,DE16280690520222333300,2023-01-01,2023-01-01
+246,,Upham,Paul,Heiligengeiststrasse,6,21335,Lüneburg,1966-03-26,57,447906919808,upham@leuphana.de,Dr Paul John Upham,DE59240400000151673100,2023-01-01,2023-01-01
+247,,Borchers,Kirstin,Unter der Burg,6,21339,Lüneburg,1979-11-24,43,0176 23508722,kirstin.b@gmx.net,Kirstin Borchers,DE21280400460403783400,2023-01-01,2023-01-01
+249,,Leben(s)wagen e.V.,Leben(s)wagen e.V.,Ebelingweg,6,21339,Lüneburg,,,0157 89117282,lebenswagen@gmx.de,Leben(s)wagen eV,DE24430609672027713800,2023-01-01,2023-01-01
+250,Wohnprojekt Fluse,Klement ,Charlotte,Lüner Weg,51a,21337,Lüneburg,1987-08-17,35,0157 52617542,charlotte.klement@yahoo.de,Charlotte Klement,DE90100100100503908112,2023-01-01,2023-01-01
+251,,Schnarr,Michael,Finkenweg ,6,21360,Vögelsen,1973-07-13,49,04131 6088226,michaelschnarr@hotmail.de,Michael Schnarr,DE26200411440672552700,2023-01-01,2023-01-01
+252,WirGarten Lüneburg,Putensen,Christina,Bäckerstraße,13,21394,Kirchgellersen,1969-07-10,53,04135 8079972,tina.putensen@posteo.de,Christina Putensen,DE83430609672053839300,2023-01-01,2023-01-01
+253,Edeka Bergmann,Lüders,Sven,Am Springintgut,53,21339,Lüneburg,1964-12-26,58,0157 75782076,s.lueders@web.de,Sven Lüders,DE37240501100060504834,2023-01-01,2023-01-01
+254,,Häntsch-Lietz,Ulrike,Schildsteinweg ,11,21339,Lüneburg,1957-08-08,65,04131 402660,u.haentsch@t-online.de,Ulrike Häntsch-Lietz,DE66200100200222330208,2023-01-01,2023-01-01
+255,,Loch,Michael,Sonninstraße,18,21339,Lüneburg,1969-09-16,53,0160 5983863,mi.loch@yahoo.com,Michael Loch,DE03250100300699287302,2023-01-01,2023-01-01
+256,,Krüger,Gaby,Am alten Schulgarten,8,21449,Radbruch,1970-01-23,53,04178 8763,gaby.krueger@yahoo.de,Gaby Krüger,DE40207500000007366131,2023-01-01,2023-01-01
+257,FrohNatur,Studemund,Bettina,Pommernstr.,23a,21391,Reppenstedt,1966-02-10,57,04131 65303,b.studemund@onlinehome.de,Bettina Studemund,DE15240501100000246793,2023-01-01,2023-01-01
+258,,Brünjes,Lisa,Kiebitzweg,8,21339,Lüneburg,1987-07-31,35,0176 61157354,lisa.bruenjes@gmail.com,Lisa Brünjes,DE51100777770561181900,2023-01-01,2023-01-01
+259,,Lütjens,Karin,Schützenstraße,13,21337,Lüneburg,1953-06-26,69,0171 1014022,karin-luetjens@web.de,Karin Lütjens,DE84206905000007585888,2023-01-01,2023-01-01
+260,,Kröhnoff,Susanne,Hagemannsweg,10,21339,Lüneburg,1969-07-22,53,0162 1759922,susanne_wasmann@gmx.de,Suanne Krönhoff,DE20206905000000212324,2023-01-01,2023-01-01
+261,Feldstraße (Rotes Feld),Weber,Hanna,Fasanenweg,5,21337,Lüneburg,1990-05-16,32,0176 62459159,hanna.weber@posteo.de,Hanna Weber,DE06120300001063975856,2023-01-01,2023-01-01
+262,,von Stern,Christian,Hauptstr.,14,29584,Himbergen,1963-07-28,59,0152 01589962,christian.von.stern@landeszeitung.de,Christian von Stern,DE29200300000052301903,2023-01-01,2023-01-01
+263,Edeka Bergmann,Wahmke,Anja,Schomakerstraße,62,21339,Lüneburg,1967-04-25,55,015161464512,annaweitweg@kabelmail.de,Wahmke Anja,DE84206905000001300385,2023-01-01,2023-01-01
+264,,Heimann,Anja,Eichenweg,1a,21337,Lüneburg,1966-06-14,56,0163 7757710,aa.heimann@t-online.de,Anja Heimann,DE28240501100051111128,2023-01-01,2023-01-01
+265,Wohnprojekt Fluse,Liebenow-Rudolph (geb. Rudolph),Franziska,Tobakskamp,30,21339,Lüneburg,1983-12-04,39,0160 94435574,rudolph.franziska@googlemail.com,Franziska Rudolph,DE47500105175427923991,2023-01-01,2023-01-01
+266,,Grewatta,Joachim,Wagenhorst ,17,21409,Embsen,1963-12-23,59,0157 83018057,grewatta@gmx.de,Joachim Grewatta,de68258501100042194134,2023-01-01,2023-01-01
+267,,Kinderhaus Hollerbusch gemeinützige gUG,Kinderhaus Hollerbusch gemeinützige gUG,Hindenburgstraße ,104,21335,Lüneburg,2011-07-15,11,04131 33373,info@kinderhaus-hollerbusch.de,Kinderhaus Hollerbusch gUG (haftungsbesschränkt),DE49240501100065096695,2023-01-01,2023-01-01
+268,,Köpsell,Rainer,Julius-Wolff-Straße,2,21335,Lüneburg,1959-09-04,63,04131 48130,a.koepsell@web.de,Rainer Köpsell,DE92240501100000225425,2023-01-01,2023-01-01
+269,,Gehle,Dietmar,Fasanenweg ,9,21337,Lüneburg,1975-02-27,48,0176 24068525,kathrin.padberg@web.de,Kathrin Padberg-Gehle,DE88500105175404209663,2023-01-01,2023-01-01
+270,Uni-Campus,Rennekamp,Barbara,Sonnenring,33,21406,Melbeck,1960-05-05,62,04137 8638,b.w-rennekamp@t-online.de,Jürgen Rennekamp,DE69258622920081587000,2023-01-01,2023-01-01
+271,,Lopez,Wiebke,Sültenweg,40,21339,Lüneburg,1977-12-13,45,0176 80678431,w_lopez77@yahoo.de,Silke Lopez,DE62250100300906573300,2023-01-01,2023-01-01
+272,Edeka Bergmann,Havekost,Jule-Sophie,Hennigstr. ,4,21337,Lüneburg,1997-06-13,25,0176 81653467,jule.havekost@posteo.de,Jule-Sophie Havekost,DE92280641790144650900,2023-01-01,2023-01-01
+273,,Graf,Carl Moritz ,Schulweg ,8,21407,Deutsch Evern ,1979-11-13,43,0170 9394566,mograf@gmx.de,Carl Moritz Graf,DE17120300001005517444,2023-01-01,2023-01-01
+275,Uni-Campus,Penk,Anja,Wilhelm-Reinecke-Straße,39,21335,Lüneburg,1965-08-15,57,0152 01905670,anja.penk@online.de,Anja Penk,DE69500105175408998992,2023-01-01,2023-01-01
+277,FrohNatur,Scholle,Manuela,Eichenbrücker Weg,1,21391,Reppenstedt,1971-05-07,51,0176 44583788,maluka123@gmx.de,Manuela Scholle,DE50240700240017686700,2023-01-01,2023-01-01
+278,WirGarten Lüneburg,Schütt,Matthias,Birkenweg,5,21360,Vögelsen,1960-05-05,62,0178 3531417,schuett-voegelsen@gmx.de,Doris Schütt,DE44240501100052117215,2023-01-01,2023-01-01
+279,WirGarten Lüneburg,Müller-Conrad,Bettina,In der Kemnau,20c,21339,Lüneburg,1969-03-11,54,0151 12780007,b.mueller-conrad@web.de,Bettina Müller-Conrad,DE20120300001014020992,2023-01-01,2023-01-01
+280,,Holle,Judith,Am Weißen Turm,8,21339,Lüneburg,1995-05-05,27,0176 45913559,judith.holle@posteo.de,Judith Holle,DE95430609672071767400,2023-01-01,2023-01-01
+281,,Oberstraß,Theresa,Rotenburgerstraße ,43,21339,Lüneburg,1994-02-08,29,0157 72939010,theresa.oberstrass@gmail.com,Theresa Oberstraß,DE35200411110720286400,2023-01-01,2023-01-01
+284,,Nörenberg,Uta,Schillerstraße,47,21335,Lüneburg,1972-11-02,50,0172 1402027,uta.noerenberg@gmx.de,Uta Nörenberg,DE88206905000007567677,2023-01-01,2023-01-01
+285,,Hollenbach,Jelena,Wichernstr. ,14,21335,Lüneburg,1986-10-25,36,0157 83820218,jelenahollenbach@gmail.com,Jelena Maria Hollenbach,DE40250501800032712049,2023-01-01,2023-01-01
+286,WirGarten Lüneburg,Klein,Klaus-Dieter,Erfurter Straße,5,21339,Lüneburg,1951-09-03,71,04131 38171,Klaus-DieterKlein@web.de,Klaus-Dieter Klein,DE13240501100056109614,2023-01-01,2023-01-01
+287,,Parr-Meyn,Heike,Eichendorffstraße ,7,21337,Lüneburg,1982-02-15,41,0178 6865071,heike.parr@freenet.de,Heike Parr,DE35250501801905078986,2023-01-01,2023-01-01
+288,,Korczewski,Birgit,In der Twiet,4,21360,Vögelsen,1962-08-30,60,0176 56732465,b.korczewski@web.de,Birgit Korczewski,DE49240501100018102038,2023-01-01,2023-01-01
+289,,Kempke-Bode,Gabriele,Spillbrunnenweg,16,21337,Lüneburg,1968-11-30,54,0176 382 367 00,diese.saite@web.de,Gabriele Kempke-Bode,DE73380707240253555700,2023-01-01,2023-01-01
+291,,Wehr,Aline,Am Berge ,37,21335,Lüneburg,1991-07-19,31,0176 32655507,alinewehr@aol.com,Aline Wehr,DE45120300001007375072,2023-01-01,2023-01-01
+292,,Kersten-Klein,Bettina Marlind,Billungweg,1,21339,Lüneburg,1966-04-06,56,0176 63251121,kersten-klein@arcor.de,Bettina Marlind Kersten-Klein,DE31250100300255731309,2023-01-01,2023-01-01
+293,,Adick,Norbert,Brockwinklerweg,72 B,21339,Lüneburg,1961-06-30,61,0173 316 9039,n.adick@posteo.de,Norbert Adick,DE79430609672050718300,2023-01-01,2023-01-01
+294,,Schlumberger,Liane,Witzendorffstr. ,3,21339,Lüneburg,1987-07-14,35,0160 90546954,liane.schlumberger@posteo.de,Liane Schlumberger,DE28430609671150656800,2023-01-01,2023-01-01
+296,,Lange,Peter,Schildsteinweg ,44,21339,Lüneburg,1963-12-17,59,04131 401424,peter.lange.lg@gmx.de,Peter Lange,DE45206905000007560109,2023-01-01,2023-01-01
+297,,Sundermann,Anna,Rotenbleicher Weg ,2c,21335,Lüneburg,1986-11-24,36,0177 5467063,anna@die-sundermanns.de,Anna Sundermann ,DE76400501500135764256,2023-01-01,2023-01-01
+299,FrohNatur,Bröckerhoff,Maria,Pferdewiese ,7,21360,Vögelsen,1946-09-21,76,04131 2195633,m.k.broeckerhoff@gmail.com,Maria Bröckerhoff,DE73356500001000185551,2023-01-01,2023-01-01
+300,WirGarten Lüneburg,Ewe,Regina,In der Kemnau,3,21339,Lüneburg,1956-01-08,67,04131 65630,regina.ewe@freenet.de,Regina und Reinhard Ewe,DE31200100200299880204,2023-01-01,2023-01-01
+302,,Lütkemüller,Stefan,Goethestraße,5,21335,Lüneburg,1972-08-09,50,04131 265884,SLuetkemueller@gmx.net,Stefan Lütkemüller,DE79200505501484427925,2023-01-01,2023-01-01
+305,,George,Carolin ,Auf der Rübekuhle ,21,21335,Lüneburg,1976-11-24,46,04131 267674,carolingeorge@web.de,Carolin George,DE32206905000000651518,2023-01-01,2023-01-01
+306,,Lutz,Thomas,Buchenweg,1 B,21339,Lüneburg,1965-04-19,57,04131 390616,vollgasahoi@gmx.de,Thomas Lutz,DE33120300001032205542,2023-01-01,2023-01-01
+307,,Meinecke,Regina,Grosse Brunnenstraße,103,22763,Hamburg,1949-02-03,74,040394027,regina.meinecke@gmail.com,-,-,2023-01-01,2023-01-01
+308,,Stilke,Marion,Veilchenweg,8,21360,Vögelsen,1960-02-29,63,015237672614,marion-holger@gmx.de,-,-,2023-01-01,2023-01-01
+309,,Harlapp,Jule,Brockwinkler Weg,72c,21339,Lüneburg,1981-04-24,41,04131 9996748,juleharlapp@googlemail.com,Julia und Heiko Harlapp,DE39430609672025648400,2023-01-01,2023-01-01
+310,,Kressel,Ulrike,Zum Bahnhof ,5a,21379,Rullstorf,1963-11-21,59,0151 26328518,u.kressel@t-online.de,Ulrike Kressel,DE13200411440651492100,2023-01-01,2023-01-01
+311,,Delekat,Anna-Lena,Kastanienallee,15,21337,Lüneburg,1983-06-26,39,0176 50256440,a.delekat@gmx.de,Anna-Lena Delekat,DE80206905000003465594,2023-01-01,2023-01-01
+312,,Schröder,Erik ,Hinter der Saline ,4b,21339,Lüneburg,1991-07-25,31,0176 62097560,casanova.schroeder@gmail.com,Erik Casanova Schröder,DE53100100100592145119,2023-01-01,2023-01-01
+313,Garage am Finkenberg,Kistner,Petra,Eckermannstraße,27,21335,Lüneburg,1957-10-07,65,0152 54977366,p.kistner@me.com,Harald und Petra Kistner,DE16240501100054514880,2023-01-01,2023-01-01
+314,Uni-Campus,Leber,Pascal,Munstermannskamp,8,21335,Lüneburg,1988-12-06,34,0176 31691818,pascal.leber@iubh.de,Pascal Leber,DE39200411110304445000,2023-01-01,2023-01-01
+315,,Rosen,Isabel ,Vor dem neuen Tore,24,21339,Lüneburg,1994-01-10,29,01575 4767968,isabel.rosen@stud.leuphana.de,Isabel Rosen,DE76360605910002716363,2023-01-01,2023-01-01
+316,,Beigang,Alina,Auf der Hude ,86,21339,Lüneburg,1994-01-18,29,0176 45630209,alina.beigang@gmx.de,Alina Beigang,DE35254621600501237600,2023-01-01,2023-01-01
+318,,Holst,Albert,Neuetorstraße,9,21339,Lüneburg,1989-01-08,34,017620071449,albert.holst@wirgarten.com,Albert Holst,DE84430609672031276500,2023-01-01,2023-01-01
+319,,Rosenke,Steffi,Zum Täckenfeld,10,21385,Amelinghausen,1962-03-21,61,04132 910490,stefanie.rosenke@web.de,Steffi Rosenke,DE46430609672046955100,2023-01-01,2023-01-01
+320,Feldstraße (Rotes Feld),Soetebeer,Annette,Wilschenbrucher Weg,63,21335,Lüneburg,1977-12-08,45,0163 8707788,annette.soetebeer@gmail.com,Annette Soetebeer,DE71120300001001402120,2023-01-01,2023-01-01
+321,,Gollers,Frederike,Hasenburger Ring,27,21335,Lüneburg,1967-06-14,55,0171 7004356,frederike.gollers@web.de,Frederike Gollers,DE19240603004051492701,2023-01-01,2023-01-01
+323,WirGarten Lüneburg,Thomas-Gilsbach,Pia,Karl-der Große-Straße ,10,21357,Barum,1956-01-12,67,01520 1985580,pia.thomas-gilsbach@posteo.de,Pia Thomas-Gilsbach,DE52240603008537807000,2023-01-01,2023-01-01
+324,,Schmitt-Maaß,Silvia,Wilhelm-Reinecke-Str. ,22,21335,Lüneburg,1972-10-29,50,0152 03762879,s.schmitt.maass@gmail.com,Christoph Schmitt-Maaß,DE57120300001034657658,2023-01-01,2023-01-01
+327,,Kern,Eva,Katzenstraße,1,21335,Lüneburg,1988-04-27,34,0160 96866055,kern-eva@gmx.de,Eva Kern,DE42550905000001012703,2023-01-01,2023-01-01
+328,,Diekmann,Kirstin,Wilschenbrucher Weg,96,21335,Lüneburg,1996-12-24,26,0176 48287336,diekmann.kirstin@gmail.com,Kirstin Diekmann,DE76430609672052892900,2023-01-01,2023-01-01
+329,,Hohmann-Hasenauer,Stefanie,Lüner Weg ,54,21337,Lüneburg,1972-10-18,50,04131 935464,hohmannhasenauer@web.de,Stefanie Hohmann-Hasenauer,DE86240501100030027619,2023-01-01,2023-01-01
+330,,Schmidt,Katja,Am Springintgut ,9,21335,Lüneburg,1993-05-29,29,0176 84175778,katja-lelm@gmx.de,Katja Schmidt ,DE49250500000150619260,2023-01-01,2023-01-01
+332,,Saar Arndt,Deborah,Soltauer Allee,27,21335,Lüneburg,1983-08-15,39,0176 71249999,deborasaar@hotmail.com,Deborah Saar Arndt,DE98240501100065536484,2023-01-01,2023-01-01
+335,,Schäfke,Heiderose,Alec Moore Straße,9,21339,Lüneburg,1962-11-04,60,04131 777162,schaefke@gmx.com,Heiderose Schäfke,DE05100500001350115416,2023-01-01,2023-01-01
+336,,Weise-Lehmann,Katja,Kastanienallee ,2,21365,Adendorf,1970-09-08,52,01578-4904161,katiwl@arcor.de,Katja Weise-Lehmann,DE94240603000524029800,2023-01-01,2023-01-01
+337,WirGarten Lüneburg,Karthaus,Frank,An den Krummstücken,4,21339,Lüneburg,1954-02-23,69,01520 2671593,Frank.Karthaus@posteo.de,Frank Karthaus,DE18201900030002165007,2023-01-01,2023-01-01
+338,,Schröder,Hans-Joachim,Zum Hohen Ort,13,21357,Bardowick,1960-02-22,63,04131 921530,EM-HJ-Schroeder@gmx.de,Hans-Joachim Schröder,DE62206905000007573480,2023-01-01,2023-01-01
+339,,Schlüsselburg,Petra,Vor dem Weissen Berge ,39,21339,Lüneburg,1969-09-19,53,04131 2214998,schluebu@gmx.de,Petra Schluesselburg,DE03600100700714423708,2023-01-01,2023-01-01
+340,,Bergunde,Filine,Kleine Bäckerstraße,19,21335,Lüneburg,1989-07-28,33,0152 05382657,filine_bergunde@posteo.de,Filine Bergunde,DE42430609672031369600,2023-01-01,2023-01-01
+341,Feldstraße (Rotes Feld),Stier,Corinna,Schnellenberger Weg ,17,21339,Lüneburg,1984-11-02,38,0179 9564161,corinna.stier@gmx.net,Corinna Stier,DE59120300000012448148,2023-01-01,2023-01-01
+342,,Chittka,Hans-Jürgen,Pferdewiese,16,21360,Vögelsen,1941-07-03,81,0152 28530894,h-j@chittka.com,Hans-J. Chitka,DE45200505501484739907,2023-01-01,2023-01-01
+343,Edeka Bergmann,Becker,Matthias,Hellmannweg,9,21339,Lüneburg,1978-02-20,45,0176 65219773,rmbecker@gmx.de,Robert Matthias Becker,DE06260700240011475100,2023-01-01,2023-01-01
+344,,Kurth,Martin,Bunsenstrasse,12,21337,Lüneburg,1982-09-14,40,0152 31791265,martinhjk@web.de,martin kurth,de19200505501354460063,2023-01-01,2023-01-01
+345,,Schiller,Waltraud,Sültenweg,59,21339,Lüneburg,1952-08-26,70,04131 2230252,waltraud.schiller@gmx.net,Waltraud Schiller,DE85206905000000635432,2023-01-01,2023-01-01
+347,,Neustadt,Luise,Apothekenstrasse ,10,21335,Lüneburg,1991-05-03,31,0172 8585996,luiseneustadt@gmx.de,Luise Neustadt,DE41100500001062550508,2023-01-01,2023-01-01
+348,,Klatte,Hildegard,Laffertstr.,3,21339,Lüneburg,1938-12-14,84,04131-31061,henning.schnell@gmail.com,Hildegard Klatte,DE02240501100000145177,2023-01-01,2023-01-01
+349,Paul-Gerhardt-Gemeinde,Leder,Melanie,Dorfstr.,25,21403,Wendisch Evern,1975-07-24,47,04131/220092,melanie.leder@gmx.de,Melanie Leder,DE64206905000000641436,2023-01-01,2023-01-01
+350,Edeka Bergmann,Emig,Yvonne,Barckhausenstraße,61,21335,Lüneburg,1989-12-11,33,0176 57661987,y.emig@gmx.de,Yvonne Emig,DE17240501100065534547,2023-01-01,2023-01-01
+351,,Schulze,Verena,Hebbelstr,35,21337,Lüneburg,1973-06-18,49,04131 4006038,renafb@gmx.de,Verena Schulze,DE23240501100058507468,2023-01-01,2023-01-01
+352,Wohnprojekt Fluse,Nickel,Birgit,Kiefernwerg ,16,21365,Adendorf,1963-09-19,59,04131 187158,nickelbgfe@web.de,Birgit Nickel,DE49240501100030050983,2023-01-01,2023-01-01
+353,Garage am Finkenberg,Lewald,Kirsten,Otto-Snell-Str. ,7,21339,Lüneburg,1965-05-22,57,0170 6126183,kirsten225@gmx.de,Justus Lewald,DE17240501100087106183,2023-01-01,2023-01-01
+356,,Leopold,Claus,Schmiedestr. ,11,21335,Lüneburg,1977-02-21,46,04131 2243897,claus.leopold@web.de,Claus Leopold,DE98240603004202199500,2023-01-01,2023-01-01
+357,WirGarten Lüneburg,Koll,Angela,Vögelser Str.,21,21339,Lüneburg,1973-02-23,50,04131-606322,angela-koll@arcor.de,Angela und Conrad Koll,DE43240501100056517832,2023-01-01,2023-01-01
+358,LeNa Wohnprojekt,Mittendorf,Gudrun,Brockwinkler Weg ,72 c,21339,Lüneburg,1954-11-04,68,0157 73420473,gmitt@gmx.de,Gudrun Mittendorf,DE09206905000000211940,2023-01-01,2023-01-01
+359,,Nübling-Ende,Dagmar,Bahnhof,2,21365,Adendorf,1962-09-06,60,04131/186394,nuebi.33@t-online.de,"Nübling-Ende, Dagmar",DE87240501100001179704,2023-01-01,2023-01-01
+360,,Hustedt,Janne ,Auf der Rübekuhle ,7,21335,Lüneburg ,1987-10-07,35,0157 51887614,jannehustedt@gmx.de,Janne Hustedt,DE87200697820015164500,2023-01-01,2023-01-01
+361,,Schloßstein,Maria,Schnellenberger Weg ,13,21339,Lüneburg,1989-04-14,33,01773783884,maria.schlossstein@web.de,Maria Schloßstein,DE78240501100087166195,2023-01-01,2023-01-01
+362,,Otte,Brigitta,Röntgenstraße,96,21335,Lüneburg,1952-05-26,70,0413 1402655,brigitta.otte@googlemail.com,Brigitta Otte,DE73240501100050233923,2023-01-01,2023-01-01
+363,WirGarten Lüneburg,Morsnowski-Scherrer,Kristin,Im Redder,39,21339,Lüneburg,1979-11-20,43,04131 9993713,kristin_morsnowski@web.de,Christian Scherrer,DE80210400100731442000,2023-01-01,2023-01-01
+364,Edeka Bergmann,Oberg,Nicole,Auf dem Knieberg,14,21335,Lüneburg,1970-05-23,52,0049 1716593305,nic.oberg@gmx.de,Nicole Oberg,DE34240501100016115263,2023-01-01,2023-01-01
+365,Garage am Finkenberg,Weßeler,Henrike,Vor Mönchsgarten,5,21339,Lüneburg,1978-04-19,44,0179 9150022,Henwes@web.de,Henrike Weßeler,DE15100400000571541200,2023-01-01,2023-01-01
+366,Garage am Finkenberg,Hoyer,Christian,Uelzener Straße,3,21385,Amelinghausen,1970-11-16,52,0172 4369099,chris5598@me.com,Christian Hoyer,DE90240501100065238644,2023-01-01,2023-01-01
+367,Edeka Bergmann,Bohlmann,Tanja,Hinter der Saline,27,21339,Lüneburg,1972-05-10,50,0172-4183767,info@tanja-bohlmann.de,Tanja Bohlmann,DE67430609672071221600,2023-01-01,2023-01-01
+369,Wohnprojekt Fluse,Nitschke,Manfred,Rudolf-Kinau-Weg,2,21365,Adendorf,1948-04-18,74,04131189316,manni_nitschke@web.de,Manfred Nitschke,DE81240501100050258805,2023-01-01,2023-01-01
+370,Garage am Finkenberg,Heinemeyer,Birgit,Am Neuen Felde ,20,21339,Lüneburg,1959-05-19,63,0179 9099897,birgit.heinemeyer@freenet.de,Birgit Heinemeyer,DE46206905000001986180,2023-01-01,2023-01-01
+371,,Endler,Simone,Schillerstr.,10,21335,Lüneburg,1968-05-04,54,01573 1816173,sim.end@web.de,Simone Endler,DE65206905000000538986,2023-01-01,2023-01-01
+372,Edeka Bergmann,Schoett,Silja,Lüner Damm,17 c,21337,Lüneburg,1968-11-07,54,04131851683,schreiben@silja-schoett.de,Silja Schoett,DE87100100100295124105,2023-01-01,2023-01-01
+373,,Dr. Theus,Ulrike,Knotterkamp ,8,21335,Lüneburg,1968-05-14,54,0170 5262208,urs-m.usicustheus@t-online.de,Dr.Ulrike Theus,DE64206905000007581980,2023-01-01,2023-01-01
+374,,Bensch,Michael,Ovelgönner Weg,33,21335,Lüneburg,1958-06-30,64,04131 404876,lokbimb@gmail.com,Michael Bensch,DE98206905000000459143,2023-01-01,2023-01-01
+375,,Bensch,Kerstin,Ovelgönner Weg,33,21335,Lüneburg,1957-09-06,65,04131 404876,bensch.kerstin@gmail.com,Kerstin Bensch,DE97240501100064110505,2023-01-01,2023-01-01
+376,,Neubert,Uta,Im Redder ,43,21339,Lüneburg,1977-11-06,45,01577/2636354,neubert.uta@web.de,Uta Neubert,DE70370100500899756503,2023-01-01,2023-01-01
+378,,Jim Curry,Darius Tadayon,Am Berge ,51,21335,Lüneburg,1977-11-01,45,0173-7432052,d.tadayon@web.de,Darius Tadayon,DE62240400000437578800,2023-01-01,2023-01-01
+379,LeNa Wohnprojekt,Ritter,Angela,Brockwinkler Weg,55,21339,Lüneburg,1957-04-16,65,04131 - 66415,angelaritter1@gmx.net,Angela Ritter,DE52200100200325194207,2023-01-01,2023-01-01
+381,,Zerbe,Lea,Barckhausenstraße ,16,21335,Lüneburg,1991-10-17,31,01575 2468 118,lea.zerbe@posteo.de,Lea Zerbe,DE69240501100065609174,2023-01-01,2023-01-01
+383,,Engels,Achim,Bachstrasse,33,52393,Hürtgenwald-Gey,1963-02-09,60,+4916090551106,achim.engels0902@gmx.de,Achim Engels,DE65395501100000404012,2023-01-01,2023-01-01
+384,Edeka Bergmann,Neuffer,Sarah,Katzenstraße ,1,21335,Lüneburg,1998-06-07,24,017628312771,sarah.neuffer@posteo.de,Sarah Neuffer,DE91100100100720363109,2023-01-01,2023-01-01
+386,,Bode,Maik,Spillbrunnenweg,16,21337,Lüneburg,1975-06-01,47,01707607724,diese.saite@web.de,Gabriele Kempke-Bode,DE73380707240253555700,2023-01-01,2023-01-01
+387,Feldstraße (Rotes Feld),Schürmann,Henrike,Quellenweg ,9,21339,Lüneburg,1984-10-16,38,0176 344 69 311,henrikeschuermann@gmx.de,Henrike Schürmann,DE22430609674028679500,2023-01-01,2023-01-01
+388,,Nitschke,Jennifer,Rosenthal,18,21354,Bleckede ,1987-05-04,35,01721556488,jenniferkahnwald@web.de,Mole Nitschke,DE06200411550796451300,2023-01-01,2023-01-01
+390,,Schäfer,Moritz,Hinter der Saline ,15,21339,Lüneburg,1991-10-08,31,015731666254,moritz.schaefer@mailbox.org,Moritz Schäfer,De97500502011243349148,2023-01-01,2023-01-01
+392,,Stietzel,Pauline,Neuetorstr ,17,21339,Lüneburg,1997-06-11,25,01639256887,p.stietzel@gmx.de,Pauline Stietzel,DE67365500000000838292,2023-01-01,2023-01-01
+393,Paul-Gerhardt-Gemeinde,Arndt,Thorsten,Obere Schreberstraße,10,29574,Ebstorf,1982-03-03,41,015228440763,thorsten_arndt@gmx.net,Thorsten Arndt,De47120300001013757248,2023-01-01,2023-01-01
+394,,Sajak,Laura,Theodor-Haubach-Strasse,4,21337,Lüneburg,1995-05-28,27,015902881992,laura.sajak@gmail.com,Laura Johanna Sajak,DE29508526510067048314,2023-01-01,2023-01-01
+396,,Bendel,Barbara,Am Galgenberg ,14,21337,Lüneburg,1982-02-21,41,04131-2202660,februar21@web.de,Barbara Bendel ,DE77120300001031368804,2023-01-01,2023-01-01
+398,,Schmidt,Claudia,Narutostraße,95,21339,Lüneburg-Ochtmissen,1961-01-28,62,0413166111,claudia_smi@web.de,Claudia Schmidt,DE88206905000007572042,2023-01-01,2023-01-01
+399,WirGarten Lüneburg,Schröder,Anja,Sattlerstraße,4,21365,Adendorf,1964-06-06,58,04131 186259,am.schroeder@gmx.de,Michael Schröder,DE84206905000000998036,2023-01-01,2023-01-01
+400,,Hedelt,Kerstin,Bei Mönchsgarten,14,21339,Lüneburg,1960-04-21,62,04131 9994455,kerstineva21@gmx.de,Kerstin Hedelt,DE42200100200575887201,2023-01-01,2023-01-01
+401,,Beckedorf,Beate,B.-v.-Suttner-Str. ,20a,21335,Lüneburg,1962-05-01,60,04131-35054,beate.beckedorf@web.de,Beate Beckedorf,DE08206905000000307115,2023-01-01,2023-01-01
+402,,Körner,Svenja,Schillingskamp ,34,21357,Bardowick,1976-09-25,46,041312691691,fraukoerner@gmx.de,Svenja Körner,DE29206905000002594773,2023-01-01,2023-01-01
+403,,Jasker,Debora,Stöteroggestrasse,79,21339,Lüneburg,1966-06-07,56,01626410583,deborajasker@aol.de,Debora Jasker,De94370100500124498509,2023-01-01,2023-01-01
+404,,Heuer,Katrin,Am Graben,5a,21339,Lünebzrg,1979-07-14,43,04131/2847778,famheuerkreibohm@gmx.de,Katrin Heuer,DE15120300000016812679,2023-01-01,2023-01-01
+405,,Meyer,Susanne,Auf den Metten ,51,21391,Reppenstedt,1975-08-25,47,01708307152,suseduever@gmx.de,Susanne Meyer,DE90200505501484544224,2023-01-01,2023-01-01
+406,Paul-Gerhardt-Gemeinde,Gerlach,Jan,Lübecker Straße,141,21337,Lüneburg,1972-09-20,50,01776263617,jgerlachlg@gmail.com,Jan Gerlach,DE48206905000001463896,2023-01-01,2023-01-01
+407,,Agthe,Marcus,Ovelgönner Weg,27,21335,Lüneburg,1993-07-30,29,016096851563,Marcus.Agthe@gmx.de,Marcus Agthe,DE53430609676026763900,2023-01-01,2023-01-01
+408,,Quentin,Gesine,Dahlenburger Landstr. ,165a,21337,Lüneburg,1983-09-01,39,01775385638,sonneheute@googlemail.com,Gesine Quentin,DE32200411440615755600,2023-01-01,2023-01-01
+409,,Beermann,Yannik,Salzbruecker Strasse,69,21335,Lueneburg,1996-04-05,26,015772987375,yannik.beermann@web.de,Yannik Beermann,DE67430609672063791400,2023-01-01,2023-01-01
+410,Edeka Bergmann,Zentgraf,Christoph ,Hindenburgstr,63,21339,Lüneburg ,1980-11-30,42,0151-72752859,mehrmusik@posteo.de,Christoph Zentgraf,DE83240501100065653057,2023-01-01,2023-01-01
+411,,Pohlki,Lorena,Yorckstraße,17,21335,Lüneburg,1990-10-04,32,01751527264,lorena.pohlki@posteo.de,Lorena Pohlki,DE27240501100013139720,2023-01-01,2023-01-01
+412,,Deckert,Katrin,Am Elbdeich ,9,29472,Damnatz,1967-05-28,55,01520296604,post@pflanzenbegegnen.de,Katrin Deckert,DE84206905000001700316,2023-01-01,2023-01-01
+413,,Strunk,Jasper,Soltauer Straße,4,21335,Lüneburg,1997-08-31,25,015786135830,jasper.strunk@gmx.de,Jasper Strunk,DE63370502991148018335,2023-01-01,2023-01-01
+414,,Schwartz,Jacob,Wichernstrasse ,24,21335,Lüneburg,1984-11-08,38,01723203726,jacob.schwartz.84@googlemail.com,Jacob Schwartz,DE09130700240380064600,2023-01-01,2023-01-01
+415,,Bunge,Bianca,Milanweg ,27,21391,Reppenstedt,1976-08-29,46,015771105976,b.bunge@gmx.net,Bianca Bunge,DE53258501100009109935,2023-01-01,2023-01-01
+416,,Reinecke,Katharina,Emser Str. ,60,12051,Berlin,1983-09-15,39,015735766840,katharina.reinecke@gmx.de,Katharina Reinecke,DE19430609671125296700,2023-01-01,2023-01-01
+418,Garage am Finkenberg,Evers,Lore,Auf der Höhe ,73,21339,Lüneburg,1954-09-29,68,04131 395457,sterlo@web.de,"Evers, Lore",DE74206905000007554737,2023-01-01,2023-01-01
+419,,Marino ,Ina,Meisterweg,5,21337,Lüneburg,1966-11-22,56,0151/74381068,ina.lucia.marino@gmail.com,Ina Marino,DE22500105175413208086,2023-01-01,2023-01-01
+420,,Frielinghaus,Katja,Ernst-Tälmann-Str.,21,19260,Vellahn,1977-07-12,45,017656904067,gemuesereich@posteo.de,Katja Frielinghaus,DE91140520002657069668,2023-01-01,2023-01-01
+421,WirGarten Lüneburg,Rudolph,Anita,Am Kaltenmoor,5,21337,Lüneburg,1981-02-22,42,015780828248,anita.rudolph@web.de,Anita Rudolph,DE56430609673052548100,2023-01-01,2023-01-01
+422,WirGarten Lüneburg,Descalzo,Pablo,Am Weiher,23,21339,Lüneburg,1970-09-29,52,04131247929,m.descalzo@web.de,Pablo descalzo,DE79250100300444613307,2023-01-01,2023-01-01
+423,,Schulte,Sara,Rosenstraße,10,21335,Lüneburg,1998-11-24,24,015170177520,saraschulte@mail.de,Sara Schulte,DE18430609672031616800,2023-01-01,2023-01-01
+424,,Homann,Tobias,Rotehahnstr. ,5,21335,Lüneburg,1979-04-25,43,01798238682,tobihome@yahoo.de,Tobias Homann,DE77200800000466418800,2023-01-01,2023-01-01
+425,,Casa 120 e.V.,Casa 120 e.V.,Konrad-Adenauer-Str.,120,21337,Lüneburg,,,017657708540,luzie.glock@posteo.de,-,-,2023-01-01,2023-01-01
+426,,Weber,Ursula,Hellmannweg,9,21339,Lüneburg,1979-01-19,44,01632543492,ursula.weber@gmx.com,Ursula Weber,DE29500105175425895463,2023-01-01,2023-01-01
+427,,Apel-Soetebeer,Florian,Wilschenbrucher Weg,63,21335,Lüneburg,1975-06-29,47,01638717749,apel.soetebeer@gmail.com,Florian Apel-Soetebeer,DE57120300000015498058,2023-01-01,2023-01-01
+428,,Kersten ,Steffi,Hinter der Schmiede,2,21357,Bardowick,1965-09-23,57,01524924571,kersten@ergotherapie-bardowick.de,Kersten,Steffi Kersten,2023-01-01,2023-01-01
+429,,Neubauer,Morena,Tannenweg,1a,21339,Lüneburg,1979-10-01,43,01776856815,taschenlicht@gmx.de,Morena Neubauer,DE25240700240020155800,2023-01-01,2023-01-01
+430,,Olmesdahl,Anja,Feldstr.,32,21335,Lüneburg,1982-09-13,40,01742777131,anisun82@web.de,Anja Olmesdahl,DE331203000005236360,2023-01-01,2023-01-01
+431,Uni-Campus,Rühl,Sophie,Kurze Straße,1,21339,Lüneburg,1998-01-07,25,015780608278,sophie.ruehl@stud.leuphana.de,Therese Kah,DE20 2802 0050 8510 8082 00,2023-01-01,2023-01-01
+432,,Tesch,Maike,Kefersteinstraße ,5,21335,Lüneburg,1996-01-14,27,017621808485,maike.tesch@web.de,Maike Tesch,DE50430609672054916400,2023-01-01,2023-01-01
+433,Feldstraße (Rotes Feld),Hervé,Julie,Lünertorstraße,16,21335,Lüneburg,1999-09-06,23,015730392497,julie.herve@web.de,Julie Hervé,DE47500105175423094652,2023-01-01,2023-01-01
+434,Feldstraße (Rotes Feld),Wapenhensch,Christian,Volgerstr.,16,21335,Lüneburg,1990-03-30,32,017663737661,christian.wapenhensch@gmail.com,Christian Wapenhensch,DE20430609671067552000,2023-01-01,2023-01-01
+435,,Jacobsen,Claudia ,Von-Cöllen-Weg,8,21379,Scharnebeck,1978-08-10,44,04136-913770,cl.berwald@freenet.de,Claudia Jacobsen,DE49240501100015127921,2023-01-01,2023-01-01
+436,,Pithan,Markus,Am weißen Berge ,7,21339,Lüneburg,1967-01-14,56,017648703586,markus.pithan@googlemail.com,Markus Pithan,DE56300209003220190711,2023-01-01,2023-01-01
+437,,Busch,Ulrich,An der Münze,8b,21335,Lüneburg,1950-04-10,72,041312845621,busch-ulrich@arcor.de,Ulrich Busch,DE32206905000007518730,2023-01-01,2023-01-01
+438,,Wohlfarth,Markus,Katzenstraße ,1,21335,Lüneburg,1973-10-18,49,017666881992,mwohlfarth@me.com,Markus Wohlfarth,DE71206905000000955881,2023-01-01,2023-01-01
+439,Uni-Campus,Loos,Jacqueline,Hasenburger Ring,44a,21335,Lüneburg,1982-09-23,40,015773223099,jacqueline.loos@posteo.net,Jacqueline Loos,DE85206905000001367200,2023-01-01,2023-01-01
+440,,Ecker,Martha,Am Wald,11,21379,Boltersen,1955-08-31,67,04136 911388,mm.ecker@yahoo.de,Martha Ecker,DE69206905000100605375,2023-01-01,2023-01-01
+441,,Wilharm ,Anja,Bögelstraße ,41,21339,Lüneburg ,1968-07-04,54,01732150845,anja_wilharm@web.de,Anja Wilharm ,DE91300209005390452755,2023-01-01,2023-01-01
+442,,Rothe,Kim Lea,Rosenstraße,6,21335,Lüneburg,1997-11-17,25,017620945240,kim.lea@online.de,Kim Rothe,DE20200411110918631300,2023-01-01,2023-01-01
+444,Uni-Campus,Kolkhorst ,Kathrin ,Scharnhorststrasse ,8,21335,Lüneburg ,1982-10-30,40,015253523164,kathrin.kolkhorst@gmx.de,Kathrin Kolkhorst,DE81750200730008636273,2023-01-01,2023-01-01
+445,Uni-Campus,Joost,Brigitta,Billungstr. ,34,29553,Bienenbüttel ,1945-01-12,78,01759765613,brigittajoost@googlemail.com, Brigitta Joost,DE76258501100042239483,2023-01-01,2023-01-01
+446,,Timmermeister,Markus,Birkenweg,7,21360,Vögelsen,1967-03-16,56,04131921199,info@timmermeister-ing.de,Markus Timmermeister,DE75206905000000215214,2023-01-01,2023-01-01
+447,,Wernicke,Sonja,Im Tiefen Tal ,22,21339,Lüneburg,1996-02-28,27,0157 77267988,sunnyes28@aol.com,Sonja Wernicke,DE58270925550715110100,2023-01-01,2023-01-01
+448,FrohNatur,Nijenhuis,Tanja,Von-Seelen-Weg,15A,21391,Reppenstedt,1985-04-12,37,017621253846,tanja.nijenhuis@web.de,Tanja Nijenhuis,DE08500105175405992993,2023-01-01,2023-01-01
+450,Wohnprojekt Fluse,Basilewitsch ,Hanna,Hermann-Löns-Straße ,17,21337,Lüneburg ,2003-05-13,19,+49 176 39207552,hanna@luebas.de,Hanna Basilewitsch,DE60262514250226070084,2023-01-01,2023-01-01
+451,,Bodner,Christoph ,Am Vitusbach ,13a,21400,Reinstorf,1984-11-11,38,04915123026047,christoph.bodner@me.com,Christoph Bodner,DE45500105175413610319,2023-01-01,2023-01-01
+452,Edeka Bergmann,Römer,Hilke,Klostergang,7,21335,Lüneburg,1969-01-14,54,01758823344,hilkeroemer@alice-dsl.net,Hilke Römer,DE76206905000001762249,2023-01-01,2023-01-01
+453,,Schwalfenberg,Claudio,Graf-Schenk-von-Stauffenberg-Str.,86,21337,Lüneburg,1992-01-09,31,01632858527,claudio.cisv@live.de,Claudio Schwalfenberg,DE59672300004012171360,2023-01-01,2023-01-01
+454,Wohnprojekt Fluse,Bremer,Luisa,Graf-Schenk-von-Stauffenberg-Str.,86,21337,Lüneburg,1989-11-13,33,015161431081,luisabremer.1@gmail.com,Luisa Bremer,DE39120300001035600822,2023-01-01,2023-01-01
+455,,Fritzke,Frieda,Friedhofsweg,1,21360,Vögelsen,1942-08-29,80,04131 121441,f.fritzke@t-online.de,Frieda Fritzke,DE21200100200113840204,2023-01-01,2023-01-01
+457,,Kruschewski,Nina,Bardowicker Straße,27,21335,Lüneburg,1993-04-02,29,0151-57365684,n.kruschewski@web.de,Nina Kruschewski,DE21120300001038928634,2023-01-01,2023-01-01
+458,,Marzian ,Tina,Am Wischfeld ,6,21335,Lüneburg,1974-04-25,48,017632668870,Info@tina-marzian.de,Tina Marzian ,DE40240400000436156400,2023-01-01,2023-01-01
+459,,Basilewitsch ,Kerstin,Rabensteinstraße,30,21337,Lüneburg,1975-08-12,47,04131 7060393,kerstin@mail.luebas.de,Kerstin Basilewitsch ,DE84262514250110064151,2023-01-01,2023-01-01
+460,,Wittekind,Miriam,Altenbrückerdamm,1a,21337,Lüneburg,1998-06-08,24,017681414555,miriwitt@googlemail.com,Miriam Wittekind,DE33240501100065660359,2023-01-01,2023-01-01
+461,,Mund,Susanna,Bodelschwingweg ,3,21335,Lüneburg,1989-02-23,34,015755874462,susannamund@icloud.com,Susanna Mund,DE73230707000440409100,2023-01-01,2023-01-01
+463,,Roth,Christine,Breite Wiese,16,21339,Lüneburg,1982-07-27,40,017682696316,christine.roth@posteo.de,Christine Roth,DE72500310001046344002,2023-01-01,2023-01-01
+464,,Ariana,Raihana,Jens-Schreiber-Str. ,17,21337,Lueneburg,1982-07-09,40,017643331670,arianaraihana@gmail.com,R.Ariana,DE18300606010002663163,2023-01-01,2023-01-01
+466,WirGarten Lüneburg,Vogel,Ulrich,Drosselweg,1,21360,Vögelsen,1957-03-22,66,0172 4145694,vogel.ulli@gmx.de,Ulrich Vogel,DE58240501100000138834,2023-01-01,2023-01-01
+468,Uni-Campus,Webersik,Michael,Bertha-von-Suttner-Str. ,22b,21335,Lüneburg,1976-04-19,46,04131 6083596,mwebersik@gmx.de,Michael Webersik,DE83660100750337896751,2023-01-01,2023-01-01
+469,Uni-Campus,Vonsien,Simone,Goethestr.,38,21335,Lüneburg,1994-02-21,29,01718099935,simone@vonsien.de,Simone Vonsien,DE31120300001036333704,2023-01-01,2023-01-01
+470,,Opel,Carola,Blümchensaal ,42,21337,Lüneburg,2019-09-05,3,01702442351,cn555@gmx.de,Carola Opel,DE65300209001610781099,2023-01-01,2023-01-01
+471,,Bartsch,Henrike,Bahnhofstr.,40 b,21409,Embsen,1989-08-11,33,017656766235,henrikefalke@gmx.de,Henrike Falke,DE93800800000447894000,2023-01-01,2023-01-01
+473,Paul-Gerhardt-Gemeinde,Röhrich,Lukas,Gellersstraße,31,21337,Lüneburg,1994-02-11,29,015114386896,l.roehrich@pm.me,Lukas Röhrich,DE58258634891731121700,2023-01-01,2023-01-01
+474,,Jennifer,Stommel,Ludwigstraße,3,21335,Lüneburg,1984-02-18,39,01796482288,jenniferstommel@web.de,Jennifer Stommel,DE80120300001060294053,2023-01-01,2023-01-01
+475,WirGarten Lüneburg,Seeger,Christine,Im Redder,64,21339,Lüneburg,1959-06-07,63,015111861051,ucl-seeger@t-online.de,Christine Seeger,DE14240501100051116812,2023-01-01,2023-01-01
+476,,Jaeger,Inge,Friedenstraße,31,34121,Kassel,1958-05-16,64,01631724692,spatzentaube.ijj@yahoo.com,Inge Jaeger,DE16500905000000583383,2023-01-01,2023-01-01
+477,Uni-Campus,Wenck,Lisa,Else-Wex-Weg,20,21335,Lüneburg,1988-08-22,34,04131709260,lisa-wenck@web.de,Lisa Wenck,DE41240501100065052995,2023-01-01,2023-01-01
+478,Feldstraße (Rotes Feld),Carballo Flores,Maria-Lena,Lessingstr.,5,21335,Lüneburg,1979-03-12,44,0171 6768897,carballoflores@t-online.de,Maria-Lena Carballo,DE51258501100002008795,2023-01-01,2023-01-01
+479,Edeka Bergmann,Leefmann,Karl-Heinz,Bennigsenstr.,2,21339,Lüneburg,1951-01-08,72,0170 9255739,karl.leefmann@posteo.de,karl-Heinz Leefmann,DE43206905000003841456,2023-01-01,2023-01-01
+481,Edeka Bergmann,Baumann-Marquardt,Angelika,Salzstrasse,19,21335,Lüneburg,1960-12-17,62,04131/731408,a.baumann-marquardt@web.de,Angelika Baumann-Marquardt,DE74240501100000135830,2023-01-01,2023-01-01
+483,,Rickert,Marlene,Stöteroggestr.,75,21339,Lüneburg,1962-04-06,60,04131 390154,rickert.marlene@posteo.de,Marlene Rickert,DE98240501100057349490,2023-01-01,2023-01-01
+484,,Bake,Christoph ,Schützenstr.,6b,21337,Lüneburg,1982-06-08,40,0175 5698909,christoph@b4k3.de,Christoph und Rafaela Bake,DE66200411110469047500,2023-01-01,2023-01-01
+485,WirGarten Lüneburg,Krüger,Edith,Imkerstieg,16,21339,Lüneburg,1972-03-27,51,0177-8665686,ekrueger@gmx.de,Edith Krüger,DE51430609672046748400,2023-01-01,2023-01-01
+486,Paul-Gerhardt-Gemeinde,Best,Simon ,Kastanienallee,8b,21365,Adendorf,1978-01-06,45,0163 6011978,simon.best@gmx.de,Simon Best,DE58240501100065326423,2023-01-01,2023-01-01
+487,Edeka Bergmann,Landsfried,Sandra,Wilschenbrucher Weg,58,21335,Lüneburg,1976-10-24,46,017638743856,s.landsfried@gmx.de,Sandra Landsfried,DE35200411330730351400,2023-01-01,2023-01-01
+488,,Püst,Andreas,Berliner Str.,58,21481,Lauenburg,1977-04-11,45,01775781941,andreas.puest@theater-lauenburg.de,Andreas Püst,DE56500105175402257338,2023-01-01,2023-01-01
+489,Edeka Bergmann,Werner,Max,Görgesstr.,19,21335,Lüneburg,1991-08-15,31,01773389173,maxtpw@posteo.de,max werner,DE54430609671111986700,2023-01-01,2023-01-01
+490,Edeka Bergmann,Jung,Heidemarie,Eisenbahnweg,9,21337,Lüneburg,1953-02-24,70,04131/54824,praxis.heidemarie.jung@t-online.de,Heidemarie Jung,DE73240501100057388449,2023-01-01,2023-01-01
+491,,Schumacher,Olivia,Gravenhorststraße,11,21335,Lüneburg,1984-04-04,38,+49 176 31168862,olivia.schumacher@gmx.net,Olivia Schumacher,DE52200411440814341400,2023-01-01,2023-01-01
+492,,Kunze,Aaron,Rosenstraße,10,21335,Lüneburg,1994-07-22,28,015778077485,kronstoeckel@gmail.com,Aaron Kunze,DE16760300800210598357,2023-01-01,2023-01-01
+493,LeNa Wohnprojekt,Lauenroth,Markus,Brockwinkler Weg ,72c,21339,LÜneburg,1980-02-21,43,015209030447,markus@so36.net,Markus Lauenroth,DE95206905000001411543,2023-01-01,2023-01-01
+494,,Klein,Lucia,Ilmenaugarten ,97,21337,Lüneburg ,1987-08-10,35,017620434973,lucia-klein@gmx.de,Lucia Klein,DE29640500000000202891,2023-01-01,2023-01-01
+496,WirGarten Lüneburg,Blumberg ,Kerstin ,Bruchweg ,11,21358,Mechtersen ,1982-12-29,40,015120121270,kerstin.blumberg@gmail.com,Kerstin Blumberg ,DE13100500001064662605,2023-01-01,2023-01-01
+498,,Heinelt,Kathrin ,Föhrenweg ,17,21339,Lüneburg,1976-04-19,46,0172 - 42 32 173,svart_liten_ulv@hotmail.de,Kathrin Heinelt ,DE89500105175431183890,2023-01-01,2023-01-01
+500,Wohnprojekt Fluse,Härtel,Annika,Meisterweg ,100,21337,Lüneburg,1988-07-27,34,017684488812,annika@lovis.de,Annika Härtel,DE41430609672023765400,2023-01-01,2023-01-01
+501,Garage am Finkenberg,Panteli,Mareike,Am Wacholderbusch ,45,21335,Lüneburg ,1983-04-28,39,01703084722,mareike.panteli@gmx.de,Mareike Panteli,DE41110101002112562901,2023-01-01,2023-01-01
+502,Wohnprojekt Fluse,Junge,Jürgen,Am Wasserturm,12,21335,Lüneburg,1954-10-05,68,0160 96331734,juergen.junge@yahoo.de,Jürgen Junge,DE35200400000326008000,2023-01-01,2023-01-01
+503,Edeka Bergmann,Lips,Stephanie,Am Kreideberg,4b,21339,Lüneburg,1981-06-30,41,0176 20267600,stephanie.lips@posteo.de,Stephanie Lips,DE04430609670047412600,2023-01-01,2023-01-01
+504,,Corduwisch,Ole,Meisterweg,102,21337,Lüneburg,1985-08-01,37,015735382340,ole.cord@posteo.de,Ole Cordruwisch,De20430609672061772900,2023-01-01,2023-01-01
+505,,Knorr,Mona,Mathildenstraße,24,01069,Dresden,1982-11-02,40,0151-42329390,hallo@monaknorr.de,Mona Knorr,DE46430609678235354601,2023-01-01,2023-01-01
+506,WirGarten Lüneburg,Wenzlaw,Uta,Kiefernweg ,20,21360,Vögelsen,1952-05-30,70,0176 41669189,uwenzlaw@web.de,Uta Wenzlaw,DE40240501100001117597,2023-01-01,2023-01-01
+507,,Mädge,Anke,Sonninstr.,1,21339,Lüneburg,1962-02-25,61,04131777913,ankemaedge@web.de,Anke Mädge,DE65430609672073453800,2023-01-01,2023-01-01
+508,,Dudziak,Johannes,Hugo-Otto-Zimmerstraße,24,21502,Geesthacht,1988-08-20,34,01774251582,jcfvad@googlemail.com,Johannes Dudziak,DE56500105175415373678,2023-01-01,2023-01-01
+509,Paul-Gerhardt-Gemeinde,Schaupp,Anika ,Siemensstr. ,34,21337,Lüneburg,1982-03-03,41,0176/47744800,anikaschaupp@web.de,Anika Schaupp,DE77300606010002566168,2023-01-01,2023-01-01
+512,Paul-Gerhardt-Gemeinde,Smith,Maria,Blumenstr ,10,21337,Lüneburg,1980-09-30,42,04131-7572801,maria.luetjohann@posteo.de,Maria Smith,DE72240501100065286304,2023-01-01,2023-01-01
+513,Paul-Gerhardt-Gemeinde,Helldorff,Christoph,Spangenbergstrasse,15,21337,Lüneburg,1980-05-26,42,015782036474,christoph.helldorff@gmail.com,christoph Helldorff,DE32672300004480242727,2023-01-01,2023-01-01
+514,,Familie Hollstein,Sonja,Hügelstraße ,11,21337,Lüneburg,1972-11-09,50,01792130996,hollstein.sonja@gmail.com,sonja hollstein,DE55300209000911721097,2023-01-01,2023-01-01
+515,,Uribe Pugner,Dario,Uelzener Straße,30,21335,Lüneburg,1996-02-19,27,01784913731,uribe.pugner@posteo.net,Benjamin Scharweit,DE54100110012624498742,2023-01-01,2023-01-01
+516,,Wegscheider,Nadine,Marcus- Heinemann- Straße,6d,21337,Lüneburg,1976-07-02,46,04032003232,n.wegscheider@gmail.com,René Kenzler,DE39200700240892935800,2023-01-01,2023-01-01
+517,Wohnprojekt Fluse,Slawski-Küllmer,Wanja,Meisterweg,102,21337,Lüneburg,1982-07-17,40,01713678037,wjslawski@hirnstrom.net,Wanja Slawski-Küllmer,DE79430609672029514100,2023-01-01,2023-01-01
+518,Paul-Gerhardt-Gemeinde,Denecke ,Anja ,Am Schierbrunnen,26,21337,Lüneburg ,1967-01-19,56,0162 4014919,a-denecke@kabelmail.de,Anja Denecke ,DE43206905000000618534,2023-01-01,2023-01-01
+520,Uni-Campus,Tiemeyer,Nele,Soltauer Allee,24,21335,Lüneburg ,1987-09-28,35,015759186194,neletiemeyer@googlemail.com,Nele Tiemeyer,DE18500105175414904009,2023-01-01,2023-01-01
+521,Edeka Bergmann,Lühmann,Mira,Van-der-Mölen-Str.,9,21339,Lüneburg,1987-12-07,35,015141277394,mira-luehmann@web.de,Mira Lühmann ,DE48258501100010102044,2023-01-01,2023-01-01
+522,,Deja,Hartmut,Im Redder,26,21339,Lüneburg,1953-02-15,70,04131 65492,deja-lueneburg@t-online.de,Hartmut Deja,DE42240501100061050951,2023-01-01,2023-01-01
+523,WirGarten Lüneburg,Neuberg,Ulrike,Stettiner Str.,1,21339,LÜNEBURG,1954-10-30,68,01751681336,uneuberg@gmail.com,Ulrike Neuberg,DE09240501100050262526,2023-01-01,2023-01-01
+524,FrohNatur,Scheffer,Jessica,Weidenring,6,21391,Reppenstedt,1977-10-26,45,015167913894,mainuschj@yahoo.com,Jessica Scheffer,de72206905000000602783,2023-01-01,2023-01-01
+525,,Kammlott,Nele,Ilmenaustraße ,1,21335,Lüneburg,1984-03-19,39,0157 376 499 79,nele.kammlott@postneo.de,Nele und Andreas Kammlott,DE53500310001064727008,2023-01-01,2023-01-01
+526,,Blumenbach,Karen,Bergstraße ,9,21365,Adendorf,1965-05-16,57,041317993783,blumenbach@t-online.de,Dr. Karen Blumenbach,DE29240501100087007027,2023-01-01,2023-01-01
+527,,Spreckels,Kirsten,Finkenberg,1a,21339,Lüneburg,1946-06-02,76,04131-42775,gspreckels@arcor.de,Kirsten Spreckels,DE87240501100052107711,2023-01-01,2023-01-01
+528,,Poth,Manuela,Gravenhorststraße ,9,21335,Lüneburg,1965-05-07,57,04131-2840074,m.m.poth@web.de,Manuela Poth,DE68200100200482541208,2023-01-01,2023-01-01
+529,Paul-Gerhardt-Gemeinde,Granderath,Verena,Am Schifferwall,1,21335,Lüneburg,1982-07-24,40,016098776390,Verena.Granderath@web.de,Verena Granderath ,DE10830200860602939219,2023-01-01,2023-01-01
+530,,Hüttmann,Katja,Mühlenweg,12,21376,Salzhausen,1965-10-31,57,015770514648,katja.huettmann@ewe.net,-,-,2023-01-01,2023-01-01
+531,LeNa Wohnprojekt,Glock,Luzie,Konrad-Adenauer-Str.,120,21337,Lüneburg,1995-01-07,28,017657708540,luzie.glock@posteo.de,Luzie Glock,DE69430609672076177100,2023-01-01,2023-01-01
+532,WirGarten Lüneburg,Hansen,Mareike,Teilfeld,15,21339,Lüneburg,1983-03-05,40,015170182886,mareike.hansen@gmail.com,Mareike Hansen,DE32200411110416076800,2023-01-01,2023-01-01
+533,,Schlöder,Hildegard,Henningstraße,12,21337,Lüneburg,1986-07-30,36,015906390134,h.schloeder@posteo.net,Hildegard Schlöder,DE24120300001008151159,2023-01-01,2023-01-01
+534,Edeka Bergmann,Priesing-Klein,Sabine,Heinrich-Böll-Straße ,31,21335,Lüneburg,1967-10-16,55,017649234961,ingridkalle@yahoo.de,Sabine Priesing-Klein,DE02500105175427489853,2023-01-01,2023-01-01
+535,,Westphal,Gabi,Eichenbrücker Str.,12,21337,Lüneburg,1965-08-16,57,01603662930,g_westphal@yahoo.com,Jost Westphal,DE71200505501028752333,2023-01-01,2023-01-01
+537,Wohnprojekt Fluse,Becker,Katja,Lausewiesen ,17,21357,Bardowick,1982-03-05,41,015156993458,katja.becker@ujuzi.de,Jonathan Happ,DE81430609672009760402,2023-01-01,2023-01-01
+538,Edeka Bergmann,Pöltl,Dominik,Lüner Weg,49,21337,Lüneburg,1989-11-22,33,0176/25566172,wirgarten@yeru.uber.space,Kerstin Gollmer & Dominik Pöltl,DE07430609672076757500,2023-01-01,2023-01-01
+539,Garage am Finkenberg,Brandt,Birgit,Kantstraße,15,21335,Lüneburg,1962-04-28,60,01789395188,birgit-brandt-lueneburg@web.de,Birgit Brandt,DE86206905000001216929,2023-01-01,2023-01-01
+540,,Stöck,Malte,Volgershall,122,21339,Lüneburg,1978-03-30,44,0160 7665845,mailmaltes@web.de,Malte Stöck,DE42430609671165217800,2023-01-01,2023-01-01
+541,WirGarten Lüneburg,Zimmer,Nicole,Am Bahndamm,25,21358,Mechtersen ,1983-05-21,39,017631718942,nicolezimmer84@gmail.com,Nicole Zimmer,De55206905000002763958,2023-01-01,2023-01-01
+542,Paul-Gerhardt-Gemeinde,Täger,Christopher,Ostlandring,7,21337,Lüneburg,1988-03-24,35,0176 20667350,christopher.taeger@gmx.de,-,-,2023-01-01,2023-01-01
+543,,Bendel,Jonathan,Am Galgenberg,14,21335,Lüneburg,2019-08-30,3,,daniel.bendel@arcor.de,-,-,2023-01-01,2023-01-01
+544,Edeka Bergmann,König,Insa,Am blauen Camp ,8,21335,Lüneburg ,1975-02-19,48,017648572599,insa.k@gmx.net,Insa König ,DE97430609672028193800,2023-01-01,2023-01-01
+546,,Ruffing,Annette,Weidenring,7b,21391,Reppenstedt,1968-03-12,55,0176 96499337,fruffing@web.de,Annette Ruffing,DE18200100200875075209,2023-01-01,2023-01-01
+548,,Herkenhoff,Susanne,Kiefernweg,14,21365,Adendorf,1967-07-07,55,04131 855311,sujoinjo@t-online.de,Susanne u. Jörg Herkenhoff,DE35240400000434665600,2023-01-01,2023-01-01
+549,,Weiß,Marie,Soltauer Str. ,125a,21335,Lüneburg,1988-02-09,35,0157 85821925,marie.weiss@web.de,Marie Weiß,DE11200411550631538600,2023-01-01,2023-01-01
+550,Garage am Finkenberg,Kolbe,Tanja,Gerberstraße,3,21335,Lüneburg,1979-10-02,43,01636271773,tanjakolbe@me.com,Tanja Kolbe,DE29240400000438597700,2023-01-01,2023-01-01
+551,FrohNatur,Kersten ,Thea,Heinser Weg ,62,21406,Melbeck,1984-06-05,38,017623259289,theakersten@web.de,Thea Kersten,DE49120300001019355567,2023-01-01,2023-01-01
+552,WirGarten Lüneburg,Brehler geb. Reese,Diena Frederika (Frieda),Am Silberkamp,19,21391,Lüneburg,1966-06-11,56,015752977076,frieda.reese@t-online.de,Diena Frederika (Frieda) Reese,DE35430609671012146300,2023-01-01,2023-01-01
+553,Edeka Bergmann,Strechel,Anjorka,Bussardweg ,1,21391,Reppenstedt,1982-01-12,41,0173 287 65 31,post@anjorka.de,Anjorka Strechel,DE19430609671220104500,2023-01-01,2023-01-01
+554,Edeka Bergmann,Rilling,Martina,Heiligengeiststr ,11,21335,Lüneburg,1981-06-18,41,017697817037,martinasiegert@yahoo.de,Martina Rilling,DE52200505501048792293,2023-01-01,2023-01-01
+555,,Viana,Samantha,Alfred-Trebchen-Strasse ,73,21337,Lüneburg,1981-11-13,41,0151-19138941,samanthaviana@gmx.net,Samantha Viana,DE77200700240650374200,2023-01-01,2023-01-01
+556,,Neddermann ,Rahel,Eulenweg ,8,21337,Lüneburg ,1987-04-20,35,0173 8282330 ,raheloona@posteo.de,Rahel Neddermann ,DE07430609672026259300,2023-01-01,2023-01-01
+557,,Schelm,Patricia,Papenbruch,44,21409,Embsen,1961-03-10,62,015770214254,patricia.schelm@gmx.de,Patricia Schelm,DE73240501100012128443,2023-01-01,2023-01-01
+558,Wohnprojekt Fluse,Burckhardt,Sabine,Am Dornbusch,24,21335,Lüneburg,1959-08-09,63,015752812538,sabine.burckhardt@gmx.de,Sabine Burckhardt,DE26250100300304816309,2023-01-01,2023-01-01
+559,WirGarten Lüneburg,Heldt-Barbato,Ursula,Sachsenweg,8,21339,Lüneburg,1965-02-13,58,+494131731655,mbarbato@kabelmail.de,Ursula Heldt-Barbato,DE42240603007102358500,2023-01-01,2023-01-01
+560,,Heintze,Jonathan,Hinter der Bardowicker Mauer 12,12,21335,Lüneburg,1998-10-12,24,015170173584,j.heintze@gmx.de,Jonathan Heintze,DE38200505501252439680,2023-01-01,2023-01-01
+561,,Vedder,Andrea,Hans-Heinrich-Stelljes-Str.,18,21337,Lüneburg,1984-01-12,39,017620804047,joeran.herding@posteo.de,Jöran Herding,DE69430609672079775800,2023-01-01,2023-01-01
+562,Feldstraße (Rotes Feld),Schumann,Tanja,Kefersteinstraße ,30,21335,Lüneburg,1973-08-17,49,01717669715,tt-ffm@gmx.de,Tanja Schumann,DE16200411440467345500,2023-01-01,2023-01-01
+563,,Fleing,Frederick,Breite Wiese ,10,21339,Lüneburg,1987-08-10,35,017663125809,fredhoven@googlemail.com,frederick Fleing,DE95533500001015007520,2023-01-01,2023-01-01
+564,Paul-Gerhardt-Gemeinde,Straube,Erika,Gottfried-Keller-Straße ,2b,21337,Lüneburg ,1959-02-11,64,04131 840384,erikastraube@gmx.de,Erika Straube,DE21206905000000310373,2023-01-01,2023-01-01
+565,,Becker,Corinna,Jens-Schreiber-Straße ,18,21337,Lüneburg,1981-02-16,42,017634308624,BeckerCorinna@gmx.net,Corinna Becker,DE52430609672059949500,2023-01-01,2023-01-01
+566,Wohnprojekt Fluse,Lenz,Christoph,Meisterweg,100,21337,Lüneburg,1988-05-12,34,041316020612,lenzdeluxe@web.de,Christoph Lenz,DE07430609676005276900,2023-01-01,2023-01-01
+567,Wohnprojekt Fluse,Hanke geb. Klahn ,Stefanie,Mühlenstr.,24,21357,Bardowick,1982-11-30,40,+4915225654590,Stefanie.hanke.22.05.2021@gmail.com,Stefanie Klahn ,De68206905000002475731,2023-01-01,2023-01-01
+568,Paul-Gerhardt-Gemeinde,Josam,Isabel,Dahlenburger Landstraße,113,21337,Lüneburg ,1996-08-15,26,017685633482,isijosam@gmail.com,Julian Linn & Zym Holm,DE75430609671282762000,2023-01-01,2023-01-01
+570,Garage am Finkenberg,Kleinert,Kerstin,Wallstr.,54,21335,Lüneburg,1990-01-09,33,+4917654600264,kerstin_kleinert@web.de,Kerstin Kleinert & Hannes Hebenstreit,DE62430609671108121300,2023-01-01,2023-01-01
+571,WirGarten Lüneburg,Hoffmann,Edeltraud,Kurze Straße,7,21339,Lüneburg,1951-11-26,71,0413136134,hoffmann_edeltraud@web.de,Edeltraud Hoffmann,DE38206905000003981517,2023-01-01,2023-01-01
+572,,Mordhorst,Lea,Auf der Altstadt ,14,21335,Lüneburg,1989-11-01,33,015737123449,lecrimo@hotmail.com,Lea Mordhorst,DE75370100500672925502,2023-01-01,2023-01-01
+573,Edeka Bergmann,Glitsch,Manuel,Dammstraße,24,21337,Lüneburg,1987-04-28,35,01726491752,manuel.glitsch@gmx.de,Manuel Glitsch,DE37100110012620754654,2023-01-01,2023-01-01
+574,,Hesse,Annegret,Wieselweg,23,21354,Bleckede,1981-06-10,41,01735741944,Annegret_Hesse@web.de,Annegret Hesse,DE48120300001056624149,2023-01-01,2023-01-01
+575,Edeka Bergmann,Schilling,Christina,Eckermannstr. ,40,21335,Lüneburg,1962-11-16,60,041318842792,christina.schilling12@web.de,Christina Schilling,DE50206905000000605216,2023-01-01,2023-01-01
+576,Feldstraße (Rotes Feld),Brüggmann,Holger,Hauskoppel,47,21407,Deutsch Evern,1962-05-20,60,0170 3838371,holger.brueggmann@gmail.com,Holger Brüggmann,DE95250501100000479899,2023-01-01,2023-01-01
+578,,Raithel,Friederike,Dorette-von-Stern-Str.,12B,21337,Lüneburg,1947-11-10,75,04131 56014,rikeraithel@gmx.de,Friederike Raithel,DE80500105175431788265,2023-01-01,2023-01-01
+579,,Breuer,Kristina,Witzendorffstraße ,21,21339,Lüneburg,1977-11-03,45,041319786262,kristina.breuer@googlemail.com,Kristina Breuer,DE55200411550243424900,2023-01-01,2023-01-01
+580,FrohNatur,Wege,Stephan,Pommernstarße,4a,21391,Reppenstedt,1983-03-28,40,041312257658,S.Wege@mail.de,Stephan Wege,DE90120300001032151845,2023-01-01,2023-01-01
+581,,Vogt,Sabina,In der Kemnau ,20 a,21339,Lüneburg,1968-08-22,54,017684458645,Sabina.vogt@gmx.de,Sabina Vogt,DE24206905000000560676,2023-01-01,2023-01-01
+582,Edeka Bergmann,Reichenbach,Florian,Papenstr.,12,21335,Lüneburg,1993-03-01,30,015774515823,florian.reichenbach@posteo.de,Florian Reichenbach,DE08430609671195812600,2023-01-01,2023-01-01
+583,Edeka Bergmann,Jung,Annegret ,Volgershall ,142,21339,Lüneburg ,1960-06-20,62,0157/55539822,annegretejung@web.de,Annegret Jung,DE79206905000000684040,2023-01-01,2023-01-01
+585,WirGarten Lüneburg,Murphy,Julia,Schulstraße ,1,21357,Bardowick,1991-06-26,31,015237891373,login@julia-murphy.de,Pierce & Julia Murphy,DE58500105175432014865,2023-01-01,2023-01-01
+586,Edeka Bergmann,Jensen,Gonna,Salzbrückerstraße,20,21335,Lüneburg,1991-11-18,31,015784128335,gonna.jensen@gmail.com,Gonna Jensen,DE73210920230001563530,2023-01-01,2023-01-01
+587,,Schmitt,Leonie,Uelzener Straße ,112a,21335,Lüneburg,1997-09-14,25,01757221863,leonie.schmitt@stud.leuphana.de,Leonie Schmitt,DE40430609671127398700,2023-01-01,2023-01-01
+588,Garage am Finkenberg,Brauner,Sabine,Wandelfeld,37,21407,Deutsch Evern,1950-06-20,72,0160 7972048,hilmar.brauner@t-online.de,Sabine Brauner,DE41206905000000261416,2023-01-01,2023-01-01
+589,Garage am Finkenberg,Lohmann,Christine,Salzstraße am Wasser,2,21335,Lüneburg,1979-01-28,44,01777311934,c.lohmann@gmx.net,Christine Lohmann,DE13258501100018200816,2023-01-01,2023-01-01
+590,Wohnprojekt Fluse,Vollstedt,Inken ,Claudiusweg ,28,21337,Lüneburg ,1971-05-06,51,04131-997488,inkenvollstedt@web.de,Inken Vollstedt,De79240501100087133294,2023-01-01,2023-01-01
+591,FrohNatur,Langer,Fabian,Eyendorfer Straße,15,21376,Salzhausen,1989-11-04,33,01736811863,fabian.langer@protonmail.com,Fabian Langer,DE13200505501031753781,2023-01-01,2023-01-01
+592,Edeka Bergmann,Grimmelmann,Mette,Karl-der-Große-Str.,10,21357,St.Dionys/ Barum,1969-04-13,53,01774501206,mette@grimmelmann.de,Mette Grimmelmann,DE39240501100065806721,2023-01-01,2023-01-01
+593,WirGarten Lüneburg,Richter,Mirjam,Weidenring,3a,21360,Vögelsen,1979-08-22,43,2063199,mirjam.richter@posteo.de,Mirjam Richter,DE22206905000001973711,2023-01-01,2023-01-01
+594,Edeka Bergmann,Vollmer,Katharina,Gaußstraße,10,21335,Lüneburg,1996-06-14,26,01742065770,katharina.vollmer@kabelmail.de,Katharina Vollmer,DE74240501100087004180,2023-01-01,2023-01-01
+595,Edeka Bergmann,Möller,Saskia,Grapengießerstraße,33,21335,Lüneburg,1995-02-28,28,01744156156,saskiamoeller@gmx.net,Saskia Möller,DE20120300001057738310,2023-01-01,2023-01-01
+597,Uni-Campus,Eggert,Jana,Planckstraße,10,21335,Lüneburg,1992-07-01,30,015172002885,jana-eggert@web.de,Jana Eggert,DE07120300001034057255,2023-01-01,2023-01-01
+598,Uni-Campus,Peters,Anike,Am Neuen Felde ,3,21339,Lüneburg,1982-12-20,40,017620134033,anike.peters@web.de,Anike Peters,DE88258501100037202348,2023-01-01,2023-01-01
+599,Uni-Campus,Franke,Catharina ,Wilhelm Reinecke Str.,14,21335,Lüneburg ,1968-01-03,55,04131 854731,catharina.franke@gmx.de,Catharina Franke,DE40430609672078428701,2023-01-01,2023-01-01
+600,Wohnprojekt Fluse,Schröder ,Christina,Rabensteinstraße,36a,21337,Lüneburg,1971-08-03,51,017683693932,grinca@freenet.de,Christina Schröder ,DE19370100500601754506,2023-01-01,2023-01-01
+601,FrohNatur,Hackbarth,Martina,Fritz-Reuter-Ring ,3,21391,Reppenstedt,1970-05-05,52,0413164094,martina-hackbarth@arcor.de,Martina Hackbarth,DE37240501100052350238,2023-01-01,2023-01-01
+602,,Heyn,Iris,Moortalsheide,246,21406,Melbeck ,1963-10-20,59,015733138421,iris_heyn@hotmail.com,Iris Heyn ,DE82200400000442476800,2023-01-01,2023-01-01
+603,FrohNatur,Fabel,Patrice,An der Landwehr,39,21391,Reppenstedt,2021-09-17,1,+491775572634,salut.patrice@gmx.de,Patrice Fabel ,DE81120965970008868085,2023-01-01,2023-01-01
+604,Uni-Campus,Wiebe,Birte,Bachstraße,64,21337,Lüneburg,1991-09-11,31,017631469656,birte.wiebe@googlemail.com,Wiebe/ Rebstock,DE45120300001066303833,2023-01-01,2023-01-01
+605,WirGarten Lüneburg,Maiwald ,Christiane ,Im Redder ,14,21339,Lüneburg,1958-01-15,65,04131 65 65 6,chmaiwald@web.de,Jürgen und Christiane Maiwald,DE06240501100061104949,2023-01-01,2023-01-01
+606,Uni-Campus,Rippl ,Natascha,Heidbergstr ,1,21335,Lüneburg,1990-07-01,32,015226521734,natascha.vermoehlen@gmail.com,Tobias und Natascha Rippl,DE87200400000845731900,2023-01-01,2023-01-01
+607,WirGarten Lüneburg,Chodzinski,Gabriele,An der Landwehr ,2,21360,Vögelsen,1952-11-29,70,04131-32517,naturheilpraxis-chodzinski@t-online.de,Gabriele Chodzinski,DE72240603000147498700,2023-01-01,2023-01-01
+608,,Hampe,Vera,Lindenallee ,20,21376,Eyendorf,1968-05-01,54,0152 08911672,vera@endegut.studio,Vera Hampe,DE70240603004032534200,2023-01-01,2023-01-01
+609,,Schock,Marcus,Ilmer Weg,23,21357,Bardowick,1988-07-04,34,01742436021,marcus.havelberg@gmail.com,Marcus Schock,DE160919940000691208,2023-01-01,2023-01-01
+610,,Fuchs,Lina,Im Redder,93,21339,Lüneburg ,1987-05-03,35,01623127014,die.maries.fuchs@googlemail.com,Lina Fuchs,DE53240501103770338998,2023-01-01,2023-01-01
+611,Edeka Bergmann,Grohn,Joanna,Salzbrückerstraße,29,21335,Lüneburg,1986-07-18,36,017682122914,Joanna.Grohn@web.de,Joanna Grohn,DE50200300000007554843,2023-01-01,2023-01-01
+612,,Löchner,Claire,Am Venusberg,2,21337,Lüneburg,1997-05-09,25,01775209252,claire.loechner@gmail.com,Claire Löchner,DE63600695950051893002,2023-01-01,2023-01-01
+613,,Suhrke,Anke,Eckermannstr. ,47,21335,Lüneburg,1965-05-28,57,015733157826,ankesuhrke@hamburg.de,Anke Suhrke,DE82120300001050719341,2023-01-01,2023-01-01
+614,Edeka Bergmann,Fahlbusch,Timo,Vor dem neuen Tore ,3,21339,Lüneburg,1986-02-27,37,015202180687,fa_ti@web.de,Timo Fahlbusch,DE64200411550447546300,2023-01-01,2023-01-01
+615,Garage am Finkenberg,Tuch,Swantje ,Auf der Höhe,6,21339,Lüneburg,1973-09-02,49,01796765893,s.tuch@gmx.net,Swantje Tuch,DE73280700240016439200,2023-01-01,2023-01-01
+616,,Mehl,Bianca,Dessauer Str.,5,21339,Lüneburg ,1972-05-22,50,0176 50 42 66 17,mehl_bianca@web.de,Bianca Mehl,DE05200100200771613206,2023-01-01,2023-01-01
+617,,Morawe,Mathias,Amselweg,5,21391,Reppenstedt,1985-03-30,37,015111246771,mathias.morawe@t-online.de,Mathias Morawe,DE30120300001076946167,2023-01-01,2023-01-01
+618,WirGarten Lüneburg,Lorenz,Anna,Am Plaggenschlag,44,21339,Lüneburg ,1989-01-17,34,015203901955,anna-tiedemann@web.de,Anna Lorenz,DE76500105175423458171,2023-01-01,2023-01-01
+619,Garage am Finkenberg,Lekat,Mirko ,Finkenberg,1,21339,Lüneburg,1993-10-10,29,016091233739,mirkolekat@mail.de,Mirko Lekat,DE83200909002559771600,2023-01-01,2023-01-01
+620,,De Sacco ,Carmina ,Stöteroggestraße,64,21339,Lüneburg,1997-11-16,25,017682940696,carmina.de-sacco@t-online.de,Carmina De Sacco ,DE93160500001100138931,2023-01-01,2023-01-01
+621,Feldstraße (Rotes Feld),Böhme,Jana,Altenbrückertorstr.,14,21335,Lüneburg,,123,015117559304,boehme_jana@gmx.de,Jana Böhme,DE20280699561010398800,2023-01-01,2023-01-01
+622,Edeka Bergmann,Rczeppa,Bernd,Feldstdraße,7,21407,Deutsch Evern,1953-11-15,69,04131 791778,Bernd.Rczeppa@online.de,Bernd Rczeppa,DE78240501100000695254,2023-01-01,2023-01-01
+623,,Bich,Sarah,Am Dorfplatz,65,213345,Lüneburg,1982-09-21,40,041312846938,sarah-bich@gmx.de,Sarah Bich,DE64430609677901757600,2023-01-01,2023-01-01
+624,Edeka Bergmann,Stolle,Melanie,Schnellenberger Weg,27,21339,Lüneburg,1981-09-27,41,017351 75 129,melanie.stolle@yahoo.de,Melanie Stolle,DE75206905000002227770,2023-01-01,2023-01-01
+625,Edeka Bergmann,Johannsen ,Gesa,Rehhagen ,23,21337,Lüneburg ,1975-11-01,47,017623781542,gesajohannsen@gmx.de,Gesa Johannsen,DE12206905000002250535,2023-01-01,2023-01-01
+626,,von der Kammer ,Rupert,Neuetorstraße,7,21339,Lüneburg,1998-09-06,24,01639729228,rupert.vdk@gmail.com,Rupert von der Kammer ,DE78430609673020431101,2023-01-01,2023-01-01
+627,Uni-Campus,Erdle,Ina,Otto-Fuhrhop-Weg,12,21335,Lüneburg,1977-05-09,45,01735339780,ina.erdle@posteo.de,Ina Erdle,DE65500105175404035574,2023-01-01,2023-01-01
+628,Wohnprojekt Fluse,Riyazi-Schaaf,Mandana,In der Twiete,20,21365,Adendorf,1981-05-16,41,016099037790,rmandana@hotmail.com,Mandana Riyazi-Schaaf,De10300606010007278470,2023-01-01,2023-01-01
+629,,Lang,Kirsten,Dammstr. ,16,21337,Lüneburg,1993-10-13,29,015773917743,lang_kirsten@web.de,Kirsten Lang,DE50120300001057598284,2023-01-01,2023-01-01
+630,Uni-Campus,König,Annette,Am Wacholderbusch,5,21335,Lüneburg,1978-06-22,44,041317899772,an22ko@yahoo.de,Annette König,DE83513900000036104309,2023-01-01,2023-01-01
+631,,Seiler,Rasmus,Reichenbachstraße,10,21335,Lüneburg,2000-03-14,23,0152 33600228,Rasmus.seiler@web.de,Rasmus Seiler,DE43200411440167900000,2023-01-01,2023-01-01
+632,Edeka Bergmann,Thißen,Marvin,Stöteroggestraße,67,21339,Lüneburg,1988-10-20,34,015901951446,marv.in@posteo.de,Marvin Schmidt,DE23430609672058259700,2023-01-01,2023-01-01
+633,WirGarten Lüneburg,Niehaus,Tanja,Köthener Straße,5,21339,Lüneburg,1973-01-16,50,04131 61017,tanjanie@web.de,Tanja Niehaus,DE12240603004203143500,2023-01-01,2023-01-01
+634,,Klaudius ,Anja,Brockwinkler Weg,14,21339,Lüneburg ,1980-05-14,42,041316050425,klaudiusanja@gmail.com,Anja Klaudius,DE15613914100018237002,2023-01-01,2023-01-01
+635,Edeka Bergmann,Hoveida,Janna,Ilmenaugarten,115,21337,Lüneburg,1989-11-10,33,01701803901,jortmanns@web.de,Janna Hoveida,DE18500105175420504401,2023-01-01,2023-01-01
+636,Uni-Campus,Hartmann,Eric,Ovelgönner Weg,75,21335,Lüneburg,1997-03-25,26,0176 84922797,eric.hartmann@fau.de,Eric Hartmann,DE60760695590003231062,2023-01-01,2023-01-01
+637,LeNa Wohnprojekt,Ambrose-Wagner,Carolin,Niklas-Luhmann-Straße ,9,21339,Lüneburg,1985-07-06,37,015754611478,wagner.caro@gmx.de,Carolin Ambrose-Wagner,DE81500105175418601970,2023-01-01,2023-01-01
+638,Wohnprojekt Fluse,Dürkop,Axel,Johannisburger Str.,8,21337,Lüneburg,1973-06-12,49,+49 177 330 92 69,me@axel-duerkop.de,Axel Dürkop,DE21430609671053311800,2023-01-01,2023-01-01
+639,WirGarten Lüneburg,Jensen,Karina,Im Dorfe,21,21358,Mechtersen,1982-05-18,40,017623316302,karina.kallmeyer@gmx.de,Karina Jensen,DE78240400000151555000,2023-01-01,2023-01-01
+640,Edeka Bergmann,Pengel,EO,Korb,10,21335,LG,1947-04-22,75,04131 406064,eopeng@freenet.de,EO Pengel,DE80240501100057114589,2023-01-01,2023-01-01
+641,Feldstraße (Rotes Feld),Reimers-Oelsner,Ulrike,Heinrich-Heine-Straße,44,21335,Lüneburg,1954-12-05,68,04131269798,b.jankowski@t-online.de,Ulrike Reimers-Oelsner,DE36206905000007534566,2023-01-01,2023-01-01
+642,Wohnprojekt Fluse,Plate,Birgit,Bäckerstr.,4,21379,Echem,1995-10-17,27,04139/ 6969 455,janett@posteo.de,Birgit Plate,DE28 2005 0550 1042 7922 08,2023-01-01,2023-01-01
+643,Wohnprojekt Fluse,Nolte,Kirsten,Dorette-von-Stern-Str.,16,21337,Lüneburg,1966-05-12,56,01601205660,kiky.nolte@t-online.de,Kirsten Nolte,DE90500105175402332774,2023-01-01,2023-01-01
+644,Edeka Bergmann,Kempe ,Daniela,Am Alten Eisenwerk ,2B,21339,Lüneburg,1986-10-29,36,0162 4030470,fam.kempe@yahoo.com,Daniela Kempe,DE73120300001016905885,2023-01-01,2023-01-01
+645,,Rostek-Schmehl,Karin,Harburger Straße,40,21224,Rosengarten,1960-04-05,62,04108 - 590701,Karin.Rostek-Schmehl@t-online.de,Karin Rostek-Schmehl,DE25430609671165722700,2023-01-01,2023-01-01
+646,,Schroeder,Katrin,Margeritenweg ,9,21360,Vögelsen,1973-05-29,49,01728359570,richter_schroeder@web.de,Katrin Schroeder,DE68200100200900165202,2023-01-01,2023-01-01
+647,,Reichel,Juliane,Soltauer Str. ,80,21335,Lüneburg,1976-10-30,46,015771259168,j.reichel@posteo.de,Juliane Reichel,DE46240501100065765273,2023-01-01,2023-01-01
+648,WirGarten Lüneburg,Wittkopf,Sabine,Birkenweg ,8,21360,Vögelsen,1965-10-02,57,04131120085,sabine_wittkopf@web.de,Dauerauftrag eingerichtet,-,2023-01-01,2023-01-01
+649,,Labuda,Sophia,Helene-Lange-Str.,9,21365,Adendorf,1990-09-09,32,017632536988,s.wannagat@live.de,Sophia Labuda,DE62120300001038066245,2023-01-01,2023-01-01
+650,Garage am Finkenberg,Reinhardt,Regine,Finkenberg,1,21339,Lüneburg,1968-06-14,54,01788085798,regi_reinhardt@gmx.net,Regine Reinhardt,DE03100700240478704000,2023-01-01,2023-01-01
+651,Garage am Finkenberg,Grube,Bastian,Vor dem Weißen Berge,12a,21339,Lüneburg,1979-01-04,44,01752065703,bastian@grumen.de,Bastian Grube,DE02200411440646852400,2023-01-01,2023-01-01
+652,Uni-Campus,Böhm,Norbert ,Wehlskamp,6,21409,Oerzen ,1959-10-04,63,04134910973,info@silkevoss.de,Norbert Böhm und Silke Voss,DE12206905000007562934,2023-01-01,2023-01-01
+653,,Frischeisen-Köhler,Julia,Am Venusberg,24,21337,Lüneburg,1976-10-23,46,0176 57790837,Julia.frischeisen@posteo.de,Julia Frischeisen-Köhler,DE69200411440323569400,2023-01-01,2023-01-01
+654,WirGarten Lüneburg,"Hanse-Klima e.K., Jusovic Asmir",HRA202864,Seevedeich ,16,21217,Seevetal,2018-02-01,5,017624090374,info@hanse-klima.de,Asmir Jusovic,DE55200505501002291506,2023-01-01,2023-01-01
+655,Edeka Bergmann,Konopko,Ingo,Danziger Straße,9,21339,Lüneburg,1990-06-29,32,017662912425,leningo@posteo.de,Ingo Konopko,DE23120300001057991620,2023-01-01,2023-01-01
+656,Wohnprojekt Fluse,Katz,Christine,Mühlenkamp ,3,21337,Lüneburg,1960-06-13,62,0160 96863987,katz@diversu.org,Christine Katz,de49240501100030001028,2023-01-01,2023-01-01
+657,Garage am Finkenberg,Kade,Corinna,Auf der Altstadt,44,21335,Lüneburg,1982-07-28,40,+4917661222689,Corinna.kade@gmx.de,Corinna Kade,DE18200411330769898800,2023-01-01,2023-01-01
+658,FrohNatur,Brandes,Kerstin,Bussardweg,3,21391,Reppenstedt,1964-08-11,58,0176 63210417,brandes-becker@posteo.de,Dr. Kerstin Brandes,DE23200505501251462287,2023-01-01,2023-01-01
+659,Feldstraße (Rotes Feld),Zeyen,Hanna,Ritters.,2,21335,Lüneburg,1999-06-19,23,01749703596,hanzey@posteo.de,Hanna Zeyen,DE08430609674128989101,2023-01-01,2023-01-01
+660,Edeka Bergmann,Troukens,Sophie,Frommestraße,7,21335,Lüneburg,1990-09-25,32,017682460813,sophie.troukens@gmail.com,Sophie Troukens ,DE47100100100399594116,2023-01-01,2023-01-01
+661,FrohNatur,Storck,Antonia,Eschenweg ,6,21391,Reppenstedt,1951-11-23,71,04131 68 00 355,antoniastorck@web.de,Antonia und Richard Storck,DE13240501100012114294,2023-01-01,2023-01-01
+662,Paul-Gerhardt-Gemeinde,Boeck,Antje,Jürgen-Backhaus-Straße,74,21337,Lüneburg,1972-04-01,50,015123319234,antje.boeck@freenet.de,Roman Boeck,DE63100500001554026705,2023-01-01,2023-01-01
+663,Wohnprojekt Fluse,Heinz,Hannah,Dammstr. ,20,21337,Lüneburg,1977-05-04,45,017642011762,hopping@gmx.de,Hannah Heinz,DE57206905000001613502,2023-01-01,2023-01-01
+664,Feldstraße (Rotes Feld),Krömer,Lisa,Rotenbleicher Weg,28,21335,Lüneburg,1982-12-05,40,0176 70138997,lisa.kroemer@posteo.de,Lisa Krömer,DE94430609673039750400,2023-01-01,2023-01-01
+665,Wohnprojekt Fluse,Albrecht,Judica,Meisterweg,104,21337,Lüneburg,1972-01-06,51,01772787178,judica1@web.de,Judica Albrecht,DE38100500006016757371,2023-01-01,2023-01-01
+666,Uni-Campus,Richter-Oldekop,Valeska,Langenstücken,63,21335,Lüneburg,1951-02-21,72,0157 77210986,valeska-richter_oldekop@posteo.de,Valeska Richter-Oldekoop,DE73430609674003205800,2023-01-01,2023-01-01
+667,Feldstraße (Rotes Feld),Bouss,Theresa ,Ilmenaugarten ,115,21337,Lüneburg ,1991-06-15,31,015776802876,theresa-bouss@web.de,Theresa Bouss,DE77210700240154679500,2023-01-01,2023-01-01
+668,Wohnprojekt Fluse,Krüger,Georg,Hansestraße ,85,21337,Lüneburg,1991-08-08,31,017670569990,schoschus@gmail.com,Georg Krüger,DE05500105175423471380,2023-01-01,2023-01-01
+669,WirGarten Lüneburg,Tietjen,Sibylle ,In der Kemnau,51,21339,Lüneburg,1992-09-01,30,015772157591,stietjen@t-online.de,Sibylle Tietjen,DE83430609671149450100,2023-01-01,2023-01-01
+670,Uni-Campus,Siebold,Johan,Gneisenaustr.,14,21335,Lüneburg,1995-09-23,27,015234573325,johansiebold@posteo.de,Johan Siebold,DE28480515800002604734,2023-01-01,2023-01-01
+671,Paul-Gerhardt-Gemeinde,Kandel,Thomas ,Kiefernring ,33,21337,Lüneburg ,1964-09-16,58,041316089308,Thomas.Kandel@gmx.de,Thomas Kandel,DE57240501100050223056,2023-01-01,2023-01-01
+672,Wohnprojekt Fluse,Hastedt,Susanne,Lüner Damm,8b,21337,Lüneburg,1973-06-25,49,0172/9438870,susanne@avides.com,Susanne Hastedt,DE96291525500003114378,2023-01-01,2023-01-01
+673,Wohnprojekt Fluse,Kletzing,Gerhardt,Auf dem Meere,23,21335,Lüneburg,1953-10-12,69,0163 8193827,gkletzing@gmx.de,Gerhard Kletzing,DE13760300800810195569,2023-01-01,2023-01-01
+674,FrohNatur,Baier,Claudia,Brockwinkler Str ,10,21391,Reppenstedt ,1981-09-16,41,015202916150,baierclaudia@gmx.net,Claudia Baier,De02500105175417484206,2023-01-01,2023-01-01
+675,Edeka Bergmann,Caspari,Alexander,Görgesstraße,2,21335,Lüneburg,1997-02-04,,017676899758,alex.caspari97@posteo.de,Alexander Caspari,DE46591900000423615010,2023-01-01,2023-01-01
+676,Edeka Bergmann,Kandut,Rebecca,Katzenstr,1,21335,Lüneburg,1982-03-19,,01626838799,rebecca.kandut@hotmail.com,Kandut Rebecca,DE78430609671182006300,2023-01-01,2023-01-01
+677,Edeka Bergmann,Bernoth,Frauke ,Quickbaumweg ,12,21339,Lüneburg ,1972-09-21,,0176 97692709,frauke.bernoth@t-online.de,Frauke Bernoth ,DE27200100200700363206,2023-01-01,2023-01-01
+678,Wohnprojekt Fluse,Quedens,Saskia Christine,Spangenbergstraße,27,21337,Lüneburg,1986-03-02,,0176-99963765,Saskia.Quedens@gmx.de,Saskia C. Quedens,DE18430609671180412700,2023-01-01,2023-01-01
+679,Uni-Campus,Richter,Stefanie,Tüner Berg,10A,21335,Lüneburg,1986-02-24,,04131 6080056,richter_st@gmx.net,Stefanie Richter,DE11240603008524659000,2023-01-01,2023-01-01
+4,,Albert,Sabine,Brockwinkler Weg,72c,21339,Lüneburg,1969-07-26,53,01793649034,,,,2023-01-01,2023-01-01
+14,,Brosch,Susanne,Jürgen-Backhaus-Strasse,52,21337,Lüneburg,1968-07-25,54,04131 380968,su.brosch@freenet.de,,,2023-01-01,2023-01-01
+51,,Ostner,Saskia,von-Dassel-Straße,22,21339,Lüneburg,1992-04-22,30,0157 38844725,,,,2023-01-01,2023-01-01
+79,,Seil,Melanie,Reichenbachstraße,1,21335,Lüneburg,1981-10-29,41,04131 8557565,,,,2023-01-01,2023-01-01
+80,,Seil,Ingo,Reichenbachstraße,1,21335,Lüneburg,1984-04-17,38,0152 01781590,,,,2023-01-01,2023-01-01
+108,,Wolter,Melanie,Am Lopaupark,7,21385,Amelinghausen,1979-12-14,43,04132 939323,,,,2023-01-01,2023-01-01
+128,,Nijboer,Laura,Goethestraße,28,21335,Lüneburg,1987-04-26,35,0157 55614284,,,,2023-01-01,2023-01-01
+283,,Poiré,Silke,Ilmerweg,28 A,21357,Bardowick ,1971-10-08,51,0152 01786171,,,,2023-01-01,2023-01-01
+290,,Wink,Anna,Hermann-Niemann-Straße,8,21337,Lüneburg,1991-05-30,31,0176 49081086,,,,2023-01-01,2023-01-01
+368,,Fritzke,Marie,Friedhofsweg,1,21360,Vögelsen,1995-12-30,27,+33648463907,marie.fritzke@orange.fr,,,2023-01-01,2023-01-01
+17,,Burghardt,Johanna,Uelzener Str.,30,21335,Lüneburg,1994-04-08,,01775576676,j.burghardt@mailbox.com,,,2023-01-01,2023-01-01
+282,,Rommel,Marlon,Dahlenburger Landstraße,29,21337,Lüneburg,1994-09-21,28,0176 67798276,,,,2023-01-01,2023-01-01
+301,,Höge,Patricia,Grenzweg,4,21357,Bardowick,1989-10-14,33,,,,,2023-01-01,2023-01-01
+22,,Fischer,Nadine,Dahlenburger Landstraße,19q,21337,Lüneburg,1980-02-21,43,04131 7760215,nadine.fischer@posteo.de,,,2023-01-01,2023-01-01
+133,,Winter,Pamela,Barckhausenstraße,12,21335,Lüneburg,1956-01-12,67,04131 407587,pamichwin@yahoo.de,,,2023-01-01,2023-01-01
+169,,Szekeres,Peter,Heidbergstraße,13,21335,Lüneburg,1966-06-29,56,0170 5523923,peter.szekeres@web.de,,,2023-01-01,2023-01-01
+185,,Krohn,Susanne,Guerickestraße,22,21337,Lüneburg,1967-10-20,55,04131 220859,susanne@janbeck.de,,,2023-01-01,2023-01-01
+224,,Peters,Anja,Charlotte-Huhn-Str. ,26,21339,Lüneburg,1962-07-29,60,0173 9362250,a.peters365@t-online.de,,,2023-01-01,2023-01-01
+276,,Franke,Hartmut,Witwenkamp,10,21357,Bardowick,1944-12-03,78,04131 7574831,muv123@gmx.net,,,2023-01-01,2023-01-01
+295,,Lange,Christina,Schildsteinweg ,44,21339,Lüneburg,1962-11-12,60,04131 401424,peter.lange.lg@gmx.de,,,2023-01-01,2023-01-01
+317,,Schilling,Christina,Eckermannstraße,40,21335,Lüneburg,1962-11-16,60,04131 8842792,christina.schilling12@web.de,,,2023-01-01,2023-01-01
+331,,Ignée,Daniela,Vor Mönchsgarten ,2,21339,Lüneburg,1988-09-29,34,04131 6086068,daniela.ignee@posteo.de,,,2023-01-01,2023-01-01
+346,,Bartsch,Anette,Kiefernweg ,2,21447,Handorf,1977-06-27,45,04133 210045,Anette.T@web.de,,,2023-01-01,2023-01-01
+377,,Sielemann,Anja Rebecca,Wilschenbrucher Weg,33,21335,Lüneburg,1973-03-15,50,04131 303429,sielemann315@t-online.de,,,2023-01-01,2023-01-01
+380,,Rohlfs,Angela,H.-F.-Hartmann-Str.,19,21357,Bardowick,1970-09-25,52,04131 6030102,arohlfs@online.de,,,2023-01-01,2023-01-01
+382,,Martens,Jurate,Am Weißen Berge,6,21339,Lüneburg,1971-01-19,52,015156607139,martensjurate@aol.de,,,2023-01-01,2023-01-01
+480,,Wulff,Tina,Feldstr.,26,21335,Lüneburg,1995-04-12,27,1782976600,tinawulff65@gmail.com,,,2023-01-01,2023-01-01
+389,,Willen,Leonard,Lüneburger Straße ,2b,21335,Lüneburg,1998-04-12,24,015734204862,leo.willen@web.de,,,2023-01-01,2023-01-01
+166,,Simon,Gabriele,Magdeburger Straße,52,21339,Lüneburg,1958-05-10,64,0175 5991624,gab.sim@web.de,,,2023-01-01,2023-01-01
+248,,Esslinger,Elisabeth,Brockwinkler Weg,72c,21339,Lüneburg,1950-06-24,72,04131 9279750,e-esslinger@posteo.de,,,2023-01-01,2023-01-01
+304,,Kröger,Otto,Wittenkamp ,6,21339,Lüneburg,1944-12-15,78,04131 7896780,info@kroeger-lg.de,,,2023-01-01,2023-01-01
+322,,Bruns,Anna,Bornkampsweg,3,22761,Hamburg,1991-04-19,31,0157 35381668,anna-bruns@gmx.net,,,2023-01-01,2023-01-01
+325,,Schwob,Insa,Stöteroggestraße,29,21339,Lüneburg,1991-05-19,31,0174 6411224,insaschwob@gmail.com,,,2023-01-01,2023-01-01
+354,,Albers/Gezeck,Joschka,Wilhelm-Reinecke-Straße ,35,21335,Lüneburg,1987-02-17,36,0159 01977136,joschka.gezeck@gmail.com,,,2023-01-01,2023-01-01
+355,,Kirchner,Doris,Bögelstr.,43,21339,Lüneburg,1945-06-25,77,04131 7571724,do.kirchner@web.de,,,2023-01-01,2023-01-01
+397,,Kanduth-Grahl,Stefan,Soltauer Str. ,15,21335,Lüneburg ,1967-12-23,55,01719723571,stefan.kanduth-grahl@kabelmail.de,,,2023-01-01,2023-01-01
+465,,Strauß,Karin,Boizenburger Str.,10,21339,Lüneburg,1960-11-19,62,04131 2849642 ,karin-kens@web.de,,,2023-01-01,2023-01-01
+467,,Albrecht,Judica,Schwalbengasse,48,21337,Lüneburg,1972-09-06,50,01772787178,judica1@web.de,,,2023-01-01,2023-01-01
+472,,Rehm,Regina,Maschensfeld,11,21376,Salzhausen,1954-06-15,68,04172/962928,rehm-krause-regina@web.de,,,2023-01-01,2023-01-01
+495,,Voß,Angela,Am Butterberg,23,21335,Lüneburg,1966-08-27,56,01734247680,angela.voss@me.com,,,2023-01-01,2023-01-01
+497,,Blümle,Bianca,Brambusch,9,21337,Lüneburg,1972-05-26,50,04131/852705,bianca.bluemle@web.de,,,2023-01-01,2023-01-01
+536,,Braun,Marjan,Neuetorstr ,7,21339,Lüneburg,,,,braun.marjan@gmail.com,,,2023-01-01,2023-01-01
+443,,Haase,Nadja,Erbstorfer Landstraße ,18,21337,Lüneburg,1988-02-27,35,01757805811,n.haase27@web.de,,,2023-01-01,2023-01-01
+177,,Wortmann,Hans,Breslauer Straße,32,21337,Lüneburg,1950-12-13,72,04131 81995,birgit-wortmann@web.de,,,2023-01-01,2023-01-01
+462,,Duensing,Jan,Peter-Schulz-Straße,1,21337,Lüneburg,1992-08-05,30,015251869922,jan.duensing@mail.de,,,2023-01-01,2023-01-01
+333,,Penck,Daniel,Auf der Altstadt,44,21335,Lüneburg,1984-08-24,38,0176 47024869,daniel.penck@gmail.com,,,2023-01-01,2023-01-01
+499,,Rolfes,Mara,Ritterstraße,2,21335,Lüneburg,1999-04-15,23,0152 03420373,mararolfes@web.de,,,2023-01-01,2023-01-01
+596,,Rode,Delia,An der Landwehr ,33,21391,Reppenstedt,1980-06-10,,017682099587,deliarode@web.de,,,2023-01-01,2023-01-01
+173,,Ziegler,Fionn,Am Stintmarkt,12a,21335,Lüneburg,1987-03-19,36,017663823639,fionnziegler@posteo.de,,,2023-01-01,2023-01-01
+179,,Platz-Cassens,Ute,Elisabeth-Maske-Str.,10,21337,Lüneburg,1954-10-10,68,04131 402335,utepca@web.de,,,2023-01-01,2023-01-01
+219,,Bruns,Angelika,Auf dem Brink,5,21394,Südergellersen,1949-10-15,73,04135 8622,bruns.geli@web.de,,,2023-01-01,2023-01-01
+274,,Rieckmann,Elke,Glogauer Str. ,63,21337,Lüneburg,1958-01-06,65,0160 8972134,e.rieckmann@web.de,,,2023-01-01,2023-01-01
+298,,Engelhardt,Heike,Ätzberg,16,21406,Melbeck,1967-12-14,55,04134 909209,engelhardt-micheli@t-online.de,,,2023-01-01,2023-01-01
+303,,Gräpler,Thomas,Hindenburgstrasse,104,21335,Lüneburg,1966-01-09,57,04131 35000,TomCat66@t-online.de,,,2023-01-01,2023-01-01
+326,,Friedrich,Dieter,Beethoven Str.,14,21391,Reppenstedt,1961-06-06,61,0162 3280074,dieter.friedrich@gmx.net,,,2023-01-01,2023-01-01
+334,,Blankemeyer,Michael,Goethestrasse ,1,21335,Lüneburg,1968-04-15,54,04131 9956225,mbl@posteo.de,,,2023-01-01,2023-01-01
+385,,Koch,Silvia,In der Kemnau,40,21339,Lüneburg,1957-12-01,65,015117618344,silvia.koch-heilpraktikerin@t-online.de,,,2023-01-01,2023-01-01
+391,,Horns,Heike,Hermann-Wrede-Weg,15,21339,Lüneburg,1967-07-03,55,04131860399,h.horns@gmx.de,,,2023-01-01,2023-01-01
+395,,Sargalski,Lea,Kantstraße,16,21335,Lüneburg,1989-08-05,33,015773536445,lea.s1989@web.de,,,2023-01-01,2023-01-01
+417,,Czaya,Sabine,An der Landwehr,10,21360,Vögelsen,1967-09-09,55,0151 14206434,sabine_czaya@yahoo.de,,,2023-01-01,2023-01-01
+449,,Schumann,Sarah,Vor dem Bardowicker Tore ,5,21339,Lüneburg,1987-11-06,35,0176-30475200,ser.schumann@web.de,,,2023-01-01,2023-01-01
+456,,Rettmer,Claudia ,Am Kaltenmoor ,2,21337,Lüneburg ,1985-06-07,37,04131/9995687,ClaudiaRettmer@gmail.com,,,2023-01-01,2023-01-01
+482,,Subbe,Sabine,Birkenweg,4,21398,Neetze,1971-02-24,52,0177/5768117,spinnbiene@t-online.de,,,2023-01-01,2023-01-01
+510,,Quent,Imke,Stadtkoppel,49,21337,Lüneburg,1968-04-20,54,04131/247710,imkeq@arcor.de,,,2023-01-01,2023-01-01
+511,,Fischer,Jo Lina,Else-Wex-Weg ,14,21335,Lüneburg,1991-12-22,31,015254572153,jolina.fischer@t-online.de,,,2023-01-01,2023-01-01
+519,,Budnik,Anke,Liegnitzer Straße,3,21339,Lüneburg,1969-12-22,53,0176 82212060,anke-budnik@web.de,,,2023-01-01,2023-01-01
+545,,Schlehufer,Roland,Hindenburgstraße,2,21335,Lüneburg,1988-05-20,34,017680084642,r.schlehufer@me.com,,,2023-01-01,2023-01-01
+547,,Petersen,Stefanie,Eichenweg,5c,21360,Vögelsen,1966-11-27,56,017646529719,ek@sr-petersen.de,,,2023-01-01,2023-01-01
+569,,Heinecke ,Lucie,Bögelstraße ,32,21339,Lüneburg ,1987-12-02,35,01775044509,Lucie.iskenius@mail.com,,,2023-01-01,2023-01-01
+577,,Brandau,Susanne,Charlotte-Huhn-Straße ,24,21339,Lüneburg,1957-11-17,65,04131 41290,mail@susanne-brandau.de,,,2023-01-01,2023-01-01
+584,,Cebulla-Wagner,Ute,Lüneburgerstraße ,160A,21423,Winsen/Luhe,1952-10-23,,0176 82085359,Cebulla-Wagner@mail.de,,,2023-01-01,2023-01-01
+44,,Kreschiniski,Petra,Im Kamp,22,21335,Lüneburg,1966-10-23,56,04131 46274,petra.kreschinski@gmx.de,,,2023-01-01,2023-01-01
+50,,Mädge,Ulrich,von-Stauffenberg-Straße,96,21337,Lüneburg,1950-06-11,72,04131 3093110,ulrich-maedge@gmx.de,,,2023-01-01,2023-01-01
+,WirGarten Lüneburg,Armbruster ,Kathrin ,Billungweg ,7,21339,Lüneburg ,,,015905253749,armbruster.kathrin@web.de,Kathrin Armbruster ,DE35240501100010163616,2023-01-01,2023-01-01
+,Edeka Bergmann,Rechtsteiner,Espen,Altenbrückerdamm,2,21337,Lüneburg,,,+4915772333662,rechtsteiner@mail.de,Espen Rechtsteiner,DE72 6905 1725 1002 117776,2023-01-01,2023-01-01
+,WirGarten Lüneburg,Heising-Soldan,Susanne,Imkerstieg,6,21339,Lüneburg,,,0413165396,susihs@gmx.de,Susanne Heising-Soldan,DE71300606010202865165,2023-01-01,2023-01-01
+,Uni-Campus,Ahner,Antonia,Meinekenhop ,19,21339,Lüneburg,,,016098632934,antonia.ahner@gmx.net,Antonia Ahner,DE 85650501100111460766,2023-01-01,2023-01-01
+,Edeka Bergmann,Kirstein,Elias,Hindenburgstr.,63,21339,Lüneburg ,,,+4917695875718,eligius@tutanota.com,Tabea Bartels,DE89 4306 0967 1025 4514 00,2023-01-01,2023-01-01
+,Feldstraße (Rotes Feld),Reßing,Sofia,Konrad-Adenauer-Straße ,60,21337,Lüneburg ,,,015788096337,sofiaressing@gmail.com,Sofia Reßing,DE43240501100065913931,2023-01-01,2023-01-01
+,Uni-Campus,Degenhardt,Justus,Schildsteinweg,29,21339,Lüneburg ,,,0157/37888684,just.d@posteo.de,Justus Degenhardt,DE75 1203 0000 1059 2117 20,2023-01-01,2023-01-01
+,Edeka Bergmann,Heckmann,Bendix,Enge str,3,21335,Lüneburg ,,,01781962377,nova.heckmann@posteo.de,Bendix Heckmann,DE71 3706 0590 0003 1685 57,2023-01-01,2023-01-01
+,Uni-Campus,Welzel,Matthias,Scharnhorststr.,16,21335,Lüneburg ,,,015773690353,matthias.welzel@posteo.de,Matthias Welzel,DE92230510300510162563,2023-01-01,2023-01-01
+,Paul-Gerhardt-Gemeinde,Rehr,Sabine ,Bachstr.,56,21337,Lüneburg ,,,+491777503421,sabinediebiene860@gmail.com,Sabine rehr ,De27 2405 01100065114357,2023-01-01,2023-01-01
+,Uni-Campus,Katrin,Hommen,Friedenstraße ,8b,21335,Lüneburg ,,,017692147541,katrinhommen@posteo.de,Katrin Hommen,DE22430609671073700600,2023-01-01,2023-01-01
+,Wohnprojekt Fluse,Willers,Maria,Auf dem Schmaarkamp,1A,21339,Lüneburg ,,,017664750616,maria.willers@web.de,Maria Willers,DE71400700240016551400,2023-01-01,2023-01-01
+,WirGarten Lüneburg,Bohns,Katrin,Dorfstraße,4,21360,Vögelsen,,,01728542711,katrin_bohns@web.de,Katrin Bohns,DE48240400000437393200,2023-01-01,2023-01-01
+,Paul-Gerhardt-Gemeinde,Bieber,Lukas,Peter-Schulz-Straße ,5,21337,Lüneburg ,,,015125306568,lukas.bieber2@gmail.com,Lukas Bieber,DE21300209005310332112,2023-01-01,2023-01-01
+,Uni-Campus,Preußler,Nina,Wichernstr.,11,21335,Lüneburg ,,,015784868208,nina.preussler@gmx.de,Nina Preußler,DE24 8505 0300 1226 8218 19,2023-01-01,2023-01-01
+,Uni-Campus,Schmidt,Bentley,Marcus-Heinemann-Str,11,21337,Lüneburg ,,,017630556530,bentleybo@web.de,Bentley Schmidt,DE67 2405 0110 0065 8588 88,2023-01-01,2023-01-01
+,Edeka Bergmann,Schneider,Hannah,Schildsteinweg,52,21339,Lüneburg ,,,017656916088,hannah_schneider@posteo.de,Hannah Schneider,DE76 4306 0967 1269 1620 00,2023-01-01,2023-01-01
+,Feldstraße (Rotes Feld),Düselder,Heike,Papenstraße,6a,21335,Lüneburg ,,,04131 2197930,heike.dueselder@t-online.de,Heike Düselder,DE47285500000108116492,2023-01-01,2023-01-01
+,Edeka Bergmann,Gobs,Julia,Kuhstraße,5,21335,Lüneburg ,,,01742882541,julia.gobs@posteo.de,Julia Gobs,DE98653510501120167389,2023-01-01,2023-01-01
+,Uni-Campus,Wilkens,Klaas,Scharnhorststraße,32,21335,Lüneburg ,,,01702433203,klaas.wilk@yahoo.com,Klaas Wilkens,DE80280501000091768663,2023-01-01,2023-01-01
+,Paul-Gerhardt-Gemeinde,Karnetzke ,Nadine,Baumstraße,28,21335,Lüneburg ,,,015254084740,nadine.karnetzke@web.de,Nadine Karnetzke,DE04500105175413774599,2023-01-01,2023-01-01
+,Edeka Bergmann,Ziegler,Annika ,Reichenbachstraße ,5,21335,Lüneburg ,,,0170 1722601,annikaziegler.1999@gmail.com,Annika Ziegler,DE62 1101 0100 2009 0057 11,2023-01-01,2023-01-01
+,Feldstraße (Rotes Feld),Dubaschny ,Eva-Lotta,Schillerstraße ,1,21335,Lüneburg ,,,017631406030,eva.dubaschny@web.de,Eva-Lotta Dubaschny ,DE73200505501228452502,2023-01-01,2023-01-01
+,WirGarten Lüneburg,Behrendt,Caterina,Vor Mönchsgarten,8,21339,Lüneburg ,,,01703089446,tougs@gmx.de,Sita Behrendt,DE73222900310008186952,2023-01-01,2023-01-01
+,Edeka Bergmann,Rosenbaum,Bryna,Auf der Rübekuhle,1,21335,Lüneburg ,,,01633404654,bryna.rosenbaum@berlin.de,Bryna Rosenbaum,DE33 1005 0000 0810 1194 04,2023-01-01,2023-01-01
+,Garage am Finkenberg,Brandau,Valentin,Spangenbergstraße,9,21337,Lüneburg ,,,015156160254,vale_b@gmx.de,Valentin Brandau,DE37120300001009536085,2023-01-01,2023-01-01
+,Paul-Gerhardt-Gemeinde,Ponellis,Petra,Salzbrückerstraße ,68,21335,Lüneburg ,,,,petraponellis@web.de,Petra Ponellis,DE31 2405 0110 0050 2669 80,2023-01-01,2023-01-01
+,Uni-Campus,Glöckner,Paul,Ostlandring ,51,21337,Lüneburg ,,,1727344451,gloeckner.paul@gmx.de,Paul Glöckner,DE45 2405 0110 0065 8893 54,2023-01-01,2023-01-01
+,Uni-Campus,Hobbs,Charlotte,Scharnhorststraße,1a ,21335,Lüneburg ,,,015755505023,charlotte_hobbs@gmx.de,Charlotte Hobbs,DE33370501981900315084,2023-01-01,2023-01-01
+,Edeka Bergmann,Wille ,Johanna,Schillerstraße,17,21335,Lüneburg ,,,015757966001,johanna.wille@posteo.de,Johanna Wille,DE98120300001066405117,2023-01-01,2023-01-01
+,Uni-Campus,Fischbach,Anna-Lina,,,,,,,,anna-lina.f@web.de,Leander Reichstein,DE53 4306 0967 1295 4434 00,2023-01-01,2023-01-01
+,Wohnprojekt Fluse,Steger,Anna,Quellenweg ,11,21339,Lüneburg ,,,0177 7958592,anna.steger.mail@gmail.com,Anna Steger,DE49 1001 0010 0480 7781 33,2023-01-01,2023-01-01
+,Edeka Bergmann,Künkenrenken,Merve,Lindenstraße ,22,21335,Lüneburg ,,,015111023664,merve.kuenkenrenken@gmx.de,Merve Künkenrenken,DE61240400000430692400,2023-01-01,2023-01-01
+,WirGarten Lüneburg,Claussen,Jan Torge,Witzendorffstr. ,31,21339,Lüneburg ,,,0178-5196140,nietzky@leuphana.de,Jan Torge Claussen,DE63370100500896171509,2023-01-01,2023-01-01
+,Uni-Campus,Schmidt,Mirko,Wichernstraße,34,21335,Lüneburg ,,,015788575180,mirkoschmidt@hotmail.com,Mirko Schmidt,DE37620500000000985273,2023-01-01,2023-01-01
+,Edeka Bergmann,Alewell,Leoni,Hasenburger Ring,64,21335,Lüneburg ,,,017643681989,leoni.alewell@web.de,Leoni Alewell,DE69 1101 0100 2358 8643 12,2023-01-01,2023-01-01
+,Feldstraße (Rotes Feld),Köppel,Laura,Klostergang,14,21335,Lüneburg ,,,017655857384,laura.koeppel@googlemail.com,Ole Krickau,DE71 4306 0967 2031 3813 00,2023-01-01,2023-01-01
+,Uni-Campus,Strassl,Sandra,Mittelfeld,58,21339,Lüneburg ,,,017698839685,sandra.strassl@gmx.de,Sandra Strassl,DE23430609671247882900,2023-01-01,2023-01-01
+,Edeka Bergmann,Miller-Aichholz,Marie,Gut Schnellenberg,1,21339,Lüneburg ,,,017647627495,marie.miller.aichholz@gmail.com,Marie Miller-Aichholz,AT302011129569713200,2023-01-01,2023-01-01
+,Edeka Bergmann,Herles,Hannah,von-Dassel-Straße,22,21339,Lüneburg ,,,01784913731,hannah.herles@posteo.de,Hannah Herles,DE76 4306 0967 1098 3223 02,2023-01-01,2023-01-01
+,Uni-Campus,Pfaffenrath,Maik,Scharnhorststr.,48,21335,Lüneburg ,,,017678348364,maik.pfaffenrath@gmx.de,Maik Pfaffenrath,DE06430609674083765700,2023-01-01,2023-01-01
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE
+,,,,,,,,,,,,,,FALSE,FALSE

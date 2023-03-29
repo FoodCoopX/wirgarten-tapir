@@ -1,7 +1,8 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 import django.db
-from tapir.wirgarten.models import Member,Subscription,CoopShareTransaction,TapirUser
+from tapir.wirgarten.models import Member,Subscription,CoopShareTransaction,TapirUser,GrowingPeriod,MandateReference,Product
+from tapir.wirgarten.service.member import get_or_create_mandate_ref
 import csv
 
 class Command(BaseCommand):
@@ -84,17 +85,77 @@ class Command(BaseCommand):
             if type == "subscriptions":
                 if delete_all:
                     Subscription.objects.all().delete()
+                    # identify current growing_period
+                period = GrowingPeriod.objects.get(start_date="2023-01-01")
                 for row in reader:
-                    print(row)
-                    # find out TapirUserID, either via MemberNo or Email
-                    m = TapirUser.objects.get(=row[""])
-                    s = Subscription.objects.get_or_create(
-                        member_id=row["Mitgliedsnummer"],
-                        entry_date=row["Datum"],
-                        quantity=row["Anzahl Anteile"],
-                        share_price=50,
-                    )
-                    s.save()
+                    # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,Richtpreis,Solidarpreis in Prozent,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
+                    # print(row)
+                    # identify TapirUserID, either via MemberNo or Email
+                    try:
+                        if row["Mitgliedernummer"] != "":
+                            m = TapirUser.objects.get(id=row["Mitgliedernummer"])
+                        else:
+                            if row["E-Mail-Adresse"] != "":
+                                m = TapirUser.objects.get(email=row["E-Mail-Adresse"])
+                            else:
+                                print("No data to identify TapirUser in Vertrag ",row["VertragNr"])
+                    except django.core.exceptions.ObjectDoesNotExist as e:
+                        print(row)
+                        print("Database Error: TapirUser not found",e.__cause__)
+                        continue
+                    except django.db.Error as e:
+                        print(row)
+                        print("Database Error occured with MemberNo",e.__cause__)
+                        continue
+                    except ValidationError as e:
+                        print(row)
+                        print("Validation Error occured",e.messages)
+                        continue
+                    # identify MandateRef
+                    mref = get_or_create_mandate_ref(m)
+                    # identify product
+                    try:
+                        if row["product"]:
+                            prod = Product.objects.get(name=row["product"])
+                        else:
+                            print("No product defined in Vertrag ", row["VertragNr"])
+                            continue
+                    except django.core.exceptions.ObjectDoesNotExist as e:
+                        print(row)
+                        print("Product not found",e.__cause__)
+                        continue
+                    # prepare cancellation value
+                    if row["cancellation.ts"] != "":
+                        ts_cancel = row["cancellation.ts"]
+                    else:
+                        ts_cancel = None
+                    try:
+                        s = Subscription.objects.create(
+                            member_id=m.id,
+                            quantity=float(row["Quantity"]),
+                            start_date=row["Vertragsbeginn"],
+                            end_date="2023-06-30",
+                            cancellation_ts=ts_cancel ,
+                            solidarity_price=row["Solidarpreis in Prozent"],
+                            mandate_ref_id=mref.ref,
+                            period_id=period.id,
+                            product_id=prod.id,
+                            consent_ts="2023-01-01 12:00:00",
+                        )
+                        print("Subscription object successfully created.")
+                    except django.db.Error as e:
+                        print(row)
+                        print("Database Error occured with create subscription: ",e.__cause__)
+                        continue
+                    except ValidationError as e:
+                        print(row)
+                        print("Validation Error occured with create subscription: ",e.messages)
+                        continue
+                    except ValueError as e:
+                        print(row)
+                        print("Value Error occured with create subscription: ",e)
+                        continue
+
 
 
 
