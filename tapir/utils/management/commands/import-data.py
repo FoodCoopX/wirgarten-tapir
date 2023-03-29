@@ -27,17 +27,18 @@ class Command(BaseCommand):
                     Member.objects.all().delete()
                 for row in reader:
                     print(row)
-                    m = Member.objects.create(
+                    m = Member(
                         first_name=row["Vorname"],
                         last_name=row["Nachname"],
                         birthdate=row["Geburtstag/Gründungsdatum"],
-                        street=row["Straße"],
+                        street=row["Straße"] + " " + row["Hausnr."],
                         postcode=row["PLZ"],
                         city=row["Ort"],
                         email=row["Mailadresse"],
-                        phone_number=row["Mobil"],
+                        phone_number=row["Telefon"],
                         id=row["Nr"]
                     )
+                    m.save()
             if type == "shares":
                 if delete_all:
                     CoopShareTransaction.objects.all().delete()
