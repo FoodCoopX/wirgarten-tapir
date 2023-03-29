@@ -244,7 +244,7 @@ if ENABLE_SILK_PROFILING:
     SILKY_META = True
 
 KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="https://tapir.foodcoopx.de"),
+    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="https://auth.tapir.foodcoopx.de"),
     PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="https://auth.tapir.foodcoopx.de"),
     CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
