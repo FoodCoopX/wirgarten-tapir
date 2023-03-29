@@ -8,18 +8,20 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
+from django.shortcuts import render
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
-from tapir.wirgarten.forms.member.forms import PersonalDataForm
+from tapir.wirgarten.forms.member.forms import (
+    PersonalDataRegistrationForm,
+    MarketingFeedbackForm,
+)
 from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
-from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.empty_form import EmptyForm
 from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
-from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -48,21 +50,47 @@ STEP_BESTELLCOOP = "BestellCoop"
 STEP_PICKUP_LOCATION = "Pickup Location"
 STEP_SUMMARY = "Summary"
 STEP_PERSONAL_DETAILS = "Personal Details"
-STEP_PAYMENT_DETAILS = "Payment Details"
-STEP_CONSENTS = "Consent"
 
 FORM_TITLES = {
-    STEP_HARVEST_SHARES: _("Ernteanteile"),
-    STEP_NO_HARVEST_SHARES_AVAILABLE: _("Ernteanteile"),
-    STEP_COOP_SHARES: _("Genossenschaft"),
-    STEP_NO_COOP_SHARES_AVAILABLE: _("Genossenschaft"),
-    STEP_ADDITIONAL_SHARES: _("Zusatzabos"),
-    STEP_BESTELLCOOP: _("BestellCoop"),
-    STEP_PICKUP_LOCATION: _("Abholort"),
-    STEP_SUMMARY: _("Übersicht"),
-    STEP_PERSONAL_DETAILS: _("Persönliche Daten"),
-    STEP_PAYMENT_DETAILS: _("Zahlung"),
-    STEP_CONSENTS: _("Widerruf & Datenschutz"),
+    STEP_HARVEST_SHARES: (
+        _("Ernteanteile"),
+        _("Erntevertrag - Wieviel Gemüse möchtest du jede Woche bekommen?"),
+    ),
+    STEP_NO_HARVEST_SHARES_AVAILABLE: (
+        _("Ernteanteile"),
+        _("Erntevertrag - Wieviel Gemüse möchtest du jede Woche bekommen?"),
+    ),
+    STEP_COOP_SHARES: (
+        _("Genossenschaft"),
+        _(
+            "Genossenschaft - Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem WirGarten beteiligen?"
+        ),
+    ),
+    STEP_NO_COOP_SHARES_AVAILABLE: (
+        _("Genossenschaft"),
+        _(
+            "Genossenschaft - Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem WirGarten beteiligen?"
+        ),
+    ),
+    STEP_ADDITIONAL_SHARES: (
+        _("Zusatzabo"),
+        _("Zusatzabo  - Willst du einen Hühneranteil mit Eiern?"),
+    ),
+    STEP_BESTELLCOOP: (
+        _("BestellCoop"),
+        _(
+            "BestellCoop - Möchtest du regelmäßig Grundnahrungsmittel in großen Mengen bestellen?"
+        ),
+    ),
+    STEP_PICKUP_LOCATION: (
+        _("Abholort"),
+        _("Abholort - Wo möchtest du dein Gemüse abholen?"),
+    ),
+    STEP_SUMMARY: (_("Übersicht"), _("Übersicht")),
+    STEP_PERSONAL_DETAILS: (
+        _("Persönliche Daten"),
+        _("Vertragsabschluss - Jetzt fehlen nur noch deine persönlichen Daten!"),
+    ),
 }
 
 FORMS = [
@@ -74,9 +102,7 @@ FORMS = [
     (STEP_BESTELLCOOP, BestellCoopForm),
     (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
     (STEP_SUMMARY, SummaryForm),
-    (STEP_PERSONAL_DETAILS, PersonalDataForm),
-    (STEP_PAYMENT_DETAILS, PaymentDataForm),
-    (STEP_CONSENTS, ConsentForm),
+    (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
 ]
 
 
@@ -92,14 +118,15 @@ def has_selected_harvest_shares(wizard) -> bool:
 
 
 def save_member(form_dict):
-    member = form_dict[STEP_PERSONAL_DETAILS].instance
+    personal_details_form = form_dict[STEP_PERSONAL_DETAILS]
+    member = personal_details_form.forms[0].instance
 
     if STEP_PICKUP_LOCATION in form_dict:
         member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
             "pickup_location"
         ]
-    member.account_owner = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["account_owner"]
-    member.iban = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["iban"]
+    member.account_owner = personal_details_form.cleaned_data["account_owner"]
+    member.iban = personal_details_form.cleaned_data["iban"]
     member.is_active = False
 
     now = timezone.now()
@@ -265,12 +292,29 @@ class RegistrationWizardView(CookieWizardView):
 
         return HttpResponseRedirect(
             reverse_lazy("wirgarten:draftuser_confirm_registration")
+            + "?member="
+            + member.id
         )
 
 
 @method_decorator(xframe_options_exempt, name="dispatch")
 class RegistrationWizardConfirmView(generic.TemplateView):
     template_name = "wirgarten/registration/confirmation.html"
+
+
+def questionaire_trafficsource_view(request, **kwargs):
+    if request.method == "POST":
+        form = MarketingFeedbackForm(request.POST)
+        if form.is_valid():
+            member_id = request.environ["QUERY_STRING"].replace("member=", "")
+            form.save(member_id=member_id)
+    else:
+        form = MarketingFeedbackForm()
+
+    context = {
+        "form": form,
+    }
+    return render(request, "wirgarten/registration/user_response.html", context)
 
 
 def is_harvest_shares_selected(harvest_share_form_data):

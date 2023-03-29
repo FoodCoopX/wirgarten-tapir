@@ -5,11 +5,11 @@
 <script src="{% static 'wirgarten/js/registration/coop_shares.js' %}"></script>
 {% endblock %}
 
-<div class="alert alert-warning" role="alert">
-    Nach Ablauf der 4-wöchigen Probezeit wirst du automatisch Mitglied der Genossenschaft und die Geschäftsanteile
-    werden von deinem Konto abgebucht. Solltest du innerhalb der ersten vier Wochen kündigen, wirst du kein
-    Mitglied.<br/><br/>
-    <strong>Bitte lies dir hier unsere Satzung durch: <a href="{{'wirgarten.coop.statute_link'|parameter}}" target="_blank">Satzung</a></strong>
+<div class="card" style="margin:1em; text-align: center">
+    <div class="card-body">
+        Wenn du deinen Ernteanteil innerhalb des ersten Monats, in dem du Gemüse bekommst, kündigst, kannst du auch deinen Beitritt zur Genossenschaft widerrufen. Ansonsten wirst du automatisch nach dem ersten Monat Mitglied in unserer Genossenschaft.
+    </div>
 </div>
-<span style="float:right; font-size:1.25rem">= <strong><span id="cooperative_shares_total"></span> €</strong> / einmalig</span>
+
+<span style="float:right; font-size:1.25rem">= <strong><span id="cooperative_shares_total"></span>,00 €</strong> / einmalige Genossenschaftsanteile</span>
 <script>initSummary({{ form.min_shares }}, {{ form.coop_share_price }})</script>

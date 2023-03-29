@@ -1,16 +1,11 @@
 var initMap = (data, productTypes = [], callback = false, selected = undefined) => {
-    console.log(selected)
-    // FIXME: the select box from the widget should be decoupled from the map
-    const pickupLocationSelect = document.getElementById('id_pickup_location');
-    if(pickupLocationSelect) pickupLocationSelect.required = true;
-
     const markers = {};
     const idToCoords = (id) => {
         return data[id]["coords"].split(',')
     }
     const map = L.map('map').setView(idToCoords(Object.entries(data)[0][0]), 12);
 
-    const possibleLocations = pickupLocationSelect ? Array.from(pickupLocationSelect.options).map(o => o.value) : Object.keys(data)
+    const possibleLocations = Object.keys(data)
 
      const setMarkerColor = (marker) => {
          if(!possibleLocations.includes(marker.locationId)){
@@ -30,7 +25,7 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
                 <small>${pl.info.replace(',', ', <br/>')}</small><br/>
                 <br/>
                 ${pl.capabilities.map(c =>
-                    `<span title="${c}" style="font-size:2.5em; text-decoration:strikethrough;">${c.icon}</span>`
+                    `<span title="${c.name}" style="font-size:2.5em; text-decoration:strikethrough;">${c.icon}</span>`
                 ).join(" ")}
 
                 ${missingCapabilities.length == 0 ? '' : `<br/><span style="color:darkred">Folgende Produkte sind hier leider <strong>nicht</strong> abholbar: ${missingCapabilities.join(" ")}<br/></span>`}
@@ -45,8 +40,6 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
       }
 
     const select = (id, callback = false) => {
-        if(pickupLocationSelect) pickupLocationSelect.value = id;
-
         target = idToCoords(id)
         target[0] = parseFloat(target[0]) + 0.002
         map.flyTo(target, 14 )
@@ -67,11 +60,6 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
-
-    if(pickupLocationSelect){
-        select(pickupLocationSelect.options[0].value);
-        pickupLocationSelect.addEventListener("change", ({ target }) =>  select(target.value));
-    }
 
     if(selected !== undefined){
         select(selected)

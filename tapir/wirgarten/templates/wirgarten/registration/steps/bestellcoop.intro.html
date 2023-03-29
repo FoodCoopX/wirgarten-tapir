@@ -1,54 +1,85 @@
-<p>Unsere FoodCoop ist auf Wunsch unserer Mitglieder entstanden, “mehr als nur Gemüse” über die Genossenschaft beziehen
-    zu können. Nach zwei Testphasen 2021 ist die FoodCoop jetzt fester Bestandteil unserer Genossenschaft!</p>
-<p>Das heißt: Du kannst als Genossenschaftsmitglied Lebensmittel wie Teigwaren & Getreide, Hülsenfrüchte, Öle & Essig,
-    Müsli & Flocken, Saaten & Kerne, Nüsse etc. in <strong>Bio-Qualität</strong> im <strong>Großgebinde</strong> bestellen - und das bis zu
-    <strong>40 % günstiger</strong> als im Einzelhandel. Obendrauf bekommst du diese noch ganz umweltfreundlich mit unserem <strong>E-Flitzer
-        bequem nach Hause geliefert</strong>.</p>
-<hr/>
-<div style="display:flex; flex-direction:row">
+{% load tapir_static %}
+
+<div style="display:flex">
     <div>
-        <h5>Welche Produkte gibt es in der BestellCoop?</h5>
-        <p>In der BestellCoop gibt es jede Menge Grundnahrungsmittel in Großgebinden, bei denen du z.T. bis zu 40 % im
-            Vergleich zum Einzelhandel sparen kannst:</p>
-        <ul>
-            <li>Getreide- und Teigwaren (Nudeln, Mehle, Flocken in 2-10kg-Packungen)</li>
-            <li>Hülsenfrüchte (Linsen, Bohnen, Erbsen etc. in 2-5kg-Packungen)</li>
-            <li>Öle & Essig (3-5l-Kanistern)</li>
-            <li>Konserven (Passata, Brotaufstriche - jeweils im Set von mehreren Gläsern)</li>
-            <li>Saaten & Kerne (0,5-2kg)</li>
-            <li>Nüsse (1-5kg)</li>
-            <li>Tee & Kaffee vom avenir (0,5-1kg)</li>
-        </ul>
-        <p>Die Produkte beziehen wir aktuell zum einen von lokalen Produzent:innen wie dem a-venir, HeyHo oder Meyers
-            Windmühle. Ergänzt wird das Angebot durch verschiedene Bio-Großhändler. Wir freuen uns über deine Anregungen
-            zur Erweiterung des Angebots und der regionalen Produzent:innen, denn wir wollen die Wertschöpfung und das
-            Lebensmittelhandwerk vor Ort weiter stärken.</p>
+        <p>Als Genossenschaftsmitglied mit einem Ernteanteil kannst du zusätzlich Mitglied in unserer BestellCoop werden und so
+            alle zwei Monate über unseren WirGarten-Webshop Lebensmittel in Großgebinden (bis zu 40 % günstiger als im Einzelhandel) bestellen. Geliefert wird mit unserem E-Transporter bequem direkt zu dir nach Hause!
+
+        <div class="accordion accordion-flush" id="accordionPanelsStayOpenExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseOne">
+                        Welche Produkte gibt es in der BestellCoop?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingOne">
+                    <div class="accordion-body">
+                        In der BestellCoop gibt es jede Menge Grundnahrungsmittel in Großgebinden, bei denen du bis zu 40 % im Vergleich zum Einzelhandel sparen kannst:
+
+                        <ul>
+                            <li>Getreide- und Teigwaren (Nudeln, Mehle, Flocken in 2-10kg-Packungen)</li>
+                            <li>Hülsenfrüchte (Linsen, Bohnen, Erbsen etc. in 2-5kg-Packungen)</li>
+                            <li>Öle & Essig (3-5l-Kanistern)</li>
+                            <li>Konserven (Passata, Brotaufstriche - jeweils im Set von mehreren Gläsern)</li>
+                            <li>Saaten & Kerne (0,5-2kg)</li>
+                            <li>Nüsse (1-5kg)</li>
+                            <li>Tee & Kaffee vom avenir (0,5-1kg)</li>
+                        </ul>
+                        Die Produkte beziehen wir aktuell zum einen von lokalen Produzent:innen wie dem a-venir, HeyHo oder Meyers Windmühle. Ergänzt wird das Angebot durch verschiedene Bio-Großhändler. Wir freuen uns über deine Anregungen zur Erweiterung des Angebots und der regionalen Produzent:innen, denn wir wollen die Wertschöpfung und das Lebensmittelhandwerk vor Ort weiter stärken.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseTwo">
+                        Wie funktioniert die BestellCoop?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingTwo">
+                    <div class="accordion-body">
+                        <ul>
+                            <li>Deine Mitgliedschaft läuft je für sechs Monate.</li>
+                            <li>Du kannst (musst aber nicht) alle zwei Monate bestellen.</li>
+                            <li>Du bestellst bequem über den WirGarten-Webshop.</li>
+                            <li>Du bekommst deine Bestellung zu dir nach Hause geliefert.</li>
+                            <li>Du erhältst alle wichtigen Informationen zur BestellCoop per Newsletter rechtzeitig vor Beginn der nächsten Bestellrunde.</li>
+                            <li>Das Angebot gilt nur für Mitglieder der WirGarten Lüneburg eG mit einem aktiven Erntevertrag.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseThree">
+                        Was kostet die Mitgliedschaft in der BestellCoop und wann lohnt sich diese?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingThree">
+                    <div class="accordion-body">
+                        Wir bieten die BestellCoop kostendeckend an. Es gibt keine Preisaufschläge und wir reichen die Großhandelspreise eins zu eins an dich weiter. Gleichzeitig sollen keine Belastungen für unser Kerngeschäft - den Gemüsebau - entstehen. Zur Deckung der administrativen Aufwendungen haben wir folgendes Preismodell entwickelt:
+
+                        <ul>
+                            <li>Du zahlst insgesamt 18€ Mitgliedsgebühr für die gesamten sechs Monate - das entspricht 3€ pro Monat.</li>
+                            <li>Sofern du bestellst, kommen nochmals 7€ Bestellgebühr oben drauf.</li>
+                        </ul>
+
+                        Über die Großhandelspreise hast du im Schnitt bis zu 30-40% Ersparnis zu den Einzelhandelspreisen.
+                        <strong>Deine Mitgliedschaft in der BestellCoop kann sich also schon ab einem Bestellwert von insgesamt ca. 120€ in den sechs Monaten lohnen.</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </p>
     </div>
     <div style="margin-left:2em"><img class="photo" style="max-height:100%"
-                                      src="/static/wirgarten/images/bestellcoop.webp"/></div>
+                                      src="{% static 'wirgarten/images/bestellcoop.webp' %}"/></div>
 </div>
-<hr/>
-<h5>Wie funktioniert die BestellCoop?</h5>
-<ul>
-    <li>Deine Mitgliedschaft läuft je für sechs Monate</li>
-    <li>Du kannst (musst aber nicht) alle zwei Monate bestellen</li>
-    <li>Du bestellst bequem über den WirGarten-Webshop</li>
-    <li>Du bekommst deine Bestellung zu dir nach Hause geliefert</li>
-    <li>Du erhältst alle wichtigsten Informationen gesammelt per Newsletter rechtzeitig vor Beginn der nächsten
-        Bestellrunde
-    </li>
-</ul>
-<strong>Das Angebot gilt nur für Mitglieder der WirGarten Lüneburg eG.</strong>
-<hr/>
-<h5>Was kostet die Mitgliedschaft in der BestellCoop?</h5>
-<p>Wir bieten die BestellCoop kostendeckend an. Es gibt keine Preisaufschläge und wir reichen die Großhandelspreise eins
-    zu eins an dich weiter. Gleichzeitig sollen keine Belastungen für unser Kerngeschäft - den Gemüsebau - entstehen.
-    Zur Deckung der administrativen Aufwendungen haben wir folgendes Preismodell entwickelt:</p>
-<ul>
-    <li>Du zahlst insgesamt <strong>18€ Mitgliedsgebühr</strong> für die gesamten sechs Monate - das entspricht <strong>3€ pro
-        Monat</strong></li>
-    <li>Sofern du bestellst, kommen nochmals <strong>7€ Bestellgebühr</strong> oben drauf</li>
-</ul>
-<p>Du zahlst also maximal 39 €, wenn du in allen drei Bestellrunden der sechsmonatigen Mitgliedschaft bestellst. Über
-    die Großhandelspreise hast du im Schnitt bis zu 30-40% Ersparnis zu den Einzelhandelspreisen. Die Mitgliedschaft in
-    der BestellCoop kann sich also schon ab einem Bestellwert von insgesamt ca. 120€ in den sechs Monaten lohnen.</p>

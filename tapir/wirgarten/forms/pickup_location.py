@@ -62,6 +62,7 @@ class PickupLocationWidget(forms.Select):
     ):
         super(PickupLocationWidget, self).__init__(*args, **kwargs)
 
+        print(selected_product_types)  # TODO remove
         self.attrs["selected_product_types"] = selected_product_types
         self.attrs["data"] = get_pickup_locations_map_data(
             pickup_locations, location_capabilities
@@ -76,10 +77,11 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         location_capabilities = get_active_pickup_location_capabilities()
         pickup_locations = get_active_pickup_locations(location_capabilities)
 
-        all_prod_types_with_delivery = (
+        all_prod_types_with_delivery = map(
+            lambda x: x["name"],
             get_active_product_types()
             .exclude(delivery_cycle=NO_DELIVERY)
-            .values("name")
+            .values("name"),
         )
         selected_product_types = list(
             (
@@ -110,16 +112,37 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         )
 
     def label_from_instance(self, obj):
-        return f"{obj.name}, {obj.street}, {obj.postcode} {obj.city} ({obj.info})"
+        info = obj.info
+        info = info.replace(",", "<br/> • ")
+        info = " • " + info
+        return f"<strong>{obj.name}</strong>, <small>{obj.street}, {obj.postcode} {obj.city}<br/>{info}</small>"
 
 
 class PickupLocationChoiceForm(forms.Form):
+    intro_template = "wirgarten/registration/steps/pickup_location.intro.html"
+    intro_text_skip_hr = True
+
     def __init__(self, *args, **kwargs):
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
             label=_("Abholort"), **kwargs
         )
+
+    def is_valid(self):
+        super().is_valid()
+
+        print(self.cleaned_data)
+
+        if (
+            "pickup_location" not in self.cleaned_data
+            or not self.cleaned_data["pickup_location"]
+        ):
+            self.add_error(
+                "pickup_location",
+                _("Bitte wähle deinen gewünschten Abholort aus!"),
+            )
+        return len(self.errors) == 0
 
 
 class PickupLocationEditForm(forms.Form):

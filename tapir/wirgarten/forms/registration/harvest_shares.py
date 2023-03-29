@@ -73,7 +73,6 @@ class HarvestShareForm(forms.Form):
                 if k != "start_date" and k != "enable_validation"
             },
         )
-
         self.require_at_least_one = kwargs.get("enable_validation", False)
         self.start_date = kwargs.get("start_date", get_next_contract_start_date())
         self.growing_period = GrowingPeriod.objects.get(
@@ -123,14 +122,14 @@ class HarvestShareForm(forms.Form):
                 required=False,
                 max_value=10,
                 min_value=0,
-                initial=0,
+                initial=0 if prod.name.lower() != "m" else 1,
                 label=_(f"{prod.name}-Ernteanteile"),
-                help_text="""{:.2f} € / Monat""".format(prices[prod.id]),
+                help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[prod.id]),
             )
 
         self.fields["solidarity_price_harvest_shares"] = forms.ChoiceField(
             required=False,
-            label=_("Solidarpreis"),
+            label=_("Solidarpreis²"),
             choices=SOLIDARITY_PRICES,
             initial=0.05,
         )

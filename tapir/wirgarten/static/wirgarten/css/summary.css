@@ -18,29 +18,18 @@
 
 #summary_grid {
     display:grid;
-    grid-template-columns: repeat(2,1fr);
-    grid-template-rows: auto auto;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: auto;
     grid-gap:1em;
 }
-#summary_grid > div{
-    width: 100%;
+#summary_grid > div > div > table > tbody > tr > td{
+    white-space: normal;
 }
 
-#summary_grid > div > div.card-body > table > tbody > tr > th{
-    width: 10em;
+#summary_grid > div > div > table > tbody > tr > th {
+    font-size: 0.9em;
 }
 
-#summary_grid > div:nth-child(2n-1) {
-    justify-self: center;
-}
-
-#summary_grid > div:nth-child(2n) {
-    justify-self: end;
-}
-
-#summary_grid > div:nth-child(2n-1):nth-last-of-type(1) {
-    grid-column: span 2;
-}
 
 .card-footer  {
     background-color:rgba(0,0,0,.02);
