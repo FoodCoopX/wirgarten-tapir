@@ -1,4 +1,6 @@
-from django.core.exceptions import ObjectDoesNotExist
+import re
+
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from tapir.configuration.models import (
     TapirParameter,
@@ -7,10 +9,37 @@ from tapir.configuration.models import (
 )
 
 
+def validate_format_string(value: str, allowed_vars: [str]):
+    """
+    Validates if a string with potential format brackets (e.g.: "{some_variable}") only uses variables from the given array of known vars.
+
+    :param value: the string to validate
+    :param allowed_vars: the array of known variables.
+    """
+
+    for match in re.findall("{[^{}]*}", value):
+        match = match[1 : len(match) - 1].strip()  # strip brackets
+        match = match.split(".")[
+            0
+        ].strip()  # if object, use only the part before the first dot
+        if match not in allowed_vars:
+            raise ValidationError(
+                f"Unknown variable '{match}'! Known variables: {allowed_vars}"
+            )
+
+
 class ParameterMeta:
     def __init__(
-        self, options: [tuple] = None, validators: [callable] = [], textarea=False
+        self,
+        options: [tuple] = None,
+        validators: [callable] = [],
+        textarea=False,
+        vars_hint: [str] = None,
     ):
+        if vars_hint and len(vars_hint) > 0:
+            validators += [lambda x: validate_format_string(x, vars_hint)]
+
+        self.vars_hint = vars_hint
         self.options = options
         self.validators = validators
         self.textarea = textarea
@@ -57,7 +86,9 @@ def parameter_definition(
     datatype: TapirParameterDatatype,
     initial_value: str | int | float | bool,
     order_priority: int = -1,
-    meta: ParameterMeta = ParameterMeta(),
+    meta: ParameterMeta = ParameterMeta(
+        options=None, validators=[], vars_hint=None, textarea=False
+    ),
 ):
     __validate_initial_value(datatype, initial_value, key, meta.validators)
 
