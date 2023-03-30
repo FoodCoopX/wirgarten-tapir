@@ -185,6 +185,7 @@ class HarvestShareForm(forms.Form):
                     ],
                     mandate_ref=mandate_ref,
                     consent_ts=datetime.now(),
+                    withdrawal_consent_ts=datetime.now(),
                 )
 
                 subs.append(sub)

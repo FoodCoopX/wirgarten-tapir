@@ -17,6 +17,7 @@ class ParameterView(PermissionRequiredMixin, generic.FormView):
             reverse_lazy("configuration:parameters")
             + "?"
             + self.request.environ["QUERY_STRING"]
+            + "&success=true"
         )
 
     @transaction.atomic

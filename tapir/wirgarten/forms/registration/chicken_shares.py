@@ -114,6 +114,7 @@ class ChickenShareForm(forms.Form):
                     end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
                     consent_ts=datetime.now(),
+                    withdrawal_consent_ts=datetime.now(),
                 )
 
     def is_valid(self):

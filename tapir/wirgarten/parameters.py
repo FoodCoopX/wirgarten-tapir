@@ -35,6 +35,7 @@ class ParameterCategory:
 
 class Parameter:
     MEMBER_LOCK_FUNCTIONS = f"{PREFIX}.temporarily.lock_functions"
+    MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
     SITE_CITY = f"{PREFIX}.site.city"
@@ -125,7 +126,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.configuration.parameter import parameter_definition, ParameterMeta
         from tapir.wirgarten.constants import ProductTypes
         from tapir.wirgarten.models import ProductType
-        from tapir.wirgarten.validators import validate_format_string, validate_html
+        from tapir.wirgarten.validators import validate_html
 
         parameter_definition(
             key=Parameter.SITE_NAME,
@@ -464,9 +465,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=801,
             meta=ParameterMeta(
-                validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ],
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
             ),
         )
 
@@ -479,9 +478,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=800,
             meta=ParameterMeta(
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                 ],
                 textarea=True,
             ),
@@ -496,9 +495,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=701,
             meta=ParameterMeta(
-                validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ]
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
             ),
         )
 
@@ -512,9 +509,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=700,
             meta=ParameterMeta(
                 textarea=True,
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                 ],
             ),
         )
@@ -528,9 +525,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=601,
             meta=ParameterMeta(
-                validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ]
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
             ),
         )
 
@@ -543,10 +538,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=600,
             meta=ParameterMeta(
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS + ["contract_list"],
                 validators=[
-                    lambda x: validate_format_string(
-                        x, MEMBER_RENEWAL_ALERT_VARS + ["contract_list"]
-                    ),
                     validate_html,
                 ],
                 textarea=True,
@@ -561,11 +554,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 2 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=501,
-            meta=ParameterMeta(
-                validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS)
-                ]
-            ),
+            meta=ParameterMeta(vars_hint=MEMBER_RENEWAL_ALERT_VARS),
         )
 
         parameter_definition(
@@ -577,8 +566,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=500,
             meta=ParameterMeta(
+                vars_hint=MEMBER_RENEWAL_ALERT_VARS,
                 validators=[
-                    lambda x: validate_format_string(x, MEMBER_RENEWAL_ALERT_VARS),
                     validate_html,
                 ],
                 textarea=True,
@@ -632,21 +621,18 @@ Für uns wäre es zudem sehr hilfreich, wenn Du dich mal in deinem Freundes- und
 Du kannst deinen Erntevertrag dann auch schon vor Ablauf des Vertrages auf diese Person übertragen. Melde dich gerne einfach. 
 
 Viele Grüße von {admin_name} aus deinem {site_name}""",
-            description="Inhalt der Email (HTML), die bei Kündigung sofort an das Mitglied verschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_end_date}, {contract_list}.",
+            description="Inhalt der Email (HTML), die bei Kündigung sofort an das Mitglied verschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=9998,
             meta=ParameterMeta(
+                vars_hint=[
+                    "contract_end_date",
+                    "contract_list",
+                ]
+                + DEFAULT_EMAIL_MEMBER_VARS
+                + DEFAULT_EMAIL_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(
-                        x,
-                        [
-                            "contract_end_date",
-                            "contract_list",
-                        ]
-                        + DEFAULT_EMAIL_MEMBER_VARS
-                        + DEFAULT_EMAIL_VARS,
-                    ),
                 ],
                 textarea=True,
             ),
@@ -680,21 +666,18 @@ Viele Grüße!
 {admin_name} für das WirGarten-Team
 
 P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verlängerst - antworte dazu einfach auf diese e-Mail.""",
-            description="Inhalt der Email (HTML), die bei expliziter nicht-Verlängerung sofort an das Mitglied verschickt wird.. Variablen: {member.*}, {admin_name}, {site_name}, {contract_end_date}, {contract_list}.",
+            description="Inhalt der Email (HTML), die bei expliziter nicht-Verlängerung sofort an das Mitglied verschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=9978,
             meta=ParameterMeta(
+                vars_hint=[
+                    "contract_end_date",
+                    "contract_list",
+                ]
+                + DEFAULT_EMAIL_MEMBER_VARS
+                + DEFAULT_EMAIL_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(
-                        x,
-                        [
-                            "contract_end_date",
-                            "contract_list",
-                        ]
-                        + DEFAULT_EMAIL_MEMBER_VARS
-                        + DEFAULT_EMAIL_VARS,
-                    ),
                 ],
                 textarea=True,
             ),
@@ -726,15 +709,13 @@ Aber auch ohne Ernteanteil freuen wir uns natürlich, dich bald mal wieder im Wi
 
 Viele Grüße und alles Gute,
 {admin_name} aus deinem {site_name}""",
-            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}",
+            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=7998,
             meta=ParameterMeta(
+                vars_hint=DEFAULT_EMAIL_MEMBER_VARS + DEFAULT_EMAIL_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(
-                        x, DEFAULT_EMAIL_MEMBER_VARS + DEFAULT_EMAIL_VARS
-                    ),
                 ],
                 textarea=True,
             ),
@@ -772,23 +753,20 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
 
 <img src="{admin_image}"/>
 """,
-            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird. Variablen: {member.*}, {admin_name}, {site_name}, {contract_list}, {first_pickup_date}, {contract_start_date}, {contract_end_date}",
+            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=6998,
             meta=ParameterMeta(
+                vars_hint=[
+                    "contract_list",
+                    "contract_start_date",
+                    "contract_end_date",
+                    "first_pickup_date",
+                ]
+                + DEFAULT_EMAIL_MEMBER_VARS
+                + DEFAULT_EMAIL_VARS,
                 validators=[
                     validate_html,
-                    lambda x: validate_format_string(
-                        x,
-                        [
-                            "contract_list",
-                            "contract_start_date",
-                            "contract_end_date",
-                            "first_pickup_date",
-                        ]
-                        + DEFAULT_EMAIL_MEMBER_VARS
-                        + DEFAULT_EMAIL_VARS,
-                    ),
                 ],
                 textarea=True,
             ),
@@ -800,5 +778,14 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung von Vertragsdaten, Zeichnen von Geno-Anteilen, Änderung Bankdaten, Änderung Abholort",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_BYPASS_KEYCLOAK,
+            label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
         )

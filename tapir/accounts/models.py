@@ -59,8 +59,11 @@ class KeycloakUser(AbstractUser):
 
     def email_verified(self):
         kk = self.get_keycloak_client()
-        kk_user = kk.get_user(self.keycloak_id)
-        return kk_user["emailVerified"]
+        try:
+            kk_user = kk.get_user(self.keycloak_id)
+            return kk_user["emailVerified"]
+        except Exception:
+            return False
 
     def get_keycloak_client(self):
         # FIXME: can we keep one instance? It seemed that the authorization expires, but not sure yet
@@ -91,6 +94,18 @@ class KeycloakUser(AbstractUser):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
+        bypass = kwargs.pop("bypass_keycloak", False)
+        initial_password = kwargs.pop("initial_password", None)
+
+        if not self.email:
+            print(f"{self} has no email address, skipping keycloak account creation.")
+            super().save(*args, **kwargs)
+            return
+        if bypass:
+            print(f"{self}: bypass_keycloak=True, skipping keycloak account creation.")
+            super().save(*args, **kwargs)
+            return
+
         if self.keycloak_id is None:  # Keycloak User does not exist yet --> create
             kk = self.get_keycloak_client()
 
@@ -103,7 +118,6 @@ class KeycloakUser(AbstractUser):
             }
             print("Creating Keycloak user: ", data)
 
-            initial_password = kwargs.pop("initial_password", None)
             if initial_password:
                 data["credentials"] = [{"value": initial_password, "type": "password"}]
                 data["emailVerified"] = True
@@ -124,7 +138,7 @@ class KeycloakUser(AbstractUser):
                 print(
                     f"Failed to send verify email to new user: ",
                     e,
-                    " (email: '{self.email}', id: '{self.id}', keycloak_id: '{user_id}'): ",
+                    f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
                 )
 
         else:  # Update --> change of keycloak data if necessary
@@ -205,8 +219,8 @@ class KeycloakUser(AbstractUser):
 class TapirUser(KeycloakUser):
     first_name = models.CharField(_("First Name"), max_length=150, blank=False)
     last_name = models.CharField(_("Last Name"), max_length=150, blank=False)
-    email = models.CharField(_("Email"), max_length=150, blank=False)
-    phone_number = PhoneNumberField(_("Phone number"), blank=True)
+    email = models.CharField(_("Email"), max_length=150, blank=True)
+    phone_number = PhoneNumberField(_("Phone number"), blank=True, null=True)
     birthdate = models.DateField(_("Birthdate"), blank=True, null=True)
     street = models.CharField(_("Street and house number"), max_length=150, blank=True)
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)

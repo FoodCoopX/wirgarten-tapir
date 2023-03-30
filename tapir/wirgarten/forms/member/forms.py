@@ -56,6 +56,9 @@ class PersonalDataForm(ModelForm):
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate
         self.fields["birthdate"].disabled = not can_edit_name_and_birthdate
+        self.fields["email"].disabled = get_parameter_value(
+            Parameter.MEMBER_LOCK_FUNCTIONS
+        )
 
     class Meta:
         model = Member
