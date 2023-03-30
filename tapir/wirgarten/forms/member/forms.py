@@ -47,6 +47,7 @@ class PersonalDataForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         can_edit_name_and_birthdate = kwargs.pop("can_edit_name_and_birthdate", True)
+        can_edit_email = kwargs.pop("can_edit_email", True)
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
@@ -56,9 +57,7 @@ class PersonalDataForm(ModelForm):
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate
         self.fields["birthdate"].disabled = not can_edit_name_and_birthdate
-        self.fields["email"].disabled = get_parameter_value(
-            Parameter.MEMBER_LOCK_FUNCTIONS
-        )
+        self.fields["email"].disabled = not can_edit_email
 
     class Meta:
         model = Member

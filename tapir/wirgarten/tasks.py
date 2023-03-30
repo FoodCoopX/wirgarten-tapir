@@ -217,7 +217,6 @@ def export_sepa_payments():
     KEY_SEPA_ZAHLPFL_STREET = "Beg/Zahlpfl Strasse"
     KEY_SEPA_ZAHLPFL_CITY = "Beg/Zahlpfl Ort"
     KEY_SEPA_ZAHLPFL_IBAN = "Beg/Zahlpfl KontoNr bzw. IBAN"
-    KEY_SEPA_ZAHLPFL_BIC = "Beg/Zahlpfl BLZ bzw. BIC"
     KEY_SEPA_AG_NAME = "AG Name"
     KEY_SEPA_AG_IBAN = "AG KontoNr bzw. AG IBAN"
     KEY_SEPA_AG_BIC = "AG BLZ bzw. AG BIC"
@@ -260,7 +259,6 @@ def export_sepa_payments():
             KEY_SEPA_ZAHLPFL_STREET,
             KEY_SEPA_ZAHLPFL_CITY,
             KEY_SEPA_ZAHLPFL_IBAN,
-            KEY_SEPA_ZAHLPFL_BIC,
             KEY_SEPA_AMOUNT,
             KEY_SEPA_DUE_DATE,
             KEY_SEPA_VWZ1,
@@ -285,7 +283,6 @@ def export_sepa_payments():
             KEY_SEPA_ZAHLPFL_CITY
         ] = f"{payment.mandate_ref.member.postcode} {payment.mandate_ref.member.city}"
         row[KEY_SEPA_ZAHLPFL_IBAN] = payment.mandate_ref.member.iban
-        row[KEY_SEPA_ZAHLPFL_BIC] = payment.mandate_ref.member.bic
         row[KEY_SEPA_AMOUNT] = payment.amount
         row[KEY_SEPA_DUE_DATE] = windata_date_format(due_date)
         row[KEY_SEPA_VWZ1] = (
