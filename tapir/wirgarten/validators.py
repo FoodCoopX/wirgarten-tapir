@@ -46,25 +46,6 @@ def validate_date_range(start_date: date, end_date: date):
         )
 
 
-def validate_format_string(value: str, allowed_vars: [str]):
-    """
-    Validates if a string with potential format brackets (e.g.: "{some_variable}") only uses variables from the given array of known vars.
-
-    :param value: the string to validate
-    :param allowed_vars: the array of known variables.
-    """
-
-    for match in re.findall("{[^{}]*}", value):
-        match = match[1 : len(match) - 1].strip()  # strip brackets
-        match = match.split(".")[
-            0
-        ].strip()  # if object, use only the part before the first dot
-        if match not in allowed_vars:
-            raise ValidationError(
-                f"Unknown variable '{match}'! Known variables: {allowed_vars}"
-            )
-
-
 def validate_html(html: str):
     """
     Validates if the given string is HTML conform and if all tags are closing.

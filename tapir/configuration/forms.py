@@ -10,7 +10,7 @@ from tapir.configuration.parameter import (
 
 
 def create_field(param: TapirParameter):
-    description = f"""{_(param.description)}<br/><span name="param-key" style="display:none"><small><i>{param.key}</i></small></span>"""
+    description = f"""<span name="param-key" style="display:none">{param.key}</span>{_(param.description)}"""
 
     param_meta = get_parameter_meta(param.key)
     if param_meta is None:
@@ -18,10 +18,15 @@ def create_field(param: TapirParameter):
 
     param_value = param.get_value()
 
+    help_text = description
+    if param_meta.vars_hint:
+        vars_sorted = map(lambda x: "{" + x + "}", sorted(param_meta.vars_hint))
+        help_text += f"""<br/><small><strong>Variablen:</strong> {", ".join(vars_sorted)}</small>"""
+
     if param_meta.options is not None and len(param_meta.options) > 0:
         return forms.ChoiceField(
             label=_(param.label),
-            help_text=description,
+            help_text=help_text,
             choices=param_meta.options,
             required=True,
             initial=param_value,
@@ -30,7 +35,7 @@ def create_field(param: TapirParameter):
     elif param.datatype == TapirParameterDatatype.STRING.value:
         return forms.CharField(
             label=_(param.label),
-            help_text=description,
+            help_text=help_text,
             required=True,
             initial=param_value,
             validators=param_meta.validators,
@@ -39,7 +44,7 @@ def create_field(param: TapirParameter):
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
             label=_(param.label),
-            help_text=description,
+            help_text=help_text,
             required=True,
             initial=param_value,
             validators=param_meta.validators,
@@ -47,7 +52,7 @@ def create_field(param: TapirParameter):
     elif param.datatype == TapirParameterDatatype.DECIMAL.value:
         return forms.DecimalField(
             label=_(param.label),
-            help_text=description,
+            help_text=help_text,
             required=True,
             initial=param_value,
             validators=param_meta.validators,
@@ -55,7 +60,7 @@ def create_field(param: TapirParameter):
     elif param.datatype == TapirParameterDatatype.BOOLEAN.value:
         return forms.BooleanField(
             label=_(param.label),
-            help_text=description,
+            help_text=help_text,
             required=False,
             initial=param_value,
             validators=param_meta.validators,

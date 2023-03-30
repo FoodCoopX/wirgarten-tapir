@@ -59,8 +59,11 @@ class KeycloakUser(AbstractUser):
 
     def email_verified(self):
         kk = self.get_keycloak_client()
-        kk_user = kk.get_user(self.keycloak_id)
-        return kk_user["emailVerified"]
+        try:
+            kk_user = kk.get_user(self.keycloak_id)
+            return kk_user["emailVerified"]
+        except Exception:
+            return False
 
     def get_keycloak_client(self):
         # FIXME: can we keep one instance? It seemed that the authorization expires, but not sure yet

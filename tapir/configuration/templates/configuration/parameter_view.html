@@ -5,45 +5,96 @@
 {% load tapir_static %}
 
 {% block content %}
-<div style="margin-top: 1em; margin-bottom: 1em" class="container">
+<div style="margin-top: 1em;">
+
     <form id="form" method="post">
         {% csrf_token %}
-
         <div class="card" style="max-height: calc(100vh - 7em)">
+
             <div class="card-header" style="display: flex">
                 <div>
                     <h4 style="padding-right: 0.8em">{% translate "Konfiguration" %}</h4>
-                </div>
-                <div>
-                    <button class="btn tapir-btn btn-primary" type="submit">Save</button>
                 </div>
                 <div style="margin-left:auto" id="search-input">
                     <input type="text" class="form-control" placeholder="Search..."/>
                 </div>
 
             </div>
-            <div class="card-body" style="overflow-y: scroll">
-                {% for category in form.categories %}
-                <div class="parameter-category">
-                    <h5>{% translate category %}</h5>
+            <div class="card-body"
+                 style="overflow-y: scroll; display:grid; grid-template-columns: auto auto; grid-gap: 1em">
+                <div style="position: fixed">
+                    <nav class="nav nav-pills nav-fill nav-justified flex-column">
+                        {% for category in form.categories %}
+                        <a class="nav-link" aria-current="page" href="#{{category}}">{{category}}</a>
+                        {% endfor %}
+                    </nav>
+                </div>
+                <div style="margin-left: 13em">
+                    {% for category in form.categories %}
+                    <div id="{{category}}" class="parameter-category">
+                        <h5>{% translate category %}</h5>
 
-                    {% for field in form.visible_fields %}
+                        {% for field in form.visible_fields %}
 
-                    {% if field.category == category %}
-                    <div class="single-parameter">
-                        {% bootstrap_field field %}
+                        {% if field.category == category %}
+                        <div class="single-parameter">
+                            {% bootstrap_field field %}
+                        </div>
+                        {% endif %}
+
+                        {% endfor %}
                     </div>
-                    {% endif %}
 
                     {% endfor %}
                 </div>
-
-                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <button class="btn tapir-btn btn-primary" style="float:right" type="submit">Speichern</button>
             </div>
         </div>
     </form>
 </div>
 
+<div class="toast bg-success text-white position-fixed top-0 start-50 translate-middle-x" style="margin-top:5em"
+     role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="10000">
+    <div class="toast-body">
+        <strong>Deine Änderungen wurden gespeichert!</strong>
+        <button type="button" class="btn-close" style="float:right" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
+
+<script>
+const params = Tapir.getUrlParams()
+console.log(params)
+if (params.success) {
+    var toastEl = document.querySelector('.toast')
+    var toast = new bootstrap.Toast(toastEl)
+
+    toast.show()
+
+    setTimeout(function() {
+      toast.hide();
+    }, 10000);
+
+    Tapir.replaceUrlParams({});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
 <script src="{% static 'configuration/js/search.js' %}"></script>
 {% endblock %}
 
