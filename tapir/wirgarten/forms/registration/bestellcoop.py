@@ -92,4 +92,5 @@ class BestellCoopForm(forms.Form):
                 period=self.growing_period,
                 mandate_ref=mandate_ref,
                 consent_ts=datetime.now(),
+                withdrawal_consent_ts=datetime.now(),
             )

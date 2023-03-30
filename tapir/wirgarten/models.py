@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
 from django.utils.translation import gettext_lazy as _
-from localflavor.generic.models import IBANField, BICField
+from localflavor.generic.models import IBANField
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
@@ -132,7 +132,6 @@ class Member(TapirUser):
 
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
-    bic = BICField(_("BIC"), null=True)
     sepa_consent = models.DateTimeField(_("SEPA Consent"), null=True)
     pickup_location = models.ForeignKey(
         PickupLocation, on_delete=models.DO_NOTHING, null=True
@@ -312,6 +311,7 @@ class Subscription(TapirModel, Payable):
     consent_ts = models.DateTimeField(
         null=True
     )  # TODO this should probably be null=False
+    withdrawal_consent_ts = models.DateTimeField(null=True)
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
