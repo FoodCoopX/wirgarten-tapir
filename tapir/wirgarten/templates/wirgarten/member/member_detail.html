@@ -327,16 +327,6 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="row m-1">
-                    <div class="col-4 fw-bold text-end">{% translate "BIC" %}:</div>
-                    <div class="col-8" id="tapir_user_bic">
-                        {% if object.bic %}
-                        {{ object.bic }}
-                        {% else %}
-                        <span class="text-danger">{% translate "Missing" %}</span>
-                        {% endif %}
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -365,6 +355,7 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
 
 
 
