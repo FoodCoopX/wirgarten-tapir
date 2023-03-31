@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 import django.db
-from tapir.wirgarten.models import Member,Subscription,CoopShareTransaction,TapirUser,GrowingPeriod,MandateReference,Product
+from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
+    MandateReference, Product, PickupLocation
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 import csv
 
@@ -26,7 +27,16 @@ class Command(BaseCommand):
                 if delete_all:
                     Member.objects.all().delete()
                 for row in reader:
-                    print(row)
+                    # identify pickup location ID
+                    try:
+                        if row["Abholort"] != '':
+                            picloc = PickupLocation.objects.get(name=row["Abholort"]).id
+                        else:
+                            picloc = None
+                    except ObjectDoesNotExist as e:
+                        print(row)
+                        print("Pickup Location not found - record is skipped!")
+                        continue
                     m = Member(
                         first_name=row["Vorname"],
                         last_name=row["Nachname"],
@@ -36,9 +46,18 @@ class Command(BaseCommand):
                         city=row["Ort"],
                         email=row["Mailadresse"],
                         phone_number=row["Telefon"],
-                        id=row["Nr"]
+                        id=row["Nr"],
+                        iban=row["IBAN"],
+                        account_owner=row["Kontoinhaber"],
+                        sepa_consent=row["consent_sepa"] + "T12:00:00+0200",
+                        privacy_consent=row["privacy_consent"] + "T12:00:00+0200",
+                        pickup_location_id=picloc
                     )
-                    m.save()
+                    try:
+                        m.save(bypass_keycloak=True)
+                    except Exception as e:
+                        print(e)
+                        continue
             if type == "shares":
                 if delete_all:
                     CoopShareTransaction.objects.all().delete()
@@ -52,7 +71,7 @@ class Command(BaseCommand):
                         try:
                             transfer_member=Member.objects.get(id=row["Übertragungspartner"])
                             print(transfer_member)
-                        except django.core.exceptions.ObjectDoesNotExist as e:
+                        except ObjectDoesNotExist as e:
                             print("Transfer Member not found!")
                             continue
                     match row["Bewegungsart (Z,Ü,K)"]:
