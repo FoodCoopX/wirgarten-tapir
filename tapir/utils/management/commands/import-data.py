@@ -1,10 +1,13 @@
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.core.management.base import BaseCommand, CommandError
-import django.db
-from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
-    MandateReference, Product, PickupLocation
-from tapir.wirgarten.service.member import get_or_create_mandate_ref
 import csv
+
+import django.db
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.management.base import BaseCommand
+
+from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
+    Product, PickupLocation
+from tapir.wirgarten.service.member import get_or_create_mandate_ref
+
 
 class Command(BaseCommand):
     help = 'Imports data from CSV files into the database'
@@ -15,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--delete-all', action='store_true')
 
     def handle(self, *args, **options):
-        #print(args)
+        # print(args)
         print(options)
         filepath = options["file"][0]
         type = options["type"][0]
@@ -63,13 +66,13 @@ class Command(BaseCommand):
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
                     print(row)
-                    #{'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
+                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
                     qu = int(row["Anzahl Anteile"])
                     transfer_member = None
                     valid_date = row["Datum"]
                     if row["Übertragungspartner"] != '':
                         try:
-                            transfer_member=Member.objects.get(id=row["Übertragungspartner"])
+                            transfer_member = Member.objects.get(id=row["Übertragungspartner"])
                             print(transfer_member)
                         except ObjectDoesNotExist as e:
                             print("Transfer Member not found!")
@@ -99,9 +102,9 @@ class Command(BaseCommand):
                             transfer_member=transfer_member
                         )
                     except django.db.Error as e:
-                        print("Database Error occured",e.__cause__)
+                        print("Database Error occured", e.__cause__)
                     except ValidationError as e:
-                        print("Validation Error occured",e.messages)
+                        print("Validation Error occured", e.messages)
             if type == "subscriptions":
                 if delete_all:
                     Subscription.objects.all().delete()
@@ -118,18 +121,18 @@ class Command(BaseCommand):
                             if row["E-Mail-Adresse"] != "":
                                 m = TapirUser.objects.get(email=row["E-Mail-Adresse"])
                             else:
-                                print("No data to identify TapirUser in Vertrag ",row["VertragNr"])
+                                print("No data to identify TapirUser in Vertrag ", row["VertragNr"])
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
-                        print("Database Error: TapirUser not found",e.__cause__)
+                        print("Database Error: TapirUser not found", e.__cause__)
                         continue
                     except django.db.Error as e:
                         print(row)
-                        print("Database Error occured with MemberNo",e.__cause__)
+                        print("Database Error occured with MemberNo", e.__cause__)
                         continue
                     except ValidationError as e:
                         print(row)
-                        print("Validation Error occured",e.messages)
+                        print("Validation Error occured", e.messages)
                         continue
                     # identify MandateRef
                     mref = get_or_create_mandate_ref(m)
@@ -142,7 +145,7 @@ class Command(BaseCommand):
                             continue
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
-                        print("Product not found",e.__cause__)
+                        print("Product not found", e.__cause__)
                         continue
                     # prepare cancellation value
                     if row["cancellation.ts"] != "":
@@ -155,7 +158,7 @@ class Command(BaseCommand):
                             quantity=float(row["Quantity"]),
                             start_date=row["Vertragsbeginn"],
                             end_date="2023-06-30",
-                            cancellation_ts=ts_cancel ,
+                            cancellation_ts=ts_cancel,
                             solidarity_price=row["Solidarpreis in Prozent"],
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
@@ -165,18 +168,13 @@ class Command(BaseCommand):
                         print("Subscription object successfully created.")
                     except django.db.Error as e:
                         print(row)
-                        print("Database Error occured with create subscription: ",e.__cause__)
+                        print("Database Error occured with create subscription: ", e.__cause__)
                         continue
                     except ValidationError as e:
                         print(row)
-                        print("Validation Error occured with create subscription: ",e.messages)
+                        print("Validation Error occured with create subscription: ", e.messages)
                         continue
                     except ValueError as e:
                         print(row)
-                        print("Value Error occured with create subscription: ",e)
+                        print("Value Error occured with create subscription: ", e)
                         continue
-
-
-
-
-
