@@ -41,7 +41,9 @@ def transfer_coop_shares(
     origin_member = Member.objects.get(id=origin_member_id)
     origin_ownerships_quantity = origin_member.coop_shares_quantity
 
-    if quantity < 1:
+    print("origin_ownerships_quantity", origin_member_id, origin_ownerships_quantity)
+
+    if origin_ownerships_quantity is None or quantity < 1:
         return False  # nothing to do
 
     # if quantity exceeds origin shares, just take all shares
