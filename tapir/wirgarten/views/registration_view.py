@@ -100,7 +100,6 @@ def save_member(form_dict):
         ]
     member.account_owner = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["account_owner"]
     member.iban = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["iban"]
-    member.bic = form_dict[STEP_PAYMENT_DETAILS].cleaned_data["bic"]
     member.is_active = False
 
     now = timezone.now()

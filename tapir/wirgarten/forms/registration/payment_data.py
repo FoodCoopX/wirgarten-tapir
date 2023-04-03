@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django import forms
 from django.core.exceptions import ValidationError
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import IBANValidator
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.parameters import Parameter
@@ -11,7 +11,6 @@ from tapir.wirgarten.parameters import Parameter
 class PaymentDataForm(forms.Form):
     account_owner = forms.CharField(label=_("Kontoinhaber"))
     iban = forms.CharField(label=_("IBAN"))
-    bic = forms.CharField(label=_("BIC"))
 
     def __init__(self, *args, instance=None, **kwargs):
         super(PaymentDataForm, self).__init__(*args, **kwargs)
@@ -27,14 +26,14 @@ class PaymentDataForm(forms.Form):
             required=True,
         )
 
-    colspans = {"account_owner": 2, "sepa_consent": 2}
+    colspans = {"sepa_consent": 2}
     n_columns = 2
 
     def get_initial_for_field(self, field, field_name):
         if not hasattr(self, "instance") or self.instance is None:
             return
 
-        if field_name in ["account_owner", "iban", "bic"]:
+        if field_name in ["account_owner", "iban"]:
             return getattr(self.instance, field_name)
         else:
             return super().get_initial_for_field(field, field_name)
@@ -48,11 +47,3 @@ class PaymentDataForm(forms.Form):
         except ValidationError:
             self.add_error("iban", _("Ungültige IBAN"))
         return iban
-
-    def clean_bic(self):
-        bic = self.cleaned_data["bic"]
-        try:
-            BICValidator()(bic)
-        except ValidationError:
-            self.add_error("bic", _("Ungültige BIC"))
-        return bic
