@@ -149,11 +149,7 @@ class CoopShareTransferForm(Form):
         super(CoopShareTransferForm, self).__init__(*args)
         member_id = kwargs["pk"]
         orig_member = Member.objects.get(pk=member_id)
-        self.orig_share_ownership_quantity = (
-            orig_member.coopsharetransaction_set.aggregate(quantity=Sum(F("quantity")))[
-                "quantity"
-            ]
-        )
+        self.orig_share_ownership_quantity = orig_member.coop_shares_quantity
 
         def member_to_string(m):
             return f"{m.first_name} {m.last_name} ({m.email})"
@@ -167,7 +163,7 @@ class CoopShareTransferForm(Form):
 
         self.fields["origin"] = CharField(
             label=_("Ursprünglicher Anteilseigner")
-            + f" ({self.orig_share_ownership_quantity} Anteile)",
+            + f" ({self.orig_share_ownership_quantity if self.orig_share_ownership_quantity else 'KEINE'} Anteile)",
             disabled=True,
             initial=member_to_string(orig_member),
         )
