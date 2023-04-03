@@ -14,32 +14,6 @@
   },
   {
     "model": "wirgarten.PickupLocation",
-    "pk": "AQbONXHloB",
-    "fields": {
-      "name": "BUDNI Ilmenau Center",
-      "coords_lon": 53.2619231,
-      "coords_lat": 10.4115288,
-      "street": "Bei der Keulahütte 1",
-      "postcode": "21339",
-      "city": "Lüneburg",
-      "info": "donnerstags 13:00 bis 18:45 Uhr"
-    }
-  },
-  {
-    "model": "wirgarten.PickupLocation",
-    "pk": "Zi6gUHT8WT",
-    "fields": {
-      "name": "Neuer Speicher Unverpackt",
-      "coords_lon": 53.2512887,
-      "coords_lat": 10.4146131,
-      "street": "Lünertorstr. 14",
-      "postcode": "21335",
-      "city": "Lüneburg",
-      "info": "donnerstags 12:00 bis 18:00 Uhr, spätestens bis 17:45 Uhr da sein!"
-    }
-  },
-  {
-    "model": "wirgarten.PickupLocation",
     "pk": "TxRDf3NBf7",
     "fields": {
       "name": "Edeka Bergmann",
@@ -128,6 +102,32 @@
       "postcode": "21335",
       "city": "Lüneburg",
       "info": "mittwochs 13:30-20:00 Uhr"
+    }
+  },
+    {
+    "model": "wirgarten.PickupLocation",
+    "pk": "IkBtNQ1CBb",
+    "fields": {
+      "name": "Yin & Yang",
+      "coords_lon": 53.2496245,
+      "coords_lat": 10.4223293,
+      "street": "Pulverweg 6",
+      "postcode": "21335",
+      "city": "Lüneburg",
+      "info": "mittwochs 14:00-19:00 Uhr, donnerstags 9:30-11:00 Uhr, Zugang über Am Schützenplatz"
+    }
+  },
+  {
+    "model": "wirgarten.PickupLocation",
+    "pk": "35raIjNXwH",
+    "fields": {
+      "name": "LeNa",
+      "coords_lon": 53.2574314,
+      "coords_lat": 10.3790822,
+      "street": "Brockwinkler Weg 72b",
+      "postcode": "21339",
+      "city": "Lüneburg",
+      "info": "PRIVATER ABHOLORT"
     }
   }
 ]
