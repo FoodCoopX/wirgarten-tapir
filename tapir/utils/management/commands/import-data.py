@@ -1,7 +1,7 @@
 import csv
-
 import django.db
-
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.management import BaseCommand
 from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
     Product, PickupLocation
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
@@ -57,11 +57,11 @@ class Command(BaseCommand):
                         city=row["Ort"],
                         email=row["Mailadresse"],
                         phone_number=row["Telefon"],
-                        id=row["Nr"],
+                        member_no=row["Nr"],
                         iban=row["IBAN"],
                         account_owner=row["Kontoinhaber"],
-                        sepa_consent=row["consent_sepa"] + "T12:00:00+0200",
-                        privacy_consent=row["privacy_consent"] + "T12:00:00+0200",
+                        sepa_consent=row["consent_sepa"],  # + "T12:00:00+0200",
+                        privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
                         pickup_location_id=picloc
                     )
                     try:
@@ -73,16 +73,22 @@ class Command(BaseCommand):
                 if delete_all:
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
-                    print(row)
+                    # print(row)
                     # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
                     qu = int(row["Anzahl Anteile"])
                     transfer_member = None
                     valid_date = row["Datum"]
+                    try:
+                        member = Member.objects.get(member_no=row["Mitgliedsnummer"])
+                    except ObjectDoesNotExist as e:
+                        print(row)
+                        print("Database Error: Member not found")
+                        continue
                     if row["Übertragungspartner"] != '':
                         try:
-                            transfer_member = Member.objects.get(id=row["Übertragungspartner"])
-                            print(transfer_member)
+                            transfer_member = Member.objects.get(member_no=row["Übertragungspartner"])
                         except ObjectDoesNotExist as e:
+                            print(row)
                             print("Transfer Member not found!")
                             continue
                     match row["Bewegungsart (Z,Ü,K)"]:
@@ -93,7 +99,6 @@ class Command(BaseCommand):
                                 trans_type = CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
                             else:
                                 trans_type = CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
-
                         case "K":
                             trans_type = CoopShareTransaction.CoopShareTransactionType.CANCELLATION
                             valid_date = row["Wirkung Kündigung"]
@@ -101,7 +106,7 @@ class Command(BaseCommand):
                             raise "Unknown transaction type!"
                     try:
                         s = CoopShareTransaction.objects.create(
-                            member_id=row["Mitgliedsnummer"],
+                            member_id=member.id,
                             transaction_type=trans_type,
                             timestamp=row["Datum"],
                             valid_at=valid_date,
@@ -110,8 +115,10 @@ class Command(BaseCommand):
                             transfer_member=transfer_member
                         )
                     except django.db.Error as e:
+                        print(row)
                         print("Database Error occured", e.__cause__)
                     except ValidationError as e:
+                        print(row)
                         print("Validation Error occured", e.messages)
             if type == "subscriptions":
                 if delete_all:
@@ -121,18 +128,20 @@ class Command(BaseCommand):
                 for row in reader:
                     # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,Richtpreis,Solidarpreis in Prozent,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
                     # print(row)
-                    # identify TapirUserID, either via MemberNo or Email
+                    # identify MemberID, either via MemberNo or Email
                     try:
                         if row["Mitgliedernummer"] != "":
-                            m = TapirUser.objects.get(id=row["Mitgliedernummer"])
+                            m = Member.objects.get(member_no=row["Mitgliedernummer"])
                         else:
-                            if row["E-Mail-Adresse"] != "":
-                                m = TapirUser.objects.get(email=row["E-Mail-Adresse"])
+                            if row["Email"] != "":
+                                m = Member.objects.get(email=row["Email"])
                             else:
-                                print("No data to identify TapirUser in Vertrag ", row["VertragNr"])
+                                print(row)
+                                print("No data to identify Member in subscription for ", row["Mitgliedernummer"],
+                                      row["Email"])
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
-                        print("Database Error: TapirUser not found", e.__cause__)
+                        print("Database Error: Member not found")
                         continue
                     except django.db.Error as e:
                         print(row)
@@ -147,13 +156,15 @@ class Command(BaseCommand):
                     # identify product
                     try:
                         if row["product"]:
+                            #print(row)
                             prod = Product.objects.get(name=row["product"])
                         else:
-                            print("No product defined in Vertrag ", row["VertragNr"])
+                            print(row)
+                            print("No product defined in subscription.")
                             continue
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
-                        print("Product not found", e.__cause__)
+                        print("Product not found")
                         continue
                     # prepare cancellation value
                     if row["cancellation.ts"] != "":
@@ -172,8 +183,9 @@ class Command(BaseCommand):
                             period_id=period.id,
                             product_id=prod.id,
                             consent_ts=row["consent_vertragsgrundsätze"],
+
                         )
-                        print("Subscription object successfully created.")
+                        #print("Subscription object successfully created.")
                     except django.db.Error as e:
                         print(row)
                         print("Database Error occured with create subscription: ", e.__cause__)
