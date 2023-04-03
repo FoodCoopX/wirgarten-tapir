@@ -20,10 +20,10 @@ class Command(BaseCommand):
         # print(options)
 
         if options["reset_all"]:
-            Member.objects.all().delete()
             Subscription.objects.all().delete()
-            MandateReference.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
+            MandateReference.objects.all().delete()
+            Member.objects.all().delete()
             return
 
         # check if type and file params are present
