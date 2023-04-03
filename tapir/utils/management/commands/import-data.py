@@ -3,7 +3,7 @@ import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management import BaseCommand
 from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
-    Product, PickupLocation
+    Product, PickupLocation, MandateReference
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
@@ -22,6 +22,7 @@ class Command(BaseCommand):
         if options["reset_all"]:
             Member.objects.all().delete()
             Subscription.objects.all().delete()
+            MandateReference.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
             return
 
