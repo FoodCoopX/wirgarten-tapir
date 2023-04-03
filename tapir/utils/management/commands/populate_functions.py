@@ -70,7 +70,6 @@ def populate_users():
                 date_joined=json_user.date_joined,
                 is_superuser=False,
                 iban="DE02100500000054540402",
-                bic="BELADEBE",
                 account_owner=json_user.get_full_name(),
                 sepa_consent=json_user.date_joined,
                 privacy_consent=json_user.date_joined,
