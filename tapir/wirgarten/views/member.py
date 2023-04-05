@@ -1402,8 +1402,8 @@ def change_email(request, **kwargs):
             content=_(
                 f"Hallo {user.first_name},<br/><br/>"
                 f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
-                f"<br/><br/>Grüße, dein WirGarten Team"
+                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
+                f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
             ),
         )
 
