@@ -1,5 +1,5 @@
 import itertools
-from datetime import datetime
+from datetime import datetime, date
 
 from celery import shared_task
 from django.db import transaction
@@ -29,6 +29,7 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
+    get_future_subscriptions,
 )
 
 
@@ -316,8 +317,21 @@ def export_sepa_payments():
 @shared_task
 def send_email_member_contract_end_reminder(member_id):
     member = Member.objects.get(pk=member_id)
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
-        content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
-    )
+
+    today = date.today()
+    if (
+        get_active_subscriptions().filter(member=member).exists()
+        and not get_future_subscriptions()
+        .filter(member=member, start_date__gt=today)
+        .exists()
+    ):
+
+        send_email(
+            to_email=[member.email],
+            subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
+            content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
+        )
+    else:
+        print(
+            f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
+        )
