@@ -1658,13 +1658,13 @@ def export_coop_member_list(request, **kwargs):
         )
         transfer_to_date = ", ".join(
             map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
                 transfered_to,
             )
         )
         transfer_from_date = ", ".join(
             map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
                 transfered_from,
             )
         )
