@@ -8,6 +8,7 @@
 
 {% block content %}
 
+
 <div style="margin-top: 1em;">
     {% block page_top %}{% endblock %}
 </div>
@@ -98,7 +99,7 @@
 </div>
 
 <script>
-    const sortHeaders = document.querySelectorAll('th.sort-header');
+const sortHeaders = document.querySelectorAll('th.sort-header');
 const sortForm = document.getElementById('filter-form');
 const sortField = document.getElementById('id_o');
 
@@ -135,6 +136,8 @@ sortHeaders.forEach(header => {
       sortOrders[sort] = 1;
       sortField.value = sort;
     }
+
+    console.log(sortField.value)
 
     sortForm.submit();
 
