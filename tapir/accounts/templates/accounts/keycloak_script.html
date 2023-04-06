@@ -53,11 +53,12 @@
                     }
             }
 
-            const savedToken = getCookieValue("token");
-            if(savedToken){
-                 hideLoadingScreen();
+            const getRedirectUrl = () =>  {
+                const params = Tapir.getUrlParams();
+                return params.next ? decodeURIComponent(params.next) : "{% url 'index' %}";
             }
 
+                const savedToken = getCookieValue("token");
                 keycloak.init({
                     onLoad: 'check-sso',
                     silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
@@ -77,7 +78,7 @@
                     console.log("authenticated: ", authenticated)
                   if(!authenticated || !keycloak.token){
                        deleteAllCookies();
-                       keycloak.login()
+                       keycloak.login({redirectUri:getRedirectUrl()})
                   } else {
                       hideLoadingScreen();
 
@@ -86,8 +87,7 @@
 
                       if(!document.body.innerText){
                           // default redirect if no body is loaded
-                          const params = Tapir.getUrlParams()
-                          window.location.replace(params.next || "{% url 'index' %}");
+                          window.location.replace(getRedirectUrl());
                       }
 
                       addLogoutFunction();
@@ -96,7 +96,12 @@
                   }
                 }).catch((err) => {
                     deleteAllCookies();
-                    console.error("Failed to initialize Keycloak: ", JSON.stringify(err));
-                    keycloak.logout({redirectUri: window.location.href})
+                    console.error("Failed to initialize Keycloak: ", err);
+                    keycloak.logout({redirectUri: getRedirectUrl()})
                 })
+
+                if(keycloak.silentCheckSsoRedirectUri && savedToken){
+                    hideLoadingScreen();
+                }
 </script>
+
