@@ -1,13 +1,11 @@
 {% extends "core/base.html" %}
 
-{% load django_bootstrap5 %}
 {% load tapir_static %}
 {% load i18n %}
 {% load log %}
 {% load accounts %}
 {% load wirgarten %}
 {% load configuration %}
-
 
 {% block head %}
 {{ block.super }}
@@ -355,14 +353,6 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
-
-
-
-
-
-
-
-
 </script>
 {% endwith %}
 {% endblock %}
