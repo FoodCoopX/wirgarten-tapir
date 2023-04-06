@@ -307,7 +307,7 @@ class Subscription(TapirModel, Payable):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    created_at = models.DateTimeField(auto_now=True, null=False)
     consent_ts = models.DateTimeField(
         null=True
     )  # TODO this should probably be null=False
