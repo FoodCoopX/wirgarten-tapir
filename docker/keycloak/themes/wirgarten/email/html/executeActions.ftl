@@ -4,6 +4,6 @@
 
 <#import "template.ftl" as layout>
 <#assign linkExpirationInHours = (linkExpiration / 60)?round>
-<@layout.layout realmName>
+<@layout.emailLayout realmName>
 ${kcSanitize(msg("executeActionsBodyHtml",link, linkExpirationInHours, realmName, requiredActionsText, linkExpirationFormatter(linkExpiration)))?no_esc}
-</@layout.layout>
+</@layout.emailLayout>
