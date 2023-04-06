@@ -159,6 +159,7 @@
 {% endif %}
 
 <script>
+document.addEventListener('load', () => {
     const handleRenewSepaConsent = () => {
         const renewChangeBtn = document.getElementById("renewChangeConditionsBtn");
         const renewSameBtn = document.getElementById("renewSameConditionsBtn");
@@ -193,7 +194,7 @@
         passwordChangedConfirmationElem.style.display = 'block';
     }
 
-    Tapir.replaceUrlParams({})
+   Tapir.replaceUrlParams({})
 
     const handleCancellation = () => {
         ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
@@ -201,8 +202,8 @@
         })
     }
 
-    const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
     const handleRenewal = () => {
+        const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
         {% if available_product_types|get_value:'Ernteanteile' %}
         renewalModal.show()
         {% else %}
@@ -224,13 +225,5 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
-
-
-
-
-
-
-
-
-
+    });
 </script>

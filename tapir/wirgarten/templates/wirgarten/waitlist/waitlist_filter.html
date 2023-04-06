@@ -55,6 +55,7 @@
 
 {% block script %}
 <script>
+document.addEventListener('load', () => {
     const typeLabel = document.getElementById("waitlist-type");
     const typeSelect = document.getElementById("id_type");
     const filterForm = document.getElementById("filter-form");
@@ -77,6 +78,7 @@
     const handleExportWaitlist = () => {
         const params = Tapir.getUrlParams();
         window.location.href="{% url 'wirgarten:export_waitlist' %}?type=" + params.type;
+    }
     }
 </script>
 {% endblock %}
