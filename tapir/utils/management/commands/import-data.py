@@ -1,8 +1,10 @@
 import csv
+
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management import BaseCommand
-from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
+
+from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, GrowingPeriod, \
     Product, PickupLocation, MandateReference
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
@@ -109,7 +111,7 @@ class Command(BaseCommand):
                         s = CoopShareTransaction.objects.create(
                             member_id=member.id,
                             transaction_type=trans_type,
-                            timestamp=row["Datum"],
+                            timestamp=row["Datum"] + " 00:00:00+0200",
                             valid_at=valid_date,
                             quantity=qu,
                             share_price=50,
@@ -157,7 +159,7 @@ class Command(BaseCommand):
                     # identify product
                     try:
                         if row["product"]:
-                            #print(row)
+                            # print(row)
                             prod = Product.objects.get(name=row["product"])
                         else:
                             print(row)
@@ -169,7 +171,7 @@ class Command(BaseCommand):
                         continue
                     # prepare cancellation value
                     if row["cancellation.ts"] != "":
-                        ts_cancel = row["cancellation.ts"]
+                        ts_cancel = row["cancellation.ts"] + " 12:00+0200"
                     else:
                         ts_cancel = None
                     try:
@@ -183,10 +185,11 @@ class Command(BaseCommand):
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
                             product_id=prod.id,
-                            consent_ts=row["consent_vertragsgrundsätze"],
+                            consent_ts=row["consent_vertragsgrundsätze"] + " 12:00+0200",
+                            withdrawal_consent_ts=row["consent_widerruf"] + " 12:00+0200"
 
                         )
-                        #print("Subscription object successfully created.")
+                        # print("Subscription object successfully created.")
                     except django.db.Error as e:
                         print(row)
                         print("Database Error occured with create subscription: ", e.__cause__)
