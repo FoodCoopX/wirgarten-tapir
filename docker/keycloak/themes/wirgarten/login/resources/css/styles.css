@@ -44,21 +44,26 @@ div.kc-logo-text{
 }
 
 input {
- font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 #kc-login {
-    font-size: 1.25em;
-    font-family: 'Montserrat', sans-serif !important;
     #filter: drop-shadow(0px 5px 10px #000);
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
     box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
 }
 
+.pf-c-button {
+    font-size:1.1em;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    width: 100%;
+    margin: 0.5em 0 0.5em 0;
+}
+
 .card-pf {
+    font-family: 'Montserrat', sans-serif !important;
     filter: drop-shadow(0px 20px 30px #000);
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;

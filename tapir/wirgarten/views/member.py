@@ -221,7 +221,7 @@ class MemberFilter(FilterSet):
         method="filter_email_verified",
         widget=Select(choices=[("", "-----------"), (True, "Ja"), (False, "Nein")]),
     )
-    email_verified = BooleanFilter(
+    no_coop_shares = BooleanFilter(
         label="Keine Geno-Anteile",
         method="filter_no_coop_shares",
         widget=CheckboxInput(),
@@ -1342,9 +1342,12 @@ class SubscriptionListFilter(FilterSet):
                 .id
             )
 
-        data = data.copy() if data else {}
-        data.setdefault("o", "-created_at")
-        data.setdefault("period", get_default_period_filter_value())
+        if data is None:
+            data = {"period": get_default_period_filter_value()}
+        else:
+            data = data.copy()
+            if "period" not in data:
+                data["period"] = get_default_period_filter_value()
 
         super(SubscriptionListFilter, self).__init__(data, *args, **kwargs)
 
@@ -1357,13 +1360,18 @@ class SubscriptionListFilter(FilterSet):
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):
     filterset_class = SubscriptionListFilter
-    ordering = ["-created_at"]
+    # ordering = ["-created_at"]
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/subscription/subscription_filter.html"
     paginate_by = 20
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        filter_query = self.request.GET.urlencode()
+        query_dict = parse_qs(filter_query)
+        query_dict.pop("page", None)
+        new_query_string = urlencode(query_dict, doseq=True)
+        context["filter_query"] = new_query_string
         context["today"] = date.today()
         return context
 
@@ -1402,8 +1410,8 @@ def change_email(request, **kwargs):
             content=_(
                 f"Hallo {user.first_name},<br/><br/>"
                 f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
-                f"<br/><br/>Grüße, dein WirGarten Team"
+                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
+                f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
             ),
         )
 
@@ -1658,13 +1666,13 @@ def export_coop_member_list(request, **kwargs):
         )
         transfer_to_date = ", ".join(
             map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
                 transfered_to,
             )
         )
         transfer_from_date = ", ".join(
             map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.timestamp)}",
+                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
                 transfered_from,
             )
         )

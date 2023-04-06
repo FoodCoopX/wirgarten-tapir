@@ -307,7 +307,7 @@ class Subscription(TapirModel, Payable):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    created_at = models.DateTimeField(auto_now=True, null=False)
     consent_ts = models.DateTimeField(
         null=True
     )  # TODO this should probably be null=False
@@ -372,7 +372,7 @@ class CoopShareTransaction(TapirModel, Payable):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     quantity = models.SmallIntegerField(null=False)
     share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
-    timestamp = models.DateTimeField(auto_now_add=True, null=False)
+    timestamp = models.DateTimeField(auto_now=True, null=False)
     valid_at = models.DateField(null=False)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=True
