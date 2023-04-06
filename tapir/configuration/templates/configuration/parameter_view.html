@@ -20,7 +20,8 @@
                 </div>
 
             </div>
-            <div class="card-body"
+            <div id="config-view"
+                 class="card-body"
                  style="overflow-y: scroll; display:grid; grid-template-columns: auto auto; grid-gap: 1em">
                 <div style="position: fixed">
                     <nav class="nav nav-pills nav-fill nav-justified flex-column">
@@ -65,7 +66,6 @@
 
 <script>
 const params = Tapir.getUrlParams()
-console.log(params)
 if (params.success) {
     var toastEl = document.querySelector('.toast')
     var toast = new bootstrap.Toast(toastEl)
@@ -76,23 +76,21 @@ if (params.success) {
       toast.hide();
     }, 10000);
 
-    Tapir.replaceUrlParams({});
+    params.success=undefined;
+    Tapir.replaceUrlParams(params);
 }
 
+const divElement = document.getElementById("config-view");
+if(params.pos){
+    divElement.scrollTop = params.pos;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+divElement.addEventListener("scroll", function() {
+  const yScrollPosition = divElement.scrollTop;
+  const params = Tapir.getUrlParams();
+  params.pos=yScrollPosition;
+  Tapir.replaceUrlParams(params);
+});
 
 </script>
 <script src="{% static 'configuration/js/search.js' %}"></script>
