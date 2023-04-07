@@ -30,7 +30,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "name": pickup_location.name,
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
-        "info": pickup_location.info,
+        "info": pickup_location.info.replace(", ", "<br/>"),
         "capabilities": list(
             map(
                 lambda x: {
