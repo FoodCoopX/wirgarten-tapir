@@ -53,52 +53,55 @@
                     }
             }
 
-            const savedToken = getCookieValue("token");
-            if(savedToken){
-                 hideLoadingScreen();
+            const getRedirectUrl = () =>  {
+                const params = Tapir.getUrlParams();
+                return params.next ? decodeURIComponent(params.next) : "{% url 'index' %}";
             }
 
-            keycloak.init({
-                onLoad: 'check-sso',
-                silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
-                token: savedToken,
-                checkLoginIframe: true,
-                onTokenExpired: () => {
-                    console.log("Token expired, refreshing...");
-                    keycloak.updateToken(10)
-                        .then(() => {
-                            console.log("Token refreshed successfully");
-                            setCookie("token", keycloak.token);
-                        })
-                        .catch(() => {
-                            console.log("Failed to refresh token. User is logged out.");
-                        });
-                },
-            }).then((authenticated) => {
-                console.log("authenticated: ", authenticated)
-              if(!authenticated || !keycloak.token){
-                   deleteAllCookies();
-                   keycloak.login()
-              } else {
-                  hideLoadingScreen();
+                const savedToken = getCookieValue("token");
+                keycloak.init({
+                    onLoad: 'check-sso',
+                    silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
+                    token: savedToken,
+                    onTokenExpired: () => {
+                        console.log("Token expired, refreshing...");
+                        keycloak.updateToken(10)
+                            .then(() => {
+                                console.log("Token refreshed successfully");
+                                setCookie("token", keycloak.token);
+                            })
+                            .catch(() => {
+                                console.log("Failed to refresh token. User is logged out.");
+                            });
+                    },
+                }).then((authenticated) => {
+                    console.log("authenticated: ", authenticated)
+                  if(!authenticated || !keycloak.token){
+                       deleteAllCookies();
+                       keycloak.login({redirectUri:getRedirectUrl()})
+                  } else {
+                      hideLoadingScreen();
 
-                  const savedToken = getCookieValue("token");
-                  setCookie("token", keycloak.token);
+                      const savedToken = getCookieValue("token");
+                      setCookie("token", keycloak.token);
 
-                  if(savedToken && !document.body.innerText){
-                      // default redirect if no body is loaded
-                      const params = Tapir.getUrlParams()
-                      window.location.replace(params.next || "{% url 'index' %}");
+                      if(!document.body.innerText){
+                          // default redirect if no body is loaded
+                          window.location.replace(getRedirectUrl());
+                      }
+
+                      addLogoutFunction();
+
+                      console.log("Keycloak initialized successfully");
                   }
+                }).catch((err) => {
+                    deleteAllCookies();
+                    console.error("Failed to initialize Keycloak: ", err);
+                    keycloak.logout({redirectUri: getRedirectUrl()})
+                })
 
-                  addLogoutFunction();
-
-                  if(!savedToken) window.location.reload()
-              }
-              console.log("Keycloak initialized successfully");
-            }).catch((err) => {
-                deleteAllCookies();
-                keycloak.logout({redirectUri: window.location.href})
-                console.error("Failed to initialize Keycloak: ", JSON.stringify(err));
-            });
+                if(keycloak.silentCheckSsoRedirectUri && savedToken){
+                    hideLoadingScreen();
+                }
 </script>
+
