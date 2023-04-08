@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from django import forms
@@ -9,7 +9,6 @@ from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Product,
     ProductType,
-    Member,
     Subscription,
     MandateReference,
     GrowingPeriod,
@@ -100,6 +99,8 @@ class ChickenShareForm(forms.Form):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
+        now = timezone.now()
+
         for key, quantity in self.cleaned_data.items():
             if quantity and quantity > 0 and key.startswith("chicken_shares_"):
                 product = Product.objects.get(
@@ -113,8 +114,8 @@ class ChickenShareForm(forms.Form):
                     start_date=self.start_date,
                     end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
-                    consent_ts=datetime.now(),
-                    withdrawal_consent_ts=datetime.now(),
+                    consent_ts=now,
+                    withdrawal_consent_ts=now,
                 )
 
     def is_valid(self):

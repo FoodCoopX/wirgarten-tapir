@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from django import template
 
@@ -40,8 +41,14 @@ def format_date(value: date | datetime):
     if type(value) is date:
         return utils.format_date(value)
     elif type(value) is datetime:
-        return f"{utils.format_date(value)}, {str(value.hour).zfill(2)}:{str(value.minute).zfill(2)}"
+        # Convert the datetime object to the desired timezone
+        desired_tz = ZoneInfo("Europe/Berlin")
+        localized_datetime = value.astimezone(desired_tz)
+
+        # Format the date and time
+        return f"{utils.format_date(localized_datetime)} {str(localized_datetime.hour).zfill(2)}:{str(localized_datetime.minute).zfill(2)}"
     else:
+        print(value, type(value), datetime)
         return None
 
 

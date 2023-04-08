@@ -1,4 +1,6 @@
-from datetime import date, datetime
+from datetime import date
+
+from django.utils import timezone
 
 from django import forms
 from django.db import transaction
@@ -162,6 +164,8 @@ class HarvestShareForm(forms.Form):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
+        now = timezone.now()
+
         subs = []
         for key, quantity in self.cleaned_data.items():
             if (
@@ -184,8 +188,8 @@ class HarvestShareForm(forms.Form):
                         "solidarity_price_harvest_shares"
                     ],
                     mandate_ref=mandate_ref,
-                    consent_ts=datetime.now(),
-                    withdrawal_consent_ts=datetime.now(),
+                    consent_ts=now,
+                    withdrawal_consent_ts=timezone.now(),
                 )
 
                 subs.append(sub)

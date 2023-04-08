@@ -1,4 +1,5 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
+from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -219,7 +220,7 @@ def create_wait_list_entry(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        privacy_consent=datetime.now(),
+        privacy_consent=timezone.now(),
         type=type,
         member=member,
     )
