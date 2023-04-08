@@ -1360,10 +1360,14 @@ class SubscriptionListFilter(FilterSet):
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):
     filterset_class = SubscriptionListFilter
-    # ordering = ["-created_at"]
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/subscription/subscription_filter.html"
     paginate_by = 20
+
+    def get_queryset(self):
+        ordering = self.request.GET.get("o", "-created_at")
+        queryset = Subscription.objects.all().order_by(ordering, "member_id")
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
