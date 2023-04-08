@@ -4,6 +4,7 @@ from datetime import datetime
 from celery import shared_task
 from django.db import transaction
 from django.db.models import Sum
+from django.utils import timezone
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
@@ -122,7 +123,7 @@ def export_supplier_list_csv():
             )
             return None
 
-        now = datetime.now()
+        now = timezone.now()
         sums = (
             Subscription.objects.filter(
                 start_date__lte=now, end_date__gte=now, product__type=product_type

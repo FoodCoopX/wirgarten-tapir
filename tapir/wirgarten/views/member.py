@@ -15,8 +15,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import (
     Q,
     ExpressionWrapper,
@@ -35,6 +34,7 @@ from django.forms.widgets import Select
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.csrf import csrf_protect
@@ -637,7 +637,7 @@ def cancel_contract_at_period_end(request, **kwargs):
     # if not member_id == request.user.pk:
     #    raise PermissionDenied("A member can only cancel a contract themself.")
 
-    now = datetime.now()
+    now = timezone.now()
     subs = list(get_future_subscriptions().filter(member_id=member_id))
     for sub in subs:
         sub.cancellation_ts = now
@@ -974,7 +974,7 @@ def get_member_payment_data_edit_form(request, **kwargs):
         member.account_owner = account_owner
         member.iban = iban
         member.bic = bic
-        member.sepa_consent = datetime.now()
+        member.sepa_consent = timezone.now()
         member.save()
         return member
 
@@ -1284,7 +1284,7 @@ def export_waitinglist(request, **kwargs):
             }
         )
 
-    filename = f"Warteliste-{waitlist_type_label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"Warteliste-{waitlist_type_label}_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
     mime_type, _ = mimetypes.guess_type(filename)
     response = HttpResponse("".join(output.csv_string), content_type=mime_type)
     response["Content-Disposition"] = "attachment; filename=%s" % filename
@@ -1450,7 +1450,7 @@ class ExportMembersView(View):
         response = HttpResponse(content_type="text/csv")
         response[
             "Content-Disposition"
-        ] = f'attachment; filename="Mitglieder_gefiltert_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        ] = f'attachment; filename="Mitglieder_gefiltert_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         writer = csv.writer(response, delimiter=";")
 
         # Write header row
@@ -1692,7 +1692,7 @@ def export_coop_member_list(request, **kwargs):
 
         writer.writerow(data)
 
-    filename = f"Mitgliederliste_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"Mitgliederliste_{timezone.now().strftime('%Y%m%d_%H%M%S')}.csv"
     mime_type, _ = mimetypes.guess_type(filename)
     response = HttpResponse("".join(output.csv_string), content_type=mime_type)
     response["Content-Disposition"] = "attachment; filename=%s" % filename
