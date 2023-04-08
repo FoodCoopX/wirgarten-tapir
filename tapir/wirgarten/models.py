@@ -144,9 +144,6 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
 
-    class Meta:
-        ordering = ["member_no", "tapiruser_ptr_id"]
-
     @classmethod
     def generate_member_no(cls):
         max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
@@ -319,7 +316,6 @@ class Subscription(TapirModel, Payable):
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
-        ordering = ["id"]
 
     @property
     def trial_end_date(self):
