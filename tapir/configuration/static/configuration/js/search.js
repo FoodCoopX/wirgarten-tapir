@@ -1,7 +1,7 @@
 const search = document.getElementById('search-input')
 search.addEventListener('input', (event) => {
 
-    params = Tapir.getUrlParams()
+    let params = Tapir.getUrlParams()
     params.q = event.target.value.toLowerCase()
     Tapir.replaceUrlParams(params)
 

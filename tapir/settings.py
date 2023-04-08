@@ -124,7 +124,7 @@ WSGI_APPLICATION = "tapir.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
-    "default": env.db(default="postgresql://tapir:tapir@localhost:5432/tapir"),
+    "default": env.db(default="postgresql://tapir:tapir@db:5432/tapir"),
 }
 
 CELERY_BROKER_URL = "redis://redis:6379"
@@ -213,7 +213,6 @@ elif EMAIL_ENV == "prod":
 # DJANGO_ADMINS="Blake <blake@cyb.org>, Alice Judge <alice@cyb.org>"
 ADMINS = tuple(email.utils.parseaddr(x) for x in env.list("DJANGO_ADMINS", default=[]))
 # Crash emails will come from this address.
-# NOTE(Leon Handreke): I don't know if our Google SMTP will reject other senders, so play it safe.
 SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
 # Static files (CSS, JavaScript, Images)
@@ -244,8 +243,8 @@ if ENABLE_SILK_PROFILING:
     SILKY_META = True
 
 KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="https://auth.tapir.foodcoopx.de"),
-    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="https://auth.tapir.foodcoopx.de"),
+    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
+    PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
     CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
     REALM_NAME=env.str("KEYCLOAK_ADMIN_REALM_NAME", default="master"),
