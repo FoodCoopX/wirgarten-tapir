@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 
 from django import forms
 from django.db import transaction
@@ -91,6 +91,6 @@ class BestellCoopForm(forms.Form):
                 end_date=self.growing_period.end_date,
                 period=self.growing_period,
                 mandate_ref=mandate_ref,
-                consent_ts=datetime.now(),
-                withdrawal_consent_ts=datetime.now(),
+                consent_ts=timezone.now(),
+                withdrawal_consent_ts=timezone.now(),
             )

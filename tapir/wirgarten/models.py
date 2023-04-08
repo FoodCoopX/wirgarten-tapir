@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 
@@ -307,9 +308,7 @@ class Subscription(TapirModel, Payable):
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
-    created_at = models.DateTimeField(
-        default=partial(datetime.datetime.now), null=False
-    )
+    created_at = models.DateTimeField(default=partial(timezone.now), null=False)
     consent_ts = models.DateTimeField(
         null=True
     )  # TODO this should probably be null=False
@@ -374,7 +373,7 @@ class CoopShareTransaction(TapirModel, Payable):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     quantity = models.SmallIntegerField(null=False)
     share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
-    timestamp = models.DateTimeField(default=partial(datetime.datetime.now), null=False)
+    timestamp = models.DateTimeField(default=partial(timezone.now), null=False)
     valid_at = models.DateField(null=False)
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=True
@@ -478,9 +477,7 @@ class PaymentTransaction(TapirModel):
     The relevant payments must reference the transaction in the same step.
     """
 
-    created_at = models.DateTimeField(
-        null=False, default=partial(datetime.datetime.now)
-    )
+    created_at = models.DateTimeField(null=False, default=partial(timezone.now))
     file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
 
 
