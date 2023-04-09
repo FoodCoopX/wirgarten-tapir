@@ -1291,6 +1291,22 @@ def export_waitinglist(request, **kwargs):
     return response
 
 
+class SecondaryOrderingFilter(OrderingFilter):
+    def __init__(self, *args, secondary_ordering="id", **kwargs):
+        self.secondary_ordering = secondary_ordering
+        super().__init__(*args, **kwargs)
+
+    def filter(self, qs, value):
+        if value:
+            ordering_fields = [self.get_ordering_value(v) for v in value] + [
+                f"{'-' if value[0][0] == '-' else ''}{self.secondary_ordering}"
+            ]
+        else:
+            ordering_fields = ["-created_at", f"-{self.secondary_ordering}"]
+
+        return qs.order_by(*ordering_fields)
+
+
 class SubscriptionListFilter(FilterSet):
     show_only_trial_period = BooleanFilter(
         label=_("Nur Verträge in der Probezeit anzeigen"),
@@ -1318,15 +1334,20 @@ class SubscriptionListFilter(FilterSet):
         queryset=ProductType.objects.all().order_by(*product_type_order_by()),
     )
     product = ModelChoiceFilter(label=_("Variante"), queryset=Product.objects.all())
-    o = OrderingFilter(
+    o = SecondaryOrderingFilter(
         label=_("Sortierung"),
-        initial=0,
+        initial=None,
         choices=(
             ("-created_at", "⮟ Abgeschlossen am"),
             ("created_at", "⮝ Abgeschlossen am"),
+            ("-member__member_no", "⮟ Mitgliedsnummer"),
+            ("member__member_no", "⮝ Mitgliedsnummer"),
+            ("-member__first_name", "⮟ Name"),
+            ("member__first_name", "⮝ Name"),
         ),
-        required=True,
-        empty_label=None,
+        required=False,
+        empty_label="",
+        secondary_ordering="member_id",
     )
 
     class Meta:
@@ -1363,11 +1384,7 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
     permission_required = Permission.Accounts.VIEW
     template_name = "wirgarten/subscription/subscription_filter.html"
     paginate_by = 20
-
-    def get_queryset(self):
-        ordering = self.request.GET.get("o", "-created_at")
-        queryset = Subscription.objects.all().order_by(ordering, "member_id")
-        return queryset
+    model = Subscription
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1377,6 +1394,9 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         new_query_string = urlencode(query_dict, doseq=True)
         context["filter_query"] = new_query_string
         context["today"] = date.today()
+        context["total_contracts"] = self.filterset.qs.aggregate(
+            total_count=Sum("quantity")
+        )["total_count"]
         return context
 
 
