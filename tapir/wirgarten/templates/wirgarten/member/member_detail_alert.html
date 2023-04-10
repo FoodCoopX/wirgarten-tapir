@@ -165,12 +165,12 @@
         const checkbox = document.getElementById('id_sepa-payment-consent');
 
          if (checkbox.checked) {
-      renewChangeConditionsBtn.removeAttribute('disabled');
-      renewSameConditionsBtn.removeAttribute('disabled');
-    } else {
-      renewChangeConditionsBtn.setAttribute('disabled', 'disabled');
-      renewSameConditionsBtn.setAttribute('disabled', 'disabled');
-    }
+          renewChangeConditionsBtn.removeAttribute('disabled');
+          renewSameConditionsBtn.removeAttribute('disabled');
+        } else {
+          renewChangeConditionsBtn.setAttribute('disabled', 'disabled');
+          renewSameConditionsBtn.setAttribute('disabled', 'disabled');
+        }
     }
 
     document.addEventListener('load', () => {
