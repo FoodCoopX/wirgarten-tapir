@@ -1344,6 +1344,8 @@ class SubscriptionListFilter(FilterSet):
             ("member__member_no", "⮝ Mitgliedsnummer"),
             ("-member__first_name", "⮟ Name"),
             ("member__first_name", "⮝ Name"),
+            ("-solidarity_price", "⮟ Solidarpreis"),
+            ("solidarity_price", "⮝ Solidarpreis"),
         ),
         required=False,
         empty_label="",
