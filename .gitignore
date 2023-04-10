@@ -114,3 +114,4 @@ testdata/odoo/filestore
 geckodriver.log
 /static/
 /real_data_lueneburg/
+/error_logs
