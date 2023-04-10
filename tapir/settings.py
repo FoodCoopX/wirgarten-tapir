@@ -42,6 +42,8 @@ if not DEBUG:
         else "\033[93m>>> WARNING: TAPIR_VERSION is not set, cache busting will not work!\033[0m"
     )
 
+ERROR_LOG_DIR = env.str("ERROR_LOG_DIR", default="error_logs")
+
 ### WIRGARTEN CONFIG ###
 
 COOP_SHARE_PRICE = 50.0
@@ -91,6 +93,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.accounts.middleware.KeycloakMiddleware",
+    "tapir.wirgarten.error_middleware.GlobalServerErrorHandlerMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
