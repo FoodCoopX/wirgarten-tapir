@@ -178,6 +178,14 @@
                 <div style="overflow-y: scroll; max-height: 30em;">
                     {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True hide_location=True %}
                 </div>
+                <hr/>
+                <div style="text-align:center">
+                    <i>{{ object.pickup_location.info }}</i>
+                </div>
+            </div>
+            <div class="card-footer"><strong>{{ object.pickup_location.name }}</strong>,
+                <small>{{ object.pickup_location.street }}, {{ object.pickup_location.postcode }} {{ object.pickup_location.city }}</small>
+                <br/>
             </div>
         </div>
 
@@ -353,6 +361,13 @@
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
+
+
+
+
+
+
 </script>
 {% endwith %}
 {% endblock %}
