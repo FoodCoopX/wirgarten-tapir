@@ -28,10 +28,16 @@ class GlobalServerErrorHandlerMiddleware:
         )
         error_log_filename = f"{error_log_dir}/error_log_{timestamp}.txt"
 
-        if not os.path.exists(error_log_dir):
-            os.makedirs(error_log_dir)
+        try:
+            if not os.path.exists(error_log_dir):
+                os.makedirs(error_log_dir)
 
-        with open(error_log_filename, "w") as error_log_file:
-            traceback.print_exc(file=error_log_file)
+            with open(error_log_filename, "w") as error_log_file:
+                traceback.print_exc(file=error_log_file)
 
-        print(f"\n\033[93m>>>>> saved stacktrace in:  {error_log_filename}\n\033[0m")
+            print(
+                f"\n\033[93m>>>>> saved stacktrace in:  {error_log_filename}\n\033[0m"
+            )
+        except Exception as e:
+            print("Error while dumping error log: ", e)
+            print("Original Exception: ", exception)
