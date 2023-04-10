@@ -605,22 +605,37 @@ def renew_contract_same_conditions(request, **kwargs):
     new_subs = []
     next_period = get_next_growing_period()
 
+    available_product_types = {
+        ProductTypes.HARVEST_SHARES: is_harvest_shares_available(
+            next_period.start_date
+        ),
+        ProductTypes.CHICKEN_SHARES: is_chicken_shares_available(
+            next_period.start_date
+        ),
+        ProductTypes.BESTELLCOOP: is_bestellcoop_available(next_period.start_date),
+    }
+
     for sub in get_active_subscriptions().filter(member_id=member_id):
-        new_subs.append(
-            Subscription(
-                member=sub.member,
-                product=sub.product,
-                period=next_period,
-                quantity=sub.quantity,
-                start_date=next_period.start_date,
-                end_date=next_period.end_date,
-                solidarity_price=sub.solidarity_price,
-                mandate_ref=sub.mandate_ref,
+        if available_product_types[sub.product.type.name]:
+            new_subs.append(
+                Subscription(
+                    member=sub.member,
+                    product=sub.product,
+                    period=next_period,
+                    quantity=sub.quantity,
+                    start_date=next_period.start_date,
+                    end_date=next_period.end_date,
+                    solidarity_price=sub.solidarity_price,
+                    mandate_ref=sub.mandate_ref,
+                )
             )
-        )
-        # reset cancellation date on existing sub
-        sub.cancellation_ts = None
-        sub.save()
+            # reset cancellation date on existing sub
+            sub.cancellation_ts = None
+            sub.save()
+        else:
+            print(
+                f"[{sub.member.id}] Renew with same conditions. Skipping {sub.product.type.name} because there is no capacity or the product type was removed."
+            )
 
     Subscription.objects.bulk_create(new_subs)
     send_order_confirmation(Member.objects.get(id=member_id), new_subs)

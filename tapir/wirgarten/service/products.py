@@ -464,22 +464,23 @@ def create_or_update_default_tax_rate(
 def get_free_product_capacity(
     product_type_id: str, reference_date: date = date.today()
 ):
-    total_capacity = float(
-        get_active_product_capacities(reference_date)
-        .get(product_type_id=product_type_id)
-        .capacity
+    active_product_capacities = get_active_product_capacities(reference_date).filter(
+        product_type_id=product_type_id
     )
-
-    used_capacity = sum(
-        map(
-            lambda sub: float(get_product_price(sub.product, reference_date).price)
-            * sub.quantity,
-            get_future_subscriptions(reference_date).filter(
-                product__type_id=product_type_id
-            ),
+    if active_product_capacities.exists():
+        total_capacity = float(active_product_capacities.first().capacity)
+        used_capacity = sum(
+            map(
+                lambda sub: float(get_product_price(sub.product, reference_date).price)
+                * sub.quantity,
+                get_future_subscriptions(reference_date).filter(
+                    product__type_id=product_type_id
+                ),
+            )
         )
-    )
-    return total_capacity - used_capacity
+        return total_capacity - used_capacity
+    else:
+        return 0
 
 
 def get_cheapest_product_price(
