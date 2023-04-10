@@ -1,8 +1,10 @@
 import os
+import sys
 import traceback
 from datetime import datetime
 
 from django.http import HttpResponseServerError
+from django.views import debug
 
 from tapir import settings
 
@@ -17,7 +19,10 @@ class GlobalServerErrorHandlerMiddleware:
             return response
         except Exception as e:
             self.handle_server_error(request, e)
-            return HttpResponseServerError("Internal Server Error")
+            if settings.DEBUG:
+                return debug.technical_500_response(request, *sys.exc_info())
+            else:
+                return HttpResponseServerError("Internal Server Error")
 
     def handle_server_error(self, request, exception):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -27,6 +32,8 @@ class GlobalServerErrorHandlerMiddleware:
             else "error_logs"
         )
         error_log_filename = f"{error_log_dir}/error_log_{timestamp}.txt"
+
+        traceback.print_exc()
 
         try:
             if not os.path.exists(error_log_dir):
