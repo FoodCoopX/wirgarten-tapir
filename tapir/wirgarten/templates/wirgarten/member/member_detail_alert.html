@@ -159,7 +159,6 @@
 {% endif %}
 
 <script>
-document.addEventListener('load', () => {
     const handleRenewSepaConsent = () => {
         const renewChangeBtn = document.getElementById("renewChangeConditionsBtn");
         const renewSameBtn = document.getElementById("renewSameConditionsBtn");
@@ -174,27 +173,29 @@ document.addEventListener('load', () => {
     }
     }
 
-    const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
-    const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
-    const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
-    const passwordChangedConfirmationElem = document.getElementById("password-changed-confirmation");
-    const params = Tapir.getUrlParams();
-    if(params.cancelled && cancellationConfirmationElem){
-        cancellationConfirmationElem.style.display = 'block';
-        cancellationDateElem = document.getElementById("cancellation_date")
-        cancellationDateElem.innerText = params.cancelled;
-    }
-    if(params.notrenewed && notRenewedConfirmationElem){
-        notRenewedConfirmationElem.style.display = 'block';
-    }
-    if(params.email_changed) {
-        emailChangedConfirmationElem.style.display = 'block';
-    }
-    if(params.passwordchanged){
-        passwordChangedConfirmationElem.style.display = 'block';
-    }
+    document.addEventListener('load', () => {
+        const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
+        const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
+        const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
+        const passwordChangedConfirmationElem = document.getElementById("password-changed-confirmation");
+        const params = Tapir.getUrlParams();
+        if(params.cancelled && cancellationConfirmationElem){
+            cancellationConfirmationElem.style.display = 'block';
+            cancellationDateElem = document.getElementById("cancellation_date")
+            cancellationDateElem.innerText = params.cancelled;
+        }
+        if(params.notrenewed && notRenewedConfirmationElem){
+            notRenewedConfirmationElem.style.display = 'block';
+        }
+        if(params.email_changed) {
+            emailChangedConfirmationElem.style.display = 'block';
+        }
+        if(params.passwordchanged){
+            passwordChangedConfirmationElem.style.display = 'block';
+        }
 
-   Tapir.replaceUrlParams({})
+       Tapir.replaceUrlParams({})
+   });
 
     const handleCancellation = () => {
         ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
@@ -225,5 +226,5 @@ document.addEventListener('load', () => {
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
-    });
+
 </script>
