@@ -875,7 +875,7 @@ def get_payment_amount_edit_form(request, **kwargs):
 
         if not hasattr(form, "payment"):
             new_payment = Payment.objects.create(
-                due_date=form.payment_due_date,
+                due_date=datetime.strptime(form.payment_due_date, "%d.%m.%Y"),
                 amount=form.data["amount"],
                 mandate_ref_id=form.mandate_ref_id,
                 edited=True,

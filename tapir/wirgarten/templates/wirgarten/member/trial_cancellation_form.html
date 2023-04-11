@@ -32,17 +32,21 @@
       });
     }
 
+    const allCheckboxes = [...baseProductCheckboxes, ...additionalProductCheckboxes];
+    const membershipCheckbox = document.getElementById('id_cancel_coop');
+
     const handleCheck = () => {
+        if(!membershipCheckbox){
+            return;
+        }
+
         membershipCheckbox.disabled = !allCheckboxes.every(it => it.checked);
         if(membershipCheckbox.disabled){
             membershipCheckbox.checked = false;
         }
     }
 
-    const allCheckboxes = [...baseProductCheckboxes, ...additionalProductCheckboxes];
-    const membershipCheckbox = document.getElementById('id_cancel_coop');
     allCheckboxes.forEach(it => it.addEventListener('change', handleCheck));
-
 
     // remove disabled properties on submit (or the fields will be missing)
     const form = document.querySelector('form');
