@@ -257,6 +257,10 @@ def send_cancellation_confirmation_email(
     if revoke_coop_membership:
         contract_list += "\n- Beitrittserklärung zur Genossenschaft"
 
+    send_email_member_contract_end_reminder.apply_async(
+        eta=contract_end_date, args=[member_id]
+    )
+
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT),
@@ -265,10 +269,6 @@ def send_cancellation_confirmation_email(
             "contract_end_date": format_date(contract_end_date),
             "contract_list": contract_list,
         },
-    )
-
-    send_email_member_contract_end_reminder.apply_async(
-        eta=contract_end_date, args=[member_id]
     )
 
 
