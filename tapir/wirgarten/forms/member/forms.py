@@ -286,12 +286,12 @@ class TrialCancellationForm(Form):
             self.subs[0] if len(self.subs) > 0 else None
         )
 
-        member = Member.objects.get(id=self.member_id)
+        self.member = Member.objects.get(id=self.member_id)
 
         def is_new_member() -> bool:
             return (
-                member.coop_entry_date is not None
-                and member.coop_entry_date > self.next_trial_end_date
+                self.member.coop_entry_date is not None
+                and self.member.coop_entry_date > self.next_trial_end_date
             )
 
         for sub in self.subs:
@@ -306,7 +306,7 @@ class TrialCancellationForm(Form):
                 )
 
         if is_new_member():
-            found = member.coopsharetransaction_set.filter(
+            found = self.member.coopsharetransaction_set.filter(
                 transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
             )
             if found.exists():
@@ -349,20 +349,20 @@ class TrialCancellationForm(Form):
 
         return not self._errors and super(TrialCancellationForm, self).is_valid()
 
-    @transaction.atomic
-    def save(self):
-        cancel_coop = (
-            "cancel_coop" in self.cleaned_data
-            and self.cleaned_data.pop("cancel_coop")
-            and self.share_ownership
-        )
-        subs_to_cancel = self.subs.filter(
+    def get_subs_to_cancel(self):
+        return self.subs.filter(
             id__in=[
                 key.replace("sub_", "")
                 for key, value in self.cleaned_data.items()
                 if value
             ]
         )
+
+    @transaction.atomic
+    def save(self):
+        cancel_coop = self.is_cancel_coop_selected()
+
+        subs_to_cancel = self.get_subs_to_cancel()
         now = datetime.now(tz=timezone.utc)
         for sub in subs_to_cancel:
             sub.cancellation_ts = now
@@ -373,7 +373,7 @@ class TrialCancellationForm(Form):
             Payment.objects.get(
                 mandate_ref=self.share_ownership.mandate_ref, due_date__gt=now
             ).delete()
-            self.share_ownership.delete()  # TODO: create log entry
+            self.share_ownership.delete()
 
         send_cancellation_confirmation_email(
             self.member_id, self.next_trial_end_date, subs_to_cancel, cancel_coop
@@ -382,6 +382,15 @@ class TrialCancellationForm(Form):
         return (
             subs_to_cancel[0].end_date if subs_to_cancel else self.next_trial_end_date
         )
+
+    def is_cancel_coop_selected(self):
+        if not hasattr(self, "cancel_coop"):
+            self.cancel_coop = (
+                "cancel_coop" in self.cleaned_data
+                and self.cleaned_data.pop("cancel_coop")
+                and self.share_ownership
+            )
+        return self.cancel_coop
 
 
 class SubscriptionRenewalForm(Form):
@@ -431,9 +440,9 @@ class SubscriptionRenewalForm(Form):
             form.save(*args, **kwargs)
 
         member_id = kwargs["member_id"]
-        subs = get_future_subscriptions(self.start_date).filter(
+        self.subs = get_future_subscriptions(self.start_date).filter(
             member_id=member_id, cancellation_ts__isnull=True
         )
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(member, subs)
+        send_order_confirmation(member, self.subs)

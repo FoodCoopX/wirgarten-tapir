@@ -166,7 +166,7 @@ class HarvestShareForm(forms.Form):
 
         now = timezone.now()
 
-        subs = []
+        self.subs = []
         for key, quantity in self.cleaned_data.items():
             if (
                 key.startswith(HARVEST_SHARE_FIELD_PREFIX)
@@ -192,11 +192,11 @@ class HarvestShareForm(forms.Form):
                     withdrawal_consent_ts=timezone.now(),
                 )
 
-                subs.append(sub)
+                self.subs.append(sub)
 
         if send_email:
             member = Member.objects.get(id=member_id)
-            send_order_confirmation(member, subs)
+            send_order_confirmation(member, self.subs)
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():

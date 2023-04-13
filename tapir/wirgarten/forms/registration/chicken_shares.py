@@ -101,22 +101,27 @@ class ChickenShareForm(forms.Form):
 
         now = timezone.now()
 
+        self.subs = []
         for key, quantity in self.cleaned_data.items():
             if quantity and quantity > 0 and key.startswith("chicken_shares_"):
                 product = Product.objects.get(
                     type=self.product_type, name=key.replace("chicken_shares_", "")
                 )
-                Subscription.objects.create(
-                    member_id=member_id,
-                    product=product,
-                    quantity=quantity,
-                    period=self.growing_period,
-                    start_date=self.start_date,
-                    end_date=self.growing_period.end_date,
-                    mandate_ref=mandate_ref,
-                    consent_ts=now,
-                    withdrawal_consent_ts=now,
+                self.subs.append(
+                    Subscription(
+                        member_id=member_id,
+                        product=product,
+                        quantity=quantity,
+                        period=self.growing_period,
+                        start_date=self.start_date,
+                        end_date=self.growing_period.end_date,
+                        mandate_ref=mandate_ref,
+                        consent_ts=now,
+                        withdrawal_consent_ts=now,
+                    )
                 )
+
+        Subscription.objects.bulk_create(self.subs)
 
     def is_valid(self):
         super().is_valid()

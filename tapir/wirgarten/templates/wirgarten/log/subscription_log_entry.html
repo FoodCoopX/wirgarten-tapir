@@ -1,0 +1,16 @@
+<i><small>
+    {% if change_type == 'CANCELLED' %}
+    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} während Probezeitraum gekündigt:
+    {% elif change_type == 'RENEWED' %}
+    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} verlängert:
+    {% elif change_type == 'ADDED' %}
+    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} abgeschlossen:
+    {% elif change_type == 'NOT_RENEWED' %}
+    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} explizit NICHT verlängert:
+    {% endif %}
+</small></i><br/>
+<ul>
+    {% for sub in subscriptions %}
+    <li>{{sub}}</li>
+    {% endfor %}
+</ul>
