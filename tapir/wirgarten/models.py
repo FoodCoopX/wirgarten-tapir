@@ -607,6 +607,52 @@ class ReceivedCoopSharesLogEntry(TransferCoopSharesLogEntry):
     template_name = "wirgarten/log/received_coop_shares_log_entry.html"
 
 
+class SubscriptionChangeLogEntry(LogEntry):
+    """
+    This log entry is created whenever a Subscription is created or cancelled.
+    """
+
+    template_name = "wirgarten/log/subscription_log_entry.html"
+
+    class SubscriptionChangeLogEntryType(models.TextChoices):
+        ADDED = "ADDED", _("Vertragsabschluss")
+        CANCELLED = "CANCELLED", _("Kündigung")
+        RENEWED = "RENEWED", _("Verlängerung")
+        NOT_RENEWED = "NOT_RENEWED", _("Keine Verlängerung")
+
+    change_type = models.CharField(
+        choices=SubscriptionChangeLogEntryType.choices, null=False, max_length=32
+    )
+    subscriptions = models.CharField(null=False, blank=False, max_length=1024)
+
+    def populate(
+        self,
+        actor: TapirUser,
+        user: Member,
+        change_type: SubscriptionChangeLogEntryType,
+        subscriptions: [Subscription],
+        **kwargs,
+    ):
+        super().populate(actor=actor, user=user, **kwargs)
+        self.change_type = change_type
+        self.subscriptions = ", ".join(
+            list(
+                map(
+                    lambda x: f"{x} ({format_date(x.start_date)} - {format_date(x.end_date)})",
+                    subscriptions,
+                )
+            )
+        )
+
+        return self
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["subscriptions"] = self.subscriptions.split(", ")
+        context["change_type"] = self.change_type
+        return context
+
+
 class WaitingListEntry(TapirModel):
     class WaitingListType(models.TextChoices):
         HARVEST_SHARES = "HARVEST_SHARES", _("Ernteanteile")

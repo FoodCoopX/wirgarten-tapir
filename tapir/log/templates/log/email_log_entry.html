@@ -1,1 +1,2 @@
-✉️ Email sent: "{{ entry.subject }}" (<a href="{% url "log:email_log_entry_content" entry.pk %}">📥 Download</a>)
+✉️ Email gesendet: "{{ entry.subject }}"
+<button style="float:right" class="btn tapir-btn btn-sm btn-warning" onclick="handleOpenEmail('{{entry.subject}}', '{% url 'log:email_log_entry_content' entry.pk %}')">Anzeigen</button>

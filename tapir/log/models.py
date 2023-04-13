@@ -111,7 +111,7 @@ class EmailLogEntry(LogEntry):
 
     def populate(self, email_message: EmailMessage, *args, **kwargs):
         self.subject = email_message.subject
-        self.email_content = email_message.message().as_bytes()
+        self.email_content = bytes(email_message.body, "utf-8")
         return super().populate(*args, **kwargs)
 
 
@@ -132,7 +132,6 @@ class TextLogEntry(LogEntry):
 
 
 class UpdateModelLogEntry(LogEntry):
-
     old_values = HStoreField()
     new_values = HStoreField()
 

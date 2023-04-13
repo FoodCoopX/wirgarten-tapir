@@ -52,8 +52,9 @@ from django_filters import (
 from django_filters.views import FilterView
 
 from tapir import settings
-from tapir.accounts.models import EmailChangeRequest, TapirUser
+from tapir.accounts.models import EmailChangeRequest, TapirUser, UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.models import TextLogEntry
 from tapir.wirgarten.constants import (
     ProductTypes,
     Permission,
@@ -90,6 +91,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Product,
     CoopShareTransaction,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -638,7 +640,17 @@ def renew_contract_same_conditions(request, **kwargs):
             )
 
     Subscription.objects.bulk_create(new_subs)
-    send_order_confirmation(Member.objects.get(id=member_id), new_subs)
+
+    member = Member.objects.get(id=member_id)
+
+    SubscriptionChangeLogEntry().populate(
+        actor=request.user,
+        user=member,
+        change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.RENEWED,
+        subscriptions=new_subs,
+    ).save()
+
+    send_order_confirmation(member, new_subs)
 
     return HttpResponseRedirect(member_detail_url(member_id))
 
@@ -653,7 +665,12 @@ def cancel_contract_at_period_end(request, **kwargs):
     #    raise PermissionDenied("A member can only cancel a contract themself.")
 
     now = timezone.now()
-    subs = list(get_future_subscriptions().filter(member_id=member_id))
+    subs = list(
+        get_future_subscriptions().filter(
+            member_id=member_id,
+            period=GrowingPeriod.objects.get(start_date__lte=now, end_date__gte=now),
+        )
+    )
     for sub in subs:
         sub.cancellation_ts = now
         sub.save()
@@ -661,6 +678,14 @@ def cancel_contract_at_period_end(request, **kwargs):
     end_date = subs[0].end_date
 
     member = Member.objects.get(id=member_id)
+
+    SubscriptionChangeLogEntry().populate(
+        actor=request.user,
+        user=member,
+        change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.NOT_RENEWED,
+        subscriptions=subs,
+    ).save()
+
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT),
@@ -957,11 +982,20 @@ def get_member_personal_data_edit_form(request, **kwargs):
     )
     kwargs["can_edit_email"] = not get_parameter_value(Parameter.MEMBER_LOCK_FUNCTIONS)
 
+    @transaction.atomic
+    def save(member: Member):
+        orig = Member.objects.get(id=member.id)
+        UpdateTapirUserLogEntry().populate(
+            old_model=orig, new_model=member, user=member, actor=request.user
+        ).save()
+
+        member.save()
+
     return get_form_modal(
         request=request,
         form=PersonalDataForm,
         instance=Member.objects.get(pk=pk),
-        handler=lambda x: x.instance.save(),
+        handler=lambda x: save(x.instance),
         redirect_url_resolver=lambda _: member_detail_url(pk),
         **kwargs,
     )
@@ -989,6 +1023,12 @@ def get_member_payment_data_edit_form(request, **kwargs):
         member.account_owner = account_owner
         member.iban = iban
         member.sepa_consent = timezone.now()
+
+        orig = Member.objects.get(id=member.id)
+        UpdateTapirUserLogEntry().populate(
+            old_model=orig, new_model=member, user=member, actor=request.user
+        ).save()
+
         member.save()
         return member
 
@@ -1095,12 +1135,25 @@ def get_renew_contracts_form(request, **kwargs):
 
     kwargs["start_date"] = get_next_growing_period().start_date
 
+    @transaction.atomic
+    def save(form: SubscriptionRenewalForm):
+        member = Member.objects.get(id=member_id)
+
+        form.save(
+            member_id=member_id,
+        )
+
+        SubscriptionChangeLogEntry().populate(
+            actor=request.user,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.RENEWED,
+            subscriptions=form.subs,
+        ).save()
+
     return get_form_modal(
         request=request,
         form=SubscriptionRenewalForm,
-        handler=lambda x: x.save(
-            member_id=member_id,
-        ),
+        handler=lambda x: save(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -1114,9 +1167,10 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     check_permission_or_self(member_id, request)
 
+    member = Member.objects.get(pk=member_id)
+
     if not is_harvest_shares_available():
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
-        member = Member.objects.get(pk=member_id)
         wl_kwargs = kwargs.copy()
         wl_kwargs["initial"] = {
             "first_name": member.first_name,
@@ -1126,10 +1180,21 @@ def get_add_harvest_shares_form(request, **kwargs):
         }
         return get_harvest_shares_waiting_list_form(request, **wl_kwargs)
 
+    @transaction.atomic
+    def save(form: HarvestShareForm):
+        form.save(member_id=member_id, send_email=True)
+
+        SubscriptionChangeLogEntry().populate(
+            actor=request.user,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=form.subs,
+        ).save()
+
     return get_form_modal(
         request=request,
         form=HarvestShareForm,
-        handler=lambda x: x.save(member_id=member_id, send_email=True),
+        handler=lambda x: save(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -1146,12 +1211,23 @@ def get_add_chicken_shares_form(request, **kwargs):
     if not is_chicken_shares_available():
         raise Exception("Keine Hühneranteile verfügbar")
 
+    @transaction.atomic
+    def save(form: ChickenShareForm):
+        form.save(member_id=member_id)
+
+        member = Member.objects.get(id=member_id)
+
+        SubscriptionChangeLogEntry().populate(
+            actor=request.user,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=form.subs,
+        ).save()
+
     return get_form_modal(
         request=request,
         form=ChickenShareForm,
-        handler=lambda x: x.save(
-            member_id=member_id,
-        ),
+        handler=lambda x: save(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -1168,12 +1244,23 @@ def get_add_bestellcoop_form(request, **kwargs):
     if not is_bestellcoop_available():
         raise Exception("BestellCoop nicht verfügbar")
 
+    @transaction.atomic
+    def save(form: BestellCoopForm):
+        form.save(member_id=member_id)
+
+        member = Member.objects.get(id=member_id)
+
+        SubscriptionChangeLogEntry().populate(
+            actor=request.user,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=[form.sub],
+        ).save()
+
     return get_form_modal(
         request=request,
         form=BestellCoopForm,
-        handler=lambda x: x.save(
-            member_id=member_id,
-        ),
+        handler=lambda x: save(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -1218,10 +1305,30 @@ def get_cancel_trial_form(request, **kwargs):
     member_id = kwargs["pk"]
     check_permission_or_self(member_id, request)
 
+    @transaction.atomic
+    def save(form: TrialCancellationForm):
+        subs_to_cancel = form.get_subs_to_cancel()
+        cancel_coop = form.is_cancel_coop_selected()
+        if cancel_coop:
+            TextLogEntry().populate(
+                text="Beitrittserklärung zur Genossenschaft zurückgezogen",
+                user=form.member,
+                actor=request.user,
+            ).save()
+        if len(subs_to_cancel) > 0:
+            SubscriptionChangeLogEntry().populate(
+                actor=request.user,
+                user=form.member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=subs_to_cancel,
+            ).save()
+
+        form.save()
+
     return get_form_modal(
         request=request,
         form=TrialCancellationForm,
-        handler=lambda x: x.save(),
+        handler=lambda x: save(x),
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="
         + format_date(x),
