@@ -985,10 +985,9 @@ def get_member_payment_data_edit_form(request, **kwargs):
 
     instance = Member.objects.get(pk=member_id)
 
-    def update_payment_data(member: Member, account_owner: str, iban: str, bic: str):
+    def update_payment_data(member: Member, account_owner: str, iban: str):
         member.account_owner = account_owner
         member.iban = iban
-        member.bic = bic
         member.sepa_consent = timezone.now()
         member.save()
         return member
@@ -1001,7 +1000,6 @@ def get_member_payment_data_edit_form(request, **kwargs):
             member=instance,
             account_owner=x.cleaned_data["account_owner"],
             iban=x.cleaned_data["iban"],
-            bic=x.cleaned_data["bic"],
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
