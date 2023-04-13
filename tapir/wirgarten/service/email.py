@@ -6,6 +6,8 @@ from django.template.loader import render_to_string
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
+from tapir.log.models import EmailLogEntry
+from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.utils import format_date
@@ -37,7 +39,10 @@ def send_email(to_email: [str], subject: str, content: str, variables: dict = {}
     email.content_subtype = "html"
     email.send()
 
-    # TODO: create log entry
+    found_member = Member.objects.filter(email=to_email[0])
+    EmailLogEntry().populate(
+        email_message=email, user=found_member[0] if found_member.exists() else None
+    ).save()
 
 
 def get_default_vars(to_email):

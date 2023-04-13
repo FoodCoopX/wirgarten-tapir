@@ -19,7 +19,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir import utils
 from tapir.core.models import generate_id, ID_LENGTH, TapirModel
-from tapir.log.models import UpdateModelLogEntry
+from tapir.log.models import UpdateModelLogEntry, TextLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
 
@@ -88,6 +88,9 @@ class KeycloakUser(AbstractUser):
             redirect_uri=settings.SITE_URL,
             client_id=settings.KEYCLOAK_ADMIN_CONFIG["FRONTEND_CLIENT_ID"],
         )
+        TextLogEntry().populate(
+            text='Keycloak Email gesendet: "Aktivierung des Benutzerkontos"', user=self
+        ).save()
 
     def has_perm(self, perm, obj=None):
         return perm in self.roles
