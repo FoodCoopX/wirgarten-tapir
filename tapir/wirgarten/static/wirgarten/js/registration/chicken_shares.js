@@ -1,4 +1,4 @@
-var initChickenShareSummary = (max_shares, chicken_share_prices, capacity_total) => {
+var initChickenShareSummary = (chicken_share_prices, capacity_total) => {
     const calculatePrice = (chicken_share) => {
         const [key, price] = chicken_share.split(':');
         let elem = document.getElementsByName('Additional Shares-' + key)[0];
@@ -16,10 +16,10 @@ var initChickenShareSummary = (max_shares, chicken_share_prices, capacity_total)
 
     const handleChange = (event) => {
         if(event){
-            if(event.target.value > max_shares){
-                event.target.value = max_shares
-            } else if(event.target.value < 0){
+            if(event.target.value < 0){
                 event.target.value = 0
+            } else if(event.target.value > event.target.max){
+                event.target.value = event.target.max
             }
         }
 
@@ -37,7 +37,7 @@ var initChickenShareSummary = (max_shares, chicken_share_prices, capacity_total)
             input = document.getElementsByName(key)[0]
         }
 
-        input.max = Math.max(0,Math.min(max_shares, Math.floor(capacity_total / price)))
+        input.max = Math.max(0, Math.floor(capacity_total / price))
 
         if(input.max == 0){
             input.readOnly=true;
