@@ -5,5 +5,5 @@
 <script src="{% static 'wirgarten/js/registration/chicken_shares.js' %}"></script>
 {% endblock %}
 
-<span style="float:right; font-size:1.25rem">= <strong><span id="additional_shares_total">0.00</span> €</strong> / Monat</span>
+<span style="float:right; font-size:1.25rem">= <strong><span id="additional_shares_total">0.00</span> €</strong> inkl. MwSt / Monat</span>
 <script>initChickenShareSummary({{ 'wirgarten.chicken.max_shares'|parameter }}, '{{form.chicken_share_prices}}'.split(','), {{form.free_capacity}})</script>

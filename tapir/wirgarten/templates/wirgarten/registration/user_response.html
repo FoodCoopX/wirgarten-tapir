@@ -1,0 +1,18 @@
+{% extends 'wirgarten/base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div id="form-content" style="max-width: 30em; margin: auto;">
+    <form id="form-to-submit" method="post"
+          style="display:flex; flex-direction: column; align-items: center; width: 100%">
+        {% csrf_token %}
+        <div style="margin-left: 2em">
+            {% for field in form %}
+            {% bootstrap_field field %}
+            {% endfor %}
+        </div>
+        <button class="btn tapir-btn btn-success" type="submit">Abschicken</button>
+    </form>
+</div>
+
+{% endblock %}

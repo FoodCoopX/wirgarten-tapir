@@ -24,9 +24,15 @@ def remove(value, arg):
     value.pop(arg, None)
 
 
+# FIXME: this is very hacky, there is probably a better way...
 @register.filter(name="get_step_title")
 def get_step_title(step):
-    return FORM_TITLES.get(step, step)
+    return FORM_TITLES.get(step, step)[0]
+
+
+@register.filter(name="get_step_description")
+def get_step_description(step):
+    return FORM_TITLES.get(step, step)[1]
 
 
 @register.inclusion_tag(

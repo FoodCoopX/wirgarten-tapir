@@ -1,0 +1,37 @@
+[
+  {
+    "model": "wirgarten.QuestionaireTrafficSourceOption",
+    "pk": "KCmjIaxWaE",
+    "fields": {
+      "name": "WirGarten-Mitglied"
+    }
+  },
+  {
+    "model": "wirgarten.QuestionaireTrafficSourceOption",
+    "pk": "APnNX681qj",
+    "fields": {
+      "name": "Flyer & Plakate"
+    }
+  },
+  {
+    "model": "wirgarten.QuestionaireTrafficSourceOption",
+    "pk": "0iS9S9j5UC",
+    "fields": {
+      "name": "Social Media"
+    }
+  },
+  {
+    "model": "wirgarten.QuestionaireTrafficSourceOption",
+    "pk": "oczudHHxIQ",
+    "fields": {
+      "name": "Zeitungsartikel"
+    }
+  },
+  {
+    "model": "wirgarten.QuestionaireTrafficSourceOption",
+    "pk": "6s0arbJPVI",
+    "fields": {
+      "name": "Suchmaschine"
+    }
+  }
+]

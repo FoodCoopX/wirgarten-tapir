@@ -1,9 +1,64 @@
-<div style="margin-bottom:1em">
-<select name="{{ widget.name }}" class="form-select" id="id_pickup_location">
-{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
-  <optgroup label="{{ group_name }}">{% endif %}{% for option in group_choices %}
-  {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
-  </optgroup>{% endif %}{% endfor %}
-</select>
+<input type="hidden" name="{{ widget.name }}" id="hidden_pickup_location">
+<div style="display:grid; grid-template-columns: 1fr 1fr; grid-gap: 1em">
+    <div style="margin-bottom:1em" class="list-group" id="id_pickup_location">
+        {% for group_name, group_choices, group_index in widget.optgroups %}
+        {% if group_name %}
+        <div class="list-group-item list-group-item-primary">{{ group_name }}</div>
+        {% endif %}
+        {% for option in group_choices %}
+        <a href="#" class="list-group-item list-group-item-action" data-value="{{ option.value }}"
+           {% if option.selected %}
+           aria-current="true" {% endif %}>{{ option.label|safe }}</a>
+        {% endfor %}
+        {% endfor %}
+    </div>
+    <script>
+  const pickupLocation = document.querySelector('#id_pickup_location');
+  const items = pickupLocation.querySelectorAll('.list-group-item-action');
+
+       function handleItemClick(item) {
+    // Remove the 'active' class from other items and add it to the clicked item
+    items.forEach(function(item) {
+      item.classList.remove('active');
+    });
+    item.classList.add('active');
+
+    // Set the value of the hidden input field to the selected option's value
+    const selectedValue = item.getAttribute('data-value');
+    document.querySelector('#hidden_pickup_location').value = selectedValue;
+
+  }
+
+     const handleSelect = (id) => {
+     const item = document.querySelector('.list-group-item-action[data-value="' + id + '"]');
+    if (item) {
+      handleItemClick(item);
+    } else {
+      // Remove the 'active' class from all items and clear the hidden input field value
+      items.forEach(function(item) {
+        item.classList.remove('active');
+      });
+      document.querySelector('#hidden_pickup_location').value = '';
+    }
+    }
+
+
+    </script>
+    <div>
+        {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=widget.attrs.data selected_product_types=widget.attrs.selected_product_types selected=widget.attrs.initial callback='handleSelect' height='100%' %}
+    </div>
 </div>
-{% include 'wirgarten/pickup_location/pickup_location_map.html' with data=widget.attrs.data selected_product_types=widget.attrs.selected_product_types selected=widget.attrs.initial %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      handleItemClick(item);
+      PickupLocationMap.selectLocation(item.getAttribute('data-value'));
+    });
+  });
+
+  const label = document.querySelector('label[for="id_Pickup Location-pickup_location"]');
+  label.style.display = 'none';
+});
+</script>

@@ -665,3 +665,18 @@ class WaitingListEntry(TapirModel):
     type = models.CharField(choices=WaitingListType.choices, null=False, max_length=32)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     privacy_consent = models.DateTimeField(null=False)
+
+
+class QuestionaireTrafficSourceOption(TapirModel):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class QuestionaireTrafficSourceResponse(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    sources = models.ManyToManyField(QuestionaireTrafficSourceOption)
+
+    def __str__(self):
+        return self.name

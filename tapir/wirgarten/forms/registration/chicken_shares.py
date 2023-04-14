@@ -74,7 +74,7 @@ class ChickenShareForm(forms.Form):
                         variation=k.replace("chicken_shares_", "")
                     )
                 ),
-                help_text="""{:.2f} € / Monat""".format(prices[v.id]),
+                help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
             )
         self.fields["consent_chicken_shares"] = forms.BooleanField(
             label=_(

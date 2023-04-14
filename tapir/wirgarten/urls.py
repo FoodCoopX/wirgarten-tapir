@@ -1,10 +1,10 @@
 from django.urls import path
-from django.views import generic
 
 from tapir.wirgarten.views import (
     RegistrationWizardView,
     RegistrationWizardConfirmView,
     exported_files,
+    questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
 from tapir.wirgarten.views.member import (
@@ -247,6 +247,11 @@ urlpatterns = [
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(
         "deliveries/<str:pk>", MemberDeliveriesView.as_view(), name="member_deliveries"
+    ),
+    path(
+        "registration/marketingfeedback",
+        questionaire_trafficsource_view,
+        name="marketing_feedback_form",
     ),
 ]
 app_name = "wirgarten"

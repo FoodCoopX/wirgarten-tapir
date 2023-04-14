@@ -23,12 +23,20 @@
                     <td>{{wizard.form.harvest_shares_info.end_date}}</td>
                 </tr>
                 <tr>
-                    <th>Probezeitraum</th>
-                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                    <th>Erste Lieferung</th>
+                    <td>{{wizard.form.harvest_shares_info.first_delivery_date}}</td>
                 </tr>
                 <tr>
-                    <th>Abholort</th>
-                    <td>{{wizard.form.pickup_location| safe}}</td>
+                    <th>Lieferintervall</th>
+                    <td><small>{{ wizard.form.harvest_shares_info.delivery_interval }}</small></td>
+                </tr>
+                <tr>
+                    <th>Kündigungsfrist</th>
+                    <td><small>Innerhalb der ersten 4 Wochen nach Startdatum</small></td>
+                </tr>
+                <tr>
+                    <th>Abholort/-zeit</th>
+                    <td>{{wizard.form.pickup_location|safe}}</td>
                 </tr>
             </table>
         </div>
@@ -38,8 +46,8 @@
                 {% if val.amount > 0 %}
                 <tr>
                     <th>{{val.name}}</th>
-                    <td style="text-align:right">{{val.amount}} x</td>
-                    <td style="text-align:right">{{val.price}} € / Monat</td>
+                    <td style="text-align:right;white-space: nowrap">{{val.amount}} x</td>
+                    <td style="text-align:right;white-space: nowrap">{{val.price}} € / Monat</td>
                 </tr>
                 {% endif %}
                 {% endfor %}
@@ -47,18 +55,11 @@
 
                 {% if wizard.form.harvest_shares_info.solidarity_price_harvest_shares != 0 %}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td style="text-align:right">= {{wizard.form.harvest_shares_info.total_without_solidarity}} € /
-                        Monat
-                    </td>
-                </tr>
-                <tr>
                     <th>Solidarpreis</th>
-                    <td style="text-align:right">
+                    <td style="text-align:right;white-space: nowrap">
                         {% widthratio wizard.form.harvest_shares_info.solidarity_price_harvest_shares 1 100 %} %
                     </td>
-                    <td style="text-align:right">{{wizard.form.harvest_shares_info.solidarity_price_diff}} € / Monat
+                    <td style="text-align:right;white-space: nowrap">{{wizard.form.harvest_shares_info.solidarity_price_diff}} € / Monat
                     </td>
                 </tr>
                 {% endif %}
@@ -67,12 +68,13 @@
                     <th></th>
                     <th></th>
                     {% if wizard.form.harvest_shares_info.has_shares %}
-                    <th style="text-align:right">= {{wizard.form.harvest_shares_info.total}} € / Monat</th>
+                    <th style="text-align:right; white-space: nowrap">= {{wizard.form.harvest_shares_info.total}} € / Monat</th>
                     {% else %}
                     <th style="text-align:right">keine Ernteanteile</th>
                     {% endif %}
                 </tr>
             </table>
+            <small style="float:right;margin:-0.75em 0 -0.5em -0.75em">inkl. MwSt</small>
         </div>
     </div>
 
@@ -80,37 +82,6 @@
     {% summary_card_disabled "Ernteanteile" %}
     {% endif %}
 
-
-    <!-- COOP SHARES -->
-    <div class="card summary-card-active">
-        <div class="card-header"><h5 class="card-title">Genossenschaftsanteile</h5></div>
-        <div class="card-body">
-            <p>Als <strong>Genossenschaftsmitglied</strong> wirst du <strong>Miteigentümer:in des WirGarten
-                Lüneburg</strong>.</p>
-            <p>Das heißt, du
-                finanzierst
-                unser Gemeinschaftsunternehmen mit und hast bei allen zentralen Entscheidungen und Wahlen ein
-                Stimmrecht. Unter <a href="https://lueneburg.wirgarten.com/genossenschaft/">Genossenschaft</a> haben
-                wir das nochmal ausführlich erklärt!</p>
-        </div>
-        <div class="card-footer">
-            <table class="table">
-                <tr>
-                    <th>Genossenschaftsanteile</th>
-                    <td style="text-align:right">{{wizard.form.coop_shares.amount}} x</td>
-                    <td style="text-align:right">{{wizard.form.coop_shares.price}} €</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th style="text-align:right">= {{wizard.form.coop_shares.total}} €</th>
-                </tr>
-            </table>
-        </div>
-    </div>
-
-
-    {% if wizard.form.has_additional_shares %}
 
     <!-- CHICKEN SHARES -->
     {% if wizard.form.chicken_shares_info.has_shares %}
@@ -127,15 +98,21 @@
                     <td>{{wizard.form.harvest_shares_info.end_date}}</td>
                 </tr>
                 <tr>
-                    <th>Probezeitraum</th>
-                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                    <th>Erste Lieferung</th>
+                     <td>{{wizard.form.chicken_shares_info.first_delivery_date}}</td>
                 </tr>
-                {% if wizard.form.chicken_shares_info.has_shares %}
                 <tr>
-                    <th>Abholort</th>
-                    <td>{{wizard.form.pickup_location| safe}}</td>
+                    <th>Lieferintervall</th>
+                    <td><small>{{ wizard.form.chicken_shares_info.delivery_interval }}</small></td>
                 </tr>
-                {% endif %}
+                <tr>
+                    <th>Kündigungsfrist</th>
+                    <td><small>Innerhalb der ersten 4 Wochen nach Startdatum</small></td>
+                </tr>
+                <tr>
+                    <th>Abholort/-zeit</th>
+                    <td>{{wizard.form.pickup_location|safe}}</td>
+                </tr>
             </table>
         </div>
         <div class="card-footer">
@@ -144,8 +121,8 @@
                 {% if val.amount > 0 %}
                 <tr>
                     <th>{{val.name}}</th>
-                    <td style="text-align:right">{{val.amount}} x</td>
-                    <td style="text-align:right">{{val.price}} € / Monat</td>
+                    <td style="text-align:right; white-space: nowrap">{{val.amount}} x</td>
+                    <td style="text-align:right;white-space: nowrap">{{val.price}} € / Monat</td>
                 </tr>
                 {% endif %}
                 {% endfor %}
@@ -154,12 +131,13 @@
                     <th></th>
                     <th></th>
                     {% if wizard.form.chicken_shares_info.has_shares %}
-                    <th style="text-align:right">= {{wizard.form.chicken_shares_info.total}} € / Monat</th>
+                    <th style="text-align:right;white-space: nowrap">= {{wizard.form.chicken_shares_info.total}} € / Monat</th>
                     {% else %}
-                    <th style="text-align:right">keine Hühneranteile</th>
+                    <th style="text-align:right;white-space: nowrap">keine Hühneranteile</th>
                     {% endif %}
                 </tr>
             </table>
+            <small style="float:right;margin:-0.75em 0 -0.5em -0.75em">inkl. MwSt</small>
         </div>
     </div>
     {% else %}
@@ -181,9 +159,20 @@
                     <td>{{wizard.form.harvest_shares_info.end_date}}</td>
                 </tr>
                 <tr>
-                    <th>Probezeitraum</th>
-                    <td>Kündigung innerhalb der ersten 4 Wochen möglich</td>
+                    <th>Lieferintervall</th>
+                    <td><small>zweimonatliche Bestellmöglichkeit</small></td>
                 </tr>
+                <tr>
+                    <th>Kündigungsfrist</th>
+                    <td><small>Innerhalb der ersten 4 Wochen nach Startdatum</small></td>
+                </tr>
+                <tr>
+                    <th>Lieferort</th>
+                    <td>
+                        <small>An die von dir angegebene Lieferadresse, wenn du im Online-Shop für die BestellCoop bestellst</small>
+                    </td>
+                </tr>
+
             </table>
         </div>
         <div class="card-footer">
@@ -207,22 +196,30 @@
                     {% endif %}
                 </tr>
             </table>
+            <small style="float:right;margin:-0.75em 0 -0.5em -0.75em">inkl. MwSt</small>
         </div>
     </div>
     {% else %}
     {% summary_card_disabled "BestellCoop" %}
     {% endif %}
-
-    {% endif %}
 </div>
 
-<br/>
+<!-- COOP SHARES -->
+<div class="card" style="margin-top:1em;margin-bottom:1em">
+    <div class="card-body" style="text-align: center;">
+        <p>
+            <strong>Du möchtest mit&nbsp;&nbsp;{{wizard.form.coop_shares.total|format_currency}} €&nbsp;&nbsp;Genossenschaftsanteilen Mitglied in unserer Genossenschaft werden.</strong>
+        </p>
+        <p>Die Bestätigung deines Beitritts erfolgt nur, wenn du deinen Ernteanteil nicht in den ersten vier Wochen nach Start kündigst.<br/>
+            Du kannst deine Genossenschaftsanteile ein Jahr zum Jahresende kündigen.</p>
+    </div>
+</div>
 
 <!-- SUM -->
 <span style="float:right">
                    <h5>
-                       <b>{{wizard.form.total_onetime}} €</b> / <small>einmalig für Genossenschaftsanteile</small><br/>
-                      <b>{{wizard.form.total_monthly}} €</b> / <small>Monat</small><br/>
+                       <b>{{wizard.form.total_onetime}} €</b> <small>/ einmalig für Genossenschaftsanteile</small><br/>
+                      <b>{{wizard.form.total_monthly}} €</b> <small>inkl. MwSt pro Monat</small><br/>
                    </h5>
                 </span>
 

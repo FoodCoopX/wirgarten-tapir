@@ -39,11 +39,16 @@ class CooperativeShareForm(forms.Form):
         if self.min_shares < default_min_shares:
             self.min_shares = default_min_shares
 
+        self.min_amount = self.min_shares * self.coop_share_price
+
         self.fields["cooperative_shares"] = forms.IntegerField(
             required=True,
-            label=_("Anzahl Genossenschaftsanteile"),
-            initial=self.min_shares,
-            validators=[MinValueValidator(1)],
+            label=_("Genossenschaftsanteile (€)"),
+            help_text=_(
+                f"Der Betrag muss durch {settings.COOP_SHARE_PRICE} teilbar sein."
+            ),
+            initial=self.min_amount,
+            validators=[MinValueValidator(self.min_amount)],
         )
         self.fields["statute_consent"] = forms.BooleanField(
             label=_(

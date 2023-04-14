@@ -1,16 +1,14 @@
-from django.utils.translation import gettext_lazy as _
-
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.constants import ProductTypes, DeliveryCycleDict
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
 from tapir.wirgarten.service.products import (
-    get_active_product_types,
     get_product_price,
-    get_available_product_types,
 )
 
 
@@ -29,6 +27,10 @@ class SummaryForm(forms.Form):
         self.harvest_shares = dict()
         self.harvest_shares_info = dict()
 
+        harvest_share_type = ProductType.objects.get(
+            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        )
+
         # FIXME: 3rd time the harvest share products query gets executed in the wizard...
         harvest_share_products = {
             """harvest_shares_{variation}""".format(
@@ -36,7 +38,7 @@ class SummaryForm(forms.Form):
             ): p
             for p in list(
                 HarvestShareProduct.objects.filter(
-                    deleted=False, type_id__in=get_available_product_types(start_date)
+                    deleted=False, type=harvest_share_type
                 )
             )
         }
@@ -65,6 +67,13 @@ class SummaryForm(forms.Form):
         self.harvest_shares_info["start_date"] = start_date
         self.harvest_shares_info["end_date"] = end_date
 
+        self.harvest_shares_info["delivery_interval"] = DeliveryCycleDict[
+            harvest_share_type.delivery_cycle
+        ]
+        self.harvest_shares_info[
+            "first_delivery_date"
+        ] = get_next_delivery_date_for_product_type(harvest_share_type, start_date)
+
         self.harvest_shares_info["has_shares"] = harvest_shares_total > 0
         self.harvest_shares_info["total_without_solidarity"] = "{:.2f}".format(
             harvest_shares_total
@@ -77,12 +86,14 @@ class SummaryForm(forms.Form):
         ).replace("+", "+ ")
 
         if "pickup_location" in initial:
-            self.pickup_location = """{val.name}<br/>{val.street}, {val.postcode} {val.city}<br/>({val.info})""".format(
+            self.pickup_location = """{val.name}<br/><small>{val.street}<br/>{val.postcode} {val.city}<br/>({val.info})</small>""".format(
                 val=initial["pickup_location"]["pickup_location"]
             )  # get pickup location text
 
-        coop_shares_amount = initial["coop_shares"]["cooperative_shares"]
         coop_share_price = settings.COOP_SHARE_PRICE
+        coop_shares_amount = int(
+            initial["coop_shares"]["cooperative_shares"] / coop_share_price
+        )
         self.total_onetime = coop_shares_amount * coop_share_price
 
         self.coop_shares = {
@@ -92,13 +103,23 @@ class SummaryForm(forms.Form):
             "statute_link": get_parameter_value(Parameter.COOP_STATUTE_LINK),
         }
 
-        self.chicken_shares_info = dict({"has_shares": False, "start_date": start_date})
+        chicken_shares_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
+        self.chicken_shares_info = dict(
+            {
+                "has_shares": False,
+                "start_date": start_date,
+                "delivery_interval": DeliveryCycleDict[
+                    chicken_shares_type.delivery_cycle
+                ],
+                "first_delivery_date": get_next_delivery_date_for_product_type(
+                    chicken_shares_type, start_date
+                ),
+            }
+        )
         if "additional_shares" in initial:
             chicken_share_products = {
                 """chicken_shares_{variation}""".format(variation=p.name): p
-                for p in Product.objects.filter(
-                    type=ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
-                )
+                for p in Product.objects.filter(type=chicken_shares_type)
             }
             self.chicken_shares = dict()
             for key, val in initial["additional_shares"].items():
