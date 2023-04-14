@@ -346,6 +346,7 @@
 const handleOpenEmail = (subject, contentUrl) => {
     ConfirmationModal.open('Email "' + subject + '"', `<iframe style="height:75vh" width="100%" height="100%" src="${contentUrl}"/>`)
 }
+
 </script>
 {% endif %}
 
@@ -353,7 +354,6 @@ const handleOpenEmail = (subject, contentUrl) => {
     const handleTrialCancellation = () => {
         FormModal.load('{% url 'wirgarten:member_cancel_trial' object.pk %}', 'Verträge kündigen')
     }
-
 
         const handleAddBestellCoop = () => {
             FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden');
@@ -366,6 +366,7 @@ const handleOpenEmail = (subject, contentUrl) => {
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
 
 </script>
 {% endwith %}

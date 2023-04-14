@@ -160,6 +160,10 @@ class Member(TapirUser):
 
         super().save(*args, **kwargs)
 
+    def is_in_coop_trial(self):
+        entry_date = self.coop_entry_date
+        return entry_date is not None and entry_date > datetime.date.today()
+
     def coop_shares_total_value(self):
         today = datetime.date.today()
         return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(

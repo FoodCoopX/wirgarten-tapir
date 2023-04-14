@@ -10,6 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 from django.shortcuts import render
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.member.forms import (
@@ -281,7 +282,8 @@ class RegistrationWizardView(CookieWizardView):
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
             actual_coop_start = get_next_contract_start_date(self.start_date)
             buy_cooperative_shares(
-                form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"],
+                form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
+                / settings.COOP_SHARE_PRICE,
                 member,
                 actual_coop_start,
             )
