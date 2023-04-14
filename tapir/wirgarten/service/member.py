@@ -1,8 +1,8 @@
 from datetime import date, datetime
-from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from django.utils import timezone
 
 from tapir import settings
 from tapir.accounts.models import TapirUser
@@ -18,7 +18,10 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.delivery import (
+    get_next_delivery_date,
+    generate_future_deliveries,
+)
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
@@ -297,4 +300,13 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
             ),
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
         },
+    )
+
+    future_deliveries = generate_future_deliveries(member)
+    last_delivery_date = datetime.strptime(
+        future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
+    ).date()
+
+    send_email_member_contract_end_reminder.apply_async(
+        eta=last_delivery_date + relativedelta(days=1), args=[member.id]
     )
