@@ -10,6 +10,7 @@ from django.db.models import F, Sum
 from django.forms import (
     Form,
     CheckboxInput,
+    ModelMultipleChoiceField,
     ModelForm,
     BooleanField,
     DateField,
@@ -17,6 +18,7 @@ from django.forms import (
     CharField,
     ChoiceField,
     IntegerField,
+    CheckboxSelectMultiple,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -26,7 +28,15 @@ from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
 from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
-from tapir.wirgarten.models import Payment, Member, CoopShareTransaction
+from tapir.wirgarten.forms.registration.consents import ConsentForm
+from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
+from tapir.wirgarten.models import (
+    Payment,
+    Member,
+    CoopShareTransaction,
+    QuestionaireTrafficSourceOption,
+    QuestionaireTrafficSourceResponse,
+)
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_subscriptions_in_trial_period,
@@ -100,6 +110,56 @@ class PersonalDataForm(ModelForm):
                     "Du musst mindestens 18 Jahre alt sein um der Genossenschaft beizutreten."
                 ),
             )
+
+        return len(self.errors) == 0
+
+
+class MarketingFeedbackForm(Form):
+    sources = ModelMultipleChoiceField(
+        queryset=QuestionaireTrafficSourceOption.objects.all(),
+        widget=CheckboxSelectMultiple,
+        label="",
+    )
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        sources = self.cleaned_data["sources"]
+        if len(sources) > 0:
+            member_id = kwargs.get("member_id", None)
+            response = QuestionaireTrafficSourceResponse(
+                member_id=member_id,
+            )
+            response.save()
+            response.sources.set(sources)
+
+
+class PersonalDataRegistrationForm(Form):
+    n_columns = 2
+    colspans = {"sepa_consent": 2, "withdrawal_consent": 2, "privacy_consent": 2}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.forms = [
+            PersonalDataForm(*args, **kwargs),
+            PaymentDataForm(*args, **kwargs),
+            ConsentForm(*args, **kwargs),
+        ]
+
+        for form in self.forms:
+            for field_name, field in form.fields.items():
+                self.fields[field_name] = field
+
+    def is_valid(self):
+        super().is_valid()
+        for form in self.forms:
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        if field == "__all__":
+                            self.add_error(None, error)
+                        else:
+                            self.add_error(field, error)
 
         return len(self.errors) == 0
 

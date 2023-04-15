@@ -14,7 +14,7 @@ class ConsentForm(forms.Form):
             label=_("Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."),
             required=True,
             help_text=_(
-                'Du kannst Deine Beitrittserklärung ohne Angabe von Gründen innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an <a target="_blank" href="mailto:{site_email}">{site_email}</a>.'
+                'Du kannst deine Verträge und Beitrittserklärung innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an <a target="_blank" href="mailto:{site_email}">{site_email}</a>.'
             ).format(site_email=get_parameter_value(Parameter.SITE_EMAIL)),
         )
 

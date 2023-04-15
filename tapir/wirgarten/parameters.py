@@ -257,15 +257,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.CHICKEN_MAX_SHARES,
-            label="Maximale Anzahl Hühneranteile pro Mitglied",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=5,
-            description="Die maximale Anzahl Hühneranteile (pro Variante) die pro Mitglied/Interessent gewählt werden kann.",
-            category=ParameterCategory.ADDITIONAL_SHARES,
-        )
-
-        parameter_definition(
             key=Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
             label="Solidarpreise möglich",
             datatype=TapirParameterDatatype.INTEGER,
@@ -389,7 +380,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Ernteanteile zeichenbar",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
-            description="Wenn aktiv, dann sind Ernteateile von Mitgliedern zeichenbar.",
+            description="Wenn deaktiviert, dann sind keine Ernteateile zeichenbar, unabhängig von der freien Kapazität.",
             category=ParameterCategory.HARVEST,
             meta=ParameterMeta(
                 options=[

@@ -66,7 +66,6 @@ class ChickenShareForm(forms.Form):
         for k, v in self.products.items():
             self.fields[k] = forms.IntegerField(
                 required=False,
-                max_value=get_parameter_value(Parameter.CHICKEN_MAX_SHARES),
                 min_value=0,
                 initial=0,
                 label=_(
@@ -74,7 +73,7 @@ class ChickenShareForm(forms.Form):
                         variation=k.replace("chicken_shares_", "")
                     )
                 ),
-                help_text="""{:.2f} € / Monat""".format(prices[v.id]),
+                help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
             )
         self.fields["consent_chicken_shares"] = forms.BooleanField(
             label=_(

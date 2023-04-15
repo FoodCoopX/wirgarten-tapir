@@ -160,6 +160,10 @@ class Member(TapirUser):
 
         super().save(*args, **kwargs)
 
+    def is_in_coop_trial(self):
+        entry_date = self.coop_entry_date
+        return entry_date is not None and entry_date > datetime.date.today()
+
     def coop_shares_total_value(self):
         today = datetime.date.today()
         return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
@@ -665,3 +669,18 @@ class WaitingListEntry(TapirModel):
     type = models.CharField(choices=WaitingListType.choices, null=False, max_length=32)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     privacy_consent = models.DateTimeField(null=False)
+
+
+class QuestionaireTrafficSourceOption(TapirModel):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class QuestionaireTrafficSourceResponse(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    sources = models.ManyToManyField(QuestionaireTrafficSourceOption)
+
+    def __str__(self):
+        return self.name
