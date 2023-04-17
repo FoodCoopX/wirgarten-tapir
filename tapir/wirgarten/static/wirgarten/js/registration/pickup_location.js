@@ -25,7 +25,7 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
                 <small>${pl.info.replace(',', ', <br/>')}</small><br/>
                 <br/>
                 ${pl.capabilities.map(c =>
-                    `<span title="${c.name}" style="font-size:2.5em; text-decoration:strikethrough;">${c.icon}</span>`
+                    `<span title="${c.name}" style="font-size:2.5em; text-decoration:strikethrough;"><img width="50em" src="${c.icon}"/></span>`
                 ).join(" ")}
 
                 ${missingCapabilities.length == 0 ? '' : `<br/><span style="color:darkred">Folgende Produkte sind hier leider <strong>nicht</strong> abholbar: ${missingCapabilities.join(" ")}<br/></span>`}

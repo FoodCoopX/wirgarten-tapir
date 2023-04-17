@@ -1,9 +1,8 @@
 from datetime import date
 
-from django.utils import timezone
-
 from django import forms
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -34,6 +33,7 @@ from tapir.wirgarten.service.products import (
 
 SOLIDARITY_PRICES = [
     (0.0, _("Ich möchte den Richtpreis zahlen")),
+    ("custom", _("Ich möchte einen anderen Betrag zahlen  ⟶")),
     (0.25, "+ 25% 🤩"),
     (0.2, "+ 20% 😍"),
     (0.15, "+ 15% 🚀"),
@@ -104,7 +104,8 @@ class HarvestShareForm(forms.Form):
         ]
         self.n_columns = len(self.products)
         self.colspans = {
-            "solidarity_price_harvest_shares": self.n_columns,
+            "solidarity_price_harvest_shares": self.n_columns - 1,
+            "solidarity_price_absolute_harvest_shares": 1,
             "consent_harvest_shares": self.n_columns,
         }
 
@@ -133,6 +134,12 @@ class HarvestShareForm(forms.Form):
             choices=SOLIDARITY_PRICES,
             initial=0.05,
         )
+        self.fields["solidarity_price_absolute_harvest_shares"] = forms.DecimalField(
+            required=False,
+            label=_("Solidaraufschlag [€]²"),
+            min_value=0.0,
+        )
+
         self.fields["consent_harvest_shares"] = forms.BooleanField(
             label=_(
                 "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
@@ -176,6 +183,22 @@ class HarvestShareForm(forms.Form):
                     type=product_type,
                     name=key.replace(HARVEST_SHARE_FIELD_PREFIX, "").upper(),
                 )
+
+                solidarity_options = (
+                    {
+                        "solidarity_price": 0.0,
+                        "solidarity_price_absolute": self.cleaned_data[
+                            "solidarity_price_absolute_harvest_shares"
+                        ],
+                    }
+                    if self.cleaned_data["solidarity_price_harvest_shares"] == "custom"
+                    else {
+                        "solidarity_price": self.cleaned_data[
+                            "solidarity_price_harvest_shares"
+                        ]
+                    }
+                )
+
                 sub = Subscription.objects.create(
                     member_id=member_id,
                     product=product,
@@ -183,12 +206,10 @@ class HarvestShareForm(forms.Form):
                     quantity=quantity,
                     start_date=self.start_date,
                     end_date=self.growing_period.end_date,
-                    solidarity_price=self.cleaned_data[
-                        "solidarity_price_harvest_shares"
-                    ],
                     mandate_ref=mandate_ref,
                     consent_ts=now,
                     withdrawal_consent_ts=timezone.now(),
+                    **solidarity_options,
                 )
 
                 self.subs.append(sub)

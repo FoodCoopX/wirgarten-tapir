@@ -456,7 +456,10 @@ class TrialCancellationForm(Form):
 class SubscriptionRenewalForm(Form):
     template_name = "wirgarten/member/subscription_renewal_form.html"
     n_columns = 4
-    colspans = {}
+    colspans = {
+        "solidarity_price_harvest_shares": n_columns - 1,
+        "solidarity_price_absolute_harvest_shares": 1,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(

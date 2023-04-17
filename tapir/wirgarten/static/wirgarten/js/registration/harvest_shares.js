@@ -15,9 +15,19 @@ const calculatePrice = (harvest_share) => {
 
 var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
     const resultElem = document.getElementById('harvest_shares_total');
+    const customSoliElem = document.getElementById('id_solidarity_price_absolute_harvest_shares')
+    if(!customSoliElem){
+        customSoliElem = document.getElementById('id_Harvest Shares-solidarity_price_absolute_harvest_shares')
+    }
 
     const calculateTotalWithoutSoliPrice = () => harvest_share_prices.split(',').map(calculatePrice).reduce((a,b) => a + b);
-    const calculateTotal = () => calculateTotalWithoutSoliPrice() * (1 + parseFloat(soliElem.value));
+    const calculateTotal = () => {
+        if(soliElem.value === 'custom'){
+            return calculateTotalWithoutSoliPrice() + parseFloat(customSoliElem.value);
+        } else  {
+            return calculateTotalWithoutSoliPrice() * (1 + parseFloat(soliElem.value));
+        }
+    }
 
     const handleChange = (event, max_shares) => {
         if(event && max_shares){
@@ -33,13 +43,41 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
          }
 
         resultElem.innerText = calculateTotal().toFixed(2);
+        const totalWithoutSoli = calculateTotalWithoutSoliPrice()
+        if (soliElem.value === 'custom'){
+            customSoliElem.disabled = false
+            customSoliElem.required = true
+        } else {
+            customSoliElem.disabled = true
+            customSoliElem.value = (totalWithoutSoli * soliElem.value).toFixed(2)
+        }
 
-        filterSoliPriceOptions(calculateTotalWithoutSoliPrice(), solidarity_total);
+        filterSoliPriceOptions(totalWithoutSoli, solidarity_total);
     }
+
+    customSoliElem.addEventListener('change', e => {
+        if(e.target.value === 0 || e.target.value === NaN) {
+            e.target.value = 0;
+        }
+
+        if(e.target.value < 0){
+            e.target.value = 0;
+        }
+
+        e.target.value = parseFloat(e.target.value).toFixed(2);
+
+        handleChange(e)
+        }
+    );
 
     const filterSoliPriceOptions = (shares_total, solidarity_total) => {
         const selected = soliElem.value;
+
         options = [...origOptions].filter(o => {
+            if(o.value === 'custom'){
+                return true;
+            }
+
             const value = parseFloat(o.value)
             return value >= 0 || (-value * shares_total) < solidarity_total;
         })
@@ -63,7 +101,15 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
         soliElem.value = newSelected;
 
         resultElem.innerText = calculateTotal().toFixed(2);
-        soliElem.addEventListener("change", handleChange);
+        soliElem.addEventListener("change", e => {
+            // if the value is 'custom', we set the value of the custom input to the price without solidarity + at least 10€ + difference to get a round sum (10)
+            if(e.target.value === 'custom'){
+                    const priceWithoutSoli = calculateTotalWithoutSoliPrice()
+                    customSoliElem.value = ((priceWithoutSoli + 20) - ((priceWithoutSoli) % 10) - priceWithoutSoli).toFixed(2)
+            }
+
+            handleChange(e)
+        });
     };
 
     let noCapacity = true;
