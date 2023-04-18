@@ -16,14 +16,20 @@ const calculatePrice = (harvest_share) => {
 var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
     const resultElem = document.getElementById('harvest_shares_total');
 
-    const calculateTotalWithoutSoliPrice = () => harvest_share_prices.split(',').map(calculatePrice).reduce((a,b) => a + b);
+    let customSoliElem = document.getElementById('id_solidarity_price_absolute_harvest_shares')
+    if (!customSoliElem) {
+        customSoliElem = document.getElementById('id_Harvest Shares-solidarity_price_absolute_harvest_shares')
+    }
+
+
+    const calculateTotalWithoutSoliPrice = () => harvest_share_prices.split(',').map(calculatePrice).reduce((a, b) => a + b);
     const calculateTotal = () => calculateTotalWithoutSoliPrice() * (1 + parseFloat(soliElem.value));
 
     const handleChange = (event, max_shares) => {
-        if(event && max_shares){
-            if(event.target.value < 0){
+        if (event && max_shares) {
+            if (event.target.value < 0) {
                 event.target.value = 0;
-            } else if (event.target.value > max_shares){
+            } else if (event.target.value > max_shares) {
                 event.target.value = max_shares;
             }
         }
