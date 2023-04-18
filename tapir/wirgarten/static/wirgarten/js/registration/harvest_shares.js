@@ -15,7 +15,7 @@ const calculatePrice = (harvest_share) => {
 
 var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_total) => {
     const resultElem = document.getElementById('harvest_shares_total');
-    const customSoliElem = document.getElementById('id_solidarity_price_absolute_harvest_shares')
+    let customSoliElem = document.getElementById('id_solidarity_price_absolute_harvest_shares')
     if(!customSoliElem){
         customSoliElem = document.getElementById('id_Harvest Shares-solidarity_price_absolute_harvest_shares')
     }
