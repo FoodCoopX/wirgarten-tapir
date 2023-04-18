@@ -23,7 +23,10 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
 
 def pickup_location_to_dict(location_capabilities, pickup_location):
     # FIXME: Icons should be configured with the ProductType ?
-    PRODUCT_TYPE_ICONS = {"Ernteanteile": "🌾", "Hühneranteile": "🐔"}
+    PRODUCT_TYPE_ICONS = {
+        "Ernteanteile": "/static/wirgarten/images/icons/Ernteanteil.svg",
+        "Hühneranteile": "/static/wirgarten/images/icons/Huehneranteil.svg",
+    }
 
     return {
         "id": pickup_location.id,

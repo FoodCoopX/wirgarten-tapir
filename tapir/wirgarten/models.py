@@ -309,6 +309,9 @@ class Subscription(TapirModel, Payable):
     end_date = models.DateField(null=False)
     cancellation_ts = models.DateTimeField(null=True)
     solidarity_price = models.FloatField(default=0.0)
+    solidarity_price_absolute = models.DecimalField(
+        decimal_places=2, max_digits=12, null=True
+    )
     mandate_ref = models.ForeignKey(
         MandateReference, on_delete=models.DO_NOTHING, null=False
     )
@@ -340,11 +343,40 @@ class Subscription(TapirModel, Payable):
                 ),
                 0.0,
             )
-            self._total_price = round(
-                float(self.quantity) * float(price) * float(1 + self.solidarity_price),
-                2,
-            )
+
+            if self.solidarity_price_absolute is not None:
+                self._total_price = round(
+                    float(self.quantity) * float(price)
+                    + float(self.solidarity_price_absolute),
+                    2,
+                )
+            else:
+                self._total_price = round(
+                    float(self.quantity)
+                    * float(price)
+                    * float(1 + self.solidarity_price),
+                    2,
+                )
         return self._total_price
+
+    def clean(self):
+        if self.start_date >= self.end_date:
+            raise ValidationError({"start_date": "Start date must be before end date."})
+
+        if (
+            self.solidarity_price_absolute is not None
+            and self.solidarity_price_absolute < 0
+        ):
+            raise ValidationError(
+                {"solidarity_price_absolute": "Solidarity price must be positive."}
+            )
+
+        if self.solidarity_price_absolute is not None and self.solidarity_price != 0.0:
+            raise ValidationError(
+                {
+                    "solidarity_price": "Solidarity price must be 0 if absolute solidarity price is set."
+                }
+            )
 
     def __str__(self):
         return f"{self.quantity} × {self.product.name} {self.product.type.name}"
