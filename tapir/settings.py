@@ -212,7 +212,7 @@ elif EMAIL_ENV == "prod":
     EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
     EMAIL_PORT = env.str("EMAIL_PORT", default=587)
     # the next 2 options are mutually exclusive!
-    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
     EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 
 # DJANGO_ADMINS="Blake <blake@cyb.org>, Alice Judge <alice@cyb.org>"
@@ -254,7 +254,7 @@ KEYCLOAK_ADMIN_CONFIG = dict(
     FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
     REALM_NAME=env.str("KEYCLOAK_ADMIN_REALM_NAME", default="master"),
     USER_REALM_NAME=env.str("KEYCLOAK_ADMIN_USER_REALM_NAME", default="tapir"),
-    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="yQmLFKwGAy9DtXKL1GfE66YA19GhXxiZ"),
+    CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
 )
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
