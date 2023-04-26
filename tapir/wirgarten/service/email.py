@@ -40,6 +40,7 @@ def send_email(to_email: [str], subject: str, content: str, variables: dict = {}
         subject=subject,
         body=email_body,
         to=to_email,
+        bcc=[settings.EMAIL_AUTO_BCC] if hasattr(settings, "EMAIL_AUTO_BCC") else None,
         from_email=settings.EMAIL_HOST_SENDER,
         headers={
             "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
