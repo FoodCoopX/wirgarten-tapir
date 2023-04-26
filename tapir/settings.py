@@ -214,6 +214,7 @@ elif EMAIL_ENV == "prod":
     # the next 2 options are mutually exclusive!
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
     EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+    EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC")
 
 # DJANGO_ADMINS="Blake <blake@cyb.org>, Alice Judge <alice@cyb.org>"
 ADMINS = tuple(email.utils.parseaddr(x) for x in env.list("DJANGO_ADMINS", default=[]))
