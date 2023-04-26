@@ -4,6 +4,7 @@
 {% load i18n %}
 {% load tapir_static %}
 {% load wirgarten %}
+{% load configuration %}
 
 {% block content %}
 <div style="margin-top: 2em; display: grid; grid-gap: 1em; grid-template-columns: 1fr 1em 1fr 1em 1fr">
@@ -74,7 +75,14 @@
                 {% for capacity in capacities %}
                 <tr id="c-{{capacity.id}}" class="tr-clickable" style="display: none"
                     onclick="select_capacity('{{capacity.id}}', '{{capacity.product_type.id}}', '{{ c_p_map }}')">
-                    <th>{% translate capacity.product_type.name %}</th>
+                    <th>{% translate capacity.product_type.name %}
+                    {% with base_type='wirgarten.coop.base_product_type'|parameter %}
+                        {% if base_type == capacity.product_type.id %}
+                        &nbsp;&nbsp;<span
+                            class="badge bg-danger">Basis</span>
+                        {% endif %}
+                        {% endwith %}
+                    </th>
                     <td>{{ capacity.product_type.delivery_cycle }}</td>
                     <td style="text-align: right">{{ capacity.capacity }} €</td>
                     <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
@@ -114,7 +122,9 @@
                         <del>{% translate product.name %}</del>
                         <span class="badge bg-danger">Gelöscht</span>
                         {% else %}
-                        {% translate product.name %}
+                        {% endif %}{% translate product.name %}
+                        {% if product.base %}&nbsp;&nbsp;<span
+                            class="badge bg-danger">Basis</span>
                         {% endif %}
                     </th>
                     <td style="text-align: right">
@@ -199,6 +209,9 @@
 <script>
     const allowedActions = JSON.parse('{{ buttons | safe }}');
     init('{{ c_p_map | safe }}', '{{ pe_c_map | safe }}');
+
+
+
 </script>
 
 {% endblock %}

@@ -3,7 +3,7 @@ from functools import partial
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -232,6 +232,28 @@ class Product(TapirModel):
     )
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
+    base = models.BooleanField(default=False, null=True)
+
+    def clean(self):
+        # Check if there is exactly one base product per ProductType
+        base_products = Product.objects.filter(type=self.type, base=True)
+
+        if self.base:
+            if base_products.exists() and not base_products.filter(id=self.id).exists():
+                raise ValidationError(
+                    "There can be only one base product per ProductType."
+                )
+        else:
+            if not base_products.exists() or base_products.filter(id=self.id).exists():
+                raise ValidationError(
+                    "There must be at least one base product per ProductType."
+                )
+
+    def save(self, *args, **kwargs):
+        self.clean()
+
+        with transaction.atomic():
+            super().save(*args, **kwargs)
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
@@ -724,6 +746,7 @@ class QuestionaireTrafficSourceOption(TapirModel):
 class QuestionaireTrafficSourceResponse(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
     sources = models.ManyToManyField(QuestionaireTrafficSourceOption)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.name
