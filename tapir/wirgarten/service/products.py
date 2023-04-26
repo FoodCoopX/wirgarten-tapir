@@ -103,6 +103,21 @@ def get_next_growing_period(
         return None
 
 
+def get_current_growing_period(
+    reference_date: date = date.today(),
+) -> GrowingPeriod | None:
+    try:
+        return (
+            GrowingPeriod.objects.filter(
+                start_date__lte=reference_date, end_date__gte=reference_date
+            )
+            .order_by("start_date")
+            .first()
+        )
+    except GrowingPeriod.DoesNotExist:
+        return None
+
+
 @transaction.atomic
 def create_growing_period(start_date: date, end_date: date) -> GrowingPeriod:
     """

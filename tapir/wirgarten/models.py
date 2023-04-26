@@ -296,7 +296,18 @@ class Payable:
         )
 
 
-class Subscription(TapirModel, Payable):
+class AdminConfirmableMixin(models.Model):
+    """
+    Mixin to add an admin confirmation field to a model.
+    """
+
+    admin_confirmed = models.DateTimeField(null=True)
+
+    class Meta:
+        abstract = True
+
+
+class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     """
     A subscription for a member.
     """
@@ -382,7 +393,7 @@ class Subscription(TapirModel, Payable):
         return f"{self.quantity} × {self.product.name} {self.product.type.name}"
 
 
-class CoopShareTransaction(TapirModel, Payable):
+class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     """
     The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
 

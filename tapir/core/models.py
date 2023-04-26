@@ -31,12 +31,20 @@ class SidebarLinkGroup:
         self.name = name
         self.links = []
 
-    def add_link(self, display_name: str, material_icon: str, url: str, html_id=""):
+    def add_link(
+        self,
+        display_name: str,
+        material_icon: str,
+        url: str,
+        html_id="",
+        notification_count: int = None,
+    ):
         self.links.append(
             {
                 "url": url,
                 "display_name": display_name,
                 "material_icon": material_icon,
                 "html_id": html_id,
+                "notification_count": notification_count,
             }
         )

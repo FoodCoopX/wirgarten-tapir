@@ -7,6 +7,7 @@ from tapir.wirgarten.views import (
     questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
+from tapir.wirgarten.views.contracts import NewContractsView, confirm_new_contracts
 from tapir.wirgarten.views.member import (
     MemberListView,
     MemberDetailView,
@@ -146,6 +147,12 @@ urlpatterns = [
         name="waitinglist",
     ),
     path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
+    path("admin/newcontracts", NewContractsView.as_view(), name="new_contracts"),
+    path(
+        "admin/newcontracts/confirm",
+        confirm_new_contracts,
+        name="new_contracts_confirm",
+    ),
     path(
         "register/waitlist/hs",
         get_harvest_shares_waiting_list_form,
