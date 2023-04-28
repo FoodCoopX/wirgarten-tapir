@@ -64,7 +64,9 @@ class SummaryForm(forms.Form):
         )
 
         if solidarity_price_value != "custom":
-            solidarity_price = float(harvest_shares_total) * float()
+            solidarity_price = float(harvest_shares_total) * float(
+                self.harvest_shares_info["solidarity_price_harvest_shares"]
+            )
             self.harvest_shares_info["custom_soliprice"] = False
         else:
             solidarity_price = float(
