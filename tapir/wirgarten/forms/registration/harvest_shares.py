@@ -144,9 +144,7 @@ class HarvestShareForm(forms.Form):
             label=_(
                 "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
             ),
-            help_text=_(
-                '<a href="https://lueneburg.wirgarten.com/vertragsgrundsaetze_ernteanteil" target="_blank">Vertragsgrundsätze - Ernteanteile</a>'
-            ),
+            help_text='<a href="https://lueneburg.wirgarten.com/vertragsgrundsaetze_ernteanteil" target="_blank">Vertragsgrundsätze - Ernteanteile</a>',
             required=False,
             initial=False,
         )
