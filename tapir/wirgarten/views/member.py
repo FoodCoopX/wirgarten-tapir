@@ -1168,6 +1168,7 @@ def get_add_harvest_shares_form(request, **kwargs):
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
+    kwargs["choose_growing_period"] = True
 
     if not is_harvest_shares_available():
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
