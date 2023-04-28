@@ -10,10 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveIndex(
-            model_name="productcapacity",
-            name="idx_productcapacity_period",
-        ),
         migrations.AlterField(
             model_name="producttype",
             name="delivery_cycle",
