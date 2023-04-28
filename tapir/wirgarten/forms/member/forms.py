@@ -68,6 +68,8 @@ class PersonalDataForm(ModelForm):
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate
         self.fields["birthdate"].disabled = not can_edit_name_and_birthdate
         self.fields["email"].disabled = not can_edit_email
+        self.fields["first_name"].label = _("Vorname")
+        self.fields["last_name"].label = _("Nachname")
 
     class Meta:
         model = Member

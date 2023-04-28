@@ -1,7 +1,6 @@
-from django.utils.translation import gettext_lazy as _
-
 from django import forms
 from django.core.validators import MinValueValidator
+from django.utils.translation import gettext_lazy as _
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
@@ -52,10 +51,8 @@ class CooperativeShareForm(forms.Form):
         )
         self.fields["statute_consent"] = forms.BooleanField(
             label=_(
-                "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen."
+                "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             ),
-            help_text=_(
-                "Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
-            ),
+            help_text=f'<a href="{get_parameter_value(Parameter.COOP_STATUTE_LINK)}" target="_blank">Satzung der Genossenschaft</a>',
             required=True,
         )
