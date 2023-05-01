@@ -14,6 +14,15 @@ from tapir.wirgarten.utils import format_date
 
 
 def send_email(to_email: [str], subject: str, content: str, variables: dict = {}):
+    """
+    Send an email to a list of recipients. The email is sent as HTML using the email/email_base.html template.
+
+    :param to_email: list of email addresses
+    :param subject: subject of the email
+    :param content: content of the email
+    :param variables: additional variables to be used in the email template
+    """
+
     variables.update(get_default_vars(to_email))
     content = content.format(**variables)
 
@@ -31,7 +40,9 @@ def send_email(to_email: [str], subject: str, content: str, variables: dict = {}
         subject=subject,
         body=email_body,
         to=to_email,
-        bcc=[settings.EMAIL_AUTO_BCC] if hasattr(settings, "EMAIL_AUTO_BCC") else None,
+        bcc=[settings.EMAIL_AUTO_BCC]
+        if hasattr(settings, "EMAIL_AUTO_BCC") and settings.EMAIL_AUTO_BCC
+        else None,
         from_email=settings.EMAIL_HOST_SENDER,
         headers={
             "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"

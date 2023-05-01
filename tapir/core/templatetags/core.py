@@ -1,9 +1,16 @@
 from django import template
+from django.db.models import Sum
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
+from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
+from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
+    get_future_subscriptions,
+    get_current_growing_period,
+)
 
 register = template.Library()
 
@@ -104,15 +111,34 @@ def add_admin_links(groups, request):
             material_icon="groups",
             url=reverse_lazy("wirgarten:member_list"),
         )
+
         members_group.add_link(
             display_name=_("Verträge"),
             material_icon="history_edu",
             url=reverse_lazy("wirgarten:subscription_list"),
         )
+
+        coop_shares = CoopShareTransaction.objects.filter(
+            admin_confirmed__isnull=True,
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+        ).count()
+        product_shares = Subscription.objects.filter(
+            admin_confirmed__isnull=True
+        ).count()
+
+        members_group.add_link(
+            display_name=_("Neue Zeichnungen"),
+            material_icon="approval_delegation",
+            url=reverse_lazy("wirgarten:new_contracts"),
+            notification_count=coop_shares + product_shares,
+        )
+
+        waitlist_entries = WaitingListEntry.objects.count()
         members_group.add_link(
             display_name=_("Warteliste"),
             material_icon="schedule",
             url=reverse_lazy("wirgarten:waitinglist"),
+            notification_count=waitlist_entries,
         )
 
         groups.append(members_group)

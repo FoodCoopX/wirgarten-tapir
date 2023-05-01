@@ -252,6 +252,7 @@ def send_cancellation_confirmation_email(
     contract_end_date: date,
     subs_to_cancel: [Subscription],
     revoke_coop_membership: bool = False,
+    skip_email: bool = False,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -264,15 +265,20 @@ def send_cancellation_confirmation_email(
         eta=contract_end_date, args=[member_id]
     )
 
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT),
-        content=get_parameter_value(Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT),
-        variables={
-            "contract_end_date": format_date(contract_end_date),
-            "contract_list": contract_list,
-        },
-    )
+    if not skip_email:
+        send_email(
+            to_email=[member.email],
+            subject=get_parameter_value(
+                Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT
+            ),
+            content=get_parameter_value(
+                Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
+            ),
+            variables={
+                "contract_end_date": format_date(contract_end_date),
+                "contract_list": contract_list,
+            },
+        )
 
 
 def send_order_confirmation(member: Member, subs: [Subscription]):

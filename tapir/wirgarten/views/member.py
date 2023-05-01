@@ -1168,6 +1168,7 @@ def get_add_harvest_shares_form(request, **kwargs):
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
+    kwargs["choose_growing_period"] = True
 
     if not is_harvest_shares_available():
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
@@ -1323,12 +1324,12 @@ def get_cancel_trial_form(request, **kwargs):
                 subscriptions=subs_to_cancel,
             ).save()
 
-        form.save()
+        form.save(skip_emails=member_id != request.user.id)
 
     return get_form_modal(
         request=request,
         form=TrialCancellationForm,
-        handler=lambda x: save(x),
+        handler=save,
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="
         + format_date(x),

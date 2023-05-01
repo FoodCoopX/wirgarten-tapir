@@ -58,11 +58,23 @@ class SummaryForm(forms.Form):
         harvest_shares_total = sum(
             map(lambda i: i["amount"] * float(i["price"]), self.harvest_shares.values())
         )
-        solidarity_price = self.harvest_shares_info.get(
+
+        solidarity_price_value = self.harvest_shares_info.get(
             "solidarity_price_harvest_shares", 0
         )
 
-        self.total_monthly = harvest_shares_total * (1 + float(solidarity_price))
+        if solidarity_price_value != "custom":
+            solidarity_price = float(harvest_shares_total) * float(
+                self.harvest_shares_info["solidarity_price_harvest_shares"]
+            )
+            self.harvest_shares_info["custom_soliprice"] = False
+        else:
+            solidarity_price = float(
+                self.harvest_shares_info["solidarity_price_absolute_harvest_shares"]
+            )
+            self.harvest_shares_info["custom_soliprice"] = True
+
+        self.total_monthly = float(harvest_shares_total) + solidarity_price
 
         self.harvest_shares_info["start_date"] = start_date
         self.harvest_shares_info["end_date"] = end_date
@@ -78,11 +90,9 @@ class SummaryForm(forms.Form):
         self.harvest_shares_info["total_without_solidarity"] = "{:.2f}".format(
             harvest_shares_total
         )
-        self.harvest_shares_info["total"] = "{:.2f}".format(
-            harvest_shares_total * (1 + float(solidarity_price))
-        )
+        self.harvest_shares_info["total"] = "{:.2f}".format(self.total_monthly)
         self.harvest_shares_info["solidarity_price_diff"] = "{:+.2f}".format(
-            float(harvest_shares_total) * float(solidarity_price)
+            solidarity_price
         ).replace("+", "+ ")
 
         if "pickup_location" in initial:

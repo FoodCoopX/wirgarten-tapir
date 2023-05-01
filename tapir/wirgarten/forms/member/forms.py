@@ -68,6 +68,8 @@ class PersonalDataForm(ModelForm):
         self.fields["last_name"].disabled = not can_edit_name_and_birthdate
         self.fields["birthdate"].disabled = not can_edit_name_and_birthdate
         self.fields["email"].disabled = not can_edit_email
+        self.fields["first_name"].label = _("Vorname")
+        self.fields["last_name"].label = _("Nachname")
 
     class Meta:
         model = Member
@@ -419,7 +421,8 @@ class TrialCancellationForm(Form):
         )
 
     @transaction.atomic
-    def save(self):
+    def save(self, **kwargs):
+        skip_emails = kwargs.pop("skip_emails", False)
         cancel_coop = self.is_cancel_coop_selected()
 
         subs_to_cancel = self.get_subs_to_cancel()
@@ -436,7 +439,11 @@ class TrialCancellationForm(Form):
             self.share_ownership.delete()
 
         send_cancellation_confirmation_email(
-            self.member_id, self.next_trial_end_date, subs_to_cancel, cancel_coop
+            self.member_id,
+            self.next_trial_end_date,
+            subs_to_cancel,
+            cancel_coop,
+            skip_emails,
         )
 
         return (
@@ -456,7 +463,10 @@ class TrialCancellationForm(Form):
 class SubscriptionRenewalForm(Form):
     template_name = "wirgarten/member/subscription_renewal_form.html"
     n_columns = 4
-    colspans = {}
+    colspans = {
+        "solidarity_price_harvest_shares": n_columns - 1,
+        "solidarity_price_absolute_harvest_shares": 1,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(

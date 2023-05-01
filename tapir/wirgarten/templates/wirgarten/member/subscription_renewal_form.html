@@ -13,7 +13,7 @@
      class="form-fields">
     {% for field in form %}
     {% if "harvest_shares" in field.name %}
-    <div style="grid-column:span {% if field.name == 'solidarity_price_harvest_shares' or field.name == 'consent_harvest_shares' %}4{% else %}1{% endif %}"
+    <div style="grid-column:span {% if field.name == 'solidarity_price_harvest_shares' %}3{% elif field.name == 'consent_harvest_shares' %}4{% else %}1{% endif %}"
          class="form-field"
          id="{{ field.name }}">
         {% bootstrap_field field %}
@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBestellCoopSummary(Number("{{form.product_forms.2.bestellcoop_price}}".replace(',','.')));
     {% endif %}
 });
+
 
 
 </script>
