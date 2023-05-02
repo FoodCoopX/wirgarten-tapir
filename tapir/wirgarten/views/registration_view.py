@@ -1,14 +1,16 @@
-from django.utils.translation import gettext_lazy as _
+from datetime import date
 
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
-from django.shortcuts import render
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
@@ -94,18 +96,6 @@ FORM_TITLES = {
     ),
 }
 
-FORMS = [
-    (STEP_HARVEST_SHARES, HarvestShareForm),
-    (STEP_NO_HARVEST_SHARES_AVAILABLE, EmptyForm),
-    (STEP_COOP_SHARES, CooperativeShareForm),
-    (STEP_NO_COOP_SHARES_AVAILABLE, EmptyForm),
-    (STEP_ADDITIONAL_SHARES, ChickenShareForm),
-    (STEP_BESTELLCOOP, BestellCoopForm),
-    (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
-    (STEP_SUMMARY, SummaryForm),
-    (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
-]
-
 
 def has_selected_harvest_shares(wizard) -> bool:
     if (
@@ -139,55 +129,75 @@ def save_member(form_dict):
     return member
 
 
-def init_conditions():
-    try:
-        _show_harvest_shares = is_harvest_shares_available()
-        _coop_shares_without_harvest_shares_possible = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
-        )
-        _chicken_shares_available = is_chicken_shares_available()
-        _bestellcoop_available = is_bestellcoop_available()
-
-        return {
-            STEP_HARVEST_SHARES: _show_harvest_shares,
-            STEP_NO_HARVEST_SHARES_AVAILABLE: not _show_harvest_shares,
-            STEP_COOP_SHARES: (lambda x: has_selected_harvest_shares(x))
-            if not _coop_shares_without_harvest_shares_possible
-            else True,
-            STEP_NO_COOP_SHARES_AVAILABLE: (
-                (lambda x: not has_selected_harvest_shares(x))
-                if not _coop_shares_without_harvest_shares_possible
-                else False
-            ),
-            STEP_ADDITIONAL_SHARES: has_selected_harvest_shares
-            if _chicken_shares_available
-            else False,
-            STEP_BESTELLCOOP: has_selected_harvest_shares
-            if _bestellcoop_available
-            else False,
-            STEP_PICKUP_LOCATION: has_selected_harvest_shares,
-        }
-    except Exception as e:
-        print("Could not init registration wizard conditions: ", e)
-
-
 @method_decorator(xframe_options_exempt, name="dispatch")
 @method_decorator(xframe_options_exempt, name="post")
 class RegistrationWizardView(CookieWizardView):
     template_name = "wirgarten/registration/registration_wizard.html"
-    form_list = FORMS
-
     finish_button_label = _("Bestellung abschließen")
+
+    form_list = [
+        (STEP_HARVEST_SHARES, HarvestShareForm),
+        (STEP_NO_HARVEST_SHARES_AVAILABLE, EmptyForm),
+        (STEP_COOP_SHARES, CooperativeShareForm),
+        (STEP_NO_COOP_SHARES_AVAILABLE, EmptyForm),
+        (STEP_ADDITIONAL_SHARES, ChickenShareForm),
+        (STEP_BESTELLCOOP, BestellCoopForm),
+        (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
+        (STEP_SUMMARY, SummaryForm),
+        (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
+    ]
 
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardView, self).__init__(*args, **kwargs)
 
-        self.condition_dict = init_conditions()
-        self.start_date = get_next_contract_start_date()
+        today = timezone.now().date()
+        reference_date = max(today, date(2023, 6, 15))
         self.growing_period = GrowingPeriod.objects.filter(
-            start_date__lte=self.start_date, end_date__gte=self.start_date
+            start_date__lte=reference_date + relativedelta(months=1, day=1),
+            end_date__gte=reference_date + relativedelta(months=1, day=1),
         ).first()
+
+        self.start_date = get_next_contract_start_date(max(today, reference_date))
         self.end_date = self.growing_period.end_date
+
+        self.condition_dict = self.init_conditions()
+
+    def init_conditions(self):
+        try:
+            _show_harvest_shares = is_harvest_shares_available(
+                reference_date=self.start_date
+            )
+            _coop_shares_without_harvest_shares_possible = get_parameter_value(
+                Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            )
+            _chicken_shares_available = is_chicken_shares_available(
+                reference_date=self.start_date
+            )
+            _bestellcoop_available = is_bestellcoop_available(
+                reference_date=self.start_date
+            )
+
+            return {
+                STEP_HARVEST_SHARES: _show_harvest_shares,
+                STEP_NO_HARVEST_SHARES_AVAILABLE: not _show_harvest_shares,
+                STEP_COOP_SHARES: (lambda x: has_selected_harvest_shares(x))
+                if not _coop_shares_without_harvest_shares_possible
+                else True,
+                STEP_NO_COOP_SHARES_AVAILABLE: (
+                    (lambda x: not has_selected_harvest_shares(x))
+                    if not _coop_shares_without_harvest_shares_possible
+                    else False
+                ),
+                STEP_ADDITIONAL_SHARES: has_selected_harvest_shares
+                if _chicken_shares_available
+                else False,
+                STEP_BESTELLCOOP: has_selected_harvest_shares
+                if _bestellcoop_available
+                else False,
+                STEP_PICKUP_LOCATION: has_selected_harvest_shares,
+            }
+        except Exception as e:
+            print("Could not init registration wizard conditions: ", e)
 
     def has_step(self, step):
         return step in self.storage.data["step_data"]
@@ -204,6 +214,9 @@ class RegistrationWizardView(CookieWizardView):
     # gather data from dependent forms
     def get_form_initial(self, step=None):
         initial = self.initial_dict
+        if step in [STEP_HARVEST_SHARES, STEP_ADDITIONAL_SHARES, STEP_BESTELLCOOP]:
+            initial["start_date"] = self.start_date
+
         if step == STEP_COOP_SHARES:
             if self.has_step(STEP_HARVEST_SHARES):
                 data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)

@@ -76,8 +76,13 @@ class HarvestShareForm(forms.Form):
                 and k != "choose_growing_period"
             },
         )
+        initial = kwargs.get("initial", {})
         self.require_at_least_one = kwargs.get("enable_validation", False)
-        self.start_date = kwargs.get("start_date", get_next_contract_start_date())
+        self.start_date = kwargs.get(
+            "start_date", initial.get("start_date", get_next_contract_start_date())
+        )
+        self.growing_period = get_current_growing_period(self.start_date)
+
         self.choose_growing_period = kwargs.get("choose_growing_period", False)
 
         harvest_share_products = list(
@@ -183,9 +188,10 @@ class HarvestShareForm(forms.Form):
         now = timezone.now()
 
         self.subs = []
-        growing_period = self.cleaned_data.get(
-            "growing_period", get_current_growing_period()
-        )
+        if not hasattr(self, "growing_period") and not self.growing_period:
+            self.growing_period = self.cleaned_data.get(
+                "growing_period", get_current_growing_period()
+            )
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -216,10 +222,10 @@ class HarvestShareForm(forms.Form):
                 sub = Subscription.objects.create(
                     member_id=member_id,
                     product=product,
-                    period=growing_period,
+                    period=self.growing_period,
                     quantity=quantity,
-                    start_date=max(self.start_date, growing_period.start_date),
-                    end_date=growing_period.end_date,
+                    start_date=max(self.start_date, self.growing_period.start_date),
+                    end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
                     consent_ts=now,
                     withdrawal_consent_ts=timezone.now(),
