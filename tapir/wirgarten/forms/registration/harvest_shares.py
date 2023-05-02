@@ -142,13 +142,13 @@ class HarvestShareForm(forms.Form):
 
         self.fields["solidarity_price_harvest_shares"] = forms.ChoiceField(
             required=False,
-            label=_("Solidarpreis²"),
+            label=_("Solidarpreis [%]²"),
             choices=SOLIDARITY_PRICES,
             initial=0.05,
         )
         self.fields["solidarity_price_absolute_harvest_shares"] = forms.DecimalField(
             required=False,
-            label=_("Solidaraufschlag [€]²"),
+            label=_("Solidarpreis [€]²"),
             min_value=0.0,
         )
 

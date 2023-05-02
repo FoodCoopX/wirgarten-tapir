@@ -36,6 +36,10 @@
             {% endfor %}
         </div>
         {% endif %}
+        {% if form.outro_template %}
+        {% include form.outro_template with form=form %}
+        <br/>
+        {% endif %}
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="closeModal()">
@@ -44,6 +48,7 @@
         <button type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
     </div>
 </form>
+
 <script>
     const closeModal = () => {
         parent.postMessage({type:"modal-close"}, "*")
@@ -52,11 +57,6 @@
     const showLoadingSpinner = () => {
         parent.postMessage({type:"modal-loading-spinner"}, "*")
     }
-
-
-
-
-
 
 </script>
 
