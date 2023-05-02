@@ -228,7 +228,7 @@ tr.tr-href:hover:not(.active), tr.tr-clickable:hover:not(.active){
 }
 
 .modal-dialog {
-    max-width: 40em;
+    max-width: 44em;
 }
 
 @keyframes fadeIn {
