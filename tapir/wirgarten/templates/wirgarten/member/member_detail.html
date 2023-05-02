@@ -71,7 +71,6 @@
                                 onclick="FormModal.load('{% url 'wirgarten:member_add_coop_shares' object.pk %}', {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})"
                                 class="btn btn-outline-success mx-1 px-2"
                                 style="float:right"
-                                {% if lock_functions %} disabled="disabled" {%endif%}
                         >
                             <span class="material-icons">add</span>
                         </button>
@@ -118,7 +117,6 @@
                         {% if coop_shares_total > 0 %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddHarvestShares()"
-                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success mx-1 px-2"
                         >
                             <span class="material-icons">add</span>
@@ -135,7 +133,6 @@
                         {% if type == 'Hühneranteile' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddChickenShares()"
-                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success mx-1 px-2"
                         >
                             <span class="material-icons">add</span>
@@ -144,7 +141,6 @@
                         {% if type == 'BestellCoop' %}
                         <button title="Anteile erhöhen"
                                 onclick="handleAddBestellCoop()"
-                                {% if lock_functions %} disabled="disabled" {%endif%}
                                 class="btn btn-outline-success mx-1 px-2"
                         >
                             <span class="material-icons">add</span>
@@ -347,6 +343,7 @@ const handleOpenEmail = (subject, contentUrl) => {
     ConfirmationModal.open('Email "' + subject + '"', `<iframe style="height:75vh" width="100%" height="100%" src="${contentUrl}"/>`)
 }
 
+
 </script>
 {% endif %}
 
@@ -366,6 +363,7 @@ const handleOpenEmail = (subject, contentUrl) => {
         const handleAddHarvestShares = () => {
             FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         }
+
 
 
 </script>
