@@ -768,7 +768,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             label="TEMPORÄR: Sperre Funktionen im Mitgliederbereich",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
-            description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung von Vertragsdaten, Zeichnen von Geno-Anteilen, Änderung Bankdaten, Änderung Abholort",
+            description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung Bankdaten, Änderung Abholort, Änderung Email-Adresse",
             category=ParameterCategory.MEMBER_DASHBOARD,
         )
 

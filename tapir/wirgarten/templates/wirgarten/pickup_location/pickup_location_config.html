@@ -43,7 +43,7 @@
                         <td>{{ pl.info|safe }}</td>
                         <td style="font-size: 2em; white-space:nowrap; text-align:left;">
                             {% for cap in pl.capabilities %}
-                            <span title="{{ cap.name }}">{{cap.icon}}</span>
+                            <img width="48em" title="{{ cap.name }}" src="{{cap.icon}}"/>
                             {% endfor %}
                         </td>
                         <td>{% if pl.members == 0 %} - {% else %} {{ pl.members }} {% endif %}</td>
@@ -70,6 +70,10 @@
     {% endfor %}
 
     initSelected();
+
+
+
+
 </script>
 
 {% endblock %}
