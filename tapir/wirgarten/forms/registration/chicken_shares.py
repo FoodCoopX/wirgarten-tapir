@@ -39,7 +39,10 @@ class ChickenShareForm(forms.Form):
         super(ChickenShareForm, self).__init__(
             *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
         )
-        self.start_date = kwargs.get("start_date", get_next_contract_start_date())
+        initial = kwargs.get("initial", {})
+        self.start_date = kwargs.get(
+            "start_date", initial.get("start_date", get_next_contract_start_date())
+        )
         self.growing_period = GrowingPeriod.objects.get(
             start_date__lte=self.start_date, end_date__gt=self.start_date
         )
