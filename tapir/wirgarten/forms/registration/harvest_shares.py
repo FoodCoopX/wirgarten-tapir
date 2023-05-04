@@ -1,5 +1,6 @@
 from datetime import date
 
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.db import transaction
 from django.utils import timezone
@@ -81,7 +82,6 @@ class HarvestShareForm(forms.Form):
         self.start_date = kwargs.get(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
-        self.growing_period = get_current_growing_period(self.start_date)
 
         self.choose_growing_period = kwargs.get("choose_growing_period", False)
 
@@ -116,23 +116,50 @@ class HarvestShareForm(forms.Form):
             "consent_harvest_shares": self.n_columns,
         }
 
-        self.solidarity_total = f"{get_solidarity_total(self.start_date)}".replace(
-            ",", "."
-        )
-
-        self.free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, self.start_date)}".replace(
-            ",", "."
-        )
         if self.choose_growing_period:
+            growing_periods = GrowingPeriod.objects.filter(
+                end_date__gte=self.start_date + relativedelta(months=-1, days=1),
+            ).order_by("start_date")
+
+            self.solidarity_total = [
+                f"{get_solidarity_total(max(growing_periods[0].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+                f"{get_solidarity_total(max(growing_periods[1].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+            ]
+
+            self.free_capacity = [
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(growing_periods[0].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(growing_periods[1].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+            ]
+
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=GrowingPeriod.objects.filter(
-                    end_date__gte=self.start_date
-                ).order_by("start_date"),
+                queryset=growing_periods,
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
                 initial=0,
             )
+        else:
+            self.growing_period = get_current_growing_period(self.start_date)
+            self.solidarity_total = [
+                f"{get_solidarity_total(max(self.growing_period.start_date, self.start_date))}".replace(
+                    ",", "."
+                )
+            ]
+
+            self.free_capacity = [
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date))}".replace(
+                    ",", "."
+                )
+            ]
+
         for prod in harvest_share_products:
             self.fields[
                 f"{HARVEST_SHARE_FIELD_PREFIX}{prod.name.lower()}"
@@ -188,7 +215,7 @@ class HarvestShareForm(forms.Form):
         now = timezone.now()
 
         self.subs = []
-        if not hasattr(self, "growing_period") and not self.growing_period:
+        if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.get(
                 "growing_period", get_current_growing_period()
             )
