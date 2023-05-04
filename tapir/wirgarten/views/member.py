@@ -1208,9 +1208,7 @@ def get_add_chicken_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
     check_permission_or_self(member_id, request)
-
-    if not is_chicken_shares_available():
-        raise Exception("Keine Hühneranteile verfügbar")
+    kwargs["choose_growing_period"] = True
 
     @transaction.atomic
     def save(form: ChickenShareForm):
