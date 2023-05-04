@@ -6,4 +6,15 @@
 {% endblock %}
 
 <span style="float:right; font-size:1.25rem">= <strong><span id="additional_shares_total">0.00</span> €</strong> inkl. MwSt / Monat</span>
-<script>initChickenShareSummary('{{form.chicken_share_prices}}'.split(','), {{form.free_capacity}})</script>
+<script>
+const growingPeriodSelect = document.getElementById("id_growing_period");
+if(!growingPeriodSelect) {
+    initChickenShareSummary('{{form.chicken_share_prices}}'.split(','), {{form.free_capacity | safe}})
+} else {
+    growingPeriodSelect.addEventListener("change", function() {
+        initChickenShareSummary('{{form.chicken_share_prices}}'.split(','), {{form.free_capacity | safe}}[growingPeriodSelect.selectedIndex])
+    });
+    initChickenShareSummary('{{form.chicken_share_prices}}'.split(','), {{form.free_capacity | safe}}[growingPeriodSelect.selectedIndex])
+}
+
+</script>

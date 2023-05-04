@@ -1,10 +1,9 @@
+from dateutil.relativedelta import relativedelta
+from django import forms
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from django import forms
-from django.db import transaction
-
-from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Product,
@@ -13,7 +12,6 @@ from tapir.wirgarten.models import (
     MandateReference,
     GrowingPeriod,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     get_next_contract_start_date,
@@ -21,6 +19,7 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_product_price,
     get_free_product_capacity,
+    get_current_growing_period,
 )
 
 
@@ -37,16 +36,19 @@ class ChickenShareForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ChickenShareForm, self).__init__(
-            *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
+            *args,
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k != "start_date" and k != "choose_growing_period"
+            },
         )
         initial = kwargs.get("initial", {})
+
+        self.choose_growing_period = kwargs.get("choose_growing_period", False)
         self.start_date = kwargs.get(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
-        self.growing_period = GrowingPeriod.objects.get(
-            start_date__lte=self.start_date, end_date__gt=self.start_date
-        )
-
         self.product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
         self.products = {
             """chicken_shares_{variation}""".format(variation=p.name): p
@@ -58,13 +60,42 @@ class ChickenShareForm(forms.Form):
             for prod in self.products.values()
         }
 
-        self.free_capacity = get_free_product_capacity(
-            self.product_type.id, self.start_date
-        )
-
         self.field_order = list(self.products.keys()) + ["consent_chicken_shares"]
         self.n_columns = len(self.products)
-        self.colspans = {"consent_chicken_shares": self.n_columns}
+        self.colspans = {
+            "consent_chicken_shares": self.n_columns,
+            "growing_period": self.n_columns,
+        }
+
+        if self.choose_growing_period:
+            growing_periods = GrowingPeriod.objects.filter(
+                end_date__gte=self.start_date + relativedelta(months=-1, days=1),
+            ).order_by("start_date")
+
+            self.free_capacity = [
+                f"{get_free_product_capacity(self.product_type.id, max(growing_periods[0].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+                f"{get_free_product_capacity(self.product_type.id, max(growing_periods[1].start_date, self.start_date))}".replace(
+                    ",", "."
+                ),
+            ]
+
+            self.fields["growing_period"] = forms.ModelChoiceField(
+                queryset=growing_periods,
+                label=_("Vertragsperiode"),
+                required=True,
+                empty_label=None,
+                initial=0,
+            )
+        else:
+            self.growing_period = get_current_growing_period(self.start_date)
+
+            self.free_capacity = [
+                f"{get_free_product_capacity(self.product_type.id, max(self.growing_period.start_date, self.start_date))}".replace(
+                    ",", "."
+                )
+            ]
 
         for k, v in self.products.items():
             self.fields[k] = forms.IntegerField(
@@ -103,6 +134,11 @@ class ChickenShareForm(forms.Form):
 
         now = timezone.now()
 
+        if not hasattr(self, "growing_period"):
+            self.growing_period = self.cleaned_data.pop(
+                "growing_period", get_current_growing_period()
+            )
+
         self.subs = []
         for key, quantity in self.cleaned_data.items():
             if quantity and quantity > 0 and key.startswith("chicken_shares_"):
@@ -115,7 +151,7 @@ class ChickenShareForm(forms.Form):
                         product=product,
                         quantity=quantity,
                         period=self.growing_period,
-                        start_date=self.start_date,
+                        start_date=max(self.start_date, self.growing_period.start_date),
                         end_date=self.growing_period.end_date,
                         mandate_ref=mandate_ref,
                         consent_ts=now,
