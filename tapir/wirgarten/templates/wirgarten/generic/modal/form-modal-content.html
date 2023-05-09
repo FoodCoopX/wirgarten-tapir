@@ -8,7 +8,7 @@
 {% block content %}
 <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
 {{ form.media }}
-<form id="form" method="post" onsubmit="showLoadingSpinner()">
+<form id="form" method="post" onsubmit="handleSubmit()">
     {% csrf_token %}
     <div class="modal-body">
         {% if form.template_name %}
@@ -45,7 +45,7 @@
         <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="closeModal()">
             {% translate 'Abbrechen'%}
         </button>
-        <button type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
+        <button id="submit-btn" type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
     </div>
 </form>
 
@@ -58,6 +58,11 @@
         parent.postMessage({type:"modal-loading-spinner"}, "*")
     }
 
+    const handleSubmit = () => {
+        showLoadingSpinner();
+        const submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+    }
 </script>
 
 {% endblock %}

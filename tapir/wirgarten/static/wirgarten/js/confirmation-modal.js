@@ -19,9 +19,10 @@ const ConfirmationModal = {
             modalConfirmButton.classList.add('btn-' + confirmButtonType);
 
             modalConfirmButton.addEventListener('click', () => {
-            handleConfirm();
-            modal.hide()
-        });
+                modalConfirmButton.disabled = true;
+                handleConfirm();
+                modal.hide()
+            });
         }
         const modal = new bootstrap.Modal(modalElem);
 
