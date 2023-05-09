@@ -180,7 +180,7 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     share_price = settings.COOP_SHARE_PRICE
-    due_date = get_next_contract_start_date().replace(
+    due_date = start_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )  # payment is always due next month
 

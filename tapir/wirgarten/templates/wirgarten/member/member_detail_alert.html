@@ -213,10 +213,14 @@
     }
 
     const handleRenewSameConditions = () => {
+        const btn = document.getElementById('renewSameConditionsBtn');
+        btn.disabled=true;
         window.location.replace("{% url 'wirgarten:member_renew_same_conditions' pk=member.id %}");
     }
 
     const handleRenewChangeConditions = () => {
+         const btn = document.getElementById('renewChangeConditionsBtn');
+         btn.disabled=true;
          const modalInstance = bootstrap.Modal.getInstance(document.getElementById("renew-modal"));
          modalInstance.hide();
 
@@ -226,5 +230,6 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
+
 
 </script>
