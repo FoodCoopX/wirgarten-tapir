@@ -11,10 +11,12 @@ from tapir.wirgarten.models import (
     Subscription,
     MandateReference,
     GrowingPeriod,
+    Member,
 )
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     get_next_contract_start_date,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
@@ -128,7 +130,9 @@ class ChickenShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(self, member_id, mandate_ref: MandateReference = None):
+    def save(
+        self, member_id, mandate_ref: MandateReference = None, send_mail: bool = False
+    ):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id, False)
 
@@ -160,6 +164,10 @@ class ChickenShareForm(forms.Form):
                 )
 
         Subscription.objects.bulk_create(self.subs)
+
+        if send_mail:
+            member = Member.objects.get(id=member_id)
+            send_order_confirmation(member, self.subs)
 
     def is_valid(self):
         super().is_valid()

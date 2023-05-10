@@ -1212,7 +1212,7 @@ def get_add_chicken_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: ChickenShareForm):
-        form.save(member_id=member_id)
+        form.save(member_id=member_id, send_mail=True)
 
         member = Member.objects.get(id=member_id)
 

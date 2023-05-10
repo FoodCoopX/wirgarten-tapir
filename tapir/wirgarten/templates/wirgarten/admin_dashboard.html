@@ -14,13 +14,36 @@
 <div class="dashboard-container">
     <!--div class="dashboard-tile card alert-warning alert-tile">
        <h4>WARNUNG:</h4>
-
     </div-->
 
     <div class="dashboard-tile card capacity-tile clickable">
         <div class="card-body">
             <h4>Kapazitäten</h4>
+            <b>(aktuelle Vertragsperiode)</b>
             <canvas height="10000px" width="10000px" id="product-capacity-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card capacity-tile clickable">
+        <div class="card-body">
+            <h4>Marketing Kanäle</h4>
+            <canvas height="10000px" width="10000px" id="traffic-source-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card harvest-share-variants-tile clickable">
+        <a href="{% url 'wirgarten:product' %}">
+            <div class="card-body">
+                <h4>Top Ernteanteile Varianten</h4>
+                <canvas id="harvest-share-variants-chart"></canvas>
+            </div>
+        </a>
+    </div>
+
+    <div class="dashboard-tile card capacity-tile">
+        <div class="card-body">
+            <h4>Kündigungen</h4>
+            <canvas id="cancellations-chart"></canvas>
         </div>
     </div>
 
@@ -85,15 +108,6 @@
                 <small>nächster <strong>Zahlungseingang</strong> ({{next_payment_date}})</small>
             </div>
         </a>
-    </div>
-
-    <div class="dashboard-tile card next-payment-tile">
-        <div class="card-body">
-            <div style="color: var(--primary)" class="dashboard-tile-number">
-                + <strong>{{solidarity_overplus}}</strong> €
-            </div>
-            <small><strong>Solidar Überschuss</strong> / Monat</small>
-        </div>
     </div>
 
     <div class="dashboard-tile card clickable">
@@ -173,22 +187,21 @@
         </a>
     </div>
 
-    <div class="dashboard-tile card product-distribution-tile clickable">
-        <a href="{% url 'wirgarten:product' %}">
-            <div class="card-body">
-                <h4>Verteilung der Verträge</h4>
-                <canvas id="product-distribution-chart"></canvas>
+    <div class="dashboard-tile card next-payment-tile">
+        <div class="card-body">
+            <div style="color: var(--primary)" class="dashboard-tile-number">
+                + <strong>{{solidarity_overplus}}</strong> €
             </div>
-        </a>
+            <small><strong>Solidar Überschuss</strong> / Monat</small>
+        </div>
     </div>
 
-    <div class="dashboard-tile card harvest-share-variants-tile clickable">
-        <a href="{% url 'wirgarten:product' %}">
-            <div class="card-body">
-                <h4>Top Ernteanteile Varianten</h4>
-                <canvas id="harvest-share-variants-chart"></canvas>
-            </div>
-        </a>
+    <div class="dashboard-tile card capacity-tile clickable">
+        <div class="card-body">
+            <h4>Kapazitäten</h4>
+            <b>(nächste Vertragsperiode)</b>
+            <canvas height="10000px" width="10000px" id="next-period-product-capacity-chart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -196,21 +209,20 @@
 <script>
   const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
 
-  const capacityChart = document.getElementById('product-capacity-chart');
-  new Chart(capacityChart, {
+  new Chart(document.getElementById('product-capacity-chart'), {
     type: 'bar',
     data: {
-      links: {{capacity_links | safe}},
-      labels: {{capacity_labels | safe}},
+      links: {{current_capacity_links | safe}},
+      labels: {{current_capacity_labels | safe}},
       datasets: [
           {
             label: 'Verfügbar',
-            data: {{free_capacity | safe}},
+            data: {{current_free_capacity | safe}},
             backgroundColor: COLORS[1]
           },
           {
             label: 'Vergeben',
-            data: {{used_capacity | safe}},
+            data: {{current_used_capacity | safe}},
             backgroundColor: COLORS[0]
           }
       ]
@@ -225,6 +237,24 @@
             stacked: true
           }
         },
+         plugins: {
+      tooltip: {
+        callbacks: {
+         title: (items) => {
+            const item = items[0];
+            const label = item.chart.data.labels[item.dataIndex];
+            return label;
+          },
+          label: (context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+
+            return [`${datasetLabel} ${value.toFixed(1)} %`]
+          }
+        }
+      }
+    },
         onClick: (event, elements, chart) => {
           if (elements.length) {
             const element = elements[0]; // use the first one
@@ -237,6 +267,127 @@
         },
     }
   });
+
+
+  new Chart(document.getElementById('next-period-product-capacity-chart'), {
+    type: 'bar',
+    data: {
+      links: {{next_capacity_links | safe}},
+      labels: {{next_capacity_labels | safe}},
+      datasets: [
+          {
+            label: 'Verfügbar',
+            data: {{next_free_capacity | safe}},
+            backgroundColor: COLORS[1]
+          },
+          {
+            label: 'Vergeben',
+            data: {{next_used_capacity | safe}},
+            backgroundColor: COLORS[0]
+          }
+      ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        },
+         plugins: {
+      tooltip: {
+        callbacks: {
+         title: (items) => {
+            const item = items[0];
+            const label = item.chart.data.labels[item.dataIndex];
+            return label;
+          },
+          label: (context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+
+            return [`${datasetLabel} ${value.toFixed(1)} %`]
+          }
+        }
+      }
+    },
+        onClick: (event, elements, chart) => {
+          if (elements.length) {
+            const element = elements[0]; // use the first one
+            const url = chart.data.links[element.index];
+            window.location.href = url;
+          }
+        },
+        onHover: (event, elements) => {
+            event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
+        },
+    }
+  });
+
+  new Chart(document.getElementById('traffic-source-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{traffic_source_labels | safe}},
+      datasets: {{traffic_source_data | safe}}.map((data, index) => {
+        return {
+          label: data.label,
+          data: data.data,
+          backgroundColor: COLORS[index]
+        }
+      })
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                      label: (context) => {
+                        const label = context.chart.data.labels[context.dataIndex];
+                        const value = context.parsed.y;
+                        const datasetLabel = context.dataset.label;
+
+                        return [`${datasetLabel}: ${value.toFixed(1)} %`]
+                      }
+                    }
+          }
+     }}
+  });
+
+    new Chart(document.getElementById('cancellations-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{cancellations_labels | safe}},
+      datasets: {{cancellations_data | safe}}.map((data, index) => {
+        return {
+          label: data.label,
+          data: data.data,
+          backgroundColor: COLORS[index + 1]
+        }
+      })
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        },
+  }});
 
   new Chart(document.getElementById('harvest-share-variants-chart'), {
     type: 'doughnut',
@@ -252,18 +403,14 @@
   });
 
 
-  new Chart(document.getElementById('product-distribution-chart'), {
-    type: 'bar',
-    data: {
-      labels: {{contract_distribution_labels | safe}},
-      datasets: [{
-        label: "Anzahl der Mitglieder",
-        data: {{contract_distribution_data | safe}},
-        borderWidth: 1,
-        backgroundColor: COLORS
-      }]
-    }
-  });
+
+
+
+
+
+
+
+
 
 
 

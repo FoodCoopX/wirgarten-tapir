@@ -12,7 +12,8 @@
     "pk": "tF4a0ZonVw",
     "fields": {
       "name": "M",
-      "type": "jW3l0EcsVM"
+      "type": "jW3l0EcsVM",
+      "base": "True"
     }
   },
   {
@@ -64,7 +65,8 @@
     "pk": "NGAwHvrHjD",
     "fields": {
       "name": "Volle",
-      "type": "Wv0JEzFQFa"
+      "type": "Wv0JEzFQFa",
+      "base": "True"
     }
   },
   {
@@ -80,7 +82,8 @@
     "pk": "CgmCfyN3q1",
     "fields": {
       "name": "Mitgliedschaft",
-      "type": "iOrXOQTZxy"
+      "type": "iOrXOQTZxy",
+      "base": "True"
     }
   }
 ]
