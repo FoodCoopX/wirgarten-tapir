@@ -28,6 +28,7 @@ from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
     GrowingPeriod,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
@@ -108,14 +109,11 @@ def has_selected_harvest_shares(wizard) -> bool:
         return False
 
 
+@transaction.atomic
 def save_member(form_dict):
     personal_details_form = form_dict[STEP_PERSONAL_DETAILS]
     member = personal_details_form.forms[0].instance
 
-    if STEP_PICKUP_LOCATION in form_dict:
-        member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
-            "pickup_location"
-        ]
     member.account_owner = personal_details_form.cleaned_data["account_owner"]
     member.iban = personal_details_form.cleaned_data["iban"]
     member.is_active = False
@@ -126,6 +124,7 @@ def save_member(form_dict):
     member.privacy_consent = now
 
     member.save()
+
     return member
 
 
@@ -268,9 +267,17 @@ class RegistrationWizardView(CookieWizardView):
 
         return initial
 
-    @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
+
+        if STEP_PICKUP_LOCATION in form_dict:
+            MemberPickupLocation.objects.create(
+                member=member,
+                pickup_location_id=form_dict[STEP_PICKUP_LOCATION]
+                .cleaned_data["pickup_location"]
+                .id,
+                valid_from=date.today(),
+            )
 
         if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
             form_dict[STEP_HARVEST_SHARES].cleaned_data

@@ -34,6 +34,9 @@ class ParameterCategory:
 
 
 class Parameter:
+    MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
+        f"{PREFIX}.member.pickup_location_change_until"
+    )
     MEMBER_LOCK_FUNCTIONS = f"{PREFIX}.temporarily.lock_functions"
     MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
@@ -127,6 +130,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.wirgarten.constants import ProductTypes
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
+
+        parameter_definition(
+            key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
+            label="Abholort-Änderung möglich bis",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=6,
+            description="Bis zu welchem Wochentag kann ein Mitglied seinen Abholort ändern, um für die darauffolgede Woche den neuen Abholort zu nutzen?",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
+        )
 
         parameter_definition(
             key=Parameter.SITE_NAME,
@@ -364,7 +377,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=800,
         )
 
-        # FIXME: obsolete
         parameter_definition(
             key=Parameter.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",

@@ -16,7 +16,7 @@
   const pickupLocation = document.querySelector('#id_pickup_location');
   const items = pickupLocation.querySelectorAll('.list-group-item-action');
 
-       function handleItemClick(item) {
+  function handleItemClick(item) {
     // Remove the 'active' class from other items and add it to the clicked item
     items.forEach(function(item) {
       item.classList.remove('active');
@@ -42,7 +42,7 @@
     }
     }
 
-
+    handleSelect('{{ widget.attrs.initial }}');
     </script>
     <div>
         {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=widget.attrs.data selected_product_types=widget.attrs.selected_product_types selected=widget.attrs.initial callback='handleSelect' height='100%' %}
@@ -61,4 +61,5 @@ document.addEventListener('DOMContentLoaded', function() {
   const label = document.querySelector('label[for="id_Pickup Location-pickup_location"]');
   label.style.display = 'none';
 });
+
 </script>

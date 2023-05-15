@@ -134,9 +134,6 @@ class Member(TapirUser):
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
     sepa_consent = models.DateTimeField(_("SEPA Consent"), null=True)
-    pickup_location = models.ForeignKey(
-        PickupLocation, on_delete=models.DO_NOTHING, null=True
-    )
     withdrawal_consent = models.DateTimeField(
         _("Right of withdrawal consent"), null=True
     )
@@ -144,11 +141,26 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
 
+    @property
+    def pickup_location(self):
+        return self.get_pickup_location()
+
+    def get_pickup_location(self, reference_date=timezone.now().date()):
+        pickup_location_record = (
+            self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
+            .order_by("-valid_from")
+            .first()
+        )
+        return (
+            pickup_location_record.pickup_location if pickup_location_record else None
+        )
+
     @classmethod
     def generate_member_no(cls):
         max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
         return (max_member_no or 0) + 1
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         if not self.member_no:
             self.member_no = self.generate_member_no()
@@ -220,6 +232,18 @@ class Member(TapirUser):
 
     def __str__(self):
         return f"[{self.member_no}] {self.first_name} {self.last_name} ({self.email})"
+
+
+class MemberPickupLocation(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    valid_from = models.DateField()
+
+    class Meta:
+        unique_together = (
+            "member",
+            "valid_from",
+        )
 
 
 class Product(TapirModel):

@@ -92,12 +92,14 @@ from tapir.wirgarten.models import (
     Product,
     CoopShareTransaction,
     SubscriptionChangeLogEntry,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_active_pickup_locations,
     generate_future_deliveries,
+    get_next_delivery_date,
 )
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string
@@ -207,7 +209,7 @@ class MemberFilter(FilterSet):
     )
     pickup_location = ModelChoiceFilter(
         queryset=PickupLocation.objects.all().order_by("name"),
-        field_name="pickup_location__name",
+        field_name="pickup_location__name",  # FIXME: pickup_location field doesn't exist anymore! Custom filter needed
         label="Abholort",
     )
     contract_status = ContractStatusFilter(
@@ -400,11 +402,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             and is_bestellcoop_available(next_month),
         }
 
-        if self.object.pickup_location:
+        pickup_location = self.object.pickup_location
+        if pickup_location:
             context["pickup_location_map_data"] = get_pickup_locations_map_data(
-                [self.object.pickup_location],
+                [pickup_location],
                 PickupLocationCapability.objects.filter(
-                    pickup_location=self.object.pickup_location
+                    pickup_location=pickup_location
                 ),
             )
         else:
@@ -1062,14 +1065,59 @@ def get_pickup_location_choice_form(request, **kwargs):
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
-    def update_pickup_location(pickup_location_id):
-        member.pickup_location_id = pickup_location_id
-        member.save()
+    @transaction.atomic
+    def update_pickup_location(form):
+        pickup_location_id = form.cleaned_data["pickup_location"].id
+
+        today = timezone.now().date()
+        next_delivery_date = get_next_delivery_date()
+
+        # Get the weekday of the next delivery date and today
+        next_delivery_weekday = next_delivery_date.weekday()
+        today_weekday = today.weekday()
+
+        change_util_weekday = get_parameter_value(
+            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+        )
+
+        # Case A: User makes change AFTER delivery_date and BEFORE change_util_weekday
+        # If today is before or on change_util_weekday and after next_delivery_weekday
+        if next_delivery_weekday < today_weekday <= change_util_weekday:
+            change_date = today
+
+        # Case B: User makes change BEFORE delivery_date and AFTER change_util_weekday
+        # If today is after change_util_weekday and before next_delivery_weekday
+        elif change_util_weekday < today_weekday < next_delivery_weekday:
+            change_date = next_delivery_date + timedelta(days=1)
+
+        # Case C: User makes change ON the delivery_date
+        # If today is the delivery_date, the change can become effective from the next day
+        elif today == next_delivery_date:
+            change_date = today + timedelta(days=1)
+
+        # Case D: Other cases
+        # If none of the above cases apply, the change will be effective from the next_delivery_date
+        else:
+            change_date = next_delivery_date + timedelta(days=1)
+
+        existing = MemberPickupLocation.objects.filter(
+            member=member, valid_from=change_date
+        )
+        if existing.exists():
+            found = existing.first()
+            found.pickup_location_id = pickup_location_id
+            found.save()
+        else:
+            MemberPickupLocation.objects.create(
+                member=member,
+                pickup_location_id=pickup_location_id,
+                valid_from=change_date,
+            )
 
     return get_form_modal(
         request=request,
         form=PickupLocationChoiceForm,
-        handler=lambda x: update_pickup_location(x.cleaned_data["pickup_location"]),
+        handler=lambda x: update_pickup_location(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
