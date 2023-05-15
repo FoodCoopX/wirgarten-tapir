@@ -1,10 +1,11 @@
 import json
-from django.utils.translation import gettext_lazy as _
+from datetime import date
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.models import PickupLocation, Member
+from tapir.wirgarten.models import PickupLocation, MemberPickupLocation
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_active_pickup_locations,
@@ -28,6 +29,8 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "Hühneranteile": "/static/wirgarten/images/icons/Huehneranteil.svg",
     }
 
+    today = date.today()
+
     return {
         "id": pickup_location.id,
         "name": pickup_location.name,
@@ -46,7 +49,12 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             )
         ),
         # FIXME: member count should be filtered by active subscriptions
-        "members": len(Member.objects.filter(pickup_location=pickup_location)),
+        "members": MemberPickupLocation.objects.filter(
+            valid_from__lte=today, pickup_location=pickup_location
+        )
+        .order_by("member", "-valid_from")
+        .distinct("member")
+        .count(),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
     }
 
@@ -65,7 +73,6 @@ class PickupLocationWidget(forms.Select):
     ):
         super(PickupLocationWidget, self).__init__(*args, **kwargs)
 
-        print(selected_product_types)  # TODO remove
         self.attrs["selected_product_types"] = selected_product_types
         self.attrs["data"] = get_pickup_locations_map_data(
             pickup_locations, location_capabilities
@@ -80,11 +87,13 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         location_capabilities = get_active_pickup_location_capabilities()
         pickup_locations = get_active_pickup_locations(location_capabilities)
 
-        all_prod_types_with_delivery = map(
-            lambda x: x["name"],
-            get_active_product_types()
-            .exclude(delivery_cycle=NO_DELIVERY)
-            .values("name"),
+        all_prod_types_with_delivery = list(
+            map(
+                lambda x: x["name"],
+                get_active_product_types()
+                .exclude(delivery_cycle=NO_DELIVERY[0])
+                .values("name"),
+            )
         )
         selected_product_types = list(
             (

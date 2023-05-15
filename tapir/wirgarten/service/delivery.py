@@ -88,7 +88,7 @@ def generate_future_deliveries(member: Member):
             deliveries.append(
                 {
                     "delivery_date": next_delivery_date.isoformat(),
-                    "pickup_location": member.pickup_location,
+                    "pickup_location": member.get_pickup_location(next_delivery_date),
                     "subs": active_subs,
                 }
             )
