@@ -74,6 +74,17 @@ class ProductType(TapirModel):
         verbose_name=_("Lieferzyklus"),
     )
 
+    @property
+    def base_price(self):
+        today = datetime.date.today()
+        product = self.product_set.get(base=True)
+        return (
+            product.productprice_set.filter(valid_from__lte=today)
+            .order_by("-valid_from")
+            .first()
+            .price
+        )
+
     class Meta:
         constraints = [
             UniqueConstraint(
@@ -94,6 +105,7 @@ class PickupLocationCapability(TapirModel):
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
     )
+    max_capacity = models.PositiveSmallIntegerField(null=True)
     pickup_location = models.ForeignKey(
         PickupLocation, null=False, on_delete=models.DO_NOTHING
     )
@@ -234,7 +246,7 @@ class Member(TapirUser):
         return f"[{self.member_no}] {self.first_name} {self.last_name} ({self.email})"
 
 
-class MemberPickupLocation(models.Model):
+class MemberPickupLocation(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
     valid_from = models.DateField()
@@ -270,7 +282,7 @@ class Product(TapirModel):
         else:
             if not base_products.exists() or base_products.filter(id=self.id).exists():
                 raise ValidationError(
-                    "There must be at least one base product per ProductType."
+                    "There must be exactly one base product per ProductType."
                 )
 
     def save(self, *args, **kwargs):

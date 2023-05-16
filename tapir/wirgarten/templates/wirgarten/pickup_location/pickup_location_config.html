@@ -2,6 +2,7 @@
 
 {% load i18n %}
 {% load core %}
+{% load wirgarten %}
 {% load tapir_static %}
 
 {% block title %}
@@ -31,7 +32,7 @@
                         <th>Name</th>
                         <th>Adresse</th>
                         <th>Hinweise zur Abholung</th>
-                        <th>Produkte</th>
+                        <th>Kapaziäten</th>
                         <th>Mitglieder</th>
                     </tr>
                     </thead>
@@ -41,9 +42,10 @@
                         <td><strong>{{ pl.name }}</strong></td>
                         <td>{{ pl.street }}<br/><small>{{ pl.postcode }} {{ pl.city }}</small></td>
                         <td>{{ pl.info|safe }}</td>
-                        <td style="font-size: 2em; white-space:nowrap; text-align:left;">
+                        <td style="white-space:nowrap; text-align:left;">
                             {% for cap in pl.capabilities %}
-                            <img width="48em" title="{{ cap.name }}" src="{{cap.icon}}"/>
+                            <img width="24em" title="{{ cap.name }}"
+                                 src="{{cap.icon}}"/><small> {{cap.current_capacity}} / {{cap.max_capacity|default:'∞'}}{%if cap.capacity_percent %} ({{ cap.capacity_percent|format_percent }}){%endif%}</small><br/>
                             {% endfor %}
                         </td>
                         <td>{% if pl.members == 0 %} - {% else %} {{ pl.members }} {% endif %}</td>
@@ -70,10 +72,6 @@
     {% endfor %}
 
     initSelected();
-
-
-
-
 </script>
 
 {% endblock %}
