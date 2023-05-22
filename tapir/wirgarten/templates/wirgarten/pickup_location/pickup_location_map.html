@@ -6,10 +6,8 @@
 <script src="{% static 'wirgarten/js/registration/pickup_location.js' %}"></script>
 {% endblock %}
 
-<div id="map" class="photo" style="min-height:10em; height:{{height|default:'40em'}};"></div>
+<div id="map" class="photo" style="min-height:30em; height:{{height|default:'40em'}};"></div>
 <script>
     const selected = {% if selected %} '{{selected}}' {% else %} undefined {% endif %}
-    var PickupLocationMap = {selectLocation: initMap(
-            JSON.parse('{{data|safe}}'), {{selected_product_types|safe|default:'[]'}}, {{callback|safe|default:'false'}}, selected
-            )}
+    var PickupLocationMap = {selectLocation: initMap(JSON.parse('{{data|safe}}'), {{selected_product_types|safe|default:'{}'}}, {{callback|safe|default:'false'}}, selected)}
 </script>

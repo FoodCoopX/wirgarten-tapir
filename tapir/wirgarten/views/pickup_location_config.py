@@ -28,7 +28,12 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         pickup_locations = list(PickupLocation.objects.all().order_by("name"))
-        capabilities = get_active_pickup_location_capabilities()
+        capabilities = get_active_pickup_location_capabilities().values(
+            "pickup_location_id",
+            "product_type_id",
+            "max_capacity",
+            "product_type__name",
+        )
         context["data"] = get_pickup_locations_map_data(
             pickup_locations=pickup_locations,
             location_capabilities=capabilities,
@@ -37,6 +42,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["pickup_locations"] = list(
             map(lambda x: pickup_location_to_dict(capabilities, x), pickup_locations)
         )
+
         return context
 
 
@@ -44,6 +50,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
 @permission_required(Permission.Coop.MANAGE)
 @csrf_protect
 def get_pickup_location_add_form(request, **kwargs):
+    @transaction.atomic
     def create_pickup_location(form):
         coords = form.cleaned_data["coords"].split(",")
         lon = coords[0].strip()
@@ -59,11 +66,7 @@ def get_pickup_location_add_form(request, **kwargs):
             coords_lat=lat,
         )
 
-        for pt in form.product_types:
-            if form.cleaned_data["pt_" + pt.id]:  # is selected
-                PickupLocationCapability.objects.create(
-                    pickup_location=pl, product_type=pt
-                )
+        update_pickup_location_capabilities(form, pl)
 
         return pl
 
@@ -75,6 +78,39 @@ def get_pickup_location_add_form(request, **kwargs):
         + "?selected="
         + x.id,
     )
+
+
+def update_pickup_location_capabilities(form, pl):
+    capabilities = list(
+        map(
+            lambda x: x["product_type__id"],
+            PickupLocationCapability.objects.filter(pickup_location=pl).values(
+                "product_type__id"
+            ),
+        )
+    )
+    for pt in form.product_types:
+        if pt not in capabilities:  # doesn't exist yet
+            if form.cleaned_data["pt_" + pt]:  # is selected
+                # --> create
+                PickupLocationCapability.objects.create(
+                    pickup_location=pl,
+                    product_type_id=pt,
+                    max_capacity=form.cleaned_data.get("pt_capa_" + pt, None),
+                )
+        else:
+            if not form.cleaned_data["pt_" + pt]:  # exists & is not selected
+                # --> delete
+                PickupLocationCapability.objects.get(
+                    pickup_location=pl, product_type_id=pt
+                ).delete()
+            else:
+                # --> update
+                plc = PickupLocationCapability.objects.get(
+                    pickup_location=pl, product_type_id=pt
+                )
+                plc.max_capacity = form.cleaned_data.get("pt_capa_" + pt, None)
+                plc.save()
 
 
 @require_http_methods(["GET", "POST"])
@@ -97,33 +133,14 @@ def get_pickup_location_edit_form(request, **kwargs):
 
         pl.save()
 
-        capabilities = list(
-            map(
-                lambda x: x["product_type__id"],
-                PickupLocationCapability.objects.filter(pickup_location=pl).values(
-                    "product_type__id"
-                ),
-            )
-        )
-        for pt in form.product_types:
-            if pt.id not in capabilities:  # doesn't exist yet
-                if form.cleaned_data["pt_" + pt.id]:  # is selected
-                    # --> create
-                    PickupLocationCapability.objects.create(
-                        pickup_location=pl, product_type=pt
-                    )
-            elif not form.cleaned_data["pt_" + pt.id]:  # exists & is not selected
-                # --> delete
-                PickupLocationCapability.objects.get(
-                    pickup_location=pl, product_type=pt
-                ).delete()
+        update_pickup_location_capabilities(form, pl)
 
         return pl
 
     return get_form_modal(
         request=request,
         form=PickupLocationEditForm,
-        handler=lambda form: update_pickup_location(form),
+        handler=update_pickup_location,
         redirect_url_resolver=lambda x: PAGE_ROOT + "?selected=" + x.id,
         **kwargs
     )

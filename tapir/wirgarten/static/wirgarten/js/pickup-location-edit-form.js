@@ -35,3 +35,22 @@ const regex =  /https:\/\/(?:www\.)?google\.[a-z]{2,6}\/maps\/place\/(.*)\/@(\d{
             coordsInput.value = coords;
         }
     });
+
+const initCapas = (productTypes) => {
+    for (const id of productTypes){
+        const checkbox = document.getElementById(`id_pt_${id}`);
+        const capaInput = document.getElementById(`id_pt_capa_${id}`);
+
+        capaInput.disabled = !checkbox.checked;
+
+        const handleCheck = () => {
+            if(checkbox.checked){
+                capaInput.disabled = false;
+            } else {
+                capaInput.disabled = true;
+            }
+        }
+
+        checkbox.addEventListener("change", handleCheck);
+    }
+}

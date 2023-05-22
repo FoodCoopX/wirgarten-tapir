@@ -402,20 +402,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             and is_bestellcoop_available(next_month),
         }
 
-        pickup_location = self.object.pickup_location
-        if pickup_location:
-            context["pickup_location_map_data"] = get_pickup_locations_map_data(
-                [pickup_location],
-                PickupLocationCapability.objects.filter(
-                    pickup_location=pickup_location
-                ),
-            )
-        else:
-            capabilities = get_active_pickup_location_capabilities()
-            context["pickup_location_map_data"] = get_pickup_locations_map_data(
-                get_active_pickup_locations(capabilities), capabilities
-            )
-
         context["deliveries"] = generate_future_deliveries(self.object)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
@@ -1058,9 +1044,7 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     member = Member.objects.get(pk=member_id)
     kwargs["initial"] = {
-        "product_types": get_active_subscriptions_grouped_by_product_type(
-            member
-        ).keys(),
+        "subs": get_active_subscriptions_grouped_by_product_type(member),
     }
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id

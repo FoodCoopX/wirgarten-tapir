@@ -1,11 +1,19 @@
-var initMap = (data, productTypes = [], callback = false, selected = undefined) => {
+var initMap = (data, productTypes = {}, callback = false, selected = undefined) => {
     const markers = {};
     const idToCoords = (id) => {
         return data[id]["coords"].split(',')
     }
     const map = L.map('map').setView(idToCoords(Object.entries(data)[0][0]), 12);
 
-    const possibleLocations = Object.keys(data)
+    const possibleLocations = Object.entries(data).filter(([id, pl]) => {
+        let freeCapacity = Object.keys(productTypes).filter(v => !pl.capabilities.map(it => it.name).includes(v)).length == 0;
+        for (const capa of pl.capabilities){
+            if(freeCapacity && productTypes[capa.name] && capa.max_capacity){
+                 freeCapacity = productTypes[capa.name] <= (capa.max_capacity - capa.current_capacity)
+            }
+        }
+        return freeCapacity
+    }).map(([id, pl]) => id)
 
      const setMarkerColor = (marker) => {
          if(!possibleLocations.includes(marker.locationId)){
@@ -17,7 +25,15 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
 
     for(const [id, pl] of Object.entries(data)) {
         const marker = L.marker(idToCoords(id)).addTo(map);
-        const missingCapabilities = productTypes.filter(v => !pl.capabilities.map(it => it.name).includes(v))
+        const missingCapabilities = Object.keys(productTypes).filter(v => !pl.capabilities.map(it => it.name).includes(v))
+
+        let freeCapacity = Object.keys(productTypes).filter(v => !pl.capabilities.map(it => it.name).includes(v)).length == 0;
+        for (const capa of pl.capabilities){
+            if(freeCapacity && productTypes[capa.name] && capa.max_capacity){
+                 freeCapacity = productTypes[capa.name] <= (capa.max_capacity - capa.current_capacity)
+            }
+        }
+
         marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>
             <br/>
@@ -29,6 +45,7 @@ var initMap = (data, productTypes = [], callback = false, selected = undefined) 
                 ).join(" ")}
 
                 ${missingCapabilities.length == 0 ? '' : `<br/><span style="color:darkred">Folgende Produkte sind hier leider <strong>nicht</strong> abholbar: ${missingCapabilities.join(" ")}<br/></span>`}
+                ${freeCapacity ? '' : `<br/><span style="color:darkred">Leider ist der Abholort im Moment <strong>voll</strong>.<br/></span>`}
             </div>
             `);
         marker.locationId = id;
