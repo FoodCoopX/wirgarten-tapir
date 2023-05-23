@@ -16,9 +16,11 @@ var initChickenShareSummary = (chicken_share_prices, capacity_total) => {
 
     const handleChange = (event) => {
         if(event){
-            if(event.target.value < 0){
+            const value = parseInt(event.target.value)
+            const max = parseInt(event.target.max)
+            if(value < 0){
                 event.target.value = 0
-            } else if(event.target.value > event.target.max){
+            } else if (value > max){
                 event.target.value = event.target.max
             }
         }
