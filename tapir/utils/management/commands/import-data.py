@@ -179,7 +179,7 @@ class Command(BaseCommand):
                             member_id=m.id,
                             quantity=float(row["Quantity"]),
                             start_date=row["Vertragsbeginn"],
-                            end_date=row["vertragsende"],
+                            end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
                             solidarity_price=row["Solidarpreis in Prozent"],
                             mandate_ref_id=mref.ref,
