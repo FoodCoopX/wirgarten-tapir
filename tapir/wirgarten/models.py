@@ -14,7 +14,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
 from tapir.wirgarten.utils import format_date
 
 
@@ -34,7 +34,15 @@ class PickupLocation(TapirModel):
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32)
     city = models.CharField(_("City"), max_length=50)
-    info = models.CharField(_("Additional info like opening times"), max_length=150)
+    info = models.CharField(_("Additional info"), max_length=150, blank=True)
+    access_code = models.CharField(_("Access Code"), max_length=20, blank=True)
+    messenger_group_link = models.CharField(
+        _("Messenger Group Link"), max_length=150, blank=True
+    )
+    contact_name = models.CharField(
+        _("Name of the contact"), max_length=150, blank=True
+    )
+    photo_link = models.CharField(_("Photo Link"), max_length=512, blank=True)
 
     class Meta:
         constraints = [
@@ -46,6 +54,19 @@ class PickupLocation(TapirModel):
 
     def __str__(self):
         return self.name
+
+
+class PickupLocationOpeningTime(TapirModel):
+    pickup_location = models.ForeignKey(
+        "PickupLocation",
+        on_delete=models.CASCADE,
+        related_name="opening_times",
+    )
+    day_of_week = models.PositiveSmallIntegerField(
+        choices=OPTIONS_WEEKDAYS,
+    )
+    open_time = models.TimeField()
+    close_time = models.TimeField()
 
 
 class GrowingPeriod(TapirModel):
