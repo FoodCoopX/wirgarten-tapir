@@ -4,7 +4,16 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
+from django.db.models import (
+    UniqueConstraint,
+    Index,
+    F,
+    Sum,
+    Case,
+    When,
+    Subquery,
+    OuterRef,
+)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
@@ -230,12 +239,12 @@ class Member(TapirUser):
             get_active_subscriptions()
             .filter(member_id=self.id)
             .annotate(
-                product_price=Case(
-                    When(
-                        product__productprice__valid_from__lte=today,
-                        then=F("product__productprice__price"),
-                    ),
-                    default=0.0,
+                product_price=Subquery(
+                    ProductPrice.objects.filter(
+                        product_id=OuterRef("product_id"), valid_from__lte=today
+                    )
+                    .order_by("-valid_from")
+                    .values("price")[:1],
                     output_field=models.FloatField(),
                 ),
             )

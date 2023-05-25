@@ -315,19 +315,38 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                 ),
                 Decimal(0.0),
             ),
-            monthly_payment=Sum(
-                Case(
-                    When(
-                        Q(subscription__start_date__lte=today)
-                        & Q(subscription__end_date__gte=today)
-                        & Q(subscription__product__productprice__valid_from__lte=today),
-                        then=F("subscription__product__productprice__price")
-                        * F("subscription__quantity")
-                        * (1 + F("subscription__solidarity_price")),
-                    ),
-                    default=0.0,
-                    output_field=models.FloatField(),
+            monthly_payment=Subquery(
+                Subscription.objects.filter(
+                    member_id=OuterRef("id"),
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    product__productprice__valid_from__lte=today,
                 )
+                .annotate(
+                    monthly_payment=ExpressionWrapper(
+                        Case(
+                            When(
+                                solidarity_price_absolute__isnull=True,
+                                then=(
+                                    F("product__productprice__price")
+                                    * F("quantity")
+                                    * (1 + F("solidarity_price"))
+                                ),
+                            ),
+                            When(
+                                solidarity_price_absolute__isnull=False,
+                                then=(
+                                    (F("product__productprice__price") * F("quantity"))
+                                    + F("solidarity_price_absolute")
+                                ),
+                            ),
+                            default=0.0,
+                            output_field=models.FloatField(),
+                        ),
+                        output_field=models.FloatField(),
+                    )
+                )
+                .values("monthly_payment")[:1]
             ),
         )
 
