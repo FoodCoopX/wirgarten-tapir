@@ -68,7 +68,7 @@ class Command(BaseCommand):
                         pickup_location_id=picloc
                     )
                     try:
-                        m.save(bypass_keycloak=True)
+                        m.save(bypass_keycloak=False)
                     except Exception as e:
                         print(e)
                         continue
