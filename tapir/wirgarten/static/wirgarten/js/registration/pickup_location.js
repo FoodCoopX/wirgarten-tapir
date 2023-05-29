@@ -38,8 +38,6 @@ var initMap = (data, productTypes = {}, callback = false, selected = undefined) 
         <strong>${pl.name}</strong>
             <br/>
                 ${pl.street}, ${pl.city}<br/></br>
-                <small>${pl.info.replace(',', ', <br/>')}</small><br/>
-                <br/>
                 ${pl.capabilities.map(c =>
                     `<span title="${c.name}" style="font-size:2.5em; text-decoration:strikethrough;"><img width="50em" src="${c.icon}"/></span>`
                 ).join(" ")}

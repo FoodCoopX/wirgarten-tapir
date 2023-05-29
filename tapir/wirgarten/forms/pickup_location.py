@@ -100,7 +100,6 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "name": pickup_location.name,
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
-        "info": pickup_location.info.replace(", ", "<br/>"),
         "capabilities": list(
             map(
                 map_capa,
@@ -205,10 +204,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         )
 
     def label_from_instance(self, obj):
-        info = obj.info
-        info = info.replace(",", "<br/> • ")
-        info = " • " + info
-        return f"<strong>{obj.name}</strong>, <small>{obj.street}, {obj.postcode} {obj.city}<br/>{info}</small>"
+        return f"<strong>{obj.name}</strong><br/><small>{obj.street}, {obj.postcode} {obj.city}</small>"
 
 
 class PickupLocationChoiceForm(forms.Form):
