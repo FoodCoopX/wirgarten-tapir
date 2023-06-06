@@ -8,6 +8,10 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.forms.pickup_location import (
+    PickupLocationChoiceField,
+    get_current_capacity,
+)
 from tapir.wirgarten.models import (
     HarvestShareProduct,
     Subscription,
@@ -16,15 +20,22 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     MandateReference,
     Member,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import (
+    get_active_pickup_location_capabilities,
+    get_next_delivery_date,
+)
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     get_or_create_mandate_ref,
     send_order_confirmation,
+    change_pickup_location,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
+    get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
     get_product_price,
@@ -32,6 +43,7 @@ from tapir.wirgarten.service.products import (
     get_free_product_capacity,
     get_current_growing_period,
 )
+from tapir.wirgarten.utils import format_date
 
 SOLIDARITY_PRICES = [
     (0.0, _("Ich möchte den Richtpreis zahlen")),
@@ -67,6 +79,7 @@ class HarvestShareForm(forms.Form):
     outro_template = "wirgarten/registration/steps/harvest_shares.outro.html"
 
     def __init__(self, *args, **kwargs):
+        self.member_id = kwargs.pop("member_id", None)
         super().__init__(
             *args,
             **{
@@ -114,30 +127,29 @@ class HarvestShareForm(forms.Form):
             "solidarity_price_harvest_shares": self.n_columns - 1,
             "solidarity_price_absolute_harvest_shares": 1,
             "consent_harvest_shares": self.n_columns,
+            "pickup_location": self.n_columns,
+            "pickup_location_change_date": self.n_columns,
         }
 
         if self.choose_growing_period:
             growing_periods = GrowingPeriod.objects.filter(
-                end_date__gte=self.start_date + relativedelta(months=-1, days=1),
+                end_date__gte=self.start_date,
             ).order_by("start_date")
 
-            self.solidarity_total = [
-                f"{get_solidarity_total(max(growing_periods[0].start_date, self.start_date))}".replace(
+            self.solidarity_total = []
+            self.free_capacity = []
+            for period in growing_periods:
+                start_date = max(period.start_date, self.start_date)
+                solidarity_total = f"{get_solidarity_total(start_date)}".replace(
                     ",", "."
-                ),
-                f"{get_solidarity_total(max(growing_periods[1].start_date, self.start_date))}".replace(
-                    ",", "."
-                ),
-            ]
+                )
+                self.solidarity_total.append(solidarity_total)
 
-            self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(growing_periods[0].start_date, self.start_date))}".replace(
+                # Assume harvest_share_products[0] is defined earlier in your code
+                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date)}".replace(
                     ",", "."
-                ),
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(growing_periods[1].start_date, self.start_date))}".replace(
-                    ",", "."
-                ),
-            ]
+                )
+                self.free_capacity.append(free_capacity)
 
             self.fields["growing_period"] = forms.ModelChoiceField(
                 queryset=growing_periods,
@@ -192,6 +204,40 @@ class HarvestShareForm(forms.Form):
             required=False,
             initial=False,
         )
+
+        if self.member_id:
+            member = Member.objects.get(id=self.member_id)
+            subs = get_active_subscriptions_grouped_by_product_type(member)
+            product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+            new_sub_dummy = Subscription(
+                quantity=2, product=Product.objects.get(type=product_type, base=True)
+            )
+            subs[product_type.name] = (
+                [new_sub_dummy]
+                if product_type.name not in subs
+                else (subs[product_type.name] + [new_sub_dummy])
+            )
+            self.fields["pickup_location"] = PickupLocationChoiceField(
+                required=False,
+                label=_("Neuen Abholort auswählen"),
+                initial={"subs": subs},
+            )
+            today = date.today()
+            next_delivery_date = get_next_delivery_date(
+                today + relativedelta(days=2)
+            )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
+            next_month = date.today() + relativedelta(months=1, day=1)
+            self.fields["pickup_location_change_date"] = forms.ChoiceField(
+                required=False,
+                label=_("Abholortwechsel zum"),
+                choices=[
+                    (
+                        next_delivery_date,
+                        f"Nächstmöglicher Zeitpunkt ({format_date(next_delivery_date)})",
+                    ),
+                    (next_month, f"Nächster Monat ({format_date(next_month)})"),
+                ],
+            )
 
         self.harvest_shares = ",".join(
             map(
@@ -261,6 +307,11 @@ class HarvestShareForm(forms.Form):
 
                 self.subs.append(sub)
 
+        new_pickup_location = self.cleaned_data.get("pickup_location")
+        change_date = self.cleaned_data.get("pickup_location_change_date")
+        if new_pickup_location:
+            change_pickup_location(member_id, new_pickup_location, change_date)
+
         if send_email:
             member = Member.objects.get(id=member_id)
             send_order_confirmation(member, self.subs)
@@ -289,5 +340,57 @@ class HarvestShareForm(forms.Form):
 
         if self.require_at_least_one and not has_harvest_shares:
             self.add_error(None, _("Bitte wähle mindestens einen Ernteanteil!"))
+
+        new_pickup_location = self.cleaned_data.get("pickup_location")
+        if not new_pickup_location and has_harvest_shares and self.member_id:
+            product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+            next_month = date.today() + relativedelta(months=1, day=1)
+            latest_pickup_location = (
+                MemberPickupLocation.objects.filter(
+                    member_id=self.member_id, valid_from__lte=next_month
+                )
+                .order_by("-valid_from")
+                .first()
+            )
+            if not latest_pickup_location:
+                self.add_error(None, _("Bitte wähle einen Abholort aus!"))
+                return False
+            else:
+                latest_pickup_location = latest_pickup_location.pickup_location
+
+            total = 0.0
+            for key, quantity in self.cleaned_data.items():
+                if key.startswith(HARVEST_SHARE_FIELD_PREFIX) and (
+                    quantity is not None and quantity > 0
+                ):
+                    product = Product.objects.get(
+                        type__name=ProductTypes.HARVEST_SHARES,
+                        name__iexact=key.replace(HARVEST_SHARE_FIELD_PREFIX, ""),
+                    )
+                    total += float(get_product_price(product).price)
+
+            capability = (
+                get_active_pickup_location_capabilities()
+                .filter(
+                    pickup_location=latest_pickup_location,
+                    product_type__id=product_type.id,
+                )
+                .first()
+            )
+            if capability.max_capacity:
+                current_capacity = (
+                    get_current_capacity(capability, next_month) + total
+                ) / float(product_type.base_price)
+                free_capacity = capability.max_capacity - current_capacity
+                if current_capacity > free_capacity:
+                    self.add_error(
+                        "pickup_location", "Abholort ist voll"
+                    )  # this is not displayed
+                    self.add_error(
+                        None,
+                        _(
+                            "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+                        ),
+                    )
 
         return len(self.errors) == 0
