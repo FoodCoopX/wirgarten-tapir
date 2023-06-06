@@ -43,7 +43,7 @@ class PickupLocation(TapirModel):
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32)
     city = models.CharField(_("City"), max_length=50)
-    info = models.CharField(_("Additional info"), max_length=150, blank=True)
+    info = models.CharField(_("Additional info"), max_length=512, blank=True)
     access_code = models.CharField(_("Access Code"), max_length=20, blank=True)
     messenger_group_link = models.CharField(
         _("Messenger Group Link"), max_length=150, blank=True

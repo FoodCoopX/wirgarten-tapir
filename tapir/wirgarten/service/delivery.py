@@ -10,8 +10,9 @@ from tapir.wirgarten.models import (
     Member,
     GrowingPeriod,
     ProductType,
+    PickupLocationOpeningTime,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_future_subscriptions,
@@ -34,6 +35,7 @@ def get_active_pickup_locations(
     )
 
 
+# FIXME: the parameter should be obsolete, and the delivery date should be calculated from the pickup location
 def get_next_delivery_date(reference_date: date = date.today()):
     delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
     if reference_date.weekday() > delivery_day:
@@ -85,11 +87,33 @@ def generate_future_deliveries(member: Member):
         )
 
         if active_subs.count() > 0:
+            pickup_location = member.get_pickup_location(next_delivery_date)
+            opening_times = PickupLocationOpeningTime.objects.filter(
+                pickup_location=pickup_location
+            )
+            next_delivery_date += relativedelta(
+                days=opening_times[0].day_of_week - next_delivery_date.weekday()
+                if opening_times
+                else 0
+            )
+
+            opening_times = enumerate(
+                map(
+                    lambda x: {
+                        "day_of_week": OPTIONS_WEEKDAYS[x.day_of_week][1],
+                        "open_time": x.open_time,
+                        "close_time": x.close_time,
+                    },
+                    opening_times,
+                )
+            )
+
             deliveries.append(
                 {
                     "delivery_date": next_delivery_date.isoformat(),
                     "pickup_location": member.get_pickup_location(next_delivery_date),
                     "subs": active_subs,
+                    "opening_times": opening_times,
                 }
             )
 

@@ -33,7 +33,23 @@
                 {% endfor %}
             </p>
         </td>
-        <td style="text-align:center">
+        <td title="Klicken für Öffnungszeiten und weitere Infos" style="text-align:center; cursor: pointer" onclick="ConfirmationModal.open('{{delivery.pickup_location.name}}', `<div>
+        {{delivery.pickup_location.street}}, {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}<br/><br/>
+        {% if delivery.pickup_location.info %}{{delivery.pickup_location.info}}<br/><br/>{% endif %}
+        {% if delivery.pickup_location.contact_name %}<strong>Kontakt:</strong> {{delivery.pickup_location.contact_name}}<br/>{% endif %}
+        {% if delivery.pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a href='{{delivery.pickup_location.messenger_group_link}}'>{{delivery.pickup_location.messenger_group_link}}</a><br/>{% endif %}
+        {% if delivery.pickup_location.access_code %}<strong>Zugangs-Code:</strong> {{delivery.pickup_location.access_code}}<br/>{% endif %}
+        {% if delivery.opening_times.0 %}<strong>Öffnungszeiten</strong><br/>{% endif %}
+        <table>
+           {% for idx, ot in delivery.opening_times %}
+            <tr>
+                <th>{{ot.day_of_week}}</td>
+                <td style='padding-left:2em; text-align:right'>{{ot.open_time}}-{{ot.close_time}}</td>
+                </tr>
+                {% endfor %}
+        </table>
+        {% if delivery.pickup_location.photo_link %}<a href='{{delivery.pickup_location.photo_link}}' target='_blank'><img style='max-width: 100%' src='{{delivery.pickup_location.photo_link}}'/></a>{% endif %}
+        </div>`)">
             {% if not hide_location %}
             <strong>{{delivery.pickup_location.name}}</strong><br/>
             {% endif %}
@@ -41,6 +57,7 @@
             <small>{{delivery.pickup_location.street}}<br/>
                 {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}</small>
             {% endif %}
+            <span class="badge bg-warning">?</span>
         </td>
         {% if not hide_info %}
         <td style="max-width: 14em">{{delivery.pickup_location.info}}</td>
@@ -60,4 +77,7 @@
     document.getElementById("datediff-{{delivery.delivery_date}}").innerText = diff;
     document.getElementById("date-{{delivery.delivery_date}}").innerText = date.format("LL");
     {% endfor %}
+
+
+
 </script>

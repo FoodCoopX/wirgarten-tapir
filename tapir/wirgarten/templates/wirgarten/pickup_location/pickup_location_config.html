@@ -31,7 +31,6 @@
                     <tr>
                         <th>Name</th>
                         <th>Adresse</th>
-                        <th>Hinweise zur Abholung</th>
                         <th>Kapaziäten</th>
                         <th>Mitglieder</th>
                     </tr>
@@ -41,7 +40,6 @@
                     <tr id="row-{{pl.id}}" class="tr-clickable location-row" onclick="handleRowClick('{{pl.id}}')">
                         <td><strong>{{ pl.name }}</strong></td>
                         <td>{{ pl.street }}<br/><small>{{ pl.postcode }} {{ pl.city }}</small></td>
-                        <td>{{ pl.info|safe }}</td>
                         <td style="white-space:nowrap; text-align:left;">
                             {% for cap in pl.capabilities %}
                             <img width="24em" title="{{ cap.name }}"

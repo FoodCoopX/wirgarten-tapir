@@ -70,7 +70,6 @@ from tapir.wirgarten.forms.member.forms import (
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
-    get_pickup_locations_map_data,
 )
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
@@ -86,7 +85,6 @@ from tapir.wirgarten.models import (
     EditFuturePaymentLogEntry,
     MandateReference,
     WaitingListEntry,
-    PickupLocationCapability,
     PickupLocation,
     ProductType,
     Product,
@@ -96,8 +94,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
-    get_active_pickup_location_capabilities,
-    get_active_pickup_locations,
     generate_future_deliveries,
     get_next_delivery_date,
 )
@@ -208,9 +204,9 @@ class MemberFilter(FilterSet):
         fields=["first_name", "last_name", "email"], label="Suche"
     )
     pickup_location = ModelChoiceFilter(
-        queryset=PickupLocation.objects.all().order_by("name"),
-        field_name="pickup_location__name",  # FIXME: pickup_location field doesn't exist anymore! Custom filter needed
         label="Abholort",
+        queryset=PickupLocation.objects.all().order_by("name"),
+        method="filter_pickup_location",
     )
     contract_status = ContractStatusFilter(
         label="Verträge verlängert",
@@ -245,7 +241,6 @@ class MemberFilter(FilterSet):
             ("email", "⮝ Email"),
             ("created_at", "⮝ Registriert am"),
             ("-created_at", "⮟ Registriert am"),
-            ("created_at", "⮝ Registriert am"),
             ("coop_shares_total_value", "⮝ Genoanteile"),
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
@@ -254,6 +249,25 @@ class MemberFilter(FilterSet):
         required=True,
         empty_label=None,
     )
+
+    def filter_pickup_location(self, queryset, name, value):
+        if value:
+            # Subquery to get the latest MemberPickupLocation id for each Member
+            latest_pickup_location_subquery = Subquery(
+                MemberPickupLocation.objects.filter(
+                    member_id=OuterRef("id")  # references Member.id
+                )
+                .order_by("-valid_from")[:1]
+                .values("id")
+            )
+
+            # Filter queryset where MemberPickupLocation.id is in the subquery result and the pickup_location matches the value
+            return queryset.filter(
+                memberpickuplocation__id=latest_pickup_location_subquery,
+                memberpickuplocation__pickup_location_id=value,
+            )
+        else:
+            return queryset.all()
 
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()

@@ -9,7 +9,7 @@
       "street": "Vögelser Straße 25",
       "postcode": "21339",
       "city": "Lüneburg-Ochtmissen",
-      "info": "donnerstags 08:00 bis 17:00 Uhr"
+      "info": "Was wir generell begrüßen, aber am WirGarten noch wichtiger ist: versuche bitte möglichst, dein Gemüse ohne Auto abzuholen, da wir am WirGarten nur begrenzte Parkmöglichkeiten haben.\nKommst du mit dem Auto, parke bitte an der Straße.\nDie Abholregale befinden sich beim Kühllager (große weiße Container).\nInnerhalb der Abholzeiten ist in der Regel immer jemand vor Ort, um mögliche Fragen zu beantworten."
     }
   },
   {
@@ -22,7 +22,7 @@
       "street": "Sülfmeisterstraße 3",
       "postcode": "21335",
       "city": "Lüneburg",
-      "info": "donnerstags 10:00 bis 20:00 Uhr"
+      "info": "Die Regale mit dem WirGarten-Gemüse stehen im Vorkassenbereich zwischen Bäckerei und Kassen.\nGanz wichtig, solltest du bei Edeka noch einkaufen wollen: Edeka Bergmanns hat selber Gemüse im Angebot, was optisch nicht immer vom WirGarten-Gemüse zu unterscheiden ist. Damit es an der Kasse nicht zu Problemen kommt, nimm dir dein Gemüse bitte erst nach dem Einkauf ODER bring es vorher zu deinem Fahrrad oder Auto.\nDie Edeka-MitarbeiterInnen sind zwar darüber informiert, dass WirGarten-Gemüse dort abgeholt werden kann, sie sind aber keine AnsprechpartnerInnen für eventuelle Fragen. Bitte richte diese direkt an uns!"
     }
   },
   {
@@ -104,7 +104,7 @@
       "info": "mittwochs 13:30-20:00 Uhr"
     }
   },
-    {
+  {
     "model": "wirgarten.PickupLocation",
     "pk": "IkBtNQ1CBb",
     "fields": {
