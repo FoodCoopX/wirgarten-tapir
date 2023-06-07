@@ -1,6 +1,9 @@
 const initSummary = (min_shares, share_price) => {
     const resultElem = document.getElementById('cooperative_shares_total');
-    const input = document.getElementsByName('Cooperative Shares-cooperative_shares')[0];
+    let input = document.getElementsByName('Cooperative Shares-cooperative_shares')[0];
+    if(!input){
+        input = document.getElementsByName('cooperative_shares')[0];
+    }
     input.step = 50;
     input.min = input.value = min_shares * share_price;
 
@@ -10,17 +13,18 @@ const initSummary = (min_shares, share_price) => {
         }
     });
 
-    const handleChange = () => {
-        const diff = input.value % 50
+    const handleChange = (evt) => {
+        const value = evt.target.value
+        const diff = value % 50
         if(diff > 0){
-            const fallback = diff > 24 ? Number(input.value) + (50 - diff) : input.value - diff;
+            const fallback = diff > 24 ? Number(value) + (50 - diff) : value - diff;
+            console.log(diff, fallback)
             input.value = Math.max(fallback, input.min)
         }
 
         resultElem.innerText = input.value;
     }
 
-    handleChange();
-
+    resultElem.innerText = input.value;
     input.addEventListener('change', handleChange);
 }

@@ -1355,7 +1355,9 @@ def get_add_coop_shares_form(request, **kwargs):
         request=request,
         form=CooperativeShareForm,
         handler=lambda x: buy_cooperative_shares(
-            x.cleaned_data["cooperative_shares"], member_id, start_date=today
+            x.cleaned_data["cooperative_shares"] / settings.COOP_SHARE_PRICE,
+            member_id,
+            start_date=today,
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
