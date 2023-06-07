@@ -45,8 +45,6 @@ def transfer_coop_shares(
     origin_member = Member.objects.get(id=origin_member_id)
     origin_ownerships_quantity = origin_member.coop_shares_quantity
 
-    print("origin_ownerships_quantity", origin_member_id, origin_ownerships_quantity)
-
     if origin_ownerships_quantity is None or quantity < 1:
         return False  # nothing to do
 
@@ -88,6 +86,9 @@ def transfer_coop_shares(
         target_member=origin_member,
         quantity=quantity,
     ).save()
+
+    # generate member no
+    Member.objects.get(id=target_member_id).save()
 
 
 def cancel_coop_shares(
@@ -200,6 +201,9 @@ def buy_cooperative_shares(
         mandate_ref=so.mandate_ref,
         status=Payment.PaymentStatus.DUE,
     )
+
+    # generate member no if necessary
+    Member.objects.get(id=member_id).save()
 
 
 def create_wait_list_entry(

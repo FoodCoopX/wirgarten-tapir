@@ -204,7 +204,7 @@ class Member(TapirUser):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        if not self.member_no:
+        if not self.member_no and self.coop_shares_quantity > 0:
             self.member_no = self.generate_member_no()
 
         if "bypass_keycloak" not in kwargs:
@@ -220,16 +220,22 @@ class Member(TapirUser):
 
     def coop_shares_total_value(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
-            total_value=Sum(F("quantity") * F("share_price"))
-        )["total_value"]
+        return (
+            self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
+                total_value=Sum(F("quantity") * F("share_price"))
+            )["total_value"]
+            or 0.0
+        )
 
     @property
     def coop_shares_quantity(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
-            quantity=Sum(F("quantity"))
-        )["quantity"]
+        return (
+            self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
+                quantity=Sum(F("quantity"))
+            )["quantity"]
+            or 0
+        )
 
     def monthly_payment(self):
         from tapir.wirgarten.service.products import get_active_subscriptions
