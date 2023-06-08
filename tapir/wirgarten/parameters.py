@@ -116,6 +116,12 @@ class Parameter:
     EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT = (
         f"{PREFIX}.email.contract_order_confirmation.content"
     )
+    EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT = (
+        f"{PREFIX}.email.contract_change_confirmation.subject"
+    )
+    EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
+        f"{PREFIX}.email.contract_change_confirmation.content"
+    )
 
 
 from tapir.configuration.models import (
@@ -791,4 +797,50 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             initial_value=False,
             description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT,
+            label="Betreff: Email 'Vertragsänderung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Deine Vertragsänderung",
+            description="Betreff der Email, die bei Erntevertragsänderung sofort an das Mitglied geschickt wird.",
+            category=ParameterCategory.EMAIL,
+            order_priority=6899,
+        )
+
+        parameter_definition(
+            key=Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT,
+            label="Inhalt: Email 'Vertragsänderung'",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""Liebe/r {member.first_name},
+
+wir bestätigen dir hiermit deine Vertragsänderung. Diese wird zum nächsten Monatsersten wirksam. Bis dahin bleiben deine Vertragsdaten gleich.
+
+Deine neuen Daten sind:
+
+{contract_list}
+
+Im Mitgliederbereich findest du eine Zahlungs-und Lieferübersicht, da kannst du nochmal genau sehen, wann und wie die Änderung in Kraft tritt.
+
+Wenn du Fragen hast oder dir etwas unklar ist, meld dich bitte bei uns!
+
+Dein WirGarten-Team""",
+            description="Inhalt der Email (HTML), die bei Erntevertragsänderung sofort an das Mitglied geschickt wird.",
+            category=ParameterCategory.EMAIL,
+            order_priority=6898,
+            meta=ParameterMeta(
+                vars_hint=[
+                    "contract_list",
+                    "contract_start_date",
+                    "contract_end_date",
+                    "first_pickup_date",
+                ]
+                + DEFAULT_EMAIL_MEMBER_VARS
+                + DEFAULT_EMAIL_VARS,
+                validators=[
+                    validate_html,
+                ],
+                textarea=True,
+            ),
         )

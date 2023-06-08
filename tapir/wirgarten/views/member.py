@@ -360,7 +360,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                         output_field=models.FloatField(),
                     )
                 )
-                .values("monthly_payment")[:1]
+                .values("member_id")
+                .annotate(total=Sum("monthly_payment"))
+                .values("total"),
+                output_field=models.FloatField(),
             ),
         )
 
@@ -1249,7 +1252,7 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: HarvestShareForm):
-        form.save(member_id=member_id, send_email=True)
+        form.save(send_email=True)
 
         SubscriptionChangeLogEntry().populate(
             actor=request.user,
