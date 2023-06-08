@@ -188,13 +188,15 @@ class Member(TapirUser):
         return self.get_pickup_location()
 
     def get_pickup_location(self, reference_date=timezone.now().date()):
-        pickup_location_record = (
+        found = (
             self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
             .order_by("-valid_from")
-            .first()
+            .values("pickup_location")[:1]
         )
         return (
-            pickup_location_record.pickup_location if pickup_location_record else None
+            PickupLocation.objects.get(id=found[0]["pickup_location"])
+            if found.exists()
+            else None
         )
 
     @classmethod

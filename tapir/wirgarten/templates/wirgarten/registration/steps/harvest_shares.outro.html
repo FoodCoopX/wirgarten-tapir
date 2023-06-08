@@ -15,7 +15,7 @@
     ² Dein solidarischer Beitrag ermöglicht weniger finanzstarken Menschen, WirGarten-Gemüse beziehen zu können. Gleichzeitig kannst du einen reduzierten Solidarpreis in Anspruch nehmen, wenn du wenig Geld zur Verfügung hast. Diese Option ist nur möglich, wenn der Solidartopf ausreichend gefüllt ist. Ist dies nicht der Fall, kannst du gerade keinen reduzierten Beitrag wählen.
 </small>
 
-
+<script src="{% static 'wirgarten/js/forced-pickup-location-change.js' %}"></script>
 <script>
 const growingPeriodSelect = document.getElementById("id_growing_period");
 if(!growingPeriodSelect) {
@@ -26,5 +26,4 @@ if(!growingPeriodSelect) {
     });
      initHarvestShareSummary("{{form.harvest_shares}}", {{form.solidarity_total|safe}}[growingPeriodSelect.selectedIndex], {{form.free_capacity|safe}}[growingPeriodSelect.selectedIndex])
 }
-
 </script>

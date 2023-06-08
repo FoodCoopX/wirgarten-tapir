@@ -16,6 +16,8 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     Subscription,
     CoopShareTransaction,
+    PickupLocation,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -230,6 +232,32 @@ def create_wait_list_entry(
         privacy_consent=timezone.now(),
         type=type,
         member=member,
+    )
+
+
+@transaction.atomic
+def change_pickup_location(
+    member_id: str, new_pickup_location: PickupLocation, change_date: date
+):
+    """
+    Changes the pickup location of a member at the specified change_date.
+
+    1. Deletes all MemberPickupLocations with valid_from date >= change_date
+    2. Creates a new MemberPickupLocations with valid_from = change_date
+
+    :param member_id: the member id
+    :param new_pickup_location: the new pickup location
+    :param change_date: the date at which the new pickup locations becomes active
+    :return:
+    """
+
+    MemberPickupLocation.objects.filter(
+        member_id=member_id, valid_from__gte=change_date
+    ).delete()
+    MemberPickupLocation.objects.create(
+        member_id=member_id,
+        pickup_location_id=new_pickup_location.id,
+        valid_from=change_date,
     )
 
 

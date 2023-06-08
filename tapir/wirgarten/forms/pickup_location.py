@@ -2,6 +2,7 @@ import json
 from datetime import date, datetime
 from math import ceil
 
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -37,12 +38,13 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity(capability):
-    current_date = date.today()
+def get_current_capacity(capability, reference_date=date.today()):
+    if type(capability) is not dict:
+        capability = capability.__dict__
 
     latest_pickup_locations = MemberPickupLocation.objects.filter(
         member=OuterRef("member"),
-        valid_from__lte=current_date,
+        valid_from__lte=reference_date,
         pickup_location_id=capability["pickup_location_id"],
     ).order_by("-valid_from")
 
@@ -53,7 +55,7 @@ def get_current_capacity(capability):
 
     # Get the most recent valid price for each product
     latest_product_prices = ProductPrice.objects.filter(
-        product=OuterRef("product"), valid_from__lte=current_date
+        product=OuterRef("product"), valid_from__lte=reference_date
     ).order_by("-valid_from")
 
     # Annotate these subscriptions with their total price (without solidarity price)
@@ -144,7 +146,7 @@ class PickupLocationWidget(forms.Select):
 
 class PickupLocationChoiceField(forms.ModelChoiceField):
     def __init__(self, **kwargs):
-        initial = kwargs["initial"]
+        initial = kwargs.pop("initial", {"subs": {}})
 
         location_capabilities = get_active_pickup_location_capabilities().values(
             "product_type__name",
@@ -168,6 +170,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         possible_locations = PickupLocation.objects.filter(
             id__in=map(lambda x: x["pickup_location_id"], location_capabilities)
         )
+        next_month = date.today() + relativedelta(months=1, day=1)
         for pt_name in selected_product_types:
             possible_locations = possible_locations.filter(
                 id__in=[
@@ -184,10 +187,11 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                         and capa["max_capacity"]
                         and capa["product_type__name"] == pt_name
                     ):
-                        current_capacity = get_current_capacity(capa) / float(
-                            ProductType.objects.get(name=pt_name).base_price
-                        )
+                        current_capacity = get_current_capacity(
+                            capa, next_month
+                        ) / float(ProductType.objects.get(name=pt_name).base_price)
                         free_capacity = capa["max_capacity"] - current_capacity
+
                         if selected_product_types[pt_name] > free_capacity:
                             possible_locations = possible_locations.exclude(id=pl.id)
 
@@ -195,12 +199,12 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             queryset=possible_locations,
             initial=0,
             widget=PickupLocationWidget(
-                pickup_locations=PickupLocation.objects.all(),
+                pickup_locations=possible_locations,
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
                 initial=initial.get("initial", None),
             ),
-            label=kwargs["label"],
+            **kwargs,
         )
 
     def label_from_instance(self, obj):
@@ -215,7 +219,7 @@ class PickupLocationChoiceForm(forms.Form):
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
-            label=_("Abholort"), **kwargs
+            label=_("Abholort"), initial=kwargs["initial"]
         )
 
     def is_valid(self):
@@ -229,6 +233,7 @@ class PickupLocationChoiceForm(forms.Form):
                 "pickup_location",
                 _("Bitte wähle deinen gewünschten Abholort aus!"),
             )
+
         return len(self.errors) == 0
 
 

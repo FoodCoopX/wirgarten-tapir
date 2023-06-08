@@ -77,18 +77,15 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    initHarvestShareSummary("{{form.product_forms.0.harvest_shares}}", {{form.product_forms.0.solidarity_total}}, {{form.product_forms.0.free_capacity}});
+    initHarvestShareSummary("{{form.product_forms.0.harvest_shares}}", {{form.product_forms.0.solidarity_total|safe}}, {{form.product_forms.0.free_capacity|safe}});
 
     {% if form.available_product_types|get_value:'Hühneranteile' %}
-    initChickenShareSummary({{ 'wirgarten.chicken.max_shares'|parameter }}, '{{form.product_forms.1.chicken_share_prices}}'.split(','), {{form.product_forms.1.free_capacity}});
+    initChickenShareSummary('{{form.product_forms.1.chicken_share_prices|safe}}'.split(','), {{form.product_forms.1.free_capacity|safe}});
     {% endif %}
 
     {% if form.available_product_types|get_value:'BestellCoop' %}
     initBestellCoopSummary(Number("{{form.product_forms.2.bestellcoop_price}}".replace(',','.')));
     {% endif %}
 });
-
-
-
 </script>
 
