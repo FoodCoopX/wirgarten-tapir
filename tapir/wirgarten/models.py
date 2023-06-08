@@ -9,8 +9,6 @@ from django.db.models import (
     Index,
     F,
     Sum,
-    Case,
-    When,
     Subquery,
     OuterRef,
 )
@@ -427,13 +425,18 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         null=True
     )  # TODO this should probably be null=False
     withdrawal_consent_ts = models.DateTimeField(null=True)
+    trial_disabled = models.BooleanField(default=False)
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
 
     @property
     def trial_end_date(self):
-        return self.start_date + relativedelta(months=1, day=1, days=-1)
+        return (
+            self.start_date
+            if self.trial_disabled
+            else self.start_date + relativedelta(months=1, day=1, days=-1)
+        )
 
     @property
     def total_price(self):
