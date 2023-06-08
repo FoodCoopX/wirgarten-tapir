@@ -50,6 +50,7 @@ from tapir.wirgarten.service.products import (
     is_chicken_shares_available,
     is_bestellcoop_available,
 )
+from tapir.wirgarten.utils import format_date
 
 
 class PersonalDataForm(ModelForm):
@@ -359,7 +360,7 @@ class TrialCancellationForm(Form):
         for sub in self.subs:
             key = f"{self.KEY_PREFIX}{sub.id}"
             self.fields[key] = BooleanField(
-                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name}",
+                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name} ({format_date(sub.start_date)} - {format_date(sub.end_date)})",
                 required=False,
             )
             if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:

@@ -313,6 +313,34 @@ def send_cancellation_confirmation_email(
         )
 
 
+def send_contract_change_confirmation(member: Member, subs: [Subscription]):
+    if not len(subs):
+        raise Exception(
+            "No subscriptions provided for sending contract change confirmation for member: ",
+            member,
+        )
+
+    contract_start_date = subs[0].start_date
+
+    send_email(
+        to_email=[member.email],
+        subject=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
+        ),
+        content=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
+        ),
+        variables={
+            "contract_start_date": format_date(contract_start_date),
+            "contract_end_date": format_date(subs[0].end_date),
+            "first_pickup_date": format_date(
+                get_next_delivery_date(contract_start_date)
+            ),
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+        },
+    )
+
+
 def send_order_confirmation(member: Member, subs: [Subscription]):
     if not len(subs):
         raise Exception(

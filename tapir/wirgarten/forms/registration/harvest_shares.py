@@ -32,6 +32,7 @@ from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     send_order_confirmation,
     change_pickup_location,
+    send_contract_change_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
@@ -301,7 +302,12 @@ class HarvestShareForm(forms.Form):
         )
         for sub in subs[product_type.name]:
             sub.end_date = self.start_date - relativedelta(days=1)
-            sub.save()
+            if (
+                sub.start_date > sub.end_date
+            ):  # change was done before the contract started, so we can delete the subscription
+                sub.delete()
+            else:
+                sub.save()
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -352,7 +358,7 @@ class HarvestShareForm(forms.Form):
 
         if send_email:
             member = Member.objects.get(id=self.member_id)
-            send_order_confirmation(member, self.subs)
+            send_contract_change_confirmation(member, self.subs)
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
