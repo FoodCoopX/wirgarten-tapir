@@ -28,7 +28,7 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
             return calculateTotalWithoutSoliPrice() * (1 + parseFloat(soliElem.value));
         }
     }
-
+    const warningCannotReduceElem = document.getElementById("warning-cannot-reduce")
     const handleChange = (event, max_shares) => {
         if(event && max_shares){
             if(event.target.value < 0){
@@ -53,6 +53,15 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
         }
 
         filterSoliPriceOptions(totalWithoutSoli, solidarity_total);
+
+        const submitBtn = document.getElementById('submit-btn')
+        if(totalWithoutSoli < originalTotal){
+            if(submitBtn) {submitBtn.disabled=true}
+            warningCannotReduceElem.style.display = "block";
+        } else{
+            if(submitBtn) {submitBtn.disabled=false}
+            warningCannotReduceElem.style.display = "none";
+        }
     }
 
     customSoliElem.addEventListener('change', e => {
@@ -132,8 +141,9 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
 
     if(noCapacity){
         soliElem.readOnly=true;
-        document.getElementById('no-capacity-warning').style.display='block';
+        noCapacityWarningElem = document.getElementById('no-capacity-warning')
+        if (noCapacityWarningElem) noCapacityWarningElem.style.display='block';
     }
 
-    handleChange();
+    resultElem.innerText = calculateTotal().toFixed(2);
 }
