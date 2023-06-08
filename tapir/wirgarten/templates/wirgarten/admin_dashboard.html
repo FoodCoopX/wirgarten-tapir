@@ -16,17 +16,22 @@
        <h4>WARNUNG:</h4>
     </div-->
 
-    <div class="dashboard-tile card capacity-tile clickable">
+    <div class="dashboard-section-heading">
+        Umsatz- und Vertriebsdaten aktuelle Vertragslaufzeit
+    </div>
+
+    <div title="Kapazitäten/Auslastung in der aktuellen Vertragslaufzeit"
+         class="dashboard-tile card capacity-tile clickable">
         <div class="card-body">
-            <h4>Kapazitäten</h4>
-            <b>(aktuelle Vertragsperiode)</b>
+            <h4>Aktuelle Kapazitäten/Auslastung</h4>
             <canvas height="10000px" width="10000px" id="product-capacity-chart"></canvas>
         </div>
     </div>
 
+
     <div class="dashboard-tile card capacity-tile clickable">
         <div class="card-body">
-            <h4>Marketing Kanäle</h4>
+            <h4>Vertriebskanalerfolg</h4>
             <canvas height="10000px" width="10000px" id="traffic-source-chart"></canvas>
         </div>
     </div>
@@ -47,44 +52,12 @@
         </div>
     </div>
 
-    <div class="dashboard-tile card clickable">
-        <a href="{% url 'wirgarten:member_list' %}">
-            <div class="card-body">
-                <div class="dashboard-tile-number">
-                    <strong>{{active_members}}</strong>
-                    <span class="material-icons">groups</span>
-                </div>
-                <small><strong>Mitglieder</strong></small>
-            </div>
-        </a>
-    </div>
-
-    <div class="dashboard-tile card">
+    <div class="dashboard-tile card harvest-share-variants-tile">
         <div class="card-body">
-            <div class="dashboard-tile-number">
-                <strong>{{cancellations_during_trial}}</strong>
-                <span class="material-icons">
-                    {% if cancellations_during_trial == 0 %}
-                    mood
-                    {% else %}
-                    sentiment_very_dissatisfied
-                    {% endif %}
-                </span>
-            </div>
-            <small><strong>Kündingungen</strong><br/>(Probezeitraum)</small>
+            <h4>Kündigungsgründe</h4>
+            <br/>
+            <div class="alert alert-info">Coming soon...</div>
         </div>
-    </div>
-
-    <div class="dashboard-tile card clickable">
-        <a href="{% url 'wirgarten:waitinglist' %}?type=COOP_SHARES">
-            <div class="card-body">
-                <div class="dashboard-tile-number">
-                    <strong>{{waiting_list_coop_shares}}</strong>
-                    <span class="material-icons">schedule</span>
-                </div>
-                <small><strong>Geno-Anteile</strong><br/>Warteliste</small>
-            </div>
-        </a>
     </div>
 
     <div class="dashboard-tile card clickable">
@@ -99,16 +72,119 @@
         </a>
     </div>
 
-    <div class="dashboard-tile card next-payment-tile clickable">
-        <a href="{% url 'wirgarten:payment_transactions' %}">
+    <div class="dashboard-tile card next-payment-tile">
+        <div class="card-body">
+            <div style="color: var(--primary)" class="dashboard-tile-number">
+                + <strong>{{solidarity_overplus}}</strong> €
+            </div>
+            <small><strong>Solidar Überschuss</strong> / Monat</small>
+        </div>
+    </div>
+
+    <div class="dashboard-section-heading">
+        <hr/>
+        Daten für die kommende Saison/Vertragslaufzeit
+    </div>
+
+    <div class="dashboard-tile card capacity-tile clickable">
+        <div class="card-body">
+            <h4>Kapazitäten</h4>
+            <b>(nächste Vertragsperiode)</b>
+            <canvas height="10000px" width="10000px" id="next-period-product-capacity-chart"></canvas>
+        </div>
+    </div>
+
+
+    <div class="dashboard-section-heading">
+        <hr/>
+        Cashflow/Zahlungsdaten
+    </div>
+    <div class="dashboard-tile card harvest-share-variants-tile" style="grid-column: 1 / -1">
+        <div class="card-body">
+            <h4>Cashflow Forecast</h4>
+            <br/>
+            <div class="alert alert-info">Coming soon...</div>
+            <div class="dashboard-tile card next-payment-tile clickable">
+                <a href="{% url 'wirgarten:payment_transactions' %}">
+                    <div class="card-body">
+                        <div class="dashboard-tile-number">
+                            + <strong>{{next_payment_amount}}</strong> €
+                        </div>
+                        <small>nächster <strong>Zahlungseingang</strong> ({{next_payment_date}})</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-section-heading">
+        <hr/>
+        Daten der Genossenschaft
+    </div>
+
+
+    <div class="dashboard-tile card clickable">
+        <a href="{% url 'wirgarten:member_list' %}">
             <div class="card-body">
                 <div class="dashboard-tile-number">
-                    + <strong>{{next_payment_amount}}</strong> €
+                    <strong>{{active_members}}</strong>
+                    <span class="material-icons">groups</span>
                 </div>
-                <small>nächster <strong>Zahlungseingang</strong> ({{next_payment_date}})</small>
+                <small><strong>Mitglieder</strong></small>
             </div>
         </a>
     </div>
+
+    <div class="dashboard-tile card next-payment-tile clickable">
+        <div class="card-body">
+            <div class="dashboard-tile-number">
+                <strong>???</strong> €
+            </div>
+            <small><strong>Geschäftsguthaben</strong><br/>(gesamt)</small>
+        </div>
+    </div>
+
+    <div class="dashboard-tile card harvest-share-variants-tile">
+        <div class="card-body">
+            <h4>Gekündigte Geschäftsguthaben</h4>
+            <br/>
+            <div class="alert alert-info">Coming soon...</div>
+        </div>
+    </div>
+
+    <div class="dashboard-section-heading">
+        <hr/>
+        Statusanzeigen
+    </div>
+
+
+    <!--div class="dashboard-tile card">
+        <div class="card-body">
+            <div class="dashboard-tile-number">
+                <strong>{{cancellations_during_trial}}</strong>
+                <span class="material-icons">
+                    {% if cancellations_during_trial == 0 %}
+                    mood
+                    {% else %}
+                    sentiment_very_dissatisfied
+                    {% endif %}
+                </span>
+            </div>
+            <small><strong>Kündingungen</strong><br/>(Probezeitraum)</small>
+        </div>
+    </div-->
+
+    <!--div class="dashboard-tile card clickable">
+         <a href="{% url 'wirgarten:waitinglist' %}?type=COOP_SHARES">
+             <div class="card-body">
+                 <div class="dashboard-tile-number">
+                     <strong>{{waiting_list_coop_shares}}</strong>
+                     <span class="material-icons">schedule</span>
+                 </div>
+                 <small><strong>Geno-Anteile</strong><br/>Warteliste</small>
+             </div>
+         </a>
+     </div-->
 
     <div class="dashboard-tile card clickable">
         <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
@@ -122,7 +198,8 @@
                     <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
                 </div>
                 {% endif %}
-                <small><strong>Geno-Anteile</strong><br/>{% if not status_seperate_coop_shares %} <strong>nicht</strong>
+                <small><strong>Geno-Anteile</strong><br/>{% if not status_seperate_coop_shares %}
+                    <strong>nicht</strong>
                     {% endif %} separat zeichenbar</small>
             </div>
         </a>
@@ -187,22 +264,6 @@
         </a>
     </div>
 
-    <div class="dashboard-tile card next-payment-tile">
-        <div class="card-body">
-            <div style="color: var(--primary)" class="dashboard-tile-number">
-                + <strong>{{solidarity_overplus}}</strong> €
-            </div>
-            <small><strong>Solidar Überschuss</strong> / Monat</small>
-        </div>
-    </div>
-
-    <div class="dashboard-tile card capacity-tile clickable">
-        <div class="card-body">
-            <h4>Kapazitäten</h4>
-            <b>(nächste Vertragsperiode)</b>
-            <canvas height="10000px" width="10000px" id="next-period-product-capacity-chart"></canvas>
-        </div>
-    </div>
 </div>
 
 <script src="{% static 'wirgarten/js/chart.js' %}"></script>
@@ -401,6 +462,19 @@
       }]
     }
   });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
