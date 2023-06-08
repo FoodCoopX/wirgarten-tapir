@@ -55,6 +55,13 @@
     margin-bottom: 1em;
 }
 
+.dashboard-section-heading {
+    font-size: 1.125em;
+    font-weight: bold;
+    grid-column: 1 / -1;
+    color: #3D3D3D;
+}
+
 @media (max-width: 767px) {
     .dashboard-container {
         grid-template-columns: repeat(2, 1fr);
