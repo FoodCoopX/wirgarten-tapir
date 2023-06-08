@@ -115,11 +115,11 @@
                         {% if available_product_types|get_value:type|default:False %}
                         {% if type == 'Ernteanteile' %}
                         {% if coop_shares_total > 0 %}
-                        <button title="Anteile erhöhen"
+                        <button title="Anteile bearbeiten"
                                 onclick="handleAddHarvestShares()"
                                 class="btn btn-outline-success mx-1 px-2"
                         >
-                            <span class="material-icons">add</span>
+                            <span class="material-icons">edit</span>
                         </button>
                         {% else %}
                         <button title="Du musst Mitglied der Genossenschaft sein um Erteanteile zeichnen zu können."
@@ -366,9 +366,11 @@ const handleOpenEmail = (subject, contentUrl) => {
         {% endif %}
     }
 
+    console.log("{{available_product_types}}")
+
     const handleAddHarvestShares = () => {
         {% if object.iban and object.pickup_location %}
-        FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile dazubuchen' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
+        FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile ändern' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
         {% else %}
         ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
         {% endif %}
