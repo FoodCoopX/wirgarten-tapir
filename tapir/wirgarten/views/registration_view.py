@@ -28,6 +28,9 @@ from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.summary import SummaryForm
 from tapir.wirgarten.models import (
     GrowingPeriod,
+    MemberPickupLocation,
+    Subscription,
+    Product,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
@@ -108,14 +111,11 @@ def has_selected_harvest_shares(wizard) -> bool:
         return False
 
 
+@transaction.atomic
 def save_member(form_dict):
     personal_details_form = form_dict[STEP_PERSONAL_DETAILS]
     member = personal_details_form.forms[0].instance
 
-    if STEP_PICKUP_LOCATION in form_dict:
-        member.pickup_location = form_dict[STEP_PICKUP_LOCATION].cleaned_data[
-            "pickup_location"
-        ]
     member.account_owner = personal_details_form.cleaned_data["account_owner"]
     member.iban = personal_details_form.cleaned_data["iban"]
     member.is_active = False
@@ -126,6 +126,7 @@ def save_member(form_dict):
     member.privacy_consent = now
 
     member.save()
+
     return member
 
 
@@ -224,15 +225,38 @@ class RegistrationWizardView(CookieWizardView):
                     initial[key] = val
         elif step == STEP_PICKUP_LOCATION:
             # TODO: has to be implemented with product_type.id not name when the wizard generically handles all products
-            initial["product_types"] = []
+            initial["subs"] = {}
             if self.has_step(STEP_HARVEST_SHARES) and is_harvest_shares_selected(
                 self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
             ):
-                initial["product_types"].append(ProductTypes.HARVEST_SHARES)
+                initial["subs"][ProductTypes.HARVEST_SHARES] = []
+                data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
+                for key, quantity in data.items():
+                    if key.startswith("harvest_shares_"):
+                        product_name = key.replace("harvest_shares_", "")
+                        product = Product.objects.get(
+                            name__iexact=product_name,
+                            type__name=ProductTypes.HARVEST_SHARES,
+                        )
+                        initial["subs"][ProductTypes.HARVEST_SHARES].append(
+                            Subscription(product=product, quantity=quantity)
+                        )
+
             if self.has_step(STEP_ADDITIONAL_SHARES) and is_chicken_shares_selected(
                 self.get_cleaned_data_for_step(STEP_ADDITIONAL_SHARES)
             ):
-                initial["product_types"].append(ProductTypes.CHICKEN_SHARES)
+                initial["subs"][ProductTypes.CHICKEN_SHARES] = []
+                data = self.get_cleaned_data_for_step(STEP_ADDITIONAL_SHARES)
+                for key, quantity in data.items():
+                    if key.startswith("chicken_shares_"):
+                        product_name = key.replace("chicken_shares_", "")
+                        product = Product.objects.get(
+                            name__iexact=product_name,
+                            type__name=ProductTypes.CHICKEN_SHARES,
+                        )
+                        initial["subs"][ProductTypes.CHICKEN_SHARES].append(
+                            Subscription(product=product, quantity=quantity)
+                        )
         elif step == STEP_SUMMARY:
             initial["general"] = {
                 "start_date": self.start_date,
@@ -268,9 +292,17 @@ class RegistrationWizardView(CookieWizardView):
 
         return initial
 
-    @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
+
+        if STEP_PICKUP_LOCATION in form_dict:
+            MemberPickupLocation.objects.create(
+                member=member,
+                pickup_location_id=form_dict[STEP_PICKUP_LOCATION]
+                .cleaned_data["pickup_location"]
+                .id,
+                valid_from=date.today(),
+            )
 
         if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
             form_dict[STEP_HARVEST_SHARES].cleaned_data

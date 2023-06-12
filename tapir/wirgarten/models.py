@@ -3,8 +3,17 @@ from functools import partial
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.db import models
-from django.db.models import UniqueConstraint, Index, F, Sum, Case, When
+from django.db import models, transaction
+from django.db.models import (
+    UniqueConstraint,
+    Index,
+    F,
+    Sum,
+    Case,
+    When,
+    Subquery,
+    OuterRef,
+)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
@@ -14,7 +23,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
 from tapir.wirgarten.utils import format_date
 
 
@@ -34,7 +43,15 @@ class PickupLocation(TapirModel):
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32)
     city = models.CharField(_("City"), max_length=50)
-    info = models.CharField(_("Additional info like opening times"), max_length=150)
+    info = models.CharField(_("Additional info"), max_length=512, blank=True)
+    access_code = models.CharField(_("Access Code"), max_length=20, blank=True)
+    messenger_group_link = models.CharField(
+        _("Messenger Group Link"), max_length=150, blank=True
+    )
+    contact_name = models.CharField(
+        _("Name of the contact"), max_length=150, blank=True
+    )
+    photo_link = models.CharField(_("Photo Link"), max_length=512, blank=True)
 
     class Meta:
         constraints = [
@@ -46,6 +63,19 @@ class PickupLocation(TapirModel):
 
     def __str__(self):
         return self.name
+
+
+class PickupLocationOpeningTime(TapirModel):
+    pickup_location = models.ForeignKey(
+        "PickupLocation",
+        on_delete=models.CASCADE,
+        related_name="opening_times",
+    )
+    day_of_week = models.PositiveSmallIntegerField(
+        choices=OPTIONS_WEEKDAYS,
+    )
+    open_time = models.TimeField()
+    close_time = models.TimeField()
 
 
 class GrowingPeriod(TapirModel):
@@ -74,6 +104,17 @@ class ProductType(TapirModel):
         verbose_name=_("Lieferzyklus"),
     )
 
+    @property
+    def base_price(self):
+        today = datetime.date.today()
+        product = self.product_set.get(base=True)
+        return (
+            product.productprice_set.filter(valid_from__lte=today)
+            .order_by("-valid_from")
+            .first()
+            .price
+        )
+
     class Meta:
         constraints = [
             UniqueConstraint(
@@ -94,6 +135,7 @@ class PickupLocationCapability(TapirModel):
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
     )
+    max_capacity = models.PositiveSmallIntegerField(null=True)
     pickup_location = models.ForeignKey(
         PickupLocation, null=False, on_delete=models.DO_NOTHING
     )
@@ -134,9 +176,6 @@ class Member(TapirUser):
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
     sepa_consent = models.DateTimeField(_("SEPA Consent"), null=True)
-    pickup_location = models.ForeignKey(
-        PickupLocation, on_delete=models.DO_NOTHING, null=True
-    )
     withdrawal_consent = models.DateTimeField(
         _("Right of withdrawal consent"), null=True
     )
@@ -144,13 +183,30 @@ class Member(TapirUser):
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
 
+    @property
+    def pickup_location(self):
+        return self.get_pickup_location()
+
+    def get_pickup_location(self, reference_date=timezone.now().date()):
+        found = (
+            self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
+            .order_by("-valid_from")
+            .values("pickup_location")[:1]
+        )
+        return (
+            PickupLocation.objects.get(id=found[0]["pickup_location"])
+            if found.exists()
+            else None
+        )
+
     @classmethod
     def generate_member_no(cls):
         max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
         return (max_member_no or 0) + 1
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        if not self.member_no:
+        if not self.member_no and self.coop_shares_quantity > 0:
             self.member_no = self.generate_member_no()
 
         if "bypass_keycloak" not in kwargs:
@@ -166,16 +222,22 @@ class Member(TapirUser):
 
     def coop_shares_total_value(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
-            total_value=Sum(F("quantity") * F("share_price"))
-        )["total_value"]
+        return (
+            self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
+                total_value=Sum(F("quantity") * F("share_price"))
+            )["total_value"]
+            or 0.0
+        )
 
     @property
     def coop_shares_quantity(self):
         today = datetime.date.today()
-        return self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
-            quantity=Sum(F("quantity"))
-        )["quantity"]
+        return (
+            self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
+                quantity=Sum(F("quantity"))
+            )["quantity"]
+            or 0
+        )
 
     def monthly_payment(self):
         from tapir.wirgarten.service.products import get_active_subscriptions
@@ -185,12 +247,12 @@ class Member(TapirUser):
             get_active_subscriptions()
             .filter(member_id=self.id)
             .annotate(
-                product_price=Case(
-                    When(
-                        product__productprice__valid_from__lte=today,
-                        then=F("product__productprice__price"),
-                    ),
-                    default=0.0,
+                product_price=Subquery(
+                    ProductPrice.objects.filter(
+                        product_id=OuterRef("product_id"), valid_from__lte=today
+                    )
+                    .order_by("-valid_from")
+                    .values("price")[:1],
                     output_field=models.FloatField(),
                 ),
             )
@@ -222,6 +284,18 @@ class Member(TapirUser):
         return f"[{self.member_no}] {self.first_name} {self.last_name} ({self.email})"
 
 
+class MemberPickupLocation(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    valid_from = models.DateField()
+
+    class Meta:
+        unique_together = (
+            "member",
+            "valid_from",
+        )
+
+
 class Product(TapirModel):
     """
     This is a specific product variation, like "Harvest Shares - M".
@@ -232,6 +306,28 @@ class Product(TapirModel):
     )
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
+    base = models.BooleanField(default=False, null=True)
+
+    def clean(self):
+        # Check if there is exactly one base product per ProductType
+        base_products = Product.objects.filter(type=self.type, base=True)
+
+        if self.base:
+            if base_products.exists() and not base_products.filter(id=self.id).exists():
+                raise ValidationError(
+                    "There can be only one base product per ProductType."
+                )
+        else:
+            if not base_products.exists() or base_products.filter(id=self.id).exists():
+                raise ValidationError(
+                    "There must be exactly one base product per ProductType."
+                )
+
+    def save(self, *args, **kwargs):
+        self.clean()
+
+        with transaction.atomic():
+            super().save(*args, **kwargs)
 
     class Meta:
         indexes = [Index(fields=["type"], name="idx_product_type")]
@@ -724,6 +820,7 @@ class QuestionaireTrafficSourceOption(TapirModel):
 class QuestionaireTrafficSourceResponse(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
     sources = models.ManyToManyField(QuestionaireTrafficSourceOption)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.name

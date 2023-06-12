@@ -36,7 +36,7 @@ class ParameterMeta:
         textarea=False,
         vars_hint: [str] = None,
     ):
-        if vars_hint and len(vars_hint) > 0:
+        if vars_hint is not None and len(vars_hint) > 0:
             validators += [lambda x: validate_format_string(x, vars_hint)]
 
         self.vars_hint = vars_hint

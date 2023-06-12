@@ -70,7 +70,6 @@ from tapir.wirgarten.forms.member.forms import (
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
-    get_pickup_locations_map_data,
 )
 from tapir.wirgarten.forms.registration import HarvestShareForm
 from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
@@ -86,18 +85,17 @@ from tapir.wirgarten.models import (
     EditFuturePaymentLogEntry,
     MandateReference,
     WaitingListEntry,
-    PickupLocationCapability,
     PickupLocation,
     ProductType,
     Product,
     CoopShareTransaction,
     SubscriptionChangeLogEntry,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
-    get_active_pickup_location_capabilities,
-    get_active_pickup_locations,
     generate_future_deliveries,
+    get_next_delivery_date,
 )
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string
@@ -206,9 +204,9 @@ class MemberFilter(FilterSet):
         fields=["first_name", "last_name", "email"], label="Suche"
     )
     pickup_location = ModelChoiceFilter(
-        queryset=PickupLocation.objects.all().order_by("name"),
-        field_name="pickup_location__name",
         label="Abholort",
+        queryset=PickupLocation.objects.all().order_by("name"),
+        method="filter_pickup_location",
     )
     contract_status = ContractStatusFilter(
         label="Verträge verlängert",
@@ -243,7 +241,6 @@ class MemberFilter(FilterSet):
             ("email", "⮝ Email"),
             ("created_at", "⮝ Registriert am"),
             ("-created_at", "⮟ Registriert am"),
-            ("created_at", "⮝ Registriert am"),
             ("coop_shares_total_value", "⮝ Genoanteile"),
             ("-coop_shares_total_value", "⮟ Genoanteile"),
             ("monthly_payment", "⮝ Umsatz"),
@@ -252,6 +249,25 @@ class MemberFilter(FilterSet):
         required=True,
         empty_label=None,
     )
+
+    def filter_pickup_location(self, queryset, name, value):
+        if value:
+            # Subquery to get the latest MemberPickupLocation id for each Member
+            latest_pickup_location_subquery = Subquery(
+                MemberPickupLocation.objects.filter(
+                    member_id=OuterRef("id")  # references Member.id
+                )
+                .order_by("-valid_from")[:1]
+                .values("id")
+            )
+
+            # Filter queryset where MemberPickupLocation.id is in the subquery result and the pickup_location matches the value
+            return queryset.filter(
+                memberpickuplocation__id=latest_pickup_location_subquery,
+                memberpickuplocation__pickup_location_id=value,
+            )
+        else:
+            return queryset.all()
 
     def filter_email_verified(self, queryset, name, value):
         new_queryset = queryset.all()
@@ -313,19 +329,38 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                 ),
                 Decimal(0.0),
             ),
-            monthly_payment=Sum(
-                Case(
-                    When(
-                        Q(subscription__start_date__lte=today)
-                        & Q(subscription__end_date__gte=today)
-                        & Q(subscription__product__productprice__valid_from__lte=today),
-                        then=F("subscription__product__productprice__price")
-                        * F("subscription__quantity")
-                        * (1 + F("subscription__solidarity_price")),
-                    ),
-                    default=0.0,
-                    output_field=models.FloatField(),
+            monthly_payment=Subquery(
+                Subscription.objects.filter(
+                    member_id=OuterRef("id"),
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    product__productprice__valid_from__lte=today,
                 )
+                .annotate(
+                    monthly_payment=ExpressionWrapper(
+                        Case(
+                            When(
+                                solidarity_price_absolute__isnull=True,
+                                then=(
+                                    F("product__productprice__price")
+                                    * F("quantity")
+                                    * (1 + F("solidarity_price"))
+                                ),
+                            ),
+                            When(
+                                solidarity_price_absolute__isnull=False,
+                                then=(
+                                    (F("product__productprice__price") * F("quantity"))
+                                    + F("solidarity_price_absolute")
+                                ),
+                            ),
+                            default=0.0,
+                            output_field=models.FloatField(),
+                        ),
+                        output_field=models.FloatField(),
+                    )
+                )
+                .values("monthly_payment")[:1]
             ),
         )
 
@@ -399,19 +434,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
             and is_bestellcoop_available(next_month),
         }
-
-        if self.object.pickup_location:
-            context["pickup_location_map_data"] = get_pickup_locations_map_data(
-                [self.object.pickup_location],
-                PickupLocationCapability.objects.filter(
-                    pickup_location=self.object.pickup_location
-                ),
-            )
-        else:
-            capabilities = get_active_pickup_location_capabilities()
-            context["pickup_location_map_data"] = get_pickup_locations_map_data(
-                get_active_pickup_locations(capabilities), capabilities
-            )
 
         context["deliveries"] = generate_future_deliveries(self.object)
 
@@ -1055,21 +1077,64 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     member = Member.objects.get(pk=member_id)
     kwargs["initial"] = {
-        "product_types": get_active_subscriptions_grouped_by_product_type(
-            member
-        ).keys(),
+        "subs": get_active_subscriptions_grouped_by_product_type(member),
     }
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
-    def update_pickup_location(pickup_location_id):
-        member.pickup_location_id = pickup_location_id
-        member.save()
+    @transaction.atomic
+    def update_pickup_location(form):
+        pickup_location_id = form.cleaned_data["pickup_location"].id
+
+        today = timezone.now().date()
+        next_delivery_date = get_next_delivery_date()
+
+        # Get the weekday of the next delivery date and today
+        next_delivery_weekday = next_delivery_date.weekday()
+        today_weekday = today.weekday()
+
+        change_util_weekday = get_parameter_value(
+            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+        )
+
+        # Case A: User makes change AFTER delivery_date and BEFORE change_util_weekday
+        # If today is before or on change_util_weekday and after next_delivery_weekday
+        if next_delivery_weekday < today_weekday <= change_util_weekday:
+            change_date = today
+
+        # Case B: User makes change BEFORE delivery_date and AFTER change_util_weekday
+        # If today is after change_util_weekday and before next_delivery_weekday
+        elif change_util_weekday < today_weekday < next_delivery_weekday:
+            change_date = next_delivery_date + timedelta(days=1)
+
+        # Case C: User makes change ON the delivery_date
+        # If today is the delivery_date, the change can become effective from the next day
+        elif today == next_delivery_date:
+            change_date = today + timedelta(days=1)
+
+        # Case D: Other cases
+        # If none of the above cases apply, the change will be effective from the next_delivery_date
+        else:
+            change_date = next_delivery_date + timedelta(days=1)
+
+        existing = MemberPickupLocation.objects.filter(
+            member=member, valid_from=change_date
+        )
+        if existing.exists():
+            found = existing.first()
+            found.pickup_location_id = pickup_location_id
+            found.save()
+        else:
+            MemberPickupLocation.objects.create(
+                member=member,
+                pickup_location_id=pickup_location_id,
+                valid_from=change_date,
+            )
 
     return get_form_modal(
         request=request,
         form=PickupLocationChoiceForm,
-        handler=lambda x: update_pickup_location(x.cleaned_data["pickup_location"]),
+        handler=lambda x: update_pickup_location(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -1169,6 +1234,7 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     member = Member.objects.get(pk=member_id)
     kwargs["choose_growing_period"] = True
+    kwargs["member_id"] = member_id
 
     if not is_harvest_shares_available():
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
@@ -1209,10 +1275,11 @@ def get_add_chicken_shares_form(request, **kwargs):
 
     check_permission_or_self(member_id, request)
     kwargs["choose_growing_period"] = True
+    kwargs["member_id"] = member_id
 
     @transaction.atomic
     def save(form: ChickenShareForm):
-        form.save(member_id=member_id)
+        form.save(member_id=member_id, send_mail=True)
 
         member = Member.objects.get(id=member_id)
 
@@ -1290,7 +1357,9 @@ def get_add_coop_shares_form(request, **kwargs):
         request=request,
         form=CooperativeShareForm,
         handler=lambda x: buy_cooperative_shares(
-            x.cleaned_data["cooperative_shares"], member_id, start_date=today
+            x.cleaned_data["cooperative_shares"] / settings.COOP_SHARE_PRICE,
+            member_id,
+            start_date=today,
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,

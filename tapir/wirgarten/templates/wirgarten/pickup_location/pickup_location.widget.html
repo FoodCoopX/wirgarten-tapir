@@ -16,7 +16,15 @@
   const pickupLocation = document.querySelector('#id_pickup_location');
   const items = pickupLocation.querySelectorAll('.list-group-item-action');
 
-       function handleItemClick(item) {
+    items.forEach(function(item) {
+      const value = item.getAttribute('data-value');
+      if (!value) {
+        item.remove();
+      }
+    });
+
+
+  function handleItemClick(item) {
     // Remove the 'active' class from other items and add it to the clicked item
     items.forEach(function(item) {
       item.classList.remove('active');
@@ -42,6 +50,7 @@
     }
     }
 
+    handleSelect('{{ widget.attrs.initial }}');
 
     </script>
     <div>
@@ -59,6 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   const label = document.querySelector('label[for="id_Pickup Location-pickup_location"]');
+  if(label){
   label.style.display = 'none';
+  }
 });
+
+
 </script>

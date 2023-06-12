@@ -101,6 +101,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
                         "type_id": p.type.id,
                         "price": product_prices.get(p.id, []),
                         "deleted": p.deleted,
+                        "base": p.base,
                     },
                     Product.objects.all().order_by("type"),
                 )
