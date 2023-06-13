@@ -307,9 +307,8 @@ class RegistrationWizardView(CookieWizardView):
         if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
             form_dict[STEP_HARVEST_SHARES].cleaned_data
         ):
-            mandate_ref = create_mandate_ref(member, False)
+            mandate_ref = create_mandate_ref(member)
             form_dict[STEP_HARVEST_SHARES].save(
-                member_id=member.id,
                 mandate_ref=mandate_ref,
             )
 
