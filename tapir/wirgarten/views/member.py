@@ -68,6 +68,7 @@ from tapir.wirgarten.forms.member.forms import (
     SubscriptionRenewalForm,
     CoopShareCancelForm,
     NonTrialCancellationForm,
+    CancellationReasonForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -92,6 +93,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     SubscriptionChangeLogEntry,
     MemberPickupLocation,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -1398,7 +1400,7 @@ def get_cancel_trial_form(request, **kwargs):
                 subscriptions=subs_to_cancel,
             ).save()
 
-        form.save(skip_emails=member_id != request.user.id)
+        return form.save(skip_emails=member_id != request.user.id)
 
     return get_form_modal(
         request=request,
@@ -1439,6 +1441,35 @@ def get_cancel_non_trial_form(request, **kwargs):
         + "?cancelled="
         + format_date(x),
         **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+def get_cancellation_reason_form(request, **kwargs):
+    member_id = kwargs["pk"]
+    check_permission_or_self(member_id, request)
+
+    @transaction.atomic
+    def save(form: CancellationReasonForm):
+        print(form.cleaned_data)
+        for reason in form.cleaned_data["reason"]:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member_id=member_id, reason=reason, custom=False
+            )
+        if form.cleaned_data["custom_reason"]:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member_id=member_id,
+                reason=form.cleaned_data["custom_reason"],
+                custom=True,
+            )
+
+    return get_form_modal(
+        request=request,
+        form=CancellationReasonForm,
+        handler=save,
+        redirect_url_resolver=lambda x: member_detail_url(member_id),
     )
 
 
