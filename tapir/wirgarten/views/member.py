@@ -110,7 +110,6 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    is_mandate_ref_for_coop_shares,
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
@@ -763,25 +762,27 @@ def generate_future_payments(member_id, prev_payments: list, limit: int = None):
     return payments
 
 
-def get_subs_or_shares_for_mandate_ref(
+def get_subs_and_shares_for_mandate_ref(
     mandate_ref: MandateReference, reference_date: date
 ):
-    if is_mandate_ref_for_coop_shares(mandate_ref):
-        return list(
-            map(
-                lambda x: {
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                    "total_price": x.total_price,
+    result = list(
+        map(
+            lambda x: {
+                "quantity": x.quantity,
+                "product": {
+                    "name": _("Genossenschaftsanteile"),
+                    "price": x.share_price,
                 },
-                CoopShareTransaction.objects.filter(member_id=mandate_ref.member.id),
-            )
+                "total_price": x.total_price,
+            },
+            CoopShareTransaction.objects.filter(
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                member_id=mandate_ref.member.id,
+            ),
         )
-    else:
-        return list(
+    )
+    result.extend(
+        list(
             map(
                 lambda x: sub_to_dict(x),
                 Subscription.objects.filter(
@@ -791,6 +792,8 @@ def get_subs_or_shares_for_mandate_ref(
                 ),
             )
         )
+    )
+    return result
 
 
 def sub_to_dict(sub):
@@ -811,7 +814,7 @@ def sub_to_dict(sub):
 
 
 def payment_to_dict(payment: Payment) -> dict:
-    subs = get_subs_or_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
+    subs = get_subs_and_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
     return {
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,

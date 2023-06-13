@@ -33,6 +33,7 @@ from tapir.wirgarten.service.products import (
     get_product_price,
     get_next_growing_period,
 )
+from tapir.wirgarten.tasks import export_payment_parts_csv
 from tapir.wirgarten.utils import format_currency
 
 
