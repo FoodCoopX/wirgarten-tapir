@@ -83,7 +83,7 @@ class BestellCoopForm(forms.Form):
                 return
 
             if not mandate_ref:
-                mandate_ref = get_or_create_mandate_ref(member_id, False)
+                mandate_ref = get_or_create_mandate_ref(member_id)
 
             self.sub = Subscription.objects.create(
                 member_id=member_id,

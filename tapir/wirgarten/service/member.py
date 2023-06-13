@@ -129,12 +129,7 @@ def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
 
 
-def get_or_create_mandate_ref(
-    member: str | Member, coop_shares: bool = False
-) -> MandateReference:
-    if coop_shares:
-        raise NotImplementedError("Coop share mandate references can not be reused.")
-
+def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     member_id = resolve_member_id(member)
     mandate_ref = False
     for row in (
@@ -147,7 +142,7 @@ def get_or_create_mandate_ref(
         break
 
     if not mandate_ref:
-        mandate_ref = create_mandate_ref(member_id, False)
+        mandate_ref = create_mandate_ref(member_id)
 
     return mandate_ref
 
@@ -186,7 +181,7 @@ def buy_cooperative_shares(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )  # payment is always due next month
 
-    mandate_ref = create_mandate_ref(member_id, True)
+    mandate_ref = get_or_create_mandate_ref(member_id)
     so = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=quantity,

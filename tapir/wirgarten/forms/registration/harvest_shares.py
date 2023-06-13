@@ -30,7 +30,6 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     get_or_create_mandate_ref,
-    send_order_confirmation,
     change_pickup_location,
     send_contract_change_confirmation,
 )
@@ -218,29 +217,30 @@ class HarvestShareForm(forms.Form):
             )
 
             sub_variants = {}
-            for sub in subs[product_type.name]:
-                sub_variants[sub.product.name.lower()] = {
-                    "quantity": sub.quantity,
-                    "solidarity_price": sub.solidarity_price,
-                    "solidarity_price_absolute": sub.solidarity_price_absolute,
-                }
+            if product_type.name in subs:
+                for sub in subs[product_type.name]:
+                    sub_variants[sub.product.name.lower()] = {
+                        "quantity": sub.quantity,
+                        "solidarity_price": sub.solidarity_price,
+                        "solidarity_price_absolute": sub.solidarity_price_absolute,
+                    }
 
-            for key, field in self.fields.items():
-                if (
-                    key.startswith(HARVEST_SHARE_FIELD_PREFIX)
-                    and key.replace(HARVEST_SHARE_FIELD_PREFIX, "") in sub_variants
-                ):
-                    field.initial = sub_variants[
-                        key.replace(HARVEST_SHARE_FIELD_PREFIX, "")
-                    ]["quantity"]
-                elif key == "solidarity_price_harvest_shares":
-                    field.initial = list(sub_variants.values())[0][
-                        "solidarity_price"
-                    ]  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
-                elif key == "solidarity_price_absolute_harvest_shares":
-                    field.initial = list(sub_variants.values())[0][
-                        "solidarity_price_absolute"
-                    ]
+                for key, field in self.fields.items():
+                    if (
+                        key.startswith(HARVEST_SHARE_FIELD_PREFIX)
+                        and key.replace(HARVEST_SHARE_FIELD_PREFIX, "") in sub_variants
+                    ):
+                        field.initial = sub_variants[
+                            key.replace(HARVEST_SHARE_FIELD_PREFIX, "")
+                        ]["quantity"]
+                    elif key == "solidarity_price_harvest_shares":
+                        field.initial = list(sub_variants.values())[0][
+                            "solidarity_price"
+                        ]  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
+                    elif key == "solidarity_price_absolute_harvest_shares":
+                        field.initial = list(sub_variants.values())[0][
+                            "solidarity_price_absolute"
+                        ]
 
             subs[product_type.name] = (
                 [new_sub_dummy]
@@ -287,7 +287,7 @@ class HarvestShareForm(forms.Form):
         product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
 
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(self.member_id, False)
+            mandate_ref = get_or_create_mandate_ref(self.member_id)
 
         now = timezone.now()
 
@@ -300,14 +300,15 @@ class HarvestShareForm(forms.Form):
         subs = get_active_subscriptions_grouped_by_product_type(
             self.member_id, self.start_date
         )
-        for sub in subs[product_type.name]:
-            sub.end_date = self.start_date - relativedelta(days=1)
-            if (
-                sub.start_date > sub.end_date
-            ):  # change was done before the contract started, so we can delete the subscription
-                sub.delete()
-            else:
-                sub.save()
+        if product_type.name in subs:
+            for sub in subs[product_type.name]:
+                sub.end_date = self.start_date - relativedelta(days=1)
+                if (
+                    sub.start_date > sub.end_date
+                ):  # change was done before the contract started, so we can delete the subscription
+                    sub.delete()
+                else:
+                    sub.save()
 
         for key, quantity in self.cleaned_data.items():
             if (
