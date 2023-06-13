@@ -89,7 +89,6 @@
 </tr>
 {% endfor %}
 {% endblock %}
-
 {% block script %}
 <script>
     const memberRows = document.getElementsByClassName('member-row');
@@ -118,7 +117,13 @@
             }
 
             for(btn of trialDependentButtons){
-                btn.disabled = params.trial === "false"
+                if(params.trial === "true"){
+                    btn.classList.add('btn-outline-warning')
+                    btn.classList.remove('btn-outline-danger')
+                } else {
+                    btn.classList.remove('btn-outline-warning')
+                    btn.classList.add('btn-outline-danger')
+                }
             }
         }
     }
@@ -141,7 +146,13 @@
 
     const handleTrialCancellation = () => {
         const params = Tapir.getUrlParams();
-        FormModal.load(`members/${params.member}/canceltrial`, 'Verträge kündigen')
+        if(params.trial === "true"){
+            FormModal.load(`members/${params.member}/canceltrial`, 'Verträge kündigen')
+        } else {
+            ConfirmationModal.open("Sonderkündigung", "Dieses Mitglied ist nicht mehr in der Probezeit. Möchtest du trotzdem Verträge kündigen? Auf der nächsten Seite kannst du die Verträge auswählen.", "Weiter", "danger", () => {
+                FormModal.load(`members/${params.member}/cancelnontrial`, 'Verträge kündigen')
+            })
+        }
     }
 
     const handleExport = () => {
@@ -232,15 +243,5 @@
         params.resend_verify_email = undefined;
         Tapir.replaceUrlParams(params);
     }
-
-
-
-
-
-
-
-
-
-
 </script>
 {% endblock %}

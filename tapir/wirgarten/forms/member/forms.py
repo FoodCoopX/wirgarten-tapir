@@ -333,6 +333,84 @@ class WaitingListForm(Form):
         )
 
 
+class NonTrialCancellationForm(Form):
+    KEY_PREFIX = "sub_"
+    BASE_PROD_TYPE_ATTR = "data-base-product-type"
+
+    def __init__(self, *args, **kwargs):
+        self.member_id = kwargs.pop("pk")
+        super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
+
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        self.subs = get_future_subscriptions().filter(
+            member_id=self.member_id,
+            end_date__gte=date.today() + relativedelta(months=1, day=1),
+        )
+        self.member = Member.objects.get(id=self.member_id)
+
+        for sub in self.subs:
+            key = f"{self.KEY_PREFIX}{sub.id}"
+            self.fields[key] = BooleanField(
+                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name} ({format_date(sub.start_date)} - {format_date(sub.end_date)})",
+                required=False,
+            )
+            if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:
+                self.fields[key].widget = CheckboxInput(
+                    attrs={self.BASE_PROD_TYPE_ATTR: "true"}
+                )
+
+    def save(self):
+        subs_to_cancel = self.get_subs_to_cancel()
+        now = datetime.now(tz=timezone.utc)
+        end_date = now + relativedelta(months=1, day=1, days=-1)
+        for sub in subs_to_cancel:
+            sub.cancellation_ts = now
+            sub.end_date = end_date
+            sub.save()
+
+    def is_valid(self):
+        all_base_product_types_selected = True
+        at_least_one_base_product_type_selected = False
+        at_least_one_additional_product_type_selected = False
+        for k, v in self.fields.items():
+            if k in self.data:
+                if self.BASE_PROD_TYPE_ATTR in v.widget.attrs:
+                    at_least_one_base_product_type_selected = True
+                    all_base_product_types_selected = False
+                else:
+                    at_least_one_additional_product_type_selected = True
+
+        if (
+            not at_least_one_base_product_type_selected
+            and not at_least_one_additional_product_type_selected
+        ):
+            self.add_error(
+                list(self.fields.keys())[0],
+                _(
+                    "Bitte wähle mindestens einen Vertrag aus, oder klick 'Abbrechen' falls du doch nicht kündigen möchtest."
+                ),
+            )
+        elif (
+            all_base_product_types_selected
+            and not at_least_one_additional_product_type_selected
+        ):
+            self.add_error(
+                list(self.fields.keys())[0],
+                _("Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."),
+            )
+
+        return not self._errors and super(NonTrialCancellationForm, self).is_valid()
+
+    def get_subs_to_cancel(self):
+        return self.subs.filter(
+            id__in=[
+                key.replace("sub_", "")
+                for key, value in self.cleaned_data.items()
+                if value
+            ]
+        )
+
+
 class TrialCancellationForm(Form):
     KEY_PREFIX = "sub_"
     BASE_PROD_TYPE_ATTR = "data-base-product-type"
@@ -365,7 +443,7 @@ class TrialCancellationForm(Form):
             )
             if len(self.subs) > 1 and sub.product.type.id == base_product_type_id:
                 self.fields[key].widget = CheckboxInput(
-                    attrs={"data-base-product-type": "true"}
+                    attrs={self.BASE_PROD_TYPE_ATTR: "true"}
                 )
 
         if is_new_member():
