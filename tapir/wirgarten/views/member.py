@@ -67,6 +67,7 @@ from tapir.wirgarten.forms.member.forms import (
     TrialCancellationForm,
     SubscriptionRenewalForm,
     CoopShareCancelForm,
+    NonTrialCancellationForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -1402,6 +1403,37 @@ def get_cancel_trial_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=TrialCancellationForm,
+        handler=save,
+        redirect_url_resolver=lambda x: member_detail_url(member_id)
+        + "?cancelled="
+        + format_date(x),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+def get_cancel_non_trial_form(request, **kwargs):
+    member_id = kwargs["pk"]
+    check_permission_or_self(member_id, request)
+
+    @transaction.atomic
+    def save(form: NonTrialCancellationForm):
+        subs_to_cancel = form.get_subs_to_cancel()
+        if len(subs_to_cancel) > 0:
+            SubscriptionChangeLogEntry().populate(
+                actor=request.user,
+                user=form.member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=subs_to_cancel,
+            ).save()
+
+        form.save()
+
+    return get_form_modal(
+        request=request,
+        form=NonTrialCancellationForm,
         handler=save,
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="

@@ -1,6 +1,6 @@
 <i><small>
     {% if change_type == 'CANCELLED' %}
-    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} während Probezeitraum gekündigt:
+    {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} gekündigt:
     {% elif change_type == 'RENEWED' %}
     {% if subscriptions|length > 1 %}Verträge{% else %}Vertrag{% endif %} verlängert:
     {% elif change_type == 'ADDED' %}

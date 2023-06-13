@@ -7,6 +7,7 @@ const ConfirmationModal = {
     open: (title, content, confirmButtonLabel, confirmButtonType, handleConfirm = null, handleCancel = null) => {
         modalTitleElem.innerText = title;
         modalContentElem.innerHTML = content;
+        modalConfirmButton.disabled = false;
 
         if(!handleConfirm){
             modalConfirmButton.style.display='none'
