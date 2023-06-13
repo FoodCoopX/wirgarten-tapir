@@ -2,6 +2,7 @@ import itertools
 from datetime import datetime, date
 
 from celery import shared_task
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
@@ -17,12 +18,12 @@ from tapir.wirgarten.models import (
     Product,
     PickupLocation,
     Member,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
 from tapir.wirgarten.service.payment import (
-    is_mandate_ref_for_coop_shares,
     generate_new_payments,
     get_existing_payments,
 )
@@ -30,7 +31,9 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_future_subscriptions,
+    get_total_price_for_subs,
 )
+from tapir.wirgarten.utils import format_date
 
 
 @shared_task
@@ -287,11 +290,7 @@ def export_sepa_payments():
         row[KEY_SEPA_ZAHLPFL_IBAN] = payment.mandate_ref.member.iban
         row[KEY_SEPA_AMOUNT] = payment.amount
         row[KEY_SEPA_DUE_DATE] = windata_date_format(due_date)
-        row[KEY_SEPA_VWZ1] = (
-            "Genossenschaftsanteile"
-            if is_mandate_ref_for_coop_shares(payment.mandate_ref)
-            else "Produktanteile"
-        )
+        row[KEY_SEPA_VWZ1] = payment.member.last_name
         row[KEY_SEPA_VWZ2] = payment.mandate_ref.ref
         row[KEY_SEPA_MANDATE_REF] = payment.mandate_ref.ref
         row[KEY_SEPA_MANDATE_DATE] = windata_date_format(
@@ -335,3 +334,85 @@ def send_email_member_contract_end_reminder(member_id):
         print(
             f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
         )
+
+
+@shared_task
+def export_payment_parts_csv():
+    # export for product types
+    for pt in get_active_product_types():
+        export_product_or_coop_payment_csv(pt)
+
+    # export for coop shares
+    export_product_or_coop_payment_csv(False)
+
+
+def export_product_or_coop_payment_csv(product_type: bool | ProductType):
+    KEY_NAME = "Name"
+    KEY_IBAN = "IBAN"
+    KEY_AMOUNT = "Betrag"
+    KEY_VERWENDUNGSZWECK = "Verwendungszweck"
+    KEY_MANDATE_REF = "Mandatsreferenz"
+    KEY_MANDATE_DATE = "Mandatsdatum"
+
+    output, writer = begin_csv_string(
+        [
+            KEY_NAME,
+            KEY_IBAN,
+            KEY_AMOUNT,
+            KEY_VERWENDUNGSZWECK,
+            KEY_MANDATE_REF,
+            KEY_MANDATE_DATE,
+        ]
+    )
+
+    if not product_type:
+        months_first = date.today() + relativedelta(day=1)
+        grouped_by_mandate_ref = {}
+        for coop_share_transaction in CoopShareTransaction.objects.filter(
+            valid_at__gte=months_first,
+            valid_at__lte=months_first + relativedelta(months=1, days=-1),
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+        ):
+            grouped_by_mandate_ref.setdefault(
+                coop_share_transaction.mandate_ref, []
+            ).append(coop_share_transaction)
+
+        for mandate_ref, transactions in grouped_by_mandate_ref.items():
+            writer.writerow(
+                {
+                    KEY_NAME: f"{mandate_ref.member.first_name} {mandate_ref.member.last_name}",
+                    KEY_IBAN: mandate_ref.member.iban,
+                    KEY_AMOUNT: sum(list(map(lambda x: x.total_price, transactions))),
+                    KEY_VERWENDUNGSZWECK: mandate_ref.member.last_name
+                    + " Geschäftsanteile",
+                    KEY_MANDATE_REF: mandate_ref.ref,
+                    KEY_MANDATE_DATE: format_date(mandate_ref.member.sepa_consent),
+                }
+            )
+
+    else:
+        subs_grouped_by_mandate_ref = {}
+        for sub in get_active_subscriptions().filter(product__type=product_type):
+            subs_grouped_by_mandate_ref.setdefault(sub.mandate_ref, []).append(sub)
+
+        for mandate_ref, subs in subs_grouped_by_mandate_ref.items():
+            writer.writerow(
+                {
+                    KEY_NAME: f"{mandate_ref.member.first_name} {mandate_ref.member.last_name}",
+                    KEY_IBAN: mandate_ref.member.iban,
+                    KEY_AMOUNT: get_total_price_for_subs(subs),
+                    KEY_VERWENDUNGSZWECK: mandate_ref.member.last_name
+                    + " "
+                    + product_type.name,
+                    KEY_MANDATE_REF: mandate_ref.ref,
+                    KEY_MANDATE_DATE: format_date(mandate_ref.member.sepa_consent),
+                }
+            )
+
+    file = export_file(
+        filename=(product_type.name if product_type else "Geschäftsanteile")
+        + "-Einzahlungen",
+        filetype=ExportedFile.FileType.CSV,
+        content=bytes("".join(output.csv_string), "utf-8"),
+        send_email=True,
+    )

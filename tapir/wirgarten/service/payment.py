@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from nanoid import generate
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import MandateReference, Subscription, Member, Payment
+from tapir.wirgarten.models import Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -16,46 +16,25 @@ from tapir.wirgarten.service.products import (
 
 MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-GENO_SUFFIX = "/GENO"
-SUBS_SUFFIX = "/PROD"
 
 
-def generate_mandate_ref(member_id: str, coop_shares: bool):
+def generate_mandate_ref(member_id: str):
     """
     Generates a new mandate reference string.
 
-    UUUUUUUUUU/XXXXXXXXXXXXXXXXXXX/TTTT
+    UUUUUUUUUU/XXXXXXXXXXXXXXXXXXXXXXXX
 
-    U = User ID
+    U = User Name
     X = Random String
-    T = Payment Type (Coop Shares: GENO, Subscriptions: PROD)
 
     :param member_id: the ID of the TapirUser/Member
-    :param coop_shares: if True, the mandate ref will be generated for coop shares, else for subscriptions
     :return: the mandate reference string
     """
 
     member = Member.objects.get(id=member_id)
     prefix = f"{member.last_name[:5]}{member.first_name[:5]}/".upper()
 
-    def __generate_ref(suffix):
-        return f"""{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix) - len(suffix))}{suffix}"""
-
-    return f"""{prefix}{__generate_ref(GENO_SUFFIX if coop_shares else SUBS_SUFFIX)}"""
-
-
-def is_mandate_ref_for_coop_shares(mandate_ref: str | MandateReference):
-    """
-    Checks if a mandate reference is for coop shares or for subscriptions.
-
-    :param mandate_ref: the mandate reference string
-    :return: True, if the mandate ref is for coop shares
-    """
-
-    if type(mandate_ref) == MandateReference:
-        mandate_ref = mandate_ref.ref
-
-    return mandate_ref.endswith(GENO_SUFFIX)
+    return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
 def get_next_payment_date(reference_date: date = date.today()):
