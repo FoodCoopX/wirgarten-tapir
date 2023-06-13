@@ -111,16 +111,15 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member, coop_shares: bool):
+def create_mandate_ref(member: str | Member):
     """
     Generates and persists a new mandate reference for a member.
 
     :param member: the member
-    :param coop_shares: if true: the mandate ref is generated for coop shares, else: generated for products
     """
 
     member_id = resolve_member_id(member)
-    ref = generate_mandate_ref(member_id, coop_shares)
+    ref = generate_mandate_ref(member_id)
     return MandateReference.objects.create(
         ref=ref, member_id=member_id, start_ts=datetime.now(timezone.utc)
     )

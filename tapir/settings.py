@@ -138,8 +138,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=0
-            # once a week, Tuesday at 00:00
+            hour=3
+            # once a week, Tuesday at 03:00
         ),
     },
     "export_pick_list_csv": {
@@ -147,22 +147,26 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=0
-            # once a week, Tuesday at 00:00
+            hour=3
+            # once a week, Tuesday at 03:00
         ),
     },
     "export_sepa_payments": {
         "task": "tapir.wirgarten.tasks.export_sepa_payments",
         "schedule": celery.schedules.crontab(
-            day_of_month=15,
+            day_of_month=5,
             minute=0,
-            hour=0
-            # once a month, on 15th 0:00
+            hour=3
+            # once a month, on 5th 3:00
         ),
     },
     "export_harvest_share_subscriber_emails": {
-        "task": "export_harvest_share_subscriber_emails",
+        "task": "tapir.wirgarten.tasks.export_harvest_share_subscriber_emails",
         "schedule": celery.schedules.crontab(day_of_week="monday", minute=0, hour=0),
+    },
+    "export_payments_per_product_type": {
+        "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
+        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
     },
 }
 
