@@ -55,8 +55,7 @@
     <div class="dashboard-tile card harvest-share-variants-tile">
         <div class="card-body">
             <h4>Kündigungsgründe</h4>
-            <br/>
-            <div class="alert alert-info">Coming soon...</div>
+            <canvas id="cancellation-reason-chart"></canvas>
         </div>
     </div>
 
@@ -450,15 +449,24 @@
         },
   }});
 
+  new Chart(document.getElementById('cancellation-reason-chart'), {
+    type:'bar',
+    data: {
+      labels: {{cancellation_reason_labels | safe}},
+      datasets: [{
+          label: "Kündigungsgrund %",
+          data: {{cancellation_reason_data | safe}},
+          backgroundColor: COLORS
+      }]
+    },
+  });
+
   new Chart(document.getElementById('harvest-share-variants-chart'), {
     type: 'doughnut',
     data: {
       labels: {{harvest_share_variants_labels | safe}},
       datasets: [{
-        label: '# Anteile pro Variante',
         data: {{ harvest_share_variants_data | safe}},
-        borderWidth: 1,
-        backgroundColor: COLORS
       }]
     }
   });

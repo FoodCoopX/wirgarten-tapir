@@ -37,6 +37,7 @@ from tapir.wirgarten.views.member import (
     export_coop_member_list,
     get_coop_share_cancel_form,
     get_cancel_non_trial_form,
+    get_cancellation_reason_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -265,6 +266,11 @@ urlpatterns = [
         "registration/marketingfeedback",
         questionaire_trafficsource_view,
         name="marketing_feedback_form",
+    ),
+    path(
+        "member/<str:pk>/cancellation_reason",
+        get_cancellation_reason_form,
+        name="cancellation_reason",
     ),
 ]
 app_name = "wirgarten"
