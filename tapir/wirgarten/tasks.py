@@ -409,10 +409,20 @@ def export_product_or_coop_payment_csv(product_type: bool | ProductType):
                 }
             )
 
-    file = export_file(
+    export_file(
         filename=(product_type.name if product_type else "Geschäftsanteile")
         + "-Einzahlungen",
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
         send_email=True,
     )
+
+
+@shared_task
+def generate_member_numbers():
+    members = Member.objects.filter(member_no__isnull=True)
+    today = date.today()
+    for member in members:
+        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
+            member.save()
+            print(f"[task] generate_member_numbers: generated member_no for {member}")
