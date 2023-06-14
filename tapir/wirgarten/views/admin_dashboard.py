@@ -19,6 +19,7 @@ from tapir.wirgarten.models import (
     Product,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import (
@@ -33,7 +34,6 @@ from tapir.wirgarten.service.products import (
     get_product_price,
     get_next_growing_period,
 )
-from tapir.wirgarten.tasks import export_payment_parts_csv, export_sepa_payments
 from tapir.wirgarten.utils import format_currency
 
 
@@ -54,6 +54,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
+        self.add_cancellation_reasons_chart_context(context)
 
         context["active_members"] = len(Member.objects.all())
         context["cancellations_during_trial"] = len(
@@ -101,11 +102,28 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         return context
 
+    def add_cancellation_reasons_chart_context(self, context):
+        total = QuestionaireCancellationReasonResponse.objects.all().count()
+        responses = (
+            QuestionaireCancellationReasonResponse.objects.filter(custom=False)
+            .values("reason")
+            .annotate(count=Count("reason"))
+        )
+        custom_responses = QuestionaireCancellationReasonResponse.objects.filter(
+            custom=True
+        ).count()
+
+        context["cancellation_reason_labels"] = list(
+            map(lambda x: x["reason"], responses)
+        ) + ["Sonstige"]
+        context["cancellation_reason_data"] = list(
+            map(lambda x: x["count"] / total * 100, responses)
+        ) + [custom_responses / total * 100]
+
     def add_cancellation_chart_context(self, context):
         month_labels = [
             date.today() + relativedelta(day=1, months=-i) for i in range(13)
         ][::-1]
-        date_cutoff = date.today() + relativedelta(day=1, months=-13)
 
         cancellations_data = [
             {"label": "Probeverträge", "data": [0] * 13},

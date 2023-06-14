@@ -92,6 +92,7 @@ class Parameter:
     MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT = (
         f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
     )
+    MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
     EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
         f"{PREFIX}.email.cancellation_confirmation.subject"
     )
@@ -581,6 +582,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 ],
                 textarea=True,
             ),
+        )
+
+        parameter_definition(
+            key=Parameter.MEMBER_CANCELLATION_REASON_CHOICES,
+            label="Kündigungsgründe",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Menge (zu viel); Menge (zu wenig); Preis; Vielfalt; Qualität; Weg-/Umzug",
+            description="Die Kündigungsgründe, die ein Mitglied bei der Kündigung auswählen kann. Die einzelnen Gründe werden durch Semikolon ';' getrennt angegeben.",
+            category=ParameterCategory.MEMBER_DASHBOARD,
+            order_priority=400,
         )
 
         parameter_definition(

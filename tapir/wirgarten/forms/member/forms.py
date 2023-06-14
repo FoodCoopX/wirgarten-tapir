@@ -19,6 +19,7 @@ from django.forms import (
     ChoiceField,
     IntegerField,
     CheckboxSelectMultiple,
+    MultipleChoiceField,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -595,3 +596,22 @@ class SubscriptionRenewalForm(Form):
 
         member = Member.objects.get(id=member_id)
         send_order_confirmation(member, self.subs)
+
+
+class CancellationReasonForm(Form):
+    def __init__(self, *args, **kwargs):
+        super(CancellationReasonForm, self).__init__(*args, **kwargs)
+        self.fields["reason"] = MultipleChoiceField(
+            label="Grund für deine Kündigung",
+            choices=map(
+                lambda x: (x.strip(), x.strip()),
+                get_parameter_value(Parameter.MEMBER_CANCELLATION_REASON_CHOICES).split(
+                    ";"
+                ),
+            ),
+            widget=CheckboxSelectMultiple,
+            required=False,
+        )
+        self.fields["custom_reason"] = CharField(
+            label="Sonstiger Grund für deine Kündigung", required=False
+        )
