@@ -168,6 +168,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
         "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
     },
+    "generate_member_numbers": {
+        "task": "tapir.wirgarten.tasks.generate_member_numbers",
+        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
+    },
 }
 
 # Password validation
