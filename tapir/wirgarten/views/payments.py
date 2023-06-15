@@ -3,6 +3,7 @@ from django.views import generic
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import PaymentTransaction, Payment
+from tapir.wirgarten.tasks import export_payment_parts_csv
 
 
 class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView):
@@ -22,6 +23,7 @@ class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView)
                 "number_of_payments": len(payments),
                 "total_amount": sum(map(lambda p: p.amount, payments)),
                 "file": t.file,
+                "type": t.type,
                 "payments": payments,
             }
 

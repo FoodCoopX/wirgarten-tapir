@@ -196,6 +196,7 @@ def buy_cooperative_shares(
         amount=share_price * quantity,
         mandate_ref=so.mandate_ref,
         status=Payment.PaymentStatus.DUE,
+        type="Genossenschaftsanteile",
     )
 
     # generate member no if necessary
