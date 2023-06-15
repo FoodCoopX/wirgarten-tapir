@@ -648,6 +648,7 @@ class PaymentTransaction(TapirModel):
 
     created_at = models.DateTimeField(null=False, default=partial(timezone.now))
     file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
+    type = models.CharField(max_length=32, null=True)
 
 
 class Payment(TapirModel):
@@ -675,11 +676,12 @@ class Payment(TapirModel):
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
+    type = models.CharField(max_length=32, null=True)
 
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["mandate_ref", "due_date"],
+                fields=["mandate_ref", "due_date", "type"],
                 name="unique_mandate_ref_date",
             )
         ]
