@@ -54,15 +54,18 @@ def export_pick_list_csv():
     for subscription in subscriptions:
         grouped_subscriptions[subscription.member].append(subscription)
 
-    variants = list(
-        map(
-            lambda x: x["name"],
-            Product.objects.filter(type_id=base_type_id).values("name").distinct(),
-        )
-    )
+    variants = list(Product.objects.filter(type_id=base_type_id))
+    variants.sort(key=lambda x: get_product_price(x).price)
+    variant_names = [x.name for x in variants]
 
     output, writer = begin_csv_string(
-        [KEY_EMAIL, KEY_FIRST_NAME, KEY_PICKUP_LOCATION, *variants, KEY_M_EQUIVALENT]
+        [
+            KEY_EMAIL,
+            KEY_FIRST_NAME,
+            *variant_names,
+            KEY_PICKUP_LOCATION,
+            KEY_M_EQUIVALENT,
+        ]
     )
 
     base_price = get_product_price(
@@ -75,14 +78,15 @@ def export_pick_list_csv():
             for key, group in itertools.groupby(subs, key=lambda sub: sub.product.name)
         }
 
+        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subs))
+        m_equivalents = round(sum_without_soli / base_price, 2)
+
         writer.writerow(
             {
                 KEY_EMAIL: member.email,
                 KEY_FIRST_NAME: member.first_name,
                 KEY_PICKUP_LOCATION: member.pickup_location.name,
-                KEY_M_EQUIVALENT: round(
-                    sum(map(lambda x: x.total_price_without_soli, subs)) / base_price, 2
-                ),
+                KEY_M_EQUIVALENT: m_equivalents,
                 **grouped_subs,
             }
         )

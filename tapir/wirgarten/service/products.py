@@ -248,11 +248,13 @@ def get_product_price(product: Product, reference_date: date = date.today()):
     :param reference_date: reference date for when the price should be valid
     :return: the ProductPrice instance
     """
-    return (
-        ProductPrice.objects.filter(product=product, valid_from__lte=reference_date)
-        .order_by("-valid_from")
-        .first()
-    )
+    prices = ProductPrice.objects.filter(product=product).order_by("-valid_from")
+
+    # If there's only one price, return it
+    if prices.count() == 1:
+        return prices.first()
+    else:  # Otherwise, return the price valid up to the reference date
+        return prices.filter(valid_from__lte=reference_date).first()
 
 
 @transaction.atomic
