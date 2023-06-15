@@ -476,6 +476,24 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
                 )
         return self._total_price
 
+    @property
+    def total_price_without_soli(self):
+        today = datetime.date.today()
+        if not hasattr(self, "_total_price_without_soli"):
+            product_prices = ProductPrice.objects.filter(
+                product_id=self.product_id, valid_from__lte=today
+            ).order_by("product_id", "-valid_from")
+            self._total_price_without_soli = next(
+                (
+                    product_price.price
+                    for product_price in product_prices
+                    if product_price.product_id == self.product_id
+                ),
+                0.0,
+            )
+
+        return self._total_price_without_soli
+
     def clean(self):
         if self.start_date >= self.end_date:
             raise ValidationError({"start_date": "Start date must be before end date."})
