@@ -822,7 +822,9 @@ def payment_to_dict(payment: Payment) -> dict:
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
-        "calculated_amount": round(sum(map(lambda x: x["total_price"], subs)), 2),
+        "calculated_amount": round(
+            sum(map(lambda x: float(x["total_price"]), subs)), 2
+        ),
         "subs": list(map(sub_to_dict, subs)),
         "status": payment.status,
         "edited": payment.edited,

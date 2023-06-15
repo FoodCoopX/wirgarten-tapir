@@ -15,68 +15,68 @@
 
 {% block content %}
 
-<div style="margin-top: 2em" class="container">
-    <div style="display:grid; grid-template-columns: 1fr 2fr; grid-gap: 1em">
-        <div class="card">
-            <div class="card-header">
-                <h4>{% translate "Zahlungseingang" %}</h4>
-            </div>
-            <div class="card-body">
-                <table class="table"
-                       aria-label="{% translate 'Liste der Lastschriften' %}">
-                    <thead>
-                    <th>{% translate "Erstellt am" %}</th>
-                    <th>{% translate "Anzahl" %}</th>
-                    <th>{% translate "Betrag" %}</th>
-                    </thead>
-
-                    <tbody>
-                    {% for transaction in object_list %}
-                    <tr id="transaction-{{transaction.id}}" class="tr-clickable transaction-row"
-                        onclick="handleSelectTransaction('{{ transaction.id }}')">
-                        <td class="align-middle">{{ transaction.created_at }}</td>
-                        <td class="align-middle">{{ transaction.number_of_payments }}</td>
-                        <td class="align-middle">{{ transaction.total_amount }} €</td>
-                        <td><a href="{% url 'wirgarten:exported_files_download' transaction.file.id %}">
-                            <span style="font-size:2em" class="material-icons">download</span></a></td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<div style="margin:1em; display:grid; grid-template-columns: 1fr 2fr; grid-gap: 1em">
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate "Zahlungseingang" %}</h4>
         </div>
-        <div class="card">
-            <div class="card-header">
-                <h4>{% translate "Zahlungen" %}</h4>
-            </div>
-            <div class="card-body">
-                <table class="table"
-                       aria-label="{% translate 'Liste der Lastschriften' %}">
-                    <thead>
-                    <tr>
-                        <th>{% translate "Fällig am" %}</th>
-                        <th>{% translate "Mandatsreferenz" %}</th>
-                        <th>{% translate "Mitglied" %}</th>
-                        <th>{% translate "Betrag" %}</th>
-                    </tr>
-                    </thead>
+        <div class="card-body">
+            <table class="table"
+                   aria-label="{% translate 'Liste der Lastschriften' %}">
+                <thead>
+                <th>{% translate "Erstellt am" %}</th>
+                <th>{% translate "Typ" %}</th>
+                <th>{% translate "Anzahl" %}</th>
+                <th>{% translate "Betrag" %}</th>
+                </thead>
 
-                    <tbody>
+                <tbody>
+                {% for transaction in object_list %}
+                <tr id="transaction-{{transaction.id}}" class="tr-clickable transaction-row"
+                    onclick="handleSelectTransaction('{{ transaction.id }}')">
+                    <td class="align-middle">{{ transaction.created_at }}</td>
+                    <td class="align-middle">{{ transaction.type }}</td>
+                    <td class="align-middle">{{ transaction.number_of_payments }}</td>
+                    <td class="align-middle">{{ transaction.total_amount }} €</td>
+                    <td><a href="{% url 'wirgarten:exported_files_download' transaction.file.id %}">
+                        <span style="font-size:2em" class="material-icons">download</span></a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h4>{% translate "Zahlungen" %}</h4>
+        </div>
+        <div class="card-body">
+            <table class="table"
+                   aria-label="{% translate 'Liste der Lastschriften' %}">
+                <thead>
+                <tr>
+                    <th>{% translate "Fällig am" %}</th>
+                    <th>{% translate "Mandatsreferenz" %}</th>
+                    <th>{% translate "Mitglied" %}</th>
+                    <th>{% translate "Betrag" %}</th>
+                </tr>
+                </thead>
 
-                    {% for transaction in object_list %}
-                    {% for payment in transaction.payments %}
-                    <tr href="{% url 'wirgarten:member_payments' payment.mandate_ref.member.pk %}" class="tr-href transaction-payment-row transaction-payments-{{ transaction.id }}">
-                        <td class="align-middle">{{ payment.due_date }}</td>
-                        <td class="align-middle">{{ payment.mandate_ref.ref }}</td>
-                        <td class="align-middle">{{ payment.mandate_ref.member }}</td>
-                        <td class="align-middle">{{ payment.amount }} €</td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
+                <tbody>
 
-                    </tbody>
-                </table>
-            </div>
+                {% for transaction in object_list %}
+                {% for payment in transaction.payments %}
+                <tr href="{% url 'wirgarten:member_payments' payment.mandate_ref.member.pk %}"
+                    class="tr-href transaction-payment-row transaction-payments-{{ transaction.id }}">
+                    <td class="align-middle">{{ payment.due_date }}</td>
+                    <td class="align-middle">{{ payment.mandate_ref.ref }}</td>
+                    <td class="align-middle">{{ payment.mandate_ref.member }}</td>
+                    <td class="align-middle">{{ payment.amount }} €</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -108,6 +108,8 @@
     }
 
     handleSelectTransaction(transactionRows[0].id.replace("transaction-", ""))
+
+
 </script>
 
 {% endblock %}

@@ -151,15 +151,6 @@ CELERY_BEAT_SCHEDULE = {
             # once a week, Tuesday at 03:00
         ),
     },
-    "export_sepa_payments": {
-        "task": "tapir.wirgarten.tasks.export_sepa_payments",
-        "schedule": celery.schedules.crontab(
-            day_of_month=5,
-            minute=0,
-            hour=3
-            # once a month, on 5th 3:00
-        ),
-    },
     "export_harvest_share_subscriber_emails": {
         "task": "tapir.wirgarten.tasks.export_harvest_share_subscriber_emails",
         "schedule": celery.schedules.crontab(day_of_week="monday", minute=0, hour=0),

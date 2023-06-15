@@ -65,14 +65,14 @@ def generate_new_payments(due_date: date) -> [Payment]:
 
     payments = []
 
-    for mandate_ref, subs in itertools.groupby(
+    for (mandate_ref, product_type), subs in itertools.groupby(
         iterable=Subscription.objects.filter(
             start_date__lte=due_date, end_date__gte=due_date
-        ).order_by("mandate_ref"),
-        key=lambda x: x.mandate_ref,
+        ).order_by("mandate_ref", "product__type"),
+        key=lambda x: (x.mandate_ref, x.product.type.name),
     ):
         if not Payment.objects.filter(
-            mandate_ref=mandate_ref, due_date=due_date
+            mandate_ref=mandate_ref, due_date=due_date, type=product_type
         ).exists():
             amount = float(
                 round(
@@ -92,6 +92,7 @@ def generate_new_payments(due_date: date) -> [Payment]:
                     amount=amount,
                     mandate_ref=mandate_ref,
                     status=Payment.PaymentStatus.DUE,
+                    type=product_type,
                 )
             )
 
