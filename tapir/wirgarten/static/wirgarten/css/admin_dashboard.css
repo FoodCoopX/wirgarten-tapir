@@ -56,10 +56,11 @@
 }
 
 .dashboard-section-heading {
-    font-size: 1.125em;
+    font-size: 1.75em;
     font-weight: bold;
     grid-column: 1 / -1;
-    color: #3D3D3D;
+    font-family: 'Montserrat', sans-serif !important;
+    text-align: center;
 }
 
 @media (max-width: 767px) {
