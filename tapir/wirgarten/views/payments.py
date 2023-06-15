@@ -3,7 +3,6 @@ from django.views import generic
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import PaymentTransaction, Payment
-from tapir.wirgarten.tasks import export_payment_parts_csv
 
 
 class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView):
