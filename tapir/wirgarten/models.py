@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from math import floor
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
@@ -496,6 +497,22 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     def __str__(self):
         return f"{self.quantity} × {self.product.name} {self.product.type.name}"
+
+    def long_str(self):
+        if self.solidarity_price_absolute is not None:
+            soliprice = f"\n\t(Solidaraufschlag: {self.solidarity_price_absolute} €)"
+        elif self.solidarity_price is not None:
+            soliprice = (
+                f"\n\t(Solidaraufschlag: {float(self.solidarity_price) * 100.0} %)"
+            )
+        else:
+            soliprice = ""
+
+        return (
+            self.__str__()
+            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            + soliprice
+        )
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
