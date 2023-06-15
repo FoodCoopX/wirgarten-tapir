@@ -10,9 +10,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="product",
-            name="base",
-            field=models.BooleanField(default=False, null=True),
-        ),
+        # Not sure what happened here, but this field already exists
+        #
+        # migrations.AddField(
+        #    model_name="product",
+        #    name="base",
+        #    field=models.BooleanField(default=False, null=True),
+        # ),
     ]
