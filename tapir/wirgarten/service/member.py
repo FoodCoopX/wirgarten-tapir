@@ -330,7 +330,7 @@ def send_contract_change_confirmation(member: Member, subs: [Subscription]):
             "first_pickup_date": format_date(
                 get_next_delivery_date(contract_start_date)
             ),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
     )
 
@@ -358,7 +358,7 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
             "first_pickup_date": format_date(
                 get_next_delivery_date(contract_start_date)
             ),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
     )
 
