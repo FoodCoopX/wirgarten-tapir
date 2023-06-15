@@ -109,6 +109,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancellation_reasons_chart_context(self, context):
         total = QuestionaireCancellationReasonResponse.objects.all().count()
+        if total == 0:
+            context["cancellation_reason_labels"] = []
+            context["cancellation_reason_data"] = []
+            context["cancellations_other_reasons"] = []
+            return
+
         responses = (
             QuestionaireCancellationReasonResponse.objects.filter(custom=False)
             .values("reason")
