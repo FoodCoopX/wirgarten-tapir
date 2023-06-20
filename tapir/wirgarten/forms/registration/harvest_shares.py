@@ -42,6 +42,7 @@ from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_free_product_capacity,
     get_current_growing_period,
+    is_harvest_shares_available,
 )
 from tapir.wirgarten.utils import format_date
 
@@ -136,9 +137,14 @@ class HarvestShareForm(forms.Form):
                 end_date__gte=self.start_date,
             ).order_by("start_date")
 
+            available_growing_periods = []
+            for period in growing_periods:
+                if is_harvest_shares_available(period.start_date):
+                    available_growing_periods.append(period)
+
             self.solidarity_total = []
             self.free_capacity = []
-            for period in growing_periods:
+            for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
                 solidarity_total = f"{get_solidarity_total(start_date)}".replace(
                     ",", "."
@@ -152,7 +158,9 @@ class HarvestShareForm(forms.Form):
                 self.free_capacity.append(free_capacity)
 
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=growing_periods,
+                queryset=growing_periods.filter(
+                    id__in=[x.id for x in available_growing_periods]
+                ),
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
