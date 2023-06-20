@@ -1244,10 +1244,10 @@ def get_add_harvest_shares_form(request, **kwargs):
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
-    kwargs["choose_growing_period"] = True
-    kwargs["member_id"] = member_id
-
-    if not is_harvest_shares_available():
+    next_period = get_next_growing_period()
+    if not is_harvest_shares_available() and not is_harvest_shares_available(
+        next_period.start_date
+    ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
         wl_kwargs = kwargs.copy()
         wl_kwargs["initial"] = {
@@ -1269,6 +1269,8 @@ def get_add_harvest_shares_form(request, **kwargs):
             subscriptions=form.subs,
         ).save()
 
+    kwargs["member_id"] = member_id
+    kwargs["choose_growing_period"] = True
     return get_form_modal(
         request=request,
         form=HarvestShareForm,
