@@ -211,7 +211,7 @@ elif EMAIL_ENV == "prod":
     EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
     EMAIL_PORT = env.str("EMAIL_PORT", default=587)
     # the next 2 options are mutually exclusive!
-    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
     EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
     EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
 
