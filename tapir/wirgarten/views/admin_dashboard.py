@@ -19,6 +19,7 @@ from tapir.wirgarten.models import (
     Product,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import (
@@ -32,6 +33,7 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_product_price,
     get_next_growing_period,
+    get_current_growing_period,
 )
 from tapir.wirgarten.utils import format_currency
 
@@ -53,6 +55,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
+        self.add_cancellation_reasons_chart_context(context)
 
         context["active_members"] = len(Member.objects.all())
         context["cancellations_during_trial"] = len(
@@ -76,7 +79,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["next_payment_amount"] = format_currency(
             get_total_payment_amount(context["next_payment_date"])
         )
-        context["solidarity_overplus"] = format_currency(get_solidarity_overplus())
+        context["solidarity_overplus"] = get_solidarity_overplus()
         context["status_seperate_coop_shares"] = get_parameter_value(
             Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         )
@@ -90,21 +93,52 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Parameter.CHICKEN_SHARES_SUBSCRIBABLE
         )
 
-        active_subs = get_future_subscriptions().order_by("-product__type")
+        current_growing_period = get_current_growing_period()
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
         ) = self.get_harvest_share_variants_chart_data(
-            active_subs.filter(product__type=harvest_share_type)
+            Subscription.objects.filter(
+                start_date__gte=current_growing_period.start_date,
+                end_date__lte=current_growing_period.end_date,
+                product__type=harvest_share_type,
+            )
         )
 
         return context
 
+    def add_cancellation_reasons_chart_context(self, context):
+        total = QuestionaireCancellationReasonResponse.objects.all().count()
+        if total == 0:
+            context["cancellation_reason_labels"] = []
+            context["cancellation_reason_data"] = []
+            context["cancellations_other_reasons"] = []
+            return
+
+        responses = (
+            QuestionaireCancellationReasonResponse.objects.filter(custom=False)
+            .values("reason")
+            .annotate(count=Count("reason"))
+        )
+        custom_responses = QuestionaireCancellationReasonResponse.objects.filter(
+            custom=True
+        )
+
+        context["cancellation_reason_labels"] = list(
+            map(lambda x: x["reason"], responses)
+        ) + ["Sonstige"]
+        context["cancellation_reason_data"] = list(
+            map(lambda x: x["count"] / total * 100, responses)
+        ) + [custom_responses.count() / total * 100]
+
+        context["cancellations_other_reasons"] = list(
+            map(lambda x: x.reason, custom_responses.order_by("-timestamp")[:50])
+        )
+
     def add_cancellation_chart_context(self, context):
         month_labels = [
-            date.today() + relativedelta(day=1, months=-i) for i in range(13)
+            date.today() + relativedelta(day=1, months=-i + 1) for i in range(13)
         ][::-1]
-        date_cutoff = date.today() + relativedelta(day=1, months=-13)
 
         cancellations_data = [
             {"label": "Probeverträge", "data": [0] * 13},
@@ -113,13 +147,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         for index, month in enumerate(month_labels):
             start_of_month = month
-            end_of_month = month + relativedelta(months=1) - relativedelta(days=1)
 
             # Calculate the total number of subscriptions in trial - cancelled for this month
             trial_cancelled_count = (
-                Subscription.objects.filter(
-                    created_at__gte=start_of_month, created_at__lte=end_of_month
-                )
+                Subscription.objects.filter(start_date=start_of_month)
                 .exclude(cancellation_ts=None)
                 .annotate(
                     trial_end_date=ExpressionWrapper(
@@ -131,13 +162,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 .count()
             )
 
-            # Calculate the total number of cancelled subscriptions for this month
-            cancelled_count = Subscription.objects.filter(
-                cancellation_ts__gte=start_of_month, cancellation_ts__lte=end_of_month
+            # Calculate the total number of new subscriptions for this month
+            total_count = Subscription.objects.filter(
+                start_date=start_of_month,
             ).count()
 
-            cancellations_data[0]["data"][index] = trial_cancelled_count
-            cancellations_data[1]["data"][index] = cancelled_count
+            cancellations_data[0]["data"][index] = total_count
+            cancellations_data[1]["data"][index] = trial_cancelled_count
 
         # Format the month values
         cancellations_labels = [month.strftime("%m/%y") for month in month_labels]

@@ -187,7 +187,7 @@ class ChickenShareForm(forms.Form):
         self, member_id, mandate_ref: MandateReference = None, send_mail: bool = False
     ):
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id, False)
+            mandate_ref = get_or_create_mandate_ref(member_id)
 
         now = timezone.now()
 

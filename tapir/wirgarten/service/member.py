@@ -111,16 +111,15 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member, coop_shares: bool):
+def create_mandate_ref(member: str | Member):
     """
     Generates and persists a new mandate reference for a member.
 
     :param member: the member
-    :param coop_shares: if true: the mandate ref is generated for coop shares, else: generated for products
     """
 
     member_id = resolve_member_id(member)
-    ref = generate_mandate_ref(member_id, coop_shares)
+    ref = generate_mandate_ref(member_id)
     return MandateReference.objects.create(
         ref=ref, member_id=member_id, start_ts=datetime.now(timezone.utc)
     )
@@ -130,12 +129,7 @@ def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
 
 
-def get_or_create_mandate_ref(
-    member: str | Member, coop_shares: bool = False
-) -> MandateReference:
-    if coop_shares:
-        raise NotImplementedError("Coop share mandate references can not be reused.")
-
+def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     member_id = resolve_member_id(member)
     mandate_ref = False
     for row in (
@@ -148,7 +142,7 @@ def get_or_create_mandate_ref(
         break
 
     if not mandate_ref:
-        mandate_ref = create_mandate_ref(member_id, False)
+        mandate_ref = create_mandate_ref(member_id)
 
     return mandate_ref
 
@@ -187,7 +181,7 @@ def buy_cooperative_shares(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )  # payment is always due next month
 
-    mandate_ref = create_mandate_ref(member_id, True)
+    mandate_ref = get_or_create_mandate_ref(member_id)
     so = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=quantity,
@@ -202,6 +196,7 @@ def buy_cooperative_shares(
         amount=share_price * quantity,
         mandate_ref=so.mandate_ref,
         status=Payment.PaymentStatus.DUE,
+        type="Genossenschaftsanteile",
     )
 
     # generate member no if necessary
@@ -313,6 +308,34 @@ def send_cancellation_confirmation_email(
         )
 
 
+def send_contract_change_confirmation(member: Member, subs: [Subscription]):
+    if not len(subs):
+        raise Exception(
+            "No subscriptions provided for sending contract change confirmation for member: ",
+            member,
+        )
+
+    contract_start_date = subs[0].start_date
+
+    send_email(
+        to_email=[member.email],
+        subject=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
+        ),
+        content=get_parameter_value(
+            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
+        ),
+        variables={
+            "contract_start_date": format_date(contract_start_date),
+            "contract_end_date": format_date(subs[0].end_date),
+            "first_pickup_date": format_date(
+                get_next_delivery_date(contract_start_date)
+            ),
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
+        },
+    )
+
+
 def send_order_confirmation(member: Member, subs: [Subscription]):
     if not len(subs):
         raise Exception(
@@ -336,7 +359,7 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
             "first_pickup_date": format_date(
                 get_next_delivery_date(contract_start_date)
             ),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs))}",
+            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
     )
 

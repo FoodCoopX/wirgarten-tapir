@@ -173,12 +173,17 @@
         }
     }
 
-    document.addEventListener('load', () => {
+    window.onload = () => {
         const cancellationConfirmationElem = document.getElementById("cancellation-confirmation");
         const notRenewedConfirmationElem = document.getElementById("not-renewed-confirmation");
         const emailChangedConfirmationElem = document.getElementById("email-changed-confirmation");
         const passwordChangedConfirmationElem = document.getElementById("password-changed-confirmation");
         const params = Tapir.getUrlParams();
+
+        if(params.cancelled || params.notrenewed){
+            FormModal.load("{% url 'wirgarten:cancellation_reason' pk=member.id %}", 'Warum möchtest du deinen Ernteanteil kündigen?')
+        }
+
         if(params.cancelled && cancellationConfirmationElem){
             cancellationConfirmationElem.style.display = 'block';
             cancellationDateElem = document.getElementById("cancellation_date")
@@ -195,7 +200,7 @@
         }
 
        Tapir.replaceUrlParams({})
-   });
+   };
 
     const handleCancellation = () => {
         ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
@@ -230,6 +235,5 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
-
 
 </script>

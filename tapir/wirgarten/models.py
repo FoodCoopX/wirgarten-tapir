@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from math import floor
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
@@ -9,8 +10,6 @@ from django.db.models import (
     Index,
     F,
     Sum,
-    Case,
-    When,
     Subquery,
     OuterRef,
 )
@@ -43,7 +42,7 @@ class PickupLocation(TapirModel):
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
     postcode = models.CharField(_("Postcode"), max_length=32)
     city = models.CharField(_("City"), max_length=50)
-    info = models.CharField(_("Additional info"), max_length=512, blank=True)
+    info = models.CharField(_("Additional info"), max_length=1024, blank=True)
     access_code = models.CharField(_("Access Code"), max_length=20, blank=True)
     messenger_group_link = models.CharField(
         _("Messenger Group Link"), max_length=150, blank=True
@@ -188,16 +187,22 @@ class Member(TapirUser):
         return self.get_pickup_location()
 
     def get_pickup_location(self, reference_date=timezone.now().date()):
-        found = (
-            self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
-            .order_by("-valid_from")
-            .values("pickup_location")[:1]
-        )
-        return (
-            PickupLocation.objects.get(id=found[0]["pickup_location"])
-            if found.exists()
-            else None
-        )
+        all_locations = self.memberpickuplocation_set.all()
+
+        # If there's only one pickup_location, return it regardless of its valid_from date
+        if all_locations.count() == 1:
+            return all_locations.first().pickup_location
+        else:
+            found = (
+                self.memberpickuplocation_set.filter(valid_from__lte=reference_date)
+                .order_by("-valid_from")
+                .values("pickup_location")
+            )
+            return (
+                PickupLocation.objects.get(id=found[0]["pickup_location"])
+                if found.exists()
+                else None
+            )
 
     @classmethod
     def generate_member_no(cls):
@@ -427,13 +432,18 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         null=True
     )  # TODO this should probably be null=False
     withdrawal_consent_ts = models.DateTimeField(null=True)
+    trial_disabled = models.BooleanField(default=False)
 
     class Meta:
         indexes = [models.Index(fields=["period_id", "created_at"])]
 
     @property
     def trial_end_date(self):
-        return self.start_date + relativedelta(months=1, day=1, days=-1)
+        return (
+            self.start_date
+            if self.trial_disabled
+            else self.start_date + relativedelta(months=1, day=1, days=-1)
+        )
 
     @property
     def total_price(self):
@@ -466,6 +476,27 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
                 )
         return self._total_price
 
+    @property
+    def total_price_without_soli(self):
+        today = datetime.date.today()
+        if not hasattr(self, "_total_price_without_soli"):
+            product_prices = ProductPrice.objects.filter(
+                product_id=self.product_id, valid_from__lte=today
+            ).order_by("product_id", "-valid_from")
+            self._total_price_without_soli = (
+                next(
+                    (
+                        product_price.price
+                        for product_price in product_prices
+                        if product_price.product_id == self.product_id
+                    ),
+                    0.0,
+                )
+                * self.quantity
+            )
+
+        return self._total_price_without_soli
+
     def clean(self):
         if self.start_date >= self.end_date:
             raise ValidationError({"start_date": "Start date must be before end date."})
@@ -487,6 +518,22 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     def __str__(self):
         return f"{self.quantity} × {self.product.name} {self.product.type.name}"
+
+    def long_str(self):
+        if self.solidarity_price_absolute is not None:
+            soliprice = f"\n\t(Solidaraufschlag: {self.solidarity_price_absolute} €)"
+        elif self.solidarity_price is not None:
+            soliprice = (
+                f"\n\t(Solidaraufschlag: {float(self.solidarity_price) * 100.0} %)"
+            )
+        else:
+            soliprice = ""
+
+        return (
+            self.__str__()
+            + f" ({format_date(self.start_date)} - {format_date(self.end_date)})"
+            + soliprice
+        )
 
 
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
@@ -622,6 +669,7 @@ class PaymentTransaction(TapirModel):
 
     created_at = models.DateTimeField(null=False, default=partial(timezone.now))
     file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
+    type = models.CharField(max_length=32, null=True)
 
 
 class Payment(TapirModel):
@@ -649,11 +697,12 @@ class Payment(TapirModel):
     transaction = models.ForeignKey(
         PaymentTransaction, on_delete=models.DO_NOTHING, null=True
     )
+    type = models.CharField(max_length=32, null=True)
 
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["mandate_ref", "due_date"],
+                fields=["mandate_ref", "due_date", "type"],
                 name="unique_mandate_ref_date",
             )
         ]
@@ -822,5 +871,9 @@ class QuestionaireTrafficSourceResponse(TapirModel):
     sources = models.ManyToManyField(QuestionaireTrafficSourceOption)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
-    def __str__(self):
-        return self.name
+
+class QuestionaireCancellationReasonResponse(TapirModel):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
+    reason = models.CharField(max_length=150)
+    custom = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)

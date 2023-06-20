@@ -103,7 +103,7 @@ def create_subscriptions(wirgarten_user):
     growing_period = GrowingPeriod.objects.get(
         start_date__lte=today, end_date__gte=today
     )
-    mandate_ref = get_or_create_mandate_ref(wirgarten_user, False)
+    mandate_ref = get_or_create_mandate_ref(wirgarten_user)
     start_date = get_next_contract_start_date(today)
     end_date = growing_period.end_date
 

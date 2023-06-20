@@ -22,6 +22,7 @@ class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView)
                 "number_of_payments": len(payments),
                 "total_amount": sum(map(lambda p: p.amount, payments)),
                 "file": t.file,
+                "type": t.type,
                 "payments": payments,
             }
 

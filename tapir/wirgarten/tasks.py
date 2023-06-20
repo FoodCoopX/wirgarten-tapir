@@ -1,4 +1,5 @@
 import itertools
+from collections import defaultdict
 from datetime import datetime, date
 
 from celery import shared_task
@@ -22,7 +23,6 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import export_file, begin_csv_string
 from tapir.wirgarten.service.payment import (
-    is_mandate_ref_for_coop_shares,
     generate_new_payments,
     get_existing_payments,
 )
@@ -30,74 +30,66 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_future_subscriptions,
+    get_product_price,
 )
+from tapir.wirgarten.utils import format_date
 
 
 @shared_task
 def export_pick_list_csv():
     """
-    Sums the quantity of product variants per pickup location and exports the list as CSV.
+    Exports a CSV file containing the pick list for the next delivery.
     """
 
-    KEY_PRODUCT = "Produkt"
-    KEY_QUANTITY = "Anzahl"
-    KEY_VARIANT = "Variante"
-    KEY_PICKUPLOCATION = "Abholort"
+    KEY_EMAIL = "E-Mail"
+    KEY_FIRST_NAME = "Vorname"
+    KEY_PICKUP_LOCATION = "Abholort"
+    KEY_M_EQUIVALENT = "M-Äquivalent"
 
-    pickup_locations = {v.id: v for v in PickupLocation.objects.all()}
+    base_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+    subscriptions = get_active_subscriptions().filter(product__type_id=base_type_id)
+    grouped_subscriptions = defaultdict(list)
 
-    product_types = {
-        v.id: v
-        for v in ProductType.objects.filter(
-            name__in=get_parameter_value(Parameter.PICK_LIST_PRODUCT_TYPES).split(","),
-            id__in=map(lambda x: x.id, get_active_product_types()),
-        )
-    }
+    # Populate the dictionary
+    for subscription in subscriptions:
+        grouped_subscriptions[subscription.member].append(subscription)
 
-    products = {v.id: v for v in Product.objects.filter(type__in=product_types.keys())}
-
-    subs = {}
-
-    for s in (
-        Subscription.objects.filter(product__type__in=product_types.keys())
-        .values(
-            "member__pickup_location__id",
-            "product__type__id",
-            "product__id",
-        )
-        .annotate(quantity_sum=Sum("quantity"))
-        .order_by("member__pickup_location__id", "product__type__id", "product__id")
-    ):
-        subs[s["member__pickup_location__id"]] = subs.get(
-            s["member__pickup_location__id"], {}
-        )
-        subs[s["member__pickup_location__id"]][s["product__type__id"]] = subs[
-            s["member__pickup_location__id"]
-        ].get("product__type__id", {})
-        subs[s["member__pickup_location__id"]][s["product__type__id"]][
-            s["product__id"]
-        ] = s["quantity_sum"]
+    variants = list(Product.objects.filter(type_id=base_type_id))
+    variants.sort(key=lambda x: get_product_price(x).price)
+    variant_names = [x.name for x in variants]
 
     output, writer = begin_csv_string(
         [
-            KEY_PICKUPLOCATION,
-            KEY_PRODUCT,
-            KEY_VARIANT,
-            KEY_QUANTITY,
+            KEY_EMAIL,
+            KEY_FIRST_NAME,
+            *variant_names,
+            KEY_PICKUP_LOCATION,
+            KEY_M_EQUIVALENT,
         ]
     )
 
-    for pl_id, pl in pickup_locations.items():
-        for pt_id, pt in product_types.items():
-            for p_id, p in products.items():
-                writer.writerow(
-                    {
-                        KEY_PICKUPLOCATION: pl.name,
-                        KEY_PRODUCT: pt.name,
-                        KEY_VARIANT: p.name,
-                        KEY_QUANTITY: subs.get(pl_id, {}).get(pt_id, {}).get(p_id, 0),
-                    }
-                )
+    base_price = get_product_price(
+        Product.objects.filter(type_id=base_type_id, base=True).first()
+    ).price
+    for member, subs in grouped_subscriptions.items():
+        subs.sort(key=lambda x: x.product.name)
+        grouped_subs = {
+            key: f"{sum(map(lambda x: x.quantity, group))} Stück"
+            for key, group in itertools.groupby(subs, key=lambda sub: sub.product.name)
+        }
+
+        sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subs))
+        m_equivalents = round(sum_without_soli / base_price, 2)
+
+        writer.writerow(
+            {
+                KEY_EMAIL: member.email,
+                KEY_FIRST_NAME: member.first_name,
+                KEY_PICKUP_LOCATION: member.pickup_location.name,
+                KEY_M_EQUIVALENT: m_equivalents,
+                **grouped_subs,
+            }
+        )
 
     export_file(
         filename="Kommissionierliste",
@@ -206,115 +198,6 @@ def export_harvest_share_subscriber_emails():
 
 
 @shared_task
-@transaction.atomic
-def export_sepa_payments():
-    """
-    Creates payments for now. This should usually only run once a month.
-    """
-
-    def windata_date_format(due_date):
-        return due_date.strftime("%d.%m.%Y")
-
-    KEY_SEPA_ZAHLPFL_NAME = "Beg/Zahlpfl Name"
-    KEY_SEPA_ZAHLPFL_STREET = "Beg/Zahlpfl Strasse"
-    KEY_SEPA_ZAHLPFL_CITY = "Beg/Zahlpfl Ort"
-    KEY_SEPA_ZAHLPFL_IBAN = "Beg/Zahlpfl KontoNr bzw. IBAN"
-    KEY_SEPA_AG_NAME = "AG Name"
-    KEY_SEPA_AG_IBAN = "AG KontoNr bzw. AG IBAN"
-    KEY_SEPA_AG_BIC = "AG BLZ bzw. AG BIC"
-    KEY_SEPA_AMOUNT = "Betrag"
-    KEY_SEPA_DUE_DATE = "Termin"
-    KEY_SEPA_VWZ1 = "VWZ1"
-    KEY_SEPA_VWZ2 = "VWZ2"
-    KEY_SEPA_MANDATE_REF = "Mandat-ID"
-    KEY_SEPA_MANDATE_DATE = "Mandat-Datum"
-    KEY_SEPA_CURRENCY = "Währung"
-    KEY_SEPA_AG_GLA_ID = "AG Gläubiger-ID"
-    KEY_SEPA_SEQUENCE = "Sequenz"
-    KEY_SEPA_ZAHLWEISE = "zahlweise"
-    KEY_SEPA_ZAHLART = "Textschlüssel bzw. Zahlart"
-
-    due_date = datetime.today().replace(
-        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
-    )
-
-    existing_payments = get_existing_payments(due_date)
-    payments = Payment.objects.bulk_create(generate_new_payments(due_date))
-    payments.extend(existing_payments)
-
-    site_name = get_parameter_value(Parameter.SITE_NAME)
-    static_values = {
-        KEY_SEPA_AG_NAME: site_name,
-        KEY_SEPA_AG_IBAN: get_parameter_value(Parameter.PAYMENT_IBAN),
-        KEY_SEPA_AG_BIC: get_parameter_value(Parameter.PAYMENT_BIC),
-        KEY_SEPA_AG_GLA_ID: get_parameter_value(Parameter.PAYMENT_CREDITOR_ID),
-        KEY_SEPA_CURRENCY: "EUR",
-        KEY_SEPA_SEQUENCE: "RCUR",
-        KEY_SEPA_ZAHLWEISE: "M",
-        KEY_SEPA_ZAHLART: "SEPA",
-    }
-
-    # write header
-    output, writer = begin_csv_string(
-        [
-            KEY_SEPA_ZAHLPFL_NAME,
-            KEY_SEPA_ZAHLPFL_STREET,
-            KEY_SEPA_ZAHLPFL_CITY,
-            KEY_SEPA_ZAHLPFL_IBAN,
-            KEY_SEPA_AMOUNT,
-            KEY_SEPA_DUE_DATE,
-            KEY_SEPA_VWZ1,
-            KEY_SEPA_VWZ2,
-            KEY_SEPA_MANDATE_REF,
-            KEY_SEPA_MANDATE_DATE,
-        ]
-        + list(static_values.keys())
-    )
-
-    # write row
-    for payment in payments:
-        row = static_values.copy()
-
-        row[
-            KEY_SEPA_ZAHLPFL_NAME
-        ] = f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}"
-        row[
-            KEY_SEPA_ZAHLPFL_STREET
-        ] = f"{payment.mandate_ref.member.street} {payment.mandate_ref.member.street_2}".strip()
-        row[
-            KEY_SEPA_ZAHLPFL_CITY
-        ] = f"{payment.mandate_ref.member.postcode} {payment.mandate_ref.member.city}"
-        row[KEY_SEPA_ZAHLPFL_IBAN] = payment.mandate_ref.member.iban
-        row[KEY_SEPA_AMOUNT] = payment.amount
-        row[KEY_SEPA_DUE_DATE] = windata_date_format(due_date)
-        row[KEY_SEPA_VWZ1] = (
-            "Genossenschaftsanteile"
-            if is_mandate_ref_for_coop_shares(payment.mandate_ref)
-            else "Produktanteile"
-        )
-        row[KEY_SEPA_VWZ2] = payment.mandate_ref.ref
-        row[KEY_SEPA_MANDATE_REF] = payment.mandate_ref.ref
-        row[KEY_SEPA_MANDATE_DATE] = windata_date_format(
-            payment.mandate_ref.member.sepa_consent
-        )
-
-        writer.writerow(row)
-
-    # write file to db
-    file = export_file(
-        filename="SEPA-Payments",
-        filetype=ExportedFile.FileType.CSV,
-        content=bytes("windata CSV 1.1\n" + "".join(output.csv_string), "utf-8"),
-        send_email=True,
-    )
-
-    transaction = PaymentTransaction.objects.create(file=file)
-    for p in payments:
-        p.transaction = transaction
-        p.save()
-
-
-@shared_task
 def send_email_member_contract_end_reminder(member_id):
     member = Member.objects.get(pk=member_id)
 
@@ -335,3 +218,94 @@ def send_email_member_contract_end_reminder(member_id):
         print(
             f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
         )
+
+
+@shared_task
+@transaction.atomic
+def export_payment_parts_csv():
+    due_date = datetime.today().replace(
+        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    )
+    existing_payments = get_existing_payments(due_date)
+    payments = Payment.objects.bulk_create(generate_new_payments(due_date))
+    payments.extend(existing_payments)
+
+    payments.sort(key=lambda x: x.type)
+    payments_grouped = {
+        key: list(group)
+        for key, group in itertools.groupby(payments, key=lambda x: x.type)
+    }
+
+    # export for product types
+    for pt in get_active_product_types():
+        export_product_or_coop_payment_csv(
+            pt, payments_grouped[pt.name] if pt.name in payments_grouped else []
+        )
+
+    # export for coop shares
+    export_product_or_coop_payment_csv(
+        False,
+        payments_grouped["Genossenschaftsanteile"]
+        if "Genossenschaftsanteile" in payments_grouped
+        else [],
+    )
+
+
+def export_product_or_coop_payment_csv(
+    product_type: bool | ProductType, payments: list[Payment]
+):
+    KEY_NAME = "Name"
+    KEY_IBAN = "IBAN"
+    KEY_AMOUNT = "Betrag"
+    KEY_VERWENDUNGSZWECK = "Verwendungszweck"
+    KEY_MANDATE_REF = "Mandatsreferenz"
+    KEY_MANDATE_DATE = "Mandatsdatum"
+
+    output, writer = begin_csv_string(
+        [
+            KEY_NAME,
+            KEY_IBAN,
+            KEY_AMOUNT,
+            KEY_VERWENDUNGSZWECK,
+            KEY_MANDATE_REF,
+            KEY_MANDATE_DATE,
+        ]
+    )
+
+    for payment in payments:
+        verwendungszweck = payment.mandate_ref.member.last_name + (
+            " Geschäftsanteile" if not product_type else " " + product_type.name
+        )
+
+        writer.writerow(
+            {
+                KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
+                KEY_IBAN: payment.mandate_ref.member.iban,
+                KEY_AMOUNT: payment.amount,
+                KEY_VERWENDUNGSZWECK: verwendungszweck,
+                KEY_MANDATE_REF: payment.mandate_ref.ref,
+                KEY_MANDATE_DATE: format_date(payment.mandate_ref.member.sepa_consent),
+            }
+        )
+
+    payment_type = product_type.name if product_type else "Geschäftsanteile"
+    file = export_file(
+        filename=(payment_type) + "-Einzahlungen",
+        filetype=ExportedFile.FileType.CSV,
+        content=bytes("".join(output.csv_string), "utf-8"),
+        send_email=True,
+    )
+    transaction = PaymentTransaction.objects.create(file=file, type=payment_type)
+    for p in payments:
+        p.transaction = transaction
+        p.save()
+
+
+@shared_task
+def generate_member_numbers():
+    members = Member.objects.filter(member_no__isnull=True)
+    today = date.today()
+    for member in members:
+        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
+            member.save()
+            print(f"[task] generate_member_numbers: generated member_no for {member}")

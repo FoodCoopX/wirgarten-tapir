@@ -52,11 +52,11 @@
         </div>
     </div>
 
-    <div class="dashboard-tile card harvest-share-variants-tile">
+    <div class="dashboard-tile card harvest-share-variants-tile clickable" onclick="showOtherCancellationReasons()"
+         style="cursor:pointer">
         <div class="card-body">
             <h4>Kündigungsgründe</h4>
-            <br/>
-            <div class="alert alert-info">Coming soon...</div>
+            <canvas id="cancellation-reason-chart"></canvas>
         </div>
     </div>
 
@@ -75,7 +75,7 @@
     <div class="dashboard-tile card next-payment-tile">
         <div class="card-body">
             <div style="color: var(--primary)" class="dashboard-tile-number">
-                + <strong>{{solidarity_overplus}}</strong> €
+                {% if solidarity_overplus > 0 %}+{% endif %}<strong>{{solidarity_overplus|format_currency}}</strong> €
             </div>
             <small><strong>Solidar Überschuss</strong> / Monat</small>
         </div>
@@ -268,6 +268,10 @@
 
 <script src="{% static 'wirgarten/js/chart.js' %}"></script>
 <script>
+   const showOtherCancellationReasons = () => {
+        ConfirmationModal.open('Sonstige Kündigungsgründe', {{cancellations_other_reasons|safe}}.map((reason) => "<li>" + reason + "</li>").join(''))
+   }
+
   const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
 
   new Chart(document.getElementById('product-capacity-chart'), {
@@ -408,7 +412,9 @@
             stacked: true,
           },
           y: {
-            stacked: true
+            stacked: true,
+             min: 0,
+            max: 100
           }
         },
         plugins: {
@@ -440,57 +446,29 @@
     },
     options: {
         responsive: true,
-        scales: {
-          x: {
-            stacked: true,
-          },
-          y: {
-            stacked: true
-          }
-        },
   }});
+
+  new Chart(document.getElementById('cancellation-reason-chart'), {
+    type:'bar',
+    data: {
+      labels: {{cancellation_reason_labels | safe}},
+      datasets: [{
+          label: "Kündigungsgrund %",
+          data: {{cancellation_reason_data | safe}},
+          backgroundColor: COLORS
+      }]
+    },
+  });
 
   new Chart(document.getElementById('harvest-share-variants-chart'), {
     type: 'doughnut',
     data: {
       labels: {{harvest_share_variants_labels | safe}},
       datasets: [{
-        label: '# Anteile pro Variante',
         data: {{ harvest_share_variants_data | safe}},
-        borderWidth: 1,
-        backgroundColor: COLORS
       }]
     }
   });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 </script>
 {% endblock %}

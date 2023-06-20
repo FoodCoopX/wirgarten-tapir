@@ -30,8 +30,8 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     get_or_create_mandate_ref,
-    send_order_confirmation,
     change_pickup_location,
+    send_contract_change_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
@@ -42,6 +42,7 @@ from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_free_product_capacity,
     get_current_growing_period,
+    is_harvest_shares_available,
 )
 from tapir.wirgarten.utils import format_date
 
@@ -136,9 +137,14 @@ class HarvestShareForm(forms.Form):
                 end_date__gte=self.start_date,
             ).order_by("start_date")
 
+            available_growing_periods = []
+            for period in growing_periods:
+                if is_harvest_shares_available(period.start_date):
+                    available_growing_periods.append(period)
+
             self.solidarity_total = []
             self.free_capacity = []
-            for period in growing_periods:
+            for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
                 solidarity_total = f"{get_solidarity_total(start_date)}".replace(
                     ",", "."
@@ -152,7 +158,9 @@ class HarvestShareForm(forms.Form):
                 self.free_capacity.append(free_capacity)
 
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=growing_periods,
+                queryset=growing_periods.filter(
+                    id__in=[x.id for x in available_growing_periods]
+                ),
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
@@ -179,7 +187,7 @@ class HarvestShareForm(forms.Form):
                 required=False,
                 max_value=10,
                 min_value=0,
-                initial=0 if prod.name.lower() != "m" else 1,
+                initial=0,
                 label=_(f"{prod.name}-Ernteanteile"),
                 help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[prod.id]),
             )
@@ -207,11 +215,41 @@ class HarvestShareForm(forms.Form):
 
         if self.member_id:
             member = Member.objects.get(id=self.member_id)
-            subs = get_active_subscriptions_grouped_by_product_type(member)
+            subs = get_active_subscriptions_grouped_by_product_type(
+                member, self.start_date
+            )
+
             product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
             new_sub_dummy = Subscription(
                 quantity=2, product=Product.objects.get(type=product_type, base=True)
             )
+
+            sub_variants = {}
+            if product_type.name in subs:
+                for sub in subs[product_type.name]:
+                    sub_variants[sub.product.name.lower()] = {
+                        "quantity": sub.quantity,
+                        "solidarity_price": sub.solidarity_price,
+                        "solidarity_price_absolute": sub.solidarity_price_absolute,
+                    }
+
+                for key, field in self.fields.items():
+                    if (
+                        key.startswith(HARVEST_SHARE_FIELD_PREFIX)
+                        and key.replace(HARVEST_SHARE_FIELD_PREFIX, "") in sub_variants
+                    ):
+                        field.initial = sub_variants[
+                            key.replace(HARVEST_SHARE_FIELD_PREFIX, "")
+                        ]["quantity"]
+                    elif key == "solidarity_price_harvest_shares":
+                        field.initial = list(sub_variants.values())[0][
+                            "solidarity_price"
+                        ]  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
+                    elif key == "solidarity_price_absolute_harvest_shares":
+                        field.initial = list(sub_variants.values())[0][
+                            "solidarity_price_absolute"
+                        ]
+
             subs[product_type.name] = (
                 [new_sub_dummy]
                 if product_type.name not in subs
@@ -250,13 +288,14 @@ class HarvestShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(
-        self, member_id, mandate_ref: MandateReference = None, send_email: bool = False
-    ):
+    def save(self, mandate_ref: MandateReference = None, send_email: bool = False):
+        if not self.member_id:
+            return
+
         product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
 
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id, False)
+            mandate_ref = get_or_create_mandate_ref(self.member_id)
 
         now = timezone.now()
 
@@ -265,6 +304,19 @@ class HarvestShareForm(forms.Form):
             self.growing_period = self.cleaned_data.get(
                 "growing_period", get_current_growing_period()
             )
+
+        subs = get_active_subscriptions_grouped_by_product_type(
+            self.member_id, self.start_date
+        )
+        if product_type.name in subs:
+            for sub in subs[product_type.name]:
+                sub.end_date = self.start_date - relativedelta(days=1)
+                if (
+                    sub.start_date > sub.end_date
+                ):  # change was done before the contract started, so we can delete the subscription
+                    sub.delete()
+                else:
+                    sub.save()
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -293,7 +345,7 @@ class HarvestShareForm(forms.Form):
                 )
 
                 sub = Subscription.objects.create(
-                    member_id=member_id,
+                    member_id=self.member_id,
                     product=product,
                     period=self.growing_period,
                     quantity=quantity,
@@ -302,6 +354,7 @@ class HarvestShareForm(forms.Form):
                     mandate_ref=mandate_ref,
                     consent_ts=now,
                     withdrawal_consent_ts=timezone.now(),
+                    trial_disabled=True,
                     **solidarity_options,
                 )
 
@@ -310,11 +363,11 @@ class HarvestShareForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
-            change_pickup_location(member_id, new_pickup_location, change_date)
+            change_pickup_location(self.member_id, new_pickup_location, change_date)
 
         if send_email:
-            member = Member.objects.get(id=member_id)
-            send_order_confirmation(member, self.subs)
+            member = Member.objects.get(id=self.member_id)
+            send_contract_change_confirmation(member, self.subs)
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():

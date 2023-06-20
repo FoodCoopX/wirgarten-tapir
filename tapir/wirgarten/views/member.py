@@ -67,6 +67,8 @@ from tapir.wirgarten.forms.member.forms import (
     TrialCancellationForm,
     SubscriptionRenewalForm,
     CoopShareCancelForm,
+    NonTrialCancellationForm,
+    CancellationReasonForm,
 )
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceForm,
@@ -91,6 +93,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     SubscriptionChangeLogEntry,
     MemberPickupLocation,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -110,7 +113,6 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    is_mandate_ref_for_coop_shares,
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
@@ -360,7 +362,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                         output_field=models.FloatField(),
                     )
                 )
-                .values("monthly_payment")[:1]
+                .values("member_id")
+                .annotate(total=Sum("monthly_payment"))
+                .values("total"),
+                output_field=models.FloatField(),
             ),
         )
 
@@ -760,25 +765,27 @@ def generate_future_payments(member_id, prev_payments: list, limit: int = None):
     return payments
 
 
-def get_subs_or_shares_for_mandate_ref(
+def get_subs_and_shares_for_mandate_ref(
     mandate_ref: MandateReference, reference_date: date
 ):
-    if is_mandate_ref_for_coop_shares(mandate_ref):
-        return list(
-            map(
-                lambda x: {
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                    "total_price": x.total_price,
+    result = list(
+        map(
+            lambda x: {
+                "quantity": x.quantity,
+                "product": {
+                    "name": _("Genossenschaftsanteile"),
+                    "price": x.share_price,
                 },
-                CoopShareTransaction.objects.filter(member_id=mandate_ref.member.id),
-            )
+                "total_price": x.total_price,
+            },
+            CoopShareTransaction.objects.filter(
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                member_id=mandate_ref.member.id,
+            ),
         )
-    else:
-        return list(
+    )
+    result.extend(
+        list(
             map(
                 lambda x: sub_to_dict(x),
                 Subscription.objects.filter(
@@ -788,6 +795,8 @@ def get_subs_or_shares_for_mandate_ref(
                 ),
             )
         )
+    )
+    return result
 
 
 def sub_to_dict(sub):
@@ -808,12 +817,14 @@ def sub_to_dict(sub):
 
 
 def payment_to_dict(payment: Payment) -> dict:
-    subs = get_subs_or_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
+    subs = get_subs_and_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
     return {
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
-        "calculated_amount": round(sum(map(lambda x: x["total_price"], subs)), 2),
+        "calculated_amount": round(
+            sum(map(lambda x: float(x["total_price"]), subs)), 2
+        ),
         "subs": list(map(sub_to_dict, subs)),
         "status": payment.status,
         "edited": payment.edited,
@@ -1233,10 +1244,10 @@ def get_add_harvest_shares_form(request, **kwargs):
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
-    kwargs["choose_growing_period"] = True
-    kwargs["member_id"] = member_id
-
-    if not is_harvest_shares_available():
+    next_period = get_next_growing_period()
+    if not is_harvest_shares_available() and not is_harvest_shares_available(
+        next_period.start_date
+    ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
         wl_kwargs = kwargs.copy()
         wl_kwargs["initial"] = {
@@ -1249,7 +1260,7 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: HarvestShareForm):
-        form.save(member_id=member_id, send_email=True)
+        form.save(send_email=True)
 
         SubscriptionChangeLogEntry().populate(
             actor=request.user,
@@ -1258,6 +1269,8 @@ def get_add_harvest_shares_form(request, **kwargs):
             subscriptions=form.subs,
         ).save()
 
+    kwargs["member_id"] = member_id
+    kwargs["choose_growing_period"] = True
     return get_form_modal(
         request=request,
         form=HarvestShareForm,
@@ -1391,7 +1404,7 @@ def get_cancel_trial_form(request, **kwargs):
                 subscriptions=subs_to_cancel,
             ).save()
 
-        form.save(skip_emails=member_id != request.user.id)
+        return form.save(skip_emails=member_id != request.user.id)
 
     return get_form_modal(
         request=request,
@@ -1401,6 +1414,66 @@ def get_cancel_trial_form(request, **kwargs):
         + "?cancelled="
         + format_date(x),
         **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+def get_cancel_non_trial_form(request, **kwargs):
+    member_id = kwargs["pk"]
+    check_permission_or_self(member_id, request)
+
+    @transaction.atomic
+    def save(form: NonTrialCancellationForm):
+        subs_to_cancel = form.get_subs_to_cancel()
+        if len(subs_to_cancel) > 0:
+            SubscriptionChangeLogEntry().populate(
+                actor=request.user,
+                user=form.member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=subs_to_cancel,
+            ).save()
+
+        form.save()
+
+    return get_form_modal(
+        request=request,
+        form=NonTrialCancellationForm,
+        handler=save,
+        redirect_url_resolver=lambda x: member_detail_url(member_id)
+        + "?cancelled="
+        + format_date(x),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+def get_cancellation_reason_form(request, **kwargs):
+    member_id = kwargs["pk"]
+    check_permission_or_self(member_id, request)
+
+    @transaction.atomic
+    def save(form: CancellationReasonForm):
+        print(form.cleaned_data)
+        for reason in form.cleaned_data["reason"]:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member_id=member_id, reason=reason, custom=False
+            )
+        if form.cleaned_data["custom_reason"]:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member_id=member_id,
+                reason=form.cleaned_data["custom_reason"],
+                custom=True,
+            )
+
+    return get_form_modal(
+        request=request,
+        form=CancellationReasonForm,
+        handler=save,
+        redirect_url_resolver=lambda x: member_detail_url(member_id),
     )
 
 
