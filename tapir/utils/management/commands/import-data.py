@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management import BaseCommand
 
 from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, GrowingPeriod, \
-    Product, PickupLocation, MandateReference
+    Product, PickupLocation, MandateReference, MemberPickupLocation
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                     # identify pickup location ID
                     try:
                         if row["Abholort"] != '':
-                            picloc = PickupLocation.objects.get(name=row["Abholort"]).id
+                            picloc = PickupLocation.objects.get(name=row["Abholort"])
                         else:
                             picloc = None
                     except ObjectDoesNotExist as e:
@@ -65,10 +65,17 @@ class Command(BaseCommand):
                         account_owner=row["Kontoinhaber"],
                         sepa_consent=row["consent_sepa"],  # + "T12:00:00+0200",
                         privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
-                        pickup_location_id=picloc
+                        # pickup_location=picloc
+                    )
+                    mp = MemberPickupLocation(
+                        member=m,
+                        pickup_location=picloc,
+                        valid_from=row["AO_gueltig_ab"]
                     )
                     try:
                         m.save(bypass_keycloak=False)
+                        if picloc is not None:
+                            mp.save()
                     except Exception as e:
                         print(e)
                         continue
