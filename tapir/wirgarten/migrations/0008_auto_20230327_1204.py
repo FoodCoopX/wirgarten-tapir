@@ -15,12 +15,6 @@ class Migration(migrations.Migration):
             name="base",
             field=models.BooleanField(default=False),
         ),
-        migrations.AddField(
-            model_name="producttype",
-            name="order_no",
-            field=models.SmallIntegerField(default=0),
-            preserve_default=False,
-        ),
         migrations.AddIndex(
             model_name="productcapacity",
             index=models.Index(fields=["period"], name="idx_productcapacity_period"),

@@ -81,6 +81,7 @@
         </div>
     </div>
 
+    {% if next_capacity_labels %}
     <div class="dashboard-section-heading">
         <hr/>
         Daten für die kommende Saison/Vertragslaufzeit
@@ -93,6 +94,7 @@
             <canvas height="10000px" width="10000px" id="next-period-product-capacity-chart"></canvas>
         </div>
     </div>
+    {% endif %}
 
 
     <div class="dashboard-section-heading">
@@ -333,7 +335,7 @@
     }
   });
 
-
+  {% if next_capacity_labels %}
   new Chart(document.getElementById('next-period-product-capacity-chart'), {
     type: 'bar',
     data: {
@@ -392,6 +394,7 @@
         },
     }
   });
+  {% endif %}
 
   new Chart(document.getElementById('traffic-source-chart'), {
     type: 'bar',

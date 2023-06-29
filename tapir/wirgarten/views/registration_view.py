@@ -292,6 +292,7 @@ class RegistrationWizardView(CookieWizardView):
 
         return initial
 
+    @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = save_member(form_dict)
 
@@ -310,6 +311,7 @@ class RegistrationWizardView(CookieWizardView):
             mandate_ref = create_mandate_ref(member)
             form_dict[STEP_HARVEST_SHARES].save(
                 mandate_ref=mandate_ref,
+                member_id=member.id,
             )
 
             if self.has_step(STEP_ADDITIONAL_SHARES):
