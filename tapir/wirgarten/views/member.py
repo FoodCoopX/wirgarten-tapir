@@ -1260,7 +1260,13 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: HarvestShareForm):
-        form.save(send_email=True)
+        if get_future_subscriptions().filter(member_id=member_id).exists():
+            form.save(send_email=True)
+        else:
+            form.save(send_email=False)
+            send_order_confirmation(
+                member, get_future_subscriptions().filter(member=member)
+            )
 
         SubscriptionChangeLogEntry().populate(
             actor=request.user,

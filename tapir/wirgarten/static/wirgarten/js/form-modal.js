@@ -59,6 +59,7 @@ const messageEvent = eventMethod === "attachEvent"
             // Adjusting the iframe height onload event
             frame.onload = () => {
                 setFrameSize();
+                // TODO: detect and show server errors
                 showLoadingIndicator(false);
             }
 

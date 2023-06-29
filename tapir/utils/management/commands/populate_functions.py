@@ -18,6 +18,7 @@ from tapir.wirgarten.models import (
     MandateReference,
     Payment,
     CoopShareTransaction,
+    QuestionaireTrafficSourceResponse,
     WaitingListEntry,
 )
 from tapir.log.models import LogEntry
@@ -108,11 +109,11 @@ def create_subscriptions(wirgarten_user):
     product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
 
     today = date.today()
-    growing_period = GrowingPeriod.objects.get(
-        start_date__lte=today, end_date__gte=today
-    )
     mandate_ref = get_or_create_mandate_ref(wirgarten_user)
     start_date = get_next_contract_start_date(today)
+    growing_period = GrowingPeriod.objects.get(
+        start_date__lte=start_date, end_date__gte=start_date
+    )
     end_date = growing_period.end_date
 
     solidarity_price = 0.05
@@ -178,6 +179,7 @@ def clear_data():
     Subscription.objects.all().delete()
     CoopShareTransaction.objects.all().delete()
     WaitingListEntry.objects.all().delete()
+    QuestionaireTrafficSourceResponse.objects.all().delete()
     Payment.objects.all().delete()
     MandateReference.objects.all().delete()
     EmailChangeRequest.objects.all().delete()
