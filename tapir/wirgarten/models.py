@@ -244,6 +244,16 @@ class Member(TapirUser):
         entry_date = self.coop_entry_date
         return entry_date is not None and entry_date > datetime.date.today()
 
+    @property
+    def has_trial_contracts(self):
+        from tapir.wirgarten.service.products import get_future_subscriptions
+        subs = get_future_subscriptions().filter(member_id=self.id)
+        today = datetime.date.today()
+        for sub in subs:
+            if today < sub.trial_end_date:
+                return True
+        return False
+
     def coop_shares_total_value(self):
         today = datetime.date.today()
         return (
