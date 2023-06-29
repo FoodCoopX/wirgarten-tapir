@@ -11,6 +11,7 @@ from tapir.accounts.models import TapirUser, EmailChangeRequest
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
+    MemberPickupLocation,
     Product,
     ProductType,
     GrowingPeriod,
@@ -51,6 +52,8 @@ def populate_users():
     print(f"Creating {USER_COUNT} users, this may take a while")
     random.seed("wirgarten")
 
+    today=date.today()
+
     parsed_users = get_test_users()
     for index, parsed_user in enumerate(parsed_users[:USER_COUNT]):
         if (index + 1) % 10 == 0:
@@ -74,12 +77,17 @@ def populate_users():
                 sepa_consent=json_user.date_joined,
                 privacy_consent=json_user.date_joined,
                 withdrawal_consent=json_user.date_joined,
-                pickup_location=pickup_locations[
-                    random.randint(0, len(pickup_locations) - 1)
-                ],
             )
             copy_user_info(json_user, wirgarten_user)
             wirgarten_user.save(initial_password=wirgarten_user.email.split("@")[0])
+
+            MemberPickupLocation.objects.create(
+                member_id=wirgarten_user.id,
+                pickup_location_id=pickup_locations[
+                    random.randint(0, len(pickup_locations) - 1)
+                ].id,
+                valid_from=today
+            )
 
             min_shares = create_subscriptions(wirgarten_user)
             create_shareownership(wirgarten_user, min_shares)

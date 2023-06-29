@@ -96,7 +96,7 @@ class SummaryForm(forms.Form):
         ).replace("+", "+ ")
 
         if "pickup_location" in initial:
-            self.pickup_location = """{val.name}<br/><small>{val.street}<br/>{val.postcode} {val.city}<br/>({val.info})</small>""".format(
+            self.pickup_location = """{val.name}<br/><small>{val.street}<br/>{val.postcode} {val.city}<br/><br/>{val.opening_times_html}</small>""".format(
                 val=initial["pickup_location"]["pickup_location"]
             )  # get pickup location text
 

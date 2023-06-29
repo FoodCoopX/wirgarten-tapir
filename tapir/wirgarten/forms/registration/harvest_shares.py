@@ -288,14 +288,17 @@ class HarvestShareForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(self, mandate_ref: MandateReference = None, send_email: bool = False):
-        if not self.member_id:
-            return
-
+    def save(
+        self,
+        mandate_ref: MandateReference = None,
+        send_email: bool = False,
+        member_id: str = None,
+    ):
+        member_id = member_id or self.member_id
         product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
 
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(self.member_id)
+            mandate_ref = get_or_create_mandate_ref(member_id)
 
         now = timezone.now()
 
@@ -306,7 +309,7 @@ class HarvestShareForm(forms.Form):
             )
 
         subs = get_active_subscriptions_grouped_by_product_type(
-            self.member_id, self.start_date
+            member_id, self.start_date
         )
         if product_type.name in subs:
             for sub in subs[product_type.name]:
@@ -345,7 +348,7 @@ class HarvestShareForm(forms.Form):
                 )
 
                 sub = Subscription.objects.create(
-                    member_id=self.member_id,
+                    member_id=member_id,
                     product=product,
                     period=self.growing_period,
                     quantity=quantity,
@@ -363,10 +366,10 @@ class HarvestShareForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
-            change_pickup_location(self.member_id, new_pickup_location, change_date)
+            change_pickup_location(member_id, new_pickup_location, change_date)
 
         if send_email:
-            member = Member.objects.get(id=self.member_id)
+            member = Member.objects.get(id=member_id)
             send_contract_change_confirmation(member, self.subs)
 
     def has_harvest_shares(self):

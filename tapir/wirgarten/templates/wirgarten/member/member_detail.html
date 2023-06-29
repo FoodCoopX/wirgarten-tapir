@@ -182,7 +182,7 @@
             <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
                 <div class="card-body" style="text-align: center;">
                     <div class="contract-tile-number">
-                        <strong>{{ next_payment.amount }}</strong> €
+                        <strong>{{ next_payment.amount|format_currency }}</strong> €
                     </div>
                     <strong>Nächste Zahlung</strong><br/>
                     <small>

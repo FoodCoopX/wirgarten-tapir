@@ -49,10 +49,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             name=ProductTypes.HARVEST_SHARES
         )
 
+        next_growing_period=get_next_growing_period()
         self.add_capacity_chart_context(context)
-        self.add_capacity_chart_context(
-            context, get_next_growing_period().start_date, "next"
-        )
+        if(next_growing_period):
+            self.add_capacity_chart_context(
+                context, next_growing_period.start_date, "next"
+            )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
         self.add_cancellation_reasons_chart_context(context)
