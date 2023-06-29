@@ -32,13 +32,14 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
         }
     }
     const warningCannotReduceElem = document.getElementById("warning-cannot-reduce")
+    let totalWithoutSoli = calculateTotalWithoutSoliPrice()
     const initDependentFields = () => {
         while(calculateTotalWithoutSoliPrice() > capacity_total){
             event.target.value--;
         }
-
+        
        resultElem.innerText = calculateTotal().toFixed(2);
-       const totalWithoutSoli = calculateTotalWithoutSoliPrice()
+       totalWithoutSoli = calculateTotalWithoutSoliPrice()
        if (soliElem.value === 'custom'){
            customSoliElem.disabled = false
            customSoliElem.required = true

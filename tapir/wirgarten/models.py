@@ -250,7 +250,7 @@ class Member(TapirUser):
         subs = get_future_subscriptions().filter(member_id=self.id)
         today = datetime.date.today()
         for sub in subs:
-            if today < sub.trial_end_date:
+            if today < sub.trial_end_date and sub.cancellation_ts is None:
                 return True
         return False
 

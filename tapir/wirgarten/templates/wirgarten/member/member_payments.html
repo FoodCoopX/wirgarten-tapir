@@ -73,6 +73,8 @@
                                 {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                 ({% if sub.solidarity_price > 0%}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
+                                {% elif sub.solidarity_price_absolute > 0 %}
+                                (+{{sub.solidarity_price_absolute|format_currency}} €)
                                 {% endif %}<br/>
                                 {% endfor %}
                             </small>

@@ -451,7 +451,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             else:
                 break
 
-        next_payments = generate_future_payments(self.object.id, prev_payments, 1)
+        next_payments = generate_future_payments(self.object.id, 1)
 
         if len(next_payments) > 0:
             if "next_payment" not in context or (
@@ -724,8 +724,7 @@ def cancel_contract_at_period_end(request, **kwargs):
     )
 
 
-def generate_future_payments(member_id, prev_payments: list, limit: int = None):
-    prev_payments = set(map(lambda p: (p["mandate_ref"], p["due_date"]), prev_payments))
+def generate_future_payments(member_id, limit: int = None):
     subs = get_future_subscriptions().filter(member_id=member_id)
 
     payments = []
@@ -738,65 +737,29 @@ def generate_future_payments(member_id, prev_payments: list, limit: int = None):
             start_date__lte=next_payment_date, end_date__gte=next_payment_date
         )
         if active_subs.count() > 0:
-
             groups = itertools.groupby(active_subs, lambda v: v.mandate_ref)
 
             for mandate_ref, values in groups:
                 values = list(values)
                 due_date = next_payment_date
 
-                if (mandate_ref, due_date) not in prev_payments:
-                    amount = get_total_price_for_subs(values)
-                    payments.append(
-                        {
-                            "due_date": due_date,
-                            "mandate_ref": mandate_ref,
-                            "amount": amount,
-                            "calculated_amount": amount,
-                            "subs": list(map(sub_to_dict, active_subs)),
-                            "status": Payment.PaymentStatus.DUE,
-                            "edited": False,
-                            "upcoming": True,
-                        }
-                    )
+                amount = get_total_price_for_subs(values)
+                payments.append(
+                    {
+                        "due_date": due_date,
+                        "mandate_ref": mandate_ref,
+                        "amount": amount,
+                        "calculated_amount": amount,
+                        "subs": list(map(sub_to_dict, active_subs)),
+                        "status": Payment.PaymentStatus.DUE,
+                        "edited": False,
+                        "upcoming": True,
+                    }
+                )
 
         next_payment_date += relativedelta(months=1)
 
     return payments
-
-
-def get_subs_and_shares_for_mandate_ref(
-    mandate_ref: MandateReference, reference_date: date
-):
-    result = list(
-        map(
-            lambda x: {
-                "quantity": x.quantity,
-                "product": {
-                    "name": _("Genossenschaftsanteile"),
-                    "price": x.share_price,
-                },
-                "total_price": x.total_price,
-            },
-            CoopShareTransaction.objects.filter(
-                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                member_id=mandate_ref.member.id,
-            ),
-        )
-    )
-    result.extend(
-        list(
-            map(
-                lambda x: sub_to_dict(x),
-                Subscription.objects.filter(
-                    mandate_ref=mandate_ref,
-                    start_date__lte=reference_date,
-                    end_date__gt=reference_date,
-                ),
-            )
-        )
-    )
-    return result
 
 
 def sub_to_dict(sub):
@@ -812,13 +775,43 @@ def sub_to_dict(sub):
             "price": price,
         },
         "solidarity_price": sub.solidarity_price,
+        "solidarity_price_absolute": sub.solidarity_price_absolute,
         "total_price": sub.total_price,
     }
 
 
 def payment_to_dict(payment: Payment) -> dict:
-    subs = get_subs_and_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
+    subs = (
+        list(
+            map(
+                lambda x: {
+                    "quantity": x.quantity,
+                    "product": {
+                        "name": _("Genossenschaftsanteile"),
+                        "price": x.share_price,
+                    },
+                    "total_price": x.total_price,
+                },
+                CoopShareTransaction.objects.filter(
+                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                    member_id=payment.mandate_ref.member.id,
+                ),
+            )
+        )
+        if payment.type == "Genossenschaftsanteile"
+        else list(
+            map(
+                lambda x: sub_to_dict(x),
+                Subscription.objects.filter(
+                    mandate_ref=payment.mandate_ref,
+                    start_date__lte=payment.due_date,
+                    end_date__gt=payment.due_date,
+                ),
+            )
+        )
+    )
     return {
+        "id": payment.id,
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
@@ -860,11 +853,11 @@ class MemberPaymentsView(
 
     def get_payments_row(self, member_id):
         prev_payments = get_previous_payments(member_id)
-        future_payments = generate_future_payments(member_id, prev_payments)
+        future_payments = generate_future_payments(member_id)
 
         return sorted(
             prev_payments + future_payments,
-            key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
+            key=lambda x: x["due_date"].isoformat() + x.get("id", ""),
         )
 
 
