@@ -423,11 +423,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             .exists()
         )
 
+        # FIXME: we need to get rid of the hardcoded product types...
         context["available_product_types"] = {
             ProductTypes.HARVEST_SHARES: is_harvest_shares_available(next_month),
             ProductTypes.CHICKEN_SHARES: additional_products_available
             and is_chicken_shares_available(next_month),
-            ProductTypes.BESTELLCOOP: additional_products_available
+            ProductTypes.BESTELLCOOP: ProductTypes.BESTELLCOOP
+            in context["subscriptions"]
+            and additional_products_available
             and (
                 not (
                     len(context["subscriptions"][ProductTypes.BESTELLCOOP]) > 0
@@ -1586,8 +1589,10 @@ class SubscriptionListFilter(FilterSet):
         .order_by("last_name")
         .order_by("-created_at"),
     )
-    member__pickup_location = ModelChoiceFilter(
-        label=_("Abholort"), queryset=PickupLocation.objects.all().order_by("name")
+    pickup_location = ModelChoiceFilter(
+        label=_("Abholort"),
+        queryset=PickupLocation.objects.all().order_by("name"),
+        method="filter_pickup_location",
     )
     product__type = ModelChoiceFilter(
         label=_("Vertragsart"),
@@ -1611,6 +1616,25 @@ class SubscriptionListFilter(FilterSet):
         empty_label="",
         secondary_ordering="member_id",
     )
+
+    def filter_pickup_location(self, queryset, name, value):
+        if value:
+            # Subquery to get the latest MemberPickupLocation id for each Member
+            latest_pickup_location_subquery = Subquery(
+                MemberPickupLocation.objects.filter(
+                    member_id=OuterRef("member_id")  # references Member.id
+                )
+                .order_by("-valid_from")[:1]
+                .values("id")
+            )
+
+            # Filter queryset where MemberPickupLocation.id is in the subquery result and the pickup_location matches the value
+            return queryset.filter(
+                member__memberpickuplocation__id=latest_pickup_location_subquery,
+                member__memberpickuplocation__pickup_location_id=value,
+            )
+        else:
+            return queryset.all()
 
     class Meta:
         model = Subscription

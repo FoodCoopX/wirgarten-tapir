@@ -92,8 +92,7 @@
                             <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span><br/>
                             <div style="margin-top:0.5em; line-height:1.1em">
                                 {% for sub in val %}
-                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A"
-                                      {% endif %}>
+                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A"{% endif %}>
                                     <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                 ({% if sub.solidarity_price > 0 %}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
