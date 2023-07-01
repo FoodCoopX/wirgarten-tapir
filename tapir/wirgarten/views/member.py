@@ -1256,7 +1256,17 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: HarvestShareForm):
-        if get_future_subscriptions().filter(member_id=member_id).exists():
+        if (
+            get_future_subscriptions()
+            .filter(
+                cancellation_ts__isnull=True,
+                member_id=member_id,
+                end_date__gt=max(form.start_date, form.growing_period.start_date)
+                if hasattr(form,"growing_period")
+                else form.start_date,
+            )
+            .exists()
+        ):
             form.save(send_email=True)
         else:
             form.save(send_email=False)
