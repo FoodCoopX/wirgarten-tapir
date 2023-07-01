@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, Sum, DecimalField
+from django.db.models import Subquery, OuterRef, Sum, DecimalField, F
 from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import NO_DELIVERY
@@ -39,7 +39,9 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
 
 
 def get_current_capacity(capability, reference_date=date.today()):
-    if type(capability) is not dict:
+    if (
+        type(capability) is not dict
+    ):  # FIXME: this is dirty, check why this was needed and fix it
         capability = capability.__dict__
 
     latest_pickup_locations = MemberPickupLocation.objects.filter(
@@ -49,6 +51,7 @@ def get_current_capacity(capability, reference_date=date.today()):
     ).order_by("-valid_from")
 
     active_subscriptions = get_future_subscriptions().filter(
+        end_date__gt=reference_date + relativedelta(day=1, months=1),
         member_id=Subquery(latest_pickup_locations.values("member_id")[:1]),
         product__type_id=capability["product_type_id"],
     )
@@ -64,8 +67,9 @@ def get_current_capacity(capability, reference_date=date.today()):
         latest_price=Subquery(
             latest_product_prices.values("price")[:1],
             output_field=DecimalField(decimal_places=2),
-        )
-    ).aggregate(total_price=Sum("latest_price"))["total_price"]
+        ),
+        total_price_per_subscription=F("latest_price") * F("quantity"),
+    ).aggregate(total_price=Sum("total_price_per_subscription"))["total_price"]
 
     return float(total_price) if total_price else 0
 
@@ -81,13 +85,14 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
-        current_capa = ceil(
+        current_capa = round(
             get_current_capacity(capa)
             / float(
                 get_product_price(
                     Product.objects.get(type_id=capa["product_type_id"], base=True)
                 ).price
-            )
+            ),
+            2,
         )
         return {
             "name": capa["product_type__name"],
