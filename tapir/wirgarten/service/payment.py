@@ -54,7 +54,7 @@ def get_next_payment_date(reference_date: date = date.today()):
     return next_payment
 
 
-def generate_new_payments(due_date: date) -> [Payment]:
+def generate_new_payments(due_date: date) -> list[Payment]:
     """
     Generates payments for the given due date. If a payment for this date and mandate_ref is already persisted, it will be skipped.
     The generated payments are not persisted!
@@ -120,7 +120,7 @@ def get_active_subscriptions_grouped_by_product_type(
     return subscriptions
 
 
-def get_existing_payments(due_date: date) -> [Payment]:
+def get_existing_payments(due_date: date) -> list[Payment]:
     """
     Gets already persisted payments for the given due date
 
@@ -133,7 +133,7 @@ def get_existing_payments(due_date: date) -> [Payment]:
     )
 
 
-def get_total_payment_amount(due_date: date) -> [Payment]:
+def get_total_payment_amount(due_date: date) -> list[Payment]:
     """
     Returns the total € amount for all due payments on this date.
 

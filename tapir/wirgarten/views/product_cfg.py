@@ -55,7 +55,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
             today = datetime.date.today()
             if period.end_date < today:
                 return "old"
-            elif period.start_date < today and period.end_date > today:
+            elif period.start_date <= today and period.end_date >= today:
                 return "active"
             elif period.start_date > today:
                 return "upcoming"

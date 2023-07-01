@@ -16,7 +16,6 @@ from tapir.wirgarten.models import (
     ProductType,
     PaymentTransaction,
     Product,
-    PickupLocation,
     Member,
 )
 from tapir.wirgarten.parameters import Parameter
@@ -208,7 +207,6 @@ def send_email_member_contract_end_reminder(member_id):
         .filter(member=member, start_date__gt=today)
         .exists()
     ):
-
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),

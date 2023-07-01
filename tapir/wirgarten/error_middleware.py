@@ -5,11 +5,12 @@ from datetime import datetime
 
 from django.http import HttpResponseServerError
 from django.views import debug
+from django.utils.deprecation import MiddlewareMixin
 
 from tapir import settings
 
 
-class GlobalServerErrorHandlerMiddleware:
+class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
     def __init__(self, get_response):
         self.get_response = get_response
 
