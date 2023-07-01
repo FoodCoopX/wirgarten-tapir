@@ -1,4 +1,5 @@
 import base64
+from collections import defaultdict
 import csv
 import itertools
 import json
@@ -454,7 +455,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             else:
                 break
 
-        next_payments = generate_future_payments(self.object.id, 1)
+        next_payments = generate_future_payments(self.object.id, 1).values()[0]
 
         if len(next_payments) > 0:
             if "next_payment" not in context or (
@@ -730,12 +731,13 @@ def cancel_contract_at_period_end(request, **kwargs):
 def generate_future_payments(member_id, limit: int = None):
     subs = get_future_subscriptions().filter(member_id=member_id)
 
-    payments = []
+    payments_per_due_date = {}
     next_payment_date = get_next_payment_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
     while next_payment_date <= last_growing_period.end_date and (
-        limit is None or len(payments) < limit
+        limit is None or len(payments_per_due_date) < limit
     ):
+        payments_per_due_date[next_payment_date] = []
         active_subs = subs.filter(
             start_date__lte=next_payment_date, end_date__gte=next_payment_date
         )
@@ -747,7 +749,7 @@ def generate_future_payments(member_id, limit: int = None):
                 due_date = next_payment_date
 
                 amount = get_total_price_for_subs(values)
-                payments.append(
+                payments_per_due_date[next_payment_date].append(
                     {
                         "due_date": due_date,
                         "mandate_ref": mandate_ref,
@@ -762,7 +764,7 @@ def generate_future_payments(member_id, limit: int = None):
 
         next_payment_date += relativedelta(months=1)
 
-    return payments
+    return payments_per_due_date
 
 
 def sub_to_dict(sub):
@@ -815,6 +817,7 @@ def payment_to_dict(payment: Payment) -> dict:
     )
     return {
         "id": payment.id,
+        "type": payment.type,
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
@@ -828,15 +831,17 @@ def payment_to_dict(payment: Payment) -> dict:
     }
 
 
-def get_previous_payments(member_id) -> [dict]:
-    return list(
-        map(
-            lambda x: payment_to_dict(x),
-            Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
-                "-due_date"
-            ),
-        )
+def get_previous_payments(member_id) -> dict:
+    payments_dict = defaultdict(list)
+    payments = Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
+        "-due_date"
     )
+
+    for payment in payments:
+        payment_dict = payment_to_dict(payment)
+        payments_dict[payment_dict["due_date"]].append(payment_dict)
+
+    return dict(payments_dict)
 
 
 class MemberPaymentsView(
@@ -858,8 +863,21 @@ class MemberPaymentsView(
         prev_payments = get_previous_payments(member_id)
         future_payments = generate_future_payments(member_id)
 
+        for date, payments in future_payments.items():
+            if date in prev_payments:
+                prev_payments[date].extend(
+                    [
+                        p
+                        for p in payments
+                        if p.get("type", None)
+                        not in map(lambda x: x.get("type", None), prev_payments[date])
+                    ]
+                )
+            else:
+                prev_payments[date] = payments
+
         return sorted(
-            prev_payments + future_payments,
+            [v for sublist in prev_payments.values() for v in sublist],
             key=lambda x: x["due_date"].isoformat() + x.get("id", ""),
         )
 
@@ -1262,7 +1280,7 @@ def get_add_harvest_shares_form(request, **kwargs):
                 cancellation_ts__isnull=True,
                 member_id=member_id,
                 end_date__gt=max(form.start_date, form.growing_period.start_date)
-                if hasattr(form,"growing_period")
+                if hasattr(form, "growing_period")
                 else form.start_date,
             )
             .exists()
