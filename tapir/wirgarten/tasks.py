@@ -220,8 +220,8 @@ def send_email_member_contract_end_reminder(member_id):
 
 @shared_task
 @transaction.atomic
-def export_payment_parts_csv():
-    due_date = datetime.today().replace(
+def export_payment_parts_csv(reference_date = datetime.today()):
+    due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
     existing_payments = get_existing_payments(due_date)
