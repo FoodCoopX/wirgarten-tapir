@@ -220,7 +220,7 @@ def send_email_member_contract_end_reminder(member_id):
 
 @shared_task
 @transaction.atomic
-def export_payment_parts_csv(reference_date = datetime.today()):
+def export_payment_parts_csv(reference_date = date.today()):
     due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
@@ -228,7 +228,7 @@ def export_payment_parts_csv(reference_date = datetime.today()):
     payments = Payment.objects.bulk_create(generate_new_payments(due_date))
     payments.extend(existing_payments)
 
-    payments.sort(key=lambda x: x.type)
+    payments.sort(key=lambda x: x.type if x.type else "")
     payments_grouped = {
         key: list(group)
         for key, group in itertools.groupby(payments, key=lambda x: x.type)

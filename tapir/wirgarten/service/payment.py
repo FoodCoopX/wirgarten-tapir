@@ -129,7 +129,7 @@ def get_existing_payments(due_date: date) -> list[Payment]:
     """
 
     return list(
-        Payment.objects.filter(transaction__isnull=True, due_date__lte=due_date)
+        Payment.objects.filter(transaction__isnull=True, due_date=due_date)
     )
 
 
