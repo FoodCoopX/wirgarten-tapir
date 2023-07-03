@@ -449,19 +449,22 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         prev_payments = get_previous_payments(self.object.pk)
         now = date.today()
-        for payment in prev_payments:
-            if payment["due_date"] >= now:
-                context["next_payment"] = payment
+        for due_date, payments in prev_payments.items():
+            if due_date >= now:
+                context["next_payment"] = payments[0]
             else:
                 break
 
-        next_payments = generate_future_payments(self.object.id, 1).values()[0]
+        next_payment = list(generate_future_payments(self.object.id, 1).values())[0]
+        if next_payment:
+            next_payment = next_payment[0]
 
-        if len(next_payments) > 0:
+        if next_payment:
+            print(next_payment, context["next_payment"])
             if "next_payment" not in context or (
-                next_payments[0]["due_date"] < context["next_payment"]["due_date"]
+                next_payment["due_date"] < context["next_payment"]["due_date"]
             ):
-                context["next_payment"] = next_payments[0]
+                context["next_payment"] = next_payment
 
         self.add_renewal_notice_context(context, next_month, today)
 
@@ -751,6 +754,7 @@ def generate_future_payments(member_id, limit: int = None):
                 amount = get_total_price_for_subs(values)
                 payments_per_due_date[next_payment_date].append(
                     {
+                        "type": "Ernteanteile",
                         "due_date": due_date,
                         "mandate_ref": mandate_ref,
                         "amount": amount,
@@ -815,6 +819,7 @@ def payment_to_dict(payment: Payment) -> dict:
             )
         )
     )
+
     return {
         "id": payment.id,
         "type": payment.type,
@@ -870,7 +875,9 @@ class MemberPaymentsView(
                         p
                         for p in payments
                         if p.get("type", None)
-                        not in map(lambda x: x.get("type", None), prev_payments[date])
+                        not in set(
+                            map(lambda x: x.get("type", None), prev_payments[date])
+                        )
                     ]
                 )
             else:
@@ -923,6 +930,10 @@ class MemberDeliveriesView(
 @permission_required(Permission.Payments.MANAGE)
 @csrf_protect
 def get_payment_amount_edit_form(request, **kwargs):
+    query_params = {k:v for k,v in map(lambda kv: kv.split("="),request.environ["QUERY_STRING"].split("&"))}
+    kwargs["initial_amount"] = float(query_params["amount"].replace(",","."))
+    payment_type = query_params["type"]
+
     @transaction.atomic
     def save_future_payment_change():
         def create_payment_edit_logentry(new_payment):
@@ -947,6 +958,7 @@ def get_payment_amount_edit_form(request, **kwargs):
 
         if not hasattr(form, "payment"):
             new_payment = Payment.objects.create(
+                type=payment_type,
                 due_date=datetime.strptime(form.payment_due_date, "%d.%m.%Y"),
                 amount=form.data["amount"],
                 mandate_ref_id=form.mandate_ref_id,

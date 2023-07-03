@@ -172,6 +172,7 @@ class PaymentAmountEditForm(Form):
     def __init__(self, *args, **kwargs):
         super(PaymentAmountEditForm, self).__init__(*args)
 
+        self.initial_amount = kwargs.get("initial_amount", 0.0)
         self.mandate_ref_id = kwargs["mandate_ref_id"].replace("~", "/")
         self.payment_due_date = kwargs["payment_due_date"]
 
@@ -181,7 +182,7 @@ class PaymentAmountEditForm(Form):
         )
 
         if len(payments) < 1:
-            initial = 0.00
+            initial = self.initial_amount
         elif len(payments) > 1:
             raise AssertionError("TOO MANY PAYMENTS FOUND!!")  # FIXME
         else:
