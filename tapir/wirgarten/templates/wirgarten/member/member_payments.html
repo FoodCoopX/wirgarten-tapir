@@ -85,7 +85,7 @@
                     <td>
                         {% if payment.upcoming %}
                         <button type="button"
-                                onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date|format_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}')"
+                                onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date|format_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}', '{{payment.type}}')"
                                 class="btn btn-outline-danger" data-bs-toggle="modal"
                                 data-bs-target="#adminEditAmountModal">
                             <span class="material-icons">edit</span>
@@ -149,12 +149,12 @@
     document.getElementById("date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = date.format("LL");
     {% endfor %}
 
-    const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName) => {
+    const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName, paymentType) => {
         formDiv = document.getElementById("edit-payment");
         detailsDiv = document.getElementById("edit-payment-details");
         formElem = document.getElementById("edit-payment-form");
 
-        const url = `/wirgarten/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}`
+        const url = `/wirgarten/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}?amount=${calculatedAmount}&type=${paymentType}`
         formElem.action = url
 
         fetch(url).then((form) => {

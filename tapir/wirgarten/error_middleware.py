@@ -34,7 +34,8 @@ class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
         )
         error_log_filename = f"{error_log_dir}/error_log_{timestamp}.txt"
 
-        traceback.print_exc()
+        if not settings.DEBUG:
+            traceback.print_exc()
 
         try:
             if not os.path.exists(error_log_dir):
