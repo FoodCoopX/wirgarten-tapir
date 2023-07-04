@@ -675,6 +675,8 @@ def renew_contract_same_conditions(request, **kwargs):
     Subscription.objects.bulk_create(new_subs)
 
     member = Member.objects.get(id=member_id)
+    member.sepa_consent = timezone.now()
+    member.save()
 
     SubscriptionChangeLogEntry().populate(
         actor=request.user,
