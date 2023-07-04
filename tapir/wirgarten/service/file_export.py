@@ -50,7 +50,7 @@ def begin_csv_string(field_names: [str], delimiter: str = ";"):
     """
 
     output = CsvTextBuilder()
-    writer = csv.DictWriter(output, fieldnames=field_names, delimiter=delimiter)
+    writer = csv.DictWriter(output, fieldnames=field_names, delimiter=delimiter, quoting=csv.QUOTE_NONNUMERIC)
     writer.writeheader()
     return output, writer
 
