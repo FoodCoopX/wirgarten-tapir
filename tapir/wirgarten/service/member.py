@@ -199,8 +199,10 @@ def buy_cooperative_shares(
         type="Genossenschaftsanteile",
     )
 
-    # generate member no if necessary
-    Member.objects.get(id=member_id).save()
+    now = timezone.now()
+    member = Member.objects.get(id=member_id)
+    member.sepa_consent = now
+    member.save()
 
 
 def create_wait_list_entry(

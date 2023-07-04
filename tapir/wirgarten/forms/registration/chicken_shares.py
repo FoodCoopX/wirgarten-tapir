@@ -218,6 +218,7 @@ class ChickenShareForm(forms.Form):
                 )
 
         Subscription.objects.bulk_create(self.subs)
+        Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")

@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
+    Member,
     Product,
     Subscription,
     GrowingPeriod,
@@ -96,3 +97,4 @@ class BestellCoopForm(forms.Form):
                 consent_ts=timezone.now(),
                 withdrawal_consent_ts=timezone.now(),
             )
+            Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
