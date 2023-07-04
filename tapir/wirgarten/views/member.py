@@ -468,13 +468,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         self.add_renewal_notice_context(context, next_month, today)
 
         subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
+        context["subscriptions_in_trial"] = []
         if subs_in_trial.exists():
             context["show_trial_period_notice"] = True
-            context["subscriptions_in_trial"] = subs_in_trial
+            context["subscriptions_in_trial"].extend(subs_in_trial)
             context["next_trial_end_date"] = min(
                 subs_in_trial, key=lambda x: x.start_date
             ).start_date + relativedelta(day=1, months=1, days=-1)
-        elif (
+        if (
             self.object.coop_entry_date is not None
             and self.object.coop_entry_date > today
             and self.object.coopsharetransaction_set.aggregate(
@@ -483,12 +484,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             > 0
         ):
             context["show_trial_period_notice"] = True
-            context["subscriptions_in_trial"] = [
-                "Beitrittserklärung zur Genossenschaft"
-            ]
-            context["next_trial_end_date"] = share_ownerships[
-                0
-            ].valid_at + relativedelta(days=-1)
+            context["subscriptions_in_trial"].append(
+                "Beitrittserklärung zur Genossenschaft",
+            )
+            context["next_trial_end_date"] = (
+                share_ownerships[0].valid_at + relativedelta(days=-1)
+                if "next_trial_end_date"  not in context
+                else context["next_trial_end_date"]
+            )
 
         email_change_requests = EmailChangeRequest.objects.filter(
             user_id=self.object.id
@@ -931,8 +934,13 @@ class MemberDeliveriesView(
 @permission_required(Permission.Payments.MANAGE)
 @csrf_protect
 def get_payment_amount_edit_form(request, **kwargs):
-    query_params = {k:v for k,v in map(lambda kv: kv.split("="),request.environ["QUERY_STRING"].split("&"))}
-    kwargs["initial_amount"] = float(query_params["amount"].replace(",","."))
+    query_params = {
+        k: v
+        for k, v in map(
+            lambda kv: kv.split("="), request.environ["QUERY_STRING"].split("&")
+        )
+    }
+    kwargs["initial_amount"] = float(query_params["amount"].replace(",", "."))
     payment_type = query_params["type"]
 
     @transaction.atomic
