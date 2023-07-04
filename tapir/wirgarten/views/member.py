@@ -460,7 +460,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_payment = next_payment[0]
 
         if next_payment:
-            print(next_payment, context["next_payment"])
             if "next_payment" not in context or (
                 next_payment["due_date"] < context["next_payment"]["due_date"]
             ):
