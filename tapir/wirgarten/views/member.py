@@ -489,7 +489,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
             context["next_trial_end_date"] = (
                 share_ownerships[0].valid_at + relativedelta(days=-1)
-                if "next_trial_end_date"  not in context
+                if "next_trial_end_date" not in context
                 else context["next_trial_end_date"]
             )
 
@@ -545,7 +545,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
             future_subs = get_future_subscriptions(
                 next_growing_period.start_date
-            ).filter(member_id=self.object.id, cancellation_ts__isnull=True)
+            ).filter(member_id=self.object.id)
             has_future_subs = future_subs.exists()
             if cancelled and not has_future_subs:
                 context[
@@ -553,6 +553,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 ] = "cancelled"  # --> show cancellation confirmation
             elif has_future_subs:
                 context["renewal_status"] = "renewed"  # --> show renewal confirmation
+                if not future_subs.filter(cancellation_ts__isnull=True).exists(): # --> renewed but cancelled
+                    context["show_renewal_warning"] = False
             else:
                 if context["available_product_types"][ProductTypes.HARVEST_SHARES]:
                     context["renewal_status"] = "unknown"  # --> show renewal notice
