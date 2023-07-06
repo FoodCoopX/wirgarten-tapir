@@ -454,7 +454,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["next_payment"] = payments[0]
             else:
                 break
-
+        
         next_payment = list(generate_future_payments(self.object.id, 1).values())[0]
         if next_payment:
             next_payment = next_payment[0]
@@ -771,6 +771,8 @@ def generate_future_payments(member_id, limit: int = None):
                         "upcoming": True,
                     }
                 )
+        if len(payments_per_due_date[next_payment_date]) == 0:
+            del payments_per_due_date[next_payment_date]
 
         next_payment_date += relativedelta(months=1)
 
