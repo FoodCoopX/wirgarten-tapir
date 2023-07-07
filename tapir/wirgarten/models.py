@@ -462,17 +462,24 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     )  # TODO this should probably be null=False
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
-
-    class Meta:
-        indexes = [models.Index(fields=["period_id", "created_at"])]
+    trial_end_date_override = models.DateField(null=True)
 
     @property
     def trial_end_date(self):
+        if self.trial_end_date_override is not None:
+            return self.trial_end_date_override
         return (
             self.start_date
             if self.trial_disabled
             else self.start_date + relativedelta(months=1, day=1, days=-1)
         )
+
+    @trial_end_date.setter
+    def trial_end_date(self, value):
+        self.trial_end_date_override = value
+
+    class Meta:
+        indexes = [models.Index(fields=["period_id", "created_at"])]
 
     @property
     def total_price(self):
