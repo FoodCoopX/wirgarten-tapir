@@ -81,6 +81,7 @@ class HarvestShareForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.member_id = kwargs.pop("member_id", None)
+        self.is_admin = kwargs.pop("is_admin", False)
         super().__init__(
             *args,
             **{
@@ -362,7 +363,7 @@ class HarvestShareForm(forms.Form):
                 )
 
                 self.subs.append(sub)
-        
+
         Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
