@@ -414,7 +414,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
-        additional_products_available = self.object.coop_entry_date is not None and (
+        additional_products_available = (
             get_future_subscriptions()
             .filter(
                 member_id=self.object.id,
