@@ -312,6 +312,7 @@ class HarvestShareForm(forms.Form):
         subs = get_active_subscriptions_grouped_by_product_type(
             member_id, self.start_date
         )
+        existing_trial_end_date = None
         if product_type.name in subs:
             for sub in subs[product_type.name]:
                 sub.end_date = self.start_date - relativedelta(days=1)
@@ -321,6 +322,7 @@ class HarvestShareForm(forms.Form):
                     sub.delete()
                 else:
                     sub.save()
+                    existing_trial_end_date = sub.trial_end_date
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -358,7 +360,7 @@ class HarvestShareForm(forms.Form):
                     mandate_ref=mandate_ref,
                     consent_ts=now,
                     withdrawal_consent_ts=timezone.now(),
-                    trial_disabled=True,
+                    trial_end_date=existing_trial_end_date,
                     **solidarity_options,
                 )
 
