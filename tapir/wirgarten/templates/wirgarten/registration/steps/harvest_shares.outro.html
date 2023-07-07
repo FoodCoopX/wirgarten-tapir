@@ -18,7 +18,7 @@
 <div id="warning-cannot-reduce" style="margin-top:1em; margin-bottom:0; display:none" class="alert alert-danger">Du kannst deine Ernteanteile nicht reduzieren, nur erhöhen.</div>
 
 <script>
-const originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a,b) => a + b);
+const originalTotal = "{{form.is_admin}}"==="True" ? 0 : "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a,b) => a + b);
 const growingPeriodSelect = document.getElementById("id_growing_period");
 if(!growingPeriodSelect) {
     initHarvestShareSummary("{{form.harvest_shares}}", {{form.solidarity_total|safe}}, {{form.free_capacity|safe}})

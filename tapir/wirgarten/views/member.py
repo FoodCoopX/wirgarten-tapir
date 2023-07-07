@@ -454,10 +454,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["next_payment"] = payments[0]
             else:
                 break
-        
-        next_payment = list(generate_future_payments(self.object.id, 1).values())[0]
-        if next_payment:
-            next_payment = next_payment[0]
+
+        next_payment = list(generate_future_payments(self.object.id, 1).values())
+        if len(next_payment) > 0:
+            next_payment = next_payment[0][0]
 
         if next_payment:
             if "next_payment" not in context or (
@@ -553,7 +553,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 ] = "cancelled"  # --> show cancellation confirmation
             elif has_future_subs:
                 context["renewal_status"] = "renewed"  # --> show renewal confirmation
-                if not future_subs.filter(cancellation_ts__isnull=True).exists(): # --> renewed but cancelled
+                if not future_subs.filter(
+                    cancellation_ts__isnull=True
+                ).exists():  # --> renewed but cancelled
                     context["show_renewal_warning"] = False
             else:
                 if context["available_product_types"][ProductTypes.HARVEST_SHARES]:
@@ -1324,6 +1326,7 @@ def get_add_harvest_shares_form(request, **kwargs):
             subscriptions=form.subs,
         ).save()
 
+    kwargs["is_admin"] = request.user.has_perm(Permission.Accounts.MANAGE)
     kwargs["member_id"] = member_id
     kwargs["choose_growing_period"] = True
     return get_form_modal(
@@ -1512,7 +1515,6 @@ def get_cancellation_reason_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: CancellationReasonForm):
-        print(form.cleaned_data)
         for reason in form.cleaned_data["reason"]:
             QuestionaireCancellationReasonResponse.objects.create(
                 member_id=member_id, reason=reason, custom=False
