@@ -98,6 +98,7 @@ def export_pick_list_csv():
     )
 
 
+@shared_task
 def export_supplier_list_csv():
     """
     Sums the quantity of product variants exports a list as CSV per product type.
