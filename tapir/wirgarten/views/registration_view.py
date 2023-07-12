@@ -161,7 +161,13 @@ class RegistrationWizardView(CookieWizardView):
         self.start_date = get_next_contract_start_date(max(today, reference_date))
         self.end_date = self.growing_period.end_date
 
+    def dispatch(self, request, *args, **kwargs):
+        self.coop_shares_only = (
+            "coop_shares_only" in request.GET
+            and request.GET["coop_shares_only"] == "true"
+        )
         self.condition_dict = self.init_conditions()
+        return super().dispatch(request, *args, **kwargs)
 
     def init_conditions(self):
         try:
@@ -179,8 +185,10 @@ class RegistrationWizardView(CookieWizardView):
             )
 
             return {
-                STEP_HARVEST_SHARES: _show_harvest_shares,
-                STEP_NO_HARVEST_SHARES_AVAILABLE: not _show_harvest_shares,
+                STEP_HARVEST_SHARES: self.coop_shares_only == False
+                and _show_harvest_shares,
+                STEP_NO_HARVEST_SHARES_AVAILABLE: self.coop_shares_only == False
+                and not _show_harvest_shares,
                 STEP_COOP_SHARES: (lambda x: has_selected_harvest_shares(x))
                 if not _coop_shares_without_harvest_shares_possible
                 else True,
@@ -196,6 +204,7 @@ class RegistrationWizardView(CookieWizardView):
                 if _bestellcoop_available
                 else False,
                 STEP_PICKUP_LOCATION: has_selected_harvest_shares,
+                STEP_SUMMARY: self.coop_shares_only == False,
             }
         except Exception as e:
             print("Could not init registration wizard conditions: ", e)
@@ -305,6 +314,15 @@ class RegistrationWizardView(CookieWizardView):
                 valid_from=date.today(),
             )
 
+        # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
+        actual_coop_start = get_next_contract_start_date(self.start_date)
+        buy_cooperative_shares(
+            quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
+            / settings.COOP_SHARE_PRICE,
+            member=member,
+            start_date=actual_coop_start,
+        )
+
         if STEP_HARVEST_SHARES in form_dict and is_harvest_shares_selected(
             form_dict[STEP_HARVEST_SHARES].cleaned_data
         ):
@@ -324,15 +342,6 @@ class RegistrationWizardView(CookieWizardView):
                     member_id=member.id,
                     mandate_ref=mandate_ref,
                 )
-
-            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(self.start_date)
-            buy_cooperative_shares(
-                quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
-                / settings.COOP_SHARE_PRICE,
-                member=member,
-                start_date=actual_coop_start,
-            )
 
             send_order_confirmation(
                 member, get_future_subscriptions().filter(member=member)
