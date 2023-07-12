@@ -7,7 +7,7 @@
 {% load django_bootstrap5 %}
 
 {% block card_header %}
-<h4>{{total_contracts}} {% translate 'Verträge' %}</h4>
+<h4>{{total_contracts|default:0}} {% translate 'Verträge' %}</h4>
 {% endblock %}
 
 {% block table_head %}

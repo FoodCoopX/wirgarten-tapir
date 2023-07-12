@@ -177,30 +177,20 @@
         </div>
         <div class="card-footer">
             <table class="table">
-                {% if wizard.form.bestellcoop.sign_up %}
                 <tr>
                     <th>Mitgliedschaft</th>
                     <th style="text-align:right"></th>
                     <th style="text-align:right"></th>
                 </tr>
-                {%endif%}
                 <tr>
-                    {% if wizard.form.bestellcoop.sign_up %}
                     <td></td>
                     <td></td>
                     <th style="text-align:right">= {{wizard.form.bestellcoop.price}} € / Monat</th>
-                    {% else %}
-                    <td></td>
-                    <td></td>
-                    <th style="text-align:right">keine BestellCoop Mitgliedschaft</th>
-                    {% endif %}
                 </tr>
             </table>
             <small style="float:right;margin:-0.75em 0 -0.5em -0.75em">inkl. MwSt</small>
         </div>
     </div>
-    {% else %}
-    {% summary_card_disabled "BestellCoop" %}
     {% endif %}
 </div>
 

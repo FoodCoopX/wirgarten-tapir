@@ -1,36 +1,44 @@
-.summary-card-active{
-    background-color:#f4fcf2;
+.summary-card-active {
+    background-color: #f4fcf2;
 }
 
-.summary-card-disabled, .summary-card-disabled > div{
-    background-color:#fafafa !important;
+.summary-card-disabled,
+.summary-card-disabled>div {
+    background-color: #fafafa !important;
     color: #4d4d4d !important;
 }
 
 .center {
-  display: block;
-  margin: auto;
-  width: 50%;
-  vertical-align: middle;
-  justify-content: center;
-  text-align:center;
+    display: block;
+    margin: auto;
+    width: 50%;
+    vertical-align: middle;
+    justify-content: center;
+    text-align: center;
 }
 
 #summary_grid {
-    display:grid;
-    grid-template-columns: repeat(3,1fr);
-    grid-template-rows: auto;
-    grid-gap:1em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    margin: -0.5em;
+    width: 100%;
 }
-#summary_grid > div > div > table > tbody > tr > td{
+
+#summary_grid > div {
+    margin: 0.5em;
+    width: 100%;
+}
+
+#summary_grid>div>div>table>tbody>tr>td {
     white-space: normal;
 }
 
-#summary_grid > div > div > table > tbody > tr > th {
+#summary_grid>div>div>table>tbody>tr>th {
     font-size: 0.9em;
 }
 
 
-.card-footer  {
-    background-color:rgba(0,0,0,.02);
+.card-footer {
+    background-color: rgba(0, 0, 0, .02);
 }

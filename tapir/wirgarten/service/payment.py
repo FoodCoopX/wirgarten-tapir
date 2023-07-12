@@ -4,9 +4,10 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from nanoid import generate
+from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Subscription, Member, Payment
+from tapir.wirgarten.models import CoopShareTransaction, Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -32,7 +33,8 @@ def generate_mandate_ref(member_id: str):
     """
 
     member = Member.objects.get(id=member_id)
-    prefix = f"{member.last_name[:5]}{member.first_name[:5]}/".upper()
+    cleaned_name = unidecode(f"{member.last_name[:5]}{member.first_name[:5]}")
+    prefix = f"{cleaned_name}/".upper()
 
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
@@ -54,7 +56,7 @@ def get_next_payment_date(reference_date: date = date.today()):
     return next_payment
 
 
-def generate_new_payments(due_date: date) -> [Payment]:
+def generate_new_payments(due_date: date) -> list[Payment]:
     """
     Generates payments for the given due date. If a payment for this date and mandate_ref is already persisted, it will be skipped.
     The generated payments are not persisted!
@@ -120,7 +122,7 @@ def get_active_subscriptions_grouped_by_product_type(
     return subscriptions
 
 
-def get_existing_payments(due_date: date) -> [Payment]:
+def get_existing_payments(due_date: date) -> list[Payment]:
     """
     Gets already persisted payments for the given due date
 
@@ -128,12 +130,10 @@ def get_existing_payments(due_date: date) -> [Payment]:
     :return: the list of persisted payments for the given date
     """
 
-    return list(
-        Payment.objects.filter(transaction__isnull=True, due_date__lte=due_date)
-    )
+    return list(Payment.objects.filter(transaction__isnull=True, due_date=due_date))
 
 
-def get_total_payment_amount(due_date: date) -> [Payment]:
+def get_total_payment_amount(due_date: date) -> list[Payment]:
     """
     Returns the total € amount for all due payments on this date.
 

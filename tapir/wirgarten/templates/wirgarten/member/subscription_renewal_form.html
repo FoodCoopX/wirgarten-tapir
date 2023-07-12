@@ -76,6 +76,7 @@
 {% endif %}
 
 <script>
+const originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a,b) => a + b);
 document.addEventListener('DOMContentLoaded', () => {
     initHarvestShareSummary("{{form.product_forms.0.harvest_shares}}", {{form.product_forms.0.solidarity_total|safe}}, {{form.product_forms.0.free_capacity|safe}});
 

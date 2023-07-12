@@ -1,4 +1,5 @@
 import base64
+from collections import defaultdict
 import csv
 import itertools
 import json
@@ -295,6 +296,11 @@ class MemberFilter(FilterSet):
 
         super(MemberFilter, self).__init__(data, *args, **kwargs)
 
+        if get_next_growing_period() is None:
+            w = self.form.fields["contract_status"].widget
+            w.attrs["disabled"] = True
+            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
 
 class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
@@ -413,7 +419,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
-        additional_products_available = self.object.coop_entry_date is not None and (
+        additional_products_available = (
             get_future_subscriptions()
             .filter(
                 member_id=self.object.id,
@@ -423,11 +429,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             .exists()
         )
 
+        # FIXME: we need to get rid of the hardcoded product types...
         context["available_product_types"] = {
             ProductTypes.HARVEST_SHARES: is_harvest_shares_available(next_month),
             ProductTypes.CHICKEN_SHARES: additional_products_available
             and is_chicken_shares_available(next_month),
-            ProductTypes.BESTELLCOOP: additional_products_available
+            ProductTypes.BESTELLCOOP: ProductTypes.BESTELLCOOP
+            in context["subscriptions"]
+            and additional_products_available
             and (
                 not (
                     len(context["subscriptions"][ProductTypes.BESTELLCOOP]) > 0
@@ -445,30 +454,33 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         prev_payments = get_previous_payments(self.object.pk)
         now = date.today()
-        for payment in prev_payments:
-            if payment["due_date"] >= now:
-                context["next_payment"] = payment
+        for due_date, payments in prev_payments.items():
+            if due_date >= now:
+                context["next_payment"] = payments[0]
             else:
                 break
 
-        next_payments = generate_future_payments(self.object.id, prev_payments, 1)
+        next_payment = list(generate_future_payments(self.object.id, 1).values())
+        if len(next_payment) > 0:
+            next_payment = next_payment[0][0]
 
-        if len(next_payments) > 0:
+        if next_payment:
             if "next_payment" not in context or (
-                next_payments[0]["due_date"] < context["next_payment"]["due_date"]
+                next_payment["due_date"] < context["next_payment"]["due_date"]
             ):
-                context["next_payment"] = next_payments[0]
+                context["next_payment"] = next_payment
 
         self.add_renewal_notice_context(context, next_month, today)
 
         subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
+        context["subscriptions_in_trial"] = []
         if subs_in_trial.exists():
             context["show_trial_period_notice"] = True
-            context["subscriptions_in_trial"] = subs_in_trial
+            context["subscriptions_in_trial"].extend(subs_in_trial)
             context["next_trial_end_date"] = min(
                 subs_in_trial, key=lambda x: x.start_date
             ).start_date + relativedelta(day=1, months=1, days=-1)
-        elif (
+        if (
             self.object.coop_entry_date is not None
             and self.object.coop_entry_date > today
             and self.object.coopsharetransaction_set.aggregate(
@@ -477,12 +489,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             > 0
         ):
             context["show_trial_period_notice"] = True
-            context["subscriptions_in_trial"] = [
-                "Beitrittserklärung zur Genossenschaft"
-            ]
-            context["next_trial_end_date"] = share_ownerships[
-                0
-            ].valid_at + relativedelta(days=-1)
+            context["subscriptions_in_trial"].append(
+                "Beitrittserklärung zur Genossenschaft",
+            )
+            context["next_trial_end_date"] = (
+                share_ownerships[0].valid_at + relativedelta(days=-1)
+                if "next_trial_end_date" not in context
+                else context["next_trial_end_date"]
+            )
 
         email_change_requests = EmailChangeRequest.objects.filter(
             user_id=self.object.id
@@ -536,7 +550,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
             future_subs = get_future_subscriptions(
                 next_growing_period.start_date
-            ).filter(member_id=self.object.id, cancellation_ts__isnull=True)
+            ).filter(member_id=self.object.id)
             has_future_subs = future_subs.exists()
             if cancelled and not has_future_subs:
                 context[
@@ -544,6 +558,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 ] = "cancelled"  # --> show cancellation confirmation
             elif has_future_subs:
                 context["renewal_status"] = "renewed"  # --> show renewal confirmation
+                if not future_subs.filter(
+                    cancellation_ts__isnull=True
+                ).exists():  # --> renewed but cancelled
+                    context["show_renewal_warning"] = False
             else:
                 if context["available_product_types"][ProductTypes.HARVEST_SHARES]:
                     context["renewal_status"] = "unknown"  # --> show renewal notice
@@ -669,6 +687,8 @@ def renew_contract_same_conditions(request, **kwargs):
     Subscription.objects.bulk_create(new_subs)
 
     member = Member.objects.get(id=member_id)
+    member.sepa_consent = timezone.now()
+    member.save()
 
     SubscriptionChangeLogEntry().populate(
         actor=request.user,
@@ -724,79 +744,46 @@ def cancel_contract_at_period_end(request, **kwargs):
     )
 
 
-def generate_future_payments(member_id, prev_payments: list, limit: int = None):
-    prev_payments = set(map(lambda p: (p["mandate_ref"], p["due_date"]), prev_payments))
+def generate_future_payments(member_id, limit: int = None):
     subs = get_future_subscriptions().filter(member_id=member_id)
 
-    payments = []
+    payments_per_due_date = {}
     next_payment_date = get_next_payment_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
     while next_payment_date <= last_growing_period.end_date and (
-        limit is None or len(payments) < limit
+        limit is None or len(payments_per_due_date) < limit
     ):
+        payments_per_due_date[next_payment_date] = []
         active_subs = subs.filter(
             start_date__lte=next_payment_date, end_date__gte=next_payment_date
         )
         if active_subs.count() > 0:
-
             groups = itertools.groupby(active_subs, lambda v: v.mandate_ref)
 
             for mandate_ref, values in groups:
                 values = list(values)
                 due_date = next_payment_date
 
-                if (mandate_ref, due_date) not in prev_payments:
-                    amount = get_total_price_for_subs(values)
-                    payments.append(
-                        {
-                            "due_date": due_date,
-                            "mandate_ref": mandate_ref,
-                            "amount": amount,
-                            "calculated_amount": amount,
-                            "subs": list(map(sub_to_dict, active_subs)),
-                            "status": Payment.PaymentStatus.DUE,
-                            "edited": False,
-                            "upcoming": True,
-                        }
-                    )
+                amount = get_total_price_for_subs(values)
+                payments_per_due_date[next_payment_date].append(
+                    {
+                        "type": "Ernteanteile",
+                        "due_date": due_date,
+                        "mandate_ref": mandate_ref,
+                        "amount": amount,
+                        "calculated_amount": amount,
+                        "subs": list(map(sub_to_dict, active_subs)),
+                        "status": Payment.PaymentStatus.DUE,
+                        "edited": False,
+                        "upcoming": True,
+                    }
+                )
+        if len(payments_per_due_date[next_payment_date]) == 0:
+            del payments_per_due_date[next_payment_date]
 
         next_payment_date += relativedelta(months=1)
 
-    return payments
-
-
-def get_subs_and_shares_for_mandate_ref(
-    mandate_ref: MandateReference, reference_date: date
-):
-    result = list(
-        map(
-            lambda x: {
-                "quantity": x.quantity,
-                "product": {
-                    "name": _("Genossenschaftsanteile"),
-                    "price": x.share_price,
-                },
-                "total_price": x.total_price,
-            },
-            CoopShareTransaction.objects.filter(
-                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                member_id=mandate_ref.member.id,
-            ),
-        )
-    )
-    result.extend(
-        list(
-            map(
-                lambda x: sub_to_dict(x),
-                Subscription.objects.filter(
-                    mandate_ref=mandate_ref,
-                    start_date__lte=reference_date,
-                    end_date__gt=reference_date,
-                ),
-            )
-        )
-    )
-    return result
+    return payments_per_due_date
 
 
 def sub_to_dict(sub):
@@ -812,13 +799,45 @@ def sub_to_dict(sub):
             "price": price,
         },
         "solidarity_price": sub.solidarity_price,
+        "solidarity_price_absolute": sub.solidarity_price_absolute,
         "total_price": sub.total_price,
     }
 
 
 def payment_to_dict(payment: Payment) -> dict:
-    subs = get_subs_and_shares_for_mandate_ref(payment.mandate_ref, payment.due_date)
+    subs = (
+        list(
+            map(
+                lambda x: {
+                    "quantity": x.quantity,
+                    "product": {
+                        "name": _("Genossenschaftsanteile"),
+                        "price": x.share_price,
+                    },
+                    "total_price": x.total_price,
+                },
+                CoopShareTransaction.objects.filter(
+                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                    member_id=payment.mandate_ref.member.id,
+                ),
+            )
+        )
+        if payment.type == "Genossenschaftsanteile"
+        else list(
+            map(
+                lambda x: sub_to_dict(x),
+                Subscription.objects.filter(
+                    mandate_ref=payment.mandate_ref,
+                    start_date__lte=payment.due_date,
+                    end_date__gt=payment.due_date,
+                ),
+            )
+        )
+    )
+
     return {
+        "id": payment.id,
+        "type": payment.type,
         "due_date": payment.due_date,
         "mandate_ref": payment.mandate_ref,
         "amount": float(round(payment.amount, 2)),
@@ -832,15 +851,17 @@ def payment_to_dict(payment: Payment) -> dict:
     }
 
 
-def get_previous_payments(member_id) -> [dict]:
-    return list(
-        map(
-            lambda x: payment_to_dict(x),
-            Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
-                "-due_date"
-            ),
-        )
+def get_previous_payments(member_id) -> dict:
+    payments_dict = defaultdict(list)
+    payments = Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
+        "-due_date"
     )
+
+    for payment in payments:
+        payment_dict = payment_to_dict(payment)
+        payments_dict[payment_dict["due_date"]].append(payment_dict)
+
+    return dict(payments_dict)
 
 
 class MemberPaymentsView(
@@ -860,11 +881,26 @@ class MemberPaymentsView(
 
     def get_payments_row(self, member_id):
         prev_payments = get_previous_payments(member_id)
-        future_payments = generate_future_payments(member_id, prev_payments)
+        future_payments = generate_future_payments(member_id)
+
+        for date, payments in future_payments.items():
+            if date in prev_payments:
+                prev_payments[date].extend(
+                    [
+                        p
+                        for p in payments
+                        if p.get("type", None)
+                        not in set(
+                            map(lambda x: x.get("type", None), prev_payments[date])
+                        )
+                    ]
+                )
+            else:
+                prev_payments[date] = payments
 
         return sorted(
-            prev_payments + future_payments,
-            key=lambda x: x["due_date"].isoformat() + x["mandate_ref"].ref,
+            [v for sublist in prev_payments.values() for v in sublist],
+            key=lambda x: x["due_date"].isoformat() + x.get("id", ""),
         )
 
 
@@ -909,6 +945,15 @@ class MemberDeliveriesView(
 @permission_required(Permission.Payments.MANAGE)
 @csrf_protect
 def get_payment_amount_edit_form(request, **kwargs):
+    query_params = {
+        k: v
+        for k, v in map(
+            lambda kv: kv.split("="), request.environ["QUERY_STRING"].split("&")
+        )
+    }
+    kwargs["initial_amount"] = float(query_params["amount"].replace(",", "."))
+    payment_type = query_params["type"]
+
     @transaction.atomic
     def save_future_payment_change():
         def create_payment_edit_logentry(new_payment):
@@ -933,6 +978,7 @@ def get_payment_amount_edit_form(request, **kwargs):
 
         if not hasattr(form, "payment"):
             new_payment = Payment.objects.create(
+                type=payment_type,
                 due_date=datetime.strptime(form.payment_due_date, "%d.%m.%Y"),
                 amount=form.data["amount"],
                 mandate_ref_id=form.mandate_ref_id,
@@ -1260,7 +1306,23 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: HarvestShareForm):
-        form.save(send_email=True)
+        if (
+            get_future_subscriptions()
+            .filter(
+                cancellation_ts__isnull=True,
+                member_id=member_id,
+                end_date__gt=max(form.start_date, form.growing_period.start_date)
+                if hasattr(form, "growing_period")
+                else form.start_date,
+            )
+            .exists()
+        ):
+            form.save(send_email=True)
+        else:
+            form.save(send_email=False)
+            send_order_confirmation(
+                member, get_future_subscriptions().filter(member=member)
+            )
 
         SubscriptionChangeLogEntry().populate(
             actor=request.user,
@@ -1269,6 +1331,7 @@ def get_add_harvest_shares_form(request, **kwargs):
             subscriptions=form.subs,
         ).save()
 
+    kwargs["is_admin"] = request.user.has_perm(Permission.Accounts.MANAGE)
     kwargs["member_id"] = member_id
     kwargs["choose_growing_period"] = True
     return get_form_modal(
@@ -1457,7 +1520,6 @@ def get_cancellation_reason_form(request, **kwargs):
 
     @transaction.atomic
     def save(form: CancellationReasonForm):
-        print(form.cleaned_data)
         for reason in form.cleaned_data["reason"]:
             QuestionaireCancellationReasonResponse.objects.create(
                 member_id=member_id, reason=reason, custom=False
@@ -1587,8 +1649,10 @@ class SubscriptionListFilter(FilterSet):
         .order_by("last_name")
         .order_by("-created_at"),
     )
-    member__pickup_location = ModelChoiceFilter(
-        label=_("Abholort"), queryset=PickupLocation.objects.all().order_by("name")
+    pickup_location = ModelChoiceFilter(
+        label=_("Abholort"),
+        queryset=PickupLocation.objects.all().order_by("name"),
+        method="filter_pickup_location",
     )
     product__type = ModelChoiceFilter(
         label=_("Vertragsart"),
@@ -1612,6 +1676,25 @@ class SubscriptionListFilter(FilterSet):
         empty_label="",
         secondary_ordering="member_id",
     )
+
+    def filter_pickup_location(self, queryset, name, value):
+        if value:
+            # Subquery to get the latest MemberPickupLocation id for each Member
+            latest_pickup_location_subquery = Subquery(
+                MemberPickupLocation.objects.filter(
+                    member_id=OuterRef("member_id")  # references Member.id
+                )
+                .order_by("-valid_from")[:1]
+                .values("id")
+            )
+
+            # Filter queryset where MemberPickupLocation.id is in the subquery result and the pickup_location matches the value
+            return queryset.filter(
+                member__memberpickuplocation__id=latest_pickup_location_subquery,
+                member__memberpickuplocation__pickup_location_id=value,
+            )
+        else:
+            return queryset.all()
 
     class Meta:
         model = Subscription

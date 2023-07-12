@@ -199,8 +199,10 @@ def buy_cooperative_shares(
         type="Genossenschaftsanteile",
     )
 
-    # generate member no if necessary
-    Member.objects.get(id=member_id).save()
+    now = timezone.now()
+    member = Member.objects.get(id=member_id)
+    member.sepa_consent = now
+    member.save()
 
 
 def create_wait_list_entry(
@@ -266,11 +268,13 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
     member_id = resolve_member_id(member)
     today = date.today()
     min_start_date = today + relativedelta(day=1, months=-1)
+    next_month = today + relativedelta(day=1, months=1)
 
     return get_future_subscriptions().filter(
         member_id=member_id,
         cancellation_ts__isnull=True,
-        start_date__gt=min_start_date,
+        start_date__gte=min_start_date,
+        end_date__gt=next_month
     )
 
 

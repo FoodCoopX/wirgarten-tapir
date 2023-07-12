@@ -92,12 +92,13 @@
                             <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span><br/>
                             <div style="margin-top:0.5em; line-height:1.1em">
                                 {% for sub in val %}
-                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A"
-                                      {% endif %}>
+                                <span {% if sub.cancellation_ts %} style="text-decoration:line-through;color:#6A6A6A"{% endif %}>
                                     <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;<strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;{% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
-                                ({% if sub.solidarity_price > 0%}+{% endif %}
+                                ({% if sub.solidarity_price > 0 %}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
-                                {% endif %}</span>
+                                {% elif sub.solidarity_price_absolute > 0 %}
+                                (+{{ sub.solidarity_price_absolute|format_currency }}€)
+                                {% endif %}
                                 <br/>
                                 {% endfor %}
                             </div>
@@ -182,7 +183,7 @@
             <a href="{% url 'wirgarten:member_payments' object.pk %}" style="text-decoration:none; color: #000000">
                 <div class="card-body" style="text-align: center;">
                     <div class="contract-tile-number">
-                        <strong>{{ next_payment.amount }}</strong> €
+                        <strong>{{ next_payment.amount|format_currency }}</strong> €
                     </div>
                     <strong>Nächste Zahlung</strong><br/>
                     <small>

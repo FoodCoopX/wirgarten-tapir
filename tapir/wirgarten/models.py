@@ -63,6 +63,25 @@ class PickupLocation(TapirModel):
     def __str__(self):
         return self.name
 
+    @property
+    def opening_times_html(self):
+        result = "<table>"
+        last_day = None
+        for idx, ot in enumerate(
+            PickupLocationOpeningTime.objects.filter(
+                pickup_location_id=self.id
+            ).order_by("day_of_week")
+        ):
+            open_time = ot.open_time.strftime("%H:%M")
+            close_time = ot.close_time.strftime("%H:%M")
+
+            result += f"""<tr>
+                <th>{OPTIONS_WEEKDAYS[ot.day_of_week][1] if ot.day_of_week != last_day else ""}</td>
+                <td style='padding-left:2em; text-align:right'>{open_time}-{close_time}</td>
+                </tr>"""
+            last_day = ot.day_of_week
+        return result + "</table>"
+
 
 class PickupLocationOpeningTime(TapirModel):
     pickup_location = models.ForeignKey(
@@ -224,6 +243,16 @@ class Member(TapirUser):
     def is_in_coop_trial(self):
         entry_date = self.coop_entry_date
         return entry_date is not None and entry_date > datetime.date.today()
+
+    @property
+    def has_trial_contracts(self):
+        from tapir.wirgarten.service.products import get_future_subscriptions
+        subs = get_future_subscriptions().filter(member_id=self.id)
+        today = datetime.date.today()
+        for sub in subs:
+            if today < sub.trial_end_date and sub.cancellation_ts is None:
+                return True
+        return False
 
     def coop_shares_total_value(self):
         today = datetime.date.today()
@@ -433,17 +462,24 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     )  # TODO this should probably be null=False
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
-
-    class Meta:
-        indexes = [models.Index(fields=["period_id", "created_at"])]
+    trial_end_date_override = models.DateField(null=True)
 
     @property
     def trial_end_date(self):
+        if self.trial_end_date_override is not None:
+            return self.trial_end_date_override
         return (
             self.start_date
             if self.trial_disabled
             else self.start_date + relativedelta(months=1, day=1, days=-1)
         )
+
+    @trial_end_date.setter
+    def trial_end_date(self, value):
+        self.trial_end_date_override = value
+
+    class Meta:
+        indexes = [models.Index(fields=["period_id", "created_at"])]
 
     @property
     def total_price(self):

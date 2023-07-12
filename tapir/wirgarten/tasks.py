@@ -16,7 +16,6 @@ from tapir.wirgarten.models import (
     ProductType,
     PaymentTransaction,
     Product,
-    PickupLocation,
     Member,
 )
 from tapir.wirgarten.parameters import Parameter
@@ -99,6 +98,7 @@ def export_pick_list_csv():
     )
 
 
+@shared_task
 def export_supplier_list_csv():
     """
     Sums the quantity of product variants exports a list as CSV per product type.
@@ -208,7 +208,6 @@ def send_email_member_contract_end_reminder(member_id):
         .filter(member=member, start_date__gt=today)
         .exists()
     ):
-
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
@@ -222,15 +221,15 @@ def send_email_member_contract_end_reminder(member_id):
 
 @shared_task
 @transaction.atomic
-def export_payment_parts_csv():
-    due_date = datetime.today().replace(
+def export_payment_parts_csv(reference_date = date.today()):
+    due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
     existing_payments = get_existing_payments(due_date)
     payments = Payment.objects.bulk_create(generate_new_payments(due_date))
     payments.extend(existing_payments)
 
-    payments.sort(key=lambda x: x.type)
+    payments.sort(key=lambda x: x.type if x.type else "")
     payments_grouped = {
         key: list(group)
         for key, group in itertools.groupby(payments, key=lambda x: x.type)

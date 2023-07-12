@@ -10,6 +10,9 @@ const calculatePrice = (harvest_share) => {
     if(!elem){
         elem = document.getElementsByName(key)[0]
     }
+    if(!elem){
+        return 0;
+    }
     return elem.value * price;
 };
 
@@ -29,33 +32,38 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
         }
     }
     const warningCannotReduceElem = document.getElementById("warning-cannot-reduce")
+    let totalWithoutSoli = calculateTotalWithoutSoliPrice()
+    const initDependentFields = () => {
+        while(calculateTotalWithoutSoliPrice() > capacity_total){
+            event.target.value--;
+        }
+        
+       resultElem.innerText = calculateTotal().toFixed(2);
+       totalWithoutSoli = calculateTotalWithoutSoliPrice()
+       if (soliElem.value === 'custom'){
+           customSoliElem.disabled = false
+           customSoliElem.required = true
+       } else {
+           customSoliElem.disabled = true
+           customSoliElem.value = (totalWithoutSoli * soliElem.value).toFixed(2)
+       }
+
+       filterSoliPriceOptions(totalWithoutSoli, solidarity_total);
+    }
+
     const handleChange = (event, max_shares) => {
-        if (event && max_shares) {
-            if (event.target.value < 0) {
+        if(event && event.target && max_shares){
+            if(event.target.value < 0){
                 event.target.value = 0;
-            } else if (event.target.value > max_shares) {
+            } else if (event.target.value > max_shares){
                 event.target.value = max_shares;
             }
         }
 
-        while(calculateTotalWithoutSoliPrice() > capacity_total){
-             event.target.value--;
-         }
-
-        resultElem.innerText = calculateTotal().toFixed(2);
-        const totalWithoutSoli = calculateTotalWithoutSoliPrice()
-        if (soliElem.value === 'custom'){
-            customSoliElem.disabled = false
-            customSoliElem.required = true
-        } else {
-            customSoliElem.disabled = true
-            customSoliElem.value = (totalWithoutSoli * soliElem.value).toFixed(2)
-        }
-
-        filterSoliPriceOptions(totalWithoutSoli, solidarity_total);
+        initDependentFields();
 
         const submitBtn = document.getElementById('submit-btn')
-        if(totalWithoutSoli < originalTotal){
+        if(warningCannotReduceElem && totalWithoutSoli < originalTotal){
             if(submitBtn) {submitBtn.disabled=true}
             warningCannotReduceElem.style.display = "block";
         } else{
@@ -146,4 +154,6 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total, capacity_
     }
 
     resultElem.innerText = calculateTotal().toFixed(2);
+
+    initDependentFields();
 }

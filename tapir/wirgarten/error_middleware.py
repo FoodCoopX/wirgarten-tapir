@@ -5,11 +5,12 @@ from datetime import datetime
 
 from django.http import HttpResponseServerError
 from django.views import debug
+from django.utils.deprecation import MiddlewareMixin
 
 from tapir import settings
 
 
-class GlobalServerErrorHandlerMiddleware:
+class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -33,7 +34,8 @@ class GlobalServerErrorHandlerMiddleware:
         )
         error_log_filename = f"{error_log_dir}/error_log_{timestamp}.txt"
 
-        traceback.print_exc()
+        if not settings.DEBUG:
+            traceback.print_exc()
 
         try:
             if not os.path.exists(error_log_dir):
