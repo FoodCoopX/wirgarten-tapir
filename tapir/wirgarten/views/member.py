@@ -296,6 +296,11 @@ class MemberFilter(FilterSet):
 
         super(MemberFilter, self).__init__(data, *args, **kwargs)
 
+        if get_next_growing_period() is None:
+            w = self.form.fields["contract_status"].widget
+            w.attrs["disabled"] = True
+            w.attrs["title"] = "Es gibt noch keine neue Vertragsperiode!"
+
 
 class MemberListView(PermissionRequiredMixin, FilterView):
     filterset_class = MemberFilter
