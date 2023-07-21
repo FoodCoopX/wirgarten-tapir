@@ -43,6 +43,7 @@ def handle_403(request, exception):
 @require_http_methods(["GET"])
 def wirgarten_redirect_view(request):
     user_type = get_user_type(request)
+
     if user_type == RequestUserType.ANONYMOUS:
         return HttpResponseRedirect(reverse_lazy("login"))
 

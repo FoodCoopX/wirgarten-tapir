@@ -270,9 +270,7 @@
 
 <script src="{% static 'wirgarten/js/chart.js' %}"></script>
 <script>
-   const showOtherCancellationReasons = () => {
-        ConfirmationModal.open('Sonstige Kündigungsgründe', {{cancellations_other_reasons|safe}}.map((reason) => "<li>" + reason + "</li>").join(''))
-   }
+  const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{cancellations_other_reasons|safe}}.map((reason) => `<li>${reason}</li>`).join(''))
 
   const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
 
