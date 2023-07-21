@@ -256,9 +256,11 @@ class MemberFilter(FilterSet):
     def filter_pickup_location(self, queryset, name, value):
         if value:
             # Subquery to get the latest MemberPickupLocation id for each Member
+            today = date.today()
             latest_pickup_location_subquery = Subquery(
                 MemberPickupLocation.objects.filter(
-                    member_id=OuterRef("id")  # references Member.id
+                    member_id=OuterRef("id"),  # references Member.id
+                    valid_from__lte=today
                 )
                 .order_by("-valid_from")[:1]
                 .values("id")
@@ -1680,9 +1682,11 @@ class SubscriptionListFilter(FilterSet):
     def filter_pickup_location(self, queryset, name, value):
         if value:
             # Subquery to get the latest MemberPickupLocation id for each Member
+            today = date.today()
             latest_pickup_location_subquery = Subquery(
                 MemberPickupLocation.objects.filter(
-                    member_id=OuterRef("member_id")  # references Member.id
+                    member_id=OuterRef("member_id"),  # references Member.id
+                    valid_from__lte=today,
                 )
                 .order_by("-valid_from")[:1]
                 .values("id")
