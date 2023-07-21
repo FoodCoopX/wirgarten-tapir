@@ -5,103 +5,102 @@
 
 <script src="{% keycloak_public_url %}/js/keycloak.js"></script>
 <script>
-            const getCookieValue = (name) => (
-                document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
-            )
+    const getCookieValue = (name) => (
+        document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
+    )
 
-            const deleteCookie = (name) => {
-                document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
-            }
+    const deleteCookie = (name) => {
+        document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    }
 
-            const setCookie = (name, value) => {
-                document.cookie = "token=" + keycloak.token + "; path=/; SameSite=None; Secure";
-            }
+    const setCookie = (name, value) => {
+        document.cookie = name + "=" + value + "; SameSite=Lax;";
+    }
 
-            const deleteAllCookies = () => {
-                const cookies = document.cookie.split(";");
+    const deleteAllCookies = () => {
+        const cookies = document.cookie.split(";");
 
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i];
-                    const eqPos = cookie.indexOf("=");
-                    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-                    deleteCookie(name);
-                }
-            }
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf("=");
+            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            deleteCookie(name);
+        }
+    }
 
-            const addLogoutFunction = () =>  {
-                  const logout = document.getElementById("logout")
-                  if(logout){
-                        logout.addEventListener('click', () => {
-                            console.log("Logging out...");
-                            deleteAllCookies();
-                            keycloak.logout({redirectUri: window.location.origin + "{% url 'login' %}"});
-                        });
-                  } else {
-                        setTimeout(addLogoutFunction, 100);
-                  }
-            }
+    const addLogoutFunction = () => {
+        const logout = document.getElementById("logout")
+        if (logout) {
+            logout.addEventListener('click', () => {
+                console.log("Logging out...");
+                deleteAllCookies();
+                keycloak.logout({ redirectUri: window.location.origin + "{% url 'login' %}" });
+            });
+        } else {
+            setTimeout(addLogoutFunction, 100);
+        }
+    }
 
-            const keycloak = new Keycloak({{ conf|safe }});
+    const keycloak = new Keycloak({{ conf| safe }});
 
-            const hideLoadingScreen = () => {
-                    const loadingScreen = document.getElementById("loading-screen");
-                    if(loadingScreen){
-                        loadingScreen.style.opacity = 0;
-                        setTimeout(() => loadingScreen.style.display='none', 200);
-                    } else {
-                        setTimeout(hideLoadingScreen, 100);
-                    }
-            }
+    const hideLoadingScreen = () => {
+        const loadingScreen = document.getElementById("loading-screen");
+        if (loadingScreen) {
+            loadingScreen.style.opacity = 0;
+            setTimeout(() => loadingScreen.style.display = 'none', 200);
+        } else {
+            setTimeout(hideLoadingScreen, 100);
+        }
+    }
 
-            const getRedirectUrl = () =>  {
-                const params = Tapir.getUrlParams();
-                return params.next ? decodeURIComponent(params.next) : "{% url 'index' %}";
-            }
+    const getRedirectUrl = () => {
+        const params = Tapir.getUrlParams();
+        return params.next ? decodeURIComponent(params.next) : "{% url 'index' %}";
+    }
 
-                const savedToken = getCookieValue("token");
-                keycloak.init({
-                    onLoad: 'check-sso',
-                    silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
-                    token: savedToken,
-                    onTokenExpired: () => {
-                        console.log("Token expired, refreshing...");
-                        keycloak.updateToken(10)
-                            .then(() => {
-                                console.log("Token refreshed successfully");
-                                setCookie("token", keycloak.token);
-                            })
-                            .catch(() => {
-                                console.log("Failed to refresh token. User is logged out.");
-                            });
-                    },
-                }).then((authenticated) => {
-                    console.log("authenticated: ", authenticated)
-                  if(!authenticated || !keycloak.token){
-                       deleteAllCookies();
-                       keycloak.login({redirectUri:getRedirectUrl()})
-                  } else {
-                      hideLoadingScreen();
-
-                      const savedToken = getCookieValue("token");
-                      setCookie("token", keycloak.token);
-
-                      if(!document.body.innerText){
-                          // default redirect if no body is loaded
-                          window.location.replace(getRedirectUrl());
-                      }
-
-                      addLogoutFunction();
-
-                      console.log("Keycloak initialized successfully");
-                  }
-                }).catch((err) => {
-                    deleteAllCookies();
-                    console.error("Failed to initialize Keycloak: ", err);
-                    keycloak.logout({redirectUri: getRedirectUrl()})
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const savedToken = getCookieValue("token");
+    keycloak.init({
+        onLoad: isSafari ? 'login-required' : 'check-sso',
+        silentCheckSsoRedirectUri: isSafari ? undefined : window.location.origin + "/static/accounts/silent-refresh.html",
+        checkLoginIframe: !isSafari,
+        token: savedToken,
+        onTokenExpired: () => {
+            console.log("Token expired, refreshing...");
+            keycloak.updateToken(10)
+                .then(() => {
+                    console.log("Token refreshed successfully");
+                    setCookie("token", keycloak.token);
                 })
+                .catch(() => {
+                    console.log("Failed to refresh token. User is logged out.");
+                });
+        },
+    }).then((authenticated) => {
+        console.log("authenticated: ", authenticated)
+        if (!authenticated || !keycloak.token) {
+            deleteAllCookies();
+            keycloak.login({ redirectUri: getRedirectUrl() })
+        } else {
+            hideLoadingScreen();
 
-                if(keycloak.silentCheckSsoRedirectUri && savedToken){
-                    hideLoadingScreen();
-                }
+            setCookie("token", keycloak.token);
+
+            if (document.location.pathname === '/login') {
+                window.location.replace(getRedirectUrl());
+            }
+
+            addLogoutFunction();
+
+            console.log("Keycloak initialized successfully");
+        }
+    }).catch((err) => {
+        deleteAllCookies();
+        console.error("Failed to initialize Keycloak: ", err);
+        keycloak.logout({ redirectUri: getRedirectUrl() })
+    })
+
+    if (silentCheckSsoRedirectUri && savedToken) {
+        hideLoadingScreen();
+    }
 </script>
-
