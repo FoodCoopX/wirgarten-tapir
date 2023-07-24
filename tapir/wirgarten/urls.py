@@ -7,37 +7,48 @@ from tapir.wirgarten.views import (
     questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
-from tapir.wirgarten.views.contracts import NewContractsView, confirm_new_contracts
-from tapir.wirgarten.views.member import (
-    MemberListView,
-    MemberDetailView,
-    MemberPaymentsView,
-    MemberDeliveriesView,
-    get_payment_amount_edit_form,
-    get_coop_share_transfer_form,
-    get_member_personal_data_create_form,
-    get_harvest_shares_waiting_list_form,
-    WaitingListView,
-    export_waitinglist,
-    get_add_harvest_shares_form,
-    get_member_personal_data_edit_form,
-    get_member_payment_data_edit_form,
-    get_coop_shares_waiting_list_form,
-    get_pickup_location_choice_form,
-    get_add_chicken_shares_form,
-    get_add_bestellcoop_form,
-    get_add_coop_shares_form,
+from tapir.wirgarten.views.contracts import (
+    NewContractsView,
+    SubscriptionListView,
+    confirm_new_contracts,
+)
+from tapir.wirgarten.views.member.details.actions import (
     cancel_contract_at_period_end,
     renew_contract_same_conditions,
-    SubscriptionListView,
+)
+from tapir.wirgarten.views.member.details.member_details import MemberDetailView
+from tapir.wirgarten.views.member.details.modals import (
+    get_add_bestellcoop_form,
+    get_add_chicken_shares_form,
+    get_add_coop_shares_form,
+    get_add_harvest_shares_form,
     get_cancel_trial_form,
+    get_cancellation_reason_form,
+    get_coop_shares_waiting_list_form,
+    get_harvest_shares_waiting_list_form,
+    get_member_payment_data_edit_form,
+    get_member_personal_data_edit_form,
+    get_pickup_location_choice_form,
     get_renew_contracts_form,
-    resend_verify_email,
+)
+from tapir.wirgarten.views.member.list.actions import (
     ExportMembersView,
     export_coop_member_list,
-    get_coop_share_cancel_form,
+    resend_verify_email,
+)
+from tapir.wirgarten.views.member.list.member_deliveries import MemberDeliveriesView
+from tapir.wirgarten.views.member.list.member_list import (
+    MemberListView,
+)
+from tapir.wirgarten.views.member.list.member_payments import (
+    MemberPaymentsView,
+    get_payment_amount_edit_form,
+)
+from tapir.wirgarten.views.member.list.modals import (
     get_cancel_non_trial_form,
-    get_cancellation_reason_form,
+    get_coop_share_cancel_form,
+    get_coop_share_transfer_form,
+    get_member_personal_data_create_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -58,6 +69,7 @@ from tapir.wirgarten.views.product_cfg import (
     get_product_type_capacity_add_form,
     delete_product_type,
 )
+from tapir.wirgarten.views.waitlist import WaitingListView, export_waitinglist
 
 urlpatterns = [
     path(

@@ -53,7 +53,7 @@ def populate_users():
     print(f"Creating {USER_COUNT} users, this may take a while")
     random.seed("wirgarten")
 
-    today=date.today()
+    today = date.today()
 
     parsed_users = get_test_users()
     for index, parsed_user in enumerate(parsed_users[:USER_COUNT]):
@@ -87,7 +87,7 @@ def populate_users():
                 pickup_location_id=pickup_locations[
                     random.randint(0, len(pickup_locations) - 1)
                 ].id,
-                valid_from=today
+                valid_from=today,
             )
 
             min_shares = create_subscriptions(wirgarten_user)

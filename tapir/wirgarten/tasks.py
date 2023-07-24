@@ -1,6 +1,5 @@
 import itertools
 from collections import defaultdict
-from datetime import datetime, date
 
 from celery import shared_task
 from django.db import transaction
@@ -31,7 +30,7 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_product_price,
 )
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_now, get_today
 
 
 @shared_task
@@ -116,7 +115,7 @@ def export_supplier_list_csv():
             )
             return None
 
-        now = timezone.now()
+        now = get_now()
         sums = (
             Subscription.objects.filter(
                 start_date__lte=now, end_date__gte=now, product__type=product_type
@@ -201,7 +200,7 @@ def export_harvest_share_subscriber_emails():
 def send_email_member_contract_end_reminder(member_id):
     member = Member.objects.get(pk=member_id)
 
-    today = date.today()
+    today = get_today()
     if (
         get_active_subscriptions().filter(member=member).exists()
         and not get_future_subscriptions()
@@ -221,7 +220,7 @@ def send_email_member_contract_end_reminder(member_id):
 
 @shared_task
 @transaction.atomic
-def export_payment_parts_csv(reference_date = date.today()):
+def export_payment_parts_csv(reference_date=get_today()):
     due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
@@ -303,7 +302,7 @@ def export_product_or_coop_payment_csv(
 @shared_task
 def generate_member_numbers():
     members = Member.objects.filter(member_no__isnull=True)
-    today = date.today()
+    today = get_today()
     for member in members:
         if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
             member.save()

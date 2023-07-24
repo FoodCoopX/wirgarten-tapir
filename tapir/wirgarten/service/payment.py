@@ -4,10 +4,11 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from nanoid import generate
+from tapir.wirgarten.utils import get_today
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import CoopShareTransaction, Subscription, Member, Payment
+from tapir.wirgarten.models import Subscription, Member, Payment
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -39,7 +40,7 @@ def generate_mandate_ref(member_id: str):
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
-def get_next_payment_date(reference_date: date = date.today()):
+def get_next_payment_date(reference_date: date = get_today()):
     """
     Get the next date on which payments are due.
 
@@ -102,7 +103,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
 
 
 def get_active_subscriptions_grouped_by_product_type(
-    member: Member, reference_date: date = date.today()
+    member: Member, reference_date: date = get_today()
 ) -> dict:
     """
     Get all active subscriptions for a member grouped by product types.
@@ -145,7 +146,7 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     return sum(map(lambda x: float(x.amount), payments))
 
 
-def get_solidarity_overplus(reference_date: date = date.today()) -> float:
+def get_solidarity_overplus(reference_date: date = get_today()) -> float:
     """
     Returns the total solidarity price sum for the active subscriptions during the reference date.
 

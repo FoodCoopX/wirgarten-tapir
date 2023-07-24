@@ -1,7 +1,8 @@
-from django.urls import path, include, reverse_lazy
+from django.urls import path
 from django.views import generic
 
-from tapir.wirgarten.views.member import change_email
+from tapir.wirgarten.views.member.details.actions import change_email
+
 
 urlpatterns = [
     # Standard login/logout/password views should be un-namespaced because Django refers to them in a few places and

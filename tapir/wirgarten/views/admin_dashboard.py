@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import json
-from datetime import date
 from math import floor
 
 from dateutil.relativedelta import relativedelta
@@ -35,7 +34,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
     get_current_growing_period,
 )
-from tapir.wirgarten.utils import format_currency
+from tapir.wirgarten.utils import format_currency, get_today
 
 
 class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
@@ -49,9 +48,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             name=ProductTypes.HARVEST_SHARES
         )
 
-        next_growing_period=get_next_growing_period()
+        next_growing_period = get_next_growing_period()
         self.add_capacity_chart_context(context)
-        if(next_growing_period):
+        if next_growing_period:
             self.add_capacity_chart_context(
                 context, next_growing_period.start_date, "next"
             )
@@ -139,7 +138,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancellation_chart_context(self, context):
         month_labels = [
-            date.today() + relativedelta(day=1, months=-i + 1) for i in range(13)
+            get_today() + relativedelta(day=1, months=-i + 1) for i in range(13)
         ][::-1]
 
         cancellations_data = [
@@ -180,7 +179,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_labels"] = cancellations_labels
 
     def add_capacity_chart_context(
-        self, context, reference_date=date.today(), prefix="current"
+        self, context, reference_date=get_today(), prefix="current"
     ):
         active_capacities = {
             c.product_type.id: c for c in get_active_product_capacities(reference_date)
@@ -258,7 +257,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_traffic_source_questionaire_chart_context(self, context):
         month_labels = [
-            date.today() + relativedelta(day=1, months=-i) for i in range(13)
+            get_today() + relativedelta(day=1, months=-i) for i in range(13)
         ][::-1]
 
         # Create an additional queryset for "No Response"

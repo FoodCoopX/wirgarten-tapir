@@ -1,6 +1,5 @@
 import json
-from datetime import date, datetime
-from math import ceil
+from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -27,6 +26,7 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_product_price,
 )
+from tapir.wirgarten.utils import get_today
 
 
 def get_pickup_locations_map_data(pickup_locations, location_capabilities):
@@ -38,7 +38,7 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity(capability, reference_date=date.today()):
+def get_current_capacity(capability, reference_date=get_today()):
     if (
         type(capability) is not dict
     ):  # FIXME: this is dirty, check why this was needed and fix it
@@ -81,7 +81,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "Hühneranteile": "/static/wirgarten/images/icons/Huehneranteil.svg",
     }
 
-    today = date.today()
+    today = get_today()
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
@@ -175,7 +175,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         possible_locations = PickupLocation.objects.filter(
             id__in=map(lambda x: x["pickup_location_id"], location_capabilities)
         )
-        next_month = date.today() + relativedelta(months=1, day=1)
+        next_month = get_today() + relativedelta(months=1, day=1)
         for pt_name in selected_product_types:
             possible_locations = possible_locations.filter(
                 id__in=[

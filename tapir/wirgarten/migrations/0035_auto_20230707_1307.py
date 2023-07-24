@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wirgarten', '0034_auto_20230615_1210'),
+        ("wirgarten", "0034_auto_20230615_1210"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='subscription',
-            name='trial_end_date_override',
+            model_name="subscription",
+            name="trial_end_date_override",
             field=models.DateField(null=True),
         ),
         migrations.AlterField(
-            model_name='product',
-            name='base',
+            model_name="product",
+            name="base",
             field=models.BooleanField(default=False, null=True),
         ),
     ]

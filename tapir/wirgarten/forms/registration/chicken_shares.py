@@ -1,9 +1,6 @@
-from datetime import date
-
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.db import transaction
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import ProductTypes
@@ -38,7 +35,7 @@ from tapir.wirgarten.service.products import (
     get_free_product_capacity,
     get_current_growing_period,
 )
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_now, get_today
 
 CHICKEN_SHARE_FIELD_PREFIX = "chicken_shares_"
 
@@ -152,11 +149,11 @@ class ChickenShareForm(forms.Form):
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
             )
-            today = date.today()
+            today = get_today()
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2)
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
-            next_month = date.today() + relativedelta(months=1, day=1)
+            next_month = today + relativedelta(months=1, day=1)
             self.fields["pickup_location_change_date"] = forms.ChoiceField(
                 required=False,
                 label=_("Abholortwechsel zum"),
@@ -189,7 +186,7 @@ class ChickenShareForm(forms.Form):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id)
 
-        now = timezone.now()
+        now = get_now()
 
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.pop(
@@ -218,7 +215,7 @@ class ChickenShareForm(forms.Form):
                 )
 
         Subscription.objects.bulk_create(self.subs)
-        Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
+        Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
@@ -246,7 +243,7 @@ class ChickenShareForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         if not new_pickup_location and has_chicken_shares and self.member_id:
             product_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
-            next_month = date.today() + relativedelta(months=1, day=1)
+            next_month = get_today() + relativedelta(months=1, day=1)
             latest_pickup_location = (
                 MemberPickupLocation.objects.filter(
                     member_id=self.member_id, valid_from__lte=next_month
