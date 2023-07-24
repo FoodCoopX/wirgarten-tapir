@@ -13,8 +13,8 @@ def user_log_entry_list(context, selected_user):
     context["log_entries"] = log_entries
 
     context["create_text_log_entry_action_url"] = "%s?next=%s" % (
+        reverse("log:create_user_text_log_entry", args=[selected_user.pk]),
         reverse("wirgarten:member_detail", args=[selected_user.pk]),
-        selected_user.get_absolute_url(),
     )
 
     return context
