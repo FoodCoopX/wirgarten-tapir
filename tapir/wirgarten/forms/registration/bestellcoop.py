@@ -1,6 +1,5 @@
 from django import forms
 from django.db import transaction
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import ProductTypes
@@ -19,6 +18,7 @@ from tapir.wirgarten.service.products import (
     get_product_price,
     get_future_subscriptions,
 )
+from tapir.wirgarten.utils import get_now
 
 
 class BestellCoopForm(forms.Form):
@@ -86,6 +86,7 @@ class BestellCoopForm(forms.Form):
             if not mandate_ref:
                 mandate_ref = get_or_create_mandate_ref(member_id)
 
+            now = get_now()
             self.sub = Subscription.objects.create(
                 member_id=member_id,
                 product=self.product,
@@ -94,7 +95,7 @@ class BestellCoopForm(forms.Form):
                 end_date=self.growing_period.end_date,
                 period=self.growing_period,
                 mandate_ref=mandate_ref,
-                consent_ts=timezone.now(),
-                withdrawal_consent_ts=timezone.now(),
+                consent_ts=now,
+                withdrawal_consent_ts=now,
             )
-            Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
+            Member.objects.filter(id=member_id).update(sepa_consent=now)

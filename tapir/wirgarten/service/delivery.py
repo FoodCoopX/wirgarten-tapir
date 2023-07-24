@@ -1,4 +1,5 @@
 from datetime import date
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 
@@ -17,6 +18,7 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_future_subscriptions,
 )
+from tapir.wirgarten.utils import get_today
 
 
 def get_active_pickup_location_capabilities():
@@ -26,7 +28,7 @@ def get_active_pickup_location_capabilities():
 
 
 def get_active_pickup_locations(
-    capabilities: [
+    capabilities: List[
         PickupLocationCapability
     ] = get_active_pickup_location_capabilities(),
 ):
@@ -36,7 +38,7 @@ def get_active_pickup_locations(
 
 
 # FIXME: the parameter should be obsolete, and the delivery date should be calculated from the pickup location
-def get_next_delivery_date(reference_date: date = date.today()):
+def get_next_delivery_date(reference_date: date = get_today()):
     delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
     if reference_date.weekday() > delivery_day:
         next_delivery = reference_date + relativedelta(
@@ -50,7 +52,7 @@ def get_next_delivery_date(reference_date: date = date.today()):
 
 
 def get_next_delivery_date_for_product_type(
-    product_type=ProductType, reference_date: date = date.today()
+    product_type=ProductType, reference_date: date = get_today()
 ):
     next_delivery_date = get_next_delivery_date(reference_date)
     _, week_num, _ = next_delivery_date.isocalendar()

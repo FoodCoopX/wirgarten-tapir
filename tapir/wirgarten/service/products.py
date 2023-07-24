@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -18,13 +19,14 @@ from tapir.wirgarten.models import (
     TaxRate,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_growing_period_overlap,
     validate_date_range,
 )
 
 
-def get_total_price_for_subs(subs: [Payable]) -> float:
+def get_total_price_for_subs(subs: List[Payable]) -> float:
     """
     Returns the total amount of one payment for the given list of subs.
 
@@ -70,7 +72,7 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
         return [name_field]
 
 
-def get_active_product_types(reference_date: date = date.today()) -> iter:
+def get_active_product_types(reference_date: date = get_today()) -> iter:
     """
     Returns the product types which are active for the given reference date.
 
@@ -85,13 +87,13 @@ def get_active_product_types(reference_date: date = date.today()) -> iter:
     ).order_by(*product_type_order_by())
 
 
-def get_available_product_types(reference_date: date = date.today()) -> iter:
+def get_available_product_types(reference_date: date = get_today()) -> iter:
     # TODO: filter out the ones without any capacity left!
     return get_active_product_types(reference_date)
 
 
 def get_next_growing_period(
-    reference_date: date = date.today(),
+    reference_date: date = get_today(),
 ) -> GrowingPeriod | None:
     try:
         return (
@@ -104,7 +106,7 @@ def get_next_growing_period(
 
 
 def get_current_growing_period(
-    reference_date: date = date.today(),
+    reference_date: date = get_today(),
 ) -> GrowingPeriod | None:
     try:
         return (
@@ -173,7 +175,7 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
     """
 
     gp = GrowingPeriod.objects.get(id=growing_period_id)
-    today = date.today()
+    today = get_today()
 
     if gp.start_date < today:  # period does not start in the future
         return False
@@ -183,7 +185,7 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
     return True
 
 
-def get_active_product_capacities(reference_date: date = date.today()):
+def get_active_product_capacities(reference_date: date = get_today()):
     """
     Gets the active product capacities for the given reference date.
 
@@ -195,7 +197,7 @@ def get_active_product_capacities(reference_date: date = date.today()):
     ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
-def get_future_subscriptions(reference_date: date = date.today()):
+def get_future_subscriptions(reference_date: date = get_today()):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
@@ -207,7 +209,7 @@ def get_future_subscriptions(reference_date: date = date.today()):
     )
 
 
-def get_active_subscriptions(reference_date: date = date.today()):
+def get_active_subscriptions(reference_date: date = get_today()):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
@@ -240,7 +242,7 @@ def create_product(name: str, price: Decimal, capacity_id: str):
     return product
 
 
-def get_product_price(product: Product, reference_date: date = date.today()):
+def get_product_price(product: Product, reference_date: date = get_today()):
     """
     Returns the currently active product price.
 
@@ -304,7 +306,7 @@ def get_next_product_price_change_date(growing_period_id: str):
     """
 
     gp = GrowingPeriod.objects.get(id=growing_period_id)
-    today = date.today()
+    today = get_today()
 
     return (
         gp.start_date
@@ -366,7 +368,7 @@ def create_product_type_capacity(
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)
-    today = date.today()
+    today = get_today()
     create_or_update_default_tax_rate(
         product_type_id=pt.id,
         tax_rate=default_tax_rate,
@@ -473,14 +475,12 @@ def create_or_update_default_tax_rate(
         TaxRate.objects.create(
             product_type_id=product_type_id,
             tax_rate=tax_rate,
-            valid_from=date.today(),
+            valid_from=get_today(),
             valid_to=None,
         )
 
 
-def get_free_product_capacity(
-    product_type_id: str, reference_date: date = date.today()
-):
+def get_free_product_capacity(product_type_id: str, reference_date: date = get_today()):
     active_product_capacities = get_active_product_capacities(reference_date).filter(
         product_type_id=product_type_id
     )
@@ -501,7 +501,7 @@ def get_free_product_capacity(
 
 
 def get_cheapest_product_price(
-    product_type: ProductType, reference_date: date = date.today()
+    product_type: ProductType, reference_date: date = get_today()
 ):
     return (
         ProductPrice.objects.filter(
@@ -513,7 +513,7 @@ def get_cheapest_product_price(
 
 
 def is_product_type_available(
-    product_type: ProductType, reference_date: date = date.today()
+    product_type: ProductType, reference_date: date = get_today()
 ) -> bool:
     return get_free_product_capacity(
         product_type_id=product_type.id, reference_date=reference_date
@@ -521,7 +521,7 @@ def is_product_type_available(
 
 
 # FIXME: duplicate code. It would be nice to have generic parameters for each product type instead of hand written ones
-def is_harvest_shares_available(reference_date: date = date.today()) -> bool:
+def is_harvest_shares_available(reference_date: date = get_today()) -> bool:
     param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
@@ -531,7 +531,7 @@ def is_harvest_shares_available(reference_date: date = date.today()) -> bool:
     )
 
 
-def is_bestellcoop_available(reference_date: date = date.today()) -> bool:
+def is_bestellcoop_available(reference_date: date = get_today()) -> bool:
     param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
@@ -541,7 +541,7 @@ def is_bestellcoop_available(reference_date: date = date.today()) -> bool:
     )
 
 
-def is_chicken_shares_available(reference_date: date = date.today()) -> bool:
+def is_chicken_shares_available(reference_date: date = get_today()) -> bool:
     param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2

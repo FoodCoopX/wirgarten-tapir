@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = "Create the initial admin account"
 
     def handle(self, *args, **options):
-        #if TapirUser.objects.filter(is_superuser=True).exists():
+        # if TapirUser.objects.filter(is_superuser=True).exists():
         #    sys.stderr.write(
         #        "There is already an admin account in the system, this command is disabled.\n"
         #    )

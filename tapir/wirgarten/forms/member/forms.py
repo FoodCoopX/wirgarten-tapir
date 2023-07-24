@@ -51,7 +51,7 @@ from tapir.wirgarten.service.products import (
     is_chicken_shares_available,
     is_bestellcoop_available,
 )
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_today
 
 
 class PersonalDataForm(ModelForm):
@@ -104,7 +104,7 @@ class PersonalDataForm(ModelForm):
             )
 
         birthdate = self.cleaned_data["birthdate"]
-        today = date.today()
+        today = get_today()
         if birthdate > today or birthdate < (today + relativedelta(years=-120)):
             self.add_error("birthdate", _("Bitte wähle ein gültiges Datum aus."))
         elif birthdate > (today + relativedelta(years=-18)):
@@ -270,7 +270,7 @@ class CoopShareCancelForm(Form):
         self.original_share_quantity = member.coopsharetransaction_set.aggregate(
             quantity=Sum(F("quantity"))
         )["quantity"]
-        today = date.today()
+        today = get_today()
         valid_at = today + relativedelta(years=1, month=12, day=31)
 
         self.fields["cancellation_date"] = DateField(
@@ -346,7 +346,7 @@ class NonTrialCancellationForm(Form):
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         self.subs = get_future_subscriptions().filter(
             member_id=self.member_id,
-            end_date__gte=date.today() + relativedelta(months=1, day=1),
+            end_date__gte=get_today() + relativedelta(months=1, day=1),
         )
         self.member = Member.objects.get(id=self.member_id)
 

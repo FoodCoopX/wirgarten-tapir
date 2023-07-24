@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import datetime
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.core.mail import EmailMultiAlternatives
@@ -10,10 +11,10 @@ from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import generate_future_deliveries
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_today
 
 
-def send_email(to_email: [str], subject: str, content: str, variables: dict = {}):
+def send_email(to_email: List[str], subject: str, content: str, variables: dict = {}):
     """
     Send an email to a list of recipients. The email is sent as HTML using the email/email_base.html template.
 
@@ -64,7 +65,7 @@ def get_default_vars(to_email):
 
 
 def add_general_vars():
-    today = date.today()
+    today = get_today()
     return {
         "year_current": today.year,
         "year_next": (today + relativedelta(years=1)).year,

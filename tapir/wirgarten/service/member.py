@@ -1,8 +1,8 @@
 from datetime import date, datetime
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.utils import timezone
 
 from tapir import settings
 from tapir.accounts.models import TapirUser
@@ -28,7 +28,7 @@ from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_now, get_today
 
 
 @transaction.atomic
@@ -54,7 +54,7 @@ def transfer_coop_shares(
     if quantity > origin_ownerships_quantity:
         quantity = origin_ownerships_quantity
 
-    today = date.today()
+    today = get_today()
     new_ownership = CoopShareTransaction.objects.create(
         member_id=target_member_id,
         quantity=quantity,
@@ -121,7 +121,7 @@ def create_mandate_ref(member: str | Member):
     member_id = resolve_member_id(member)
     ref = generate_mandate_ref(member_id)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=datetime.now(timezone.utc)
+        ref=ref, member_id=member_id, start_ts=get_now()
     )
 
 
@@ -130,6 +130,10 @@ def resolve_member_id(member: str | Member | TapirUser) -> str:
 
 
 def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
+    """
+    Returns the existing mandate ref for a member of creates a new one if none exists.
+    """
+
     member_id = resolve_member_id(member)
     mandate_ref = False
     for row in (
@@ -147,7 +151,7 @@ def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date=date.today()):
+def get_next_contract_start_date(ref_date=get_today()):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
@@ -199,9 +203,8 @@ def buy_cooperative_shares(
         type="Genossenschaftsanteile",
     )
 
-    now = timezone.now()
     member = Member.objects.get(id=member_id)
-    member.sepa_consent = now
+    member.sepa_consent = get_now()
     member.save()
 
 
@@ -226,7 +229,7 @@ def create_wait_list_entry(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        privacy_consent=timezone.now(),
+        privacy_consent=get_now(),
         type=type,
         member=member,
     )
@@ -260,13 +263,13 @@ def change_pickup_location(
 
 def get_next_trial_end_date(sub: Subscription = None):
     return (
-        (sub.start_date if sub else date.today()) + relativedelta(day=1, months=1)
+        (sub.start_date if sub else get_today()) + relativedelta(day=1, months=1)
     ) + relativedelta(days=-1)
 
 
 def get_subscriptions_in_trial_period(member: int | str | Member):
     member_id = resolve_member_id(member)
-    today = date.today()
+    today = get_today()
     min_start_date = today + relativedelta(day=1, months=-1)
     next_month = today + relativedelta(day=1, months=1)
 
@@ -281,7 +284,7 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
 def send_cancellation_confirmation_email(
     member: str | Member,
     contract_end_date: date,
-    subs_to_cancel: [Subscription],
+    subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
     skip_email: bool = False,
 ):
@@ -312,7 +315,7 @@ def send_cancellation_confirmation_email(
         )
 
 
-def send_contract_change_confirmation(member: Member, subs: [Subscription]):
+def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
@@ -340,7 +343,7 @@ def send_contract_change_confirmation(member: Member, subs: [Subscription]):
     )
 
 
-def send_order_confirmation(member: Member, subs: [Subscription]):
+def send_order_confirmation(member: Member, subs: List[Subscription]):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending order confirmation for member: ",

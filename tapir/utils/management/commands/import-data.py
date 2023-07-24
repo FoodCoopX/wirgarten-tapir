@@ -4,18 +4,30 @@ import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 
-from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, TapirUser, GrowingPeriod, \
-    Product, PickupLocation
+from tapir.wirgarten.models import (
+    Member,
+    Subscription,
+    CoopShareTransaction,
+    TapirUser,
+    GrowingPeriod,
+    Product,
+    PickupLocation,
+)
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
 class Command(BaseCommand):
-    help = 'Imports data from CSV files into the database'
+    help = "Imports data from CSV files into the database"
 
     def add_arguments(self, parser):
-        parser.add_argument('--type', nargs=1, choices=['members', 'shares', 'subscriptions'], required=True)
-        parser.add_argument('--file', nargs=1, required=True)
-        parser.add_argument('--delete-all', action='store_true')
+        parser.add_argument(
+            "--type",
+            nargs=1,
+            choices=["members", "shares", "subscriptions"],
+            required=True,
+        )
+        parser.add_argument("--file", nargs=1, required=True)
+        parser.add_argument("--delete-all", action="store_true")
 
     def handle(self, *args, **options):
         # print(args)
@@ -24,7 +36,7 @@ class Command(BaseCommand):
         type = options["type"][0]
         delete_all = options["delete_all"]
 
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             reader = csv.DictReader(f)
             if type == "members":
                 if delete_all:
@@ -32,7 +44,7 @@ class Command(BaseCommand):
                 for row in reader:
                     # identify pickup location ID
                     try:
-                        if row["Abholort"] != '':
+                        if row["Abholort"] != "":
                             picloc = PickupLocation.objects.get(name=row["Abholort"]).id
                         else:
                             picloc = None
@@ -54,7 +66,7 @@ class Command(BaseCommand):
                         account_owner=row["Kontoinhaber"],
                         sepa_consent=row["consent_sepa"] + "T12:00:00+0200",
                         privacy_consent=row["privacy_consent"] + "T12:00:00+0200",
-                        pickup_location_id=picloc
+                        pickup_location_id=picloc,
                     )
                     try:
                         m.save(bypass_keycloak=True)
@@ -70,24 +82,34 @@ class Command(BaseCommand):
                     qu = int(row["Anzahl Anteile"])
                     transfer_member = None
                     valid_date = row["Datum"]
-                    if row["Übertragungspartner"] != '':
+                    if row["Übertragungspartner"] != "":
                         try:
-                            transfer_member = Member.objects.get(id=row["Übertragungspartner"])
+                            transfer_member = Member.objects.get(
+                                id=row["Übertragungspartner"]
+                            )
                             print(transfer_member)
                         except ObjectDoesNotExist as e:
                             print("Transfer Member not found!")
                             continue
                     match row["Bewegungsart (Z,Ü,K)"]:
                         case "Z":
-                            trans_type = CoopShareTransaction.CoopShareTransactionType.PURCHASE
+                            trans_type = (
+                                CoopShareTransaction.CoopShareTransactionType.PURCHASE
+                            )
                         case "Ü":
                             if qu > 0:
-                                trans_type = CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
+                                trans_type = (
+                                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
+                                )
                             else:
-                                trans_type = CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
+                                trans_type = (
+                                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
+                                )
 
                         case "K":
-                            trans_type = CoopShareTransaction.CoopShareTransactionType.CANCELLATION
+                            trans_type = (
+                                CoopShareTransaction.CoopShareTransactionType.CANCELLATION
+                            )
                             valid_date = row["Wirkung Kündigung"]
                         case _:
                             raise "Unknown transaction type!"
@@ -99,7 +121,7 @@ class Command(BaseCommand):
                             valid_at=valid_date,
                             quantity=qu,
                             share_price=50,
-                            transfer_member=transfer_member
+                            transfer_member=transfer_member,
                         )
                     except django.db.Error as e:
                         print("Database Error occured", e.__cause__)
@@ -121,7 +143,10 @@ class Command(BaseCommand):
                             if row["E-Mail-Adresse"] != "":
                                 m = TapirUser.objects.get(email=row["E-Mail-Adresse"])
                             else:
-                                print("No data to identify TapirUser in Vertrag ", row["VertragNr"])
+                                print(
+                                    "No data to identify TapirUser in Vertrag ",
+                                    row["VertragNr"],
+                                )
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
                         print("Database Error: TapirUser not found", e.__cause__)
@@ -168,11 +193,17 @@ class Command(BaseCommand):
                         print("Subscription object successfully created.")
                     except django.db.Error as e:
                         print(row)
-                        print("Database Error occured with create subscription: ", e.__cause__)
+                        print(
+                            "Database Error occured with create subscription: ",
+                            e.__cause__,
+                        )
                         continue
                     except ValidationError as e:
                         print(row)
-                        print("Validation Error occured with create subscription: ", e.messages)
+                        print(
+                            "Validation Error occured with create subscription: ",
+                            e.messages,
+                        )
                         continue
                     except ValueError as e:
                         print(row)

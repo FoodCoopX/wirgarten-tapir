@@ -26,7 +26,7 @@ class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
                 return HttpResponseServerError("Internal Server Error")
 
     def handle_server_error(self, request, exception):
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = get_now().strftime("%Y-%m-%d_%H-%M-%S")
         error_log_dir = (
             settings.ERROR_LOG_DIR
             if "ERROR_LOG_DIR" in settings.__dict__

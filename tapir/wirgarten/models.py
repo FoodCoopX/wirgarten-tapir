@@ -1,6 +1,5 @@
 import datetime
 from functools import partial
-from math import floor
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
@@ -23,7 +22,7 @@ from tapir.core.models import TapirModel
 from tapir.log.models import UpdateModelLogEntry, LogEntry
 from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
 from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_today
 
 
 class PickupLocation(TapirModel):
@@ -124,7 +123,7 @@ class ProductType(TapirModel):
 
     @property
     def base_price(self):
-        today = datetime.date.today()
+        today = get_today()
         product = self.product_set.get(base=True)
         return (
             product.productprice_set.filter(valid_from__lte=today)
@@ -205,7 +204,7 @@ class Member(TapirUser):
     def pickup_location(self):
         return self.get_pickup_location()
 
-    def get_pickup_location(self, reference_date=timezone.now().date()):
+    def get_pickup_location(self, reference_date=get_today()):
         all_locations = self.memberpickuplocation_set.all()
 
         # If there's only one pickup_location, return it regardless of its valid_from date
@@ -242,20 +241,21 @@ class Member(TapirUser):
 
     def is_in_coop_trial(self):
         entry_date = self.coop_entry_date
-        return entry_date is not None and entry_date > datetime.date.today()
+        return entry_date is not None and entry_date > get_today()
 
     @property
     def has_trial_contracts(self):
         from tapir.wirgarten.service.products import get_future_subscriptions
+
         subs = get_future_subscriptions().filter(member_id=self.id)
-        today = datetime.date.today()
+        today = get_today()
         for sub in subs:
             if today < sub.trial_end_date and sub.cancellation_ts is None:
                 return True
         return False
 
     def coop_shares_total_value(self):
-        today = datetime.date.today()
+        today = get_today()
         return (
             self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
                 total_value=Sum(F("quantity") * F("share_price"))
@@ -265,7 +265,7 @@ class Member(TapirUser):
 
     @property
     def coop_shares_quantity(self):
-        today = datetime.date.today()
+        today = get_today()
         return (
             self.coopsharetransaction_set.filter(valid_at__lte=today).aggregate(
                 quantity=Sum(F("quantity"))
@@ -276,7 +276,7 @@ class Member(TapirUser):
     def monthly_payment(self):
         from tapir.wirgarten.service.products import get_active_subscriptions
 
-        today = datetime.date.today()
+        today = get_today()
         return (
             get_active_subscriptions()
             .filter(member_id=self.id)
@@ -483,7 +483,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     @property
     def total_price(self):
-        today = datetime.date.today()
+        today = get_today()
         if not hasattr(self, "_total_price"):
             product_prices = ProductPrice.objects.filter(
                 product_id=self.product_id, valid_from__lte=today
@@ -514,7 +514,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     @property
     def total_price_without_soli(self):
-        today = datetime.date.today()
+        today = get_today()
         if not hasattr(self, "_total_price_without_soli"):
             product_prices = ProductPrice.objects.filter(
                 product_id=self.product_id, valid_from__lte=today

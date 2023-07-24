@@ -1,9 +1,7 @@
 from datetime import date
-
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.db import transaction
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -44,7 +42,7 @@ from tapir.wirgarten.service.products import (
     get_current_growing_period,
     is_harvest_shares_available,
 )
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, get_now, get_today
 
 SOLIDARITY_PRICES = [
     (0.0, _("Ich möchte den Richtpreis zahlen")),
@@ -60,7 +58,7 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_solidarity_total(reference_date: date = date.today()) -> float:
+def get_solidarity_total(reference_date: date = get_today()) -> float:
     val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
     if val == 0:  # disabled
         return 0.0
@@ -261,11 +259,11 @@ class HarvestShareForm(forms.Form):
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
             )
-            today = date.today()
+            today = get_today()
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2)
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
-            next_month = date.today() + relativedelta(months=1, day=1)
+            next_month = today + relativedelta(months=1, day=1)
             self.fields["pickup_location_change_date"] = forms.ChoiceField(
                 required=False,
                 label=_("Abholortwechsel zum"),
@@ -301,7 +299,7 @@ class HarvestShareForm(forms.Form):
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id)
 
-        now = timezone.now()
+        now = get_now()
 
         self.subs = []
         if not hasattr(self, "growing_period"):
@@ -359,14 +357,14 @@ class HarvestShareForm(forms.Form):
                     end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
                     consent_ts=now,
-                    withdrawal_consent_ts=timezone.now(),
+                    withdrawal_consent_ts=now,
                     trial_end_date=existing_trial_end_date,
                     **solidarity_options,
                 )
 
                 self.subs.append(sub)
 
-        Member.objects.filter(id=member_id).update(sepa_consent=timezone.now())
+        Member.objects.filter(id=member_id).update(sepa_consent=now)
         new_pickup_location = self.cleaned_data.get("pickup_location")
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
@@ -404,7 +402,7 @@ class HarvestShareForm(forms.Form):
         new_pickup_location = self.cleaned_data.get("pickup_location")
         if not new_pickup_location and has_harvest_shares and self.member_id:
             product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
-            next_month = date.today() + relativedelta(months=1, day=1)
+            next_month = get_today() + relativedelta(months=1, day=1)
             latest_pickup_location = (
                 MemberPickupLocation.objects.filter(
                     member_id=self.member_id, valid_from__lte=next_month

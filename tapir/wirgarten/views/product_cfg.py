@@ -1,4 +1,3 @@
-import datetime
 import itertools
 import json
 import re
@@ -36,6 +35,7 @@ from tapir.wirgarten.service.products import (
     create_growing_period,
     update_product,
 )
+from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.views.modal import get_form_modal
 
 PAGE_ROOT = "wirgarten:product"
@@ -52,7 +52,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         context = super().get_context_data(*args, **kwargs)
 
         def get_growing_period_status(period) -> str:
-            today = datetime.date.today()
+            today = get_today()
             if period.end_date < today:
                 return "old"
             elif period.start_date <= today and period.end_date >= today:

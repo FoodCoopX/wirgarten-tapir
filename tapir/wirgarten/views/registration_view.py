@@ -45,6 +45,7 @@ from tapir.wirgarten.service.products import (
     is_chicken_shares_available,
     get_future_subscriptions,
 )
+from tapir.wirgarten.utils import get_now, get_today
 
 # Wizard Steps Keys
 STEP_HARVEST_SHARES = "Harvest Shares"
@@ -120,7 +121,7 @@ def save_member(form_dict):
     member.iban = personal_details_form.cleaned_data["iban"]
     member.is_active = False
 
-    now = timezone.now()
+    now = get_now()
     member.sepa_consent = now
     member.withdrawal_consent = now
     member.privacy_consent = now
@@ -151,7 +152,7 @@ class RegistrationWizardView(CookieWizardView):
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardView, self).__init__(*args, **kwargs)
 
-        today = timezone.now().date()
+        today = get_today()
         reference_date = max(today, date(2023, 6, 15))
         self.growing_period = GrowingPeriod.objects.filter(
             start_date__lte=reference_date + relativedelta(months=1, day=1),
@@ -311,7 +312,7 @@ class RegistrationWizardView(CookieWizardView):
                 pickup_location_id=form_dict[STEP_PICKUP_LOCATION]
                 .cleaned_data["pickup_location"]
                 .id,
-                valid_from=date.today(),
+                valid_from=get_today(),
             )
 
         # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
