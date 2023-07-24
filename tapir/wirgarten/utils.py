@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from django.utils import timezone
 import datetime
 from decimal import Decimal
@@ -6,10 +7,15 @@ from django.core.exceptions import PermissionDenied
 from tapir.wirgarten.constants import Permission
 
 
-def format_date(date: datetime.date) -> str:
-    if date is None:
+def format_date(value: datetime.date | datetime.datetime) -> str:
+    if value is None:
         return ""
-    return f"{str(date.day).zfill(2)}.{str(date.month).zfill(2)}.{date.year}"
+    if type(value) is datetime.datetime:
+        desired_tz = ZoneInfo("Europe/Berlin")
+        localized_datetime = value.astimezone(desired_tz)
+        return f"{str(localized_datetime.day).zfill(2)}.{str(localized_datetime.month).zfill(2)}.{localized_datetime.year} {str(localized_datetime.hour).zfill(2)}:{str(localized_datetime.minute).zfill(2)}"
+    else:
+        return f"{str(value.day).zfill(2)}.{str(value.month).zfill(2)}.{value.year}"
 
 
 def format_currency(number: int | float | Decimal | str):

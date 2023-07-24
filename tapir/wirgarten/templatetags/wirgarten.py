@@ -44,15 +44,8 @@ def summary_card_disabled(title):
 
 @register.filter(name="format_date")
 def format_date(value: date | datetime):
-    if type(value) is date:
+    if type(value) is date or type(value) is datetime:
         return utils.format_date(value)
-    elif type(value) is datetime:
-        # Convert the datetime object to the desired timezone
-        desired_tz = ZoneInfo("Europe/Berlin")
-        localized_datetime = value.astimezone(desired_tz)
-
-        # Format the date and time
-        return f"{utils.format_date(localized_datetime)} {str(localized_datetime.hour).zfill(2)}:{str(localized_datetime.minute).zfill(2)}"
     else:
         print(value, type(value), datetime)
         return None

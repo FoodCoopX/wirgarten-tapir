@@ -8,6 +8,7 @@ from tapir.wirgarten.views import (
 )
 from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
 from tapir.wirgarten.views.contracts import (
+    ExportSubscriptionList,
     NewContractsView,
     SubscriptionListView,
     confirm_new_contracts,
@@ -264,6 +265,11 @@ urlpatterns = [
         name="member_coopshare_cancel",
     ),
     path("contracts", SubscriptionListView.as_view(), name="subscription_list"),
+    path(
+        "contracts/exportoverview",
+        ExportSubscriptionList.as_view(),
+        name="subscription_overview_export",
+    ),
     path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(
         "payments/<str:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",

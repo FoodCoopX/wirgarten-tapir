@@ -1,13 +1,13 @@
 import os
 import sys
 import traceback
-from datetime import datetime
 
 from django.http import HttpResponseServerError
 from django.views import debug
 from django.utils.deprecation import MiddlewareMixin
 
 from tapir import settings
+from tapir.wirgarten.utils import get_now
 
 
 class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
