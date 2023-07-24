@@ -68,12 +68,14 @@ def get_next_delivery_date_for_product_type(
         )
 
 
-def generate_future_deliveries(member: Member):
+def generate_future_deliveries(member: Member, limit: int = None):
     deliveries = []
     next_delivery_date = get_next_delivery_date()
     last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
     subs = get_future_subscriptions().filter(member=member)
-    while next_delivery_date <= last_growing_period.end_date:
+    while next_delivery_date <= last_growing_period.end_date and (
+        limit is None or len(deliveries) < limit
+    ):
         _, week_num, _ = next_delivery_date.isocalendar()
         even_week = week_num % 2 == 0
 

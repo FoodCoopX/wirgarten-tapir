@@ -260,7 +260,7 @@ class MemberFilter(FilterSet):
             latest_pickup_location_subquery = Subquery(
                 MemberPickupLocation.objects.filter(
                     member_id=OuterRef("id"),  # references Member.id
-                    valid_from__lte=today
+                    valid_from__lte=today,
                 )
                 .order_by("-valid_from")[:1]
                 .values("id")
@@ -1158,13 +1158,12 @@ def get_pickup_location_choice_form(request, **kwargs):
 
         # Case A: User makes change AFTER delivery_date and BEFORE change_util_weekday
         # If today is before or on change_util_weekday and after next_delivery_weekday
-        if next_delivery_weekday < today_weekday <= change_util_weekday:
-            change_date = today
-
+        # OR 
         # Case B: User makes change BEFORE delivery_date and AFTER change_util_weekday
         # If today is after change_util_weekday and before next_delivery_weekday
-        elif change_util_weekday < today_weekday < next_delivery_weekday:
-            change_date = next_delivery_date + timedelta(days=1)
+        if next_delivery_weekday < today_weekday <= change_util_weekday or \
+            change_util_weekday <= today_weekday < next_delivery_weekday:
+            change_date = today
 
         # Case C: User makes change ON the delivery_date
         # If today is the delivery_date, the change can become effective from the next day
@@ -1176,6 +1175,7 @@ def get_pickup_location_choice_form(request, **kwargs):
         else:
             change_date = next_delivery_date + timedelta(days=1)
 
+        orig_pl = member.pickup_location
         existing = MemberPickupLocation.objects.filter(
             member=member, valid_from=change_date
         )
@@ -1189,6 +1189,12 @@ def get_pickup_location_choice_form(request, **kwargs):
                 pickup_location_id=pickup_location_id,
                 valid_from=change_date,
             )
+        pl = PickupLocation.objects.get(id=pickup_location_id)
+        TextLogEntry().populate(
+            actor=request.user,
+            user=member,
+            text=f"Abholort geändert zum {format_date(change_date)}: {orig_pl} -> {pl}",
+        ).save()
 
     return get_form_modal(
         request=request,
