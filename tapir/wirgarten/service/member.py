@@ -274,7 +274,7 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
         member_id=member_id,
         cancellation_ts__isnull=True,
         start_date__gte=min_start_date,
-        end_date__gt=next_month
+        end_date__gt=next_month,
     )
 
 
@@ -360,9 +360,7 @@ def send_order_confirmation(member: Member, subs: [Subscription]):
         variables={
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date)
-            ),
+            "first_pickup_date": generate_future_deliveries(member)[0]["delivery_date"],
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
     )

@@ -143,7 +143,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Abholort-Änderung möglich bis",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=6,
-            description="Bis zu welchem Wochentag kann ein Mitglied seinen Abholort ändern, um für die darauffolgede Woche den neuen Abholort zu nutzen?",
+            description="Bis zu welchem Wochentag kann ein Mitglied seinen Abholort ändern, um für die darauffolgede Woche den neuen Abholort zu nutzen? Es gilt der gewählte Tag bis 23:59 Uhr.",
             category=ParameterCategory.MEMBER_DASHBOARD,
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
         )
