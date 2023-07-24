@@ -1,39 +1,36 @@
+import csv
 from urllib.parse import parse_qs, urlencode
+
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.db.models import OuterRef, Subquery, Sum
+from django.forms import CheckboxInput
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView
 from django.utils.translation import gettext_lazy as _
-from django.forms import CheckboxInput
-from django.db.models import (
-    Sum,
-    Subquery,
-    OuterRef,
-)
-from django_filters import FilterSet, BooleanFilter, ModelChoiceFilter
+from django.views.generic import TemplateView, View
+from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter
+from django_filters.views import FilterView
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     GrowingPeriod,
-    MemberPickupLocation,
-    Subscription,
     Member,
+    MemberPickupLocation,
     PickupLocation,
-    ProductType,
     Product,
+    ProductType,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import (
-    product_type_order_by,
-)
-from dateutil.relativedelta import relativedelta
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.service.products import product_type_order_by
+from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
-from django_filters.views import FilterView
 
 
 class NewContractsView(PermissionRequiredMixin, TemplateView):
@@ -219,3 +216,78 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
             total_count=Sum("quantity")
         )["total_count"]
         return context
+
+    def get_queryset(self):
+        return Subscription.objects.all().order_by("-created_at")
+
+
+class ExportSubscriptionList(View):
+    """
+    Exports the filtered subscriptions to csv
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Get queryset based on filters and ordering
+        filter_class = SubscriptionListFilter
+        queryset = filter_class(request.GET, queryset=self.get_queryset()).qs
+
+        # Create response object with CSV content
+        response = HttpResponse(content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="Verträge_gefiltert_{get_now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        writer = csv.writer(response, delimiter=";", quoting=csv.QUOTE_ALL)
+
+        # Write header row
+        writer.writerow(
+            [
+                "Mitgliedsnr.",
+                "Vorname",
+                "Nachname",
+                "Abgeschlossen am",
+                "Gekündigt am",
+                "Vertragsbeginn",
+                "Vertragsende",
+                "Produkt",
+                "Variante",
+                "Solipreis",
+                "Abholort",
+            ]
+        )
+
+        # Write data rows
+        for sub in queryset:
+            soliprice_str = (
+                f"{sub.solidarity_price_absolute} €"
+                if sub.solidarity_price_absolute
+                else (f"{sub.solidarity_price * 100} %" if sub.solidarity_price else "")
+            )
+            for _ in range(sub.quantity):
+                writer.writerow(
+                    [
+                        sub.member.member_no,
+                        sub.member.first_name,
+                        sub.member.last_name,
+                        format_date(sub.created_at),
+                        format_date(sub.cancellation_ts),
+                        format_date(sub.start_date),
+                        format_date(sub.end_date),
+                        sub.product.type.name,
+                        sub.product.name,
+                        soliprice_str,
+                        sub.member.pickup_location.name
+                        if sub.member.pickup_location
+                        else "",
+                    ]
+                )
+
+        return response
+
+    def get_queryset(self):
+        return SubscriptionListView.get_queryset(self)
+
+    def get_filterset_class(self):
+        return SubscriptionListFilter
+
+    def get_success_url(self):
+        return reverse_lazy("subscription_list")

@@ -2,6 +2,7 @@ import csv
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy

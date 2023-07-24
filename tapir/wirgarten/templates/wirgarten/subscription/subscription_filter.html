@@ -8,6 +8,9 @@
 
 {% block card_header %}
 <h4>{{total_contracts|default:0}} {% translate 'Verträge' %}</h4>
+<span style="display: flex; flex-direction:row;">
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
+</span>
 {% endblock %}
 
 {% block table_head %}
@@ -29,23 +32,19 @@
 
 {% with ''|center:entry.quantity as range %}
 {% for _ in range %}
-<tr id="entry-{{entry.id}}"
-    class="tr-clickable entry-row tr-href"
+<tr id="entry-{{entry.id}}" class="tr-clickable entry-row tr-href"
     href="{% url 'wirgarten:member_detail' entry.member_id %}">
     <td>
         {% if entry.cancellation_ts %}
         <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
-              title="Gekündigt am {{entry.cancellation_ts|format_date}}"
-              class="material-icons">free_cancellation</span>
-        {% elif today <= entry.trial_end_date %}
-        <span style="color:var(--secondary)" data-bs-toggle="tooltip" data-bs-placement="top"
-              title="Probezeitraum läuft bis zum {{entry.trial_end_date|format_date}}"
-              class="material-icons">calendar_month</span>
-        {% else %}
-        <span style="color:var(--primary)" data-bs-toggle="tooltip" data-bs-placement="top"
-              title="Vertrag läuft bis {{entry.end_date|format_date}}"
-              class="material-icons">task_alt</span>
-        {% endif %}
+            title="Gekündigt am {{entry.cancellation_ts|format_date}}" class="material-icons">free_cancellation</span>
+        {% elif today <= entry.trial_end_date %} <span style="color:var(--secondary)" data-bs-toggle="tooltip"
+            data-bs-placement="top" title="Probezeitraum läuft bis zum {{entry.trial_end_date|format_date}}"
+            class="material-icons">calendar_month</span>
+            {% else %}
+            <span style="color:var(--primary)" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Vertrag läuft bis {{entry.end_date|format_date}}" class="material-icons">task_alt</span>
+            {% endif %}
     </td>
     <td style="text-align:center">{{entry.member.member_no|default:'-'}}</td>
     <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
@@ -53,11 +52,24 @@
     <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
     <td style="text-align:center">{{ entry.product.type.name }}</td>
     <td style="text-align:center">{{ entry.product.name }}</td>
-    <td style="text-align:center">{% if entry.solidarity_price != 0 %}{{ entry.solidarity_price|format_percent }}{% else %}{% if entry.solidarity_price_absolute %}{{entry.solidarity_price_absolute|format_currency}} €{%else%}-{%endif%}{% endif %}</td>
+    <td style="text-align:center">{% if entry.solidarity_price != 0 %}{{ entry.solidarity_price|format_percent }}
+        {% else %}
+        {% if entry.solidarity_price_absolute %}{{entry.solidarity_price_absolute|format_currency}} €{%else%}-{%endif%}{% endif %}</td>
     <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
 </tr>
 {% endfor %}
 {% endwith %}
 {% endfor %}
 
+{% endblock %}
+
+{% block script %}
+<script>
+    const handleExport = () => {
+        const params = Tapir.getUrlParams();
+        const url = "{% url 'wirgarten:subscription_overview_export' %}"
+        const newParams = { ...params, next: window.location.pathname + Tapir.stringifyUrlParams(params) };
+        window.location.href = url + Tapir.stringifyUrlParams(newParams);
+    }
+</script>
 {% endblock %}
