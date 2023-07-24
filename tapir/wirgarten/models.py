@@ -81,6 +81,23 @@ class PickupLocation(TapirModel):
             last_day = ot.day_of_week
         return result + "</table>"
 
+    @property
+    def delivery_date_offset(self):
+        opening_times = PickupLocationOpeningTime.objects.filter(
+            pickup_location_id=self.id
+        ).order_by("day_of_week")
+        delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
+        smallest_offset = None
+        for ot in opening_times:
+            offset = ot.day_of_week - delivery_day
+            if ot.day_of_week < delivery_day:
+                offset += 7
+            smallest_offset = (
+                min(smallest_offset, offset) if smallest_offset is not None else offset
+            )
+
+        return smallest_offset
+
 
 class PickupLocationOpeningTime(TapirModel):
     pickup_location = models.ForeignKey(
