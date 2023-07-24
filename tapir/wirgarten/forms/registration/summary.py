@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from dateutil.relativedelta import relativedelta
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
@@ -82,9 +83,6 @@ class SummaryForm(forms.Form):
         self.harvest_shares_info["delivery_interval"] = DeliveryCycleDict[
             harvest_share_type.delivery_cycle
         ]
-        self.harvest_shares_info[
-            "first_delivery_date"
-        ] = get_next_delivery_date_for_product_type(harvest_share_type, start_date)
 
         self.harvest_shares_info["has_shares"] = harvest_shares_total > 0
         self.harvest_shares_info["total_without_solidarity"] = "{:.2f}".format(
@@ -95,10 +93,21 @@ class SummaryForm(forms.Form):
             solidarity_price
         ).replace("+", "+ ")
 
+        delivery_date_offset = 0
         if "pickup_location" in initial:
+            pl = initial["pickup_location"]["pickup_location"]
             self.pickup_location = """{val.name}<br/><small>{val.street}<br/>{val.postcode} {val.city}<br/><br/>{val.opening_times_html}</small>""".format(
-                val=initial["pickup_location"]["pickup_location"]
+                val=pl
             )  # get pickup location text
+            delivery_date_offset = pl.delivery_date_offset
+
+        self.harvest_shares_info[
+            "first_delivery_date"
+        ] = get_next_delivery_date_for_product_type(
+            harvest_share_type, start_date
+        ) + relativedelta(
+            days=delivery_date_offset
+        )
 
         coop_share_price = settings.COOP_SHARE_PRICE
         coop_shares_amount = int(
@@ -123,7 +132,8 @@ class SummaryForm(forms.Form):
                 ],
                 "first_delivery_date": get_next_delivery_date_for_product_type(
                     chicken_shares_type, start_date
-                ),
+                )
+                + relativedelta(days=delivery_date_offset),
             }
         )
         if "additional_shares" in initial:
