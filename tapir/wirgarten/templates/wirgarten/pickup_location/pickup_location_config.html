@@ -29,7 +29,8 @@
                 <table class="table" style="text-align:center">
                     <thead class="sticky-top" style="background:#fff; margin:0;">
                     <tr>
-                        <th>Name</th>
+                        <th style="text-align:left">Name</th>
+                        <th>Öffnungszeiten</th>
                         <th>Adresse</th>
                         <th>Kapaziäten</th>
                         <th>Mitglieder</th>
@@ -38,7 +39,8 @@
                     <tbody>
                     {% for pl in pickup_locations %}
                     <tr id="row-{{pl.id}}" class="tr-clickable location-row" onclick="handleRowClick('{{pl.id}}')">
-                        <td><strong>{{ pl.name }}</strong></td>
+                        <td style="text-align:left"><strong>{{ pl.name }}</strong></td>
+                        <td><small style="line-height: 1em;">{{pl.opening_times|safe}}</small></td>
                         <td>{{ pl.street }}<br/><small>{{ pl.postcode }} {{ pl.city }}</small></td>
                         <td style="white-space:nowrap; text-align:left;">
                             {% for cap in pl.capabilities %}

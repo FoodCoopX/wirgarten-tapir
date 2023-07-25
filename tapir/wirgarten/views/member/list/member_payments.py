@@ -1,5 +1,5 @@
-import copy
 import itertools
+from copy import copy
 from collections import defaultdict
 from datetime import datetime
 

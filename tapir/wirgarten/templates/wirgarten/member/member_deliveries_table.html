@@ -37,9 +37,9 @@
         {{delivery.pickup_location.street}}, {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}<br/><br/>
         {% if delivery.pickup_location.info %}{{delivery.pickup_location.info}}<br/><br/>{% endif %}
         {% if delivery.pickup_location.contact_name %}<strong>Kontakt:</strong> {{delivery.pickup_location.contact_name}}<br/>{% endif %}
-        {% if delivery.pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a href='{{delivery.pickup_location.messenger_group_link}}'>{{delivery.pickup_location.messenger_group_link}}</a><br/>{% endif %}
+        {% if delivery.pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a href='{{delivery.pickup_location.messenger_group_link}}'>Klicke hier zum Beitreten</a><br/>{% endif %}
         {% if delivery.pickup_location.access_code %}<strong>Zugangs-Code:</strong> {{delivery.pickup_location.access_code}}<br/>{% endif %}
-        {% if delivery.opening_times.0 %}<strong>Öffnungszeiten</strong><br/>{delivery.pickup_location.opening_times_html}{% endif %}
+        {% if delivery.pickup_location.opening_times_html %}<hr/><h4>Öffnungszeiten</h4><br/>{{delivery.pickup_location.opening_times_html}}{% endif %}
         {% if delivery.pickup_location.photo_link %}<a href='{{delivery.pickup_location.photo_link}}' target='_blank'><img style='max-width: 100%' src='{{delivery.pickup_location.photo_link}}'/></a>{% endif %}
         </div>`)">
             {% if not hide_location %}

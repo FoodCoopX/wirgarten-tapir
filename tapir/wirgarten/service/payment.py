@@ -1,11 +1,13 @@
-import itertools
+from decimal import Decimal
 from collections import OrderedDict
 from datetime import date
+import itertools
 
 from dateutil.relativedelta import relativedelta
 from nanoid import generate
 from tapir.wirgarten.utils import get_today
 from unidecode import unidecode
+from django.db.models import Sum
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Subscription, Member, Payment
@@ -59,45 +61,37 @@ def get_next_payment_date(reference_date: date = get_today()):
 
 def generate_new_payments(due_date: date) -> list[Payment]:
     """
-    Generates payments for the given due date. If a payment for this date and mandate_ref is already persisted, it will be skipped.
-    The generated payments are not persisted!
+    Generates payments for the given due date. The generated payments are not persisted!
 
     :param due_date: The date on which the payment will be due.
     :return: the list of new Payments
     """
+    subscriptions = Subscription.objects.filter(
+        start_date__lte=due_date, end_date__gte=due_date
+    ).order_by("mandate_ref", "product__type")
 
     payments = []
 
     for (mandate_ref, product_type), subs in itertools.groupby(
-        iterable=Subscription.objects.filter(
-            start_date__lte=due_date, end_date__gte=due_date
-        ).order_by("mandate_ref", "product__type"),
-        key=lambda x: (x.mandate_ref, x.product.type.name),
+        iterable=subscriptions, key=lambda x: (x.mandate_ref, x.product.type.name)
     ):
-        if not Payment.objects.filter(
+        existing = Payment.objects.filter(
             mandate_ref=mandate_ref, due_date=due_date, type=product_type
-        ).exists():
-            amount = float(
-                round(
-                    sum(
-                        map(
-                            lambda x: x.total_price,
-                            subs,
-                        )
-                    ),
-                    2,
-                )
-            )
+        )
+        if not existing.exists():
+            amount = sum(sub.total_price for sub in subs)
 
             payments.append(
                 Payment(
                     due_date=due_date,
-                    amount=amount,
+                    amount=Decimal(amount).quantize(Decimal("0.01")),
                     mandate_ref=mandate_ref,
                     status=Payment.PaymentStatus.DUE,
                     type=product_type,
                 )
             )
+        else:
+            payments.extend(existing)
 
     return payments
 
@@ -142,7 +136,9 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     :return: the list of existing and projected payments for the given date
     """
     payments = generate_new_payments(due_date)
-    payments.extend(get_existing_payments(due_date))
+    payments.extend(
+        Payment.objects.filter(type="Genossenschaftsanteile", due_date=due_date)
+    )
     return sum(map(lambda x: float(x.amount), payments))
 
 
