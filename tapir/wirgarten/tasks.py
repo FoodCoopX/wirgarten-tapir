@@ -33,60 +33,60 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 
-@shared_task
-def export_pick_list_csv():
+def export_pick_list(product_type, include_equivalents=True):
     """
-    Exports a CSV file containing the pick list for the next delivery.
+    Exports picklist or supplier list as CSV for a product type.
+    indclude_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
 
     KEY_PICKUP_LOCATION = "Abholort"
     KEY_M_EQUIVALENT = "M-Äquivalent"
 
-    base_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-    subscriptions = get_active_subscriptions().filter(product__type_id=base_type_id)
+    subscriptions = get_active_subscriptions().filter(product__type_id=product_type.id)
     grouped_subscriptions = defaultdict(list)
 
-    # Populate the dictionary
     for subscription in subscriptions:
         grouped_subscriptions[subscription.member.pickup_location.name].append(
             subscription
         )
 
-    variants = list(Product.objects.filter(type_id=base_type_id))
+    variants = list(Product.objects.filter(type_id=product_type.id))
     variants.sort(key=lambda x: get_product_price(x).price)
     variant_names = [x.name for x in variants]
 
-    output, writer = begin_csv_string(
-        [
-            KEY_PICKUP_LOCATION,
-            *variant_names,
-            KEY_M_EQUIVALENT,
-        ]
-    )
+    header = [
+        KEY_PICKUP_LOCATION,
+        *variant_names,
+    ]
+    if include_equivalents:
+        header.append(KEY_M_EQUIVALENT)
+    output, writer = begin_csv_string(header)
 
     base_price = get_product_price(
-        Product.objects.filter(type_id=base_type_id, base=True).first()
+        Product.objects.filter(type_id=product_type.id, base=True).first()
     ).price
-    for pickup_location, subs in grouped_subscriptions.items():
+
+    for pickup_location, subs in sorted(
+        grouped_subscriptions.items(), key=lambda x: x[0]
+    ):
         subs.sort(key=lambda x: x.product.name)
         grouped_subs = {
-            key: f"{sum(map(lambda x: x.quantity, group))} Stück"
+            key: sum([x.quantity for x in group])
             for key, group in itertools.groupby(subs, key=lambda sub: sub.product.name)
         }
 
         sum_without_soli = sum(map(lambda x: x.total_price_without_soli, subs))
-        m_equivalents = round(sum_without_soli / base_price, 2)
 
-        writer.writerow(
-            {
-                KEY_PICKUP_LOCATION: pickup_location,
-                KEY_M_EQUIVALENT: m_equivalents,
-                **grouped_subs,
-            }
-        )
+        data = {
+            KEY_PICKUP_LOCATION: pickup_location,
+            **grouped_subs,
+        }
+        if include_equivalents:
+            data[KEY_M_EQUIVALENT] = round(sum_without_soli / base_price, 2)
+        writer.writerow(data)
 
     export_file(
-        filename="Kommissionierliste",
+        filename=f"{'Kommissionierliste' if include_equivalents else 'Lieferantenliste'}_{product_type.name}",
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
         send_email=get_parameter_value(Parameter.PICK_LIST_SEND_ADMIN_EMAIL),
@@ -94,62 +94,43 @@ def export_pick_list_csv():
 
 
 @shared_task
+def export_pick_list_csv():
+    """
+    Exports a CSV file containing the pick list for the next delivery.
+    """
+    all_product_types = {pt.name: pt for pt in get_active_product_types()}
+    include_product_types = get_parameter_value(
+        Parameter.PICK_LIST_PRODUCT_TYPES
+    ).split(",")
+
+    for type_name in include_product_types:
+        type_name = type_name.strip()
+        if type_name not in all_product_types:
+            print(
+                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICK_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+            )
+            continue
+        export_pick_list(all_product_types[type_name], True)
+
+
+@shared_task
 def export_supplier_list_csv():
     """
     Sums the quantity of product variants exports a list as CSV per product type.
     """
-
-    KEY_PRODUCT = "Produkt"
-    KEY_QUANTITY = "Anzahl"
-
-    def create_csv_string(product_type: str):
-        product_type = all_product_types[product_type]
-
-        if product_type is None:
-            print(
-                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{Parameter.SUPPLIER_LIST_PRODUCT_TYPES}': {product_type}. Possible values: {all_product_types.keys}"""
-            )
-            return None
-
-        now = get_now()
-        sums = (
-            Subscription.objects.filter(
-                start_date__lte=now, end_date__gte=now, product__type=product_type
-            )
-            .order_by("product__name")
-            .values("product__name")
-            .annotate(quantity_sum=Sum("quantity"))
-        )
-
-        output, writer = begin_csv_string([KEY_PRODUCT, KEY_QUANTITY])
-
-        for variant in sums:
-            writer.writerow(
-                {
-                    KEY_PRODUCT: variant["product__name"],
-                    KEY_QUANTITY: variant["quantity_sum"],
-                }
-            )
-
-        return "".join(output.csv_string)
-
     all_product_types = {pt.name: pt for pt in get_active_product_types()}
     include_product_types = get_parameter_value(
         Parameter.SUPPLIER_LIST_PRODUCT_TYPES
     ).split(",")
-    for _type_name in include_product_types:
-        type_name = _type_name.strip()
-        data = create_csv_string(type_name)
 
-        if data is not None:
-            export_file(
-                filename=f"Lieferant_{type_name}",
-                filetype=ExportedFile.FileType.CSV,
-                content=bytes(data, "utf-8"),
-                send_email=get_parameter_value(
-                    Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
-                ),
+    for type_name in include_product_types:
+        type_name = type_name.strip()
+        if type_name not in all_product_types:
+            print(
+                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{Parameter.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
+            continue
+        export_pick_list(all_product_types[type_name], False)
 
 
 @shared_task
