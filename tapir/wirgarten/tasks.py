@@ -39,8 +39,6 @@ def export_pick_list_csv():
     Exports a CSV file containing the pick list for the next delivery.
     """
 
-    KEY_EMAIL = "E-Mail"
-    KEY_FIRST_NAME = "Vorname"
     KEY_PICKUP_LOCATION = "Abholort"
     KEY_M_EQUIVALENT = "M-Äquivalent"
 
@@ -50,7 +48,9 @@ def export_pick_list_csv():
 
     # Populate the dictionary
     for subscription in subscriptions:
-        grouped_subscriptions[subscription.member].append(subscription)
+        grouped_subscriptions[subscription.member.pickup_location.name].append(
+            subscription
+        )
 
     variants = list(Product.objects.filter(type_id=base_type_id))
     variants.sort(key=lambda x: get_product_price(x).price)
@@ -58,10 +58,8 @@ def export_pick_list_csv():
 
     output, writer = begin_csv_string(
         [
-            KEY_EMAIL,
-            KEY_FIRST_NAME,
-            *variant_names,
             KEY_PICKUP_LOCATION,
+            *variant_names,
             KEY_M_EQUIVALENT,
         ]
     )
@@ -69,7 +67,7 @@ def export_pick_list_csv():
     base_price = get_product_price(
         Product.objects.filter(type_id=base_type_id, base=True).first()
     ).price
-    for member, subs in grouped_subscriptions.items():
+    for pickup_location, subs in grouped_subscriptions.items():
         subs.sort(key=lambda x: x.product.name)
         grouped_subs = {
             key: f"{sum(map(lambda x: x.quantity, group))} Stück"
@@ -81,9 +79,7 @@ def export_pick_list_csv():
 
         writer.writerow(
             {
-                KEY_EMAIL: member.email,
-                KEY_FIRST_NAME: member.first_name,
-                KEY_PICKUP_LOCATION: member.pickup_location.name,
+                KEY_PICKUP_LOCATION: pickup_location,
                 KEY_M_EQUIVALENT: m_equivalents,
                 **grouped_subs,
             }

@@ -3,6 +3,9 @@ import itertools
 import json
 from math import floor
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, DateField, ExpressionWrapper, F, Sum, Max
@@ -40,6 +43,25 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_currency, format_date, get_now, get_today
 
 
+@require_GET
+def get_cashflow_chart_data(request):
+    last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
+        "max_date"
+    ]
+
+    payment_dates = [get_next_payment_date()]
+    while payment_dates[-1] < last_contract_end:
+        payment_dates.append(payment_dates[-1] + relativedelta(months=1))
+
+    return JsonResponse(
+        {
+            "labels": [format_date(x) for x in payment_dates],
+            "data": [get_total_payment_amount(x) for x in payment_dates],
+        },
+        safe=True,
+    )
+
+
 class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/admin_dashboard.html"
     permission_required = "coop.view"
@@ -60,7 +82,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
         self.add_cancellation_reasons_chart_context(context)
-        self.add_cashflow_chart_context(context)
         self.add_cancelled_coop_shares_context(context)
 
         context["active_members"] = len(
@@ -133,20 +154,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         }
         context["cancelled_coop_shares_labels"] = list(cancellations.keys())
         context["cancelled_coop_shares_data"] = list(cancellations.values())
-
-    def add_cashflow_chart_context(self, context):
-        last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
-            "max_date"
-        ]
-
-        payment_dates = [get_next_payment_date()]
-        while payment_dates[-1] < last_contract_end:
-            payment_dates.append(payment_dates[-1] + relativedelta(months=1))
-
-        context["cashflow_labels"] = list(map(lambda x: format_date(x), payment_dates))
-        context["cashflow_data"] = list(
-            map(lambda x: get_total_payment_amount(x), payment_dates)
-        )
 
     def add_cancellation_reasons_chart_context(self, context):
         qs = QuestionaireCancellationReasonResponse.objects.filter(

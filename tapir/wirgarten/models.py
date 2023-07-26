@@ -4,14 +4,7 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import (
-    UniqueConstraint,
-    Index,
-    F,
-    Sum,
-    Subquery,
-    OuterRef,
-)
+from django.db.models import F, Index, OuterRef, Subquery, Sum, UniqueConstraint
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
@@ -19,9 +12,9 @@ from localflavor.generic.models import IBANField
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
-from tapir.log.models import UpdateModelLogEntry, LogEntry
-from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
-from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
+from tapir.log.models import LogEntry, UpdateModelLogEntry
+from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
 from tapir.wirgarten.utils import format_date, get_today
 
 
@@ -405,7 +398,10 @@ class ProductPrice(TapirModel):
                 name="unique_product_price_date",
             )
         ]
-        indexes = [Index(fields=["product"], name="idx_productprice_product")]
+        indexes = [
+            Index(fields=["product"], name="idx_productprice_product"),
+            Index(fields=["-valid_from"], name="idx_productprice_valid_from"),
+        ]
 
 
 class HarvestShareProduct(Product):
@@ -494,14 +490,18 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         self.trial_end_date_override = value
 
     class Meta:
-        indexes = [models.Index(fields=["period_id", "created_at"])]
+        indexes = [
+            models.Index(fields=["period_id"]),
+            models.Index(fields=["-created_at"]),
+            models.Index(fields=["start_date"]),
+            models.Index(fields=["end_date"]),
+            models.Index(fields=["member"]),
+        ]
 
-    @property
-    def total_price(self):
-        today = get_today()
+    def total_price(self, reference_date=get_today()):
         if not hasattr(self, "_total_price"):
             product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
+                product_id=self.product_id, valid_from__lte=reference_date
             ).order_by("product_id", "-valid_from")
             price = next(
                 (
@@ -757,7 +757,10 @@ class Payment(TapirModel):
                 name="unique_mandate_ref_date",
             )
         ]
-        indexes = [Index(fields=["mandate_ref"], name="idx_payment_mandate_ref")]
+        indexes = [
+            Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
+            Index(fields=["due_date"], name="idx_payment_due_date"),
+        ]
 
 
 class Deliveries(TapirModel):

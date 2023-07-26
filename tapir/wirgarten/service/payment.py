@@ -1,22 +1,21 @@
-from decimal import Decimal
 from collections import OrderedDict
 from datetime import date
-import itertools
+from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
-from nanoid import generate
-from tapir.wirgarten.utils import get_today
-from unidecode import unidecode
 from django.db.models import Sum
+from nanoid import generate
+from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Subscription, Member, Payment
+from tapir.wirgarten.models import Member, Payment, Subscription
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_product_price,
     get_future_subscriptions,
+    get_product_price,
 )
+from tapir.wirgarten.utils import get_today
 
 MANDATE_REF_LENGTH = 35
 MANDATE_REF_ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -66,15 +65,20 @@ def generate_new_payments(due_date: date) -> list[Payment]:
     :param due_date: The date on which the payment will be due.
     :return: the list of new Payments
     """
+    payments = []
+
     subscriptions = Subscription.objects.filter(
         start_date__lte=due_date, end_date__gte=due_date
     ).order_by("mandate_ref", "product__type")
 
-    payments = []
+    grouped = {}
+    for sub in subscriptions:
+        key = (sub.mandate_ref, sub.product.type)
+        if key not in grouped:
+            grouped[key] = []
+        grouped[key].append(sub)
 
-    for (mandate_ref, product_type), subs in itertools.groupby(
-        iterable=subscriptions, key=lambda x: (x.mandate_ref, x.product.type.name)
-    ):
+    for (mandate_ref, product_type), subs in grouped.items():
         existing = Payment.objects.filter(
             mandate_ref=mandate_ref, due_date=due_date, type=product_type
         )
@@ -135,11 +139,29 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     :param due_date: the date on which the payments are due
     :return: the list of existing and projected payments for the given date
     """
-    payments = generate_new_payments(due_date)
-    payments.extend(
-        Payment.objects.filter(type="Genossenschaftsanteile", due_date=due_date)
+
+    total_amount = 0.0
+
+    subscriptions = Subscription.objects.filter(
+        start_date__lte=due_date, end_date__gte=due_date
+    ).order_by("mandate_ref", "product__type")
+
+    existing_payments = {
+        f"{p.mandate_ref.ref}-{p.type}": float(p.amount)
+        for p in Payment.objects.filter(due_date=due_date)
+    }
+    for sub in subscriptions:
+        total_amount += existing_payments.get(
+            f"{sub.mandate_ref.ref}-{sub.product.type.name}", None
+        ) or sub.total_price(due_date)
+
+    total_amount += float(
+        Payment.objects.filter(
+            type="Genossenschaftsanteile", due_date=due_date
+        ).aggregate(Sum("amount"))["amount__sum"]
+        or 0.0
     )
-    return sum(map(lambda x: float(x.amount), payments))
+    return total_amount
 
 
 def get_solidarity_overplus(reference_date: date = get_today()) -> float:
