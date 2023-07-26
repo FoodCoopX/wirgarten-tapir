@@ -70,7 +70,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for k, v in context["subscriptions"].items()
         }
         context["sub_totals"] = {
-            k: sum(map(lambda x: x.total_price, v))
+            k: sum(map(lambda x: x.total_price(), v))
             for k, v in context["subscriptions"].items()
         }
 

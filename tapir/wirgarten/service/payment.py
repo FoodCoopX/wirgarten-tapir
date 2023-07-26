@@ -83,7 +83,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
             mandate_ref=mandate_ref, due_date=due_date, type=product_type
         )
         if not existing.exists():
-            amount = sum(sub.total_price for sub in subs)
+            amount = sum(sub.total_price() for sub in subs)
 
             payments.append(
                 Payment(
