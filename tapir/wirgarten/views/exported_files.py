@@ -1,4 +1,5 @@
 import mimetypes
+from typing import Any
 
 from django.contrib.auth.decorators import permission_required
 from django.views.decorators.csrf import csrf_protect
