@@ -37,7 +37,6 @@ class Parameter:
     MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
         f"{PREFIX}.member.pickup_location_change_until"
     )
-    MEMBER_LOCK_FUNCTIONS = f"{PREFIX}.temporarily.lock_functions"
     MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
     SITE_NAME = f"{PREFIX}.site.name"
     SITE_STREET = f"{PREFIX}.site.street"
@@ -800,15 +799,6 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
                 ],
                 textarea=True,
             ),
-        )
-
-        parameter_definition(
-            key=Parameter.MEMBER_LOCK_FUNCTIONS,
-            label="TEMPORÄR: Sperre Funktionen im Mitgliederbereich",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=True,
-            description="Wenn aktiv, dann werden folgende Funktionen im Mitgliederbereich gesperrt: Änderung Bankdaten, Änderung Abholort, Änderung Email-Adresse",
-            category=ParameterCategory.MEMBER_DASHBOARD,
         )
 
         parameter_definition(

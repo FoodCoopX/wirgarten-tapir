@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-{% with 'wirgarten.temporarily.lock_functions'|parameter|default:False as lock_functions %}<!-- TODO: remove the Parameter and all usages after June/July 2023 when it is not needed anymore -->
+{% with False as lock_functions %}
 <div id="member-detail-container">
     <div id="member-detail-left-column">
 
