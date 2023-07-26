@@ -6,7 +6,10 @@ from tapir.wirgarten.views import (
     exported_files,
     questionaire_trafficsource_view,
 )
-from tapir.wirgarten.views.admin_dashboard import AdminDashboardView
+from tapir.wirgarten.views.admin_dashboard import (
+    AdminDashboardView,
+    get_cashflow_chart_data,
+)
 from tapir.wirgarten.views.contracts import (
     ExportSubscriptionList,
     NewContractsView,
@@ -125,6 +128,11 @@ urlpatterns = [
         "admin/dashboard",
         AdminDashboardView.as_view(),
         name="admin_dashboard",
+    ),
+    path(
+        "admin/dashboard/data/cashflow",
+        get_cashflow_chart_data,
+        name="admin_dashboard_cashflow_data",
     ),
     path(
         "admin/exportedfiles",

@@ -105,401 +105,414 @@
     <div class="card-body">
       <h4>Cashflow Forecast</h4>
       <canvas style="max-height:20em" id="cashflow-forecast-chart"></canvas>
+      <h3 id="cashflow-loading">Loading...</h3>
     </div>
-    </div>
-
-    <div class="dashboard-section-heading">
-      <hr />
-      Daten der Genossenschaft
-    </div>
-
-    <div class="dashboard-tile card clickable" style="grid-area: span 1 / span 2">
-      <a href="{% url 'wirgarten:member_list' %}">
-        <div class="card-body">
-          <div class="dashboard-tile-number">
-            <strong>{{active_members}}</strong>
-            <span class="material-icons">groups</span>
-          </div>
-          <small><strong>Mitglieder</strong></small>
-        </div>
-      </a>
-    </div>
-
-    <div class="dashboard-tile card harvest-share-variants-tile" style="grid-area: span 2 / span 4">
-      <div class="card-body">
-        <h4>Gekündigtes Geschäftsguthaben</h4>
-        <canvas style="max-height:20em"  id="cancellation-coop-shares"></canvas>
-      </div>
-    </div>
-
-    <div class="dashboard-tile card next-payment-tile" style="grid-area: span 1 / span 2">
-      <div class="card-body">
-        <div class="dashboard-tile-number">
-          <strong>{{coop_shares_value}}</strong> €
-        </div>
-        <small><strong>Geschäftsguthaben</strong><br />(gesamt)</small>
-      </div>
-    </div>
-
-    <div class="dashboard-section-heading">
-      <hr />
-      Statusanzeigen
-    </div>
-
-
-    <div class="dashboard-tile card clickable">
-      <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
-        <div class="card-body">
-          {% if status_seperate_coop_shares %}
-          <div class="dashboard-tile-status positive">
-            <span class="material-icons">task_alt</span>
-          </div>
-          {% else %}
-          <div class="dashboard-tile-status negative">
-            <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
-          </div>
-          {% endif %}
-          <small><strong>Geno-Anteile</strong><br />{% if not status_seperate_coop_shares %}
-            <strong>nicht</strong>
-            {% endif %} separat zeichenbar</small>
-        </div>
-      </a>
-    </div>
-
-    <div class="dashboard-tile card clickable">
-      <a href="{% url 'configuration:parameters' %}?q=wirgarten.harvest.negative_soliprice_enabled">
-        <div class="card-body">
-          {% if status_negative_soli_price_allowed is 0 %}
-          <div class="dashboard-tile-status negative">
-            <span class="material-icons">hide_source</span>
-          </div>
-          {% else %}
-          <div class="dashboard-tile-status positive">
-            <span class="material-icons">task_alt</span>
-          </div>
-          {% endif %}
-          <small><strong>Solidarpreise</strong><br />{% if status_negative_soli_price_allowed is 0 %}
-            <strong>nicht</strong>{% endif %} möglich {% if status_negative_soli_price_allowed is 2 %} (auto)
-            {% endif %}</small>
-        </div>
-      </a>
-    </div>
-
-    <div class="dashboard-tile card clickable">
-      <a href="{% url 'configuration:parameters' %}?q=wirgarten.bestellcoop.is_subscribable">
-        <div class="card-body">
-          {% if status_bestellcoop_allowed is 0 %}
-          <div class="dashboard-tile-status negative">
-            <span class="material-icons">hide_source</span>
-          </div>
-          {% else %}
-          <div class="dashboard-tile-status positive">
-            <span class="material-icons">task_alt</span>
-          </div>
-          {% endif %}
-          <small><strong>BestellCoop</strong><br />Mitgliedschaft
-            {% if status_bestellcoop_allowed is 0 %}
-            <strong>nicht</strong>{% endif %} möglich {% if status_bestellcoop_allowed is 2 %} (auto)
-            {% endif %}</small>
-        </div>
-      </a>
-    </div>
-
-    <div class="dashboard-tile card clickable">
-      <a href="{% url 'configuration:parameters' %}?q=wirgarten.chicken.is_subscribable">
-        <div class="card-body">
-          {% if status_chickenshares_allowed is 0 %}
-          <div class="dashboard-tile-status negative">
-            <span class="material-icons">hide_source</span>
-          </div>
-          {% else %}
-          <div class="dashboard-tile-status positive">
-            <span class="material-icons">task_alt</span>
-          </div>
-          {% endif %}
-          <small><strong>Hühneranteile</strong><br />
-            {% if status_chickenshares_allowed is 0 %}
-            <strong>nicht</strong>{% endif %} zeichenbar {% if status_chickenshares_allowed is 2 %} (auto)
-            {% endif %}</small>
-        </div>
-      </a>
-    </div>
-
   </div>
 
-  <script src="{% static 'wirgarten/js/chart.js' %}"></script>
-  <script>
-    const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{ cancellations_other_reasons| safe}}.map((reason) => `<li>${reason}</li>`).join(''))
+  <div class="dashboard-section-heading">
+    <hr />
+    Daten der Genossenschaft
+  </div>
 
-    const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
+  <div class="dashboard-tile card clickable" style="grid-area: span 1 / span 2">
+    <a href="{% url 'wirgarten:member_list' %}">
+      <div class="card-body">
+        <div class="dashboard-tile-number">
+          <strong>{{active_members}}</strong>
+          <span class="material-icons">groups</span>
+        </div>
+        <small><strong>Mitglieder</strong></small>
+      </div>
+    </a>
+  </div>
 
-    new Chart(document.getElementById('product-capacity-chart'), {
-      type: 'bar',
-      data: {
-        links: {{ current_capacity_links | safe}},
-      labels: {{ current_capacity_labels | safe}},
-      datasets: [
-        {
-          label: 'Vergeben',
-          data: {{ current_used_capacity | safe}},
-          backgroundColor: COLORS[4]
+  <div class="dashboard-tile card harvest-share-variants-tile" style="grid-area: span 2 / span 4">
+    <div class="card-body">
+      <h4>Gekündigtes Geschäftsguthaben</h4>
+      <canvas style="max-height:20em" id="cancellation-coop-shares"></canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-tile card next-payment-tile" style="grid-area: span 1 / span 2">
+    <div class="card-body">
+      <div class="dashboard-tile-number">
+        <strong>{{coop_shares_value}}</strong> €
+      </div>
+      <small><strong>Geschäftsguthaben</strong><br />(gesamt)</small>
+    </div>
+  </div>
+
+  <div class="dashboard-section-heading">
+    <hr />
+    Statusanzeigen
+  </div>
+
+
+  <div class="dashboard-tile card clickable">
+    <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
+      <div class="card-body">
+        {% if status_seperate_coop_shares %}
+        <div class="dashboard-tile-status positive">
+          <span class="material-icons">task_alt</span>
+        </div>
+        {% else %}
+        <div class="dashboard-tile-status negative">
+          <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+        </div>
+        {% endif %}
+        <small><strong>Geno-Anteile</strong><br />{% if not status_seperate_coop_shares %}
+          <strong>nicht</strong>
+          {% endif %} separat zeichenbar</small>
+      </div>
+    </a>
+  </div>
+
+  <div class="dashboard-tile card clickable">
+    <a href="{% url 'configuration:parameters' %}?q=wirgarten.harvest.negative_soliprice_enabled">
+      <div class="card-body">
+        {% if status_negative_soli_price_allowed is 0 %}
+        <div class="dashboard-tile-status negative">
+          <span class="material-icons">hide_source</span>
+        </div>
+        {% else %}
+        <div class="dashboard-tile-status positive">
+          <span class="material-icons">task_alt</span>
+        </div>
+        {% endif %}
+        <small><strong>Solidarpreise</strong><br />{% if status_negative_soli_price_allowed is 0 %}
+          <strong>nicht</strong>{% endif %} möglich {% if status_negative_soli_price_allowed is 2 %} (auto)
+          {% endif %}</small>
+      </div>
+    </a>
+  </div>
+
+  <div class="dashboard-tile card clickable">
+    <a href="{% url 'configuration:parameters' %}?q=wirgarten.bestellcoop.is_subscribable">
+      <div class="card-body">
+        {% if status_bestellcoop_allowed is 0 %}
+        <div class="dashboard-tile-status negative">
+          <span class="material-icons">hide_source</span>
+        </div>
+        {% else %}
+        <div class="dashboard-tile-status positive">
+          <span class="material-icons">task_alt</span>
+        </div>
+        {% endif %}
+        <small><strong>BestellCoop</strong><br />Mitgliedschaft
+          {% if status_bestellcoop_allowed is 0 %}
+          <strong>nicht</strong>{% endif %} möglich {% if status_bestellcoop_allowed is 2 %} (auto)
+          {% endif %}</small>
+      </div>
+    </a>
+  </div>
+
+  <div class="dashboard-tile card clickable">
+    <a href="{% url 'configuration:parameters' %}?q=wirgarten.chicken.is_subscribable">
+      <div class="card-body">
+        {% if status_chickenshares_allowed is 0 %}
+        <div class="dashboard-tile-status negative">
+          <span class="material-icons">hide_source</span>
+        </div>
+        {% else %}
+        <div class="dashboard-tile-status positive">
+          <span class="material-icons">task_alt</span>
+        </div>
+        {% endif %}
+        <small><strong>Hühneranteile</strong><br />
+          {% if status_chickenshares_allowed is 0 %}
+          <strong>nicht</strong>{% endif %} zeichenbar {% if status_chickenshares_allowed is 2 %} (auto)
+          {% endif %}</small>
+      </div>
+    </a>
+  </div>
+
+</div>
+
+<script src="{% static 'wirgarten/js/chart.js' %}"></script>
+<script>
+  const COLORS = ["#d6832b", "#2a9d8f", "#e9c46a", "#5c8bd6", "#32822d", "#8e6c88"]
+
+  fetch("{% url 'wirgarten:admin_dashboard_cashflow_data' %}")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("HTTP error " + response.status);
+      }
+      return response.json();
+    }).then(({ labels, data }) => {
+      document.getElementById("cashflow-loading").remove();
+      new Chart(document.getElementById('cashflow-forecast-chart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Einnahmen",
+            data: data,
+            backgroundColor: COLORS[4],
+            fill: true
+          }]
         },
-        {
-          label: 'Noch Frei',
-          data: {{ current_free_capacity | safe}},
-        backgroundColor: COLORS[0]
-            },
-    ]
-    },
-      options: {
-      responsive: true,
-      scales: {
-        x: {
-          stacked: true,
-        },
-        y: {
-          stacked: true
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            title: (items) => {
-              const item = items[0];
-              const label = item.chart.data.labels[item.dataIndex];
-              return label;
-            },
-            label: (context) => {
-              const label = context.chart.data.labels[context.dataIndex];
-              const value = context.parsed.y;
-              const datasetLabel = context.dataset.label;
+        options: {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const label = context.chart.data.labels[context.dataIndex];
+                  const value = context.parsed.y;
+                  const datasetLabel = context.dataset.label;
 
-              return [`${datasetLabel} ${value.toFixed(1)} %`]
+                  return [`${datasetLabel}: ${value.toFixed(2)} €`]
+                }
+              }
             }
+          },
+          responsive: true,
+        }
+      });
+    })
+
+
+
+  const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{ cancellations_other_reasons| safe}}.map((reason) => `<li>${reason}</li>`).join(''))
+
+  new Chart(document.getElementById('product-capacity-chart'), {
+    type: 'bar',
+    data: {
+      links: {{ current_capacity_links | safe}},
+    labels: {{ current_capacity_labels | safe}},
+    datasets: [
+    {
+      label: 'Vergeben',
+      data: {{ current_used_capacity | safe}},
+    backgroundColor: COLORS[4]
+        },
+    {
+      label: 'Noch Frei',
+      data: {{ current_free_capacity | safe}},
+    backgroundColor: COLORS[0]
+            },
+  ]
+    },
+    options: {
+    responsive: true,
+    scales: {
+      x: {
+        stacked: true,
+      },
+      y: {
+        stacked: true
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          title: (items) => {
+            const item = items[0];
+            const label = item.chart.data.labels[item.dataIndex];
+            return label;
+          },
+          label: (context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+
+            return [`${datasetLabel} ${value.toFixed(1)} %`]
           }
         }
-      },
-      onClick: (event, elements, chart) => {
-        if (elements.length) {
-          const element = elements[0]; // use the first one
-          const url = chart.data.links[element.index];
-          window.location.href = url;
-        }
-      },
-      onHover: (event, elements) => {
-        event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
-      },
-    }
+      }
+    },
+    onClick: (event, elements, chart) => {
+      if (elements.length) {
+        const element = elements[0]; // use the first one
+        const url = chart.data.links[element.index];
+        window.location.href = url;
+      }
+    },
+    onHover: (event, elements) => {
+      event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
+    },
+  }
   });
 
-    {% if next_capacity_labels %}
-    new Chart(document.getElementById('next-period-product-capacity-chart'), {
-      type: 'bar',
-      data: {
-        links: {{ next_capacity_links | safe}},
-      labels: {{ next_capacity_labels | safe}},
-      datasets: [
-        {
-          label: 'Vergeben',
-          data: {{ next_used_capacity | safe}},
-          backgroundColor: COLORS[4]
+  {% if next_capacity_labels %}
+  new Chart(document.getElementById('next-period-product-capacity-chart'), {
+    type: 'bar',
+    data: {
+      links: {{ next_capacity_links | safe}},
+    labels: {{ next_capacity_labels | safe}},
+    datasets: [
+    {
+      label: 'Vergeben',
+      data: {{ next_used_capacity | safe}},
+    backgroundColor: COLORS[4]
         },
-        {
-          label: 'Verfügbar',
-          data: {{ next_free_capacity | safe}},
-        backgroundColor: COLORS[0]
+    {
+      label: 'Verfügbar',
+      data: {{ next_free_capacity | safe}},
+    backgroundColor: COLORS[0]
             },
-    ]
+  ]
     },
-      options: {
-      responsive: true,
-      scales: {
-        x: {
-          stacked: true,
-        },
-        y: {
-          stacked: true
-        }
+    options: {
+    responsive: true,
+    scales: {
+      x: {
+        stacked: true,
       },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            title: (items) => {
-              const item = items[0];
-              const label = item.chart.data.labels[item.dataIndex];
-              return label;
-            },
-            label: (context) => {
-              const label = context.chart.data.labels[context.dataIndex];
-              const value = context.parsed.y;
-              const datasetLabel = context.dataset.label;
+      y: {
+        stacked: true
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          title: (items) => {
+            const item = items[0];
+            const label = item.chart.data.labels[item.dataIndex];
+            return label;
+          },
+          label: (context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
 
-              return [`${datasetLabel} ${value.toFixed(1)} %`]
-            }
+            return [`${datasetLabel} ${value.toFixed(1)} %`]
           }
         }
-      },
-      onClick: (event, elements, chart) => {
-        if (elements.length) {
-          const element = elements[0]; // use the first one
-          const url = chart.data.links[element.index];
-          window.location.href = url;
-        }
-      },
-      onHover: (event, elements) => {
-        event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
-      },
-    }
-  });
-    {% endif %}
-
-    new Chart(document.getElementById('traffic-source-chart'), {
-      type: 'bar',
-      data: {
-        labels: {{ traffic_source_labels | safe}},
-      datasets: {{ traffic_source_data | safe}}.map((data, index) => {
-        return {
-          label: data.label,
-          data: data.data,
-          backgroundColor: COLORS[index]
-        }
-      })
+      }
     },
-      options: {
-      responsive: true,
-      scales: {
-        x: {
-          stacked: true,
-        },
-        y: {
-          stacked: true,
-          min: 0,
-          max: 100
-        }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const label = context.chart.data.labels[context.dataIndex];
-              const value = context.parsed.y;
-              const datasetLabel = context.dataset.label;
+    onClick: (event, elements, chart) => {
+      if (elements.length) {
+        const element = elements[0]; // use the first one
+        const url = chart.data.links[element.index];
+        window.location.href = url;
+      }
+    },
+    onHover: (event, elements) => {
+      event.native.target.style.cursor = elements[0] ? 'pointer' : 'default';
+    },
+  }
+  });
+  {% endif %}
 
-              return [`${datasetLabel}: ${value.toFixed(1)} %`]
-            }
+  new Chart(document.getElementById('traffic-source-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{ traffic_source_labels | safe}},
+    datasets: {{ traffic_source_data | safe}}.map((data, index) => {
+      return {
+        label: data.label,
+        data: data.data,
+        backgroundColor: COLORS[index]
+      }
+    })
+    },
+    options: {
+    responsive: true,
+    scales: {
+      x: {
+        stacked: true,
+      },
+      y: {
+        stacked: true,
+        min: 0,
+        max: 100
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+
+            return [`${datasetLabel}: ${value.toFixed(1)} %`]
           }
         }
       }
     }
+  }
   });
 
-    new Chart(document.getElementById('cancellations-chart'), {
-      type: 'bar',
-      data: {
-        labels: {{ cancellations_labels | safe}},
-      datasets: {{ cancellations_data | safe}}.map((data, index) => {
-        return {
-          label: data.label,
-          data: data.data,
-          backgroundColor: COLORS[index + 1]
-        }
-      })
+  new Chart(document.getElementById('cancellations-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{ cancellations_labels | safe}},
+    datasets: {{ cancellations_data | safe}}.map((data, index) => {
+      return {
+        label: data.label,
+        data: data.data,
+        backgroundColor: COLORS[index + 1]
+      }
+    })
     },
-      options: {
-      responsive: true,
-    }});
+    options: {
+    responsive: true,
+  }});
 
-    new Chart(document.getElementById('cashflow-forecast-chart'), {
-      type: 'line',
-      data: {
-        labels: {{ cashflow_labels | safe }},
-      datasets: [{
-        label: "Einnahmen",
-        data: {{ cashflow_data | safe }},
-        backgroundColor: COLORS[3],
-        fill: true 
-    }]
-  },
-      options: {
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const label = context.chart.data.labels[context.dataIndex];
-              const value = context.parsed.y;
-              const datasetLabel = context.dataset.label;
 
-              return [`${datasetLabel}: ${value.toFixed(2)} €`]
-            }
-          }
-        }
-      },
-      responsive: true,
-    }
-});
-
-    new Chart(document.getElementById('cancellation-reason-chart'), {
-      type: 'bar',
-      data: {
-        labels: {{ cancellation_reason_labels | safe}},
-      datasets: [{
-        label: "Kündigungsgrund %",
-        data: {{ cancellation_reason_data | safe}},
-      backgroundColor: COLORS
+  new Chart(document.getElementById('cancellation-reason-chart'), {
+    type: 'bar',
+    data: {
+      labels: {{ cancellation_reason_labels | safe}},
+    datasets: [{
+      label: "Kündigungsgrund %",
+      data: {{ cancellation_reason_data | safe}},
+    backgroundColor: COLORS
       }]
     },
-      options: {
-      scales: {
-        x: {
-          ticks: {
-            autoSkip: false,
-            callback: function (value, index) {
-              const maxLength = 18; // You can adjust this value to determine the maximum length of truncated labels
-              const labels = this.chart.data.labels;
-              return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
-            }
+    options: {
+    scales: {
+      x: {
+        ticks: {
+          autoSkip: false,
+          callback: function (value, index) {
+            const maxLength = 18; // You can adjust this value to determine the maximum length of truncated labels
+            const labels = this.chart.data.labels;
+            return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
           }
         }
-      },
-    }
+      }
+    },
+  }
   });
 
-    new Chart(document.getElementById('harvest-share-variants-chart'), {
-      type: 'doughnut',
-      data: {
-        labels: {{ harvest_share_variants_labels | safe}},
-      datasets: [{
-        data: {{ harvest_share_variants_data | safe}},
-        backgroundColor: COLORS
+  new Chart(document.getElementById('harvest-share-variants-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ harvest_share_variants_labels | safe}},
+    datasets: [{
+      data: {{ harvest_share_variants_data | safe}},
+    backgroundColor: COLORS
       }]
     }
   });
 
   new Chart(document.getElementById('cancellation-coop-shares'), {
-      type: 'bar',
-      data: {
-        labels: {{ cancelled_coop_shares_labels | safe}},
-      datasets: [{
-        label: "Gekündigtes Geschäftsguthaben",
-        data: {{ cancelled_coop_shares_data | safe}},
-        backgroundColor: COLORS.reverse()
+    type: 'bar',
+    data: {
+      labels: {{ cancelled_coop_shares_labels | safe}},
+    datasets: [{
+      label: "Gekündigtes Geschäftsguthaben",
+      data: {{ cancelled_coop_shares_data | safe}},
+    backgroundColor: COLORS.reverse()
       }]
     },
-      options: {
-      scales: {
-        x: {
-          ticks: {
-            autoSkip: false,
-            callback: function (value, index) {
-              const maxLength = 18; // You can adjust this value to determine the maximum length of truncated labels
-              const labels = this.chart.data.labels;
-              return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
-            }
+    options: {
+    scales: {
+      x: {
+        ticks: {
+          autoSkip: false,
+          callback: function (value, index) {
+            const maxLength = 18; // You can adjust this value to determine the maximum length of truncated labels
+            const labels = this.chart.data.labels;
+            return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
           }
         }
-      },
-    }
+      }
+    },
+  }
   });
 
-  </script>
-  {% endblock %}
+</script>
+{% endblock %}
