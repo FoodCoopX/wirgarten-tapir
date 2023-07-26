@@ -717,23 +717,33 @@ P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verl�
             key=Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT,
             label="Inhalt: Email 'Vertrags-/Lieferende'",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="""Moin {member.first_name},
+            initial_value="""Liebe/r {member.first_name}
 
-du hast deinen Erntevertrag beim {site_name} gekündigt und hast diese Woche deinen letzten Ernteanteil abgeholt. 
-Wir finden es toll, dass du diese ersten, aufregenden Gemüse-Jahre mit uns gemeinsam bestritten und gestaltet hast und wir dich mit WirGarten-Gemüse versorgen konnten. 
-Vielen Dank für dein Vertrauen und deine Unterstützung, denn ohne dich wäre dies alles nicht möglich gewesen!
+Du hast diese Woche deine letzte Abholung gehabt. 
 
-Umso mehr bedauern wir es, dass du gehst! Wir würden uns sehr freuen, wenn du eines Tages doch wieder Lust hast, mit uns die Agrarwende im Kleinen weiter zu gestalten und du wieder regionales Gemüse aus dem WirGarten genießen willst. 
-Und toll fänden wir es auch, wenn du uns deinen Freund*innen und Bekannten weiterempfiehlst! 
-Aber auch ohne Ernteanteil freuen wir uns natürlich, dich bald mal wieder im WirGarten oder anderswo zu treffen. 
+Folgende Produktverträge sind nun abgelaufen:
+
+{contract_list}
+
+Wenn du bereits Mitglied unserer Genossenschaft bist, bleibt dein Zugang zum Mitgliederbereich bestehen und du kannst - wenn Ernteanteile verfügbar sind - jederzeit über den Mitgliederbereich einen neuen Ernteanteil abschließen.
+
+Wenn dies die letzte Abholung in deinem Probemonat war und du auch deinen Beitritt zur Genossenschaft widerrufen hast, löschen wir den Zugang zum Mitgliederbereich in den nächsten Tagen. Dann kannst du über unsere Website lueneburg.wirgarten.com einen neuen Ernteertrag abschließen, wenn du es dir anders überlegst.
+
+Egal ob letzte Lieferung nach dem Probemonat oder nach einer oder mehreren Saisons - wir danken dir für deine Unterstützung und dein Vertrauen und freuen uns, dich auch ohne Ernteanteil mal wieder im WirGarten zu treffen!
+
+Wenn du noch eine Frage oder Rückmeldung hast, melde dich gerne bei uns!
 
 Viele Grüße und alles Gute,
-{admin_name} aus deinem {site_name}""",
+{admin_name} aus deinem {site_name}
+
+P.S.: Erzähle gerne Freund:innen, Nachbar:innen, Kolleg:innen in Lüneburg vom WirGarten!""",
             description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
             category=ParameterCategory.EMAIL,
             order_priority=7998,
             meta=ParameterMeta(
-                vars_hint=DEFAULT_EMAIL_MEMBER_VARS + DEFAULT_EMAIL_VARS,
+                vars_hint=DEFAULT_EMAIL_MEMBER_VARS
+                + DEFAULT_EMAIL_VARS
+                + ["contract_list"],
                 validators=[
                     validate_html,
                 ],
