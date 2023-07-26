@@ -5,36 +5,39 @@ from math import floor
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Count, Sum, F, DateField, ExpressionWrapper
+from django.db.models import Count, DateField, ExpressionWrapper, F, Sum, Max
 from django.urls import reverse_lazy
 from django.views import generic
+from django.db.models.functions import ExtractYear
+from tapir import settings
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
+    CoopShareTransaction,
     Member,
-    Subscription,
-    WaitingListEntry,
     Product,
+    QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
-    QuestionaireCancellationReasonResponse,
+    Subscription,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    get_total_payment_amount,
     get_solidarity_overplus,
+    get_total_payment_amount,
 )
 from tapir.wirgarten.service.products import (
-    get_active_product_types,
     get_active_product_capacities,
-    get_future_subscriptions,
-    get_product_price,
-    get_next_growing_period,
+    get_active_product_types,
     get_current_growing_period,
+    get_future_subscriptions,
+    get_next_growing_period,
+    get_product_price,
 )
-from tapir.wirgarten.utils import format_currency, get_today
+from tapir.wirgarten.utils import format_currency, format_date, get_now, get_today
 
 
 class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
@@ -57,8 +60,17 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
         self.add_cancellation_reasons_chart_context(context)
+        self.add_cashflow_chart_context(context)
+        self.add_cancelled_coop_shares_context(context)
 
-        context["active_members"] = len(Member.objects.all())
+        context["active_members"] = len(
+            list(filter(lambda x: x.coop_shares_quantity > 0, Member.objects.all()))
+        )
+        context["coop_shares_value"] = format_currency(
+            CoopShareTransaction.objects.aggregate(quantity=Sum("quantity"))["quantity"]
+            * settings.COOP_SHARE_PRICE
+        ).replace(",00", "")
+
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
@@ -76,10 +88,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["waiting_list_harvest_shares"] = waiting_list_counts.get(
             WaitingListEntry.WaitingListType.HARVEST_SHARES, 0
         )
-        context["next_payment_date"] = get_next_payment_date()
-        context["next_payment_amount"] = format_currency(
-            get_total_payment_amount(context["next_payment_date"])
-        )
+
         context["solidarity_overplus"] = get_solidarity_overplus()
         context["status_seperate_coop_shares"] = get_parameter_value(
             Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
@@ -108,8 +117,42 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         return context
 
+    def add_cancelled_coop_shares_context(self, context):
+        cancellations = {
+            c["year"]: -c["total_quantity"] * settings.COOP_SHARE_PRICE
+            for c in (
+                CoopShareTransaction.objects.filter(
+                    transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+                    valid_at__gte=get_today(),
+                )
+                .annotate(year=ExtractYear("valid_at"))
+                .values("year")
+                .annotate(total_quantity=Sum("quantity"))
+                .order_by("year")
+            )
+        }
+        context["cancelled_coop_shares_labels"] = list(cancellations.keys())
+        context["cancelled_coop_shares_data"] = list(cancellations.values())
+
+    def add_cashflow_chart_context(self, context):
+        last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
+            "max_date"
+        ]
+
+        payment_dates = [get_next_payment_date()]
+        while payment_dates[-1] < last_contract_end:
+            payment_dates.append(payment_dates[-1] + relativedelta(months=1))
+
+        context["cashflow_labels"] = list(map(lambda x: format_date(x), payment_dates))
+        context["cashflow_data"] = list(
+            map(lambda x: get_total_payment_amount(x), payment_dates)
+        )
+
     def add_cancellation_reasons_chart_context(self, context):
-        total = QuestionaireCancellationReasonResponse.objects.all().count()
+        qs = QuestionaireCancellationReasonResponse.objects.filter(
+            timestamp__gte=get_today() + relativedelta(day=1, years=-1)
+        )
+        total = qs.count()
         if total == 0:
             context["cancellation_reason_labels"] = []
             context["cancellation_reason_data"] = []
@@ -117,12 +160,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             return
 
         responses = (
-            QuestionaireCancellationReasonResponse.objects.filter(custom=False)
-            .values("reason")
-            .annotate(count=Count("reason"))
+            qs.filter(custom=False).values("reason").annotate(count=Count("reason"))
         )
-        custom_responses = QuestionaireCancellationReasonResponse.objects.filter(
-            custom=True
+        custom_responses = list(
+            {x.reason: x for x in qs.filter(custom=True).order_by("-timestamp")}.keys()
         )
 
         context["cancellation_reason_labels"] = list(
@@ -130,11 +171,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         ) + ["Sonstige"]
         context["cancellation_reason_data"] = list(
             map(lambda x: x["count"] / total * 100, responses)
-        ) + [custom_responses.count() / total * 100]
+        ) + [len(custom_responses) / total * 100]
 
-        context["cancellations_other_reasons"] = list(
-            map(lambda x: x.reason, custom_responses.order_by("-timestamp")[:50])
-        )
+        context["cancellations_other_reasons"] = custom_responses
 
     def add_cancellation_chart_context(self, context):
         month_labels = [
@@ -248,7 +287,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{base_share_count} Anteile verfügbar"
+                    f"{base_share_count} Anteile noch frei"
                     if base_share_count
                     else None,
                     f"{format_currency(total - used)} €",

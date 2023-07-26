@@ -66,16 +66,14 @@ class PickupLocation(TapirModel):
     def opening_times_html(self):
         result = "<table>"
         last_day = None
-        for idx, ot in enumerate(
-            PickupLocationOpeningTime.objects.filter(
-                pickup_location_id=self.id
-            ).order_by("day_of_week")
-        ):
+        for ot in PickupLocationOpeningTime.objects.filter(
+            pickup_location_id=self.id
+        ).order_by("day_of_week"):
             open_time = ot.open_time.strftime("%H:%M")
             close_time = ot.close_time.strftime("%H:%M")
 
             result += f"""<tr>
-                <th>{OPTIONS_WEEKDAYS[ot.day_of_week][1] if ot.day_of_week != last_day else ""}</td>
+                <th style='font-weight: semibold'>{OPTIONS_WEEKDAYS[ot.day_of_week][1][0:2] if ot.day_of_week != last_day else ""}</td>
                 <td style='padding-left:2em; text-align:right'>{open_time}-{close_time}</td>
                 </tr>"""
             last_day = ot.day_of_week

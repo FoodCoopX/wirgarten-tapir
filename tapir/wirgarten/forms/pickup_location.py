@@ -105,6 +105,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
     return {
         "id": pickup_location.id,
         "name": pickup_location.name,
+        "opening_times": pickup_location.opening_times_html,
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
         "capabilities": list(

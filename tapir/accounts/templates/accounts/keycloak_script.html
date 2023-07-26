@@ -100,7 +100,7 @@
         keycloak.logout({ redirectUri: getRedirectUrl() })
     })
 
-    if (silentCheckSsoRedirectUri && savedToken) {
+    if (keycloak.silentCheckSsoRedirectUri && savedToken) {
         hideLoadingScreen();
     }
 </script>
