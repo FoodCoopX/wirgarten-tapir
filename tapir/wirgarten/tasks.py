@@ -201,8 +201,9 @@ def send_email_member_contract_end_reminder(member_id):
     member = Member.objects.get(pk=member_id)
 
     today = get_today()
+    active_subs = get_active_subscriptions().filter(member=member)
     if (
-        get_active_subscriptions().filter(member=member).exists()
+        active_subs.exists()
         and not get_future_subscriptions()
         .filter(member=member, start_date__gt=today)
         .exists()
@@ -211,6 +212,9 @@ def send_email_member_contract_end_reminder(member_id):
             to_email=[member.email],
             subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
             content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
+            variables={
+                "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), active_subs))}"
+            },
         )
     else:
         print(
