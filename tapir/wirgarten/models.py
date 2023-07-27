@@ -87,7 +87,7 @@ class PickupLocation(TapirModel):
                 min(smallest_offset, offset) if smallest_offset is not None else offset
             )
 
-        return smallest_offset
+        return smallest_offset if smallest_offset is not None else 0
 
 
 class PickupLocationOpeningTime(TapirModel):
