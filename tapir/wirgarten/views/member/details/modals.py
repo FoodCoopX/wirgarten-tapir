@@ -67,7 +67,6 @@ def get_member_personal_data_edit_form(request, **kwargs):
     kwargs["can_edit_name_and_birthdate"] = request.user.has_perm(
         Permission.Accounts.MANAGE
     )
-    kwargs["can_edit_email"] = not get_parameter_value(Parameter.MEMBER_LOCK_FUNCTIONS)
 
     @transaction.atomic
     def save(member: Member):
