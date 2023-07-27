@@ -1,61 +1,55 @@
 {% load i18n %}
 
+{% if deliveries %}
 <table class="table table-striped">
     <thead>
-    <tr>
-        <th style="text-align:center">
-            {% translate 'Datum' %}
-        </th>
-        <th style="text-align:center">
-            {% translate 'Produkte' %}
-        </th>
-        {% if not hide_location %}
-        <th style="text-align:center">
-            {% translate 'Abholort' %}
-        </th>
-        {% endif %}
-        {% if not hide_info %}
-        <th></th>
-        {% endif %}
-    </tr>
-    </thead>
-    <tbody style="overflow-y: auto">
-    {% for delivery in deliveries %}
-    <tr>
-        <td style="text-align:center">
-            <strong id="date-{{delivery.delivery_date}}">{{delivery.date}}</strong><br/>
-            <p style="line-height:1.25em"><small id="datediff-{{delivery.delivery_date}}"></small></p>
-        </td>
-        <td style="text-align:center">
-            <p style="line-height:1.25em">
-                {% for sub in delivery.subs %}
-                {{sub.quantity}} × {{sub.product.name}} {{sub.product.type.name}}<br/>
-                {% endfor %}
-            </p>
-        </td>
-        <td title="Klicken für Öffnungszeiten und weitere Infos" style="text-align:center; cursor: pointer" onclick="ConfirmationModal.open('{{delivery.pickup_location.name}}', `<div>
-        {{delivery.pickup_location.street}}, {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}<br/><br/>
-        {% if delivery.pickup_location.info %}{{delivery.pickup_location.info}}<br/><br/>{% endif %}
-        {% if delivery.pickup_location.contact_name %}<strong>Kontakt:</strong> {{delivery.pickup_location.contact_name}}<br/>{% endif %}
-        {% if delivery.pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a href='{{delivery.pickup_location.messenger_group_link}}'>Klicke hier zum Beitreten</a><br/>{% endif %}
-        {% if delivery.pickup_location.access_code %}<strong>Zugangs-Code:</strong> {{delivery.pickup_location.access_code}}<br/>{% endif %}
-        {% if delivery.pickup_location.opening_times_html %}<hr/><h4>Öffnungszeiten</h4><br/>{{delivery.pickup_location.opening_times_html}}{% endif %}
-        {% if delivery.pickup_location.photo_link %}<a href='{{delivery.pickup_location.photo_link}}' target='_blank'><img style='max-width: 100%' src='{{delivery.pickup_location.photo_link}}'/></a>{% endif %}
-        </div>`)">
+        <tr>
+            <th style="text-align:center">
+                {% translate 'Datum' %}
+            </th>
+            <th style="text-align:center">
+                {% translate 'Produkte' %}
+            </th>
             {% if not hide_location %}
-            <strong>{{delivery.pickup_location.name}}</strong><br/>
+            <th style="text-align:center">
+                {% translate 'Abholort' %}
+            </th>
             {% endif %}
             {% if not hide_info %}
-            <small>{{delivery.pickup_location.street}}<br/>
-                {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}</small>
+            <th></th>
             {% endif %}
-            <span class="badge bg-warning">?</span>
-        </td>
-        {% if not hide_info %}
-        <td style="max-width: 14em">{{delivery.pickup_location.info}}</td>
-        {% endif %}
-    </tr>
-    {% endfor %}
+        </tr>
+    </thead>
+    <tbody style="overflow-y: auto">
+        {% for delivery in deliveries %}
+        <tr>
+            <td style="text-align:center">
+                <strong id="date-{{delivery.delivery_date}}">{{delivery.date}}</strong><br />
+                <p style="line-height:1.25em"><small id="datediff-{{delivery.delivery_date}}"></small></p>
+            </td>
+            <td style="text-align:center">
+                <p style="line-height:1.25em">
+                    {% for sub in delivery.subs %}
+                    {{sub.quantity}} × {{sub.product.name}} {{sub.product.type.name}}<br />
+                    {% endfor %}
+                </p>
+            </td>
+            <td title="Klicken für Öffnungszeiten und weitere Infos" style="text-align:center; cursor: pointer"
+                onclick="ConfirmationModal.open('{{delivery.pickup_location.name}}', `{% include 'wirgarten/member/member_pickup_location_info.html' with pickup_location=member.pickup_location %}`)">
+                {% if not hide_location %}
+                <strong>{{delivery.pickup_location.name}}</strong><br />
+                {% endif %}
+                {% if not hide_info %}
+                <small>{{delivery.pickup_location.street}}<br />
+                    {{delivery.pickup_location.postcode}} {{delivery.pickup_location.city}}</small>
+                {% endif %}
+                <span class="badge bg-warning">?</span>
+            </td>
+            {% if not hide_info %}
+            <td style="max-width: 14em">{{delivery.pickup_location.info}}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
 
@@ -71,3 +65,14 @@
     {% endfor %}
 
 </script>
+{% elif member.pickup_location %}
+<h4>{{member.pickup_location.name}}</h4>
+{% include 'wirgarten/member/member_pickup_location_info.html' with pickup_location=member.pickup_location %}
+{% else %}
+<div style="width:100%; text-align: center; padding: 3em">
+    <button class="btn tapir-btn btn-outline-success" style="margin:auto"
+        onclick="FormModal.load('{% url 'wirgarten:member_pickup_location_choice' member.pk %}', 'Abholort auswählen')">
+        <span class="material-icons">add_location_alt</span>{% translate 'Abholort auswählen' %}
+    </button>
+</div>
+{% endif %}

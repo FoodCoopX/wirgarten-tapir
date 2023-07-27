@@ -116,31 +116,32 @@ def get_pickup_location_choice_form(request, **kwargs):
             Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
         )
 
-        # Case A: User makes change AFTER delivery_date and BEFORE change_util_weekday
+        # Case A: User doesn't have a pickup location yet
+        # OR
+        # Case B: User makes change AFTER delivery_date and BEFORE change_util_weekday
         # If today is before or on change_util_weekday and after next_delivery_weekday
         # OR
-        # Case B: User makes change BEFORE delivery_date and AFTER change_util_weekday
+        # Case C: User makes change BEFORE delivery_date and AFTER change_util_weekday
         # If today is after change_util_weekday and before next_delivery_weekday
         if (
-            next_delivery_weekday < today_weekday <= change_util_weekday
+            member.pickup_location is None
+            or next_delivery_weekday < today_weekday <= change_util_weekday
             or change_util_weekday <= today_weekday < next_delivery_weekday
         ):
             change_date = today
 
-        # Case C: User makes change ON the delivery_date
+        # Case D: User makes change ON the delivery_date
         # If today is the delivery_date, the change can become effective from the next day
         elif today == next_delivery_date:
             change_date = today + relativedelta(days=1)
 
-        # Case D: Other cases
+        # Case E: Other cases
         # If none of the above cases apply, the change will be effective from the next_delivery_date
         else:
             change_date = next_delivery_date + relativedelta(days=1)
 
-        orig_pl = member.pickup_location
-        existing = MemberPickupLocation.objects.filter(
-            member=member, valid_from=change_date
-        )
+        qs = MemberPickupLocation.objects.filter(member=member)
+        existing = qs.filter(valid_from=change_date)
         if existing.exists():
             found = existing.first()
             found.pickup_location_id = pickup_location_id
@@ -155,7 +156,7 @@ def get_pickup_location_choice_form(request, **kwargs):
         TextLogEntry().populate(
             actor=request.user,
             user=member,
-            text=f"Abholort geändert zum {format_date(change_date)}: {orig_pl} -> {pl}",
+            text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
         ).save()
 
     return get_form_modal(
