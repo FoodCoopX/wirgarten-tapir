@@ -33,15 +33,7 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
     :param subs: the list of subs (e.g. that are currently active for a user)
     :return: the total price in €
     """
-    return round(
-        sum(
-            map(
-                lambda x: x.total_price(),
-                subs,
-            )
-        ),
-        2,
-    )
+    return round(sum([x.total_price() for x in subs]), 2)
 
 
 def product_type_order_by(id_field: str = "id", name_field: str = "name"):
@@ -92,8 +84,9 @@ def get_active_product_types(reference_date: date = None) -> iter:
 def get_available_product_types(reference_date: date = None) -> iter:
     if reference_date is None:
         reference_date = get_today()
-    # TODO: filter out the ones without any capacity left!
-    return get_active_product_types(reference_date)
+
+    product_types = get_active_product_types(reference_date)
+    return [p for p in product_types if is_product_type_available(p, reference_date)]
 
 
 def get_next_growing_period(
@@ -241,7 +234,7 @@ def get_active_subscriptions(reference_date: date = None):
 
 
 @transaction.atomic
-def create_product(name: str, price: Decimal, capacity_id: str):
+def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     """
     Creates a product and product price with the given attributes.
 
@@ -252,7 +245,7 @@ def create_product(name: str, price: Decimal, capacity_id: str):
     """
     pc = ProductCapacity.objects.get(id=capacity_id)
 
-    product = Product.objects.create(name=name, type_id=pc.product_type.id)
+    product = Product.objects.create(name=name, type_id=pc.product_type.id, base=base)
 
     ProductPrice.objects.create(
         price=price,
@@ -361,6 +354,9 @@ def delete_product(id_: str):
 @transaction.atomic
 def create_product_type_capacity(
     name: str,
+    contract_link: str,
+    icon_link: str,
+    single_subscription_only: bool,
     delivery_cycle: str,
     default_tax_rate: float,
     capacity: Decimal,
@@ -383,12 +379,22 @@ def create_product_type_capacity(
     if product_type_id is not None and len(product_type_id.strip()) > 0:
         pt = ProductType.objects.get(id=product_type_id)
         pt.delivery_cycle = delivery_cycle
+        pt.contract_link = contract_link
+        pt.icon_link = icon_link
+        pt.single_subscription_only = single_subscription_only
         pt.save()
     else:
         pt = ProductType.objects.create(
             name=name,
             delivery_cycle=delivery_cycle,
+            contract_link=contract_link,
+            icon_link=icon_link,
+            single_subscription_only=single_subscription_only,
         )
+        if not ProductType.objects.exists():
+            Parameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
+                value=pt.id
+            )
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)
@@ -411,6 +417,9 @@ def create_product_type_capacity(
 def update_product_type_capacity(
     id_: str,
     name: str,
+    contract_link: str,
+    icon_link: str,
+    single_subscription_only: bool,
     delivery_cycle: str,
     default_tax_rate: float,
     capacity: Decimal,
@@ -433,6 +442,9 @@ def update_product_type_capacity(
     cp.save()
 
     cp.product_type.name = name
+    cp.product_type.contract_link = contract_link
+    cp.product_type.icon_link = icon_link
+    cp.product_type.single_subscription_only = single_subscription_only
     cp.product_type.delivery_cycle = delivery_cycle
     cp.product_type.save()
 
@@ -527,65 +539,31 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
         return 0
 
 
-def get_cheapest_product_price(product_type: ProductType, reference_date: date = None):
+def get_cheapest_product_price(
+    product_type: ProductType | str, reference_date: date = None
+):
     if reference_date == None:
         reference_date = get_today()
 
-    return (
-        ProductPrice.objects.filter(
-            product__type=product_type, valid_from__lte=reference_date
-        )
-        .order_by("price")
-        .values("price")[0:1][0]["price"]
-    )
+    if type(product_type) == ProductType:
+        product_type = product_type.id
+
+    product_prices = ProductPrice.objects.filter(product__type_id=product_type)
+    if len(product_prices) > 1:
+        product_prices.filter(valid_from__lte=reference_date).order_by("price")
+
+    return product_prices.first().price
 
 
 def is_product_type_available(
-    product_type: ProductType, reference_date: date = None
+    product_type: ProductType | str, reference_date: date = None
 ) -> bool:
     if reference_date == None:
         reference_date = get_today()
 
+    if type(product_type) == ProductType:
+        product_type = product_type.id
+
     return get_free_product_capacity(
-        product_type_id=product_type.id, reference_date=reference_date
+        product_type_id=product_type, reference_date=reference_date
     ) > get_cheapest_product_price(product_type, reference_date)
-
-
-# FIXME: duplicate code. It would be nice to have generic parameters for each product type instead of hand written ones
-def is_harvest_shares_available(reference_date: date = None) -> bool:
-    if reference_date == None:
-        reference_date = get_today()
-
-    param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.HARVEST_SHARES), reference_date
-        )
-    )
-
-
-def is_bestellcoop_available(reference_date: date = None) -> bool:
-    if reference_date == None:
-        reference_date = get_today()
-
-    param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.BESTELLCOOP), reference_date
-        )
-    )
-
-
-def is_chicken_shares_available(reference_date: date = None) -> bool:
-    if reference_date == None:
-        reference_date = get_today()
-
-    param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
-    return param == 1 or (
-        param == 2
-        and is_product_type_available(
-            ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES), reference_date
-        )
-    )

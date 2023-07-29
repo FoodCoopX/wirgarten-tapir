@@ -4,7 +4,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
-from tapir import settings
+from django.conf import settings
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (

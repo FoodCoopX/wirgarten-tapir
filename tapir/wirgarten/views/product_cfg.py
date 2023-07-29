@@ -188,6 +188,9 @@ def get_product_type_capacity_edit_form(request, **kwargs):
         handler=lambda form: update_product_type_capacity(
             id_=kwargs[KW_CAPACITY_ID],
             name=form.cleaned_data["name"],
+            contract_link=form.cleaned_data["contract_link"],
+            icon_link=form.cleaned_data["icon_link"],
+            single_subscription_only=form.cleaned_data["single_subscription_only"],
             delivery_cycle=form.cleaned_data["delivery_cycle"],
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
@@ -205,6 +208,9 @@ def get_product_type_capacity_add_form(request, **kwargs):
     def handler(form):
         return create_product_type_capacity(
             name=form.cleaned_data["name"],
+            contract_link=form.cleaned_data["contract_link"],
+            icon_link=form.cleaned_data["icon_link"],
+            single_subscription_only=form.cleaned_data["single_subscription_only"],
             delivery_cycle=form.cleaned_data["delivery_cycle"],
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
@@ -275,6 +281,7 @@ def get_product_add_form(request, **kwargs):
             name=form.cleaned_data["name"],
             price=form.cleaned_data["price"],
             capacity_id=kwargs[KW_CAPACITY_ID],
+            base=form.cleaned_data["base"],
         ),
         redirect_url_resolver=redirect_url,
         **kwargs,

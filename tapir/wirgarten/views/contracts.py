@@ -177,11 +177,13 @@ class SubscriptionListFilter(FilterSet):
     def __init__(self, data=None, *args, **kwargs):
         def get_default_period_filter_value():
             today = get_today()
-            return (
-                GrowingPeriod.objects.filter(start_date__lte=today, end_date__gte=today)
-                .first()
-                .id
+            growing_periods = GrowingPeriod.objects.filter(
+                start_date__lte=today, end_date__gte=today
             )
+            if not growing_periods.exists():
+                return None
+
+            return growing_periods.first().id
 
         if data is None:
             data = {"period": get_default_period_filter_value()}

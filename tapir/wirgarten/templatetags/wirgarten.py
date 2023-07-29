@@ -1,11 +1,9 @@
 from datetime import datetime, date
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from django import template
 
 from tapir.wirgarten import utils
-from tapir.wirgarten.views import FORM_TITLES
 
 register = template.Library()
 
@@ -22,24 +20,6 @@ def get_value(dictionary, key):
 def remove(value, arg):
     """Removes the specified argument from the input string."""
     value.pop(arg, None)
-
-
-# FIXME: this is very hacky, there is probably a better way...
-@register.filter(name="get_step_title")
-def get_step_title(step):
-    return FORM_TITLES.get(step, step)[0]
-
-
-@register.filter(name="get_step_description")
-def get_step_description(step):
-    return FORM_TITLES.get(step, step)[1]
-
-
-@register.inclusion_tag(
-    "wirgarten/registration/steps/components/summary_card_disabled.html"
-)
-def summary_card_disabled(title):
-    return {"title": title}
 
 
 @register.filter(name="format_date")

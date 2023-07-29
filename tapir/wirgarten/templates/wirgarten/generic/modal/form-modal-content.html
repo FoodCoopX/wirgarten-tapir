@@ -36,6 +36,10 @@
             {% endfor %}
         </div>
         {% endif %}
+        {% if form.sum_template %}
+        {% include form.sum_template with form=form %}
+        <br/>
+        {% endif %}
         {% if form.outro_template %}
         {% include form.outro_template with form=form %}
         <br/>

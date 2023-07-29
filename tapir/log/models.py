@@ -25,12 +25,6 @@ class LogEntry(models.Model):
         null=True,
         on_delete=models.PROTECT,
     )
-    # share_owner = models.ForeignKey(
-    #    "coop.ShareOwner",
-    #    related_name="log_entries",
-    #    null=True,
-    #    on_delete=models.PROTECT,
-    # )
 
     log_class_type = models.ForeignKey(
         ContentType, on_delete=models.PROTECT, related_name="+"

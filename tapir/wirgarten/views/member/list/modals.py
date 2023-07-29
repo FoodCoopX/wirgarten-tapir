@@ -1,5 +1,5 @@
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.forms.member.forms import (
+from tapir.wirgarten.forms.member import (
     CoopShareCancelForm,
     CoopShareTransferForm,
     NonTrialCancellationForm,

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
     F,
+    Q,
     Index,
     JSONField,
     OuterRef,
@@ -136,17 +137,35 @@ class ProductType(TapirModel):
         default=NO_DELIVERY,
         verbose_name=_("Lieferzyklus"),
     )
+    contract_link = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        verbose_name=_("Link zu den Vertragsgrundsätzen"),
+    )
+    icon_link = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        verbose_name=_("Link zum Icon"),
+    )
+    single_subscription_only = models.BooleanField(
+        default=False, verbose_name=_("Nur Einzelabonnement erlaubt")
+    )
 
     @property
     def base_price(self):
         today = get_today()
         product = self.product_set.get(base=True)
-        return (
-            product.productprice_set.filter(valid_from__lte=today)
-            .order_by("-valid_from")
-            .first()
-            .price
-        )
+        price_queryset = product.productprice_set.filter(
+            valid_from__lte=today
+        ).order_by("-valid_from")
+
+        price = price_queryset.first()
+        if price is None:
+            price = product.productprice_set.order_by("-valid_from").first()
+
+        return price.price if price else None
 
     class Meta:
         constraints = [
@@ -511,20 +530,12 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     def total_price(self, reference_date=None):
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = max(self.start_date, get_today())
 
         if not hasattr(self, "_total_price"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=reference_date
-            ).order_by("product_id", "-valid_from")
-            price = next(
-                (
-                    product_price.price
-                    for product_price in product_prices
-                    if product_price.product_id == self.product_id
-                ),
-                0.0,
-            )
+            from tapir.wirgarten.service.products import get_product_price
+
+            price = get_product_price(self.product, reference_date).price
 
             if self.solidarity_price_absolute is not None:
                 self._total_price = round(
