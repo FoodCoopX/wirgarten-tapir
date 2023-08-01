@@ -403,18 +403,18 @@ class HarvestShareForm(forms.Form):
         if not new_pickup_location and has_harvest_shares and self.member_id:
             product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
             next_month = get_today() + relativedelta(months=1, day=1)
-            latest_pickup_location = (
-                MemberPickupLocation.objects.filter(
-                    member_id=self.member_id, valid_from__lte=next_month
+            qs = MemberPickupLocation.objects.filter(member_id=self.member_id)
+            if len(qs) > 1:
+                latest_pickup_location = (
+                    qs.filter(valid_from__lte=next_month)
+                    .order_by("-valid_from")
+                    .first()
                 )
-                .order_by("-valid_from")
-                .first()
-            )
-            if not latest_pickup_location:
+            elif len(qs) == 1:
+                latest_pickup_location = qs.first()
+            else:
                 self.add_error(None, _("Bitte wähle einen Abholort aus!"))
                 return False
-            else:
-                latest_pickup_location = latest_pickup_location.pickup_location
 
             total = 0.0
             for key, quantity in self.cleaned_data.items():
@@ -430,7 +430,7 @@ class HarvestShareForm(forms.Form):
             capability = (
                 get_active_pickup_location_capabilities()
                 .filter(
-                    pickup_location=latest_pickup_location,
+                    pickup_location=latest_pickup_location.pickup_location,
                     product_type__id=product_type.id,
                 )
                 .first()
