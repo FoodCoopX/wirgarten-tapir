@@ -10,7 +10,7 @@
     {{pickup_location.access_code}}<br />{% endif %}
     {% if pickup_location.opening_times_html %}
     <hr />
-    <h4>Öffnungszeiten</h4><br />{{pickup_location.opening_times_html|safe}}{% endif %}
+    <h4>Öffnungszeiten</h4>{{pickup_location.opening_times_html|safe}}{% endif %}
     {% if pickup_location.photo_link %}<a href='{{pickup_location.photo_link}}' target='_blank'><img
             style='max-width: 100%' src='{{pickup_location.photo_link}}' /></a>{% endif %}
 </div>

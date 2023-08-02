@@ -72,6 +72,11 @@ def add_admin_links(groups, request):
         material_icon="attach_file",
         url=reverse_lazy("wirgarten:exported_files_list"),
     )
+    debug_group.add_link(
+        display_name=_("Geplante Tasks"),
+        material_icon="schedule",
+        url=reverse_lazy("wirgarten:scheduled_tasks"),
+    )
 
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(

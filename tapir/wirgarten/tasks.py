@@ -1,17 +1,15 @@
 import itertools
 from collections import defaultdict
+from dateutil.relativedelta import relativedelta
 
 from celery import shared_task
 from django.db import transaction
-from django.db.models import Sum
-from django.utils import timezone
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     ExportedFile,
     Payment,
-    Subscription,
     ProductType,
     PaymentTransaction,
     Product,
@@ -30,10 +28,10 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_product_price,
 )
-from tapir.wirgarten.utils import format_date, get_now, get_today
+from tapir.wirgarten.utils import format_date, get_today
 
 
-def export_pick_list(product_type, include_equivalents=True):
+def _export_pick_list(product_type, include_equivalents=True):
     """
     Exports picklist or supplier list as CSV for a product type.
     indclude_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
@@ -110,7 +108,9 @@ def export_pick_list_csv():
                 f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICK_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
-        export_pick_list(all_product_types[type_name], True)
+        _export_pick_list(all_product_types[type_name], True)
+
+    export_pick_list_csv.ack()
 
 
 @shared_task
@@ -130,7 +130,9 @@ def export_supplier_list_csv():
                 f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{Parameter.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
-        export_pick_list(all_product_types[type_name], False)
+        _export_pick_list(all_product_types[type_name], False)
+
+    export_supplier_list_csv.ack()
 
 
 @shared_task
@@ -172,15 +174,18 @@ def export_harvest_share_subscriber_emails():
         send_email=True,
     )
 
+    export_harvest_share_subscriber_emails.ack()
+
 
 @shared_task
-def send_email_member_contract_end_reminder(member_id):
+def send_email_member_contract_end_reminder(member_id: str):
     member = Member.objects.get(pk=member_id)
 
     today = get_today()
+    next_month = today + relativedelta(months=1)
     active_subs = get_active_subscriptions().filter(member=member)
     if (
-        active_subs.exists()
+        active_subs.filter(end_date__lte=next_month).exists()
         and not get_future_subscriptions()
         .filter(member=member, start_date__gt=today)
         .exists()
@@ -198,10 +203,63 @@ def send_email_member_contract_end_reminder(member_id):
             f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
         )
 
+    send_email_member_contract_end_reminder.ack()
+
 
 @shared_task
 @transaction.atomic
 def export_payment_parts_csv(reference_date=get_today()):
+    def export_product_or_coop_payment_csv(
+        product_type: bool | ProductType, payments: list[Payment]
+    ):
+        KEY_NAME = "Name"
+        KEY_IBAN = "IBAN"
+        KEY_AMOUNT = "Betrag"
+        KEY_VERWENDUNGSZWECK = "Verwendungszweck"
+        KEY_MANDATE_REF = "Mandatsreferenz"
+        KEY_MANDATE_DATE = "Mandatsdatum"
+
+        output, writer = begin_csv_string(
+            [
+                KEY_NAME,
+                KEY_IBAN,
+                KEY_AMOUNT,
+                KEY_VERWENDUNGSZWECK,
+                KEY_MANDATE_REF,
+                KEY_MANDATE_DATE,
+            ]
+        )
+
+        for payment in payments:
+            verwendungszweck = payment.mandate_ref.member.last_name + (
+                " Geschäftsanteile" if not product_type else " " + product_type.name
+            )
+
+            writer.writerow(
+                {
+                    KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
+                    KEY_IBAN: payment.mandate_ref.member.iban,
+                    KEY_AMOUNT: payment.amount,
+                    KEY_VERWENDUNGSZWECK: verwendungszweck,
+                    KEY_MANDATE_REF: payment.mandate_ref.ref,
+                    KEY_MANDATE_DATE: format_date(
+                        payment.mandate_ref.member.sepa_consent
+                    ),
+                }
+            )
+
+        payment_type = product_type.name if product_type else "Geschäftsanteile"
+        file = export_file(
+            filename=(payment_type) + "-Einzahlungen",
+            filetype=ExportedFile.FileType.CSV,
+            content=bytes("".join(output.csv_string), "utf-8"),
+            send_email=True,
+        )
+        transaction = PaymentTransaction.objects.create(file=file, type=payment_type)
+        for p in payments:
+            p.transaction = transaction
+            p.save()
+
     due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
@@ -229,55 +287,7 @@ def export_payment_parts_csv(reference_date=get_today()):
         else [],
     )
 
-
-def export_product_or_coop_payment_csv(
-    product_type: bool | ProductType, payments: list[Payment]
-):
-    KEY_NAME = "Name"
-    KEY_IBAN = "IBAN"
-    KEY_AMOUNT = "Betrag"
-    KEY_VERWENDUNGSZWECK = "Verwendungszweck"
-    KEY_MANDATE_REF = "Mandatsreferenz"
-    KEY_MANDATE_DATE = "Mandatsdatum"
-
-    output, writer = begin_csv_string(
-        [
-            KEY_NAME,
-            KEY_IBAN,
-            KEY_AMOUNT,
-            KEY_VERWENDUNGSZWECK,
-            KEY_MANDATE_REF,
-            KEY_MANDATE_DATE,
-        ]
-    )
-
-    for payment in payments:
-        verwendungszweck = payment.mandate_ref.member.last_name + (
-            " Geschäftsanteile" if not product_type else " " + product_type.name
-        )
-
-        writer.writerow(
-            {
-                KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
-                KEY_IBAN: payment.mandate_ref.member.iban,
-                KEY_AMOUNT: payment.amount,
-                KEY_VERWENDUNGSZWECK: verwendungszweck,
-                KEY_MANDATE_REF: payment.mandate_ref.ref,
-                KEY_MANDATE_DATE: format_date(payment.mandate_ref.member.sepa_consent),
-            }
-        )
-
-    payment_type = product_type.name if product_type else "Geschäftsanteile"
-    file = export_file(
-        filename=(payment_type) + "-Einzahlungen",
-        filetype=ExportedFile.FileType.CSV,
-        content=bytes("".join(output.csv_string), "utf-8"),
-        send_email=True,
-    )
-    transaction = PaymentTransaction.objects.create(file=file, type=payment_type)
-    for p in payments:
-        p.transaction = transaction
-        p.save()
+    export_payment_parts_csv.ack()
 
 
 @shared_task
@@ -288,3 +298,5 @@ def generate_member_numbers():
         if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
             member.save()
             print(f"[task] generate_member_numbers: generated member_no for {member}")
+
+    generate_member_numbers.ack()
