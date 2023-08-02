@@ -13,7 +13,7 @@
     {% block page_top %}{% endblock %}
 </div>
 
-<div style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr">
+<div {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between">
             {% block card_header %}{% endblock %}
@@ -74,6 +74,7 @@
         {% endif %}
     </div>
 
+    {% if filter.form %}
     <div class="card">
         <div class="card-header">
             <h4>{% translate "Filter" %}</h4>
@@ -96,6 +97,7 @@
             </form>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <script>

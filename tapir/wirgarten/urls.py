@@ -16,6 +16,7 @@ from tapir.wirgarten.views.contracts import (
     SubscriptionListView,
     confirm_new_contracts,
 )
+from tapir.wirgarten.views.debug.scheduled_tasks import ScheduledTasksListView
 from tapir.wirgarten.views.member.details.actions import (
     cancel_contract_at_period_end,
     renew_contract_same_conditions,
@@ -298,5 +299,6 @@ urlpatterns = [
         get_cancellation_reason_form,
         name="cancellation_reason",
     ),
+    path("admin/debug/tasks", ScheduledTasksListView.as_view(), name="scheduled_tasks"),
 ]
 app_name = "wirgarten"

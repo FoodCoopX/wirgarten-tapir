@@ -8,25 +8,26 @@ from tapir import settings
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
-    TransferCoopSharesLogEntry,
+    CoopShareTransaction,
     MandateReference,
     Member,
-    ReceivedCoopSharesLogEntry,
-    Payment,
-    WaitingListEntry,
-    Subscription,
-    CoopShareTransaction,
-    PickupLocation,
     MemberPickupLocation,
+    Payment,
+    PickupLocation,
+    ReceivedCoopSharesLogEntry,
+    Subscription,
+    TransferCoopSharesLogEntry,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
-    get_next_delivery_date,
     generate_future_deliveries,
+    get_next_delivery_date,
 )
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
+from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -295,9 +296,17 @@ def send_cancellation_confirmation_email(
     if revoke_coop_membership:
         contract_list += "\n- Beitrittserklärung zur Genossenschaft"
 
-    send_email_member_contract_end_reminder.apply_async(
-        eta=contract_end_date, args=[member_id]
-    )
+    future_subs = get_future_subscriptions(
+        contract_end_date + relativedelta(days=1)
+    ).filter(member_id=member_id)
+    if (
+        not future_subs.exists()
+    ):  # only schedule contract end reminder if the member has no other contracts left
+        schedule_task_unique(
+            task=send_email_member_contract_end_reminder,
+            eta=contract_end_date,
+            kwargs={"member_id": member_id},
+        )
 
     if not skip_email:
         send_email(
@@ -324,6 +333,8 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
 
     contract_start_date = subs[0].start_date
 
+    future_deliveries = generate_future_deliveries(member)
+
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
@@ -342,6 +353,15 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
         },
     )
 
+    last_delivery_date = datetime.strptime(
+        future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
+    ).date()
+    schedule_task_unique(
+        task=send_email_member_contract_end_reminder,
+        eta=last_delivery_date + relativedelta(days=1),
+        kwargs={"member_id": member.id},
+    )
+
 
 def send_order_confirmation(member: Member, subs: List[Subscription]):
     if not len(subs):
@@ -352,6 +372,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
 
     contract_start_date = subs[0].start_date
 
+    future_deliveries = generate_future_deliveries(member)
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
@@ -363,16 +384,17 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
         variables={
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": generate_future_deliveries(member)[0]["delivery_date"],
+            "first_pickup_date": future_deliveries[0]["delivery_date"],
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
     )
 
-    future_deliveries = generate_future_deliveries(member)
     last_delivery_date = datetime.strptime(
         future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
     ).date()
 
-    send_email_member_contract_end_reminder.apply_async(
-        eta=last_delivery_date + relativedelta(days=1), args=[member.id]
+    schedule_task_unique(
+        task=send_email_member_contract_end_reminder,
+        eta=last_delivery_date + relativedelta(days=1),
+        kwargs={"member_id": member.id},
     )
