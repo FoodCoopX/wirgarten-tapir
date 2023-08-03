@@ -133,6 +133,12 @@ DATABASES = {
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
 CELERY_BEAT_SCHEDULE = {
+    "execute_scheduled_tasks": {
+        "task": "tapir.wirgarten.tasks.execute_scheduled_tasks",
+        "schedule": celery.schedules.crontab(
+            minute=[5],
+        ),  # every hour
+    },
     "export_supplier_list_csv": {
         "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
         "schedule": celery.schedules.crontab(

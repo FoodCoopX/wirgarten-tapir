@@ -1,31 +1,20 @@
 {% extends 'wirgarten/generic/filter-list.html' %}
 
+{% load wirgarten %}
+
 {% block card_header %}
-<h4>{{tasks | length}} Tasks queued </h4>
-{% for worker in workers %}
-    {% if worker.alive %}
-    <span class="badge bg-success"><span data-bs-toggle="tooltip" data-bs-placement="top"
-        title="Worker '{{worker.id}}' is alive" class="material-icons">sensors</span></span>
-    
-    {% else %}
-    <span class="badge bg-danger"><span data-bs-toggle="tooltip" data-bs-placement="top"
-        title="Worker '{{worker.id}}' is not reachable" class="material-icons">sensors_off</span></span>
-    {% endif %}
-{% endfor %}
-{% if not celery_alive %}
-<span class="badge bg-danger"><span data-bs-toggle="tooltip" data-bs-placement="top"
-    title="Celery is not reachable" class="material-icons">sensors_off</span></span>
-{% endif %}
+<h4>{{tasks | length}} Tasks</h4>
 {% endblock %}
 
 {% block table_head %}
 <tr>
-    <th data-sort="acknowledged">Ack</th>
+    <th>Status</th>
     <th data-sort="eta">ETA</th>
     <th data-sort="name">Name</th>
     <th data-sort="args">args</th>
     <th data-sort="kwargs">kwargs</th>
-    <th data-sort="worker">Worker</th>
+    <th data-sort="created_at">Created</th>
+    <th data-sort="updated_at">Updated</th>
     <th data-sort="id">ID</th>
 </tr>
 {% endblock %}
@@ -34,20 +23,14 @@
 {% for task in tasks %}
 
 <tr id="task-{{task.id}}" class="tr-clickable">
-    <td>{% if task.acknowledged %}
-        <span style="color:var(--bs-success)" data-bs-toggle="tooltip" data-bs-placement="top"
-        title="Acknowledged" class="material-icons">task_alt</span>
-        {% else %}
-        <span style="color:var(--bs-warning)" data-bs-toggle="tooltip" data-bs-placement="top"
-        title="Not acknowledged" class="material-icons">hide_source</span>
-        {% endif %}
-    </td>
-    <td>{{ task.eta }}</td>
+    <td>{{ task.status }}</td>
+    <td>{{ task.eta | format_date }}</td>
     <td>{{ task.name }}</td>
     <td>{{ task.args }}</td>
     <td>{{ task.kwargs }}</td>
-    <td><small>{{ task.worker }}</small></td>
-    <td><small>{{ task.id }}</small></td>
+    <td>{{ task.created_at | format_date }}</td>
+    <td>{{ task.updated_at | format_date }}</td>
+    <td>{{ task.id }}</td>
 </tr>
 
 {% endfor %}

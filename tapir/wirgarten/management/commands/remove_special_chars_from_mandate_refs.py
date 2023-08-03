@@ -5,7 +5,7 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from unidecode import unidecode
-from django.db import transaction, IntegrityError
+from django.db import transaction
 from django.core.management import BaseCommand
 
 

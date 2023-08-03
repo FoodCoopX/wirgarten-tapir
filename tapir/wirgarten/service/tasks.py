@@ -1,50 +1,28 @@
-import inspect
-import json
 from datetime import datetime
 
 from celery import Celery
+from django.db import transaction
+
 from tapir import settings
 
 app = Celery("tapir", broker=settings.CELERY_BROKER_URL)
 
 
+from tapir.wirgarten.models import ScheduledTask
+
+
+@transaction.atomic
 def schedule_task_unique(task, eta: datetime, args=(), kwargs={}):
-    """
-    Scheduling tasks via this function makes sure that the task is unique by args.
-    All other tasks of the same type with the same args/kwargs combination are revoked.
-    """
+    st_args = {
+        "task_function": f"{task.__module__}.{task.__name__}",
+        "task_args": args,
+        "task_kwargs": kwargs,
+    }
 
-    cinspect = app.control.inspect()
-    scheduled_tasks = cinspect.scheduled()
-    revoked_tasks = set(
-        [item for sublist in cinspect.revoked().values() for item in sublist]
-    )
+    existing = ScheduledTask.objects.filter(**st_args)
+    if existing.exists():
+        existing.delete()
+        print("Deleted duplicate task: ", existing)
 
-    module = inspect.getmodule(task)
-    new_task_serialized = json.dumps(
-        {
-            "type": f"{module.__name__}.{task.__name__}",
-            "args": args,
-            "kwargs": kwargs,
-        }
-    )
-
-    if scheduled_tasks:
-        for t in [x for tasks in scheduled_tasks.values() for x in tasks]:
-            task_id = t["request"]["id"]
-            if task_id not in revoked_tasks:
-                serialized = json.dumps(
-                    {
-                        "type": t["request"]["type"],
-                        "args": t["request"]["args"],
-                        "kwargs": t["request"]["kwargs"],
-                    }
-                )
-
-                if serialized == new_task_serialized:
-                    app.control.revoke(task_id)
-                    print("Revoked duplicate task: ", serialized)
-
-    task.apply_async(args=args, kwargs=kwargs, eta=eta)
-
-    print(f"Task scheduled: {eta} {new_task_serialized}")
+    scheduled_task = ScheduledTask.objects.create(**st_args, eta=eta)
+    print("Scheduled new task: ", scheduled_task)
