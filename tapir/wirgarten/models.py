@@ -4,7 +4,15 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import F, Index, OuterRef, Subquery, Sum, UniqueConstraint
+from django.db.models import (
+    F,
+    Index,
+    JSONField,
+    OuterRef,
+    Subquery,
+    Sum,
+    UniqueConstraint,
+)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
@@ -323,7 +331,7 @@ class Member(TapirUser):
             return None
 
     def __str__(self):
-        return f"[{self.member_no}] {self.first_name} {self.last_name} ({self.email})"
+        return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
 
 
 class MemberPickupLocation(TapirModel):
@@ -931,3 +939,52 @@ class QuestionaireCancellationReasonResponse(TapirModel):
     reason = models.CharField(max_length=150)
     custom = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
+
+
+class ScheduledTask(TapirModel):
+    """
+    A scheduled task is being executed at the given eta by celery
+    """
+
+    STATUS_PENDING = "PENDING"
+    STATUS_IN_PROGRESS = "IN_PROGRESS"
+    STATUS_DONE = "DONE"
+    STATUS_FAILED = "FAILED"
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_DONE, "Done"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    task_function = models.CharField(max_length=255)
+    task_args = JSONField(blank=True, default=list)
+    task_kwargs = JSONField(blank=True, default=dict)
+    eta = models.DateTimeField()
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    error_message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def execute(self):
+        from importlib import import_module
+
+        module_name, function_name = self.task_function.rsplit(".", 1)
+        module = import_module(module_name)
+        function = getattr(module, function_name)
+        try:
+            self.status = self.STATUS_IN_PROGRESS
+            self.save()
+            function(*self.task_args, **self.task_kwargs)
+            self.status = self.STATUS_DONE
+        except Exception as e:
+            self.status = self.STATUS_FAILED
+            self.error_message = str(e)
+        finally:
+            self.save()
+
+    def __str__(self):
+        return f"{self.task_function} | eta: {self.eta} | status: {self.status}"

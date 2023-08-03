@@ -1,34 +1,46 @@
 import itertools
 from collections import defaultdict
-from dateutil.relativedelta import relativedelta
 
 from celery import shared_task
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     ExportedFile,
+    Member,
     Payment,
-    ProductType,
     PaymentTransaction,
     Product,
-    Member,
+    ProductType,
+    ScheduledTask,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.email import send_email
-from tapir.wirgarten.service.file_export import export_file, begin_csv_string
-from tapir.wirgarten.service.payment import (
-    generate_new_payments,
-    get_existing_payments,
-)
+from tapir.wirgarten.service.file_export import begin_csv_string, export_file
+from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_future_subscriptions,
     get_product_price,
 )
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import format_date, get_now, get_today
+
+
+@shared_task
+def execute_scheduled_tasks():
+    """
+    Executes all scheduled tasks that are due.
+    """
+
+    scheduled_tasks = ScheduledTask.objects.filter(
+        eta__lte=get_now(), status=ScheduledTask.STATUS_PENDING
+    )
+    for scheduled_task in scheduled_tasks:
+        print("Executing scheduled task: ", scheduled_task)
+        scheduled_task.execute()
 
 
 def _export_pick_list(product_type, include_equivalents=True):
@@ -110,8 +122,6 @@ def export_pick_list_csv():
             continue
         _export_pick_list(all_product_types[type_name], True)
 
-    export_pick_list_csv.ack()
-
 
 @shared_task
 def export_supplier_list_csv():
@@ -131,8 +141,6 @@ def export_supplier_list_csv():
             )
             continue
         _export_pick_list(all_product_types[type_name], False)
-
-    export_supplier_list_csv.ack()
 
 
 @shared_task
@@ -174,10 +182,7 @@ def export_harvest_share_subscriber_emails():
         send_email=True,
     )
 
-    export_harvest_share_subscriber_emails.ack()
 
-
-@shared_task
 def send_email_member_contract_end_reminder(member_id: str):
     member = Member.objects.get(pk=member_id)
 
@@ -202,8 +207,6 @@ def send_email_member_contract_end_reminder(member_id: str):
         print(
             f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
         )
-
-    send_email_member_contract_end_reminder.ack()
 
 
 @shared_task
@@ -287,8 +290,6 @@ def export_payment_parts_csv(reference_date=get_today()):
         else [],
     )
 
-    export_payment_parts_csv.ack()
-
 
 @shared_task
 def generate_member_numbers():
@@ -298,5 +299,3 @@ def generate_member_numbers():
         if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
             member.save()
             print(f"[task] generate_member_numbers: generated member_no for {member}")
-
-    generate_member_numbers.ack()

@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import Any, Dict
 
-from celery import Celery
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views import generic
 
-from tapir import settings
 from tapir.wirgarten.constants import Permission
-
-app = Celery("tapir", broker=settings.CELERY_BROKER_URL)
+from tapir.wirgarten.models import ScheduledTask
+from tapir.wirgarten.utils import get_now
 
 
 class ScheduledTasksListView(
@@ -20,40 +19,22 @@ class ScheduledTasksListView(
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         ctx = super().get_context_data(**kwargs)
 
-        celery = app.control.inspect()
+        time_offset = get_now() + relativedelta(days=-1)
 
-        revoked_tasks = set(
-            [item for sublist in celery.revoked().values() for item in sublist]
-        )
+        ctx["tasks"] = [
+            {
+                "id": t.id,
+                "name": t.task_function,
+                "eta": t.eta,
+                "args": t.task_args,
+                "kwargs": t.task_kwargs,
+                "status": t.status,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at,
+            }
+            for t in ScheduledTask.objects.all()
+            .filter(eta__gte=time_offset)
+            .order_by("eta")
+        ]
 
-        flat_tasks = []
-
-        scheduled_tasks = celery.scheduled()
-        if scheduled_tasks:
-            for worker, tasks in scheduled_tasks.items():
-                flat_tasks.extend(
-                    [
-                        {
-                            "worker": worker,
-                            "id": x["request"]["id"],
-                            "name": x["request"]["name"],
-                            "eta": datetime.fromisoformat(x["eta"]),
-                            "args": x["request"]["args"],
-                            "kwargs": x["request"]["kwargs"],
-                            "acknowledged": x["request"]["acknowledged"],
-                        }
-                        for x in tasks
-                        if x["request"]["id"] not in revoked_tasks
-                    ]
-                )
-
-            ping_status = celery.ping()
-            ctx["workers"] = [
-                {"id": x, "alive": ping_status[x]} for x in scheduled_tasks.keys()
-            ]
-            ctx["celery_alive"] = True
-        else:
-            ctx["celery_alive"] = False
-
-        ctx["tasks"] = flat_tasks
         return ctx
