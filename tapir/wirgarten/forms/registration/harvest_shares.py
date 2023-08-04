@@ -264,6 +264,8 @@ class HarvestShareForm(forms.Form):
                 today + relativedelta(days=2)
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
+            if next_month < next_delivery_date:
+                next_month += relativedelta(months=1)
             self.fields["pickup_location_change_date"] = forms.ChoiceField(
                 required=False,
                 label=_("Abholortwechsel zum"),
