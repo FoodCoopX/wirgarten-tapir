@@ -11,7 +11,8 @@ const ConfirmationModal = {
 
         if(!handleConfirm){
             modalConfirmButton.style.display='none'
-        } else        {
+        } else {
+            modalConfirmButton.style.display='block'
             modalConfirmButton.innerText = confirmButtonLabel
                   if(!confirmButtonType){
                 confirmButtonType = 'primary';

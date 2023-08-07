@@ -80,7 +80,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
 
     for (mandate_ref, product_type), subs in grouped.items():
         existing = Payment.objects.filter(
-            mandate_ref=mandate_ref, due_date=due_date, type=product_type
+            mandate_ref=mandate_ref, due_date=due_date, type=product_type.name
         )
         if not existing.exists():
             amount = sum(sub.total_price() for sub in subs)
@@ -91,7 +91,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
                     amount=Decimal(amount).quantize(Decimal("0.01")),
                     mandate_ref=mandate_ref,
                     status=Payment.PaymentStatus.DUE,
-                    type=product_type,
+                    type=product_type.name,
                 )
             )
         else:
