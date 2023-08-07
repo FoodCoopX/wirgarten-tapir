@@ -284,11 +284,17 @@ def export_payment_parts_csv(reference_date=get_today()):
     due_date = reference_date.replace(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
     )
-    existing_payments = get_existing_payments(due_date)
-    payments = Payment.objects.bulk_create(generate_new_payments(due_date))
-    payments.extend(existing_payments)
 
-    payments.sort(key=lambda x: x.type.name if x.type else "")
+    print(
+        f"[task] export_payment_parts_csv: generating payments for due date {format_date(due_date)}"
+    )
+
+    payments = generate_new_payments(due_date)
+    for p in payments:
+        if p.id is None:
+            p.save()
+
+    payments.sort(key=lambda x: x.type if x.type else "")
     payments_grouped = {
         key: list(group)
         for key, group in itertools.groupby(payments, key=lambda x: x.type)

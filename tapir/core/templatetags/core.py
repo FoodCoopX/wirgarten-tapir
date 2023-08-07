@@ -74,8 +74,13 @@ def add_admin_links(groups, request):
     )
     debug_group.add_link(
         display_name=_("Geplante Tasks"),
-        material_icon="schedule",
+        material_icon="pending_actions",
         url=reverse_lazy("wirgarten:scheduled_tasks"),
+    )
+    debug_group.add_link(
+        display_name=_("Jobs"),
+        material_icon="event_repeat",
+        url=reverse_lazy("wirgarten:jobs"),
     )
 
     admin_group = SidebarLinkGroup(name=_("Administration"))

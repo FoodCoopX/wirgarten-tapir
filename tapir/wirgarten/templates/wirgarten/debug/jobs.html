@@ -1,0 +1,51 @@
+{% extends 'wirgarten/generic/filter-list.html' %}
+
+{% load wirgarten %}
+
+{% block card_header %}
+<h4>{{jobs | length}} Jobs</h4>
+{% endblock %}
+
+{% block table_head %}
+<tr>
+    <th>Name</th>
+    <th>Function</th>
+    <th>Schedule</th>
+    <th></th>
+</tr>
+{% endblock %}
+
+{% block table_body %}
+{% for job in jobs %}
+
+<tr id="job-{{job.name}}" class="tr-clickable">
+    <td>{{ job.name }}</td>
+    <td>{{ job.task }}</td>
+    <td>{{ job.schedule }}</td>
+    <td style="text-align: right"><span onclick="handleRun('{{job.name}}', '{{job.task}}')"
+            class="material-icons">play_circle_outline</span></td>
+</tr>
+
+{% endfor %}
+{% endblock %}
+
+{% block script %}
+<script>
+    function handleRun(name, task) {
+        ConfirmationModal.open("Bist du dir sicher?", "Möchtest du den Job <strong>" + name + "</strong> wirklich ausführen?", "Ja, führe den Job aus", 'danger', () => {
+            fetch("{% url 'wirgarten:job_execute' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ task: task }),
+            }).then(async data => [data.status, await data.text()]).then(([status, log]) => {
+                ConfirmationModal.open("Job Log: " + name, `${status === 200 ? '<div style="width:100%" class="alert alert-success">Job erfolgreich ausgeführt!</div>' : '<div style="width:100%" class="alert alert-danger">Ein Fehler ist aufgetreten!</div>'}<br/>${log}`)
+            }).catch((error) => {
+                console.error('Error:', error);
+            });
+        })
+    }
+</script>
+{% endblock %}

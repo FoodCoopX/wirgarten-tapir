@@ -23,7 +23,7 @@ from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 
 class PickupLocation(TapirModel):
@@ -769,6 +769,9 @@ class Payment(TapirModel):
             Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
             Index(fields=["due_date"], name="idx_payment_due_date"),
         ]
+
+    def __str__(self):
+        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
 
 
 class Deliveries(TapirModel):

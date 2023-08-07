@@ -120,7 +120,7 @@ sortHeaders.forEach(header => {
   }
 });
 
-sortField.parentElement.style.display = 'none';
+if (sortField) sortField.parentElement.style.display = 'none';
 
 sortHeaders.forEach(header => {
   const sort = header.getAttribute('data-sort');
