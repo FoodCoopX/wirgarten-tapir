@@ -1,5 +1,11 @@
 from datetime import timezone
+
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
+
 from tapir import settings
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
@@ -27,7 +33,10 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.delivery import (
+    calculate_pickup_location_change_date,
+    get_next_delivery_date,
+)
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
@@ -50,10 +59,6 @@ from tapir.wirgarten.utils import (
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
-from django.db import transaction
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_http_methods
 
 
 @require_http_methods(["GET", "POST"])
@@ -105,40 +110,11 @@ def get_pickup_location_choice_form(request, **kwargs):
     def update_pickup_location(form):
         pickup_location_id = form.cleaned_data["pickup_location"].id
 
-        today = get_today()
-        next_delivery_date = get_next_delivery_date()
-
-        # Get the weekday of the next delivery date and today
-        next_delivery_weekday = next_delivery_date.weekday()
-        today_weekday = today.weekday()
-
-        change_util_weekday = get_parameter_value(
-            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+        change_date = (
+            calculate_pickup_location_change_date()
+            if member.pickup_location is not None
+            else get_today()
         )
-
-        # Case A: User doesn't have a pickup location yet
-        # OR
-        # Case B: User makes change AFTER delivery_date and BEFORE change_util_weekday
-        # If today is before or on change_util_weekday and after next_delivery_weekday
-        # OR
-        # Case C: User makes change BEFORE delivery_date and AFTER change_util_weekday
-        # If today is after change_util_weekday and before next_delivery_weekday
-        if (
-            member.pickup_location is None
-            or next_delivery_weekday < today_weekday <= change_util_weekday
-            or change_util_weekday <= today_weekday < next_delivery_weekday
-        ):
-            change_date = today
-
-        # Case D: User makes change ON the delivery_date
-        # If today is the delivery_date, the change can become effective from the next day
-        elif today == next_delivery_date:
-            change_date = today + relativedelta(days=1)
-
-        # Case E: Other cases
-        # If none of the above cases apply, the change will be effective from the next_delivery_date
-        else:
-            change_date = next_delivery_date + relativedelta(days=1)
 
         qs = MemberPickupLocation.objects.filter(member=member)
         existing = qs.filter(valid_from=change_date)

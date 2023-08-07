@@ -317,4 +317,3 @@ def generate_member_numbers():
         if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
             member.save()
             print(f"[task] generate_member_numbers: generated member_no for {member}")
-            
