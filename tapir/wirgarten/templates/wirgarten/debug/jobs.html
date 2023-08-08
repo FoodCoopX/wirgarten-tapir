@@ -41,7 +41,7 @@
                 },
                 body: JSON.stringify({ task: task }),
             }).then(async data => [data.status, await data.text()]).then(([status, log]) => {
-                ConfirmationModal.open("Job Log: " + name, `${status === 200 ? '<div style="width:100%" class="alert alert-success">Job erfolgreich ausgeführt!</div>' : '<div style="width:100%" class="alert alert-danger">Ein Fehler ist aufgetreten!</div>'}<br/>${log}`)
+                ConfirmationModal.open("Job Log: " + name, `${status === 200 ? '<div style="width:100%; white-space: pre-wrap;" class="alert alert-success">Job erfolgreich ausgeführt!</div>' : '<div style="width:100%" class="alert alert-danger">Ein Fehler ist aufgetreten!</div>'}<br/>${log}`)
             }).catch((error) => {
                 console.error('Error:', error);
             });

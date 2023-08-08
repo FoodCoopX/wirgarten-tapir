@@ -131,14 +131,9 @@ class HarvestShareForm(forms.Form):
         }
 
         if self.choose_growing_period:
-            growing_periods = GrowingPeriod.objects.filter(
+            available_growing_periods = GrowingPeriod.objects.filter(
                 end_date__gte=self.start_date,
             ).order_by("start_date")
-
-            available_growing_periods = []
-            for period in growing_periods:
-                if is_harvest_shares_available(period.start_date):
-                    available_growing_periods.append(period)
 
             self.solidarity_total = []
             self.free_capacity = []
@@ -156,9 +151,7 @@ class HarvestShareForm(forms.Form):
                 self.free_capacity.append(free_capacity)
 
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=growing_periods.filter(
-                    id__in=[x.id for x in available_growing_periods]
-                ),
+                queryset=available_growing_periods,
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
@@ -426,7 +419,7 @@ class HarvestShareForm(forms.Form):
                         type__name=ProductTypes.HARVEST_SHARES,
                         name__iexact=key.replace(HARVEST_SHARE_FIELD_PREFIX, ""),
                     )
-                    total += float(get_product_price(product).price)
+                    total += float(get_product_price(product, next_month).price)
 
             capability = (
                 get_active_pickup_location_capabilities()

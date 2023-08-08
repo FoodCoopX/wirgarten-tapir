@@ -296,7 +296,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                     product_type.name,
                     f"{base_share_count} Anteile noch frei"
                     if base_share_count
-                    else None,
+                    else "Keine Anteile mehr frei",
                     f"{format_currency(total - used)} €",
                 ]
             )

@@ -35,7 +35,7 @@
                 </p>
             </td>
             <td title="Klicken für Öffnungszeiten und weitere Infos" style="text-align:center; cursor: pointer"
-                onclick="ConfirmationModal.open('{{delivery.pickup_location.name}}', `{% include 'wirgarten/member/member_pickup_location_info.html' with pickup_location=member.pickup_location %}`)">
+                onclick="ConfirmationModal.open('{{delivery.pickup_location.name}}', `{% include 'wirgarten/member/member_pickup_location_info.html' with pickup_location=delivery.pickup_location %}`)">
                 {% if not hide_location %}
                 <strong>{{delivery.pickup_location.name}}</strong><br />
                 {% endif %}

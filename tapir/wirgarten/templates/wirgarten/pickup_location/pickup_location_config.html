@@ -45,7 +45,7 @@
                         <td style="white-space:nowrap; text-align:left;">
                             {% for cap in pl.capabilities %}
                             <img width="24em" title="{{ cap.name }}"
-                                 src="{{cap.icon}}"/><small> {{cap.current_capacity}} / {{cap.max_capacity|default:'∞'}}{%if cap.capacity_percent %} ({{ cap.capacity_percent|format_percent }}){%endif%}</small><br/>
+                                 src="{{cap.icon}}"/><small> {{cap.current_capacity}} / {{cap.max_capacity|default:'∞'}}{%if cap.capacity_percent %} ({{ cap.capacity_percent|format_percent }}){%endif%}&nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{%else%}red{%endif%}">{{cap.next_capacity_diff}}</span></small><br/>
                             {% endfor %}
                         </td>
                         <td>{% if pl.members == 0 %} - {% else %} {{ pl.members }} {% endif %}</td>

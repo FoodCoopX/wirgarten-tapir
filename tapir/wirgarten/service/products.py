@@ -216,7 +216,9 @@ def get_active_subscriptions(reference_date: date = get_today()):
     :param reference_date: the date on which the subscription must be active
     :return: queryset of active subscription
     """
-    return get_future_subscriptions().filter(start_date__lte=reference_date)
+    return get_future_subscriptions(reference_date).filter(
+        start_date__lte=reference_date
+    )
 
 
 @transaction.atomic

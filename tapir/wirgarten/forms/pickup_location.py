@@ -20,10 +20,11 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
+    get_next_delivery_date,
 )
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    get_future_subscriptions,
+    get_active_subscriptions,
     get_product_price,
 )
 from tapir.wirgarten.utils import get_today
@@ -44,32 +45,34 @@ def get_current_capacity(capability, reference_date=get_today()):
     ):  # FIXME: this is dirty, check why this was needed and fix it
         capability = capability.__dict__
 
-    latest_pickup_locations = MemberPickupLocation.objects.filter(
-        member=OuterRef("member"),
-        valid_from__lte=reference_date,
-        pickup_location_id=capability["pickup_location_id"],
-    ).order_by("-valid_from")
-
-    active_subscriptions = get_future_subscriptions().filter(
-        end_date__gt=reference_date + relativedelta(day=1, months=1),
-        member_id=Subquery(latest_pickup_locations.values("member_id")[:1]),
-        product__type_id=capability["product_type_id"],
+    latest_member_pickup_location = (
+        MemberPickupLocation.objects.filter(
+            member=OuterRef("member"), valid_from__lte=reference_date
+        )
+        .order_by("-valid_from")
+        .values("pickup_location_id")[:1]
     )
 
-    # Get the most recent valid price for each product
-    latest_product_prices = ProductPrice.objects.filter(
-        product=OuterRef("product"), valid_from__lte=reference_date
-    ).order_by("-valid_from")
-
-    # Annotate these subscriptions with their total price (without solidarity price)
-    # and sum these prices
-    total_price = active_subscriptions.annotate(
-        latest_price=Subquery(
-            latest_product_prices.values("price")[:1],
-            output_field=DecimalField(decimal_places=2),
-        ),
-        total_price_per_subscription=F("latest_price") * F("quantity"),
-    ).aggregate(total_price=Sum("total_price_per_subscription"))["total_price"]
+    total_price = (
+        get_active_subscriptions(reference_date)
+        .annotate(latest_pickup_location_id=Subquery(latest_member_pickup_location))
+        .filter(
+            latest_pickup_location_id=capability["pickup_location_id"],
+            product__type_id=capability["product_type_id"],
+        )
+        .annotate(
+            latest_price=Subquery(
+                ProductPrice.objects.filter(
+                    product=OuterRef("product"), valid_from__lte=reference_date
+                )
+                .order_by("-valid_from")
+                .values("price")[:1],
+                output_field=DecimalField(decimal_places=2),
+            ),
+            total_price_per_subscription=F("latest_price") * F("quantity"),
+        )
+        .aggregate(total_price=Sum("total_price_per_subscription"))["total_price"]
+    )
 
     return float(total_price) if total_price else 0
 
@@ -82,23 +85,42 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
     }
 
     today = get_today()
+    next_month = today + relativedelta(day=1, months=1)
+    next_delivery_date = get_next_delivery_date()
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
         current_capa = round(
-            get_current_capacity(capa)
+            get_current_capacity(capa, next_delivery_date)
             / float(
                 get_product_price(
-                    Product.objects.get(type_id=capa["product_type_id"], base=True)
+                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    next_delivery_date,
                 ).price
             ),
             2,
         )
+
+        next_month_capa = round(
+            get_current_capacity(capa, next_month)
+            / float(
+                get_product_price(
+                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    next_month,
+                ).price
+            ),
+            2,
+        )
+
+        capa_diff = round(next_month_capa - current_capa, 2)
         return {
             "name": capa["product_type__name"],
             "icon": PRODUCT_TYPE_ICONS.get(capa["product_type__name"], "?"),
             "max_capacity": max_capa,
             "current_capacity": current_capa,
+            "next_capacity_diff": f"{'+' if capa_diff > 0 else ''} {capa_diff}"
+            if capa_diff != 0
+            else "",
             "capacity_percent": (current_capa / max_capa) if max_capa else None,
         }
 
@@ -473,7 +495,11 @@ class PickupLocationEditForm(forms.Form):
 
     @transaction.atomic
     def save(self):
-        pl = self.pickup_location
+        pl = (
+            self.pickup_location
+            if hasattr(self, "pickup_location")
+            else PickupLocation()
+        )
         coords = self.cleaned_data["coords"].split(",")
 
         pl.coords_lon = coords[0].strip()
