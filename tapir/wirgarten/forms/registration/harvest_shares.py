@@ -95,7 +95,6 @@ class HarvestShareForm(forms.Form):
         self.start_date = kwargs.get(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
-
         self.choose_growing_period = kwargs.get("choose_growing_period", False)
 
         harvest_share_products = list(

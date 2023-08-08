@@ -109,7 +109,6 @@ def get_pickup_location_choice_form(request, **kwargs):
     @transaction.atomic
     def update_pickup_location(form):
         pickup_location_id = form.cleaned_data["pickup_location"].id
-
         change_date = (
             calculate_pickup_location_change_date()
             if member.pickup_location is not None
@@ -138,7 +137,7 @@ def get_pickup_location_choice_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=PickupLocationChoiceForm,
-        handler=lambda x: update_pickup_location(x),
+        handler=update_pickup_location,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )

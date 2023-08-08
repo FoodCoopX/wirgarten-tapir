@@ -115,7 +115,7 @@ def generate_future_deliveries(member: Member, limit: int = None):
             deliveries.append(
                 {
                     "delivery_date": next_delivery_date.isoformat(),
-                    "pickup_location": member.get_pickup_location(next_delivery_date),
+                    "pickup_location": pickup_location,
                     "subs": active_subs,
                     "opening_times": opening_times,
                 }
