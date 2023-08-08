@@ -227,7 +227,6 @@ class RegistrationWizardView(CookieWizardView):
         initial = self.initial_dict
         if step in [STEP_HARVEST_SHARES, STEP_ADDITIONAL_SHARES, STEP_BESTELLCOOP]:
             initial["start_date"] = self.start_date
-
         if step == STEP_COOP_SHARES:
             if self.has_step(STEP_HARVEST_SHARES):
                 data = self.get_cleaned_data_for_step(STEP_HARVEST_SHARES)
