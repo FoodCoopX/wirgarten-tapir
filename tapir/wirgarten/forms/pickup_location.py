@@ -84,9 +84,8 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "Hühneranteile": "/static/wirgarten/images/icons/Huehneranteil.svg",
     }
 
-    today = get_today()
-    next_month = today + relativedelta(day=1, months=1)
     next_delivery_date = get_next_delivery_date()
+    next_month = next_delivery_date + relativedelta(day=1, months=1)
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
@@ -142,7 +141,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         ),
         # FIXME: member count should be filtered by active subscriptions
         "members": MemberPickupLocation.objects.filter(
-            valid_from__lte=today, pickup_location=pickup_location
+            valid_from__lte=next_delivery_date, pickup_location=pickup_location
         )
         .order_by("member", "-valid_from")
         .distinct("member")
