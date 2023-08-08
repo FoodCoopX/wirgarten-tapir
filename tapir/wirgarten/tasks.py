@@ -307,11 +307,12 @@ def export_payment_parts_csv(reference_date=get_today()):
         )
 
     # export for coop shares
+    coop_share_payments = Payment.objects.filter(
+        transaction__isnull=True, due_date__lte=due_date, type="Genossenschaftsanteile"
+    )
     export_product_or_coop_payment_csv(
         False,
-        payments_grouped["Genossenschaftsanteile"]
-        if "Genossenschaftsanteile" in payments_grouped
-        else [],
+        coop_share_payments,
     )
 
 
