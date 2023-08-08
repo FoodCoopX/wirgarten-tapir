@@ -139,12 +139,21 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 ],
             )
         ),
-        # FIXME: member count should be filtered by active subscriptions
-        "members": MemberPickupLocation.objects.filter(
-            valid_from__lte=next_delivery_date, pickup_location=pickup_location
+        "members": get_active_subscriptions(next_delivery_date)
+        .annotate(
+            latest_pickup_location_id=Subquery(
+                MemberPickupLocation.objects.filter(
+                    member=OuterRef("member"), valid_from__lte=next_delivery_date
+                )
+                .order_by("-valid_from")
+                .values("pickup_location_id")[:1]
+            )
         )
-        .order_by("member", "-valid_from")
-        .distinct("member")
+        .filter(
+            latest_pickup_location_id=pickup_location.id,
+        )
+        .values("member_id")
+        .distinct()
         .count(),
         "coords": f"{pickup_location.coords_lon},{pickup_location.coords_lat}",
     }
