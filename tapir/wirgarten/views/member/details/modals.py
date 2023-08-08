@@ -127,6 +127,11 @@ def get_pickup_location_choice_form(request, **kwargs):
                 pickup_location_id=pickup_location_id,
                 valid_from=change_date,
             )
+
+        MemberPickupLocation.objects.filter(
+            member=member, valid_from__gt=change_date
+        ).delete()
+
         pl = PickupLocation.objects.get(id=pickup_location_id)
         TextLogEntry().populate(
             actor=request.user,
@@ -224,8 +229,8 @@ def get_add_harvest_shares_form(request, **kwargs):
 
     member = Member.objects.get(pk=member_id)
     next_period = get_next_growing_period()
-    if not is_harvest_shares_available() and not is_harvest_shares_available(
-        next_period.start_date
+    if not is_harvest_shares_available() and (
+        next_period and not is_harvest_shares_available(next_period.start_date)
     ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
         wl_kwargs = kwargs.copy()

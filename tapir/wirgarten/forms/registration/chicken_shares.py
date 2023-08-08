@@ -280,20 +280,22 @@ class ChickenShareForm(forms.Form):
                     None,
                     "An deinem Abholort können leider keine Hühneranteile abgeholt werden. Bitte wähle einen anderen Abholort aus.",
                 )
-            elif capability.first().max_capacity:
-                current_capacity = (
-                    get_current_capacity(capability, next_month) + total
-                ) / float(product_type.base_price)
-                free_capacity = capability.max_capacity - current_capacity
-                if current_capacity > free_capacity:
-                    self.add_error(
-                        "pickup_location", "Abholort ist voll"
-                    )  # this is not displayed
-                    self.add_error(
-                        None,
-                        _(
-                            "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-                        ),
-                    )
+            else:
+                capability = capability.first()
+                if capability.max_capacity:
+                    current_capacity = (
+                        get_current_capacity(capability, next_month) + total
+                    ) / float(product_type.base_price)
+                    free_capacity = capability.max_capacity - current_capacity
+                    if current_capacity > free_capacity:
+                        self.add_error(
+                            "pickup_location", "Abholort ist voll"
+                        )  # this is not displayed
+                        self.add_error(
+                            None,
+                            _(
+                                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+                            ),
+                        )
 
         return len(self.errors) == 0
