@@ -430,11 +430,12 @@ class TrialCancellationForm(Form):
         )
 
         self.member = Member.objects.get(id=self.member_id)
+        today = get_today()
 
         def is_new_member() -> bool:
             return (
                 self.member.coop_entry_date is not None
-                and self.member.coop_entry_date > self.next_trial_end_date
+                and self.member.coop_entry_date > today
             )
 
         for sub in self.subs:
@@ -514,8 +515,10 @@ class TrialCancellationForm(Form):
             sub.save()
 
         if cancel_coop:
-            Payment.objects.get(
-                mandate_ref=self.share_ownership.mandate_ref, due_date__gt=now
+            Payment.objects.filter(
+                mandate_ref=self.share_ownership.mandate_ref,
+                due_date__gt=now,
+                type="Genossenschaftsanteile",
             ).delete()
             self.share_ownership.delete()
 

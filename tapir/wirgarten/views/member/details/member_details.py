@@ -144,12 +144,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
         context["subscriptions_in_trial"] = []
-        if subs_in_trial.exists():
+        if subs_in_trial:
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"].extend(subs_in_trial)
             context["next_trial_end_date"] = min(
-                subs_in_trial, key=lambda x: x.start_date
-            ).start_date + relativedelta(day=1, months=1, days=-1)
+                subs_in_trial, key=lambda x: x.trial_end_date
+            ).trial_end_date
+
         if (
             self.object.coop_entry_date is not None
             and self.object.coop_entry_date > today
