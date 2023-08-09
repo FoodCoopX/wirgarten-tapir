@@ -264,8 +264,10 @@ def change_pickup_location(
 
 def get_next_trial_end_date(sub: Subscription = None):
     return (
-        (sub.start_date if sub else get_today()) + relativedelta(day=1, months=1)
-    ) + relativedelta(days=-1)
+        sub.trial_end_date
+        if sub
+        else (get_today() + relativedelta(day=1, months=1, days=-1))
+    )
 
 
 def get_subscriptions_in_trial_period(member: int | str | Member):
@@ -274,12 +276,14 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
     min_start_date = today + relativedelta(day=1, months=-1)
     next_month = today + relativedelta(day=1, months=1)
 
-    return get_future_subscriptions().filter(
+    subs = get_future_subscriptions().filter(
         member_id=member_id,
         cancellation_ts__isnull=True,
         start_date__gte=min_start_date,
         end_date__gt=next_month,
     )
+
+    return subs.filter(id__in=[sub.id for sub in subs if sub.trial_end_date > today])
 
 
 def send_cancellation_confirmation_email(

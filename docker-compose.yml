@@ -16,7 +16,7 @@ services:
     build: .
     command: bash -c "poetry install &&
                       poetry run python manage.py compilemessages --ignore \".venv\" &&
-                      poetry run python manage.py runserver_plus 0.0.0.0:80"
+                      poetry run python manage.py runserver_plus 0.0.0.0:80 --reloader-type=stat"
     volumes:
       - .:/app
     environment:
@@ -92,3 +92,4 @@ services:
 
 volumes:
   nginx-certs-volume:
+
