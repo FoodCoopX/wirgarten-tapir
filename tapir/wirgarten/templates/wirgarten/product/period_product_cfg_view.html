@@ -110,6 +110,7 @@
                 <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Größe</th>
                     <th style="text-align:right">Preis</th>
                 </tr>
                 </thead>
@@ -127,6 +128,7 @@
                             class="badge bg-danger">Basis</span>
                         {% endif %}
                     </th>
+                    <td>{{ product.share }}</td>
                     <td style="text-align: right">
                         {% if product.price.1 and product.price.1.price != product.price.0.price %}
                         <del>{{product.price.1.price}} €</del>

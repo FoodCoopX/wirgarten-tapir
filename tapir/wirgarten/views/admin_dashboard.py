@@ -27,6 +27,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
     get_solidarity_overplus,
@@ -35,6 +36,7 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
+    get_active_subscriptions,
     get_current_growing_period,
     get_future_subscriptions,
     get_next_growing_period,
@@ -73,8 +75,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             name=ProductTypes.HARVEST_SHARES
         )
 
-        next_growing_period = get_next_growing_period()
-        self.add_capacity_chart_context(context)
+        next_contract_start_date = get_next_contract_start_date()
+        next_growing_period = get_next_growing_period(next_contract_start_date)
+        self.add_capacity_chart_context(context, next_contract_start_date)
         if next_growing_period:
             self.add_capacity_chart_context(
                 context, next_growing_period.start_date, "next"
@@ -225,12 +228,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_labels"] = cancellations_labels
 
     def add_capacity_chart_context(
-        self, context, reference_date=get_today(), prefix="current"
+        self, context, reference_date=get_next_contract_start_date(), prefix="current"
     ):
         active_capacities = {
             c.product_type.id: c for c in get_active_product_capacities(reference_date)
         }
-        active_subs = get_future_subscriptions(reference_date).order_by(
+        active_subs = get_active_subscriptions(reference_date).order_by(
             "-product__type"
         )
 
@@ -294,11 +297,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{base_share_count} Anteile noch frei"
+                    f"{round(used / float(base_share_value))} Anteile vergeben ({format_currency(used)} €)",
+                    (
+                        f"{base_share_count} Anteile noch frei ({format_currency(total - used)} €)"
+                    )
                     if base_share_count
                     else "Keine Anteile mehr frei",
-                    f"{format_currency(total - used)} €",
-                ]
+                ],
             )
 
     def add_traffic_source_questionaire_chart_context(self, context):
