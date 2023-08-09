@@ -26,6 +26,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.products import (
     create_product_type_capacity,
+    get_product_price,
     update_product_type_capacity,
     delete_product_type_capacity,
     create_product,
@@ -91,18 +92,26 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
             )
         }
 
+        def map_product(product):
+            base_share_value = get_product_price(
+                Product.objects.get(type_id=product.type_id, base=True)
+            ).price
+            price = product_prices.get(product.id, [])
+            return {
+                "id": product.id,
+                "name": product.name,
+                "type_id": product.type.id,
+                "price": price,
+                "share": round(price[-1]["price"] / base_share_value, 2),
+                "deleted": product.deleted,
+                "base": product.base,
+            }
+
         # all products
         context["products"] = sorted(
             list(
                 map(
-                    lambda p: {
-                        "id": p.id,
-                        "name": p.name,
-                        "type_id": p.type.id,
-                        "price": product_prices.get(p.id, []),
-                        "deleted": p.deleted,
-                        "base": p.base,
-                    },
+                    map_product,
                     Product.objects.all().order_by("type"),
                 )
             ),
@@ -122,7 +131,6 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
                 )
             }
         )
-
         c_p_map = {
             capacity.id: list(
                 map(
