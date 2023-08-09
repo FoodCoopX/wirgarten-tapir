@@ -143,6 +143,12 @@ class SubscriptionListFilter(FilterSet):
         empty_label="",
         secondary_ordering="member_id",
     )
+    show_only_ended_contracts = BooleanFilter(
+        label=_("Nur ausgelaufene Verträge anzeigen"),
+        field_name="show_only_ended_contracts",
+        method="filter_show_only_ended_contracts",
+        widget=CheckboxInput,
+    )
 
     def filter_pickup_location(self, queryset, name, value):
         if value:
@@ -191,6 +197,14 @@ class SubscriptionListFilter(FilterSet):
             min_start_date = get_today() + relativedelta(day=1, months=-1)
             return queryset.filter(start_date__gt=min_start_date, cancellation_ts=None)
         return queryset
+
+    def filter_show_only_ended_contracts(self, queryset, name, value):
+        today = get_today()
+        return (
+            queryset.filter(end_date__lt=today)
+            if value
+            else queryset.filter(end_date__gte=today)
+        )
 
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):
