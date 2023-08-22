@@ -157,10 +157,6 @@ CELERY_BEAT_SCHEDULE = {
             # once a week, Tuesday at 03:00
         ),
     },
-    "export_harvest_share_subscriber_emails": {
-        "task": "tapir.wirgarten.tasks.export_harvest_share_subscriber_emails",
-        "schedule": celery.schedules.crontab(day_of_week="monday", minute=0, hour=0),
-    },
     "export_payments_per_product_type": {
         "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
         "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),

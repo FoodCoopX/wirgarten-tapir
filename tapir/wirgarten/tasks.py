@@ -63,6 +63,9 @@ def _export_pick_list(product_type, include_equivalents=True):
         if (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week) or (
             product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week
         ):
+            print(
+                f"Skipping export_pick_list_csv() for product type {product_type.name} because it is not due this week."
+            )
             return
 
     KEY_PICKUP_LOCATION = "Abholort"
@@ -117,7 +120,11 @@ def _export_pick_list(product_type, include_equivalents=True):
         filename=f"{'Kommissionierliste' if include_equivalents else 'Lieferantenliste'}_{product_type.name}",
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
-        send_email=get_parameter_value(Parameter.PICK_LIST_SEND_ADMIN_EMAIL),
+        send_email=get_parameter_value(
+            Parameter.PICK_LIST_SEND_ADMIN_EMAIL
+            if include_equivalents
+            else Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
+        ),
     )
 
 
@@ -159,46 +166,6 @@ def export_supplier_list_csv():
             )
             continue
         _export_pick_list(all_product_types[type_name], False)
-
-
-@shared_task
-def export_harvest_share_subscriber_emails():
-    """
-    Exports the names and email addresses of members with active harvest share subscriptions.
-    The exported list will be used by the newsletter sender (everyone in the list gets the newsleter).
-    """
-
-    KEY_FIRST_NAME = "Vorname"
-    KEY_LAST_NAME = "Nachname"
-    KEY_VARIANTS = "Ernteanteile"
-    KEY_EMAIL = "Email"
-
-    def create_csv_string():
-        output, writer = begin_csv_string(
-            [KEY_FIRST_NAME, KEY_LAST_NAME, KEY_VARIANTS, KEY_EMAIL]
-        )
-        for member, subs in itertools.groupby(
-            get_active_subscriptions()
-            .filter(product__type__name=ProductTypes.HARVEST_SHARES)
-            .order_by("member_id"),
-            lambda x: x.member,
-        ):
-            writer.writerow(
-                {
-                    KEY_FIRST_NAME: member.first_name,
-                    KEY_LAST_NAME: member.last_name,
-                    KEY_VARIANTS: ", ".join([s.product.name for s in subs]),
-                    KEY_EMAIL: member.email,
-                }
-            )
-        return "".join(output.csv_string)
-
-    export_file(
-        filename="Erntepost_Empfänger",
-        filetype=ExportedFile.FileType.CSV,
-        content=bytes(create_csv_string(), "utf-8"),
-        send_email=True,
-    )
 
 
 def send_email_member_contract_end_reminder(member_id: str):
