@@ -4,16 +4,16 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import WEEKLY, ODD_WEEKS, EVEN_WEEKS
+from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
 from tapir.wirgarten.models import (
-    PickupLocationCapability,
-    PickupLocation,
-    Member,
     GrowingPeriod,
-    ProductType,
+    Member,
+    PickupLocation,
+    PickupLocationCapability,
     PickupLocationOpeningTime,
+    ProductType,
 )
-from tapir.wirgarten.parameters import Parameter, OPTIONS_WEEKDAYS
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_future_subscriptions,
@@ -28,32 +28,40 @@ def get_active_pickup_location_capabilities():
 
 
 def get_active_pickup_locations(
-    capabilities: List[
-        PickupLocationCapability
-    ] = get_active_pickup_location_capabilities(),
+    capabilities: List[PickupLocationCapability] = None,
 ):
+    if capabilities is None:
+        get_active_pickup_location_capabilities()
+
     return PickupLocation.objects.filter(
         id__in=capabilities.values("pickup_location__id")
     )
 
 
-# FIXME: the parameter should be obsolete, and the delivery date should be calculated from the pickup location
-def get_next_delivery_date(reference_date: date = get_today()):
-    delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
-    if reference_date.weekday() > delivery_day:
+def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = None):
+    if reference_date is None:
+        reference_date = get_today()
+
+    if delivery_weekday is None:
+        delivery_weekday = get_parameter_value(Parameter.DELIVERY_DAY)
+
+    if reference_date.weekday() > delivery_weekday:
         next_delivery = reference_date + relativedelta(
-            days=(7 - reference_date.weekday() % 7) + delivery_day
+            days=(7 - reference_date.weekday() % 7) + delivery_weekday
         )
     else:
         next_delivery = reference_date + relativedelta(
-            days=delivery_day - reference_date.weekday()
+            days=delivery_weekday - reference_date.weekday()
         )
     return next_delivery
 
 
 def get_next_delivery_date_for_product_type(
-    product_type=ProductType, reference_date: date = get_today()
+    product_type: ProductType, reference_date: date = None
 ):
+    if reference_date is None:
+        reference_date = get_today()
+
     next_delivery_date = get_next_delivery_date(reference_date)
     _, week_num, _ = next_delivery_date.isocalendar()
     even_week = week_num % 2 == 0
@@ -127,15 +135,19 @@ def generate_future_deliveries(member: Member, limit: int = None):
 
 
 def calculate_pickup_location_change_date(
-    reference_date=get_today(),
-    next_delivery_date=get_next_delivery_date(),
-    change_until_weekday=get_parameter_value(
-        Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
-    ),
+    reference_date=None,
+    next_delivery_date=None,
+    change_until_weekday=None,
 ):
     """
     Calculates the date at which a member pickup location changes becomes effective.
     """
+    if reference_date is None:
+        reference_date = get_today()
+    if next_delivery_date is None:
+        reference_date = get_next_delivery_date()
+    if change_until_weekday is None:
+        get_parameter_value(Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL)
 
     days_ahead = next_delivery_date.weekday() - change_until_weekday
     if days_ahead <= 0:  # Target day already happened this week

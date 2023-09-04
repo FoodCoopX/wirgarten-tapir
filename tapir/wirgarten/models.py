@@ -220,7 +220,10 @@ class Member(TapirUser):
     def pickup_location(self):
         return self.get_pickup_location()
 
-    def get_pickup_location(self, reference_date=get_today()):
+    def get_pickup_location(self, reference_date=None):
+        if reference_date is None:
+            reference_date = get_today()
+
         all_locations = self.memberpickuplocation_set.all()
 
         # If there's only one pickup_location, return it regardless of its valid_from date
@@ -506,7 +509,10 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=get_today()):
+    def total_price(self, reference_date=None):
+        if reference_date is None:
+            reference_date = get_today()
+
         if not hasattr(self, "_total_price"):
             product_prices = ProductPrice.objects.filter(
                 product_id=self.product_id, valid_from__lte=reference_date

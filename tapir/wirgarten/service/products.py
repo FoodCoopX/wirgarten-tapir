@@ -4,25 +4,25 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
-from django.db.models import Value, Case, When, IntegerField
+from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
-    Subscription,
-    ProductCapacity,
     GrowingPeriod,
-    ProductType,
     Payable,
-    ProductPrice,
     Product,
+    ProductCapacity,
+    ProductPrice,
+    ProductType,
+    Subscription,
     TaxRate,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
-    validate_growing_period_overlap,
     validate_date_range,
+    validate_growing_period_overlap,
 )
 
 
@@ -72,13 +72,15 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
         return [name_field]
 
 
-def get_active_product_types(reference_date: date = get_today()) -> iter:
+def get_active_product_types(reference_date: date = None) -> iter:
     """
     Returns the product types which are active for the given reference date.
 
     :param reference_date: default: today()
     :return: the QuerySet of ProductTypes filtered for the given reference date
     """
+    if reference_date is None:
+        reference_date = get_today()
 
     return ProductType.objects.filter(
         id__in=ProductCapacity.objects.filter(
@@ -87,14 +89,19 @@ def get_active_product_types(reference_date: date = get_today()) -> iter:
     ).order_by(*product_type_order_by())
 
 
-def get_available_product_types(reference_date: date = get_today()) -> iter:
+def get_available_product_types(reference_date: date = None) -> iter:
+    if reference_date is None:
+        reference_date = get_today()
     # TODO: filter out the ones without any capacity left!
     return get_active_product_types(reference_date)
 
 
 def get_next_growing_period(
-    reference_date: date = get_today(),
+    reference_date: date = None,
 ) -> GrowingPeriod | None:
+    if reference_date is None:
+        reference_date = get_today()
+
     try:
         return (
             GrowingPeriod.objects.filter(start_date__gt=reference_date)
@@ -106,8 +113,11 @@ def get_next_growing_period(
 
 
 def get_current_growing_period(
-    reference_date: date = get_today(),
+    reference_date: date = None,
 ) -> GrowingPeriod | None:
+    if reference_date is None:
+        reference_date = get_today()
+
     try:
         return (
             GrowingPeriod.objects.filter(
@@ -185,37 +195,46 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
     return True
 
 
-def get_active_product_capacities(reference_date: date = get_today()):
+def get_active_product_capacities(reference_date: date = None):
     """
     Gets the active product capacities for the given reference date.
 
     :param reference_date: the date on which the capacity must be active
     :return: queryset of active product capacities
     """
+    if reference_date is None:
+        reference_date = get_today()
+
     return ProductCapacity.objects.filter(
         period__start_date__lte=reference_date, period__end_date__gte=reference_date
     ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
-def get_future_subscriptions(reference_date: date = get_today()):
+def get_future_subscriptions(reference_date: date = None):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
     :param reference_date: the date on which the capacity must be active
     :return: queryset of active and future subscriptions
     """
+    if reference_date == None:
+        reference_date = get_today()
+
     return Subscription.objects.filter(end_date__gte=reference_date).order_by(
         *product_type_order_by("product__type_id", "product__type__name")
     )
 
 
-def get_active_subscriptions(reference_date: date = get_today()):
+def get_active_subscriptions(reference_date: date = None):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
     :param reference_date: the date on which the subscription must be active
     :return: queryset of active subscription
     """
+    if reference_date is None:
+        reference_date = get_today()
+
     return get_future_subscriptions(reference_date).filter(
         start_date__lte=reference_date
     )
@@ -244,7 +263,7 @@ def create_product(name: str, price: Decimal, capacity_id: str):
     return product
 
 
-def get_product_price(product: Product, reference_date: date = get_today()):
+def get_product_price(product: Product, reference_date: date = None):
     """
     Returns the currently active product price.
 
@@ -252,6 +271,9 @@ def get_product_price(product: Product, reference_date: date = get_today()):
     :param reference_date: reference date for when the price should be valid
     :return: the ProductPrice instance
     """
+    if reference_date is None:
+        reference_date = get_today()
+
     prices = ProductPrice.objects.filter(product=product).order_by("-valid_from")
 
     # If there's only one price, return it
@@ -482,7 +504,10 @@ def create_or_update_default_tax_rate(
         )
 
 
-def get_free_product_capacity(product_type_id: str, reference_date: date = get_today()):
+def get_free_product_capacity(product_type_id: str, reference_date: date = None):
+    if reference_date == None:
+        reference_date = get_today()
+
     active_product_capacities = get_active_product_capacities(reference_date).filter(
         product_type_id=product_type_id
     )
@@ -502,9 +527,10 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = get_t
         return 0
 
 
-def get_cheapest_product_price(
-    product_type: ProductType, reference_date: date = get_today()
-):
+def get_cheapest_product_price(product_type: ProductType, reference_date: date = None):
+    if reference_date == None:
+        reference_date = get_today()
+
     return (
         ProductPrice.objects.filter(
             product__type=product_type, valid_from__lte=reference_date
@@ -515,15 +541,21 @@ def get_cheapest_product_price(
 
 
 def is_product_type_available(
-    product_type: ProductType, reference_date: date = get_today()
+    product_type: ProductType, reference_date: date = None
 ) -> bool:
+    if reference_date == None:
+        reference_date = get_today()
+
     return get_free_product_capacity(
         product_type_id=product_type.id, reference_date=reference_date
     ) > get_cheapest_product_price(product_type, reference_date)
 
 
 # FIXME: duplicate code. It would be nice to have generic parameters for each product type instead of hand written ones
-def is_harvest_shares_available(reference_date: date = get_today()) -> bool:
+def is_harvest_shares_available(reference_date: date = None) -> bool:
+    if reference_date == None:
+        reference_date = get_today()
+
     param = get_parameter_value(Parameter.HARVEST_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
@@ -533,7 +565,10 @@ def is_harvest_shares_available(reference_date: date = get_today()) -> bool:
     )
 
 
-def is_bestellcoop_available(reference_date: date = get_today()) -> bool:
+def is_bestellcoop_available(reference_date: date = None) -> bool:
+    if reference_date == None:
+        reference_date = get_today()
+
     param = get_parameter_value(Parameter.BESTELLCOOP_SUBSCRIBABLE)
     return param == 1 or (
         param == 2
@@ -543,7 +578,10 @@ def is_bestellcoop_available(reference_date: date = get_today()) -> bool:
     )
 
 
-def is_chicken_shares_available(reference_date: date = get_today()) -> bool:
+def is_chicken_shares_available(reference_date: date = None) -> bool:
+    if reference_date == None:
+        reference_date = get_today()
+
     param = get_parameter_value(Parameter.CHICKEN_SHARES_SUBSCRIBABLE)
     return param == 1 or (
         param == 2

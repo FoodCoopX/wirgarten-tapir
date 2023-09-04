@@ -60,6 +60,17 @@ def _export_pick_list(product_type, include_equivalents=True):
     if product_type.delivery_cycle != WEEKLY[0]:
         _, week, _ = next_delivery_date.isocalendar()
         is_even_week = week % 2 == 0
+
+        # DEBUG LOG
+        print(
+            product_type.name,
+            next_delivery_date,
+            product_type.delivery_cycle,
+            is_even_week,
+            (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week)
+            or (product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week),
+        )
+
         if (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week) or (
             product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week
         ):
@@ -196,7 +207,10 @@ def send_email_member_contract_end_reminder(member_id: str):
 
 @shared_task
 @transaction.atomic
-def export_payment_parts_csv(reference_date=get_today()):
+def export_payment_parts_csv(reference_date=None):
+    if reference_date is None:
+        reference_date = get_today()
+
     def export_product_or_coop_payment_csv(
         product_type: bool | ProductType, payments: list[Payment]
     ):
