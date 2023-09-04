@@ -41,13 +41,15 @@ def generate_mandate_ref(member_id: str):
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
-def get_next_payment_date(reference_date: date = get_today()):
+def get_next_payment_date(reference_date: date = None):
     """
     Get the next date on which payments are due.
 
     :param reference_date: start at this date, default: today()
     :return: the next payment due date
     """
+    if reference_date is None:
+        reference_date = get_today()
 
     due_day = get_parameter_value(Parameter.PAYMENT_DUE_DAY)
 
@@ -101,7 +103,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
 
 
 def get_active_subscriptions_grouped_by_product_type(
-    member: Member, reference_date: date = get_today()
+    member: Member, reference_date: date = None
 ) -> dict:
     """
     Get all active subscriptions for a member grouped by product types.
@@ -109,6 +111,8 @@ def get_active_subscriptions_grouped_by_product_type(
     :param member: the Member instance
     :return: a dict of product_type.name -> Subscription[]
     """
+    if reference_date is None:
+        reference_date = get_today()
 
     subscriptions = OrderedDict()
     for sub in get_active_subscriptions(reference_date).filter(member=member):
@@ -164,13 +168,16 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     return total_amount
 
 
-def get_solidarity_overplus(reference_date: date = get_today()) -> float:
+def get_solidarity_overplus(reference_date: date = None) -> float:
     """
     Returns the total solidarity price sum for the active subscriptions during the reference date.
 
     :param reference_date: the date for which the subscription is active
     :return: the total solidarity overplus amount
     """
+
+    if reference_date is None:
+        reference_date = get_today()
 
     return sum(
         map(

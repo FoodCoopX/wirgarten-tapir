@@ -17,7 +17,7 @@ class CsvTextBuilder(object):
         self.csv_string.append(row)
 
 
-def __send_email(file: ExportedFile, recipient: str | None = None):
+def __send_email(file: ExportedFile, recipient: str = None):
     if recipient is None:
         recipient = [get_parameter_value(Parameter.SITE_ADMIN_EMAIL)]
     else:

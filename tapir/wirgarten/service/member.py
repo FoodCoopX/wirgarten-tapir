@@ -169,7 +169,7 @@ def get_next_contract_start_date(ref_date=get_today()):
 def buy_cooperative_shares(
     quantity: int,
     member: int | str | Member,
-    start_date: date = get_next_contract_start_date(),
+    start_date: date = None,
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -178,6 +178,8 @@ def buy_cooperative_shares(
     :param member: the member
     :param start_date: the date on which the member officially enters the cooperative
     """
+    if start_date == None:
+        start_date = get_next_contract_start_date()
 
     member_id = resolve_member_id(member)
 
