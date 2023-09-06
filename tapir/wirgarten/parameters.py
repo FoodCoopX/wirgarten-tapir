@@ -133,7 +133,6 @@ from tapir.configuration.models import (
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         from tapir.configuration.parameter import parameter_definition, ParameterMeta
-        from tapir.wirgarten.constants import ProductTypes
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
 
@@ -597,7 +596,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value=ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            #            initial_value=ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            initial_value="jW3l0EcsVM",
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
