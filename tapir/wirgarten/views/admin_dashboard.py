@@ -3,17 +3,16 @@ import itertools
 import json
 from math import floor
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Count, DateField, ExpressionWrapper, F, Sum, Max
+from django.db.models import Count, DateField, ExpressionWrapper, F, Max, Sum
+from django.db.models.functions import ExtractYear
+from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views import generic
-from django.db.models.functions import ExtractYear
-from tapir import settings
+from django.views.decorators.http import require_GET
 
+from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
@@ -71,6 +70,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        current_growing_period = get_current_growing_period()
+        if not current_growing_period:
+            context["no_growing_period"] = True
+            return context
+
         harvest_share_type = get_active_product_types().get(
             name=ProductTypes.HARVEST_SHARES
         )
@@ -127,7 +131,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Parameter.CHICKEN_SHARES_SUBSCRIBABLE
         )
 
-        current_growing_period = get_current_growing_period()
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
