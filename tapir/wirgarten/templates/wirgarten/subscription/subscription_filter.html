@@ -18,6 +18,7 @@
     <th></th>
     <th class="sort-header" data-sort="member__member_no">#</th>
     <th class="sort-header" data-sort="member__first_name">{% translate "Mitglied" %}</th>
+    <th class="sort-header" data-sort="member__email">{% translate "Email" %}</th>
     <th class="sort-header" data-sort="created_at" style="text-align:center">{% translate "Abgeschlossen am" %}</th>
     <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
     <th style="text-align:center">{% translate "Vertrag" %}</th>
@@ -48,6 +49,7 @@
     </td>
     <td style="text-align:center">{{entry.member.member_no|default:'-'}}</td>
     <td>{{ entry.member.first_name }} {{ entry.member.last_name }}</td>
+    <td>{{ entry.member.email}}</td>
     <td style="text-align:center">{{ entry.created_at|format_date }}</td>
     <td style="text-align:center">{{ entry.start_date|format_date }} - {{entry.end_date|format_date}}</td>
     <td style="text-align:center">{{ entry.product.type.name }}</td>
