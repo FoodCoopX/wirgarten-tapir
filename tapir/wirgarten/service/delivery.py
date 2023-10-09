@@ -145,9 +145,11 @@ def calculate_pickup_location_change_date(
     if reference_date is None:
         reference_date = get_today()
     if next_delivery_date is None:
-        reference_date = get_next_delivery_date()
+        next_delivery_date = get_next_delivery_date()
     if change_until_weekday is None:
-        get_parameter_value(Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL)
+        change_until_weekday = get_parameter_value(
+            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+        )
 
     days_ahead = next_delivery_date.weekday() - change_until_weekday
     if days_ahead <= 0:  # Target day already happened this week
