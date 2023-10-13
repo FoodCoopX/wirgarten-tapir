@@ -64,7 +64,7 @@
     "model": "wirgarten.Product",
     "pk": "NGAwHvrHjD",
     "fields": {
-      "name": "Volle",
+      "name": "Ganze",
       "type": "Wv0JEzFQFa",
       "base": "True"
     }
@@ -73,7 +73,7 @@
     "model": "wirgarten.Product",
     "pk": "w6FlqZ1wSQ",
     "fields": {
-      "name": "Ganze",
+      "name": "Halbe",
       "type": "Wv0JEzFQFa"
     }
   },
