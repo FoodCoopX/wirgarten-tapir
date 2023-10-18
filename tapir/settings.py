@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+import datetime
 import email.utils
 import os
 from pathlib import Path
+import importlib_resources
 
 import celery.schedules
 import environ
@@ -78,6 +80,10 @@ INSTALLED_APPS = [
     # TODO(Leon Handreke): Don't install in prod
     "django_extensions",
     "formtools",
+    "rest_framework",
+    "mjml",
+    "django_drf_filepond",
+    "tapir_mail",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -106,10 +112,14 @@ ROOT_URLCONF = "tapir.urls"
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "tapir/templates")],
+        "DIRS": [
+            os.path.join(BASE_DIR, "tapir/templates"),
+            importlib_resources.files("tapir_mail").joinpath("__ui__"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -164,6 +174,14 @@ CELERY_BEAT_SCHEDULE = {
     "generate_member_numbers": {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
         "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
+    },
+    "resolve_segment_and_create_email_dispatches_task": {
+        "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
+        "schedule": datetime.timedelta(minutes=1),
+    },
+    "send_email_dispatch_batch_task": {
+        "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "schedule": datetime.timedelta(minutes=1),
     },
 }
 
@@ -227,6 +245,7 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATICFILES_DIRS = [importlib_resources.files("tapir_mail").joinpath("__static__")]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
 SELECT2_CSS = "core/select2/4.0.13/css/select2.min.css"
@@ -286,3 +305,39 @@ BOOTSTRAP_DATEPICKER_PLUS = {
         },
     },
 }
+
+
+# Tapir Mail
+DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")
+DJANGO_DRF_FILEPOND_FILE_STORE_PATH = os.path.join(BASE_DIR, "filepond_stored_uploads")
+
+MJML_BACKEND_MODE = "cmd"
+MJML_EXEC_CMD = [
+    "mjml",
+    "--config.juicePreserveTags",
+    "true",
+    "--config.validationLevel",
+    "skip",
+    "--config.minify",
+    "true",
+    "--config.beautify",
+    "false",
+    "--config.keepComments",
+    "false",
+    "--config.minifyOptions",
+    '{"removeComments": true}',
+]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CELERY_BROKER_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+TAPIR_MAIL_PATH = "/tapirmail"
+os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
+os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH

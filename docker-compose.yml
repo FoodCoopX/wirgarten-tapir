@@ -14,7 +14,7 @@ services:
 
   web:
     build: .
-    command: bash -c "poetry install &&
+    command: bash -c "poetry lock --no-update && poetry install && poetry run python manage.py collectstatic --noinput &&
                       poetry run python manage.py compilemessages --ignore \".venv\" &&
                       poetry run python manage.py runserver_plus 0.0.0.0:80 --reloader-type=stat"
     volumes:
@@ -34,6 +34,7 @@ services:
       - ./docker/nginx/certs:/etc/nginx/certs:ro
       - ./docker/nginx/vhost.d:/etc/nginx/vhost.d:ro
       - ./docker/nginx/client_auth_certs:/etc/nginx/client_auth_certs:ro
+      - ./static:/usr/src/app/static 
     ports:
       - "8000:80"
       - "8001:443"

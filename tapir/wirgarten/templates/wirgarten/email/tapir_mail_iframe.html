@@ -1,0 +1,11 @@
+{% extends "core/base.html" %} 
+{% block content %}
+{% csrf_token %}
+<div style="width: 86.75vw; height: 93.25vh; margin-left:-1.25em; margin-right: -1.25em; overflow: hidden">
+  <iframe
+    id="tapirMailIframe"
+    style="width: 100%; height: 100%; overflow: hidden"
+    src="{{TAPIR_MAIL_PATH}}"
+  />
+</div>
+{% endblock %}

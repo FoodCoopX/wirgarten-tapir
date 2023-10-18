@@ -53,7 +53,7 @@
     {% include 'wirgarten/generic/modal/form-modal.html' %}
     {% include 'wirgarten/generic/modal/confirmation-modal.html' %}
 
-    <div class="container-fluid">
+    <div class="container-fluid" style="padding-right:1em; padding-left:1em;">
             {% if request.user and "coop.view" in request.user.roles %}
             <nav id="sidebar" class="bg-light sidebar custom-sidebar">
                 <div class="sidebar-sticky">
@@ -64,7 +64,7 @@
             </nav>
              {% endif %}
 
-            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:17em;"{%else%}style="padding-left:2em;padding-right:2em"{% endif %}>
+            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:16em; padding-right:0"{%else%}style="padding-left:2em;padding-right:2em"{% endif %}>
                 {% bootstrap_messages %}
                 {% block content %}{% endblock %}
             </main>
