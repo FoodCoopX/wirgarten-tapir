@@ -17,10 +17,9 @@ from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from django.views import generic
 
-from tapir.settings import ENABLE_SILK_PROFILING
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 
 handler403 = "tapir.wirgarten.views.default_redirect.handle_403"
@@ -37,7 +36,16 @@ urlpatterns = [
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("wirgarten/", include("tapir.wirgarten.urls")),
+    path(
+        "mailing/",
+        generic.TemplateView.as_view(
+            template_name="wirgarten/email/tapir_mail_iframe.html"
+        ),
+        name="tapir_mail",
+        kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
+    ),
+    path(settings.TAPIR_MAIL_PATH, include("tapir_mail.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-if ENABLE_SILK_PROFILING:
+if settings.ENABLE_SILK_PROFILING:
     urlpatterns += [url(r"^silk/", include("silk.urls", namespace="silk"))]
