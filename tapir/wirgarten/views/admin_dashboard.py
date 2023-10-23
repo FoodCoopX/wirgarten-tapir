@@ -131,13 +131,14 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Parameter.CHICKEN_SHARES_SUBSCRIBABLE
         )
 
+        today = get_today()
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
         ) = self.get_harvest_share_variants_chart_data(
             Subscription.objects.filter(
-                start_date__gte=current_growing_period.start_date,
-                end_date__lte=current_growing_period.end_date,
+                start_date__lte=today,
+                end_date__gte=today,
                 product__type=harvest_share_type,
             )
         )
