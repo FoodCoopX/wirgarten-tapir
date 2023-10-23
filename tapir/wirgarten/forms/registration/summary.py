@@ -1,16 +1,14 @@
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from dateutil.relativedelta import relativedelta
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes, DeliveryCycleDict
+from tapir.wirgarten.constants import DeliveryCycleDict, ProductTypes
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
-from tapir.wirgarten.service.products import (
-    get_product_price,
-)
+from tapir.wirgarten.service.products import get_product_price
 
 
 class SummaryForm(forms.Form):
@@ -57,7 +55,11 @@ class SummaryForm(forms.Form):
                 self.harvest_shares_info[key] = val
 
         harvest_shares_total = sum(
-            map(lambda i: i["amount"] * float(i["price"]), self.harvest_shares.values())
+            [
+                i["amount"] * float(i["price"])
+                for i in self.harvest_shares.values()
+                if i["amount"] is not None
+            ]
         )
 
         solidarity_price_value = self.harvest_shares_info.get(
@@ -153,10 +155,11 @@ class SummaryForm(forms.Form):
                     }
 
             chicken_total = sum(
-                map(
-                    lambda i: i["amount"] * float(i["price"]),
-                    self.chicken_shares.values(),
-                )
+                [
+                    i["amount"] * float(i["price"])
+                    for i in self.chicken_shares.values()
+                    if i["amount"] is not None
+                ]
             )
             self.chicken_shares_info["has_shares"] = chicken_total > 0
             self.chicken_shares_info["total"] = "{:.2f}".format(chicken_total)
