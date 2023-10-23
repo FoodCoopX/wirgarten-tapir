@@ -70,6 +70,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.accounts.middleware.KeycloakMiddleware",
     "tapir.wirgarten.error_middleware.GlobalServerErrorHandlerMiddleware",
+    "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
