@@ -107,7 +107,10 @@ def has_selected_harvest_shares(wizard) -> bool:
         and STEP_HARVEST_SHARES in wizard.storage.data["step_data"]
     ):
         for key, val in wizard.storage.data["step_data"][STEP_HARVEST_SHARES].items():
-            if key.startswith("Harvest Shares-harvest_shares_") and int(val[0]) > 0:
+            if (
+                key.startswith("Harvest Shares-harvest_shares_")
+                and int(val[0] if val[0] else 0) > 0
+            ):
                 return True
         return False
 
@@ -376,13 +379,13 @@ def questionaire_trafficsource_view(request, **kwargs):
 
 def is_harvest_shares_selected(harvest_share_form_data):
     for key, val in harvest_share_form_data.items():
-        if key.startswith("harvest_shares_") and val > 0:
+        if key.startswith("harvest_shares_") and val is not None and val > 0:
             return True
     return False
 
 
 def is_chicken_shares_selected(chicken_share_form_data):
     for key, val in chicken_share_form_data.items():
-        if key.startswith("chicken_shares_") and val > 0:
+        if key.startswith("chicken_shares_") and val is not None and val > 0:
             return True
     return False
