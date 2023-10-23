@@ -5,7 +5,6 @@ from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member
 
 
 class RequestUserType:

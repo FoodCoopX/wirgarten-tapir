@@ -21,8 +21,14 @@ from django.urls import include, path
 from django.views import generic
 
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
+from tapir.wirgarten.views.mailing import TapirMailView
 
 handler403 = "tapir.wirgarten.views.default_redirect.handle_403"
+tapir_mail_path = (
+    settings.TAPIR_MAIL_PATH[1:]
+    if settings.TAPIR_MAIL_PATH.startswith("/")
+    else settings.TAPIR_MAIL_PATH
+) + "/"
 
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
@@ -38,13 +44,11 @@ urlpatterns = [
     path("wirgarten/", include("tapir.wirgarten.urls")),
     path(
         "mailing/",
-        generic.TemplateView.as_view(
-            template_name="wirgarten/email/tapir_mail_iframe.html"
-        ),
+        TapirMailView.as_view(),
         name="tapir_mail",
         kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
     ),
-    path(settings.TAPIR_MAIL_PATH, include("tapir_mail.urls")),
+    path(tapir_mail_path, include("tapir_mail.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

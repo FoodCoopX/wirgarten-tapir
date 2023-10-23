@@ -56,3 +56,6 @@ class Permission:
     class Products:
         VIEW = "products.view"
         MANAGE = "products.manage"
+
+    class Email:
+        MANAGE = "email.manage"

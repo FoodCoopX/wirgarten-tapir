@@ -151,6 +151,15 @@
         "clientRole": false,
         "containerId": "9cefa2cd-b1c8-45e9-a043-636965ebeed1",
         "attributes": {}
+      },
+      {
+        "id": "7a506a97-b6d0-4e25-890f-b8b54785f40e",
+        "name": "email.manage",
+        "description": "",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "9cefa2cd-b1c8-45e9-a043-636965ebeed1",
+        "attributes": {}
       }
     ],
     "client": {
@@ -415,7 +424,8 @@
         "payments.view",
         "coop.manage",
         "payments.manage",
-        "coop.view"
+        "coop.view",
+        "email.manage"
       ],
       "clientRoles": {},
       "subGroups": []
