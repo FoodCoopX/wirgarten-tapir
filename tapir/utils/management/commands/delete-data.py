@@ -1,30 +1,41 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import BaseCommand
 
-from tapir.wirgarten.models import Member, Subscription, CoopShareTransaction, \
-    MandateReference, Payment
+from tapir.wirgarten.models import (
+    Member,
+    Subscription,
+    CoopShareTransaction,
+    MandateReference,
+    Payment,
+)
 
 
 class Command(BaseCommand):
-    help = 'Delete member/shares/subscription data from database'
+    help = "Delete member/shares/subscription data from database"
 
     def add_arguments(self, parser):
-        parser.add_argument('--member-no', type=int)
-        parser.add_argument('--member-email', type=str)
-        parser.add_argument('--delete-shares', action='store_true')
-        parser.add_argument('--delete-subscriptions', action='store_true')
-        parser.add_argument('--delete-complete', action='store_true')
-        parser.add_argument('--dry-run', choices='yes,no', default='yes')
+        parser.add_argument("--member-no", type=int)
+        parser.add_argument("--member-email", type=str)
+        parser.add_argument("--delete-shares", action="store_true")
+        parser.add_argument("--delete-subscriptions", action="store_true")
+        parser.add_argument("--delete-complete", action="store_true")
+        parser.add_argument("--dry-run", choices="yes,no", default="yes")
 
     def handle(self, *args, **options):
         print(options)
 
         # check params
         if not options["member_no"] and not options["member_email"]:
-            print("Either --member-no or --member-email must be given - otherwise no member identification possible!")
+            print(
+                "Either --member-no or --member-email must be given - otherwise no member identification possible!"
+            )
             return
 
-        if not options["delete_shares"] and not options["delete_subscriptions"] and not options["delete_complete"]:
+        if (
+                not options["delete_shares"]
+                and not options["delete_subscriptions"]
+                and not options["delete_complete"]
+        ):
             print("No delete flag set - don't know what to delete!")
             return
 
@@ -33,7 +44,7 @@ class Command(BaseCommand):
         del_complete = options["delete_complete"]
         del_shares = options["delete_shares"]
         del_subs = options["delete_subscriptions"]
-        dry = options["dry_run"] == 'yes'
+        dry = options["dry_run"] == "yes"
 
         if mno:
             try:
