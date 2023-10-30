@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand
 from tapir.utils.management.commands.populate_functions import (
     populate_users,
     clear_data,
-    reset_all_test_data,
 )
 
 

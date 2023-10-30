@@ -2,12 +2,14 @@ import json
 import os
 import pathlib
 import random
-
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
 
 from tapir.accounts.models import TapirUser, EmailChangeRequest
+from tapir.log.models import LogEntry
+from tapir.utils.json_user import JsonUser
+from tapir.utils.models import copy_user_info
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
@@ -21,9 +23,6 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceResponse,
     WaitingListEntry,
 )
-from tapir.log.models import LogEntry
-from tapir.utils.json_user import JsonUser
-from tapir.utils.models import copy_user_info
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.delivery import get_active_pickup_locations
 from tapir.wirgarten.service.member import (
