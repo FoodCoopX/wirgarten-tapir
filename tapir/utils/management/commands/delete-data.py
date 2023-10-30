@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import BaseCommand
 
+from tapir.log.models import EmailLogEntry, TextLogEntry
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -85,7 +86,7 @@ class Command(BaseCommand):
                 print(e)
 
         if del_complete:
-            # first delete mandate references and payments
+            # first delete mandate references, payments and log entries
             try:
                 ref_list = MandateReference.objects.filter(member_id=m_id)
                 pay_list = []
@@ -103,6 +104,21 @@ class Command(BaseCommand):
                         print("Deleted payment.", p)
                     res = ref_list.delete()
                     print("Deleted:", res)
+
+                log_emails_list = EmailLogEntry.objects.filter(user=m_id)
+                print("DRY-RUN: Would delete EmailLogEntries: ", log_emails_list)
+                if not dry:
+                    for p in log_emails_list:
+                        p.delete()
+                        print("Deleted EmailLogEntry: ", p)
+
+                log_text_list = TextLogEntry.objects.filter(user=m_id)
+                print("DRY-RUN: Would delete TextLogEntries: ", log_text_list)
+                if not dry:
+                    for p in log_text_list:
+                        p.delete()
+                        print("Deleted TextLogEntry: ", p)
+
             except Exception as e:
                 print(e)
                 return
