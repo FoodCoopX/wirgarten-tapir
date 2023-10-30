@@ -47,7 +47,11 @@ class Command(BaseCommand):
         def send_emails(members):
             if confirm_member_group(members):
                 for m in members:
-                    m.save(bypass_keycloak=False)
+                    try:
+                        m.save(bypass_keycloak=False)
+                    except Exception as e:
+                        print(e)
+                        continue
 
         qs = Member.objects.filter(keycloak_id=None)
         if options["with_subscription"]:

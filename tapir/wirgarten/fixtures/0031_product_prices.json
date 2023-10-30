@@ -4,8 +4,8 @@
     "pk": "aFXBgZITJP",
     "fields": {
       "product": "UicJzTMc9y",
-      "price": 45,
-      "valid_from" : "2022-01-01"
+      "price": 49.5,
+      "valid_from": "2022-01-01"
     }
   },
   {
@@ -13,8 +13,8 @@
     "pk": "NxK5MJVk45",
     "fields": {
       "product": "tF4a0ZonVw",
-      "price": 67.5,
-      "valid_from" : "2022-01-01"
+      "price": 74,
+      "valid_from": "2022-01-01"
     }
   },
   {
@@ -22,8 +22,8 @@
     "pk": "JuQJraJjcJ",
     "fields": {
       "product": "MBq0SqtZ6X",
-      "price": 90,
-      "valid_from" : "2022-01-01"
+      "price": 98.5,
+      "valid_from": "2022-01-01"
     }
   },
   {
@@ -31,8 +31,8 @@
     "pk": "wpdfvWfGmW",
     "fields": {
       "product": "ItpIuRUgoy",
-      "price": 112.5,
-      "valid_from" : "2022-01-01"
+      "price": 123,
+      "valid_from": "2022-01-01"
     }
   },
   {

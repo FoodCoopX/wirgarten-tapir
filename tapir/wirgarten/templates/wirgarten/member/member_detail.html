@@ -367,6 +367,8 @@ const handleOpenEmail = (subject, contentUrl) => {
         {% endif %}
     }
 
+    console.log("{{available_product_types}}")
+
     const handleAddHarvestShares = () => {
         {% if object.iban and object.pickup_location %}
         FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile ändern' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
