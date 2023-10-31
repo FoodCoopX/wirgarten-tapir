@@ -95,7 +95,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             list(filter(lambda x: x.coop_shares_quantity > 0, Member.objects.all()))
         )
         context["coop_shares_value"] = format_currency(
-            CoopShareTransaction.objects.aggregate(quantity=Sum("quantity"))["quantity"]
+            (
+                CoopShareTransaction.objects.aggregate(quantity=Sum("quantity")).get(
+                    "quantity", 0
+                )
+                or 0
+            )
             * settings.COOP_SHARE_PRICE
         ).replace(",00", "")
 
