@@ -194,7 +194,8 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda x: float(get_product_price(x.product).price) * x.quantity,
+                    lambda x: float(get_product_price(x.product).price)
+                    * (x.quantity or 0),
                     sub,
                 )
             )
