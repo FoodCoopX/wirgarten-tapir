@@ -21,9 +21,12 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import get_today
 
 
-def get_active_pickup_location_capabilities():
+def get_active_pickup_location_capabilities(reference_date: date = None):
+    if reference_date is None:
+        reference_date = get_today()
+
     return PickupLocationCapability.objects.filter(
-        product_type__in=get_active_product_types()
+        product_type__in=get_active_product_types(reference_date=reference_date)
     )
 
 

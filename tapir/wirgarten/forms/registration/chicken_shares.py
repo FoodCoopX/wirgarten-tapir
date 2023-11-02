@@ -284,10 +284,20 @@ class ChickenShareForm(forms.Form):
                 capability = capability.first()
                 if capability.max_capacity:
                     current_capacity = (
-                        get_current_capacity(capability, next_month) + total
+                        get_current_capacity(
+                            capability=capability,
+                            reference_date=next_month,
+                            additional_subscription_filter=lambda qs: qs.exclude(
+                                member_id=self.member_id
+                            ),
+                        )
                     ) / float(product_type.base_price)
+
                     free_capacity = capability.max_capacity - current_capacity
-                    if current_capacity > free_capacity:
+                    total_new_shares = total / float(product_type.base_price)
+
+                    # + 0.1 because of float precision. It is no problem if the capacity is overshot slightly
+                    if total_new_shares > (free_capacity + 0.1):
                         self.add_error(
                             "pickup_location", "Abholort ist voll"
                         )  # this is not displayed

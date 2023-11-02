@@ -5,7 +5,7 @@
     {% if pickup_location.contact_name %}<strong>Kontakt:</strong>
     {{pickup_location.contact_name}}<br />{% endif %}
     {% if pickup_location.messenger_group_link %}<strong>Signal Gruppe:</strong> <a
-        href='{{pickup_location.messenger_group_link}}'>Klicke hier zum Beitreten</a><br />{% endif %}
+        href='{{pickup_location.messenger_group_link}}' target='_blank'>Klicke hier zum Beitreten</a><br />{% endif %}
     {% if pickup_location.access_code %}<strong>Zugangs-Code:</strong>
     {{pickup_location.access_code}}<br />{% endif %}
     {% if pickup_location.opening_times_html %}

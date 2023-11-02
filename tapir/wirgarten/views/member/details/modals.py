@@ -1,6 +1,3 @@
-from datetime import timezone
-
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.views.decorators.csrf import csrf_protect
@@ -35,7 +32,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     calculate_pickup_location_change_date,
-    get_next_delivery_date,
 )
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
@@ -103,6 +99,7 @@ def get_pickup_location_choice_form(request, **kwargs):
     kwargs["initial"] = {
         "subs": get_active_subscriptions_grouped_by_product_type(member),
     }
+
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
