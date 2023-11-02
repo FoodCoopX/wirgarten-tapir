@@ -1,7 +1,9 @@
 from datetime import date
+
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.db import transaction
+from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
@@ -11,14 +13,14 @@ from tapir.wirgarten.forms.pickup_location import (
     get_current_capacity,
 )
 from tapir.wirgarten.models import (
-    HarvestShareProduct,
-    Subscription,
-    ProductType,
-    Product,
     GrowingPeriod,
+    HarvestShareProduct,
     MandateReference,
     Member,
     MemberPickupLocation,
+    Product,
+    ProductType,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -26,20 +28,21 @@ from tapir.wirgarten.service.delivery import (
     get_next_delivery_date,
 )
 from tapir.wirgarten.service.member import (
+    change_pickup_location,
     get_next_contract_start_date,
     get_or_create_mandate_ref,
-    change_pickup_location,
     send_contract_change_confirmation,
 )
 from tapir.wirgarten.service.payment import (
-    get_solidarity_overplus,
     get_active_subscriptions_grouped_by_product_type,
+    get_solidarity_overplus,
 )
 from tapir.wirgarten.service.products import (
-    get_product_price,
     get_available_product_types,
-    get_free_product_capacity,
     get_current_growing_period,
+    get_free_product_capacity,
+    get_future_subscriptions,
+    get_product_price,
     is_harvest_shares_available,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
@@ -246,11 +249,6 @@ class HarvestShareForm(forms.Form):
                 if product_type.name not in subs
                 else (subs[product_type.name] + [new_sub_dummy])
             )
-            self.fields["pickup_location"] = PickupLocationChoiceField(
-                required=False,
-                label=_("Neuen Abholort auswählen"),
-                initial={"subs": subs},
-            )
             today = get_today()
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2)
@@ -258,6 +256,13 @@ class HarvestShareForm(forms.Form):
             next_month = today + relativedelta(months=1, day=1)
             if next_month < next_delivery_date:
                 next_month += relativedelta(months=1)
+
+            self.fields["pickup_location"] = PickupLocationChoiceField(
+                required=False,
+                label=_("Neuen Abholort auswählen"),
+                initial={"subs": subs},
+                reference_date=next_month,
+            )
             self.fields["pickup_location_change_date"] = forms.ChoiceField(
                 required=False,
                 label=_("Abholortwechsel zum"),
@@ -419,10 +424,12 @@ class HarvestShareForm(forms.Form):
                         type__name=ProductTypes.HARVEST_SHARES,
                         name__iexact=key.replace(HARVEST_SHARE_FIELD_PREFIX, ""),
                     )
-                    total += float(get_product_price(product, next_month).price)
+                    total += quantity * float(
+                        get_product_price(product, next_month).price
+                    )
 
             capability = (
-                get_active_pickup_location_capabilities()
+                get_active_pickup_location_capabilities(reference_date=next_month)
                 .filter(
                     pickup_location=latest_pickup_location.pickup_location,
                     product_type__id=product_type.id,
@@ -431,10 +438,20 @@ class HarvestShareForm(forms.Form):
             )
             if capability.max_capacity:
                 current_capacity = (
-                    get_current_capacity(capability, next_month) + total
+                    get_current_capacity(
+                        capability=capability,
+                        reference_date=next_month,
+                        additional_subscription_filter=lambda qs: qs.exclude(
+                            member_id=self.member_id
+                        ),
+                    )
                 ) / float(product_type.base_price)
+
                 free_capacity = capability.max_capacity - current_capacity
-                if current_capacity > free_capacity:
+                total_new_shares = total / float(product_type.base_price)
+
+                # + 0.1 because of float precision. It is no problem if the capacity is overshot slightly
+                if total_new_shares > (free_capacity + 0.1):
                     self.add_error(
                         "pickup_location", "Abholort ist voll"
                     )  # this is not displayed

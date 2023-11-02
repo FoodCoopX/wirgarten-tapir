@@ -5,18 +5,18 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, Sum, DecimalField, F
+from django.db.models import DecimalField, F, OuterRef, Subquery, Sum
 from django.utils.translation import gettext_lazy as _
 
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    PickupLocation,
     MemberPickupLocation,
-    ProductPrice,
-    Product,
-    ProductType,
+    PickupLocation,
     PickupLocationCapability,
     PickupLocationOpeningTime,
+    Product,
+    ProductPrice,
+    ProductType,
 )
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
@@ -39,11 +39,16 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity(capability, reference_date=get_today()):
+def get_current_capacity(
+    capability, reference_date=None, additional_subscription_filter=None
+):
     if (
         type(capability) is not dict
     ):  # FIXME: this is dirty, check why this was needed and fix it
         capability = capability.__dict__
+
+    if reference_date is None:
+        reference_date = get_today()
 
     latest_member_pickup_location = (
         MemberPickupLocation.objects.filter(
@@ -53,9 +58,15 @@ def get_current_capacity(capability, reference_date=get_today()):
         .values("pickup_location_id")[:1]
     )
 
+    sub_qs = get_active_subscriptions(reference_date)
+
+    if additional_subscription_filter:
+        sub_qs = additional_subscription_filter(sub_qs)
+
     total_price = (
-        get_active_subscriptions(reference_date)
-        .annotate(latest_pickup_location_id=Subquery(latest_member_pickup_location))
+        sub_qs.annotate(
+            latest_pickup_location_id=Subquery(latest_member_pickup_location)
+        )
         .filter(
             latest_pickup_location_id=capability["pickup_location_id"],
             product__type_id=capability["product_type_id"],
@@ -183,8 +194,12 @@ class PickupLocationWidget(forms.Select):
 class PickupLocationChoiceField(forms.ModelChoiceField):
     def __init__(self, **kwargs):
         initial = kwargs.pop("initial", {"subs": {}})
+        next_month = get_today() + relativedelta(months=1, day=1)
+        reference_date = kwargs.pop("reference_date", next_month)
 
-        location_capabilities = get_active_pickup_location_capabilities().values(
+        location_capabilities = get_active_pickup_location_capabilities(
+            reference_date=reference_date
+        ).values(
             "product_type__name",
             "max_capacity",
             "product_type_id",
@@ -227,7 +242,8 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                         current_capacity = get_current_capacity(
                             capa, next_month
                         ) / float(ProductType.objects.get(name=pt_name).base_price)
-                        free_capacity = capa["max_capacity"] - current_capacity
+                        max_capa = capa["max_capacity"] + 0.1
+                        free_capacity = max_capa - current_capacity
 
                         if selected_product_types[pt_name] > free_capacity:
                             possible_locations = possible_locations.exclude(id=pl.id)
@@ -256,7 +272,8 @@ class PickupLocationChoiceForm(forms.Form):
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
-            label=_("Abholort"), initial=kwargs["initial"]
+            label=_("Abholort"),
+            initial=kwargs["initial"],
         )
 
     def is_valid(self):
