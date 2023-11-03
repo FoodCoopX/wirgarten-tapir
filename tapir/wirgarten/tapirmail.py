@@ -1,6 +1,12 @@
 from datetime import timedelta
+
+from dateutil.relativedelta import relativedelta
 from django.db import models
-from tapir.wirgarten.service.products import get_next_growing_period
+from django.db.models import ExpressionWrapper, F
+from django.db.models.functions import TruncMonth
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+from tapir_mail.models import StaticSegment, StaticSegmentRecipient
 from tapir_mail.service.segment import (
     BASE_QUERYSET,
     register_base_segment,
@@ -10,13 +16,10 @@ from tapir_mail.service.segment import (
 from tapir_mail.service.token import register_tokens
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Member, PickupLocation
+from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_today
-from django.db.models import F, ExpressionWrapper
-from django.db.models.functions import TruncMonth
-from dateutil.relativedelta import relativedelta
-from datetime import timedelta
 
 
 def configure_mail_module():
@@ -24,6 +27,8 @@ def configure_mail_module():
     _register_filters()
     _register_tokens()
     _register_triggers()
+
+    synchronize_waitlist_segments()
 
 
 def _register_segments():
@@ -184,3 +189,49 @@ def _register_tokens():
 def _register_triggers():
     # TODO
     pass
+
+
+def synchronize_waitlist_segment_for_entry(entry):
+    static_segment, _ = StaticSegment.objects.get_or_create(
+        name=f"Warteliste: {entry.get_type_display()}"
+    )
+
+    recipient, created = StaticSegmentRecipient.objects.get_or_create(
+        segment=static_segment,
+        email=entry.email,
+        defaults={"first_name": entry.first_name, "last_name": entry.last_name},
+    )
+
+    if not created:
+        recipient.first_name = entry.first_name
+        recipient.last_name = entry.last_name
+        recipient.save()
+
+
+def synchronize_waitlist_segments():
+    for entry in WaitingListEntry.objects.all():
+        synchronize_waitlist_segment_for_entry(entry)
+
+    # Handle deletion of recipients no longer in WaitingList
+    for recipient in StaticSegmentRecipient.objects.all():
+        if not WaitingListEntry.objects.filter(email=recipient.email).exists():
+            recipient.delete()
+
+
+@receiver(post_save, sender=WaitingListEntry)
+def create_or_update_recipient(sender, instance, created, **kwargs):
+    synchronize_waitlist_segment_for_entry(instance)
+
+
+@receiver(post_delete, sender=WaitingListEntry)
+def delete_recipient(sender, instance, **kwargs):
+    try:
+        static_segment = StaticSegment.objects.get(
+            name=f"Warteliste: {instance.get_type_display()}"
+        )
+        recipient = StaticSegmentRecipient.objects.get(
+            segment=static_segment, email=instance.email
+        )
+        recipient.delete()
+    except (StaticSegment.DoesNotExist, StaticSegmentRecipient.DoesNotExist):
+        pass
