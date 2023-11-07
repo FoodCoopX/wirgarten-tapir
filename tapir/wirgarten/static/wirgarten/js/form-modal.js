@@ -58,18 +58,33 @@ const messageEvent = eventMethod === "attachEvent"
 
             // Adjusting the iframe height onload event
             frame.onload = () => {
-                setFrameSize();
-                // TODO: detect and show server errors
+                const contentDocument = frame.contentDocument || frame.contentWindow.document;
+
+                // Check if the document body contains any form or expected content.
+                const formExists = contentDocument.querySelector('.form-fields') !== null;
+                if (!formExists) {
+                    // If no form or expected content, display the error message.
+                    modalInfo.style.display = "block";
+                    modalInfo.style.marginBottom = "1em";
+                    modalInfoContent.className = "alert alert-danger"; // Reset classes and add alert-danger.
+                    modalInfoContent.innerText = "Ein Fehler ist aufgetreten. Bitte versuche es später erneut oder kontaktiere den Admin!";
+                    frame.style.display = "none";
+                } else {
+                    frame.style.display = "block";
+                    modalInfo.style.display = "none"
+                    setFrameSize(); // If form exists, adjust the size as needed.
+                }
+
                 showLoadingIndicator(false);
-            }
+            };
 
             const modal = new bootstrap.Modal(document.getElementById('form-modal'))
             modal.show()
         },
 
         close: () => {
-          const modalInstance = bootstrap.Modal.getInstance(document.getElementById('form-modal'));
-          modalInstance.hide();
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('form-modal'));
+            modalInstance.hide();
         },
 
         addCallback: (callback) => {
