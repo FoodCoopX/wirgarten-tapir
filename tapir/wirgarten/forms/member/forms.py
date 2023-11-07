@@ -1,24 +1,22 @@
-from datetime import datetime, timezone, date
+from datetime import date, datetime, timezone
 
 from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
-from django.core.validators import (
-    EmailValidator,
-)
+from django.core.validators import EmailValidator
 from django.db import transaction
 from django.db.models import F, Sum
 from django.forms import (
-    Form,
-    CheckboxInput,
-    ModelMultipleChoiceField,
-    ModelForm,
     BooleanField,
+    CharField,
+    CheckboxInput,
+    CheckboxSelectMultiple,
+    ChoiceField,
     DateField,
     DecimalField,
-    CharField,
-    ChoiceField,
+    Form,
     IntegerField,
-    CheckboxSelectMultiple,
+    ModelForm,
+    ModelMultipleChoiceField,
     MultipleChoiceField,
 )
 from django.utils.translation import gettext_lazy as _
@@ -32,24 +30,24 @@ from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.models import (
-    Payment,
-    Member,
     CoopShareTransaction,
+    Member,
+    Payment,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
-    get_subscriptions_in_trial_period,
     get_next_trial_end_date,
+    get_subscriptions_in_trial_period,
     send_cancellation_confirmation_email,
     send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_future_subscriptions,
-    is_harvest_shares_available,
-    is_chicken_shares_available,
     is_bestellcoop_available,
+    is_chicken_shares_available,
+    is_harvest_shares_available,
 )
 from tapir.wirgarten.utils import format_date, get_today
 
@@ -91,18 +89,34 @@ class PersonalDataForm(ModelForm):
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
-    def is_valid(self):
-        super().is_valid()
-
+    def _validate_duplicate_email(self):
         duplicate_email_query = Member.objects.filter(email=self.cleaned_data["email"])
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
+        duplicate_email_error_msg = _(
+            "Ein Nutzer mit dieser Email Adresse existiert bereits."
+        )
         if duplicate_email_query.exists():
-            self.add_error(
-                "email", _("Ein Nutzer mit dieser Email Adresse existiert bereits.")
-            )
+            self.add_error("email", duplicate_email_error_msg)
+            print("Error changing email: user with same email already exists in Tapir.")
 
+        original = Member.objects.get(id=self.instance.id)
+        email_changed = original.email != self.cleaned_data["email"]
+        if email_changed:
+            try:
+                kc = self.instance.get_keycloak_client()
+                keycloak_id = kc.get_user_id(self.cleaned_data["email"])
+                if keycloak_id is not None:
+                    self.add_error("email", duplicate_email_error_msg)
+                    print(
+                        f"Error changing email: user with same email already exists in Keycloak, but not in Tapir: {keycloak_id}"
+                    )
+            except Exception as e:
+                # user does not exist, so it's ok
+                pass
+
+    def _validate_birthdate(self):
         birthdate = self.cleaned_data["birthdate"]
         today = get_today()
         if birthdate > today or birthdate < (today + relativedelta(years=-120)):
@@ -115,7 +129,13 @@ class PersonalDataForm(ModelForm):
                 ),
             )
 
-        return len(self.errors) == 0
+    def is_valid(self):
+        valid = super().is_valid()
+
+        self._validate_duplicate_email()
+        self._validate_birthdate()
+
+        return valid and len(self.errors) == 0
 
 
 class MarketingFeedbackForm(Form):
