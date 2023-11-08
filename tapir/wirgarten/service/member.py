@@ -152,13 +152,15 @@ def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date=get_today()):
+def get_next_contract_start_date(ref_date: date = None):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
     :param ref_date: the reference date
     :return: the next contract start date
     """
+    if ref_date is None:
+        ref_date = get_today()
 
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
@@ -184,9 +186,9 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     share_price = settings.COOP_SHARE_PRICE
-    due_date = start_date.replace(
-        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
-    )  # payment is always due next month
+    due_date = start_date + relativedelta(
+        months=1, day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    )
 
     mandate_ref = get_or_create_mandate_ref(member_id)
     so = CoopShareTransaction.objects.create(
