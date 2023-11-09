@@ -3,6 +3,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from dateutil.relativedelta import relativedelta
 
@@ -34,9 +35,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    calculate_pickup_location_change_date,
-)
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
@@ -49,6 +48,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
@@ -77,6 +77,8 @@ def get_member_personal_data_edit_form(request, **kwargs):
         UpdateTapirUserLogEntry().populate(
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
+
+        TransactionalTrigger.fire_action(Events.MEMBERAREA_CHANGE_DATA, member.email)
 
         member.save()
 
@@ -140,6 +142,10 @@ def get_pickup_location_choice_form(request, **kwargs):
             user=member,
             text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
         ).save()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+        )
 
     return get_form_modal(
         request=request,
@@ -262,6 +268,10 @@ def get_add_subscription_form(request, **kwargs):
         kwargs["product_type_id"] = product_type.id
         form_type = AdditionalProductForm
 
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+        )
+
     kwargs["is_admin"] = request.user.has_perm(Permission.Accounts.MANAGE)
     kwargs["member_id"] = member_id
     kwargs["choose_growing_period"] = True
@@ -277,6 +287,10 @@ def get_add_subscription_form(request, **kwargs):
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=form.subs,
         ).save()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+        )
 
     return get_form_modal(
         request=request,

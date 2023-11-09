@@ -8,18 +8,32 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from tapir_mail.models import StaticSegment, StaticSegmentRecipient
 from tapir_mail.service.segment import (
-    BASE_QUERYSET,
     register_base_segment,
     register_filter,
     register_segment,
 )
 from tapir_mail.service.token import register_tokens
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_today
+
+
+# Absenden Bestellwizzard Mitgliedschaft + Ernteanteile
+class Events:
+    REGISTER_MEMBERSHIP_AND_SUBSCRIPTION = "register_membership_and_subscription"
+
+    # Absenden Bestellwizzard Mitgliedschaft (nur Geno-Anteile)
+    REGISTER_MEMBERSHIP_ONLY = "register_membership_only"
+
+    # Vertragsänderungen im Mitgliederbereich (Erntevertrag erhöhen, dazubestellen, abbestellen, kündigen, nicht verlängern, verlängern, Abholort ändern)
+    MEMBERAREA_CHANGE_CONTRACT = "memberarea_change_contract"
+
+    # Mitgliedsdatenänderungen (e-Mail-Adresse, Bankdaten, Adresse)
+    MEMBERAREA_CHANGE_DATA = "memberarea_change_data"
 
 
 def configure_mail_module():
@@ -187,8 +201,19 @@ def _register_tokens():
 
 
 def _register_triggers():
-    # TODO
-    pass
+    TransactionalTrigger.register_action(
+        "BestellWizard: Mitgliedschaft + Ernteanteile",
+        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+    )
+    TransactionalTrigger.register_action(
+        "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
+    )
+    TransactionalTrigger.register_action(
+        "Vertragsänderungen im Mitgliederbereich", Events.MEMBERAREA_CHANGE_CONTRACT
+    )
+    TransactionalTrigger.register_action(
+        "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
+    )
 
 
 def synchronize_waitlist_segment_for_entry(entry):
