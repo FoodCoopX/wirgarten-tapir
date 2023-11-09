@@ -12,12 +12,6 @@ DeliveryCycle = [
 
 DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
 
-
-class ProductTypes:
-    CHICKEN_SHARES = "Hühneranteile"
-    BESTELLCOOP = "BestellCoop"
-
-
 class Permission:
     permission_strings = False
 

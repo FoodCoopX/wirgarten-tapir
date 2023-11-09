@@ -30,7 +30,7 @@ class KeycloakMiddleware(MiddlewareMixin):
         self.config = settings.KEYCLOAK_ADMIN_CONFIG
         self.keycloak = KeycloakOpenID(
             server_url=self.config["PUBLIC_URL"],
-            realm_name=self.config["REALM_NAME"],
+            realm_name=self.config["USER_REALM_NAME"],
             client_id=self.config["FRONTEND_CLIENT_ID"],
         )
 
