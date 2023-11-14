@@ -13,12 +13,14 @@ from tapir_mail.service.segment import (
     register_segment,
 )
 from tapir_mail.service.token import register_tokens
+from tapir_mail.service.triggers import register_trigger
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_next_growing_period
+from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_today
 
 
@@ -214,6 +216,8 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
     )
+
+    register_trigger(OnboardingTrigger)
 
 
 def synchronize_waitlist_segment_for_entry(entry):

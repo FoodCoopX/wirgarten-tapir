@@ -121,6 +121,15 @@ class PersonalDataForm(ModelForm):
             self.add_error("email", duplicate_email_error_msg)
             print("Error changing email: user with same email already exists in Tapir.")
 
+<<<<<<< HEAD
+=======
+        original = Member.objects.filter(id=self.instance.id)
+        if not original.exists():
+            return
+
+        original = original.first()
+        email_changed = original.email != self.cleaned_data["email"]
+>>>>>>> 25fe25f (#111: Onboarding Trigger)
         if email_changed:
             self._validate_duplicate_email_keycloak()
 
