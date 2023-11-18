@@ -20,6 +20,7 @@ from django.forms import (
     MultipleChoiceField,
 )
 from django.utils.translation import gettext_lazy as _
+from tapir.accounts.models import KeycloakUser
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField
@@ -89,8 +90,26 @@ class PersonalDataForm(ModelForm):
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
+    def _validate_duplicate_email_keycloak(self):
+        try:
+            kc = KeycloakUser.get_keycloak_client()
+            keycloak_id = kc.get_user_id(self.cleaned_data["email"])
+            if keycloak_id is not None:
+                duplicate_email_error_msg = _(
+                    "Ein Nutzer mit dieser Email Adresse existiert bereits."
+                )
+                self.add_error("email", duplicate_email_error_msg)
+                print(
+                    f"Error changing email: user with same email already exists in Keycloak, but not in Tapir: {keycloak_id}"
+                )
+        except Exception as e:
+            pass
+
     def _validate_duplicate_email(self):
-        duplicate_email_query = Member.objects.filter(email=self.cleaned_data["email"])
+        email = self.cleaned_data["email"]
+        email_changed = not self.instance or (self.instance.email != email)
+
+        duplicate_email_query = Member.objects.filter(email=email)
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
@@ -101,20 +120,8 @@ class PersonalDataForm(ModelForm):
             self.add_error("email", duplicate_email_error_msg)
             print("Error changing email: user with same email already exists in Tapir.")
 
-        original = Member.objects.get(id=self.instance.id)
-        email_changed = original.email != self.cleaned_data["email"]
         if email_changed:
-            try:
-                kc = self.instance.get_keycloak_client()
-                keycloak_id = kc.get_user_id(self.cleaned_data["email"])
-                if keycloak_id is not None:
-                    self.add_error("email", duplicate_email_error_msg)
-                    print(
-                        f"Error changing email: user with same email already exists in Keycloak, but not in Tapir: {keycloak_id}"
-                    )
-            except Exception as e:
-                # user does not exist, so it's ok
-                pass
+            self._validate_duplicate_email_keycloak()
 
     def _validate_birthdate(self):
         birthdate = self.cleaned_data["birthdate"]
