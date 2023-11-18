@@ -62,6 +62,7 @@ class KeycloakUser(AbstractUser):
         except Exception:
             return False
 
+    @classmethod
     def get_keycloak_client(self):
         # FIXME: can we keep one instance? It seemed that the authorization expires, but not sure yet
         # if not self._kk or self._kk.is_authenticated():
@@ -124,28 +125,35 @@ class KeycloakUser(AbstractUser):
             }
             print("Creating Keycloak user: ", data)
 
-            if initial_password:
-                data["credentials"] = [{"value": initial_password, "type": "password"}]
-                data["emailVerified"] = True
+            keycloak_id = kc.get_user_id(self.email)
+            if keycloak_id is not None:
+                if not TapirUser.objects.filter(keycloak_id=keycloak_id).exists():
+                    self.keycloak_id = keycloak_id
+                    kc.update_user(user_id=self.keycloak_id, payload=data)
             else:
-                data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
+                if initial_password:
+                    data["credentials"] = [
+                        {"value": initial_password, "type": "password"}
+                    ]
+                    data["emailVerified"] = True
+                else:
+                    data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
 
-            if self.is_superuser:
-                group = kc.get_group_by_path(path="/superuser")
-                if group:
-                    data["groups"] = ["superuser"]
+                if self.is_superuser:
+                    group = kc.get_group_by_path(path="/superuser")
+                    if group:
+                        data["groups"] = ["superuser"]
 
-            self.keycloak_id = kc.create_user(data)
+                self.keycloak_id = kc.create_user(data)
 
-            try:
-                self.send_verify_email()
-            except Exception as e:
-                # FIXME: schedule to try again later?
-                print(
-                    f"Failed to send verify email to new user: ",
-                    e,
-                    f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
-                )
+                try:
+                    self.send_verify_email()
+                except Exception as e:
+                    print(
+                        f"Failed to send verify email to new user: ",
+                        e,
+                        f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
+                    )
 
         else:  # Update --> change of keycloak data if necessary
             original = type(self).objects.get(id=self.id)
