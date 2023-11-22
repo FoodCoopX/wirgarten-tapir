@@ -778,7 +778,7 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             raise ValidationError(
                 {
                     "transfer_member": _(
-                        "For TRASNFER_OUT and TRANSFER_IN, the transfer_member must be set."
+                        "For TRANSFER_OUT and TRANSFER_IN, the transfer_member must be set."
                     )
                 }
             )

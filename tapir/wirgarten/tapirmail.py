@@ -38,6 +38,19 @@ class Events:
     MEMBERAREA_CHANGE_DATA = "memberarea_change_data"
 
 
+class Segments:
+    COOP_MEMBERS = "Geno-Mitglieder"
+    NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
+    WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
+    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufendem Ertevertrag"
+
+
+class Filters:
+    CONTRACT_EXTENDED_YES = "Vertrag verlängert: ja"
+    CONTRACT_EXTENDED_NO = "Vertrag verlängert: nein"
+    CONTRACT_EXTENDED_NO_REACTION = "Vertrag verlängert: keine Reaktion"
+
+
 def configure_mail_module():
     _register_segments()
     _register_filters()
@@ -85,21 +98,21 @@ def _register_segments():
     }
 
     register_segment(
-        "Geno-Mitglieder",
+        Segments.COOP_MEMBERS,
         lambda: get_member_ids(shares_annotation, {"total_shares__gte": 1}),
     )
     register_segment(
-        "Nicht Geno-Mitglieder",
+        Segments.NON_COOP_MEMBERS,
         lambda: get_member_ids(shares_annotation, {"total_shares": 0}),
     )
     register_segment(
-        "Mit laufendem Ertevertrag",
+        Segments.WITH_ACTIVE_SUBSCRIPTION,
         lambda: get_member_ids(
             subscription_annotation, {"active_subscription_count__gte": 1}
         ),
     )
     register_segment(
-        "Ohne laufendem Ertevertrag",
+        Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
         lambda: get_member_ids(
             subscription_annotation, {"active_subscription_count": 0}
         ),
@@ -108,53 +121,51 @@ def _register_segments():
 
 def _register_filters():
     def create_contract_status_filter(expression):
-        next_growing_period = get_next_growing_period()
+        def filter_func(qs):
+            next_growing_period = get_next_growing_period()
 
-        if next_growing_period is None:
-            if expression == "no reaction":
-                return lambda qs: qs.all()
-            else:
-                return lambda qs: qs.none()
+            if next_growing_period is None:
+                return qs.none() if expression != "no reaction" else qs.all()
 
-        if expression == "yes":
-            return lambda qs: qs.filter(
-                subscription__start_date__gte=next_growing_period.start_date,
-                subscription__start_date__lte=next_growing_period.end_date,
-            )
-
-        elif expression == "no":
-            trial_period_end_expr = ExpressionWrapper(
-                TruncMonth(F("subscription__start_date"))
-                + timedelta(
-                    days=relativedelta(months=1).days,
-                    seconds=relativedelta(months=1).seconds,
-                ),
-                output_field=models.DateField(),
-            )
-
-            return lambda qs: qs.annotate(
-                trial_period_end=trial_period_end_expr
-            ).filter(
-                subscription__cancellation_ts__gt=F("trial_period_end"),
-                subscription__cancellation_ts__isnull=False,
-            )
-
-        elif expression == "no reaction":
-            trial_period_start = get_today() + relativedelta(months=-1, day=1)
-
-            return (
-                lambda qs: qs.filter(subscription__start_date__lte=trial_period_start)
-                .exclude(subscription__cancellation_ts__isnull=False)
-                .exclude(
+            if expression == "yes":
+                return qs.filter(
                     subscription__start_date__gte=next_growing_period.start_date,
                     subscription__start_date__lte=next_growing_period.end_date,
                 )
-            )
 
-    register_filter("Vertrag verlängert: ja", create_contract_status_filter("yes"))
-    register_filter("Vertrag verlängert: nein", create_contract_status_filter("no"))
+            elif expression == "no":
+                trial_period_end_expr = ExpressionWrapper(
+                    TruncMonth(F("subscription__start_date"))
+                    + timedelta(
+                        days=relativedelta(months=1).days,
+                        seconds=relativedelta(months=1).seconds,
+                    ),
+                    output_field=models.DateField(),
+                )
+
+                return qs.annotate(trial_period_end=trial_period_end_expr).filter(
+                    subscription__cancellation_ts__gt=F("trial_period_end"),
+                    subscription__cancellation_ts__isnull=False,
+                )
+
+            elif expression == "no reaction":
+                trial_period_start = get_today() + relativedelta(months=-1, day=1)
+
+                return (
+                    qs.filter(subscription__start_date__lte=trial_period_start)
+                    .exclude(subscription__cancellation_ts__isnull=False)
+                    .exclude(
+                        subscription__start_date__gte=next_growing_period.start_date,
+                        subscription__start_date__lte=next_growing_period.end_date,
+                    )
+                )
+
+        return filter_func
+
+    register_filter(Filters.CONTRACT_EXTENDED_YES, create_contract_status_filter("yes"))
+    register_filter(Filters.CONTRACT_EXTENDED_NO, create_contract_status_filter("no"))
     register_filter(
-        "Vertrag verlängert: keine Reaktion",
+        Filters.CONTRACT_EXTENDED_NO_REACTION,
         create_contract_status_filter("no reaction"),
     )
 
