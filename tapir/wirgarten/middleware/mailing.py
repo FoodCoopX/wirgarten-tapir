@@ -20,6 +20,6 @@ class TapirMailPermissionMiddleware:
         if request.path.startswith(
             settings.TAPIR_MAIL_PATH
         ) and not request.user.has_perm(Permission.Email.MANAGE):
-            raise PermissionDenied
+            raise PermissionDenied()
 
         return self.get_response(request)

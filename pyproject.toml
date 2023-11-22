@@ -35,7 +35,7 @@ django-webtest = "^1.9.10"
 PyJWT = "2.6.0"
 unidecode = "^1.3.6"
 importlib-resources = "^6.1.0"
-tapir-mail = { url="https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1700139082/tapir_mail-0.0.0.dev1700139082-py3-none-any.whl"}
+tapir-mail = { url="https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1700649848/tapir_mail-0.0.0.dev1700649848-py3-none-any.whl"}
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"
@@ -48,6 +48,7 @@ pytest-sugar = "^0.9.4"
 selenium = "^3.141.0"
 factory-boy = "^3.2.1"
 black = "^22.3.0"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

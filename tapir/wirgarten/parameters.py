@@ -1,11 +1,11 @@
 from django.core.validators import (
-    MinValueValidator,
-    MaxValueValidator,
     EmailValidator,
+    MaxValueValidator,
+    MinValueValidator,
     URLValidator,
 )
 from django.utils.translation import gettext_lazy as _
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import BICValidator, IBANValidator
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -126,7 +126,7 @@ from tapir.configuration.models import (
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
-        from tapir.configuration.parameter import parameter_definition, ParameterMeta
+        from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.constants import ProductTypes
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
@@ -506,11 +506,21 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=400,
         )
 
+        def get_default_product_type():
+            default_product_type = ProductType.objects.filter(
+                name=ProductTypes.HARVEST_SHARES
+            )
+            return (
+                default_product_type.first().id
+                if default_product_type.exists()
+                else None
+            )
+
         parameter_definition(
             key=Parameter.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="",  # ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            initial_value=get_default_product_type(),
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
