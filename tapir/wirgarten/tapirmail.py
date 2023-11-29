@@ -40,6 +40,9 @@ class Events:
     # Mitglied kündigt im Probemonat
     TRIAL_CANCELLATION = "trial_cancellation"
 
+    # Mitglied hat Vertrag explizit nicht verlängert
+    CONTRACT_NOT_RENEWED = "contract_not_renewed"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -232,6 +235,9 @@ def _register_triggers():
     )
     TransactionalTrigger.register_action(
         "Kündigung im Probemonat", Events.TRIAL_CANCELLATION
+    )
+    TransactionalTrigger.register_action(
+        "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
     )
 
     register_trigger(OnboardingTrigger)
