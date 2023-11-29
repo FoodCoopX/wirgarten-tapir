@@ -20,8 +20,8 @@ from django.forms import (
     MultipleChoiceField,
 )
 from django.utils.translation import gettext_lazy as _
-from tapir.accounts.models import KeycloakUser
 
+from tapir.accounts.models import KeycloakUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -121,15 +121,12 @@ class PersonalDataForm(ModelForm):
             self.add_error("email", duplicate_email_error_msg)
             print("Error changing email: user with same email already exists in Tapir.")
 
-<<<<<<< HEAD
-=======
         original = Member.objects.filter(id=self.instance.id)
         if not original.exists():
             return
 
         original = original.first()
         email_changed = original.email != self.cleaned_data["email"]
->>>>>>> 25fe25f (#111: Onboarding Trigger)
         if email_changed:
             self._validate_duplicate_email_keycloak()
 

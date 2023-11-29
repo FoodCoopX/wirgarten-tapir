@@ -37,6 +37,9 @@ class Events:
     # Mitgliedsdatenänderungen (e-Mail-Adresse, Bankdaten, Adresse)
     MEMBERAREA_CHANGE_DATA = "memberarea_change_data"
 
+    # Mitglied kündigt im Probemonat
+    TRIAL_CANCELLATION = "trial_cancellation"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -226,6 +229,9 @@ def _register_triggers():
     )
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
+    )
+    TransactionalTrigger.register_action(
+        "Kündigung im Probemonat", Events.TRIAL_CANCELLATION
     )
 
     register_trigger(OnboardingTrigger)
