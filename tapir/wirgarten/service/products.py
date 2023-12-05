@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Payable,

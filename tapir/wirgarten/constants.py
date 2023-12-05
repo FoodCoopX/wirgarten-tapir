@@ -12,6 +12,7 @@ DeliveryCycle = [
 
 DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
 
+
 class Permission:
     permission_strings = False
 
