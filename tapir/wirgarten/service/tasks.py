@@ -22,7 +22,7 @@ def schedule_task_unique(task, eta: datetime, args=(), kwargs={}):
     existing = ScheduledTask.objects.filter(**st_args)
     if existing.exists():
         existing.delete()
-        print("Deleted duplicate task: ", existing)
+    print("Deleted duplicate task: ", ", ".join([e for e in existing]))
 
     scheduled_task = ScheduledTask.objects.create(**st_args, eta=eta)
     print("Scheduled new task: ", scheduled_task)

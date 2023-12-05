@@ -6,7 +6,12 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
+from tapir.wirgarten.constants import (
+    EVEN_WEEKS,
+    ODD_WEEKS,
+    WEEKLY,
+    ProductTypes,
+)
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
@@ -17,6 +22,9 @@ from tapir.wirgarten.models import (
     ScheduledTask,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import (
+    get_next_delivery_date,
+)
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
 from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
@@ -48,17 +56,27 @@ def _export_pick_list(product_type, include_equivalents=True):
     Exports picklist or supplier list as CSV for a product type.
     indclude_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
+    next_delivery_date = get_next_delivery_date()
+    if product_type.delivery_cycle != WEEKLY[0]:
+        _, week, _ = next_delivery_date.isocalendar()
+        is_even_week = week % 2 == 0
+        if (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week) or (
+            product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week
+        ):
+            return
 
     KEY_PICKUP_LOCATION = "Abholort"
     KEY_M_EQUIVALENT = "M-Äquivalent"
 
-    subscriptions = get_active_subscriptions().filter(product__type_id=product_type.id)
+    subscriptions = get_active_subscriptions(next_delivery_date).filter(
+        product__type_id=product_type.id
+    )
     grouped_subscriptions = defaultdict(list)
 
     for subscription in subscriptions:
-        grouped_subscriptions[subscription.member.pickup_location.name].append(
-            subscription
-        )
+        grouped_subscriptions[
+            subscription.member.get_pickup_location(next_delivery_date).name
+        ].append(subscription)
 
     variants = list(Product.objects.filter(type_id=product_type.id))
     variants.sort(key=lambda x: get_product_price(x).price)
@@ -169,7 +187,7 @@ def export_harvest_share_subscriber_emails():
                 {
                     KEY_FIRST_NAME: member.first_name,
                     KEY_LAST_NAME: member.last_name,
-                    KEY_VARIANTS: ", ".join(subs),
+                    KEY_VARIANTS: ", ".join([s.product.name for s in subs]),
                     KEY_EMAIL: member.email,
                 }
             )
@@ -270,7 +288,7 @@ def export_payment_parts_csv(reference_date=get_today()):
     payments = Payment.objects.bulk_create(generate_new_payments(due_date))
     payments.extend(existing_payments)
 
-    payments.sort(key=lambda x: x.type if x.type else "")
+    payments.sort(key=lambda x: x.type.name if x.type else "")
     payments_grouped = {
         key: list(group)
         for key, group in itertools.groupby(payments, key=lambda x: x.type)
@@ -299,3 +317,4 @@ def generate_member_numbers():
         if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
             member.save()
             print(f"[task] generate_member_numbers: generated member_no for {member}")
+            
