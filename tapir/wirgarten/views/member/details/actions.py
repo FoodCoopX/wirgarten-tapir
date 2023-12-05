@@ -3,7 +3,7 @@ import json
 
 from click import Parameter
 from dateutil.relativedelta import relativedelta
-from django.conf import SITE_URL
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -66,7 +66,7 @@ def change_email(request, **kwargs):
             content=_(
                 f"Hallo {user.first_name},<br/><br/>"
                 f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
+                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
                 f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
             ),
         )

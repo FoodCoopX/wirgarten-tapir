@@ -39,7 +39,7 @@ class SegmentFilterTest(TapirIntegrationTest):
             end_date=next_start + relativedelta(years=1),
         )
         self.included_pickup_location = PickupLocationFactory.create()
-        self.excluded_pickup_location = PickupLocationFactory.create()
+        self.excluded_pickup_location = PickupLocationFactory.create(coords_lat=1.0)
 
         _register_segments()
         _register_filters()

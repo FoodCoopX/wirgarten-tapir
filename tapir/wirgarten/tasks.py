@@ -4,14 +4,10 @@ from collections import defaultdict
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import (
-    EVEN_WEEKS,
-    ODD_WEEKS,
-    WEEKLY,
-    ProductTypes,
-)
+from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
@@ -22,9 +18,7 @@ from tapir.wirgarten.models import (
     ScheduledTask,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    get_next_delivery_date,
-)
+from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
 from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
@@ -34,6 +28,7 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_product_price,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
 
@@ -303,13 +298,11 @@ def generate_member_numbers():
     today = get_today()
     for member in members:
         with transaction.atomic():
-            if (
-                not member.member_no
-                and member.coop_shares_quantity > 0
-                and member.coop_entry_date <= today
-            ):
+            if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
                 member.member_no = member.generate_member_no()
                 member.save()
+
+                TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
 
                 print(
                     f"[task] generate_member_numbers: generated member_no for {member}"

@@ -2,7 +2,7 @@ import datetime
 import os
 import environ
 import celery.schedules
-from django.config import BASE_DIR
+from tapir.settings.base import BASE_DIR
 
 env = environ.Env()
 
@@ -72,6 +72,10 @@ CELERY_BEAT_SCHEDULE = {
     },
     "send_email_dispatch_batch_task": {
         "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "schedule": datetime.timedelta(minutes=1),
+    },
+    "check_email_bounces": {
+        "task": "tapir_mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=1),
     },
 }

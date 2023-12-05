@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import (
     EmailValidator,
     MaxValueValidator,
@@ -5,7 +6,6 @@ from django.core.validators import (
     URLValidator,
 )
 from django.utils.translation import gettext_lazy as _
-from localflavor.generic.validators import BICValidator, IBANValidator
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -127,7 +127,6 @@ from tapir.configuration.models import (
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
-        from tapir.wirgarten.constants import ProductTypes
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
 
@@ -507,8 +506,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         def get_default_product_type():
+            if not settings.BASE_PRODUCT_NAME:
+                raise ValueError(
+                    "BASE_PRODUCT_NAME is not set in tapir/wirgarten/settings/site.py"
+                )
+
             default_product_type = ProductType.objects.filter(
-                name=ProductTypes.HARVEST_SHARES
+                name=settings.BASE_PRODUCT_NAME
             )
             return (
                 default_product_type.first().id

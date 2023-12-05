@@ -268,10 +268,6 @@ def get_add_subscription_form(request, **kwargs):
         kwargs["product_type_id"] = product_type.id
         form_type = AdditionalProductForm
 
-        TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
-        )
-
     kwargs["is_admin"] = request.user.has_perm(Permission.Accounts.MANAGE)
     kwargs["member_id"] = member_id
     kwargs["choose_growing_period"] = True
