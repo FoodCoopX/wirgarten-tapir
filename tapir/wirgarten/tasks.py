@@ -302,6 +302,15 @@ def generate_member_numbers():
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today()
     for member in members:
-        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
-            member.save()
-            print(f"[task] generate_member_numbers: generated member_no for {member}")
+        with transaction.atomic():
+            if (
+                not member.member_no
+                and member.coop_shares_quantity > 0
+                and member.coop_entry_date <= today
+            ):
+                member.member_no = member.generate_member_no()
+                member.save()
+
+                print(
+                    f"[task] generate_member_numbers: generated member_no for {member}"
+                )

@@ -268,9 +268,6 @@ class Member(TapirUser):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        if not self.member_no and self.coop_shares_quantity > 0:
-            self.member_no = self.generate_member_no()
-
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
                 Parameter.MEMBER_BYPASS_KEYCLOAK

@@ -43,6 +43,9 @@ class Events:
     # Mitglied hat Vertrag explizit nicht verlängert
     CONTRACT_NOT_RENEWED = "contract_not_renewed"
 
+    # Mitglied tritt der Genossenschaft bei (nach Ablauf der Probezeit)
+    MEMBERSHIP_ENTRY = "membership_entry"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -238,6 +241,9 @@ def _register_triggers():
     )
     TransactionalTrigger.register_action(
         "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
+    )
+    TransactionalTrigger.register_action(
+        "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
     )
 
     register_trigger(OnboardingTrigger)
