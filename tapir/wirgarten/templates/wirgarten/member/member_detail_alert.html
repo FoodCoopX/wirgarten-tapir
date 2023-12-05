@@ -210,7 +210,7 @@
 
     const handleRenewal = () => {
         const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
-        {% if available_product_types|get_value:'Ernteanteile' %}
+        {% if available_product_types|get_value:base_product_type_name %}
         renewalModal.show()
         {% else %}
         handleShowWaitlist();
@@ -235,5 +235,4 @@
     const handleShowWaitlist = () => {
          FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
     }
-
 </script>

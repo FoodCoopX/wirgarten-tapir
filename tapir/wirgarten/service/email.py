@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from tapir import settings
+from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member

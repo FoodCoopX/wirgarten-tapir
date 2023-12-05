@@ -64,20 +64,19 @@ class KeycloakUser(AbstractUser):
 
     @classmethod
     def get_keycloak_client(self):
-        # FIXME: can we keep one instance? It seemed that the authorization expires, but not sure yet
-        # if not self._kk or self._kk.is_authenticated():
-        config = settings.KEYCLOAK_ADMIN_CONFIG
+        if not self._kc or self._kc.is_authenticated():
+            config = settings.KEYCLOAK_ADMIN_CONFIG
 
-        return KeycloakAdmin(
-            server_url=config["SERVER_URL"] + "/auth",
-            client_id=config["CLIENT_ID"],
-            realm_name=config["REALM_NAME"],
-            user_realm_name=config["USER_REALM_NAME"],
-            client_secret_key=config["CLIENT_SECRET_KEY"],
-            verify=True,
-        )
+            self._kc = KeycloakAdmin(
+                server_url=config["SERVER_URL"] + "/auth",
+                client_id=config["CLIENT_ID"],
+                realm_name=config["REALM_NAME"],
+                user_realm_name=config["USER_REALM_NAME"],
+                client_secret_key=config["CLIENT_SECRET_KEY"],
+                verify=True,
+            )
 
-        # return self._kk
+        return self._kc
 
     def send_verify_email(self):
         kc = self.get_keycloak_client()

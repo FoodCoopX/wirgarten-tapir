@@ -3,7 +3,7 @@ from datetime import datetime
 from celery import Celery
 from django.db import transaction
 
-from tapir import settings
+from django.conf import settings
 
 app = Celery("tapir", broker=settings.CELERY_BROKER_URL)
 

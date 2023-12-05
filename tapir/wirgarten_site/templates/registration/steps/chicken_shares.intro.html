@@ -1,0 +1,73 @@
+{% load configuration %}
+{% load tapir_static %}
+
+<div style="display:flex;">
+    <div>
+        <p>
+            Als Mitglied mit Ernteanteil kannst du zusätzlich einen halben oder ganzen Hühneranteil beziehen. Ein ganzer Hühneranteil umfasst 8-10 Eier (zweiwöchentlich), Hahn und Suppenhuhn (jährlich), ein halber 4-6 Eier plus Hahn und Suppenhuhn. Die Eier werden mit deinem Gemüse an den Abholort geliefert und kommen von unserem Kooperationsbetrieb in Uelzen.
+
+        <div class="accordion accordion-flush" id="accordionPanelsStayOpenExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseOne">
+                        Wie funktioniert der Hühneranteil?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingOne">
+                    <div class="accordion-body">
+                        Der Vertrag über einen Hühneranteil ist zeitlich an die Laufzeit deines gültigen Gemüse-Ernteanteils gekoppelt. Der Jahresvertrag über den Hühneranteil synchronisiert sich somit parallel zur Laufzeit deines Gemüse-Erntevertrags.
+                        <a href="https://lueneburg.wirgarten.com/der-wirgarten-huhneranteil/"
+                           target="_blank">Mehr zum Hühneranteil</a>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseTwo">
+                        Wie viele Eier und Fleisch erhalte ich?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingTwo">
+                    <div class="accordion-body">
+                        <strong>Voller Hühneranteil:</strong>
+                        <ul>
+                            <li>Ca. 230 Eier pro Jahr (ca. 8-10 Eier /alle zwei Wochen)</li>
+                            <li>1 x im Jahr ein ganzer Hahn (samt leckeren Rezeptideen)</li>
+                            <li>1x im Jahr ein ganzes großes Suppenhuhn</li>
+                        </ul>
+                        <strong>Halber Hühneranteil:</strong>
+                        <ul>
+                            <li>Ca. 115 Eier pro Jahr ca. 4-6 Eier / alle zwei Wochen</li>
+                            <li>1 x im Jahr ein halber Hahn (samt leckeren Rezeptideen)</li>
+                            <li>1 x im Jahr ein halbes großes Suppenhuhn</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseThree">
+                        Woher kommen die Eier und Hühner?
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse"
+                     aria-labelledby="panelsStayOpen-headingThree">
+                    <div class="accordion-body">
+                        Eier und Hühner kommen von einem Kooperationsbetrieb in der Nähe von Uelzen, mit dem wir in den nächsten Jahren eine Streuobst-Wiese mit kombinierter Hühnerhaltung im Agroforst umsetzen.
+                    </div>
+                </div>
+            </div>
+        </div>
+        </p>
+    </div>
+    <div><img class="photo" style="max-height:28em; margin-left:2em" src="{% static 'lueneburg/registration/chicken_share.webp' %}"/>
+    </div>
+</div>

@@ -8,12 +8,13 @@ from nanoid import generate
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Member, Payment, Subscription
+from tapir.wirgarten.models import Member, Payment, ProductType, Subscription
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_future_subscriptions,
     get_product_price,
+    product_type_order_by,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -104,7 +105,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
 
 def get_active_subscriptions_grouped_by_product_type(
     member: Member, reference_date: date = None
-) -> dict:
+) -> OrderedDict[str, list[Subscription]]:
     """
     Get all active subscriptions for a member grouped by product types.
 
@@ -114,12 +115,11 @@ def get_active_subscriptions_grouped_by_product_type(
     if reference_date is None:
         reference_date = get_today()
 
-    subscriptions = OrderedDict()
+    subscriptions = OrderedDict(
+        {p.name: [] for p in ProductType.objects.order_by(*product_type_order_by())}
+    )
     for sub in get_active_subscriptions(reference_date).filter(member=member):
         product_type = sub.product.type.name
-        if product_type not in subscriptions:
-            subscriptions[product_type] = []
-
         subscriptions[product_type].append(sub)
 
     return subscriptions

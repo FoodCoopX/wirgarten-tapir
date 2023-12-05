@@ -21,6 +21,10 @@ PAGE_ROOT = reverse_lazy("wirgarten:pickup_locations")
 
 
 class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
+    """
+    This view lists all pickup locations and their capabilities.
+    """
+
     template_name = "wirgarten/pickup_location/pickup_location_config.html"
     permission_required = Permission.Coop.VIEW
 
@@ -32,6 +36,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             "product_type_id",
             "max_capacity",
             "product_type__name",
+            "product_type__icon_link",
         )
         context["data"] = get_pickup_locations_map_data(
             pickup_locations=pickup_locations,
@@ -49,6 +54,10 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
 @permission_required(Permission.Coop.MANAGE)
 @csrf_protect
 def get_pickup_location_add_form(request, **kwargs):
+    """
+    This view handles the admin modal form for adding a new pickup location.
+    """
+
     return get_form_modal(
         request=request,
         form=PickupLocationEditForm,
@@ -63,6 +72,9 @@ def get_pickup_location_add_form(request, **kwargs):
 @permission_required(Permission.Coop.MANAGE)
 @csrf_protect
 def get_pickup_location_edit_form(request, **kwargs):
+    """
+    This view handles the admin modal form for editing a pickup location.
+    """
     return get_form_modal(
         request=request,
         form=PickupLocationEditForm,
@@ -76,6 +88,9 @@ def get_pickup_location_edit_form(request, **kwargs):
 @permission_required(Permission.Coop.MANAGE)
 @csrf_protect
 def delete_pickup_location(request, **kwargs):
+    """
+    This view deletes a pickup location.
+    """
     try:
         pl = PickupLocation.objects.get(id=kwargs["id"])
         PickupLocationCapability.objects.filter(pickup_location=pl).delete()

@@ -29,6 +29,10 @@
     </div>
     {% endfor %}
 </div>
+{% if wizard.form.sum_template %}
+{% include wizard.form.sum_template %}
+{% endif %}
+
 {% if wizard.form.outro_template %}
 <div class="summary">
     {% include wizard.form.outro_template %}

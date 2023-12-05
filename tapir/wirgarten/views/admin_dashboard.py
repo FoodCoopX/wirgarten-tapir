@@ -12,13 +12,14 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.views.decorators.http import require_GET
 
-from tapir import settings
+from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
     Product,
+    ProductType,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
@@ -41,7 +42,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
     get_product_price,
 )
-from tapir.wirgarten.utils import format_currency, format_date, get_now, get_today
+from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 
 @require_GET
@@ -75,9 +76,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context["no_growing_period"] = True
             return context
 
-        harvest_share_type = get_active_product_types().get(
-            name=ProductTypes.HARVEST_SHARES
-        )
+        base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        try:
+            harvest_share_type = ProductType.objects.get(id=base_product_id)
+        except ProductType.DoesNotExist:
+            context["no_base_product_type"] = True
+            return context
 
         next_contract_start_date = get_next_contract_start_date()
         next_growing_period = get_next_growing_period(next_contract_start_date)
@@ -129,12 +133,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["status_negative_soli_price_allowed"] = get_parameter_value(
             Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
         )
-        context["status_bestellcoop_allowed"] = get_parameter_value(
-            Parameter.BESTELLCOOP_SUBSCRIBABLE
-        )
-        context["status_chickenshares_allowed"] = get_parameter_value(
-            Parameter.CHICKEN_SHARES_SUBSCRIBABLE
-        )
+        # FIXME: those parameters don't exist anymore
+        # context["status_bestellcoop_allowed"] = get_parameter_value(
+        #    Parameter.BESTELLCOOP_SUBSCRIBABLE
+        # )
+        # context["status_chickenshares_allowed"] = get_parameter_value(
+        #    Parameter.CHICKEN_SHARES_SUBSCRIBABLE
+        # )
 
         today = get_today()
         (
@@ -237,7 +242,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancellations_labels"] = cancellations_labels
 
     def add_capacity_chart_context(
-        self, context, reference_date=get_next_contract_start_date(), prefix="current"
+        self,
+        context,
+        base_type_id,
+        reference_date=get_next_contract_start_date(),
+        prefix="current",
     ):
         active_capacities = {
             c.product_type.id: c for c in get_active_product_capacities(reference_date)
@@ -264,7 +273,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         }
         for capacity in sorted(
             active_capacities.values(),
-            key=lambda c: c.product_type.name == ProductTypes.HARVEST_SHARES,
+            key=lambda c: c.product_type_id == base_type_id,
             reverse=True,
         ):
             product_type = capacity.product_type
@@ -282,23 +291,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LINKS].append(
                 f"{reverse_lazy('wirgarten:product')}?periodId={capacity.period.id}&capacityId={capacity.id}"
             )
-            # TODO: generify, no hardcoded product names!
-            if product_type.name == ProductTypes.HARVEST_SHARES:
-                base_share_value = get_product_price(
-                    Product.objects.get(
-                        type__name=ProductTypes.HARVEST_SHARES, base=True
-                    )
-                ).price
-            elif product_type.name == ProductTypes.CHICKEN_SHARES:
-                base_share_value = get_product_price(
-                    Product.objects.get(
-                        type__name=ProductTypes.CHICKEN_SHARES, base=True
-                    )
-                ).price
-            elif product_type.name == ProductTypes.CHICKEN_SHARES:
-                base_share_value = get_product_price(
-                    Product.objects.get(type__name=ProductTypes.BESTELLCOOP, base=True)
-                ).price
+            base_share_value = get_product_price(
+                Product.objects.get(type=capacity.product_type, base=True)
+            ).price
 
             if base_share_value:
                 base_share_count = floor((total - used) / float(base_share_value))

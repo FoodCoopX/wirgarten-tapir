@@ -2,7 +2,7 @@ import json
 
 from django import template
 
-from tapir import settings
+from django.conf import settings
 
 register = template.Library()
 

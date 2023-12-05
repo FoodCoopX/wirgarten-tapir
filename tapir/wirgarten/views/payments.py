@@ -6,6 +6,10 @@ from tapir.wirgarten.models import PaymentTransaction, Payment
 
 
 class PaymentTransactionListView(PermissionRequiredMixin, generic.list.ListView):
+    """
+    This view lists all payment transactions for debugging purposes.
+    """
+
     permission_required = Permission.Payments.VIEW
     template_name = "wirgarten/payment/payment_list.html"
 

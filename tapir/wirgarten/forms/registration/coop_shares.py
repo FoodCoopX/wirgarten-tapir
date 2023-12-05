@@ -2,23 +2,22 @@ from django import forms
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
-from tapir import settings
+from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.forms.registration import HARVEST_SHARE_FIELD_PREFIX
+from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_available_product_types
 
 
 class CooperativeShareForm(forms.Form):
-    intro_template = "wirgarten/registration/steps/coop_shares.intro.html"
-    outro_template = "wirgarten/registration/steps/coop_shares.outro.html"
-
     min_shares: int = 0
 
     def __init__(self, *args, **kwargs):
         super(CooperativeShareForm, self).__init__(*args, **kwargs)
         initial = kwargs.get("initial", {})
+        self.intro_template = initial.pop("intro_template", None)
+        self.outro_template = initial.pop("outro_template", None)
 
         self.coop_share_price = settings.COOP_SHARE_PRICE
 
@@ -30,7 +29,7 @@ class CooperativeShareForm(forms.Form):
 
         default_min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
         for prod in self.harvest_shares_products:
-            key = HARVEST_SHARE_FIELD_PREFIX + prod.name.lower()
+            key = BASE_PRODUCT_FIELD_PREFIX + prod.name.lower()
             if key in initial and initial.get(key, 0) is not None:
                 self.min_shares += initial.get(key, 0) * prod.min_coop_shares
         if self.min_shares < default_min_shares:

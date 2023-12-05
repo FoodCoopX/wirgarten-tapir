@@ -2,6 +2,10 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class PermissionOrSelfRequiredMixin(PermissionRequiredMixin):
+    """
+    Mixin to check if the user is the same as the user in the url or has the required permission.
+    """
+
     def get_permission_required(self):
         return super(PermissionOrSelfRequiredMixin, self).get_permission_required()
 
