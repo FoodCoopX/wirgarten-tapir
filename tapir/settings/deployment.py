@@ -94,8 +94,7 @@ KEYCLOAK_ADMIN_CONFIG = dict(
     PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
     CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
-    REALM_NAME=env.str("KEYCLOAK_ADMIN_REALM_NAME", default="master"),
-    USER_REALM_NAME=env.str("KEYCLOAK_ADMIN_USER_REALM_NAME", default="tapir"),
+    REALM_NAME=env.str("KEYCLOAK_REALM_NAME", default="tapir"),
     CLIENT_SECRET_KEY=env.str("KEYCLOAK_ADMIN_CLIENT_SECRET_KEY", default="**********"),
 )
 

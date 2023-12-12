@@ -64,14 +64,13 @@ class KeycloakUser(AbstractUser):
 
     @classmethod
     def get_keycloak_client(self):
-        if not self._kc or self._kc.is_authenticated():
+        if not self._kc:
             config = settings.KEYCLOAK_ADMIN_CONFIG
 
             self._kc = KeycloakAdmin(
                 server_url=config["SERVER_URL"] + "/auth",
                 client_id=config["CLIENT_ID"],
                 realm_name=config["REALM_NAME"],
-                user_realm_name=config["USER_REALM_NAME"],
                 client_secret_key=config["CLIENT_SECRET_KEY"],
                 verify=True,
             )
