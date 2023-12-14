@@ -202,7 +202,7 @@ class BaseProductForm(forms.Form):
             required=False,
             label=_("Solidarpreis [%]²"),
             choices=SOLIDARITY_PRICES,
-            initial=0.05,
+            initial=0.0,
         )
         self.fields["solidarity_price_absolute_harvest_shares"] = forms.DecimalField(
             required=False,

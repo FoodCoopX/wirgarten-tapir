@@ -575,6 +575,9 @@ def is_product_type_available(
     if type(product_type) == ProductType:
         product_type = product_type.id
 
+    if not Product.objects.filter(type_id=product_type).exists():
+        return False
+
     return get_free_product_capacity(
         product_type_id=product_type, reference_date=reference_date
     ) > get_cheapest_product_price(product_type, reference_date)
