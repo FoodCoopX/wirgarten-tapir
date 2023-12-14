@@ -121,16 +121,6 @@ class ProductTypeForm(forms.Form):
                 initial=next_month,
             )
 
-        for location in PickupLocation.objects.all():
-            initial_value = None
-            if product_type is not None:
-                initial_value = PickupLocationCapability.objects.filter(
-                    pickup_location=location, product_type=product_type
-                ).exists()
-            self.fields["plc_" + location.id] = forms.BooleanField(
-                label=location.name, required=False, initial=initial_value
-            )
-
 
 class ProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
