@@ -9,7 +9,7 @@ from django.db import models, transaction
 from django.urls import reverse, reverse_lazy
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak import KeycloakAdmin
+from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
@@ -67,13 +67,15 @@ class KeycloakUser(AbstractUser):
         if not self._kc:
             config = settings.KEYCLOAK_ADMIN_CONFIG
 
-            self._kc = KeycloakAdmin(
-                server_url=config["SERVER_URL"] + "/auth",
-                client_id=config["CLIENT_ID"],
+            keycloak_connection = KeycloakOpenIDConnection(
+                server_url=config["SERVER_URL"],
                 realm_name=config["REALM_NAME"],
+                client_id=config["CLIENT_ID"],
                 client_secret_key=config["CLIENT_SECRET_KEY"],
                 verify=True,
             )
+
+            self._kc = KeycloakAdmin(connection=keycloak_connection)
 
         return self._kc
 

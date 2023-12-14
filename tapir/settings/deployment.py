@@ -24,7 +24,7 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_CONNECTION_URL", default="postgresql://tapir:tapir@db:5432/tapir"
+        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
     ),
 }
 
