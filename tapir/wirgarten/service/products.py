@@ -245,6 +245,9 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     """
     pc = ProductCapacity.objects.get(id=capacity_id)
 
+    if base:
+        Product.objects.filter(type_id=pc.product_type.id, base=True).update(base=False)
+
     product = Product.objects.create(name=name, type_id=pc.product_type.id, base=base)
 
     ProductPrice.objects.create(
@@ -256,7 +259,7 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     return product
 
 
-def get_product_price(product: Product, reference_date: date = None):
+def get_product_price(product: str | Product, reference_date: date = None):
     """
     Returns the currently active product price.
 
@@ -266,8 +269,10 @@ def get_product_price(product: Product, reference_date: date = None):
     """
     if reference_date is None:
         reference_date = get_today()
+    if type(product) == Product:
+        product = product.id
 
-    prices = ProductPrice.objects.filter(product=product).order_by("-valid_from")
+    prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
 
     # If there's only one price, return it
     if prices.count() == 1:
@@ -277,7 +282,9 @@ def get_product_price(product: Product, reference_date: date = None):
 
 
 @transaction.atomic
-def update_product(id_: str, name: str, price: Decimal, growing_period_id: str):
+def update_product(
+    id_: str, name: str, base: bool, price: Decimal, growing_period_id: str
+):
     """
     Updates a product and product price with the provided attributes.
 
@@ -290,8 +297,12 @@ def update_product(id_: str, name: str, price: Decimal, growing_period_id: str):
     :param growing_period_id: the growing period id
     :return:
     """
-
     product = Product.objects.get(id=id_)
+
+    if base:
+        Product.objects.filter(type_id=product.type.id, base=True).update(base=False)
+        product.base = base
+
     product.name = name
     product.deleted = False
     product.save()

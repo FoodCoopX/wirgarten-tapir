@@ -93,16 +93,21 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         }
 
         def map_product(product):
-            base_share_value = get_product_price(
-                Product.objects.get(type_id=product.type_id, base=True)
-            ).price
+            try:
+                base_product = Product.objects.get(type_id=product.type_id, base=True)
+                base_share_value = get_product_price(base_product).price
+            except Product.DoesNotExist:
+                base_share_value = None
+
             price = product_prices.get(product.id, [])
             return {
                 "id": product.id,
                 "name": product.name,
                 "type_id": product.type.id,
                 "price": price,
-                "share": round(price[-1]["price"] / base_share_value, 2),
+                "share": round(price[-1]["price"] / base_share_value, 2)
+                if base_share_value
+                else "?",
                 "deleted": product.deleted,
                 "base": product.base,
             }
@@ -255,6 +260,7 @@ def get_product_edit_form(request, **kwargs):
         handler=lambda form: update_product(
             id_=form.cleaned_data["id"],
             name=form.cleaned_data["name"],
+            base=form.cleaned_data["base"],
             price=form.cleaned_data["price"],
             growing_period_id=kwargs[KW_PERIOD_ID],
         ),
