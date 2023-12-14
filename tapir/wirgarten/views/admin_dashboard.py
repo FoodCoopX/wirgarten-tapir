@@ -280,6 +280,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             subs = pt_to_subs.get(product_type.id, [])
 
             total = float(capacity.capacity)
+            if total == 0:
+                total = 1  # avoid division by zero
+
             used = sum(
                 map(
                     lambda x: x.quantity * float(get_product_price(x.product).price),
@@ -291,12 +294,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LINKS].append(
                 f"{reverse_lazy('wirgarten:product')}?periodId={capacity.period.id}&capacityId={capacity.id}"
             )
-            base_share_value = get_product_price(
-                Product.objects.get(type=capacity.product_type, base=True)
-            ).price
-
-            if base_share_value:
-                base_share_count = floor((total - used) / float(base_share_value))
+            base_product = Product.objects.filter(
+                type=capacity.product_type, base=True
+            ).first()
+            if base_product:
+                base_share_value = get_product_price(base_product).price
+                if base_share_value:
+                    base_share_count = floor((total - used) / float(base_share_value))
 
             context[KEY_CAPACITY_LABELS].append(
                 [
