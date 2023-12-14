@@ -33,7 +33,7 @@ REGISTRATION_STEPS = {
     },
     "additional_product_Hühneranteile": {
         "title": "Zusatzabo",
-        "description": "Zusatzabo  - Willst du einen Hühneranteil mit Eiern?",
+        "description": "Zusatzabo - Willst du einen Hühneranteil mit Eiern?",
         "intro_template": "registration/steps/chicken_shares.intro.html",
     },
     "additional_product_BestellCoop": {

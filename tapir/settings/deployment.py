@@ -23,7 +23,9 @@ if not DEBUG:
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
-    "default": env.db(default="postgresql://tapir:tapir@db:5432/tapir"),
+    "default": env.db(
+        "DATABASE_CONNECTION_URL", default="postgresql://tapir:tapir@db:5432/tapir"
+    ),
 }
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
