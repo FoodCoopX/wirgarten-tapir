@@ -66,6 +66,12 @@ class PersonalDataForm(ModelForm):
         self.fields["email"].disabled = not can_edit_email
         self.fields["first_name"].label = _("Vorname")
         self.fields["last_name"].label = _("Nachname")
+        self.fields["street"].label = _("Straße & Hausnummer")
+        self.fields["street_2"].label = _("Adresszusatz")
+        self.fields["postcode"].label = _("Postleitzahl")
+        self.fields["city"].label = _("Stadt")
+        self.fields["country"].label = _("Land")
+        self.fields["birthdate"].label = _("Geburtsdatum")
 
     class Meta:
         model = Member
