@@ -85,10 +85,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         next_contract_start_date = get_next_contract_start_date()
         next_growing_period = get_next_growing_period(next_contract_start_date)
-        self.add_capacity_chart_context(context, next_contract_start_date)
+        self.add_capacity_chart_context(
+            context, base_product_id, next_contract_start_date
+        )
         if next_growing_period:
             self.add_capacity_chart_context(
-                context, next_growing_period.start_date, "next"
+                context, base_product_id, next_growing_period.start_date, "next"
             )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
