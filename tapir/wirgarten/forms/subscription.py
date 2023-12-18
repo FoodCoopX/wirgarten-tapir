@@ -465,9 +465,8 @@ class BaseProductForm(forms.Form):
             if capability.max_capacity:
                 current_capacity = (
                     get_current_capacity(capability, next_month) + total
-                ) / float(product_type.base_price)
-                free_capacity = capability.max_capacity - current_capacity
-                if current_capacity > free_capacity:
+                ) / float(product_type.base_price(reference_date=next_month))
+                if current_capacity > capability.max_capacity:
                     self.add_error(
                         "pickup_location", "Abholort ist voll"
                     )  # this is not displayed
@@ -754,7 +753,6 @@ class AdditionalProductForm(forms.Form):
 
             total = 0.0
             for key, quantity in self.cleaned_data.items():
-                print(self.field_prefix, key, quantity)
                 if key.startswith(self.field_prefix) and (
                     quantity is not None and quantity > 0
                 ):
