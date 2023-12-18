@@ -308,6 +308,9 @@ def get_add_coop_shares_form(request, **kwargs):
         return get_coop_shares_waiting_list_form(request, **wl_kwargs)
 
     today = get_today()
+    kwargs["initial"] = {
+        "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
+    }
     return get_form_modal(
         request=request,
         form=CooperativeShareForm,

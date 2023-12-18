@@ -29,7 +29,7 @@ class CooperativeShareForm(forms.Form):
 
         default_min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
         for prod in self.harvest_shares_products:
-            key = BASE_PRODUCT_FIELD_PREFIX + prod.name.lower()
+            key = BASE_PRODUCT_FIELD_PREFIX + prod.name
             if key in initial and initial.get(key, 0) is not None:
                 self.min_shares += initial.get(key, 0) * prod.min_coop_shares
         if self.min_shares < default_min_shares:
