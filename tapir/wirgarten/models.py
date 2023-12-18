@@ -153,12 +153,13 @@ class ProductType(TapirModel):
         default=False, verbose_name=_("Nur Einzelabonnement erlaubt")
     )
 
-    @property
-    def base_price(self):
-        today = get_today()
+    def base_price(self, reference_date=None):
+        if reference_date is None:
+            reference_date = get_today()
+
         product = self.product_set.get(base=True)
         price_queryset = product.productprice_set.filter(
-            valid_from__lte=today
+            valid_from__lte=reference_date
         ).order_by("-valid_from")
 
         price = price_queryset.first()

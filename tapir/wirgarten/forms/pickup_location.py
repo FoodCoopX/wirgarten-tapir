@@ -25,7 +25,9 @@ from tapir.wirgarten.service.delivery import (
     get_next_delivery_date,
 )
 from tapir.wirgarten.service.products import (
+    get_active_product_types,
     get_active_subscriptions,
+    get_available_product_types,
     get_product_price,
 )
 from tapir.wirgarten.utils import get_today
@@ -203,8 +205,8 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         )
 
         product_type_base_prices = {
-            pt.name: pt.base_price
-            for pt in ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0])
+            pt.name: pt.base_price(reference_date=reference_date)
+            for pt in get_active_product_types(reference_date=reference_date)
         }
 
         selected_product_types = {
@@ -242,7 +244,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                     ):
                         current_capacity = get_current_capacity(
                             capa, next_month
-                        ) / float(ProductType.objects.get(name=pt_name).base_price)
+                        ) / float(product_type_base_prices.get(pt_name, 1))
                         max_capa = capa["max_capacity"] + 0.1
                         free_capacity = max_capa - current_capacity
 
