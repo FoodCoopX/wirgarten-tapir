@@ -1,0 +1,6 @@
+{% load tapir_static %}
+
+<script src="{% static 'wirgarten/js/registration/coop_shares.js' %}"></script>
+<script>
+  initSummary({{ form.min_shares }}, {{ form.coop_share_price }})
+</script>
