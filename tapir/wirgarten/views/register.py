@@ -366,17 +366,18 @@ class RegistrationWizardViewBase(CookieWizardView):
                 if hasattr(self, "start_date")
                 else get_next_contract_start_date()
             )
+            mandate_ref = create_mandate_ref(member)
             buy_cooperative_shares(
                 quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
                 / settings.COOP_SHARE_PRICE,
                 member=member,
                 start_date=actual_coop_start,
+                mandate_ref=mandate_ref,
             )
 
             if STEP_BASE_PRODUCT in form_dict and is_base_product_selected(
                 form_dict[STEP_BASE_PRODUCT].cleaned_data
             ):
-                mandate_ref = create_mandate_ref(member)
                 form_dict[STEP_BASE_PRODUCT].save(
                     mandate_ref=mandate_ref,
                     member_id=member.id,

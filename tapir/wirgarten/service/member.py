@@ -172,6 +172,7 @@ def buy_cooperative_shares(
     quantity: int,
     member: int | str | Member,
     start_date: date = None,
+    mandate_ref: MandateReference = None,
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -180,37 +181,44 @@ def buy_cooperative_shares(
     :param member: the member
     :param start_date: the date on which the member officially enters the cooperative
     """
+    member_id = resolve_member_id(member)
+
     if start_date == None:
         start_date = get_next_contract_start_date()
 
-    member_id = resolve_member_id(member)
+    if mandate_ref is None:
+        mandate_ref = get_or_create_mandate_ref(member_id)
 
     share_price = settings.COOP_SHARE_PRICE
     due_date = start_date + relativedelta(
-        months=1, day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    )
+    if due_date < start_date:
+        due_date = due_date + relativedelta(months=1)
+
+    payment = Payment.objects.create(
+        due_date=due_date,
+        amount=share_price * quantity,
+        mandate_ref=mandate_ref,
+        status=Payment.PaymentStatus.DUE,
+        type="Genossenschaftsanteile",
     )
 
-    mandate_ref = get_or_create_mandate_ref(member_id)
-    so = CoopShareTransaction.objects.create(
+    coop_share_tx = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=quantity,
         share_price=share_price,
         valid_at=start_date,
         mandate_ref=mandate_ref,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-    )
-
-    Payment.objects.create(
-        due_date=due_date,
-        amount=share_price * quantity,
-        mandate_ref=so.mandate_ref,
-        status=Payment.PaymentStatus.DUE,
-        type="Genossenschaftsanteile",
+        payment=payment,
     )
 
     member = Member.objects.get(id=member_id)
     member.sepa_consent = get_now()
     member.save()
+
+    return coop_share_tx
 
 
 def create_wait_list_entry(
