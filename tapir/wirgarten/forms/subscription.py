@@ -94,15 +94,14 @@ class BaseProductForm(forms.Form):
 
         super().__init__(*args, **kwargs)
 
-        harvest_share_products = HarvestShareProduct.objects.filter(
-            deleted=False, type_id__in=get_available_product_types(self.start_date)
-        )
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        if not harvest_share_products.exists():
-            harvest_share_products = Product.objects.filter(
-                deleted=False,
-                type_id=base_product_type_id,
-            )
+        harvest_share_products = Product.objects.filter(
+            deleted=False, type_id=base_product_type_id
+        )
+        for p in harvest_share_products:
+            price = get_product_price(p)
+            if price and price.valid_from > self.start_date:
+                harvest_share_products = harvest_share_products.exclude(id=p.id)
 
         self.n_columns = max(2, len(harvest_share_products))
 

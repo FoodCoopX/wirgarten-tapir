@@ -97,11 +97,18 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
+        try:
+            base_product = Product.objects.get(
+                type_id=capa["product_type_id"], base=True
+            )
+        except Product.DoesNotExist:
+            return None
+
         current_capa = round(
             get_current_capacity(capa, next_delivery_date)
             / float(
                 get_product_price(
-                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    base_product,
                     next_delivery_date,
                 ).price
             ),
@@ -112,7 +119,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             get_current_capacity(capa, next_month)
             / float(
                 get_product_price(
-                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    base_product,
                     next_month,
                 ).price
             ),
@@ -138,14 +145,15 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
         "capabilities": list(
-            map(
-                map_capa,
-                [
-                    capa
+            [
+                x
+                for x in [
+                    map_capa(capa)
                     for capa in location_capabilities
                     if capa["pickup_location_id"] == pickup_location.id
-                ],
-            )
+                ]
+                if x is not None
+            ]
         ),
         "members": get_active_subscriptions(next_delivery_date)
         .annotate(
