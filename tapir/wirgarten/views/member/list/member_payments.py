@@ -94,22 +94,17 @@ def sub_to_dict(sub):
 
 def payment_to_dict(payment: Payment) -> dict:
     subs = (
-        list(
-            map(
-                lambda x: {
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                    "total_price": x.total_price,
+        [
+            {
+                "quantity": tx.quantity,
+                "product": {
+                    "name": _("Genossenschaftsanteile"),
+                    "price": tx.share_price,
                 },
-                CoopShareTransaction.objects.filter(
-                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                    member_id=payment.mandate_ref.member.id,
-                ),
-            )
-        )
+                "total_price": int(tx.quantity * tx.share_price),
+            }
+            for tx in CoopShareTransaction.objects.filter(payment=payment)
+        ]
         if payment.type == "Genossenschaftsanteile"
         else list(
             map(

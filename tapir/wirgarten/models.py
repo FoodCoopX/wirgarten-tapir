@@ -613,6 +613,75 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         )
 
 
+class ExportedFile(TapirModel):
+    """
+    An exported file (blob in DB).
+    """
+
+    class FileType(models.TextChoices):
+        CSV = "csv", _("CSV")
+        PDF = "pdf", _("PDF")
+
+    name = models.CharField(max_length=256, null=False)
+    type = models.CharField(max_length=8, choices=FileType.choices, null=False)
+    file = models.BinaryField(null=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+
+
+class PaymentTransaction(TapirModel):
+    """
+    A payment transaction. This is usually created once a month by a task, when the payments are due.
+    The relevant payments must reference the transaction in the same step.
+    """
+
+    created_at = models.DateTimeField(null=False, default=partial(timezone.now))
+    file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
+    type = models.CharField(max_length=32, null=True)
+
+
+class Payment(TapirModel):
+    """
+    A payment. Usually payments are created in DB when they are due, but also when the admin edits a future payment.
+    If the sepa_payments reference is set, the payment cannot be changed anymore, because it was exported for the bank already.
+    """
+
+    class PaymentStatus(models.TextChoices):
+        PAID = "PAID", _("Bezahlt")
+        DUE = "DUE", _("Offen")
+
+    due_date = models.DateField(null=False)
+    mandate_ref = models.ForeignKey(
+        MandateReference, on_delete=models.DO_NOTHING, null=False
+    )
+    amount = models.DecimalField(decimal_places=2, max_digits=8, null=False)
+    status = models.CharField(
+        max_length=8,
+        choices=PaymentStatus.choices,
+        null=False,
+        default=PaymentStatus.DUE,
+    )
+    edited = models.BooleanField(default=False, null=False)
+    transaction = models.ForeignKey(
+        PaymentTransaction, on_delete=models.DO_NOTHING, null=True
+    )
+    type = models.CharField(max_length=32, null=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["mandate_ref", "due_date", "type"],
+                name="unique_mandate_ref_date",
+            )
+        ]
+        indexes = [
+            Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
+            Index(fields=["due_date"], name="idx_payment_due_date"),
+        ]
+
+    def __str__(self):
+        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
+
+
 class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     """
     The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
@@ -647,6 +716,9 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     )
     transfer_member = models.ForeignKey(
         Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
+    )
+    payment = models.ForeignKey(
+        Payment, on_delete=models.DO_NOTHING, null=True, related_name="payment"
     )
 
     @property
@@ -721,75 +793,6 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
         elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
             suffix = f"empfangen von {self.transfer_member}"
         return f"{prefix} {suffix}"
-
-
-class ExportedFile(TapirModel):
-    """
-    An exported file (blob in DB).
-    """
-
-    class FileType(models.TextChoices):
-        CSV = "csv", _("CSV")
-        PDF = "pdf", _("PDF")
-
-    name = models.CharField(max_length=256, null=False)
-    type = models.CharField(max_length=8, choices=FileType.choices, null=False)
-    file = models.BinaryField(null=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-
-
-class PaymentTransaction(TapirModel):
-    """
-    A payment transaction. This is usually created once a month by a task, when the payments are due.
-    The relevant payments must reference the transaction in the same step.
-    """
-
-    created_at = models.DateTimeField(null=False, default=partial(timezone.now))
-    file = models.ForeignKey(ExportedFile, on_delete=models.DO_NOTHING, null=False)
-    type = models.CharField(max_length=32, null=True)
-
-
-class Payment(TapirModel):
-    """
-    A payment. Usually payments are created in DB when they are due, but also when the admin edits a future payment.
-    If the sepa_payments reference is set, the payment cannot be changed anymore, because it was exported for the bank already.
-    """
-
-    class PaymentStatus(models.TextChoices):
-        PAID = "PAID", _("Bezahlt")
-        DUE = "DUE", _("Offen")
-
-    due_date = models.DateField(null=False)
-    mandate_ref = models.ForeignKey(
-        MandateReference, on_delete=models.DO_NOTHING, null=False
-    )
-    amount = models.DecimalField(decimal_places=2, max_digits=8, null=False)
-    status = models.CharField(
-        max_length=8,
-        choices=PaymentStatus.choices,
-        null=False,
-        default=PaymentStatus.DUE,
-    )
-    edited = models.BooleanField(default=False, null=False)
-    transaction = models.ForeignKey(
-        PaymentTransaction, on_delete=models.DO_NOTHING, null=True
-    )
-    type = models.CharField(max_length=32, null=True)
-
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["mandate_ref", "due_date", "type"],
-                name="unique_mandate_ref_date",
-            )
-        ]
-        indexes = [
-            Index(fields=["mandate_ref"], name="idx_payment_mandate_ref"),
-            Index(fields=["due_date"], name="idx_payment_due_date"),
-        ]
-
-    def __str__(self):
-        return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
 
 
 class Deliveries(TapirModel):
