@@ -39,6 +39,7 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
+    get_current_growing_period,
     get_future_subscriptions,
     is_product_type_available,
 )
@@ -99,10 +100,9 @@ class RegistrationWizardViewBase(CookieWizardView):
         super(RegistrationWizardViewBase, self).__init__(*args, **kwargs)
 
         today = get_today()
-        self.growing_period = GrowingPeriod.objects.filter(
-            start_date__lte=today + relativedelta(months=1, day=1),
-            end_date__gte=today + relativedelta(months=1, day=1),
-        ).first()
+        self.growing_period = get_current_growing_period(
+            today + relativedelta(months=1, day=1)
+        )
 
         if not self.growing_period:
             self.coop_shares_only = True

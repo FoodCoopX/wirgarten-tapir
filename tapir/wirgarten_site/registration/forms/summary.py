@@ -37,10 +37,8 @@ class SummaryForm(forms.Form):
         )
 
         harvest_share_products = {
-            f"{BASE_PRODUCT_FIELD_PREFIX}{p.product_ptr.name}": p
-            for p in list(
-                HarvestShareProduct.objects.filter(deleted=False, type=base_type)
-            )
+            f"{BASE_PRODUCT_FIELD_PREFIX}{p.name}": p
+            for p in list(Product.objects.filter(deleted=False, type=base_type))
         }
 
         for key, val in initial["base_product"].items():
