@@ -196,13 +196,25 @@ def buy_cooperative_shares(
     if due_date < start_date:
         due_date = due_date + relativedelta(months=1)
 
-    payment = Payment.objects.create(
+    payment_type = "Genossenschaftsanteile"
+    existing_payment = Payment.objects.filter(
         due_date=due_date,
-        amount=share_price * quantity,
         mandate_ref=mandate_ref,
         status=Payment.PaymentStatus.DUE,
-        type="Genossenschaftsanteile",
+        type=payment_type,
     )
+    if existing_payment.exists():
+        payment = existing_payment.first()
+        payment.amount = float(payment.amount) + share_price * quantity
+        payment.save()
+    else:
+        payment = Payment.objects.create(
+            due_date=due_date,
+            amount=share_price * quantity,
+            mandate_ref=mandate_ref,
+            status=Payment.PaymentStatus.DUE,
+            type=payment_type,
+        )
 
     coop_share_tx = CoopShareTransaction.objects.create(
         member_id=member_id,

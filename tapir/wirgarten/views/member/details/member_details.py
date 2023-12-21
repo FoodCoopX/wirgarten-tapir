@@ -22,6 +22,7 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
+    get_next_payment_date,
 )
 from tapir.wirgarten.service.products import (
     get_active_product_types,
@@ -111,23 +112,20 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["deliveries"] = generate_future_deliveries(self.object)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
-        prev_payments = get_previous_payments(self.object.pk)
-        today = get_today()
-        for due_date, payments in prev_payments.items():
-            if due_date >= today:
-                context["next_payment"] = payments[0]
-            else:
-                break
+        next_due_date = get_next_payment_date()
 
-        next_payment = list(generate_future_payments(self.object.id, 1).values())
-        if len(next_payment) > 0:
-            next_payment = next_payment[0][0]
+        persisted_payments = get_previous_payments(self.object.pk)
+        next_payments = persisted_payments.get(next_due_date, [])
 
-        if next_payment:
-            if "next_payment" not in context or (
-                next_payment["due_date"] < context["next_payment"]["due_date"]
-            ):
-                context["next_payment"] = next_payment
+        projected = generate_future_payments(self.object.id, 2)
+        if len(projected) > 0:
+            next_payments += projected.get(next_due_date, [])
+
+        context["next_payment"] = {
+            "due_date": next_due_date,
+            "amount": sum([p["amount"] for p in next_payments]),
+            "mandate_ref": next_payments[0]["mandate_ref"],
+        }
 
         self.add_renewal_notice_context(context, next_month, today)
 

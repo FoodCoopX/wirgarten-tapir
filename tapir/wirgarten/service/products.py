@@ -575,7 +575,7 @@ def is_product_type_available(
     if type(product_type) == ProductType:
         product_type = product_type.id
 
-    if not Product.objects.filter(type_id=product_type).exists():
+    if not Product.objects.filter(type_id=product_type, deleted=False).exists():
         return False
 
     return get_free_product_capacity(

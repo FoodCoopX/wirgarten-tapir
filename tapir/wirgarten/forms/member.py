@@ -479,7 +479,8 @@ class TrialCancellationForm(Form):
 
         if is_new_member():
             found = self.member.coopsharetransaction_set.filter(
-                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
+                transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                valid_at__gt=self.next_trial_end_date,
             )
             if found.exists():
                 self.share_ownership = found[0]
@@ -543,11 +544,8 @@ class TrialCancellationForm(Form):
             sub.save()
 
         if cancel_coop:
-            Payment.objects.filter(
-                mandate_ref=self.share_ownership.mandate_ref,
-                due_date__gt=now,
-                type="Genossenschaftsanteile",
-            ).delete()
+            if self.share_ownership.payment:
+                self.share_ownership.payment.delete()
             self.share_ownership.delete()
 
         send_cancellation_confirmation_email(
