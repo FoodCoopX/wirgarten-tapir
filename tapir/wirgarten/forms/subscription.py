@@ -771,7 +771,7 @@ class AdditionalProductForm(forms.Form):
                 )  # this is not displayed
                 self.add_error(
                     None,
-                    f"An deinem Abholort können leider keine {self.product_type.namef} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
+                    f"An deinem Abholort können leider keine {self.product_type.name} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
                 )
             else:
                 capability = capability.first()
