@@ -135,13 +135,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["status_negative_soli_price_allowed"] = get_parameter_value(
             Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
         )
-        # FIXME: those parameters don't exist anymore
-        # context["status_bestellcoop_allowed"] = get_parameter_value(
-        #    Parameter.BESTELLCOOP_SUBSCRIBABLE
-        # )
-        # context["status_chickenshares_allowed"] = get_parameter_value(
-        #    Parameter.CHICKEN_SHARES_SUBSCRIBABLE
-        # )
 
         today = get_today()
         (
