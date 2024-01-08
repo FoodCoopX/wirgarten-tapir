@@ -197,46 +197,6 @@
     </a>
   </div>
 
-  <div class="dashboard-tile card clickable">
-    <a href="{% url 'configuration:parameters' %}?q=wirgarten.bestellcoop.is_subscribable">
-      <div class="card-body">
-        {% if status_bestellcoop_allowed is 0 %}
-        <div class="dashboard-tile-status negative">
-          <span class="material-icons">hide_source</span>
-        </div>
-        {% else %}
-        <div class="dashboard-tile-status positive">
-          <span class="material-icons">task_alt</span>
-        </div>
-        {% endif %}
-        <small><strong>BestellCoop</strong><br />Mitgliedschaft
-          {% if status_bestellcoop_allowed is 0 %}
-          <strong>nicht</strong>{% endif %} möglich {% if status_bestellcoop_allowed is 2 %} (auto)
-          {% endif %}</small>
-      </div>
-    </a>
-  </div>
-
-  <div class="dashboard-tile card clickable">
-    <a href="{% url 'configuration:parameters' %}?q=wirgarten.chicken.is_subscribable">
-      <div class="card-body">
-        {% if status_chickenshares_allowed is 0 %}
-        <div class="dashboard-tile-status negative">
-          <span class="material-icons">hide_source</span>
-        </div>
-        {% else %}
-        <div class="dashboard-tile-status positive">
-          <span class="material-icons">task_alt</span>
-        </div>
-        {% endif %}
-        <small><strong>Hühneranteile</strong><br />
-          {% if status_chickenshares_allowed is 0 %}
-          <strong>nicht</strong>{% endif %} zeichenbar {% if status_chickenshares_allowed is 2 %} (auto)
-          {% endif %}</small>
-      </div>
-    </a>
-  </div>
-
 </div>
 
 <script src="{% static 'wirgarten/js/chart.js' %}"></script>
