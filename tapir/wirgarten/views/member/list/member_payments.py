@@ -89,6 +89,7 @@ def sub_to_dict(sub):
         "solidarity_price": sub.solidarity_price,
         "solidarity_price_absolute": sub.solidarity_price_absolute,
         "total_price": sub.total_price(),
+        "price_override": sub.price_override,
     }
 
 
