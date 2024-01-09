@@ -45,6 +45,7 @@ from tapir.wirgarten.views.member.list.modals import (
     get_cancel_non_trial_form,
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
+    get_edit_price_form,
     get_member_personal_data_create_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
@@ -265,6 +266,11 @@ urlpatterns = [
         "contracts/exportoverview",
         ExportSubscriptionList.as_view(),
         name="subscription_overview_export",
+    ),
+    path(
+        "contracts/<str:pk>/editprice",
+        get_edit_price_form,
+        name="subscription_edit_price",
     ),
     path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(

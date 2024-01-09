@@ -40,3 +40,8 @@ def format_currency(value: float | Decimal | int | str):
 def format_percent(value: float | Decimal, decimal_places: int = 0):
     display_value = float(value) * 100.0
     return f"{round(display_value) if decimal_places == 0 else round(display_value, decimal_places)} %"
+
+
+@register.simple_tag
+def create_range(n):
+    return range(n)

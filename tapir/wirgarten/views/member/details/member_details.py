@@ -121,11 +121,15 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         if len(projected) > 0:
             next_payments += projected.get(next_due_date, [])
 
-        context["next_payment"] = {
-            "due_date": next_due_date,
-            "amount": sum([p["amount"] for p in next_payments]),
-            "mandate_ref": next_payments[0]["mandate_ref"],
-        }
+        context["next_payment"] = (
+            {
+                "due_date": next_due_date,
+                "amount": sum([p["amount"] for p in next_payments]),
+                "mandate_ref": next_payments[0]["mandate_ref"],
+            }
+            if next_payments
+            else None
+        )
 
         self.add_renewal_notice_context(context, next_month, today)
 

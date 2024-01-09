@@ -792,3 +792,31 @@ class AdditionalProductForm(forms.Form):
                         )
 
         return len(self.errors) == 0
+
+
+class EditSubscriptionPriceForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.subscription_id = kwargs.pop("pk", None)
+        self.subscription = Subscription.objects.get(id=self.subscription_id)
+        super().__init__(*args, **kwargs)
+
+        self.fields["new_price"] = forms.DecimalField(
+            required=False,
+            label=_("Neuer Preis"),
+            localize=True,
+            max_digits=6,
+            decimal_places=2,
+            min_value=0.0,
+            initial=self.subscription.total_price,
+            help_text="Leer lassen um den Preis zurückzusetzen (automatisch berechnen)",
+        )
+
+    def save(self):
+        if self.cleaned_data["new_price"]:
+            self.subscription.price_override = self.cleaned_data["new_price"]
+            self.subscription.solidarity_price = 0.0
+            self.subscription.solidarity_price_absolute = None
+        else:
+            self.subscription.price_override = None
+        self.subscription.save()
+        return self.subscription

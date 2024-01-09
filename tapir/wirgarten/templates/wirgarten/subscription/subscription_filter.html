@@ -9,6 +9,10 @@
 {% block card_header %}
 <h4>{{total_contracts|default:0}} {% translate 'Verträge' %}</h4>
 <span style="display: flex; flex-direction:row;">
+    {% if perms.accounts.manage %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleEditPrice()' disabled=True title='Betrag ändern' type='primary' icon='edit' class='needs-contract' %}
+    {% endif %}
+    <div style="width: 1em"></div>
     {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
 </span>
 {% endblock %}
@@ -23,7 +27,8 @@
     <th style="text-align:center">{% translate "Vertragslaufzeit" %}</th>
     <th style="text-align:center">{% translate "Vertrag" %}</th>
     <th style="text-align:center">{% translate "Variante" %}</th>
-    <th class="sort-header" data-sort="solidarity_price" style="text-align:center">{% translate "Solidarpreis" %}</th>
+    <th class="sort-header" data-sort="solidarity_price" style="text-align:center">{% translate "Solipreis" %}</th>
+    <th style="text-align:center">{% translate "Betrag" %}</th>
     <th style="text-align:center">{% translate "Abholort" %}</th>
 </tr>
 {% endblock %}
@@ -31,10 +36,9 @@
 {% block table_body %}
 {% for entry in object_list %}
 
-{% with ''|center:entry.quantity as range %}
-{% for _ in range %}
-<tr id="entry-{{entry.id}}" class="tr-clickable entry-row tr-href"
-    href="{% url 'wirgarten:member_detail' entry.member_id %}">
+{% create_range entry.quantity as range %}
+{% for idx in range %}
+<tr id="entry-{{entry.id}}" onClick="handleSelectRow('{{entry.id}}', '{{entry.member_id}}')" class="tr-clickable entry-row">
     <td>
         {% if entry.cancellation_ts %}
         <span style="color:var(--bs-danger)" data-bs-toggle="tooltip" data-bs-placement="top"
@@ -57,10 +61,12 @@
     <td style="text-align:center">{% if entry.solidarity_price != 0 %}{{ entry.solidarity_price|format_percent }}
         {% else %}
         {% if entry.solidarity_price_absolute %}{{entry.solidarity_price_absolute|format_currency}} €{%else%}-{%endif%}{% endif %}</td>
+    <td style="text-align:right">{% if idx == 0 %}{% if entry.price_override %}<span title="{% translate 'Manuell editiert!' %}"><span
+        style="font-size:1.25em; color: var(--bs-warning)"
+        class="material-icons">warning</span></span>&nbsp;{% endif %}{{ entry.total_price | format_currency }} €{% endif %}</td>
     <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
 </tr>
 {% endfor %}
-{% endwith %}
 {% endfor %}
 
 {% endblock %}
@@ -73,5 +79,47 @@
         const newParams = { ...params, next: window.location.pathname + Tapir.stringifyUrlParams(params) };
         window.location.href = url + Tapir.stringifyUrlParams(newParams);
     }
+
+    const activateRow = () => {
+        const params = Tapir.getUrlParams();
+        
+        const rows = document.getElementsByClassName('entry-row'); 
+        const buttons = document.getElementsByClassName('needs-contract');
+        for(row of rows){
+                if(row.id === `entry-${params.contract}`){
+                    row.classList.add('active');
+                } else {
+                    row.classList.remove('active');
+                }
+            }
+
+            for(btn of buttons){
+                btn.disabled = !params.contract;
+            }
+    }
+
+    const handleEditPrice = () => {
+        const params = Tapir.getUrlParams();
+
+        if(params.contract){
+            FormModal.load(`/wirgarten/contracts/${params.contract}/editprice`, 'Betrag ändern')
+        }
+    }
+
+    const handleSelectRow = (id, member_id) => {
+        const params = Tapir.getUrlParams();
+
+        if(params.contract === id){
+            window.location.href = `/wirgarten/members/${member_id}`;
+        } else {
+            params.contract = id;
+
+            Tapir.replaceUrlParams(params);
+
+            activateRow();
+        }
+    }
+
+    activateRow()
 </script>
 {% endblock %}

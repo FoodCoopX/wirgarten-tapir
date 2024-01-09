@@ -505,6 +505,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
     trial_end_date_override = models.DateField(null=True)
+    price_override = models.DecimalField(
+        decimal_places=2, max_digits=8, null=True, blank=True
+    )
 
     @property
     def trial_end_date(self):
@@ -530,6 +533,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         ]
 
     def total_price(self, reference_date=None):
+        if self.price_override is not None:
+            return float(self.price_override)
+
         if reference_date is None:
             reference_date = max(self.start_date, get_today())
 
