@@ -5,7 +5,24 @@
   <iframe
     id="tapirMailIframe"
     style="width: 100%; height: 100%; overflow: hidden"
-    src="{{TAPIR_MAIL_PATH}}"
-  />
+  ></iframe>
 </div>
+<script>
+  window.onload = () => {
+    const iframe = document.getElementById('tapirMailIframe');
+    iframe.src = '{{TAPIR_MAIL_PATH}}' + window.location.hash.substring(1);
+
+    const checkIframeUrl = () => {
+      try {
+        window.location.hash = iframe.contentWindow.location.pathname.replace('/tapirmail', '');
+      } catch(e) {
+        console.log(e)
+      }
+    }
+
+    // Poll every 1000 milliseconds (1 second)
+    setInterval(checkIframeUrl, 500);
+  }
+</script>
+
 {% endblock %}
