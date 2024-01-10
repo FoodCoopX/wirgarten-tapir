@@ -36,6 +36,7 @@ class KeycloakMiddleware(MiddlewareMixin):
 
     def __call__(self, request):
         # Check for authentication and try to get user from keycloak.
+        request.error = False
         if "token" not in request.COOKIES:
             logger.debug(f"No authorization found. Using public user.")
         else:
@@ -43,11 +44,11 @@ class KeycloakMiddleware(MiddlewareMixin):
             try:
                 data = decode(access_token, options={"verify_signature": False})
                 if data["exp"] < int(time.time()):
-                    self.auth_failed("Token expired on: ", data["exp"])
+                    self.auth_failed(request, "Token expired on: ", data["exp"])
                 else:
                     self.set_user(request, data)
             except Exception as e:
-                self.auth_failed("Could not decode token", e)
+                self.auth_failed(request, "Could not decode token", e)
 
         # Continue processing the request
         return self.get_response(request)
@@ -55,7 +56,7 @@ class KeycloakMiddleware(MiddlewareMixin):
     def set_user(self, request, data):
         keycloak_id = data.get("sub", None)
         if keycloak_id is None:
-            self.auth_failed("Could not get id from token: ", data)
+            self.auth_failed(request, "Could not get id from token: ", data)
         else:
             try:
                 request.user = TapirUser.objects.get(keycloak_id=keycloak_id)
@@ -67,8 +68,9 @@ class KeycloakMiddleware(MiddlewareMixin):
                     if role not in settings.KEYCLOAK_NON_TAPIR_ROLES
                 ]
             except TapirUser.DoesNotExist as e:
-                self.auth_failed("Could not find matching TapirUser", e)
+                self.auth_failed(request, "Could not find matching TapirUser", e)
 
-    def auth_failed(self, log_message, error):
+    def auth_failed(self, request, log_message, error):
         """Return authentication failed message in log and API."""
+        request.error = "Authentication failed: " + log_message
         logger.debug(f"{log_message}: {repr(error)}")
