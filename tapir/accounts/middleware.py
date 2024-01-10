@@ -66,7 +66,7 @@ class KeycloakMiddleware(MiddlewareMixin):
                     for role in roles
                     if role not in settings.KEYCLOAK_NON_TAPIR_ROLES
                 ]
-            except Exception as e:
+            except TapirUser.DoesNotExist as e:
                 self.auth_failed("Could not find matching TapirUser", e)
 
     def auth_failed(self, log_message, error):
