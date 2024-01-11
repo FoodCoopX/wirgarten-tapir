@@ -2,7 +2,7 @@ import csv
 import mimetypes
 
 from django.contrib.auth.decorators import permission_required
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Max, Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_protect
@@ -46,8 +46,8 @@ def export_coop_member_list(request, **kwargs):
     KEY_COOP_SHARES_PAYBACK_EURO = "Ausgezahltes Geschäftsguthaben"
     KEY_COMMENT = "Kommentar"
 
-    # Determine maximum number of shares a member has
-    max_shares = Member.objects.annotate(
+    # Determine maximum number of purchase transactions a member has
+    max_purchase_transactions = Member.objects.annotate(
         purchase_transactions_count=Count(
             "coopsharetransaction",
             filter=Q(
@@ -58,9 +58,12 @@ def export_coop_member_list(request, **kwargs):
         "max_purchase_transactions"
     ]
 
+    if not max_purchase_transactions:
+        max_purchase_transactions = 1
+
     # Generate column headers for each share ownership entry
     share_cols = {}
-    for i in range(1, max_shares + 1):
+    for i in range(1, max_purchase_transactions + 1):
         share_cols[f"KEY_COOP_SHARES_{i}_EURO"] = f"GAnteile in € {i}. Zeichnung"
         share_cols[f"KEY_COOP_SHARES_{i}_ENTRY_DATE"] = f"Eintrittsdatum {i}. Zeichnung"
 
@@ -93,25 +96,30 @@ def export_coop_member_list(request, **kwargs):
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
         ).order_by("timestamp")
-        last_cancelled_coop_shares = entry.coopsharetransaction_set.filter(
+        cancelled_coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION
-        ).order_by("-timestamp")
-        if len(last_cancelled_coop_shares) > 0:
-            last_cancelled_coop_shares = last_cancelled_coop_shares[0]
-        else:
-            last_cancelled_coop_shares = None
+        ).order_by("timestamp")
+        cancelled_coop_shares_dates = "\n".join(
+            [format_date(t.timestamp) for t in cancelled_coop_shares]
+        )
+        cancelled_coop_shares_amounts = "\n".join(
+            [format_currency(t.total_price) for t in cancelled_coop_shares]
+        )
+        cancelled_coop_shares_valid_at = "\n".join(
+            [format_date(t.valid_at) for t in cancelled_coop_shares]
+        )
 
         today = get_today()
         # skip future members. TODO: check cancellation, when must old members be removed from the list?
         if entry.coop_entry_date is None or entry.coop_entry_date > today:
             continue
 
-        transfered_to = entry.coopsharetransaction_set.filter(
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
-        )
-        transfered_from = entry.coopsharetransaction_set.filter(
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN
-        )
+        transfers = entry.coopsharetransaction_set.filter(
+            transaction_type__in=[
+                CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT,
+                CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
+            ]
+        ).order_by("timestamp")
 
         data = {
             KEY_MEMBER_NO: entry.member_no,
@@ -128,21 +136,9 @@ def export_coop_member_list(request, **kwargs):
             KEY_COOP_SHARES_TOTAL_EURO: format_currency(
                 entry.coop_shares_total_value()
             ),
-            KEY_COOP_SHARES_CANCELLATION_DATE: format_date(
-                last_cancelled_coop_shares.timestamp
-            )
-            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
-            else "",
-            KEY_COOP_SHARES_CANCELLATION_AMOUNT: format_currency(
-                last_cancelled_coop_shares.total_price
-            )
-            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
-            else "",
-            KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: format_date(
-                last_cancelled_coop_shares.valid_at
-            )
-            if last_cancelled_coop_shares and last_cancelled_coop_shares.valid_at
-            else "",
+            KEY_COOP_SHARES_CANCELLATION_DATE: cancelled_coop_shares_dates,
+            KEY_COOP_SHARES_CANCELLATION_AMOUNT: cancelled_coop_shares_amounts,
+            KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE: cancelled_coop_shares_valid_at,
             KEY_COOP_SHARES_PAYBACK_EURO: "",  # TODO: how??? Cancelled coop shares?
             KEY_COMMENT: "",  # TODO: join comment log entries?
         }
@@ -155,51 +151,34 @@ def export_coop_member_list(request, **kwargs):
                 share.valid_at
             )
 
-        transfer_euro_amount = (
-            sum(map(lambda x: x.quantity, transfered_to))
-            + sum(map(lambda x: x.quantity, transfered_from))
-        ) * settings.COOP_SHARE_PRICE
+        transfer_total_quantity = transfers.aggregate(total=Sum("quantity"))["total"]
         transfer_euro_string = (
-            "" if transfer_euro_amount == 0 else format_currency(transfer_euro_amount)
+            format_currency(settings.COOP_SHARE_PRICE * transfer_total_quantity)
+            if transfer_total_quantity
+            else ""
         )
 
-        transfer_to_string = ", ".join(
-            map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)}  €",
-                transfered_to,
+        def get_transaction_verb(t: CoopShareTransaction):
+            return (
+                "an"
+                if t.transaction_type
+                == CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT
+                else "von"
             )
-        )
-        transfer_from_string = ", ".join(
-            map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_currency(x.quantity * settings.COOP_SHARE_PRICE)} €",
-                transfered_from,
-            )
-        )
-        transfer_to_date = ", ".join(
-            map(
-                lambda x: f"an {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
-                transfered_to,
-            )
-        )
-        transfer_from_date = ", ".join(
-            map(
-                lambda x: f"von {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
-                transfered_from,
-            )
-        )
+
         data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
-        if not transfer_to_string or not transfer_from_string:
-            data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = (
-                transfer_to_string or transfer_from_string
+        data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = "\n".join(
+            map(
+                lambda x: f"Übertragung {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.member_no})",
+                transfers,
             )
-            data[KEY_COOP_SHARES_TRANSFER_DATE] = transfer_to_date or transfer_from_date
-        else:
-            data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = (
-                transfer_to_string + " | " + transfer_from_string
+        )
+        data[KEY_COOP_SHARES_TRANSFER_DATE] = "\n".join(
+            map(
+                lambda x: f"{get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name}: {format_date(x.valid_at)}",
+                transfers,
             )
-            data[KEY_COOP_SHARES_TRANSFER_DATE] = (
-                transfer_to_date + " | " + transfer_from_date
-            )
+        )
 
         writer.writerow(data)
 
