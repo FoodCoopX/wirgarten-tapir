@@ -381,6 +381,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                 form_dict[STEP_BASE_PRODUCT].save(
                     mandate_ref=mandate_ref,
                     member_id=member.id,
+                    is_registration=True,
                 )
 
                 for dyn_step in self.dynamic_steps:
@@ -389,10 +390,6 @@ class RegistrationWizardViewBase(CookieWizardView):
                             mandate_ref=mandate_ref,
                             member_id=member.id,
                         )
-
-                send_order_confirmation(
-                    member, get_future_subscriptions().filter(member=member)
-                )
         except Exception as e:
             member.delete()
             raise e

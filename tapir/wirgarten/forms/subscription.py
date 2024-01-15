@@ -295,7 +295,12 @@ class BaseProductForm(forms.Form):
         )
 
     @transaction.atomic
-    def save(self, mandate_ref: MandateReference = None, member_id: str = None):
+    def save(
+        self,
+        mandate_ref: MandateReference = None,
+        member_id: str = None,
+        is_registration: bool = False,
+    ):
         member_id = member_id or self.member_id
 
         if not mandate_ref:
@@ -379,7 +384,8 @@ class BaseProductForm(forms.Form):
             change_pickup_location(member_id, new_pickup_location, change_date)
 
         if (
-            get_future_subscriptions()
+            not is_registration
+            and get_future_subscriptions()
             .filter(
                 cancellation_ts__isnull=True,
                 member_id=member_id,
