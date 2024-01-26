@@ -17,14 +17,23 @@ from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_future_subscriptions,
+    product_type_order_by,
 )
 from tapir.wirgarten.utils import get_today
 
 
-def get_active_pickup_location_capabilities():
+def get_active_pickup_location_capabilities(reference_date: date = None):
+    """
+    Get all pickup location capabilities for active product types for the next month.
+    """
+
+    if reference_date is None:
+        reference_date = get_today()
+
+    next_month = reference_date + relativedelta(months=1, day=1)
     return PickupLocationCapability.objects.filter(
-        product_type__in=get_active_product_types()
-    )
+        product_type__in=get_active_product_types(next_month)
+    ).order_by(*product_type_order_by("product_type__id", "product_type__name"))
 
 
 def get_active_pickup_locations(
@@ -39,6 +48,10 @@ def get_active_pickup_locations(
 
 
 def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = None):
+    """
+    Calculates the next delivery date based on the reference date and the delivery weekday.
+    """
+
     if reference_date is None:
         reference_date = get_today()
 
@@ -59,6 +72,10 @@ def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = 
 def get_next_delivery_date_for_product_type(
     product_type: ProductType, reference_date: date = None
 ):
+    """
+    Calculates the next delivery date for a given product type based on the reference date.
+    """
+
     if reference_date is None:
         reference_date = get_today()
 
@@ -79,9 +96,19 @@ def get_next_delivery_date_for_product_type(
 
 
 def generate_future_deliveries(member: Member, limit: int = None):
+    """
+    Generates a list of future deliveries for a given member.
+    """
+
     deliveries = []
+
+    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1]
+    if not last_growing_period.exists():
+        return deliveries
+    last_growing_period = last_growing_period[0]
+
     next_delivery_date = get_next_delivery_date()
-    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
+
     subs = get_future_subscriptions().filter(member=member)
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
@@ -145,7 +172,7 @@ def calculate_pickup_location_change_date(
     if reference_date is None:
         reference_date = get_today()
     if next_delivery_date is None:
-        next_delivery_date = get_next_delivery_date()
+        next_delivery_date = get_next_delivery_date(reference_date=reference_date)
     if change_until_weekday is None:
         change_until_weekday = get_parameter_value(
             Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL

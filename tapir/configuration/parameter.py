@@ -17,7 +17,7 @@ def validate_format_string(value: str, allowed_vars: [str]):
     :param allowed_vars: the array of known variables.
     """
 
-    for match in re.findall("{[^{}]*}", value):
+    for match in re.findall("{[^{}]*}", f"{value}"):
         match = match[1 : len(match) - 1].strip()  # strip brackets
         match = match.split(".")[
             0

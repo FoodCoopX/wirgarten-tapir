@@ -1,15 +1,6 @@
 from django.urls import path
 
-from tapir.wirgarten.views import (
-    RegistrationWizardView,
-    RegistrationWizardConfirmView,
-    exported_files,
-    questionaire_trafficsource_view,
-)
-from tapir.wirgarten.views.admin_dashboard import (
-    AdminDashboardView,
-    get_cashflow_chart_data,
-)
+from tapir.wirgarten.views import exported_files
 from tapir.wirgarten.views.contracts import (
     ExportSubscriptionList,
     NewContractsView,
@@ -21,16 +12,15 @@ from tapir.wirgarten.views.debug.scheduled_tasks import (
     ScheduledTasksListView,
     run_job,
 )
+from tapir.wirgarten.views.default_redirect import dynamic_view
 from tapir.wirgarten.views.member.details.actions import (
     cancel_contract_at_period_end,
     renew_contract_same_conditions,
 )
 from tapir.wirgarten.views.member.details.member_details import MemberDetailView
 from tapir.wirgarten.views.member.details.modals import (
-    get_add_bestellcoop_form,
-    get_add_chicken_shares_form,
     get_add_coop_shares_form,
-    get_add_harvest_shares_form,
+    get_add_subscription_form,
     get_cancel_trial_form,
     get_cancellation_reason_form,
     get_coop_shares_waiting_list_form,
@@ -46,9 +36,7 @@ from tapir.wirgarten.views.member.list.actions import (
     resend_verify_email,
 )
 from tapir.wirgarten.views.member.list.member_deliveries import MemberDeliveriesView
-from tapir.wirgarten.views.member.list.member_list import (
-    MemberListView,
-)
+from tapir.wirgarten.views.member.list.member_list import MemberListView
 from tapir.wirgarten.views.member.list.member_payments import (
     MemberPaymentsView,
     get_payment_amount_edit_form,
@@ -57,26 +45,32 @@ from tapir.wirgarten.views.member.list.modals import (
     get_cancel_non_trial_form,
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
+    get_edit_price_form,
     get_member_personal_data_create_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
     PickupLocationCfgView,
+    delete_pickup_location,
     get_pickup_location_add_form,
     get_pickup_location_edit_form,
-    delete_pickup_location,
 )
 from tapir.wirgarten.views.product_cfg import (
     ProductCfgView,
     delete_period,
-    get_period_copy_form,
-    get_period_add_form,
     delete_product_handler,
-    get_product_edit_form,
-    get_product_add_form,
-    get_product_type_capacity_edit_form,
-    get_product_type_capacity_add_form,
     delete_product_type,
+    get_period_add_form,
+    get_period_copy_form,
+    get_product_add_form,
+    get_product_edit_form,
+    get_product_type_capacity_add_form,
+    get_product_type_capacity_edit_form,
+)
+from tapir.wirgarten.views.register import (
+    RegistrationWizardConfirmView,
+    RegistrationWizardViewBase,
+    questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.waitlist import WaitingListView, export_waitinglist
 
@@ -121,7 +115,7 @@ urlpatterns = [
     path("product/<str:periodId>/perioddelete", delete_period, name="period_delete"),
     path(
         "register",
-        RegistrationWizardView.as_view(),
+        dynamic_view("draftuser_register"),
         name="draftuser_register",
     ),
     path(
@@ -131,12 +125,12 @@ urlpatterns = [
     ),
     path(
         "admin/dashboard",
-        AdminDashboardView.as_view(),
+        dynamic_view("admin_dashboard"),
         name="admin_dashboard",
     ),
     path(
         "admin/dashboard/data/cashflow",
-        get_cashflow_chart_data,
+        dynamic_view("admin_dashboard_cashflow_data"),
         name="admin_dashboard_cashflow_data",
     ),
     path(
@@ -222,19 +216,9 @@ urlpatterns = [
         name="member_renew_changed_conditions",
     ),
     path(
-        "members/<str:pk>/addharvestshares",
-        get_add_harvest_shares_form,
-        name="member_add_harvest_shares",
-    ),
-    path(
-        "members/<str:pk>/addchickenshares",
-        get_add_chicken_shares_form,
-        name="member_add_chicken_shares",
-    ),
-    path(
-        "members/<str:pk>/addbestellcoop",
-        get_add_bestellcoop_form,
-        name="member_add_bestellcoop",
+        "members/<str:pk>/addsubscription",
+        get_add_subscription_form,
+        name="member_add_subscription",
     ),
     path(
         "members/<str:pk>/addcoopshares",
@@ -282,6 +266,11 @@ urlpatterns = [
         "contracts/exportoverview",
         ExportSubscriptionList.as_view(),
         name="subscription_overview_export",
+    ),
+    path(
+        "contracts/<str:pk>/editprice",
+        get_edit_price_form,
+        name="subscription_edit_price",
     ),
     path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(

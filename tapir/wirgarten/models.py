@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
     F,
+    Q,
     Index,
     JSONField,
     OuterRef,
@@ -136,17 +137,36 @@ class ProductType(TapirModel):
         default=NO_DELIVERY,
         verbose_name=_("Lieferzyklus"),
     )
+    contract_link = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        verbose_name=_("Link zu den Vertragsgrundsätzen"),
+    )
+    icon_link = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        verbose_name=_("Link zum Icon"),
+    )
+    single_subscription_only = models.BooleanField(
+        default=False, verbose_name=_("Nur Einzelabonnement erlaubt")
+    )
 
-    @property
-    def base_price(self):
-        today = get_today()
+    def base_price(self, reference_date=None):
+        if reference_date is None:
+            reference_date = get_today()
+
         product = self.product_set.get(base=True)
-        return (
-            product.productprice_set.filter(valid_from__lte=today)
-            .order_by("-valid_from")
-            .first()
-            .price
-        )
+        price_queryset = product.productprice_set.filter(
+            valid_from__lte=reference_date
+        ).order_by("-valid_from")
+
+        price = price_queryset.first()
+        if price is None:
+            price = product.productprice_set.order_by("-valid_from").first()
+
+        return price.price if price else None
 
     class Meta:
         constraints = [
@@ -248,9 +268,6 @@ class Member(TapirUser):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        if not self.member_no and self.coop_shares_quantity > 0:
-            self.member_no = self.generate_member_no()
-
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
                 Parameter.MEMBER_BYPASS_KEYCLOAK
@@ -485,6 +502,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     withdrawal_consent_ts = models.DateTimeField(null=True)
     trial_disabled = models.BooleanField(default=False)
     trial_end_date_override = models.DateField(null=True)
+    price_override = models.DecimalField(
+        decimal_places=2, max_digits=8, null=True, blank=True
+    )
 
     @property
     def trial_end_date(self):
@@ -510,21 +530,16 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         ]
 
     def total_price(self, reference_date=None):
+        if self.price_override is not None:
+            return float(self.price_override)
+
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = max(self.start_date, get_today())
 
         if not hasattr(self, "_total_price"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=reference_date
-            ).order_by("product_id", "-valid_from")
-            price = next(
-                (
-                    product_price.price
-                    for product_price in product_prices
-                    if product_price.product_id == self.product_id
-                ),
-                0.0,
-            )
+            from tapir.wirgarten.service.products import get_product_price
+
+            price = get_product_price(self.product, reference_date).price
 
             if self.solidarity_price_absolute is not None:
                 self._total_price = round(
@@ -601,116 +616,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         )
 
 
-class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
-    """
-    The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
-
-    Attributes:
-        transaction_type (CharField): The type of transaction (PURCHASE, CANCELLATION, TRANSFER_OUT, TRANSFER_IN).
-        member (ForeignKey): The member associated with the transaction.
-        quantity (SmallIntegerField): The quantity of shares involved in the transaction. Must be positive for PURCHASE and TRANSFER_IN, and negative for CANCELLATION and TRANSFER_OUT.
-        share_price (DecimalField): The price of a single share at the time of the transaction.
-        timestamp (DateTimeField): The date and time when the transaction was created.
-        valid_at (DateField): The date when the transaction becomes valid.
-        mandate_ref (ForeignKey): The reference to a mandate associated with the transaction (optional).
-        transfer_member (ForeignKey): The member associated with the share transfer (TRANSFER_OUT, TRANSFER_IN transactions only).
-    """
-
-    class CoopShareTransactionType(models.TextChoices):
-        PURCHASE = "purchase", _("Zeichnung von Anteilen")
-        CANCELLATION = "cancellation", _("Kündigung von Anteilen")
-        TRANSFER_OUT = "transfer_out", _("Abgabe von Anteilen")
-        TRANSFER_IN = "transfer_in", _("Empfang von Anteilen")
-
-    transaction_type = models.CharField(
-        max_length=30, choices=CoopShareTransactionType.choices, null=False
-    )
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
-    quantity = models.SmallIntegerField(null=False)
-    share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
-    timestamp = models.DateTimeField(default=partial(timezone.now), null=False)
-    valid_at = models.DateField(null=False)
-    mandate_ref = models.ForeignKey(
-        MandateReference, on_delete=models.DO_NOTHING, null=True
-    )
-    transfer_member = models.ForeignKey(
-        Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
-    )
-
-    @property
-    def total_price(self):
-        return self.quantity * self.share_price
-
-    def clean(self):
-        # Call the parent class's clean method to ensure any default validation is performed.
-        super().clean()
-
-        # Validate the quantity based on the transaction_type.
-        if (
-            self.transaction_type
-            in [
-                self.CoopShareTransactionType.CANCELLATION,
-                self.CoopShareTransactionType.TRANSFER_OUT,
-            ]
-            and self.quantity >= 0
-        ):
-            raise ValidationError(
-                {
-                    "quantity": _(
-                        "For CANCELLATION and TRANSFER_OUT, the quantity must be negative."
-                    )
-                }
-            )
-        elif (
-            self.transaction_type
-            in [
-                self.CoopShareTransactionType.PURCHASE,
-                self.CoopShareTransactionType.TRANSFER_IN,
-            ]
-            and self.quantity <= 0
-        ):
-            raise ValidationError(
-                {
-                    "quantity": _(
-                        "For PURCHASE and TRANSFER_IN, the quantity must be positive."
-                    )
-                }
-            )
-
-        if (
-            self.transaction_type
-            in [
-                self.CoopShareTransactionType.TRANSFER_IN,
-                self.CoopShareTransactionType.TRANSFER_OUT,
-            ]
-            and self.transfer_member is None
-        ):
-            raise ValidationError(
-                {
-                    "transfer_member": _(
-                        "For TRASNFER_OUT and TRANSFER_IN, the transfer_member must be set."
-                    )
-                }
-            )
-
-    def save(self, *args, **kwargs):
-        # Call the clean method to validate the model instance before saving.
-        self.clean()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        prefix = f"[{format_date(self.timestamp)}] {abs(self.quantity)} Genossenschaftsanteile"
-        if self.transaction_type == self.CoopShareTransactionType.PURCHASE:
-            suffix = "gezeichnet"
-        elif self.transaction_type == self.CoopShareTransactionType.CANCELLATION:
-            suffix = "gekündigt"
-        elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_OUT:
-            suffix = f"übertragen an {self.transfer_member}"
-        elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
-            suffix = f"empfangen von {self.transfer_member}"
-        return f"{prefix} {suffix}"
-
-
 class ExportedFile(TapirModel):
     """
     An exported file (blob in DB).
@@ -778,6 +683,119 @@ class Payment(TapirModel):
 
     def __str__(self):
         return f"[{self.due_date}] {format_currency(self.amount)} €, edited={self.edited}, transaction={self.transaction}, type={self.type}, {self.mandate_ref.ref}"
+
+
+class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
+    """
+    The CoopShareTransaction model represents a transaction related to cooperative shares. It provides a way to track various types of transactions that can occur within a cooperative, such as purchasing, canceling, transferring out, and transferring in shares.
+
+    Attributes:
+        transaction_type (CharField): The type of transaction (PURCHASE, CANCELLATION, TRANSFER_OUT, TRANSFER_IN).
+        member (ForeignKey): The member associated with the transaction.
+        quantity (SmallIntegerField): The quantity of shares involved in the transaction. Must be positive for PURCHASE and TRANSFER_IN, and negative for CANCELLATION and TRANSFER_OUT.
+        share_price (DecimalField): The price of a single share at the time of the transaction.
+        timestamp (DateTimeField): The date and time when the transaction was created.
+        valid_at (DateField): The date when the transaction becomes valid.
+        mandate_ref (ForeignKey): The reference to a mandate associated with the transaction (optional).
+        transfer_member (ForeignKey): The member associated with the share transfer (TRANSFER_OUT, TRANSFER_IN transactions only).
+    """
+
+    class CoopShareTransactionType(models.TextChoices):
+        PURCHASE = "purchase", _("Zeichnung von Anteilen")
+        CANCELLATION = "cancellation", _("Kündigung von Anteilen")
+        TRANSFER_OUT = "transfer_out", _("Abgabe von Anteilen")
+        TRANSFER_IN = "transfer_in", _("Empfang von Anteilen")
+
+    transaction_type = models.CharField(
+        max_length=30, choices=CoopShareTransactionType.choices, null=False
+    )
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
+    quantity = models.SmallIntegerField(null=False)
+    share_price = models.DecimalField(max_digits=5, decimal_places=2, null=False)
+    timestamp = models.DateTimeField(default=partial(timezone.now), null=False)
+    valid_at = models.DateField(null=False)
+    mandate_ref = models.ForeignKey(
+        MandateReference, on_delete=models.DO_NOTHING, null=True
+    )
+    transfer_member = models.ForeignKey(
+        Member, on_delete=models.DO_NOTHING, null=True, related_name="transfer_member"
+    )
+    payment = models.ForeignKey(
+        Payment, on_delete=models.DO_NOTHING, null=True, related_name="payment"
+    )
+
+    @property
+    def total_price(self):
+        return self.quantity * self.share_price
+
+    def clean(self):
+        # Call the parent class's clean method to ensure any default validation is performed.
+        super().clean()
+
+        # Validate the quantity based on the transaction_type.
+        if (
+            self.transaction_type
+            in [
+                self.CoopShareTransactionType.CANCELLATION,
+                self.CoopShareTransactionType.TRANSFER_OUT,
+            ]
+            and self.quantity >= 0
+        ):
+            raise ValidationError(
+                {
+                    "quantity": _(
+                        "For CANCELLATION and TRANSFER_OUT, the quantity must be negative."
+                    )
+                }
+            )
+        elif (
+            self.transaction_type
+            in [
+                self.CoopShareTransactionType.PURCHASE,
+                self.CoopShareTransactionType.TRANSFER_IN,
+            ]
+            and self.quantity <= 0
+        ):
+            raise ValidationError(
+                {
+                    "quantity": _(
+                        "For PURCHASE and TRANSFER_IN, the quantity must be positive."
+                    )
+                }
+            )
+
+        if (
+            self.transaction_type
+            in [
+                self.CoopShareTransactionType.TRANSFER_IN,
+                self.CoopShareTransactionType.TRANSFER_OUT,
+            ]
+            and self.transfer_member is None
+        ):
+            raise ValidationError(
+                {
+                    "transfer_member": _(
+                        "For TRANSFER_OUT and TRANSFER_IN, the transfer_member must be set."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        # Call the clean method to validate the model instance before saving.
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        prefix = f"[{format_date(self.timestamp)}] {abs(self.quantity)} Genossenschaftsanteile"
+        if self.transaction_type == self.CoopShareTransactionType.PURCHASE:
+            suffix = "gezeichnet"
+        elif self.transaction_type == self.CoopShareTransactionType.CANCELLATION:
+            suffix = "gekündigt"
+        elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_OUT:
+            suffix = f"übertragen an {self.transfer_member}"
+        elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
+            suffix = f"empfangen von {self.transfer_member}"
+        return f"{prefix} {suffix}"
 
 
 class Deliveries(TapirModel):

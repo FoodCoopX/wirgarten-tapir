@@ -8,85 +8,38 @@
 <p style="color: #dc3545;">{{ error }}</p>
 {% endfor %}
 {% endif %}
-<h4>Ernteanteile</h4>
-<div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
-     class="form-fields">
-    {% for field in form %}
-    {% if "harvest_shares" in field.name %}
-    <div style="grid-column:span {% if field.name == 'solidarity_price_harvest_shares' %}3{% elif field.name == 'consent_harvest_shares' %}4{% else %}1{% endif %}"
-         class="form-field"
-         id="{{ field.name }}">
-        {% bootstrap_field field %}
-    </div>
-    {% endif %}
-    {% endfor %}
-</div>
-<div style="float:right; font-size:1.25rem; text-align: right">= <strong><span
-        id="harvest_shares_total">0.00</span> €</strong> / Monat<small
-        style="font-size:0.8125rem"><br/>inkl. Mwst.</small></div>
-<br/><br/>
-{% if form.available_product_types|get_value:'Hühneranteile' %}
+
+{% for sub_form in form.product_forms %}
+{% if forloop.counter0 > 0 %}
 <hr/>
-<h4>Hühneranteile</h4>
-<div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
+{% endif %}
+<h4>{{sub_form.product_type.name}}</h4>
+{% if sub_form.template_name %}
+{% include sub_form.template_name %}
+{% else %}
+{% if sub_form.non_field_errors %}
+{% for error in sub_form.non_field_errors %}
+<p style="color: #dc3545;">{{ error }}</p>
+{% endfor %}
+{% endif %}
+<div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ sub_form.n_columns|default:'1' }}, 1fr);"
      class="form-fields">
-    {% for field in form %}
-    {% if "chicken_shares" in field.name %}
-    <div style="grid-column:span {% if field.name == 'consent_chicken_shares' %}4{% else %}2{% endif %}"
-         class="form-field"
+    {% for field in sub_form %}
+    <div style="grid-column:span {{sub_form.colspans|get_value:field.name|default:1}}" class="form-field"
          id="{{ field.name }}">
+        {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' or field.name == 'receiver' %}
+        <div class="mb-3 searchable-select">
+            <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
+            {{ field }}
+        </div>
+        {% else %}
         {% bootstrap_field field %}
+        {% endif %}
     </div>
-    {% endif %}
     {% endfor %}
 </div>
-<div style="float:right; font-size:1.25rem; text-align: right">= <strong><span
-        id="additional_shares_total">0.00</span> €</strong> / Monat<small
-        style="font-size:0.8125rem"><br/>inkl. Mwst.</small></div>
-<br/><br/>
 {% endif %}
-{% if form.available_product_types|get_value:'BestellCoop' %}
-<hr/>
-<h4>BestellCoop</h4>
-<div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
-     class="form-fields">
-    {% for field in form %}
-    {% if "bestellcoop" in field.name %}
-    <div style="grid-column:span 4"
-         class="form-field"
-         id="{{ field.name }}">
-        {% bootstrap_field field %}
-    </div>
-    {% endif %}
-    {% endfor %}
-</div>
-<div style="float:right; font-size:1.25rem; text-align: right">= <strong><span
-        id="bestellcoop_total">0.00</span> €</strong> / Monat<small style="font-size:0.8125rem"><br/>inkl. Mwst.</small>
-</div>
+{% if sub_form.sum_template %}
+{% include sub_form.sum_template with form=sub_form %}
 {% endif %}
-
-<script src="{% static 'wirgarten/js/registration/harvest_shares.js' %}"></script>
-
-{% if form.available_product_types|get_value:'Hühneranteile' %}
-<script src="{% static 'wirgarten/js/registration/chicken_shares.js' %}"></script>
-{% endif %}
-
-{% if form.available_product_types|get_value:'BestellCoop' %}
-<script src="{% static 'wirgarten/js/registration/bestellcoop.js' %}"></script>
-{% endif %}
-
-<script>
-const originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a,b) => a + b);
-document.addEventListener('DOMContentLoaded', () => {
-    initHarvestShareSummary("{{form.product_forms.0.harvest_shares}}", {{form.product_forms.0.solidarity_total|safe}}, {{form.product_forms.0.free_capacity|safe}});
-
-    {% if form.available_product_types|get_value:'Hühneranteile' %}
-    initChickenShareSummary('{{form.product_forms.1.chicken_share_prices|safe}}'.split(','), {{form.product_forms.1.free_capacity|safe}});
-    {% endif %}
-
-    {% if form.available_product_types|get_value:'BestellCoop' %}
-    initBestellCoopSummary(Number("{{form.product_forms.2.bestellcoop_price}}".replace(',','.')));
-    {% endif %}
-});
-</script>
-
+{% endfor %}

@@ -29,34 +29,6 @@ def get_sidebar_link_groups(request):
     if request.user.has_perm(Permission.Coop.VIEW):
         add_admin_links(groups, request)
 
-    # misc_group = SidebarLinkGroup(name=_("Miscellaneous"))
-    # groups.append(misc_group)
-    # misc_group.add_link(
-    #    display_name=_("Wiki"),
-    #    material_icon="feed",
-    #    url="https://wiki.supercoop.de",
-    # )
-    # misc_group.add_link(
-    #    display_name=_("Member manual"),
-    #    material_icon="menu_book",
-    #    url="https://wiki.supercoop.de/wiki/Member_Manual",
-    # )
-    # misc_group.add_link(
-    #    display_name=_("Shop opening hours"),
-    #    material_icon="access_time",
-    #    url="https://wiki.supercoop.de/wiki/%C3%96ffnungszeiten",
-    # )
-    # misc_group.add_link(
-    #    display_name=_("Contact the member office"),
-    #    material_icon="email",
-    #    url="mailto:mitglied@supercoop.de",
-    # )
-    #   misc_group.add_link(
-    #       display_name=_("About tapir"),
-    #       material_icon="help",
-    #       url=reverse_lazy("coop:about"),
-    #   )
-
     return groups
 
 

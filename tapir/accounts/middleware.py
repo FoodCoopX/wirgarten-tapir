@@ -36,6 +36,7 @@ class KeycloakMiddleware(MiddlewareMixin):
 
     def __call__(self, request):
         # Check for authentication and try to get user from keycloak.
+        request.error = False
         if "token" not in request.COOKIES:
             logger.debug(f"No authorization found. Using public user.")
         else:
@@ -43,7 +44,7 @@ class KeycloakMiddleware(MiddlewareMixin):
             try:
                 data = decode(access_token, options={"verify_signature": False})
                 if data["exp"] < int(time.time()):
-                    self.auth_failed("Token expired on: ", data["exp"])
+                    self.auth_failed("Token expired on: " + data["exp"])
                 else:
                     self.set_user(request, data)
             except Exception as e:
@@ -66,8 +67,9 @@ class KeycloakMiddleware(MiddlewareMixin):
                     for role in roles
                     if role not in settings.KEYCLOAK_NON_TAPIR_ROLES
                 ]
-            except Exception as e:
+            except TapirUser.DoesNotExist as e:
                 self.auth_failed("Could not find matching TapirUser", e)
+                request.error = True
 
     def auth_failed(self, log_message, error):
         """Return authentication failed message in log and API."""

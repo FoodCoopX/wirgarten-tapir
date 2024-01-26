@@ -14,7 +14,7 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from tapir import settings
+from django.conf import settings
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ScheduledTask
 from tapir.wirgarten.utils import get_now

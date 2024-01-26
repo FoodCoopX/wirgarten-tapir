@@ -1,8 +1,9 @@
 import base64
 import json
-from click import Parameter
 
+from click import Parameter
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -10,13 +11,10 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from tapir import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import (
-    ProductTypes,
-)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -27,14 +25,12 @@ from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
+    get_available_product_types,
     get_future_subscriptions,
     get_next_growing_period,
-    is_bestellcoop_available,
-    is_chicken_shares_available,
-    is_harvest_shares_available,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import format_date, get_now, member_detail_url
-
 
 EMAIL_CHANGE_LINK_VALIDITY_MINUTES = 4 * 60
 
@@ -92,18 +88,12 @@ def renew_contract_same_conditions(request, **kwargs):
     new_subs = []
     next_period = get_next_growing_period()
 
-    available_product_types = {
-        ProductTypes.HARVEST_SHARES: is_harvest_shares_available(
-            next_period.start_date
-        ),
-        ProductTypes.CHICKEN_SHARES: is_chicken_shares_available(
-            next_period.start_date
-        ),
-        ProductTypes.BESTELLCOOP: is_bestellcoop_available(next_period.start_date),
-    }
+    available_product_types = [
+        p.id for p in get_available_product_types(reference_date=next_period.start_date)
+    ]
 
     for sub in get_active_subscriptions().filter(member_id=member_id):
-        if available_product_types[sub.product.type.name]:
+        if sub.product.type.id in available_product_types:
             new_subs.append(
                 Subscription(
                     member=sub.member,
@@ -148,8 +138,6 @@ def renew_contract_same_conditions(request, **kwargs):
 @transaction.atomic
 def cancel_contract_at_period_end(request, **kwargs):
     member_id = kwargs["pk"]
-    # if not member_id == request.user.pk:
-    #    raise PermissionDenied("A member can only cancel a contract themself.")
 
     now = get_now()
     subs = list(
@@ -173,6 +161,9 @@ def cancel_contract_at_period_end(request, **kwargs):
         subscriptions=subs,
     ).save()
 
+    TransactionalTrigger.fire_action(Events.CONTRACT_NOT_RENEWED, member.email)
+
+    # TODO: remove after tapir_mail migration
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT),

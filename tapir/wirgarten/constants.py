@@ -13,17 +13,11 @@ DeliveryCycle = [
 DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
 
 
-class ProductTypes:
-    HARVEST_SHARES = "Ernteanteile"
-    CHICKEN_SHARES = "Hühneranteile"
-    BESTELLCOOP = "BestellCoop"
-
-
 class Permission:
     permission_strings = False
 
     @staticmethod
-    def all() -> [str]:
+    def all() -> list[str]:
         if not Permission.permission_strings:
             perms = []
             internal_classes = [

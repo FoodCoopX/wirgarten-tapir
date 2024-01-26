@@ -1,11 +1,27 @@
 {% extends "core/base.html" %} 
 {% block content %}
 {% csrf_token %}
-<div style="width: 86.75vw; height: 93.25vh; margin-left:-1.25em; margin-right: -1.25em; overflow: hidden">
+<div style="width: calc(100% + 2.5em); height: 93.75vh; margin-left:-1.55em; margin-right: -1.25em; overflow: hidden">
   <iframe
     id="tapirMailIframe"
     style="width: 100%; height: 100%; overflow: hidden"
-    src="{{TAPIR_MAIL_PATH}}"
-  />
+  ></iframe>
 </div>
+<script>
+  window.onload = () => {
+    const iframe = document.getElementById('tapirMailIframe');
+    iframe.src = '{{TAPIR_MAIL_PATH}}' + window.location.hash.substring(1);
+
+    const checkIframeUrl = () => {
+      try {
+        window.location.hash = iframe.contentWindow.location.pathname.replace('/tapirmail', '');
+      } catch(e) {
+        console.log(e)
+      }
+    }
+
+    setInterval(checkIframeUrl, 500);
+  }
+</script>
+
 {% endblock %}

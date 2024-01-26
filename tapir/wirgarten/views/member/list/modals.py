@@ -1,10 +1,11 @@
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.forms.member.forms import (
+from tapir.wirgarten.forms.member import (
     CoopShareCancelForm,
     CoopShareTransferForm,
     NonTrialCancellationForm,
     PersonalDataForm,
 )
+from tapir.wirgarten.forms.subscription import EditSubscriptionPriceForm
 from tapir.wirgarten.models import SubscriptionChangeLogEntry
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.utils import (
@@ -96,5 +97,23 @@ def get_cancel_non_trial_form(request, **kwargs):
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="
         + format_date(x),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+@permission_required(Permission.Accounts.MANAGE)
+def get_edit_price_form(request, **kwargs):
+    contract_id = kwargs["pk"]
+
+    return get_form_modal(
+        request=request,
+        form=EditSubscriptionPriceForm,
+        handler=lambda x: x.save(),
+        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
+        + "?contract="
+        + str(contract_id),
         **kwargs,
     )

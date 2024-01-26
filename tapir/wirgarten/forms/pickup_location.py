@@ -5,19 +5,21 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Subquery, OuterRef, Sum, DecimalField, F
+from django.db.models import DecimalField, F, OuterRef, Subquery, Sum
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    PickupLocation,
     MemberPickupLocation,
-    ProductPrice,
-    Product,
-    ProductType,
+    PickupLocation,
     PickupLocationCapability,
     PickupLocationOpeningTime,
+    Product,
+    ProductPrice,
+    ProductType,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -25,6 +27,7 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
+    get_available_product_types,
     get_product_price,
 )
 from tapir.wirgarten.utils import get_today
@@ -39,11 +42,16 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity(capability, reference_date=get_today()):
+def get_current_capacity(
+    capability, reference_date=None, additional_subscription_filter=None
+):
     if (
         type(capability) is not dict
     ):  # FIXME: this is dirty, check why this was needed and fix it
         capability = capability.__dict__
+
+    if reference_date is None:
+        reference_date = get_today()
 
     latest_member_pickup_location = (
         MemberPickupLocation.objects.filter(
@@ -53,9 +61,15 @@ def get_current_capacity(capability, reference_date=get_today()):
         .values("pickup_location_id")[:1]
     )
 
+    sub_qs = get_active_subscriptions(reference_date)
+
+    if additional_subscription_filter:
+        sub_qs = additional_subscription_filter(sub_qs)
+
     total_price = (
-        get_active_subscriptions(reference_date)
-        .annotate(latest_pickup_location_id=Subquery(latest_member_pickup_location))
+        sub_qs.annotate(
+            latest_pickup_location_id=Subquery(latest_member_pickup_location)
+        )
         .filter(
             latest_pickup_location_id=capability["pickup_location_id"],
             product__type_id=capability["product_type_id"],
@@ -78,22 +92,23 @@ def get_current_capacity(capability, reference_date=get_today()):
 
 
 def pickup_location_to_dict(location_capabilities, pickup_location):
-    # FIXME: Icons should be configured with the ProductType ?
-    PRODUCT_TYPE_ICONS = {
-        "Ernteanteile": "/static/wirgarten/images/icons/Ernteanteil.svg",
-        "Hühneranteile": "/static/wirgarten/images/icons/Huehneranteil.svg",
-    }
-
     next_delivery_date = get_next_delivery_date()
     next_month = next_delivery_date + relativedelta(day=1, months=1)
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
+        try:
+            base_product = Product.objects.get(
+                type_id=capa["product_type_id"], base=True
+            )
+        except Product.DoesNotExist:
+            return None
+
         current_capa = round(
             get_current_capacity(capa, next_delivery_date)
             / float(
                 get_product_price(
-                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    base_product,
                     next_delivery_date,
                 ).price
             ),
@@ -104,7 +119,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             get_current_capacity(capa, next_month)
             / float(
                 get_product_price(
-                    Product.objects.get(type_id=capa["product_type_id"], base=True),
+                    base_product,
                     next_month,
                 ).price
             ),
@@ -114,7 +129,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         capa_diff = round(next_month_capa - current_capa, 2)
         return {
             "name": capa["product_type__name"],
-            "icon": PRODUCT_TYPE_ICONS.get(capa["product_type__name"], "?"),
+            "icon": capa["product_type__icon_link"],
             "max_capacity": max_capa,
             "current_capacity": current_capa,
             "next_capacity_diff": f"{'+' if capa_diff > 0 else ''} {capa_diff}"
@@ -130,14 +145,15 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
         "capabilities": list(
-            map(
-                map_capa,
-                [
-                    capa
+            [
+                x
+                for x in [
+                    map_capa(capa)
                     for capa in location_capabilities
                     if capa["pickup_location_id"] == pickup_location.id
-                ],
-            )
+                ]
+                if x is not None
+            ]
         ),
         "members": get_active_subscriptions(next_delivery_date)
         .annotate(
@@ -183,24 +199,35 @@ class PickupLocationWidget(forms.Select):
 class PickupLocationChoiceField(forms.ModelChoiceField):
     def __init__(self, **kwargs):
         initial = kwargs.pop("initial", {"subs": {}})
+        next_month = get_today() + relativedelta(months=1, day=1)
+        reference_date = kwargs.pop("reference_date", next_month)
 
-        location_capabilities = get_active_pickup_location_capabilities().values(
+        location_capabilities = get_active_pickup_location_capabilities(
+            reference_date=reference_date
+        ).values(
             "product_type__name",
             "max_capacity",
             "product_type_id",
             "pickup_location_id",
+            "product_type__icon_link",
         )
+
+        product_type_base_prices = {
+            pt.name: pt.base_price(reference_date=reference_date)
+            for pt in get_active_product_types(reference_date=reference_date)
+        }
 
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda x: float(get_product_price(x.product).price) * x.quantity,
+                    lambda x: float(get_product_price(x.product).price)
+                    * (x.quantity or 0),
                     sub,
                 )
             )
-            / float(sub[0].product.type.base_price)
+            / float(product_type_base_prices[product_type_name])
             for product_type_name, sub in initial["subs"].items()
-            if sub[0].product.type.delivery_cycle != NO_DELIVERY[0]
+            if sub and sub[0].product.type.delivery_cycle != NO_DELIVERY[0]
         }
 
         possible_locations = PickupLocation.objects.filter(
@@ -225,8 +252,9 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                     ):
                         current_capacity = get_current_capacity(
                             capa, next_month
-                        ) / float(ProductType.objects.get(name=pt_name).base_price)
-                        free_capacity = capa["max_capacity"] - current_capacity
+                        ) / float(product_type_base_prices.get(pt_name, 1))
+                        max_capa = capa["max_capacity"] + 0.1
+                        free_capacity = max_capa - current_capacity
 
                         if selected_product_types[pt_name] > free_capacity:
                             possible_locations = possible_locations.exclude(id=pl.id)
@@ -248,14 +276,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
 
 
 class PickupLocationChoiceForm(forms.Form):
-    intro_template = "wirgarten/registration/steps/pickup_location.intro.html"
+    intro_template = "registration/steps/pickup_location.intro.html"
     intro_text_skip_hr = True
 
     def __init__(self, *args, **kwargs):
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
-            label=_("Abholort"), initial=kwargs["initial"]
+            label=_("Abholort"),
+            initial=kwargs["initial"],
         )
 
     def is_valid(self):
@@ -323,15 +352,15 @@ class PickupLocationEditForm(forms.Form):
         }
 
         self.product_types = list(
-            get_active_product_types()
-            .exclude(delivery_cycle=NO_DELIVERY[0])
-            .order_by("name")
+            ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0]).order_by("name")
         )
 
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         for pt in self.product_types:
             self.fields["pt_" + pt.id] = forms.BooleanField(
                 label=_(pt.name),
                 required=False,
+                initial=pt.id == base_product_type_id,
                 help_text=f"Hier können {pt.name} abgeholt werden",
             )
             self.fields["pt_capa_" + pt.id] = forms.IntegerField(

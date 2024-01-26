@@ -62,7 +62,9 @@ services:
     image: redis:alpine
 
   celery:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: bash -c "poetry install &&
                       poetry run celery -A tapir worker -l info"
     volumes:
@@ -74,7 +76,9 @@ services:
       - db
 
   celery-beat:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     # --schedule to avoid polluting the app directory
     command: bash -c "poetry install &&
                       poetry run celery -A tapir beat -l info --schedule /tmp/celerybeat-schedule"
@@ -93,4 +97,3 @@ services:
 
 volumes:
   nginx-certs-volume:
-

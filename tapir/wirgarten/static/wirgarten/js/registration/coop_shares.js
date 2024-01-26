@@ -1,6 +1,6 @@
 const initSummary = (min_shares, share_price) => {
     const resultElem = document.getElementById('cooperative_shares_total');
-    let input = document.getElementsByName('Cooperative Shares-cooperative_shares')[0];
+    let input = document.getElementsByName('coop_shares-cooperative_shares')[0];
     if(!input){
         input = document.getElementsByName('cooperative_shares')[0];
     }
@@ -18,7 +18,6 @@ const initSummary = (min_shares, share_price) => {
         const diff = value % 50
         if(diff > 0){
             const fallback = diff > 24 ? Number(value) + (50 - diff) : value - diff;
-            console.log(diff, fallback)
             input.value = Math.max(fallback, input.min)
         }
 

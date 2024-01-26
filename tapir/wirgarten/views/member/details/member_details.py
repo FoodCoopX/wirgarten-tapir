@@ -1,42 +1,35 @@
 from dateutil.relativedelta import relativedelta
-from django.db.models import (
-    Sum,
-    F,
-)
+from django.db.models import F, Sum
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
+
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import (
-    ProductTypes,
-    Permission,
-)
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
-    Member,
-    Subscription,
-    GrowingPeriod,
-    WaitingListEntry,
     CoopShareTransaction,
+    GrowingPeriod,
+    Member,
+    ProductType,
+    Subscription,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    generate_future_deliveries,
-)
+from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.service.member import (
-    get_subscriptions_in_trial_period,
     get_next_contract_start_date,
+    get_subscriptions_in_trial_period,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
+    get_next_payment_date,
 )
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    is_harvest_shares_available,
-    get_future_subscriptions,
-    is_chicken_shares_available,
-    is_bestellcoop_available,
-    get_next_growing_period,
     get_active_subscriptions,
+    get_available_product_types,
+    get_future_subscriptions,
+    get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_today
 from tapir.wirgarten.views.member.list.member_payments import (
@@ -74,11 +67,14 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for k, v in context["subscriptions"].items()
         }
 
-        product_types = get_active_product_types()
-        for pt in product_types:
-            if pt.name not in context["subscriptions"]:
-                context["subscriptions"][pt.name] = []
-                context["sub_quantities"][pt.name] = 0
+        product_types = get_active_product_types(reference_date=next_month)
+        types_to_remove = []
+        product_type_names = list(map(lambda x: x.name, product_types))
+        for key in context["subscriptions"].keys():
+            if key not in product_type_names:
+                types_to_remove.append(key)
+        for key in types_to_remove:
+            del context["subscriptions"][key]
 
         share_ownerships = list(
             CoopShareTransaction.objects.filter(member=self.object).order_by(
@@ -86,7 +82,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
         )
         context["coop_shares"] = share_ownerships
-
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
         additional_products_available = (
@@ -99,46 +94,42 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             .exists()
         )
 
-        # FIXME: we need to get rid of the hardcoded product types...
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         context["available_product_types"] = {
-            ProductTypes.HARVEST_SHARES: is_harvest_shares_available(next_month),
-            ProductTypes.CHICKEN_SHARES: additional_products_available
-            and is_chicken_shares_available(next_month),
-            ProductTypes.BESTELLCOOP: ProductTypes.BESTELLCOOP
-            in context["subscriptions"]
-            and additional_products_available
-            and (
-                not (
-                    len(context["subscriptions"][ProductTypes.BESTELLCOOP]) > 0
-                    and context["subscriptions"][ProductTypes.BESTELLCOOP][0].quantity
-                    > 0
+            p.name: p.id == base_product_type_id
+            or (
+                additional_products_available
+                and (
+                    p.single_subscription_only
+                    and not Subscription.objects.filter(
+                        member_id=self.object.id, product__type_id=p.id
+                    ).exists()
                 )
-                or context["subscriptions"][ProductTypes.BESTELLCOOP][0].cancellation_ts
-                is not None
+                or not p.single_subscription_only
             )
-            and is_bestellcoop_available(next_month),
+            for p in get_available_product_types(reference_date=next_month)
         }
-
         context["deliveries"] = generate_future_deliveries(self.object)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
-        prev_payments = get_previous_payments(self.object.pk)
-        today = get_today()
-        for due_date, payments in prev_payments.items():
-            if due_date >= today:
-                context["next_payment"] = payments[0]
-            else:
-                break
+        next_due_date = get_next_payment_date()
 
-        next_payment = list(generate_future_payments(self.object.id, 1).values())
-        if len(next_payment) > 0:
-            next_payment = next_payment[0][0]
+        persisted_payments = get_previous_payments(self.object.pk)
+        next_payments = persisted_payments.get(next_due_date, [])
 
-        if next_payment:
-            if "next_payment" not in context or (
-                next_payment["due_date"] < context["next_payment"]["due_date"]
-            ):
-                context["next_payment"] = next_payment
+        projected = generate_future_payments(self.object.id, 2)
+        if len(projected) > 0:
+            next_payments += projected.get(next_due_date, [])
+
+        context["next_payment"] = (
+            {
+                "due_date": next_due_date,
+                "amount": sum([p["amount"] for p in next_payments]),
+                "mandate_ref": next_payments[0]["mandate_ref"],
+            }
+            if next_payments
+            else None
+        )
 
         self.add_renewal_notice_context(context, next_month, today)
 
@@ -190,113 +181,116 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             return
 
         next_growing_period = get_next_growing_period(today)
-        if (
+        if not (
             next_growing_period
             and (today + relativedelta(months=3)) > next_growing_period.start_date
         ):
-            context["next_period"] = next_growing_period
-            context["add_shares_disallowed"] = (
-                next_month >= next_growing_period.start_date
-            )  # 1 month before
+            return
 
-            harvest_share_subs = context["subscriptions"][ProductTypes.HARVEST_SHARES]
+        context["next_period"] = next_growing_period
+        context["add_shares_disallowed"] = (
+            next_month >= next_growing_period.start_date
+        )  # 1 month before
 
-            if len(harvest_share_subs) < 1:
+        base_product_type = ProductType.objects.get(
+            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        )
+        harvest_share_subs = context["subscriptions"][base_product_type.name]
+        context["base_product_type_name"] = base_product_type.name
+
+        if len(harvest_share_subs) < 1:
+            context["show_renewal_warning"] = False
+            return  # no harvest share subs, nothing to renew. Member can add subscriptions via the "+" button
+        else:
+            context["show_renewal_warning"] = True
+
+        context["contract_end_date"] = contract_end_date = (
+            format_date(harvest_share_subs[0].end_date)
+            if type(harvest_share_subs[0]) is Subscription
+            else None
+        )
+        cancelled = any(
+            map(
+                lambda x: (None if type(x) is dict else x.cancellation_ts) is not None,
+                harvest_share_subs,
+            )
+        )
+        future_subs = get_future_subscriptions(next_growing_period.start_date).filter(
+            member_id=self.object.id
+        )
+        has_future_subs = future_subs.exists()
+        if cancelled and not has_future_subs:
+            context[
+                "renewal_status"
+            ] = "cancelled"  # --> show cancellation confirmation
+        elif has_future_subs:
+            context["renewal_status"] = "renewed"  # --> show renewal confirmation
+            if not future_subs.filter(
+                cancellation_ts__isnull=True
+            ).exists():  # --> renewed but cancelled
                 context["show_renewal_warning"] = False
-                return  # no harvest share subs, nothing to renew. Member can add subscriptions via the "+" button
+        else:
+            if context["available_product_types"][base_product_type.name]:
+                context["renewal_status"] = "unknown"  # --> show renewal notice
+            elif WaitingListEntry.objects.filter(
+                email=self.object.email,
+                type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
+            ).exists():
+                context["renewal_status"] = "waitlist"  # --> show waitlist confirmation
             else:
-                context["show_renewal_warning"] = True
+                context["renewal_status"] = "no_capacity"  # --> show waitlist
 
-            context["contract_end_date"] = contract_end_date = (
-                format_date(harvest_share_subs[0].end_date)
-                if type(harvest_share_subs[0]) is Subscription
-                else None
-            )
-            cancelled = any(
-                map(
-                    lambda x: (None if type(x) is dict else x.cancellation_ts)
-                    is not None,
-                    harvest_share_subs,
-                )
-            )
-            future_subs = get_future_subscriptions(
-                next_growing_period.start_date
-            ).filter(member_id=self.object.id)
-            has_future_subs = future_subs.exists()
-            if cancelled and not has_future_subs:
-                context[
-                    "renewal_status"
-                ] = "cancelled"  # --> show cancellation confirmation
-            elif has_future_subs:
-                context["renewal_status"] = "renewed"  # --> show renewal confirmation
-                if not future_subs.filter(
-                    cancellation_ts__isnull=True
-                ).exists():  # --> renewed but cancelled
-                    context["show_renewal_warning"] = False
-            else:
-                if context["available_product_types"][ProductTypes.HARVEST_SHARES]:
-                    context["renewal_status"] = "unknown"  # --> show renewal notice
-                elif WaitingListEntry.objects.filter(
-                    email=self.object.email,
-                    type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
-                ).exists():
-                    context[
-                        "renewal_status"
-                    ] = "waitlist"  # --> show waitlist confirmation
-                else:
-                    context["renewal_status"] = "no_capacity"  # --> show waitlist
-
-            context["renewal_alert"] = {
-                "unknown": {
-                    "header": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                    "content": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                },
-                "cancelled": {
-                    "header": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                    "content": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                },
-                "renewed": {
-                    "header": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                    "content": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
-                        contract_end_date,
-                        next_growing_period,
-                        contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
-                    ),
-                },
-                "no_capacity": {
-                    "header": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                    "content": self.format_param(
-                        Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
-                        contract_end_date,
-                        next_growing_period,
-                    ),
-                },
-            }
+        context["renewal_alert"] = {
+            "unknown": {
+                "header": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+                "content": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+            },
+            "cancelled": {
+                "header": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+                "content": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+            },
+            "renewed": {
+                "header": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+                "content": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
+                    contract_end_date,
+                    next_growing_period,
+                    contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
+                ),
+            },
+            "no_capacity": {
+                "header": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+                "content": self.format_param(
+                    Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
+                    contract_end_date,
+                    next_growing_period,
+                ),
+            },
+        }
 
     def format_param(
         self,

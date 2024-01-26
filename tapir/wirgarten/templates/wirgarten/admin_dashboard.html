@@ -16,6 +16,11 @@
 <div class="alert alert-warning m-4" role="alert" style="margin:auto; width:fit-content">
   Es gibt <strong>keine aktive</strong> Anbauperiode. <a href="{% url 'wirgarten:product' %}" class="alert-link">Klicke hier</a> um eine neue Anbauperiode anzulegen.
 </div></div>
+{% elif no_base_product_type %}
+<div style="justify-content: center; display: flex">
+<div class="alert alert-warning m-4" role="alert" style="margin:auto; width:fit-content">
+  Es gibt <strong>keinen</strong> Basis Produkttyp (z.B. Ernteanteile). <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.base_product_type" class="alert-link">Klicke hier</a> um den Basis Produkttyp festzulegen.
+</div></div>
 {% else %}
 <div class="dashboard-container">
   <!--div class="dashboard-tile card alert-warning alert-tile">
@@ -86,7 +91,7 @@
       <small><strong>Solidar Überschuss</strong> / Monat</small>
     </div>
   </div>
-
+{% endif %}
   {% if next_capacity_labels %}
   <div class="dashboard-section-heading">
     <hr />
@@ -102,7 +107,7 @@
   </div>
   {% endif %}
 
-
+{% if not no_growing_period %}
   <div class="dashboard-section-heading">
     <hr />
     Cashflow/Zahlungsdaten
@@ -187,46 +192,6 @@
         {% endif %}
         <small><strong>Solidarpreise</strong><br />{% if status_negative_soli_price_allowed is 0 %}
           <strong>nicht</strong>{% endif %} möglich {% if status_negative_soli_price_allowed is 2 %} (auto)
-          {% endif %}</small>
-      </div>
-    </a>
-  </div>
-
-  <div class="dashboard-tile card clickable">
-    <a href="{% url 'configuration:parameters' %}?q=wirgarten.bestellcoop.is_subscribable">
-      <div class="card-body">
-        {% if status_bestellcoop_allowed is 0 %}
-        <div class="dashboard-tile-status negative">
-          <span class="material-icons">hide_source</span>
-        </div>
-        {% else %}
-        <div class="dashboard-tile-status positive">
-          <span class="material-icons">task_alt</span>
-        </div>
-        {% endif %}
-        <small><strong>BestellCoop</strong><br />Mitgliedschaft
-          {% if status_bestellcoop_allowed is 0 %}
-          <strong>nicht</strong>{% endif %} möglich {% if status_bestellcoop_allowed is 2 %} (auto)
-          {% endif %}</small>
-      </div>
-    </a>
-  </div>
-
-  <div class="dashboard-tile card clickable">
-    <a href="{% url 'configuration:parameters' %}?q=wirgarten.chicken.is_subscribable">
-      <div class="card-body">
-        {% if status_chickenshares_allowed is 0 %}
-        <div class="dashboard-tile-status negative">
-          <span class="material-icons">hide_source</span>
-        </div>
-        {% else %}
-        <div class="dashboard-tile-status positive">
-          <span class="material-icons">task_alt</span>
-        </div>
-        {% endif %}
-        <small><strong>Hühneranteile</strong><br />
-          {% if status_chickenshares_allowed is 0 %}
-          <strong>nicht</strong>{% endif %} zeichenbar {% if status_chickenshares_allowed is 2 %} (auto)
           {% endif %}</small>
       </div>
     </a>

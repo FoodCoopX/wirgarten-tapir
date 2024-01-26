@@ -1,11 +1,11 @@
+from django.conf import settings
 from django.core.validators import (
-    MinValueValidator,
-    MaxValueValidator,
     EmailValidator,
+    MaxValueValidator,
+    MinValueValidator,
     URLValidator,
 )
 from django.utils.translation import gettext_lazy as _
-from localflavor.generic.validators import IBANValidator, BICValidator
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -54,18 +54,12 @@ class Parameter:
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
-    CHICKEN_SHARES_SUBSCRIBABLE = f"{PREFIX}.chicken.is_subscribable"
-    BESTELLCOOP_SUBSCRIBABLE = f"{PREFIX}.bestellcoop.is_subscribable"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
-    HARVEST_SHARES_SUBSCRIBABLE = f"{PREFIX}.harvest.harvest_shares_subscribable"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
     PICK_LIST_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
-    PAYMENT_IBAN = f"{PREFIX}.payment.iban"
-    PAYMENT_BIC = f"{PREFIX}.payment.bic"
-    PAYMENT_CREDITOR_ID = f"{PREFIX}.payment.creditor_id"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
@@ -132,8 +126,7 @@ from tapir.configuration.models import (
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
-        from tapir.configuration.parameter import parameter_definition, ParameterMeta
-        from tapir.wirgarten.constants import ProductTypes
+        from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
 
@@ -290,7 +283,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     ),
                     (
                         1,
-                        "Negative Solidarpreise möglich (Mitglieder können einen niedrigeren Preis wählen)",
+                        "Negative Solidarpreise möglich (Mitglieder können immer einen niedrigeren Preis wählen)",
                     ),
                     (
                         2,
@@ -352,38 +345,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PAYMENT_IBAN,
-            label="Empfänger IBAN",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="DE60240603002801881800",
-            description="IBAN des Empfänger Kontos für Beitragszahlungen.",
-            category=ParameterCategory.PAYMENT,
-            order_priority=1000,
-            meta=ParameterMeta(validators=[IBANValidator()]),
-        )
-
-        parameter_definition(
-            key=Parameter.PAYMENT_BIC,
-            label="Empfänger BIC",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="GENODEF1NBU",
-            description="BIC des Empfänger Kontos für Beitragszahlungen.",
-            category=ParameterCategory.PAYMENT,
-            order_priority=900,
-            meta=ParameterMeta(validators=[BICValidator()]),
-        )
-
-        parameter_definition(
-            key=Parameter.PAYMENT_CREDITOR_ID,
-            label="Gläubiger-ID",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="DE98ZZZ00001996599",
-            description="Die Gläubiger-ID der Genossenschaft.",
-            category=ParameterCategory.PAYMENT,
-            order_priority=800,
-        )
-
-        parameter_definition(
             key=Parameter.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",
             datatype=TapirParameterDatatype.INTEGER,
@@ -391,55 +352,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Wochentag an dem die Ware zum Abholort geliefert wird.",
             category=ParameterCategory.DELIVERY,
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
-        )
-
-        parameter_definition(
-            key=Parameter.HARVEST_SHARES_SUBSCRIBABLE,
-            label="Ernteanteile zeichenbar",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="Wenn deaktiviert, dann sind keine Ernteateile zeichenbar, unabhängig von der freien Kapazität.",
-            category=ParameterCategory.HARVEST,
-            meta=ParameterMeta(
-                options=[
-                    (2, "Automatik (zeichenbar abhängig von Kapaziät)"),
-                    # (1, "zeichenbar"),
-                    (0, "nicht zeichenbar"),
-                ]
-            ),
-            order_priority=1000,
-        )
-
-        parameter_definition(
-            key=Parameter.CHICKEN_SHARES_SUBSCRIBABLE,
-            label="Hühneranteile zeichenbar",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="Wenn aktiv, dann sind Hühneranteile von Mitgliedern zeichenbar.",
-            category=ParameterCategory.ADDITIONAL_SHARES,
-            meta=ParameterMeta(
-                options=[
-                    (2, "Automatik (zeichenbar abhängig von Kapazität)"),
-                    # (1, "zeichenbar"),
-                    (0, "nicht zeichenbar"),
-                ]
-            ),
-        )
-
-        parameter_definition(
-            key=Parameter.BESTELLCOOP_SUBSCRIBABLE,
-            label="BestellCoop Mitgliedschaft möglich",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="Wenn aktiv, dann können neue BestellCoop Mitgliedschaften gebucht werden.",
-            category=ParameterCategory.ADDITIONAL_SHARES,
-            meta=ParameterMeta(
-                options=[
-                    (2, "Automatik (möglich abhängig von Kapaziät)"),
-                    # (1, "zeichenbar"),
-                    (0, "keine Anmeldung möglich"),
-                ]
-            ),
         )
 
         parameter_definition(
@@ -593,11 +505,26 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=400,
         )
 
+        def get_default_product_type():
+            if not settings.BASE_PRODUCT_NAME:
+                raise ValueError(
+                    "BASE_PRODUCT_NAME is not set in tapir/wirgarten/settings/site.py"
+                )
+
+            default_product_type = ProductType.objects.filter(
+                name=settings.BASE_PRODUCT_NAME
+            )
+            return (
+                default_product_type.first().id
+                if default_product_type.exists()
+                else None
+            )
+
         parameter_definition(
             key=Parameter.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value=ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            initial_value=get_default_product_type(),
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(

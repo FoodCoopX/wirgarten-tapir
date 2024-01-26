@@ -1,0 +1,12 @@
+{% load configuration %}
+{% load tapir_static %}
+
+<div class="card" style="margin:1em; text-align: center">
+    <div class="card-body"><strong>
+        Wenn du deinen Ernteanteil innerhalb des ersten Monats, in dem du Gemüse bekommst, kündigst, kannst du auch deinen Beitritt zur Genossenschaft widerrufen. Ansonsten wirst du automatisch nach dem ersten Monat Mitglied in unserer Genossenschaft.
+    </strong></div>
+</div>
+
+<span style="float:right; font-size:1.25rem">= <strong><span id="cooperative_shares_total"></span>,00 €</strong> / einmalige Genossenschaftsanteile</span>
+
+{% include "wirgarten/registration/steps/coop_shares.validation.html" %}

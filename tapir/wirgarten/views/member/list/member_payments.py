@@ -1,11 +1,12 @@
 import itertools
-from copy import copy
 from collections import defaultdict
+from copy import copy
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.db import transaction
+from django.db.models import Max
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy
@@ -15,11 +16,10 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.forms.member.forms import PaymentAmountEditForm
+from tapir.wirgarten.forms.member import PaymentAmountEditForm
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     EditFuturePaymentLogEntry,
-    GrowingPeriod,
     Member,
     Payment,
     Subscription,
@@ -89,27 +89,23 @@ def sub_to_dict(sub):
         "solidarity_price": sub.solidarity_price,
         "solidarity_price_absolute": sub.solidarity_price_absolute,
         "total_price": sub.total_price(),
+        "price_override": sub.price_override,
     }
 
 
 def payment_to_dict(payment: Payment) -> dict:
     subs = (
-        list(
-            map(
-                lambda x: {
-                    "quantity": x.quantity,
-                    "product": {
-                        "name": _("Genossenschaftsanteile"),
-                        "price": x.share_price,
-                    },
-                    "total_price": x.total_price,
+        [
+            {
+                "quantity": tx.quantity,
+                "product": {
+                    "name": _("Genossenschaftsanteile"),
+                    "price": tx.share_price,
                 },
-                CoopShareTransaction.objects.filter(
-                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                    member_id=payment.mandate_ref.member.id,
-                ),
-            )
-        )
+                "total_price": int(tx.quantity * tx.share_price),
+            }
+            for tx in CoopShareTransaction.objects.filter(payment=payment)
+        ]
         if payment.type == "Genossenschaftsanteile"
         else list(
             map(
@@ -154,11 +150,14 @@ def get_previous_payments(member_id) -> dict:
 
 def generate_future_payments(member_id, limit: int = None):
     subs = get_future_subscriptions().filter(member_id=member_id)
+    max_end_date = subs.aggregate(Max("end_date"))["end_date__max"]
 
     payments_per_due_date = {}
+    if not max_end_date:
+        return payments_per_due_date
+
     next_payment_date = get_next_payment_date()
-    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1][0]
-    while next_payment_date <= last_growing_period.end_date and (
+    while next_payment_date <= max_end_date and (
         limit is None or len(payments_per_due_date) < limit
     ):
         payments_per_due_date[next_payment_date] = []

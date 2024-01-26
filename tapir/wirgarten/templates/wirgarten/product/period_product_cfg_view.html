@@ -65,6 +65,7 @@
             <table class="table">
                 <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
                     <th>Lieferzyklus</th>
                     <th style="text-align: right">Kapazität</th>
@@ -75,6 +76,7 @@
                 {% for capacity in capacities %}
                 <tr id="c-{{capacity.id}}" class="tr-clickable" style="display: none"
                     onclick="select_capacity('{{capacity.id}}', '{{capacity.product_type.id}}', '{{ c_p_map }}')">
+                    <td><img width="28" src="{{capacity.product_type.icon_link}}"/></td>
                     <th>{% translate capacity.product_type.name %}
                     {% with base_type='wirgarten.coop.base_product_type'|parameter %}
                         {% if base_type == capacity.product_type.id %}

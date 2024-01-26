@@ -69,12 +69,16 @@
                         <p style="line-height:1.25em">
                             <small>
                                 {% for sub in payment.subs %}
+                                {% if sub.price_override %}
+                                {{sub.quantity}} × {{sub.price_override|format_currency}} €
+                                {% else %}
                                 {{sub.quantity}} × {{sub.product.price}} €
                                 {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                 ({% if sub.solidarity_price > 0%}+{% endif %}
                                 {% widthratio sub.solidarity_price 1 100 %}%)
                                 {% elif sub.solidarity_price_absolute > 0 %}
                                 (+{{sub.solidarity_price_absolute|format_currency}} €)
+                                {% endif %}
                                 {% endif %}<br/>
                                 {% endfor %}
                             </small>

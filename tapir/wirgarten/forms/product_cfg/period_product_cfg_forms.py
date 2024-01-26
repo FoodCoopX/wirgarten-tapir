@@ -1,21 +1,21 @@
-from django.utils.translation import gettext_lazy as _
-
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from tapir.utils.forms import DateInput
-from tapir.wirgarten.constants import DeliveryCycle, NO_DELIVERY
+from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.models import (
-    ProductType,
-    Product,
-    ProductCapacity,
     GrowingPeriod,
-    TaxRate,
     PickupLocation,
     PickupLocationCapability,
+    Product,
+    ProductCapacity,
     ProductPrice,
+    ProductType,
+    TaxRate,
 )
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -79,6 +79,23 @@ class ProductTypeForm(forms.Form):
         self.fields["name"] = forms.CharField(
             initial=initial_name, required=False, label=_("Produkt Name")
         )
+        self.fields["icon_link"] = forms.CharField(
+            required=False,
+            label=_("Icon Link"),
+            initial=product_type.icon_link if product_type is not None else "",
+        )
+        self.fields["contract_link"] = forms.CharField(
+            required=False,
+            label=_("Link zu den Vertragsgrundsätzen"),
+            initial=product_type.contract_link if product_type is not None else "",
+        )
+        self.fields["single_subscription_only"] = forms.BooleanField(
+            required=False,
+            label=_("Nur Einzelabonnement möglich"),
+            initial=product_type.single_subscription_only
+            if product_type is not None
+            else False,
+        )
         self.fields["capacity"] = forms.FloatField(
             initial=initial_capacity, required=True, label=_("Produkt Kapazität (in €)")
         )
@@ -104,23 +121,15 @@ class ProductTypeForm(forms.Form):
                 initial=next_month,
             )
 
-        for location in PickupLocation.objects.all():
-            initial_value = None
-            if product_type is not None:
-                initial_value = PickupLocationCapability.objects.filter(
-                    pickup_location=location, product_type=product_type
-                ).exists()
-            self.fields["plc_" + location.id] = forms.BooleanField(
-                label=location.name, required=False, initial=initial_value
-            )
-
 
 class ProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ProductForm, self).__init__(*args)
 
+        self.capacity_id = kwargs[KW_CAPACITY_ID]
+        self.type_id = ProductCapacity.objects.get(id=self.capacity_id).product_type_id
+
         initial_id = "-"
-        initial_type_id = "-"
         initial_name = ""
         initial_price = 0
 
@@ -139,15 +148,27 @@ class ProductForm(forms.Form):
         self.fields["id"] = forms.CharField(
             initial=initial_id, widget=forms.HiddenInput()
         )
-        self.fields["type_id"] = forms.CharField(
-            initial=initial_type_id, widget=forms.HiddenInput()
-        )
         self.fields["name"] = forms.CharField(
             initial=initial_name, required=True, label=_("Produkt Name")
         )
         self.fields["price"] = forms.FloatField(
             initial=initial_price, required=True, label=_("Preis")
         )
+        self.fields["base"] = forms.BooleanField(
+            initial=False, required=False, label=_("Basisprodukt")
+        )
+
+    def is_valid(self, *args, **kwargs):
+        super(ProductForm, self).is_valid(*args, **kwargs)
+
+        if not self.cleaned_data["base"]:
+            if not Product.objects.filter(type_id=self.type_id, base=True).exists():
+                self.add_error(
+                    field="base",
+                    error=ValidationError(_("Bitte lege zuerst ein Basisprodukt an.")),
+                )
+
+        return not self.errors
 
 
 class GrowingPeriodForm(forms.Form):
@@ -168,8 +189,12 @@ class GrowingPeriodForm(forms.Form):
             initial["id"] = period.id
         else:
             try:
-                period = GrowingPeriod.objects.order_by("-end_date").first()
-                new_start_date = period.end_date + relativedelta(days=1)
+                period = GrowingPeriod.objects.order_by("-end_date")
+                if period.exists():
+                    period = period[:1][0]
+                    new_start_date = period.end_date + relativedelta(days=1)
+                else:
+                    new_start_date = get_next_contract_start_date(ref_date=today)
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:
                 pass

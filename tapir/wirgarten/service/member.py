@@ -3,8 +3,9 @@ from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from tapir import settings
+from django.conf import settings
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
@@ -28,6 +29,7 @@ from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
 from tapir.wirgarten.service.tasks import schedule_task_unique
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -152,13 +154,15 @@ def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date=get_today()):
+def get_next_contract_start_date(ref_date: date = None):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
     :param ref_date: the reference date
     :return: the next contract start date
     """
+    if ref_date is None:
+        ref_date = get_today()
 
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
@@ -170,6 +174,7 @@ def buy_cooperative_shares(
     quantity: int,
     member: int | str | Member,
     start_date: date = None,
+    mandate_ref: MandateReference = None,
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -178,37 +183,56 @@ def buy_cooperative_shares(
     :param member: the member
     :param start_date: the date on which the member officially enters the cooperative
     """
+    member_id = resolve_member_id(member)
+
     if start_date == None:
         start_date = get_next_contract_start_date()
 
-    member_id = resolve_member_id(member)
+    if mandate_ref is None:
+        mandate_ref = get_or_create_mandate_ref(member_id)
 
     share_price = settings.COOP_SHARE_PRICE
-    due_date = start_date.replace(
+    due_date = start_date + relativedelta(
         day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
-    )  # payment is always due next month
+    )
+    if due_date < start_date:
+        due_date = due_date + relativedelta(months=1)
 
-    mandate_ref = get_or_create_mandate_ref(member_id)
-    so = CoopShareTransaction.objects.create(
+    payment_type = "Genossenschaftsanteile"
+    existing_payment = Payment.objects.filter(
+        due_date=due_date,
+        mandate_ref=mandate_ref,
+        status=Payment.PaymentStatus.DUE,
+        type=payment_type,
+    )
+    if existing_payment.exists():
+        payment = existing_payment.first()
+        payment.amount = float(payment.amount) + share_price * quantity
+        payment.save()
+    else:
+        payment = Payment.objects.create(
+            due_date=due_date,
+            amount=share_price * quantity,
+            mandate_ref=mandate_ref,
+            status=Payment.PaymentStatus.DUE,
+            type=payment_type,
+        )
+
+    coop_share_tx = CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=quantity,
         share_price=share_price,
         valid_at=start_date,
         mandate_ref=mandate_ref,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-    )
-
-    Payment.objects.create(
-        due_date=due_date,
-        amount=share_price * quantity,
-        mandate_ref=so.mandate_ref,
-        status=Payment.PaymentStatus.DUE,
-        type="Genossenschaftsanteile",
+        payment=payment,
     )
 
     member = Member.objects.get(id=member_id)
     member.sepa_consent = get_now()
     member.save()
+
+    return coop_share_tx
 
 
 def create_wait_list_entry(
@@ -315,6 +339,9 @@ def send_cancellation_confirmation_email(
         )
 
     if not skip_email:
+        TransactionalTrigger.fire_action(Events.TRIAL_CANCELLATION, member.email)
+
+        # TODO: remove this once migrated to mail module
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(

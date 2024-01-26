@@ -9,14 +9,6 @@
 </div>
 <script>
     const fields = document.getElementsByClassName("form-field");
-    const handleDeliveryCycleChange = (value) => {
-        for (field of fields){
-            if(field.id.startsWith("plc_")){
-                field.style.display = value === "no_delivery" ? "none" : "block";
-            }
-        }
-        parent.postMessage({type:"modal-content-resized"}, "*");
-    }
 
     const nameField = document.getElementById("name");
     const nameInput = document.getElementById("id_name");
@@ -32,9 +24,4 @@
         productTypeSelect.addEventListener("change", (e) => handleProductTypeChange(e.target.value));
         handleProductTypeChange(productTypeSelect.value);
     }
-
-    const deliveryCycleSelect = document.getElementById("id_delivery_cycle")
-    deliveryCycleSelect.addEventListener("change", (e) => handleDeliveryCycleChange(e.target.value))
-
-    handleDeliveryCycleChange(deliveryCycleSelect.value);
 </script>

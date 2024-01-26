@@ -11,6 +11,15 @@ def get_form_modal(
     redirect_url_resolver=(lambda x: str),
     **kwargs
 ):
+    """
+    Generic view to handle a modal form.
+
+    :param request: The request object.
+    :param form: The form to be displayed.
+    :param handler: The handler to be called when the form is submitted.
+    :param instance: The instance to be edited.
+    :param redirect_url_resolver: A function to resolve the redirect url after submitting. Gets the handler result as parameter.
+    """
     # if this is a POST request we need to process the modal data
     if request.method == "POST":
         # create a modal instance and populate it with data from the request:

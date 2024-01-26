@@ -1,17 +1,20 @@
-from datetime import timezone
-
-from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from tapir import settings
+from dateutil.relativedelta import relativedelta
+
+from django.conf import settings
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
+
+# FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.forms.member.forms import (
+from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
     PersonalDataForm,
     SubscriptionRenewalForm,
@@ -19,38 +22,33 @@ from tapir.wirgarten.forms.member.forms import (
     WaitingListForm,
 )
 from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
-from tapir.wirgarten.forms.registration.bestellcoop import BestellCoopForm
-from tapir.wirgarten.forms.registration.chicken_shares import ChickenShareForm
 from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
-from tapir.wirgarten.forms.registration.harvest_shares import HarvestShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
+from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
 from tapir.wirgarten.models import (
     Member,
     MemberPickupLocation,
     PickupLocation,
+    ProductType,
     QuestionaireCancellationReasonResponse,
     SubscriptionChangeLogEntry,
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    calculate_pickup_location_change_date,
-    get_next_delivery_date,
-)
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
-    send_order_confirmation,
+    get_next_contract_start_date,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
     get_next_growing_period,
-    is_bestellcoop_available,
-    is_harvest_shares_available,
+    is_product_type_available,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
@@ -80,6 +78,8 @@ def get_member_personal_data_edit_form(request, **kwargs):
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
 
+        TransactionalTrigger.fire_action(Events.MEMBERAREA_CHANGE_DATA, member.email)
+
         member.save()
 
     return get_form_modal(
@@ -100,9 +100,13 @@ def get_pickup_location_choice_form(request, **kwargs):
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
+    next_month = get_today() + relativedelta(months=1, day=1)
     kwargs["initial"] = {
-        "subs": get_active_subscriptions_grouped_by_product_type(member),
+        "subs": get_active_subscriptions_grouped_by_product_type(
+            member, reference_date=next_month
+        ),
     }
+
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
@@ -138,6 +142,10 @@ def get_pickup_location_choice_form(request, **kwargs):
             user=member,
             text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
         ).save()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+        )
 
     return get_form_modal(
         request=request,
@@ -222,81 +230,53 @@ def get_renew_contracts_form(request, **kwargs):
 @require_http_methods(["GET", "POST"])
 @login_required
 @csrf_protect
-def get_add_harvest_shares_form(request, **kwargs):
+def get_add_subscription_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
     check_permission_or_self(member_id, request)
 
-    member = Member.objects.get(pk=member_id)
-    next_period = get_next_growing_period()
-    if not is_harvest_shares_available() and (
-        next_period and not is_harvest_shares_available(next_period.start_date)
-    ):
-        # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
-        wl_kwargs = kwargs.copy()
-        wl_kwargs["initial"] = {
-            "first_name": member.first_name,
-            "last_name": member.last_name,
-            "email": member.email,
-            "privacy_consent": (member.privacy_consent is not None),
-        }
-        return get_harvest_shares_waiting_list_form(request, **wl_kwargs)
+    product_type_name = request.GET.get("productType")
+    if product_type_name is None:
+        raise Exception("productType not specified")
 
-    @transaction.atomic
-    def save(form: HarvestShareForm):
-        if (
-            get_future_subscriptions()
-            .filter(
-                cancellation_ts__isnull=True,
-                member_id=member_id,
-                end_date__gt=max(form.start_date, form.growing_period.start_date)
-                if hasattr(form, "growing_period")
-                else form.start_date,
-            )
-            .exists()
+    product_type = get_object_or_404(ProductType, name=product_type_name)
+    is_base_product_type = (
+        get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE) == product_type.id
+    )
+
+    if is_base_product_type:
+        form_type = BaseProductForm
+
+        next_start_date = get_next_contract_start_date()
+        next_period = get_next_growing_period()
+        if not is_product_type_available(product_type.id, next_start_date) and (
+            next_period
+            and not is_product_type_available(product_type.id, next_period.start_date)
         ):
-            form.save(send_email=True)
-        else:
-            form.save(send_email=False)
-            send_order_confirmation(
-                member, get_future_subscriptions().filter(member=member)
-            )
+            member = Member.objects.get(id=member_id)
+            # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
+            wl_kwargs = kwargs.copy()
+            wl_kwargs["initial"] = {
+                "first_name": member.first_name,
+                "last_name": member.last_name,
+                "email": member.email,
+                "privacy_consent": (member.privacy_consent is not None),
+            }
+            return get_harvest_shares_waiting_list_form(request, **wl_kwargs)
 
-        SubscriptionChangeLogEntry().populate(
-            actor=request.user,
-            user=member,
-            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=form.subs,
-        ).save()
+    else:
+        kwargs["product_type_id"] = product_type.id
+        form_type = AdditionalProductForm
 
     kwargs["is_admin"] = request.user.has_perm(Permission.Accounts.MANAGE)
     kwargs["member_id"] = member_id
     kwargs["choose_growing_period"] = True
-    return get_form_modal(
-        request=request,
-        form=HarvestShareForm,
-        handler=lambda x: save(x),
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-def get_add_chicken_shares_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-
-    check_permission_or_self(member_id, request)
-    kwargs["choose_growing_period"] = True
-    kwargs["member_id"] = member_id
 
     @transaction.atomic
-    def save(form: ChickenShareForm):
-        form.save(member_id=member_id, send_mail=True)
+    def save(form):
+        form.save(member_id=member_id)
 
         member = Member.objects.get(id=member_id)
-
         SubscriptionChangeLogEntry().populate(
             actor=request.user,
             user=member,
@@ -304,43 +284,14 @@ def get_add_chicken_shares_form(request, **kwargs):
             subscriptions=form.subs,
         ).save()
 
-    return get_form_modal(
-        request=request,
-        form=ChickenShareForm,
-        handler=lambda x: save(x),
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-def get_add_bestellcoop_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-
-    check_permission_or_self(member_id, request)
-
-    if not is_bestellcoop_available():
-        raise Exception("BestellCoop nicht verfügbar")
-
-    @transaction.atomic
-    def save(form: BestellCoopForm):
-        form.save(member_id=member_id)
-
-        member = Member.objects.get(id=member_id)
-
-        SubscriptionChangeLogEntry().populate(
-            actor=request.user,
-            user=member,
-            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=[form.sub],
-        ).save()
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+        )
 
     return get_form_modal(
         request=request,
-        form=BestellCoopForm,
-        handler=lambda x: save(x),
+        form=form_type,
+        handler=save,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
@@ -367,6 +318,9 @@ def get_add_coop_shares_form(request, **kwargs):
         return get_coop_shares_waiting_list_form(request, **wl_kwargs)
 
     today = get_today()
+    kwargs["initial"] = {
+        "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
+    }
     return get_form_modal(
         request=request,
         form=CooperativeShareForm,

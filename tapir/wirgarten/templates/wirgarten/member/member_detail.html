@@ -18,7 +18,7 @@
 <div id="member-detail-container">
     <div id="member-detail-left-column">
 
-        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning %}
+        {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning base_product_type_name=base_product_type_name %}
 
         {% if email_change_request %}
         <div id="email-change-verify" class="alert alert-success">
@@ -67,7 +67,7 @@
                         </small>
                     </div>
                     <div class="card-footer">
-                        <button title="Anteile erhöhen"
+                        <button data-bs-toggle="tooltip" data-bs-placement="bottom" title="Anteile erhöhen"
                                 onclick="handleAddCoopShares()"
                                 class="btn btn-outline-success mx-1 px-2"
                                 style="float:right"
@@ -76,7 +76,7 @@
                         </button>
                     </div>
                 </div>
-
+                
                 {% for type in subscriptions.keys %}
                 <div class="card">
                     <div class="card-body">
@@ -112,45 +112,16 @@
                         <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
                     </span>
                         {% endwith %}
-                        <!-- FIXME: hardcoded product type names :( -->
-                        {% if available_product_types|get_value:type|default:False %}
-                        {% if type == 'Ernteanteile' %}
-                        {% if coop_shares_total > 0 %}
-                        <button title="Anteile bearbeiten"
-                                onclick="handleAddHarvestShares()"
+                        {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
+                        <button data-bs-toggle="tooltip" data-bs-placement="bottom" title="Anteile bearbeiten"
+                                onclick="handleAddSubscription('{{type}}' {% if forloop.counter0 == 0 and not available_product_types|get_value:type|default:False %}, true {% endif %})"
                                 class="btn btn-outline-success mx-1 px-2"
                         >
                             <span class="material-icons">edit</span>
                         </button>
                         {% else %}
-                        <button title="Du musst Mitglied der Genossenschaft sein um Erteanteile zeichnen zu können."
-                                class="btn btn-outline-success mx-1 px-2"
-                                disabled
-                        >
-                            <span class="material-icons">add</span>
-                        </button>
-                        {% endif %}
-                        {% endif %}
-                        {% if type == 'Hühneranteile' %}
-                        <button title="Anteile erhöhen"
-                                onclick="handleAddChickenShares()"
-                                class="btn btn-outline-success mx-1 px-2"
-                        >
-                            <span class="material-icons">add</span>
-                        </button>
-                        {% endif %}
-                        {% if type == 'BestellCoop' %}
-                        <button title="Anteile erhöhen"
-                                onclick="handleAddBestellCoop()"
-                                class="btn btn-outline-success mx-1 px-2"
-                        >
-                            <span class="material-icons">add</span>
-                        </button>
-                        {% endif %}
-                        {% else %}
-                        <button title="Aktuell nicht verfügbar"
-                                class="btn btn-outline-success mx-1 px-2"
-                                disabled
+                        <button data-bs-toggle="tooltip" data-bs-placement="bottom" title="Aktuell nicht verfügbar"
+                                class="btn btn-outline-secondary mx-1 px-2"
                         >
                             <span class="material-icons">add</span>
                         </button>
@@ -167,7 +138,7 @@
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Abholung" %}
                 <button class="btn tapir-btn btn-outline-primary" {% if lock_functions %} disabled="disabled" {%endif%}
-                        onclick="FormModal.load('{% url 'wirgarten:member_pickup_location_choice' object.pk %}', 'Abholort ändern')">
+                        onclick="FormModal.load(`{% url 'wirgarten:member_pickup_location_choice' object.pk %}`, 'Abholort ändern')">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
             </h5>
@@ -228,7 +199,7 @@
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 {% translate "Persönliche Daten" %}
                 <button class="btn tapir-btn btn-outline-primary"
-                        onclick="FormModal.load('{% url 'wirgarten:member_edit' object.pk %}', 'Persönliche Daten ändern')"
+                        onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
                         id="tapir_user_edit_button">
                     <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
                 </button>
@@ -339,41 +310,26 @@ const handleOpenEmail = (subject, contentUrl) => {
 {% endif %}
 
 <script>
-    const handleAddCoopShares = () => {
+    const handleAddSubscription = (productType, waitlist = false) => {
         {% if object.iban and object.pickup_location %}
-        FormModal.load('{% url 'wirgarten:member_add_coop_shares' object.pk %}', {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})
+        FormModal.load(`{% url 'wirgarten:member_add_subscription' object.pk %}?productType=` + productType, waitlist ? "Warteliste" : productType + ' dazubuchen');
         {% else %}
         ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
+        {% endif %}
+    }
+
+    const handleAddCoopShares = () => {
+        {% if object.iban %}
+        FormModal.load(`{% url 'wirgarten:member_add_coop_shares' object.pk %}`, {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen' {% else %} 'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %})
+        {% else %}
+        ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}")
         {% endif %}
     }
 
     const handleTrialCancellation = () => {
-        FormModal.load('{% url 'wirgarten:member_cancel_trial' object.pk %}', 'Verträge kündigen')
+        FormModal.load(`{% url 'wirgarten:member_cancel_trial' object.pk %}`, 'Verträge kündigen')
     }
 
-    const handleAddBestellCoop = () => {
-        {% if object.iban and object.pickup_location %}
-        FormModal.load('{% url 'wirgarten:member_add_bestellcoop' object.pk %}', 'BestellCoop Mitglied werden');
-        {% else %}
-        ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
-        {% endif %}
-    }
-
-    const handleAddChickenShares = () => {
-        {% if object.iban and object.pickup_location %}
-        FormModal.load('{% url 'wirgarten:member_add_chicken_shares' object.pk %}', 'Hühneranteile dazubuchen');
-        {% else %}
-        ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
-        {% endif %}
-    }
-
-    const handleAddHarvestShares = () => {
-        {% if object.iban and object.pickup_location %}
-        FormModal.load('{% url 'wirgarten:member_add_harvest_shares' object.pk %}', {% if available_product_types|get_value:"Ernteanteile"|default:False %} 'Ernteanteile ändern' {% else %} 'Warteliste', 'Aktuell sind leider keine Ernteanteile verfügbar. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning' {% endif %});
-        {% else %}
-        ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
-        {% endif %}
-    }
 </script>
 {% endwith %}
 {% endblock %}

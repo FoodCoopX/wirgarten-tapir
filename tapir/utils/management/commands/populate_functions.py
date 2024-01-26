@@ -78,6 +78,9 @@ def populate_users():
                 sepa_consent=json_user.date_joined,
                 privacy_consent=json_user.date_joined,
                 withdrawal_consent=json_user.date_joined,
+                pickup_location=pickup_locations[
+                    random.randint(0, len(pickup_locations) - 1)
+                ],
             )
             copy_user_info(json_user, wirgarten_user)
             wirgarten_user.save(initial_password=wirgarten_user.email.split("@")[0])

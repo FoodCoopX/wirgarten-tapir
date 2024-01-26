@@ -1,0 +1,19 @@
+{% load configuration %} 
+{% load tapir_static %}
+
+<span style="float: right; font-size: 1.25rem"
+  >= <strong><span id="additional_shares_total">0.00</span> €</strong> inkl.
+  MwSt / Monat</span><br/>
+<script src="{% static 'wirgarten/js/registration/additional_shares.js' %}"></script>
+<script>
+  const growingPeriodSelect = document.getElementById("id_growing_period");
+  if(!growingPeriodSelect) {
+      initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}})
+  } else {
+      growingPeriodSelect.addEventListener("change", function() {
+        initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}}[growingPeriodSelect.selectedIndex])
+      });
+      initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}}[growingPeriodSelect.selectedIndex])
+  }
+</script>
+<script src="{% static 'wirgarten/js/forced-pickup-location-change.js' %}"></script>

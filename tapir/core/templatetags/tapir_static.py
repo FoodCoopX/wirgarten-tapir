@@ -5,7 +5,7 @@ from django.apps import apps
 from django.utils.encoding import iri_to_uri
 from django.utils.html import conditional_escape
 
-from tapir import settings
+from django.conf import settings
 
 register = template.Library()
 
