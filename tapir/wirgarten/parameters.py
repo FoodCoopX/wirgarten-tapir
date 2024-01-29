@@ -506,7 +506,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         def get_default_product_type():
-            if not settings.BASE_PRODUCT_NAME:
+            if not hasattr(settings, "BASE_PRODUCT_NAME"):
                 raise ValueError(
                     "BASE_PRODUCT_NAME is not set in tapir/wirgarten/settings/site.py"
                 )
