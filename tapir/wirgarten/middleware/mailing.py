@@ -1,4 +1,5 @@
 import re
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
@@ -13,6 +14,9 @@ class TapirMailPermissionMiddleware:
         # PUBLIC TRACKING PIXEL LINK ACCESS
         if re.match(
             settings.TAPIR_MAIL_PATH + r"/?api/tracking/(.*)/track/?", request.path
+        ) or re.match(
+            settings.TAPIR_MAIL_PATH + r"/?api/media_library/get_file/(.*)",
+            request.path,
         ):
             return self.get_response(request)
 
