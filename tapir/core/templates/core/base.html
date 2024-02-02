@@ -64,24 +64,13 @@
             </nav>
              {% endif %}
 
-            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:16em; padding-right:0"{%else%}style="padding-left:2em;padding-right:2em"{% endif %}>
+            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:4em;"{% endif %}>
                 {% bootstrap_messages %}
                 {% block content %}{% endblock %}
             </main>
 
     </div>
 </div>
-<script>
-  function adjustMainContentMargin() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
-    const sidebarWidth = sidebar.offsetWidth;
-    mainContent.style.marginLeft = `calc(${sidebarWidth}px + 0.5em)`;
-  }
-
-  window.addEventListener('load', adjustMainContentMargin);
-  window.addEventListener('resize', adjustMainContentMargin);
-</script>
 </body>
 
 <script src="{% static 'wirgarten/js/table-functions.js' %}"></script>
