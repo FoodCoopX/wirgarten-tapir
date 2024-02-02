@@ -229,6 +229,9 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             for product_type_name, sub in initial["subs"].items()
             if sub and sub[0].product.type.delivery_cycle != NO_DELIVERY[0]
         }
+        selected_product_types = {
+            k: v for k, v in selected_product_types.items() if v > 0
+        }
 
         possible_locations = PickupLocation.objects.filter(
             id__in=map(lambda x: x["pickup_location_id"], location_capabilities)
