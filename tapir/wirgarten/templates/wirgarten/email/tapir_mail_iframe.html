@@ -1,7 +1,13 @@
-{% extends "core/base.html" %} 
-{% block content %}
-{% csrf_token %}
-<div style="width: calc(100% + 2.5em); height: 93.75vh; margin-left:-1.55em; margin-right: -1.25em; overflow: hidden">
+{% extends "core/base.html" %} {% block content %} {% csrf_token %}
+<div
+  style="
+    width: calc(100% + 2.5em);
+    height: 93.75vh;
+    margin-left: -1.55em;
+    margin-right: -1.25em;
+    overflow: hidden;
+  "
+>
   <iframe
     id="tapirMailIframe"
     style="width: 100%; height: 100%; overflow: hidden"
@@ -9,19 +15,34 @@
 </div>
 <script>
   window.onload = () => {
-    const iframe = document.getElementById('tapirMailIframe');
-    iframe.src = '{{TAPIR_MAIL_PATH}}' + window.location.hash.substring(1);
+    const iframe = document.getElementById("tapirMailIframe");
+    iframe.src = "{{TAPIR_MAIL_PATH}}" + window.location.hash.substring(1);
 
     const checkIframeUrl = () => {
       try {
-        window.location.hash = iframe.contentWindow.location.pathname.replace('/tapirmail', '');
-      } catch(e) {
-        console.log(e)
+        window.location.hash = iframe.contentWindow.location.pathname.replace(
+          "/tapirmail",
+          ""
+        );
+      } catch (e) {
+        console.log(e);
       }
-    }
+    };
 
     setInterval(checkIframeUrl, 500);
-  }
+  };
+
+  // Prevent leaving the page when the user is editing an email
+  window.addEventListener("beforeunload", function (e) {
+    if (
+      window.location.hash.startsWith("#/editor") ||
+      window.location.hash.startsWith("#/emailconfiguration")
+    ) {
+      e.preventDefault();
+      // Chrome requires returnValue to be set.
+      e.returnValue = "";
+    }
+  });
 </script>
 
 {% endblock %}
