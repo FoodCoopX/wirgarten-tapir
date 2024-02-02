@@ -71,7 +71,10 @@ input {
     border-bottom-right-radius: 10px;
     box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
     animation: fadeIn 0.8s;
+    max-width: 32em;
+    margin: auto;
 }
+
 
 @keyframes fadeIn {
   0% { opacity: 0; }
