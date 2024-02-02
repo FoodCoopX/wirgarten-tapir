@@ -202,7 +202,7 @@ body {
     border-bottom-right-radius: 10px;
     box-shadow: 2px 2px 18px 2px rgb(2 0 1 / 7%);
     animation: fadeIn 0.8s;
-}
+}nav-item
 
 .hidden { display: none; }
 
@@ -285,9 +285,35 @@ div.option.selected {
   white-space: nowrap;
 }
 
+.navbar.sticky-top{
+  z-index: 2010;
+}
+
 .custom-sidebar{
-    width: auto;
-    min-width: 12em; /* Adjust this value to your desired minimum width */
+    width: 4em;
+    transition: width 0.3s ease;
+    position:absolute;
+    padding-top:4.5em;
+    white-space: nowrap;
+    z-index: 2000;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+}
+
+.sidebar-item-details{
+  opacity:0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-group {
+  margin-top:1em;
+}
+
+.custom-sidebar:hover{
+  width:16em;
+}
+
+.custom-sidebar:hover > div > .sidebar-item-details, .custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+  opacity:1;
 }
 
 .material-icons {
@@ -296,4 +322,9 @@ div.option.selected {
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
+}
+
+main{
+  padding-left:1em;
+  padding-right:1em
 }
