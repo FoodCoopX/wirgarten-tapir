@@ -240,6 +240,9 @@ class BaseProductForm(forms.Form):
                     }
 
                 if len(sub_variants) > 0:
+                    soli_absolute = list(sub_variants.values())[0][
+                        "solidarity_price_absolute"
+                    ]
                     for key, field in self.fields.items():
                         if (
                             key.startswith(BASE_PRODUCT_FIELD_PREFIX)
@@ -250,13 +253,13 @@ class BaseProductForm(forms.Form):
                                 key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                             ]["quantity"]
                         elif key == "solidarity_price_harvest_shares":
-                            field.initial = list(sub_variants.values())[0][
-                                "solidarity_price"
-                            ]  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
+                            field.initial = (
+                                list(sub_variants.values())[0]["solidarity_price"]
+                                if not soli_absolute
+                                else "custom"
+                            )  # FIXME: maybe the soli price should not be in the subscription but in the Member model..
                         elif key == "solidarity_price_absolute_harvest_shares":
-                            field.initial = list(sub_variants.values())[0][
-                                "solidarity_price_absolute"
-                            ]
+                            field.initial = soli_absolute
 
             subs[self.product_type.name] = (
                 [new_sub_dummy]
@@ -321,13 +324,13 @@ class BaseProductForm(forms.Form):
         if self.product_type.name in subs:
             for sub in subs[self.product_type.name]:
                 sub.end_date = self.start_date - relativedelta(days=1)
+                existing_trial_end_date = sub.trial_end_date
                 if (
                     sub.start_date > sub.end_date
                 ):  # change was done before the contract started, so we can delete the subscription
                     sub.delete()
                 else:
                     sub.save()
-                    existing_trial_end_date = sub.trial_end_date
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -363,12 +366,15 @@ class BaseProductForm(forms.Form):
                     start_date=max(self.start_date, self.growing_period.start_date),
                     end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
-                    consent_ts=now
-                    if self.product_type.contract_link
-                    and self.cleaned_data["consent_harvest_shares"]
-                    else None,
+                    consent_ts=(
+                        now
+                        if self.product_type.contract_link
+                        and self.cleaned_data["consent_harvest_shares"]
+                        else None
+                    ),
                     withdrawal_consent_ts=now,
-                    trial_end_date=existing_trial_end_date,
+                    trial_end_date_override=existing_trial_end_date,
+                    trial_disabled=existing_trial_end_date is None,
                     **solidarity_options,
                 )
 
@@ -389,9 +395,11 @@ class BaseProductForm(forms.Form):
             .filter(
                 cancellation_ts__isnull=True,
                 member_id=member_id,
-                end_date__gt=max(self.start_date, self.growing_period.start_date)
-                if hasattr(self, "growing_period")
-                else self.start_date,
+                end_date__gt=(
+                    max(self.start_date, self.growing_period.start_date)
+                    if hasattr(self, "growing_period")
+                    else self.start_date
+                ),
             )
             .exists()
         ):
