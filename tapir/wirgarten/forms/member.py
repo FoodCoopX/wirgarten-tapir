@@ -203,10 +203,12 @@ class PaymentAmountEditForm(Form):
         self.initial_amount = kwargs.get("initial_amount", 0.0)
         self.mandate_ref_id = kwargs["mandate_ref_id"].replace("~", "/")
         self.payment_due_date = kwargs["payment_due_date"]
+        self.payment_type = kwargs["payment_type"]
 
         payments = Payment.objects.filter(
             mandate_ref=self.mandate_ref_id,
             due_date=datetime.strptime(self.payment_due_date, "%d.%m.%Y").date(),
+            type=self.payment_type,
         )
 
         if len(payments) < 1:
