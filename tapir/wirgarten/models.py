@@ -511,13 +511,13 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     @property
     def trial_end_date(self):
+        if self.trial_disabled:
+            return get_today() - relativedelta(days=1)
+
         if self.trial_end_date_override is not None:
             return self.trial_end_date_override
-        return (
-            self.start_date
-            if self.trial_disabled
-            else self.start_date + relativedelta(months=1, day=1, days=-1)
-        )
+
+        return self.start_date + relativedelta(months=1, day=1, days=-1)
 
     @trial_end_date.setter
     def trial_end_date(self, value):
