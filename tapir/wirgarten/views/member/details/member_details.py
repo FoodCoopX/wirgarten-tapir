@@ -119,7 +119,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         projected = generate_future_payments(self.object.id, 2)
         if len(projected) > 0:
-            next_payments += projected.get(next_due_date, [])
+            projected = projected.get(next_due_date, [])
+            for p in projected:
+                if p["type"] not in [n["type"] for n in next_payments]:
+                    next_payments.append(p)
 
         context["next_payment"] = (
             {

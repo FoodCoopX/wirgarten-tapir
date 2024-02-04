@@ -13,7 +13,7 @@
             <h5>Zahlungen - {{member.first_name}} {{member.last_name}}</h5>
         </div>
         <div class="card-body">
-            <table class="table table-striped">
+            <table class="table">
                 <thead>
                 <tr>
                     <th style="text-align:center">
@@ -25,11 +25,14 @@
                     <th style="text-align:center">
                         {% translate 'Betrag' %}
                     </th>
+                    {% if perms.coop.manage %}
+                    <th></th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
                 {% for payment in payments %}
-                <tr>
+                <tr class="single-payment" data-date="{{payment.due_date}}">
                     <td style="text-align:center">
                         <strong id="date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}">{{payment.due_date}}</strong><br/>
                         <p style="line-height:1.25em"><small
@@ -184,6 +187,22 @@
                 });
             };
 
+
+// stripe table by due_date
+document.addEventListener('DOMContentLoaded', function() {
+    var tableRows = document.querySelectorAll('tr.single-payment');
+    var prevValue = null;
+    var currentBgColor = '#f8f9fa'; // Initial background color
+    tableRows.forEach(function(row) {
+        var currentValue = row.getAttribute('data-date'); 
+        console.log(currentValue)
+        if (prevValue !== null && currentValue !== prevValue) {
+            currentBgColor = (currentBgColor === '#f8f9fa') ? '#ffffff' : '#f8f9fa'; // Toggle color
+        }
+        row.style.backgroundColor = currentBgColor;
+        prevValue = currentValue;
+    });
+});
 
 </script>
 {% endblock %}
