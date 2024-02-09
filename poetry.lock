@@ -2653,12 +2653,12 @@ yaml = ["pyyaml"]
 
 [[package]]
 name = "tapir-mail"
-version = "0.0.0.dev1707479554"
+version = "0.0.0.dev1707486331"
 description = ""
 optional = false
 python-versions = ">=3.11,<4.0"
 files = [
-    {file = "tapir_mail-0.0.0.dev1707479554-py3-none-any.whl", hash = "sha256:1b4079b0f07a9217fdaad4a92d5c444c4d9b6a9a706135148a913353f918c4fa"},
+    {file = "tapir_mail-0.0.0.dev1707486331-py3-none-any.whl", hash = "sha256:57c2697d339fcae03a34018b977aa35ac8a60512c2050ef48156ec0160c243ba"},
 ]
 
 [package.dependencies]
@@ -2678,7 +2678,7 @@ redis = ">=5.0.1,<6.0.0"
 
 [package.source]
 type = "url"
-url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1707479554/tapir_mail-0.0.0.dev1707479554-py3-none-any.whl"
+url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1707486331/tapir_mail-0.0.0.dev1707486331-py3-none-any.whl"
 
 [[package]]
 name = "termcolor"
@@ -3010,4 +3010,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ba69196b978dfbf4d9631ce8d17d5be73a7131e9ca5ccfdeaeec6637279b71ec"
+content-hash = "e5f28c1478c6250816c65edbcb38521d37da99f2c63f0328c81055ab87b264cf"
