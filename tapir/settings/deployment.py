@@ -45,7 +45,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },
@@ -54,7 +54,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },
@@ -83,6 +83,9 @@ CELERY_BEAT_SCHEDULE = {
 EMAIL_DISPATCH_BATCH_SIZE = (
     200  # job runs 1x/minute --> 200 * 60 = 12,000 emails per hour maximum
 )
+
+# if True, email will not be sent and set to ERROR if it contains unknown tokens. If False, unknown tokens are just stripped and ignored.
+EMAIL_TOKENS_STRICT_VALIDATION = True
 
 EMAIL_ENV = env("EMAIL_ENV", default="dev")
 EMAIL_PORT_IMAP = env.str("EMAIL_PORT_IMAP", default=993)

@@ -29,7 +29,12 @@ from tapir.wirgarten.service.products import (
     get_product_price,
 )
 from tapir.wirgarten.tapirmail import Events
-from tapir.wirgarten.utils import format_date, get_now, get_today
+from tapir.wirgarten.utils import (
+    format_date,
+    format_subscription_list_html,
+    get_now,
+    get_today,
+)
 
 
 @shared_task
@@ -186,13 +191,16 @@ def send_email_member_contract_end_reminder(member_id: str):
         .filter(member=member, start_date__gt=today)
         .exists()
     ):
+        contract_list = format_subscription_list_html(active_subs)
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
             content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
-            variables={
-                "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + str(x), active_subs))}"
-            },
+            variables={"contract_list": contract_list},
+        )
+
+        TransactionalTrigger.fire_action(
+            Events.FINAL_PICKUP, member.email, {"contract_list": contract_list}
         )
     else:
         print(
