@@ -17,17 +17,9 @@ class GlobalServerErrorHandlerMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        try:
-            response = self.get_response(request)
-            return response
-        except Exception as e:
-            self.handle_server_error(request, e)
-            if settings.DEBUG:
-                return debug.technical_500_response(request, *sys.exc_info())
-            else:
-                return HttpResponseServerError("Internal Server Error")
+        return self.get_response(request)
 
-    def handle_server_error(self, request, exception):
+    def process_exception(self, request, exception):
         timestamp = get_now().strftime("%Y-%m-%d_%H-%M-%S")
         error_log_dir = (
             settings.ERROR_LOG_DIR
