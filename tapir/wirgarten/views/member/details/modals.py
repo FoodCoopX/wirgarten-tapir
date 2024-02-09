@@ -137,16 +137,17 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).delete()
 
         pl = PickupLocation.objects.get(id=pickup_location_id)
+        change_date_str = format_date(change_date)
         TextLogEntry().populate(
             actor=request.user,
             user=member,
-            text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
+            text=f"Abholort geändert zum {change_date_str}: {member.pickup_location} -> {pl}",
         ).save()
 
         TransactionalTrigger.fire_action(
             Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
             member.email,
-            {"pickup_location": pl.name, "pickup_location_start_date": change_date},
+            {"pickup_location": pl.name, "pickup_location_start_date": change_date_str},
         )
 
     return get_form_modal(
