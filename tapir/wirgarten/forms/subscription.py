@@ -379,8 +379,8 @@ class BaseProductForm(forms.Form):
         member.save()
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
-        change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
+            change_date = self.cleaned_data.get("pickup_location_change_date")
             change_pickup_location(member_id, new_pickup_location, change_date)
 
         if (

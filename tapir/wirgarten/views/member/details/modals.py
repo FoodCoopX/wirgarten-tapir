@@ -1,3 +1,5 @@
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -5,9 +7,6 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from dateutil.relativedelta import relativedelta
-
-from django.conf import settings
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
@@ -52,6 +51,7 @@ from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
+    format_subscription_list_html,
     get_now,
     get_today,
     member_detail_url,
@@ -144,7 +144,9 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).save()
 
         TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
+            Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+            member.email,
+            {"pickup_location": pl.name, "pickup_location_start_date": change_date},
         )
 
     return get_form_modal(
@@ -283,10 +285,6 @@ def get_add_subscription_form(request, **kwargs):
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=form.subs,
         ).save()
-
-        TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_CONTRACT, member.email
-        )
 
     return get_form_modal(
         request=request,

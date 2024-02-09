@@ -46,6 +46,18 @@ class Events:
     # Mitglied tritt der Genossenschaft bei (nach Ablauf der Probezeit)
     MEMBERSHIP_ENTRY = "membership_entry"
 
+    # Letzte Abholung (es gibt keine weiteren Verträge mehr)
+    FINAL_PICKUP = "final_pickup"
+
+    # Mitglied hat Abholort geändert
+    MEMBERAREA_CHANGE_PICKUP_LOCATION = "memberarea_change_pickup_location"
+
+    # Mitglied möchte Email Adresse ändern, muss Bestätigungslink klicken
+    MEMBERAREA_CHANGE_EMAIL_INITIATE = "memberarea_change_email_initiate"
+
+    # Email Adresse wurde erfolgreich geändert
+    MEMBERAREA_CHANGE_EMAIL_SUCCESS = "memberarea_change_email_success"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -226,24 +238,67 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "BestellWizard: Mitgliedschaft + Ernteanteile",
         Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        {
+            "Vertragsliste": "contract_list",
+            "Vertragsstart": "contract_start_date",
+            "Vertragsende": "contract_end_date",
+            "Erste Abholung am": "first_pickup_date",
+        },
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
     )
     TransactionalTrigger.register_action(
-        "Vertragsänderungen im Mitgliederbereich", Events.MEMBERAREA_CHANGE_CONTRACT
+        "Vertragsänderungen im Mitgliederbereich",
+        Events.MEMBERAREA_CHANGE_CONTRACT,
+        {
+            "Vertragsliste": "contract_list",
+            "Vertragsstart": "contract_start_date",
+            "Vertragsende": "contract_end_date",
+            "Erste Abholung am": "first_pickup_date",
+        },
     )
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
     )
     TransactionalTrigger.register_action(
-        "Kündigung im Probemonat", Events.TRIAL_CANCELLATION
+        "Abholortänderung",
+        Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+        {
+            "Neuer Abholort": "pickup_location",
+            "Gültig ab": "pickup_location_start_date",
+        },
+    )
+
+    TransactionalTrigger.register_action(
+        "Email-Änderung: Bestätigung anfordern",
+        Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+        {"Bestätigungslink": "verify_link"},
+    )
+    TransactionalTrigger.register_action(
+        "Email-Änderung: Erfolg",
+        Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+    )
+
+    TransactionalTrigger.register_action(
+        "Kündigung im Probemonat",
+        Events.TRIAL_CANCELLATION,
+        {
+            "Vertragsliste": "contract_list",
+            "Vertragsende": "contract_end_date",
+            "Letzte Abholung am": "last_pickup_date",
+        },
     )
     TransactionalTrigger.register_action(
         "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
+    )
+    TransactionalTrigger.register_action(
+        "Vertrags-/Lieferende",
+        Events.FINAL_PICKUP,
+        {"Vertragsliste": "contract_list"},
     )
 
     register_trigger(OnboardingTrigger)

@@ -42,3 +42,7 @@ def get_today() -> datetime.date:
 
 def get_now() -> datetime.datetime:
     return timezone.now()
+
+
+def format_subscription_list_html(subs):
+    return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
