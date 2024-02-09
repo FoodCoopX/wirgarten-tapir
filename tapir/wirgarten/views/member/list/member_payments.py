@@ -1,7 +1,8 @@
 import itertools
 from collections import defaultdict
 from copy import copy
-from datetime import datetime
+from datetime import datetime, date
+from urllib.parse import unquote
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import permission_required
@@ -53,24 +54,24 @@ class MemberPaymentsView(
         prev_payments = get_previous_payments(member_id)
         future_payments = generate_future_payments(member_id)
 
-        for date, payments in future_payments.items():
-            if date in prev_payments:
-                prev_payments[date].extend(
+        for due_date, payments in future_payments.items():
+            if due_date in prev_payments:
+                prev_payments[due_date].extend(
                     [
                         p
                         for p in payments
                         if p.get("type", None)
                         not in set(
-                            map(lambda x: x.get("type", None), prev_payments[date])
+                            map(lambda x: x.get("type", None), prev_payments[due_date])
                         )
                     ]
                 )
             else:
-                prev_payments[date] = payments
+                prev_payments[due_date] = payments
 
         return sorted(
             [v for sublist in prev_payments.values() for v in sublist],
-            key=lambda x: x["due_date"].isoformat() + x.get("id", ""),
+            key=lambda x: x["due_date"].isoformat() + x.get("type", ""),
         )
 
 
@@ -114,6 +115,7 @@ def payment_to_dict(payment: Payment) -> dict:
                     mandate_ref=payment.mandate_ref,
                     start_date__lte=payment.due_date,
                     end_date__gt=payment.due_date,
+                    product__type__name=payment.type,
                 ),
             )
         )
@@ -131,7 +133,8 @@ def payment_to_dict(payment: Payment) -> dict:
         "subs": list(map(sub_to_dict, subs)),
         "status": payment.status,
         "edited": payment.edited,
-        "upcoming": (get_today() - payment.due_date).days < 0,
+        "upcoming": (get_today() - payment.due_date).days < 0
+        and not payment.transaction,
     }
 
 
@@ -164,27 +167,22 @@ def generate_future_payments(member_id, limit: int = None):
         active_subs = subs.filter(
             start_date__lte=next_payment_date, end_date__gte=next_payment_date
         )
-        if active_subs.count() > 0:
-            groups = itertools.groupby(active_subs, lambda v: v.mandate_ref)
-
-            for mandate_ref, values in groups:
-                values = list(values)
-                due_date = next_payment_date
-
-                amount = get_total_price_for_subs(values)
-                payments_per_due_date[next_payment_date].append(
-                    {
-                        "type": "Ernteanteile",
-                        "due_date": due_date,
-                        "mandate_ref": mandate_ref,
-                        "amount": amount,
-                        "calculated_amount": amount,
-                        "subs": list(map(sub_to_dict, active_subs)),
-                        "status": Payment.PaymentStatus.DUE,
-                        "edited": False,
-                        "upcoming": True,
-                    }
-                )
+        for sub in active_subs:
+            due_date = next_payment_date
+            amount = sub.total_price()
+            payments_per_due_date[next_payment_date].append(
+                {
+                    "type": sub.product.type.name,
+                    "due_date": due_date,
+                    "mandate_ref": sub.mandate_ref,
+                    "amount": amount,
+                    "calculated_amount": amount,
+                    "subs": [sub_to_dict(sub)],
+                    "status": Payment.PaymentStatus.DUE,
+                    "edited": False,
+                    "upcoming": True,
+                }
+            )
         if len(payments_per_due_date[next_payment_date]) == 0:
             del payments_per_due_date[next_payment_date]
 
@@ -204,7 +202,7 @@ def get_payment_amount_edit_form(request, **kwargs):
         )
     }
     kwargs["initial_amount"] = float(query_params["amount"].replace(",", "."))
-    payment_type = query_params["type"]
+    kwargs["payment_type"] = unquote(query_params["type"])
 
     @transaction.atomic
     def save_future_payment_change():
@@ -230,7 +228,7 @@ def get_payment_amount_edit_form(request, **kwargs):
 
         if not hasattr(form, "payment"):
             new_payment = Payment.objects.create(
-                type=payment_type,
+                type=kwargs["payment_type"],
                 due_date=datetime.strptime(form.payment_due_date, "%d.%m.%Y"),
                 amount=form.data["amount"],
                 mandate_ref_id=form.mandate_ref_id,
