@@ -16,7 +16,11 @@
 <script>
   window.onload = () => {
     const iframe = document.getElementById("tapirMailIframe");
-    iframe.src = "{{TAPIR_MAIL_PATH}}" + window.location.hash.substring(1);
+    let subpage = window.location.hash.substring(1);
+    if (subpage.startsWith("state=")) {
+      subpage = "";
+    }
+    iframe.src = "{{TAPIR_MAIL_PATH}}" + subpage;
 
     const checkIframeUrl = () => {
       try {
