@@ -40,6 +40,7 @@ from tapir.wirgarten.service.payment import (
     get_solidarity_overplus,
 )
 from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
     get_available_product_types,
     get_current_growing_period,
     get_free_product_capacity,
@@ -156,7 +157,6 @@ class BaseProductForm(forms.Form):
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                # Assume harvest_share_products[0] is defined earlier in your code
                 free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date)}".replace(
                     ",", "."
                 )
@@ -317,20 +317,11 @@ class BaseProductForm(forms.Form):
                 "growing_period", get_current_growing_period()
             )
 
-        subs = get_active_subscriptions_grouped_by_product_type(
-            member_id, self.start_date
+        self.start_date = max(self.start_date, self.growing_period.start_date)
+
+        existing_trial_end_date = cancel_subs_for_edit(
+            member_id, self.start_date, self.product_type
         )
-        existing_trial_end_date = None
-        if self.product_type.name in subs:
-            for sub in subs[self.product_type.name]:
-                sub.end_date = self.start_date - relativedelta(days=1)
-                existing_trial_end_date = sub.trial_end_date
-                if (
-                    sub.start_date > sub.end_date
-                ):  # change was done before the contract started, so we can delete the subscription
-                    sub.delete()
-                else:
-                    sub.save()
 
         for key, quantity in self.cleaned_data.items():
             if (
@@ -363,7 +354,7 @@ class BaseProductForm(forms.Form):
                     product=product,
                     period=self.growing_period,
                     quantity=quantity,
-                    start_date=max(self.start_date, self.growing_period.start_date),
+                    start_date=self.start_date,
                     end_date=self.growing_period.end_date,
                     mandate_ref=mandate_ref,
                     consent_ts=(
@@ -701,6 +692,12 @@ class AdditionalProductForm(forms.Form):
                 "growing_period", get_current_growing_period()
             )
 
+        self.start_date = max(self.start_date, self.growing_period.start_date)
+
+        existing_trial_end_date = cancel_subs_for_edit(
+            member_id, self.start_date, self.product_type
+        )
+
         self.subs = []
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and quantity and quantity > 0:
@@ -714,11 +711,13 @@ class AdditionalProductForm(forms.Form):
                         product=product,
                         quantity=quantity,
                         period=self.growing_period,
-                        start_date=max(self.start_date, self.growing_period.start_date),
+                        start_date=self.start_date,
                         end_date=self.growing_period.end_date,
                         mandate_ref=mandate_ref,
                         consent_ts=now if self.contract_link else None,
                         withdrawal_consent_ts=now,
+                        trial_end_date_override=existing_trial_end_date,
+                        trial_disabled=existing_trial_end_date is None,
                     )
                 )
 
@@ -806,6 +805,38 @@ class AdditionalProductForm(forms.Form):
                         )
 
         return len(self.errors) == 0
+
+
+def cancel_subs_for_edit(
+    member_id: str, start_date: date, product_type: ProductType
+) -> date:
+    """
+    Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
+
+    :param member_id: The member's id
+    :param start_date: The start date of the new contract
+    :param product_type: The product type of the subscriptions to cancel
+
+    :return: The trial end date of the last subscription that was canceled
+    """
+
+    subs = get_active_subscriptions(start_date).filter(
+        member_id=member_id, product__type=product_type
+    )
+
+    existing_trial_end_date = None
+
+    for sub in subs:
+        sub.end_date = start_date - relativedelta(days=1)
+        existing_trial_end_date = sub.trial_end_date
+        if (
+            sub.start_date > sub.end_date
+        ):  # change was done before the contract started, so we can delete the subscription
+            sub.delete()
+        else:
+            sub.save()
+
+    return existing_trial_end_date
 
 
 class EditSubscriptionPriceForm(forms.Form):
