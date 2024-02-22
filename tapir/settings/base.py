@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_drf_filepond",
     "bootstrap_datepicker_plus",
-    "mjml",
     "tapir_mail",
     "tapir.core",
     "tapir.log",
