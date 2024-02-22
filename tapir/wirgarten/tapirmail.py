@@ -63,7 +63,7 @@ class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
     NON_COOP_MEMBERS = "Nicht Geno-Mitglieder"
     WITH_ACTIVE_SUBSCRIPTION = "Mit laufendem Ertevertrag"
-    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufendem Ertevertrag"
+    WITHOUT_ACTIVE_SUBSCRIPTION = "Ohne laufenden Ertevertrag"
 
 
 class Filters:
