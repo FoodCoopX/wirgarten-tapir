@@ -85,6 +85,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         next_contract_start_date = get_next_contract_start_date()
         next_growing_period = get_next_growing_period(next_contract_start_date)
+
+        context["next_contract_start_date"] = next_contract_start_date
+        context["next_period_start_date"] = (
+            next_growing_period.start_date if next_growing_period else None
+        )
+
         self.add_capacity_chart_context(
             context, base_product_id, next_contract_start_date
         )

@@ -21,7 +21,7 @@ const calculatePrice = (harvest_share) => {
 var initHarvestShareSummary = (
   harvest_share_prices,
   solidarity_total,
-  capacity_total
+  capacity_total,
 ) => {
   const resultElem = document.getElementById("harvest_shares_total");
   let customSoliElem = document.getElementById(
@@ -92,7 +92,8 @@ var initHarvestShareSummary = (
       if (submitBtn) {
         submitBtn.disabled = false;
       }
-      warningCannotReduceElem.style.display = "none";
+      if (warningCannotReduceElem)
+        warningCannotReduceElem.style.display = "none";
     }
   };
 
@@ -166,8 +167,11 @@ var initHarvestShareSummary = (
     if (!input) {
       input = document.getElementsByName(key)[0];
     }
+    const clone = input.cloneNode(true);
 
-    console.log(key)
+    // Replace the original element with its clone to remove old event listeners
+    input.parentNode.replaceChild(clone, input);
+    input = clone;
 
     input.addEventListener("change", (e) => handleChange(e, 10));
     input.min = 0;
@@ -175,10 +179,12 @@ var initHarvestShareSummary = (
       0,
       Math.min(10, Math.floor(capacity_total / parseFloat(price)))
     );
-    if (input.max == 0) {
+    if (input.max < 1) {
       input.readOnly = true;
-      input.value = 0;
+      input.disabled = true;
     } else {
+      input.readOnly = false;
+      input.disabled = false;
       noCapacity = false;
     }
   });

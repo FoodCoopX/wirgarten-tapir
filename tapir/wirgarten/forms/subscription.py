@@ -46,6 +46,7 @@ from tapir.wirgarten.service.products import (
     get_free_product_capacity,
     get_future_subscriptions,
     get_product_price,
+    get_total_price_for_subs,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -226,7 +227,7 @@ class BaseProductForm(forms.Form):
             )
 
             new_sub_dummy = Subscription(
-                quantity=2,
+                quantity=1,
                 product=Product.objects.get(type=self.product_type, base=True),
             )
 
@@ -239,6 +240,9 @@ class BaseProductForm(forms.Form):
                         "solidarity_price_absolute": sub.solidarity_price_absolute,
                     }
 
+                self.current_used_capacity = get_total_price_for_subs(
+                    subs[self.product_type.name]
+                )
                 if len(sub_variants) > 0:
                     soli_absolute = list(sub_variants.values())[0][
                         "solidarity_price_absolute"
@@ -272,6 +276,7 @@ class BaseProductForm(forms.Form):
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
             )
+
             today = get_today()
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2)

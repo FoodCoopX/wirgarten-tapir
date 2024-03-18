@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Payable,
@@ -33,6 +32,9 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
     :param subs: the list of subs (e.g. that are currently active for a user)
     :return: the total price in €
     """
+    if not subs:
+        return 0
+
     return round(sum([x.total_price() for x in subs]), 2)
 
 
@@ -531,6 +533,10 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
     if reference_date == None:
         reference_date = get_today()
 
+    from tapir.wirgarten.service.member import get_next_contract_start_date
+
+    next_month = get_next_contract_start_date(reference_date)
+
     active_product_capacities = get_active_product_capacities(reference_date).filter(
         product_type_id=product_type_id
     )
@@ -540,7 +546,7 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
             map(
                 lambda sub: float(get_product_price(sub.product, reference_date).price)
                 * sub.quantity,
-                get_future_subscriptions(reference_date).filter(
+                get_active_subscriptions(next_month).filter(
                     product__type_id=product_type_id
                 ),
             )

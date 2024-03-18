@@ -8,16 +8,16 @@
 <script>
   var originalTotal = 0;
   document.addEventListener("DOMContentLoaded", () => {
-  originalTotal = "{{form.is_admin}}" === "True" ? 0 : "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a, b) => a + b);
-  const growingPeriodSelect = document.getElementById("id_growing_period");
-  if (!growingPeriodSelect) {
-  initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}, {{ form.free_capacity | safe }})
-  } else {
-  growingPeriodSelect.addEventListener("change", function () {
-      initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], {{ form.free_capacity | safe }} [growingPeriodSelect.selectedIndex])
-  });
-  initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], {{ form.free_capacity | safe }}[growingPeriodSelect.selectedIndex])
-  }
+    originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a, b) => a + b);
+    const growingPeriodSelect = document.getElementById("id_growing_period");
+    if (!growingPeriodSelect) {
+    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[0], parseFloat({{ form.free_capacity | safe }}[0]) + originalTotal)
+    } else {
+    growingPeriodSelect.addEventListener("change", function () {
+        initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], parseFloat({{ form.free_capacity | safe }}[growingPeriodSelect.selectedIndex]) + originalTotal)
+    });
+    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], parseFloat({{ form.free_capacity | safe }}[growingPeriodSelect.selectedIndex]) + originalTotal)
+    }
   })
 </script>
 <script src="{% static 'wirgarten/js/forced-pickup-location-change.js' %}"></script>
