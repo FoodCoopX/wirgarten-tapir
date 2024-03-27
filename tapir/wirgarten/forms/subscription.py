@@ -46,6 +46,7 @@ from tapir.wirgarten.service.products import (
     get_free_product_capacity,
     get_future_subscriptions,
     get_product_price,
+    get_total_price_for_subs,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -226,7 +227,7 @@ class BaseProductForm(forms.Form):
             )
 
             new_sub_dummy = Subscription(
-                quantity=2,
+                quantity=1,
                 product=Product.objects.get(type=self.product_type, base=True),
             )
 
@@ -239,6 +240,9 @@ class BaseProductForm(forms.Form):
                         "solidarity_price_absolute": sub.solidarity_price_absolute,
                     }
 
+                self.current_used_capacity = get_total_price_for_subs(
+                    subs[self.product_type.name]
+                )
                 if len(sub_variants) > 0:
                     soli_absolute = list(sub_variants.values())[0][
                         "solidarity_price_absolute"
@@ -266,11 +270,13 @@ class BaseProductForm(forms.Form):
                 if self.product_type.name not in subs
                 else (subs[self.product_type.name] + [new_sub_dummy])
             )
+
             self.fields["pickup_location"] = PickupLocationChoiceField(
                 required=False,
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
             )
+
             today = get_today()
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2)
@@ -431,7 +437,7 @@ class BaseProductForm(forms.Form):
 
         base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         new_pickup_location = self.cleaned_data.get("pickup_location")
-        if not new_pickup_location and has_harvest_shares and self.member_id:
+        if has_harvest_shares and self.member_id:
             product_type = ProductType.objects.get(id=base_prod_type_id)
             next_month = get_today() + relativedelta(months=1, day=1)
             qs = MemberPickupLocation.objects.filter(member_id=self.member_id)
@@ -456,32 +462,64 @@ class BaseProductForm(forms.Form):
                         type_id=base_prod_type_id,
                         name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
                     )
-                    total += float(get_product_price(product, next_month).price)
+                    total += (
+                        float(get_product_price(product, next_month).price) * quantity
+                    )
 
             capability = (
                 get_active_pickup_location_capabilities()
                 .filter(
-                    pickup_location=latest_pickup_location.pickup_location,
-                    product_type__id=product_type.id,
+                    pickup_location=(
+                        new_pickup_location
+                        if new_pickup_location
+                        else latest_pickup_location.pickup_location
+                    ),
+                    product_type__id=base_prod_type_id,
                 )
                 .first()
             )
-            if capability.max_capacity:
-                current_capacity = (
-                    get_current_capacity(capability, next_month) + total
-                ) / float(product_type.base_price(reference_date=next_month))
-                if current_capacity > capability.max_capacity:
-                    self.add_error(
-                        "pickup_location", "Abholort ist voll"
-                    )  # this is not displayed
-                    self.add_error(
-                        None,
-                        _(
-                            "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-                        ),
-                    )
+            validate_pickup_location_capacity(
+                self,
+                capability,
+                product_type,
+                self.start_date,
+                total,
+                self.member_id,
+            )
 
         return len(self.errors) == 0
+
+
+def validate_pickup_location_capacity(
+    form, capability, product_type, start_date, total_member_amount, member_id
+):
+    if capability.max_capacity:
+        current_member_amount = float(
+            sum(
+                [
+                    s.total_price_without_soli
+                    for s in get_active_subscriptions(start_date).filter(
+                        member_id=member_id,
+                        product__type_id=product_type.id,
+                    )
+                ]
+            )
+        )
+        diff_member_amount = total_member_amount - current_member_amount
+        new_total_amount = (
+            get_current_capacity(capability, start_date) + diff_member_amount
+        ) / float(product_type.base_price(reference_date=start_date))
+
+        if new_total_amount > capability.max_capacity:
+            form.add_error(
+                "pickup_location", "Abholort ist voll"
+            )  # this is not displayed
+            form.add_error(
+                None,
+                _(
+                    "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
+                ),
+            )
 
 
 class AdditionalProductForm(forms.Form):
@@ -580,15 +618,13 @@ class AdditionalProductForm(forms.Form):
                     help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
                 )
 
-        # FIXME: link must be configurable in the productType
-        self.contract_link = self.product_type.contract_link
-        if self.contract_link:
+        if self.product_type.contract_link:
             self.fields[self.consent_field_key] = forms.BooleanField(
                 label=_(
                     "Ja, ich habe die Vertragsgrundsätze gelesen und stimme diesen zu."
                 ),
                 help_text=_(
-                    f'<a href="{self.contract_link}" target="_blank">Vertragsgrundsätze - {self.product_type.name}</a>'
+                    f'<a href="{self.product_type.contract_link}" target="_blank">Vertragsgrundsätze - {self.product_type.name}</a>'
                 ),
                 required=False,
                 initial=False,
@@ -605,6 +641,7 @@ class AdditionalProductForm(forms.Form):
             next_month = today + relativedelta(months=1, day=1)
 
             def add_pickup_location_fields():
+                # FIXME: no dummy, use the real diff value
                 new_sub_dummy = Subscription(
                     quantity=1,
                     product=Product.objects.get(type=self.product_type, base=True),
@@ -714,7 +751,7 @@ class AdditionalProductForm(forms.Form):
                         start_date=self.start_date,
                         end_date=self.growing_period.end_date,
                         mandate_ref=mandate_ref,
-                        consent_ts=now if self.contract_link else None,
+                        consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
                         trial_disabled=existing_trial_end_date is None,
@@ -738,7 +775,7 @@ class AdditionalProductForm(forms.Form):
 
         has_shares_selected = self.has_shares_selected()
         if (
-            self.contract_link
+            self.product_type.contract_link
             and has_shares_selected
             and not self.cleaned_data.get(self.consent_field_key, False)
         ):
@@ -788,21 +825,14 @@ class AdditionalProductForm(forms.Form):
                 )
             else:
                 capability = capability.first()
-                if capability.max_capacity:
-                    current_capacity = (
-                        get_current_capacity(capability, next_month) + total
-                    ) / float(self.product_type.base_price)
-                    free_capacity = capability.max_capacity - current_capacity
-                    if current_capacity > free_capacity:
-                        self.add_error(
-                            "pickup_location", "Abholort ist voll"
-                        )  # this is not displayed
-                        self.add_error(
-                            None,
-                            _(
-                                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-                            ),
-                        )
+                validate_pickup_location_capacity(
+                    self,
+                    capability,
+                    self.product_type,
+                    self.start_date,
+                    total,
+                    self.member_id,
+                )
 
         return len(self.errors) == 0
 
