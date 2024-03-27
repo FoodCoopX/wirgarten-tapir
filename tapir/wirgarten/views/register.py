@@ -24,7 +24,6 @@ from tapir.wirgarten.forms.subscription import (
     BaseProductForm,
 )
 from tapir.wirgarten.models import (
-    GrowingPeriod,
     MemberPickupLocation,
     Product,
     ProductType,
@@ -35,12 +34,10 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
     get_next_contract_start_date,
-    send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_current_growing_period,
-    get_future_subscriptions,
     is_product_type_available,
 )
 from tapir.wirgarten.utils import get_now, get_today
@@ -184,7 +181,6 @@ class RegistrationWizardViewBase(CookieWizardView):
         return super().dispatch(request, *args, **kwargs)
 
     def init_conditions(self):
-        print(self.coop_shares_only)
         if self.coop_shares_only:
             return {
                 STEP_BASE_PRODUCT: False,

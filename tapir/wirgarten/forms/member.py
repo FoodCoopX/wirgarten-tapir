@@ -4,7 +4,7 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
 from django.core.validators import EmailValidator
 from django.db import transaction
-from django.db.models import Count, F, Max, Sum
+from django.db.models import F, Sum
 from django.forms import (
     BooleanField,
     CharField,
