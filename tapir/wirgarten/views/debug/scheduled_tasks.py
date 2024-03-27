@@ -62,7 +62,11 @@ class JobsListView(
         scheduled = []
         for key, value in settings.CELERY_BEAT_SCHEDULE.items():
             schedule = value["schedule"]
-            cron_expression = f"{schedule._orig_minute} {schedule._orig_hour} {schedule._orig_day_of_month} {schedule._orig_month_of_year} {schedule._orig_day_of_week}"
+            cron_expression = (
+                f"{schedule._orig_minute} {schedule._orig_hour} {schedule._orig_day_of_month} {schedule._orig_month_of_year} {schedule._orig_day_of_week}"
+                if hasattr(schedule, "_orig_minute")
+                else str(schedule)
+            )  # FIXME: proper display of non-cron schedule objects
 
             scheduled.append(
                 {"name": key, "task": value["task"], "schedule": cron_expression}

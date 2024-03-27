@@ -74,6 +74,14 @@ def add_admin_links(groups, request):
             material_icon="add_location_alt",
             url=reverse_lazy("wirgarten:pickup_locations"),
         )
+
+    if request.user.has_perm(Permission.Email.MANAGE):
+        admin_group.add_link(
+            display_name=_("E-Mail"),
+            material_icon="email",
+            url=reverse_lazy("tapir_mail"),
+        )
+
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
             display_name=_("Lastschrift"),

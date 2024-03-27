@@ -1,20 +1,15 @@
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from dateutil.relativedelta import relativedelta
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import (
-    ProductTypes,
-    DeliveryCycleDict,
-)
+from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
-from tapir.wirgarten.service.products import (
-    get_product_price,
-)
+from tapir.wirgarten.service.products import get_product_price
 
 
 class SummaryForm(forms.Form):
@@ -122,7 +117,7 @@ class SummaryForm(forms.Form):
             "statute_link": get_parameter_value(Parameter.COOP_STATUTE_LINK),
         }
 
-        chicken_shares_type = ProductType.objects.get(name=ProductTypes.CHICKEN_SHARES)
+        chicken_shares_type = ProductType.objects.get(name="Hühneranteile")
         self.chicken_shares_info = dict(
             {
                 "has_shares": False,
@@ -168,9 +163,7 @@ class SummaryForm(forms.Form):
         if "bestellcoop" in initial:
             price = float(
                 get_product_price(
-                    Product.objects.filter(
-                        type__name=ProductTypes.BESTELLCOOP, deleted=False
-                    )[0]
+                    Product.objects.filter(type__name="BestellCoop", deleted=False)[0]
                 ).price
             )  # FIXME: name must be configurable
             sign_up = initial["bestellcoop"]["bestellcoop"]

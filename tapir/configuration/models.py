@@ -40,6 +40,6 @@ class TapirParameter(models.Model):
 
 
 class TapirParameterDefinitionImporter:
-    def import_definitions(self):
+    def import_definitions(self, skip_validation: bool = False):
         """Import the parameter definitions for the module."""
         pass

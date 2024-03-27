@@ -58,6 +58,7 @@ def send_email(to_email: List[str], subject: str, content: str, variables: dict 
     ).save()
 
 
+# all the vars stuff will be deprecated as soon as the mail module is going in production
 def get_default_vars(to_email):
     variables = add_member_vars(to_email)
     variables.update(add_general_vars())

@@ -1,0 +1,436 @@
+[
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "0Ga7u1wmZ2",
+  "fields": {
+    "created_at": "2024-02-09T10:39:17.372Z",
+    "updated_at": "2024-02-09T11:43:09.352Z",
+    "name": "Email Adresse geändert",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "8juDlPsoZu",
+  "fields": {
+    "created_at": "2024-02-08T13:52:52.809Z",
+    "updated_at": "2024-02-08T13:53:29.655Z",
+    "name": "Vertragsänderung",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "D6g-B7jc1q",
+  "fields": {
+    "created_at": "2024-02-08T13:54:47.061Z",
+    "updated_at": "2024-02-08T13:57:08.029Z",
+    "name": "Bestellbestätigung",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "HC-llcaSEj",
+  "fields": {
+    "created_at": "2024-02-08T13:47:57.818Z",
+    "updated_at": "2024-02-09T10:17:47.085Z",
+    "name": "Kündigungsbestätigung",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "KaTuLETB07",
+  "fields": {
+    "created_at": "2024-02-08T13:35:54.143Z",
+    "updated_at": "2024-02-08T13:46:02.790Z",
+    "name": "Letzte Abholung",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "RqsRDA5BYu",
+  "fields": {
+    "created_at": "2024-02-08T13:58:24.334Z",
+    "updated_at": "2024-02-08T13:59:03.268Z",
+    "name": "Vertrag nicht verlängert",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfiguration",
+  "pk": "S8xTlCeKvD",
+  "fields": {
+    "created_at": "2024-02-09T10:34:41.981Z",
+    "updated_at": "2024-02-09T11:54:44.845Z",
+    "name": "Email-Adresse Änderung: gestartet",
+    "description": "TODO"
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "8seNAP2kaX",
+  "fields": {
+    "created_at": "2024-02-08T13:35:54.147Z",
+    "updated_at": "2024-02-08T13:46:02.795Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}}</div><div><br/></div><div>du hast diese Woche deine letzte Abholung gehabt.&nbsp;</div><div><br/></div><div>Folgende Produktverträge sind nun abgelaufen:</div><div><br/></div><div>{{Letzte Abholung.Vertragsliste}}</div><div><br/></div><div>Wenn du bereits Mitglied unserer Genossenschaft bist, bleibt dein Zugang zum Mitgliederbereich bestehen und du kannst - wenn Ernteanteile verfügbar sind - jederzeit über den Mitgliederbereich einen neuen Ernteanteil abschließen.</div><div><br/></div><div>Wenn dies die letzte Abholung in deinem Probemonat war und du auch deinen Beitritt zur Genossenschaft widerrufen hast, löschen wir den Zugang zum Mitgliederbereich in den nächsten Tagen. Dann kannst du über unsere Website lueneburg.wirgarten.com einen neuen Ernteertrag abschließen, wenn du es dir anders überlegst.</div><div><br/></div><div>Egal ob letzte Lieferung nach dem Probemonat oder nach einer oder mehreren Saisons - wir danken dir für deine Unterstützung und dein Vertrauen und freuen uns, dich auch ohne Ernteanteil mal wieder im WirGarten zu treffen!</div><div><br/></div><div>Wenn du noch eine Frage oder Rückmeldung hast, melde dich gerne bei uns!</div><div><br/></div><div>Viele Grüße und alles Gute,</div><div>{{Allgemein.Admin Name}} aus deinem {{Allgemein.WirGarten Standort}}</div><div><br/></div><div>P.S.: Erzähle gerne Freund:innen, Nachbar:innen, Kolleg:innen in Lüneburg vom WirGarten!</div></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Letzte Abholung",
+    "email_configuration": "KaTuLETB07",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "final_pickup"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "cc6rHS_3IS",
+  "fields": {
+    "created_at": "2024-02-09T11:42:59.332Z",
+    "updated_at": "2024-02-09T11:43:09.361Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Hallo&nbsp;{{Empfänger.Vorname}},<div><br/></div><div>deine Email Adresse wurde erfolgreich zu&nbsp;{{Empfänger.Email}} geändert.<br/><br/>Falls du das nicht warst, ändere bitte sofort dein Password im Mitgliederbereich.<br/><br/>Herzliche Grüße, dein WirGarten Team</div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Deine Email Adresse wurde geändert",
+    "email_configuration": "0Ga7u1wmZ2",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_email_success"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "CUEG32xmQR",
+  "fields": {
+    "created_at": "2024-02-09T10:17:44.376Z",
+    "updated_at": "2024-02-09T10:17:47.090Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!</div><div><br/></div><div>Du hast folgende Verträge gekündigt:</div><div><br/></div><div>{{Kündigung im Probemonat.Vertragsliste}}<br/></div><div><br/></div><div>Wenn du einen Ernteanteil gekündigt hast, ist dein letzter Abholtag am {{Kündigung im Probemonat.Letzte Abholung am}}.</div><div><br/></div><div>Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!</div><div><br/></div><div>Viele Grüße!</div><div><br/></div><div>{{Allgemein.Admin Name}} für das WirGarten-Team</div><div><br/></div><div>Wichtig: Wenn du deinen Erntevertrag im Probemonat kündigst, und deinen Beitritt zur Genossenschaft NICHT widerrufst, wirst du zum nächsten Monatsersten Mitglied unserer Genossenschaft. Bei Kündigung des Erntevertrags und Widerruf der Beitrittserklärung löschen wir den Zugang zum Mitgliederbereich nach deiner letzten Abholung.</div></div><div><br/></div><div><br/></div><div><br/></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Kündigungsbestätigung",
+    "email_configuration": "HC-llcaSEj",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "trial_cancellation"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "g8L4NTXpEw",
+  "fields": {
+    "created_at": "2024-02-09T09:54:03.168Z",
+    "updated_at": "2024-02-09T10:17:47.087Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!</div><div><br/></div><div>Du hast folgende Verträge gekündigt:</div><div><br/></div><div>{{Kündigung im Probemonat.Vertragsliste abc}}<br/></div><div><br/></div><div>Wenn du einen Ernteanteil gekündigt hast, ist dein letzter Abholtag am {{Kündigung im Probemonat.Letzte Abholung am}}.</div><div><br/></div><div>Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!</div><div><br/></div><div>Viele Grüße!</div><div><br/></div><div>{{Allgemein.Admin Name}} für das WirGarten-Team</div><div><br/></div><div>Wichtig: Wenn du deinen Erntevertrag im Probemonat kündigst, und deinen Beitritt zur Genossenschaft NICHT widerrufst, wirst du zum nächsten Monatsersten Mitglied unserer Genossenschaft. Bei Kündigung des Erntevertrags und Widerruf der Beitrittserklärung löschen wir den Zugang zum Mitgliederbereich nach deiner letzten Abholung.</div></div><div><br/></div><div><br/></div><div><br/></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Kündigungsbestätigung",
+    "email_configuration": "HC-llcaSEj",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "trial_cancellation"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "JHL00Ak02r",
+  "fields": {
+    "created_at": "2024-02-08T13:47:57.822Z",
+    "updated_at": "2024-02-09T09:35:38.272Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!</div><div><br/></div><div>Du hast folgende Verträge gekündigt:</div><div><br/></div><div>{{Kündigung im Probemonat.Vertragsliste}}<br/></div><div><br/></div><div>Wenn du einen Ernteanteil gekündigt hast, ist dein letzter Abholtag am {{Kündigung im Probemonat.Letzte Abholung}}.</div><div><br/></div><div>Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!</div><div><br/></div><div>Viele Grüße!</div><div><br/></div><div>{{Allgemein.Admin Name}} für das WirGarten-Team</div><div><br/></div><div>Wichtig: Wenn du deinen Erntevertrag im Probemonat kündigst, und deinen Beitritt zur Genossenschaft NICHT widerrufst, wirst du zum nächsten Monatsersten Mitglied unserer Genossenschaft. Bei Kündigung des Erntevertrags und Widerruf der Beitrittserklärung löschen wir den Zugang zum Mitgliederbereich nach deiner letzten Abholung.</div></div><div><br/></div><div><br/></div><div><br/></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Kündigungsbestätigung",
+    "email_configuration": "HC-llcaSEj",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "trial_cancellation"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "oQQpzwdYwf",
+  "fields": {
+    "created_at": "2024-02-09T10:39:17.374Z",
+    "updated_at": "2024-02-09T10:52:21.830Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Hallo&nbsp;{{Empfänger.Vorname}},<div><br/></div><div>deine Email Adresse wurde erfolgreich zu&nbsp;<b>{{Email-Addresse Änderung: Erfolg.Neue Email}}</b> geändert.<br/><br/>Falls du das nicht warst, ändere bitte sofort dein Password im Mitgliederbereich.<br/><br/>Herzliche Grüße, dein WirGarten Team</div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Deine Email Adresse wurde geändert",
+    "email_configuration": "0Ga7u1wmZ2",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_email_success"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "PaHFP180RO",
+  "fields": {
+    "created_at": "2024-02-08T13:52:52.813Z",
+    "updated_at": "2024-02-08T13:53:29.659Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><span style=\"word-spacing: normal;\">Liebe/r&nbsp;</span><span style=\"word-spacing: normal;\">{{Empfänger.Vorname}}</span><span style=\"word-spacing: normal;\">,</span></div><div><div><br/></div><div>wir bestätigen dir hiermit deine Vertragsänderung. Diese wird zum nächsten Monatsersten wirksam. Bis dahin bleiben deine Vertragsdaten gleich.</div><div><br/></div><div>Deine neuen Daten sind:</div><div><br/></div><div>{{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}</div><div><br/></div><div>Im Mitgliederbereich findest du eine Zahlungs-und Lieferübersicht, da kannst du nochmal genau sehen, wann und wie die Änderung in Kraft tritt.</div><div><br/></div><div>Wenn du Fragen hast oder dir etwas unklar ist, meld dich bitte bei uns!</div><div><br/></div><div>Dein WirGarten-Team</div></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Vertragsänderung",
+    "email_configuration": "8juDlPsoZu",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_contract"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "r2Fgyp_J5N",
+  "fields": {
+    "created_at": "2024-02-09T10:52:33.026Z",
+    "updated_at": "2024-02-09T11:54:44.847Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Hallo&nbsp;{{Empfänger.Vorname}},<br/><br/>du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/></mj-text></mj-column></mj-section><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-button align=\"center\" background-color=\"#414141\" color=\"#ffffff\" font-weight=\"normal\" border-radius=\"3px\" line-height=\"120%\" target=\"_blank\" vertical-align=\"middle\" border=\"none\" text-align=\"center\" href=\"{{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}\" padding=\"10px 25px 10px 25px\" >Email Adresse bestätigen</mj-button></mj-column></mj-section></mj-wrapper><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren.<br/><br/>Grüße, dein WirGarten Team</mj-text></mj-column></mj-section></mj-body></mjml >",
+    "subject": "Änderung deiner Email-Adresse",
+    "email_configuration": "S8xTlCeKvD",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_email_initiate"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "sFqH6uWXsL",
+  "fields": {
+    "created_at": "2024-02-08T13:54:47.064Z",
+    "updated_at": "2024-02-08T13:57:08.033Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>du hast folgende Ernteanteile und Zusatzabos gebucht:</div><div><br/></div><div>{{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}<br/></div><div><br/></div><div>Die Details (Lieferort, Kündigungsfristen, Datum der ersten Lieferung, Anzahl der gezeichneten Genossenschaftsanteile usw.)&nbsp; kannst du bequem in deinem Mitgliederbereich einsehen.</div><div><br/></div><div>Wenn du <b>Neumitglied</b> bist, erhältst du in Kürze außerdem eine automatische Mail aus tapir (das ist unsere Mitglieder- und Ernteverwaltungssoftware), in der du gebeten wirst, dein Konto in tapir zu verifizieren. Bitte klicke einfach auf den Link und setze dann dein Passwort. Danach wirst du direkt in den Mitgliederbereich weitergeleitet. Im Mitgliederbereich findest du eine Übersicht über alle deine Verträge und kannst deine Daten, aber z.B. auch deinen Abholort, jederzeit ändern. Außerdem schicken wir dir&nbsp; eine Willkommensmail mit allen wichtigen Informationen für Neumitglieder.</div><div><br/></div><div>Wenn du schon <b>Mitglied im WirGarten Lüneburg bist</b>, hast du bereits einen Zugang zum Mitgliederbereich und kannst deine Vertragsdaten dort direkt einsehen. Wir melden uns dann kurz vor der ersten Abholung der neuen Vertragslaufzeit nochmal mit einer Infomail bei dir!</div><div><br/></div><div>Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:</div><div><br/></div><div>{{Allgemein.Admin Name}}<br/></div><div>{{Allgemein.Admin Telefonnr}}</div><div>{{Allgemein.Kontakt Email}}</div><div><br/></div><div>Liebe Grüße vom gesamten WirGarten-Team!</div></div><div><br/></div></mj-text></mj-column></mj-section><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-image align=\"center\" height=\"auto\" padding=\"0px 0px 0px 0px\" src=\"{{Allgemein.Admin Image}}\" ></mj-image><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><pre class=\"mx_EventTile_collapsedCodeBlock\" style=\"font-size: 15px; box-sizing: border-box; margin-bottom: 16px; margin-top: 0px; overflow-wrap: normal; background-color: var(--cpd-color-bg-subtle-secondary); border-radius: 3px; line-height: 1.45; overflow: overlay visible; padding: 12px 16px; border: 1px solid var(--cpd-color-gray-800); max-height: 30vh; color: rgb(235, 238, 242); letter-spacing: -0.132px; font-family: &quot;Inconsolata&quot;,var(--emoji-font-family),&quot;Apple Color Emoji&quot;,&quot;Segoe UI Emoji&quot;,&quot;Courier&quot;,monospace,&quot;Noto Color Emoji&quot; !important;\"><br/></pre></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Bestellbestätigung",
+    "email_configuration": "D6g-B7jc1q",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "register_membership_and_subscription"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "TqXbgPSQEF",
+  "fields": {
+    "created_at": "2024-02-09T10:34:41.983Z",
+    "updated_at": "2024-02-09T10:53:01.175Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Hallo&nbsp;{{Empfänger.Vorname}},<br/><br/>du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/></mj-text></mj-column></mj-section><mj-section padding=\"0px\" text-align=\"left\" ><mj-column ><mj-button align=\"center\" background-color=\"#414141\" color=\"#ffffff\" font-weight=\"normal\" border-radius=\"3px\" padding=\"10px 25px 10px 25px\" inner-padding=\"10px 25px 10px 25px\" line-height=\"120%\" target=\"_blank\" vertical-align=\"middle\" border=\"none\" text-align=\"center\" href=\"{{Email-Addresse Änderung: Bitte bestätigen.Bestätigungslink}}\" >Email Adresse bestätigen</mj-button></mj-column></mj-section></mj-wrapper><mj-section padding=\"0px\" text-align=\"left\" ><mj-column ><mj-text padding=\"10px 25px 10px 25px\" align=\"left\" >Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren.<br/><br/>Grüße, dein WirGarten Team</mj-text></mj-column></mj-section></mj-body></mjml >",
+    "subject": "Änderung deiner Email-Adresse",
+    "email_configuration": "S8xTlCeKvD",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_email_initiate"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "XVNDy-2V4n",
+  "fields": {
+    "created_at": "2024-02-09T09:35:31.285Z",
+    "updated_at": "2024-02-09T10:10:40.970Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!</div><div><br/></div><div>Du hast folgende Verträge gekündigt:</div><div><br/></div><div>{{Kündigung im Probemonat.Vertragsliste}}<br/></div><div><br/></div><div>Wenn du einen Ernteanteil gekündigt hast, ist dein letzter Abholtag am {{Kündigung im Probemonat.Letzte Abholung am}}.</div><div><br/></div><div>Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!</div><div><br/></div><div>Viele Grüße!</div><div><br/></div><div>{{Allgemein.Admin Name}} für das WirGarten-Team</div><div><br/></div><div>Wichtig: Wenn du deinen Erntevertrag im Probemonat kündigst, und deinen Beitritt zur Genossenschaft NICHT widerrufst, wirst du zum nächsten Monatsersten Mitglied unserer Genossenschaft. Bei Kündigung des Erntevertrags und Widerruf der Beitrittserklärung löschen wir den Zugang zum Mitgliederbereich nach deiner letzten Abholung.</div></div><div><br/></div><div><br/></div><div><br/></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Kündigungsbestätigung",
+    "email_configuration": "HC-llcaSEj",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "trial_cancellation"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "Yq7OFbny5z",
+  "fields": {
+    "created_at": "2024-02-08T13:58:24.337Z",
+    "updated_at": "2024-02-08T13:59:03.271Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" ><div><div>Liebe/r {{Empfänger.Vorname}},</div><div><br/></div><div>vielen Dank, dass du uns mitteilst, dass du deinen Ernteertrag nicht verlängern wirst - das hilft uns sehr bei der Planung! Aber trotzdem: Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!</div><div><br/></div><div>Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!</div><div><br/></div><div>Wenn du es dir bis zu deinem Vertragsende doch anders überlegst, kannst du deinen Vertrag über den Mitgliederbereich einfach verlängern.</div><div><br/></div><div>Aber auch wenn du keinen Ernteanteil mehr beziehst, freuen wir uns natürlich, dich bald mal wieder im WirGarten oder anderswo zu treffen!</div><div><br/></div><div>Viele Grüße!</div><div>{{Allgemein.Admin Name}} für das WirGarten-Team</div></div><div><br/></div><div><br/></div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Vertrag nicht verlängert",
+    "email_configuration": "RqsRDA5BYu",
+    "status": "released",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "contract_not_renewed"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+},
+{
+  "model": "tapir_mail.emailconfigurationversion",
+  "pk": "z0ZHNQtweB",
+  "fields": {
+    "created_at": "2024-02-09T10:52:00.142Z",
+    "updated_at": "2024-02-09T11:43:09.355Z",
+    "content": "<mjml>          <mj-head>                  <mj-html-attributes>      <mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"text-color\" text-color=\"#000000\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-family\" font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-size\" font-size=\"14px\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"line-height\" line-height=\"1.7\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"font-weight\" font-weight=\"400\"></mj-html-attribute><mj-html-attribute class=\"easy-email\" multiple-attributes=\"false\" attribute-name=\"responsive\" responsive=\"true\"></mj-html-attribute>    </mj-html-attributes>                                                          <mj-breakpoint width=\"480px\" />                            <mj-font name=\"Montserrat\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Montserrat.css\" />,<mj-font name=\"Bitter\" href=\"http://127.0.0.1:8000/tapirmail/static/fonts/Bitter.css\" />            <mj-attributes>              <mj-text font-size=\"14px\" /><mj-text line-height=\"1.7\" /><mj-text font-weight=\"400\" />              <mj-all font-family=\"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans','Helvetica Neue', sans-serif\" />              <mj-text font-size=\"14px\" />              <mj-text color=\"#000000\" />        <mj-text line-height=\"1.7\" />        <mj-text font-weight=\"400\" />                          </mj-attributes>          </mj-head>          <mj-body background-color=\"#efeeea\" width=\"600px\" ><mj-wrapper padding=\"20px 0px 20px 0px\" border=\"none\" direction=\"ltr\" text-align=\"center\" ><mj-section background-repeat=\"repeat\" background-size=\"auto\" background-position=\"top center\" border=\"none\" direction=\"ltr\" text-align=\"left\" padding=\"0px 0px 0px 0px\" ><mj-column border=\"none\" vertical-align=\"top\" padding=\"0px 0px 0px 0px\" ><mj-text align=\"left\" padding=\"10px 25px 10px 25px\" >Hallo&nbsp;{{Empfänger.Vorname}},<div><br/></div><div>deine Email Adresse wurde erfolgreich zu {{Email-Änderung: Erfolg.Neue Email}}&nbsp;geändert.<br/><br/>Falls du das nicht warst, ändere bitte sofort dein Password im Mitgliederbereich.<br/><br/>Herzliche Grüße, dein WirGarten Team</div></mj-text></mj-column></mj-section></mj-wrapper></mj-body></mjml >",
+    "subject": "Deine Email Adresse wurde geändert",
+    "email_configuration": "0Ga7u1wmZ2",
+    "status": "archived",
+    "triggers": [
+      {
+        "trigger_id": "tapir_mail.triggers.transactional_trigger.transactional_trigger",
+        "trigger_field_values": {
+          "key": "memberarea_change_email_success"
+        }
+      }
+    ],
+    "segment_data": {
+      "filter_list": [],
+      "add_segments": [
+        "Alle Benutzer"
+      ],
+      "remove_segments": [],
+      "static_segments": []
+    }
+  }
+}
+]
