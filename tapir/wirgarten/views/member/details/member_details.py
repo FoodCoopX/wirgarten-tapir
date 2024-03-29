@@ -1,6 +1,5 @@
 from dateutil.relativedelta import relativedelta
 from django.db.models import F, Sum
-from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
@@ -233,7 +232,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             ).exists():  # --> renewed but cancelled
                 context["show_renewal_warning"] = False
         else:
-            if context["available_product_types"][base_product_type.name]:
+            next_growing_period = get_next_growing_period()
+            has_capacity_next_growing_period = (
+                next_growing_period
+                and base_product_type
+                in get_available_product_types(next_growing_period.start_date)
+            )
+            if has_capacity_next_growing_period:
                 context["renewal_status"] = "unknown"  # --> show renewal notice
             elif WaitingListEntry.objects.filter(
                 email=self.object.email,
