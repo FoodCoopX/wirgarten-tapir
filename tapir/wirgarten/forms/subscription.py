@@ -308,7 +308,6 @@ class BaseProductForm(forms.Form):
         self,
         mandate_ref: MandateReference = None,
         member_id: str = None,
-        is_registration: bool = False,
     ):
         member_id = member_id or self.member_id
 
@@ -385,26 +384,6 @@ class BaseProductForm(forms.Form):
         change_date = self.cleaned_data.get("pickup_location_change_date")
         if new_pickup_location:
             change_pickup_location(member_id, new_pickup_location, change_date)
-
-        if (
-            not is_registration
-            and get_future_subscriptions()
-            .filter(
-                cancellation_ts__isnull=True,
-                member_id=member_id,
-                end_date__gt=(
-                    max(self.start_date, self.growing_period.start_date)
-                    if hasattr(self, "growing_period")
-                    else self.start_date
-                ),
-            )
-            .exists()
-        ):
-            send_contract_change_confirmation(member, self.subs)
-        else:
-            send_order_confirmation(
-                member, get_future_subscriptions().filter(member=member)
-            )
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():

@@ -189,6 +189,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         ):
             return
 
+        context["next_available_product_types"] = [
+            p.name for p in get_available_product_types(next_growing_period.start_date)
+        ]
+
         context["next_period"] = next_growing_period
         context["add_shares_disallowed"] = (
             next_month >= next_growing_period.start_date
@@ -232,11 +236,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             ).exists():  # --> renewed but cancelled
                 context["show_renewal_warning"] = False
         else:
-            next_growing_period = get_next_growing_period()
             has_capacity_next_growing_period = (
                 next_growing_period
-                and base_product_type
-                in get_available_product_types(next_growing_period.start_date)
+                and base_product_type.name in context["next_available_product_types"]
             )
             if has_capacity_next_growing_period:
                 context["renewal_status"] = "unknown"  # --> show renewal notice
