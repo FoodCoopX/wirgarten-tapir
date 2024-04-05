@@ -41,11 +41,14 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
     get_next_contract_start_date,
+    send_contract_change_confirmation,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
+    get_future_subscriptions,
     get_next_growing_period,
     is_product_type_available,
 )
@@ -277,6 +280,22 @@ def get_add_subscription_form(request, **kwargs):
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=form.subs,
         ).save()
+
+        if is_base_product_type:
+            if (
+                get_future_subscriptions()
+                .filter(
+                    cancellation_ts__isnull=True,
+                    member_id=member_id,
+                    end_date__gt=(max(next_start_date, next_period.start_date)),
+                )
+                .exists()
+            ):
+                send_contract_change_confirmation(member, form.subs)
+            else:
+                send_order_confirmation(
+                    member, get_future_subscriptions().filter(member=member)
+                )
 
     return get_form_modal(
         request=request,

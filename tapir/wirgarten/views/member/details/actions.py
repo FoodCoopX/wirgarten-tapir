@@ -1,4 +1,3 @@
-from click import Parameter
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -13,6 +12,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
