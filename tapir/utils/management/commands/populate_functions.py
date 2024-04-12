@@ -8,6 +8,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 from tapir.accounts.models import TapirUser, EmailChangeRequest
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     Member,
@@ -25,6 +26,7 @@ from tapir.log.models import LogEntry
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_active_pickup_locations
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
@@ -78,9 +80,6 @@ def populate_users():
                 sepa_consent=json_user.date_joined,
                 privacy_consent=json_user.date_joined,
                 withdrawal_consent=json_user.date_joined,
-                pickup_location=pickup_locations[
-                    random.randint(0, len(pickup_locations) - 1)
-                ],
             )
             copy_user_info(json_user, wirgarten_user)
             wirgarten_user.save(initial_password=wirgarten_user.email.split("@")[0])
@@ -109,7 +108,7 @@ def create_shareownership(wirgarten_user, min_shares):
 
 
 def create_subscriptions(wirgarten_user):
-    product_type = ProductType.objects.get(name=ProductTypes.HARVEST_SHARES)
+    product_type = ProductType.objects.get(name=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE))
 
     today = date.today()
     mandate_ref = get_or_create_mandate_ref(wirgarten_user)
