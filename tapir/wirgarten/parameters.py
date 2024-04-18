@@ -510,7 +510,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="",  # ProductType.objects.get(name=ProductTypes.HARVEST_SHARES).id,
+            initial_value="Ernteanteile",
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(

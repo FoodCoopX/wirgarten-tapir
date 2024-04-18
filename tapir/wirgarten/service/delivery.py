@@ -40,7 +40,7 @@ def get_active_pickup_locations(
     capabilities: List[PickupLocationCapability] = None,
 ):
     if capabilities is None:
-        get_active_pickup_location_capabilities()
+        capabilities = get_active_pickup_location_capabilities()
 
     return PickupLocation.objects.filter(
         id__in=capabilities.values("pickup_location__id")
