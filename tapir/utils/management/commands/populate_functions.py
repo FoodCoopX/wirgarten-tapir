@@ -108,7 +108,9 @@ def create_shareownership(wirgarten_user, min_shares):
 
 
 def create_subscriptions(wirgarten_user):
-    product_type = ProductType.objects.get(name=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE))
+    product_type = ProductType.objects.get(
+        name=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+    )
 
     today = date.today()
     mandate_ref = get_or_create_mandate_ref(wirgarten_user)
