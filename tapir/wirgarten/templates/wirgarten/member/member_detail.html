@@ -114,7 +114,7 @@
                         {% endwith %}
                         {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
                         <button data-bs-toggle="tooltip" data-bs-placement="bottom" title="Anteile bearbeiten"
-                                onclick="handleAddSubscription('{{type}}' {% if forloop.counter0 == 0 and not available_product_types|get_value:type|default:False %}, true {% endif %})"
+                                onclick="handleAddSubscription('{{type}}')"
                                 class="btn btn-outline-success mx-1 px-2"
                         >
                             <span class="material-icons">edit</span>
@@ -312,7 +312,7 @@ const handleOpenEmail = (subject, contentUrl) => {
 <script>
     const handleAddSubscription = (productType, waitlist = false) => {
         {% if object.iban and object.pickup_location %}
-        FormModal.load(`{% url 'wirgarten:member_add_subscription' object.pk %}?productType=` + productType, waitlist ? "Warteliste" : productType + ' dazubuchen');
+        FormModal.load(`{% url 'wirgarten:member_add_subscription' object.pk %}?productType=` + productType, waitlist ? "Warteliste" : productType + ' bearbeiten');
         {% else %}
         ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br/>- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br/>- Bitte wähle einen Abholort aus.{%endif%}")
         {% endif %}

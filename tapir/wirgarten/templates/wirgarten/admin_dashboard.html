@@ -35,6 +35,7 @@
     class="dashboard-tile card capacity-tile clickable">
     <div class="card-body">
       <h4>Aktuelle Kapazitäten/Auslastung</h4>
+      <b>zum {{next_contract_start_date|format_date}}</b>
       <canvas height="10000px" width="10000px" id="product-capacity-chart"></canvas>
     </div>
   </div>
@@ -101,7 +102,7 @@
   <div class="dashboard-tile card capacity-tile clickable">
     <div class="card-body">
       <h4>Kapazitäten</h4>
-      <b>(nächste Vertragsperiode)</b>
+      <b>zum {{next_period_start_date|format_date}}</b>
       <canvas height="10000px" width="10000px" id="next-period-product-capacity-chart"></canvas>
     </div>
   </div>

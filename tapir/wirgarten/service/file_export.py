@@ -34,6 +34,11 @@ def __send_email(file: ExportedFile, recipient: str = None):
         ).format(filename=filename),
         to=recipient,
         from_email=settings.EMAIL_HOST_SENDER,
+        bcc=(
+            [settings.EMAIL_AUTO_BCC]
+            if hasattr(settings, "EMAIL_AUTO_BCC") and settings.EMAIL_AUTO_BCC
+            else None
+        ),
     )
     email.content_subtype = "html"
     email.attach(filename, file.file)
