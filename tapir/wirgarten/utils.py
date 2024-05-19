@@ -38,9 +38,13 @@ def check_permission_or_self(pk, request):
         raise PermissionDenied
 
 
-def get_today():
+def get_today() -> datetime.date:
     return timezone.localdate()
 
 
-def get_now():
+def get_now() -> datetime.datetime:
     return timezone.now()
+
+
+def format_subscription_list_html(subs):
+    return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"

@@ -1,98 +1,108 @@
 /* cyrillic-ext */
 @font-face {
-  font-family: 'Bitter';
+    font-family: "Bitter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLXOXWh2.woff2) format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+    src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLXOXWh2.woff2) format("woff2");
+    unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F,
+    U+FE2E-FE2F;
 }
 /* cyrillic */
 @font-face {
-  font-family: 'Bitter';
+    font-family: "Bitter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLzOXWh2.woff2) format('woff2');
+    src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLzOXWh2.woff2) format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 /* vietnamese */
 @font-face {
-  font-family: 'Bitter';
+    font-family: "Bitter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLfOXWh2.woff2) format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
+    src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLfOXWh2.woff2) format("woff2");
+    unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+    U+01AF-01B0, U+1EA0-1EF9, U+20AB;
 }
 /* latin-ext */
 @font-face {
-  font-family: 'Bitter';
+    font-family: "Bitter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLbOXWh2.woff2) format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLbOXWh2.woff2) format("woff2");
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
 @font-face {
-  font-family: 'Bitter';
+    font-family: "Bitter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLjOXQ.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    src: url(/static/core/css/fonts/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfOLjOXQ.woff2) format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
 }
 /* cyrillic-ext */
 @font-face {
-  font-family: 'Montserrat';
+    font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w0aXpsog.woff2) format('woff2');
-  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+    src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w0aXpsog.woff2) format("woff2");
+    unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F,
+    U+FE2E-FE2F;
 }
 /* cyrillic */
 @font-face {
-  font-family: 'Montserrat';
+    font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w9aXpsog.woff2) format('woff2');
+    src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w9aXpsog.woff2) format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
 /* vietnamese */
 @font-face {
-  font-family: 'Montserrat';
+    font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w2aXpsog.woff2) format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
+    src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w2aXpsog.woff2) format("woff2");
+    unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+    U+01AF-01B0, U+1EA0-1EF9, U+20AB;
 }
 /* latin-ext */
 @font-face {
-  font-family: 'Montserrat';
+    font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w3aXpsog.woff2) format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w3aXpsog.woff2) format("woff2");
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
 @font-face {
-  font-family: 'Montserrat';
+    font-family: "Montserrat";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w5aXo.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    src: url(/static/core/css/fonts/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM73w5aXo.woff2) format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
 }
 
 :root {
   --primary: #32822d;
-  --secondary: #F49633;
-  --platinum: #E9E7E5;
+    --secondary: #f49633;
+    --platinum: #e9e7e5;
   --white: #ffffff;
   --black: #000000;
   --active-color: #bfdebd;
@@ -101,43 +111,43 @@
 h1 {
     line-height: 1.4 !important;
     font-size: 39px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
 h2 {
     line-height: 1.4 !important;
     font-size: 33px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
 h3 {
     line-height: 1.4 !important;
     font-size: 23px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
 h4 {
     line-height: 1.4 !important;
     font-size: 20px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
 h5 {
     line-height: 1.4 !important;
     font-size: 17px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
-h6{
+h6 {
     line-height: 1.4 !important;
     font-size: 16px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: "Montserrat", sans-serif !important;
 }
 
 body {
-    font-size:16px !important;
-    line-height:1.7 !important;
-    font-family: 'Bitter', serif !important;
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+    font-family: "Bitter", serif !important;
     color: var(--black);
 }
 
@@ -155,43 +165,49 @@ body {
     border-color: var(--secondary);
 }
 
-.btn-primary:hover, .btn-primary:focus {
+.btn-primary:hover,
+.btn-primary:focus {
     background-color: var(--primary);
     border-color: var(--primary);
     filter: brightness(90%);
 }
 
-.btn-secondary:hover, .btn-secondary:focus {
+.btn-secondary:hover,
+.btn-secondary:focus {
     background-color: var(--secondary);
     border-color: var(--secondary);
     filter: brightness(90%);
 }
 
-.btn-primary:disabled, .btn-primary.disabled {
+.btn-primary:disabled,
+.btn-primary.disabled {
     background-color: var(--primary);
     border-color: var(--primary);
     opacity: 0.65;
 }
 
-.btn-secondary:disabled, .btn-secondary.disabled {
+.btn-secondary:disabled,
+.btn-secondary.disabled {
     background-color: var(--secondary);
     border-color: var(--secondary);
     opacity: 0.65;
 }
 
-.btn-primary:not(:disabled):not(.disabled):active, .btn-primary:not(:disabled):not(.disabled).active {
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active {
     background-color: var(--primary);
     border-color: var(--primary);
     filter: brightness(75%);
 }
 
-.btn-secondary:not(:disabled):not(.disabled):active, .btn-secondary:not(:disabled):not(.disabled).active {
+.btn-secondary:not(:disabled):not(.disabled):active,
+.btn-secondary:not(:disabled):not(.disabled).active {
     background-color: var(--secondary);
     border-color: var(--secondary);
     filter: brightness(75%);
 }
 
-.is-valid{
+.is-valid {
     border-color: var(--primary) !important;
 }
 
@@ -204,24 +220,33 @@ body {
     animation: fadeIn 0.8s;
 }
 
-.hidden { display: none; }
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+nav-item .hidden {
+    display: none;
 }
 
-tr.tr-href, tr.tr-clickable{
-    transition: background .2s;
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+tr.tr-href,
+tr.tr-clickable {
+    transition: background 0.2s;
     cursor: pointer;
 }
 
-tr.tr-href.active, tr.tr-clickable.active{
+tr.tr-href.active,
+tr.tr-clickable.active {
     background: var(--active-color);
     color: black;
 }
 
-tr.tr-href:hover:not(.active), tr.tr-clickable:hover:not(.active){
+tr.tr-href:hover:not(.active),
+tr.tr-clickable:hover:not(.active) {
     background: var(--bs-gray-100);
 }
 
@@ -234,40 +259,43 @@ tr.tr-href:hover:not(.active), tr.tr-clickable:hover:not(.active){
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
-
 /* ===== Scrollbar CSS ===== */
-  /* Chrome, Edge, and Safari */
-  *::-webkit-scrollbar {
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
     width: 16px;
-  }
+}
 
-  *::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
     background: transparent;
-  }
+}
 
-  *::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
     background-color: gray;
     border-radius: 10px;
     border: 2px solid #ffffff;
-  }
+}
 
 .btn:disabled {
-    color:grey;
-    border-color:grey;
+    color: grey;
+    border-color: grey;
 }
 
 .tapir-btn:disabled {
     background-color: gray !important;
     color: white !important;
-    border-color:grey;
+    border-color: grey;
 }
 
 .selectize-input {
-    background: #FFFFFF !important;
+    background: #ffffff !important;
     min-height: 2.375em !important;
     font-size: 1em !important;
     padding: 0.5rem 2.25rem 0.25rem 0.75rem;
@@ -279,15 +307,42 @@ div.option.selected {
 
 .table td,
 .table tr {
-  padding: .3rem;
+    padding: 0.3rem;
   font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.custom-sidebar{
-    width: auto;
-    min-width: 12em; /* Adjust this value to your desired minimum width */
+.navbar.sticky-top {
+    z-index: 2010;
+}
+
+.custom-sidebar {
+    width: 4em;
+    transition: width 0.3s ease;
+    position: absolute;
+    padding-top: 4.5em;
+    white-space: nowrap;
+    z-index: 2000;
+    box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-item-details {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-group {
+    margin-top: 1em;
+}
+
+.custom-sidebar:hover {
+    width: 16em;
+}
+
+.custom-sidebar:hover > div > .sidebar-item-details,
+.custom-sidebar:hover > div > ul > li > a > span.sidebar-item-details {
+    opacity: 1;
 }
 
 .material-icons {
@@ -296,4 +351,9 @@ div.option.selected {
     overflow: hidden;
     text-align: center;
     vertical-align: middle;
+}
+
+main {
+    padding-left: 1em;
+    padding-right: 1em;
 }

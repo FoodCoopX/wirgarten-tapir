@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member
@@ -58,6 +58,7 @@ def send_email(to_email: List[str], subject: str, content: str, variables: dict 
     ).save()
 
 
+# all the vars stuff will be deprecated as soon as the mail module is going in production
 def get_default_vars(to_email):
     variables = add_member_vars(to_email)
     variables.update(add_general_vars())

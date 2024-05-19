@@ -23,7 +23,7 @@
         {% if email_change_request %}
         <div id="email-change-verify" class="alert alert-success">
             <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
-            <p>Wir haben dir eine Mail geschickt an <strong>{{email_change_request.new_email}}</strong>.<br/>
+            <p>Wir haben dir eine Mail geschickt an <strong>{{ object.email }}</strong>.<br/>
                 Bitte klicke den Link um deine Änderung wirksam zu machen.</p>
         </div>
         {% endif %}

@@ -5,11 +5,11 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
-
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -33,9 +33,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    calculate_pickup_location_change_date,
-)
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
@@ -51,6 +49,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
@@ -79,6 +78,8 @@ def get_member_personal_data_edit_form(request, **kwargs):
         UpdateTapirUserLogEntry().populate(
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
+
+        TransactionalTrigger.fire_action(Events.MEMBERAREA_CHANGE_DATA, member.email)
 
         member.save()
 
@@ -137,11 +138,18 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).delete()
 
         pl = PickupLocation.objects.get(id=pickup_location_id)
+        change_date_str = format_date(change_date)
         TextLogEntry().populate(
             actor=request.user,
             user=member,
-            text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
+            text=f"Abholort geändert zum {change_date_str}: {member.pickup_location} -> {pl}",
         ).save()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+            member.email,
+            {"pickup_location": pl.name, "pickup_location_start_date": change_date_str},
+        )
 
     return get_form_modal(
         request=request,
