@@ -13,10 +13,10 @@ import datetime
 import email.utils
 import os
 from pathlib import Path
-import importlib_resources
 
 import celery.schedules
 import environ
+import importlib_resources
 
 env = environ.Env()
 
@@ -112,7 +112,6 @@ if ENABLE_SILK_PROFILING:
 ROOT_URLCONF = "tapir.urls"
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
 
 TEMPLATES = [
     {
@@ -306,7 +305,6 @@ BOOTSTRAP_DATEPICKER_PLUS = {
         },
     },
 }
-
 
 # Tapir Mail
 DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")

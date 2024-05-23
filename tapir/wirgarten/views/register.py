@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -9,7 +10,6 @@ from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
-from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
@@ -34,10 +34,12 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
     get_next_contract_start_date,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_current_growing_period,
+    get_future_subscriptions,
     is_product_type_available,
 )
 from tapir.wirgarten.utils import get_now, get_today
@@ -109,7 +111,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
 
-    def get_summary_form():
+    def get_summary_form(self):
         raise not NotImplementedError(
             "Please implement get_summary_form in the inherited class()"
         )
@@ -356,12 +358,19 @@ class RegistrationWizardViewBase(CookieWizardView):
                     valid_from=get_today(),
                 )
 
-            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(
-                ref_date=self.start_date
+            start_date = (
+                self.start_date
                 if hasattr(self, "start_date")
                 else get_next_contract_start_date()
             )
+            self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
+                "growing_period", get_current_growing_period()
+            )
+            if self.growing_period and self.growing_period.start_date > get_today():
+                start_date = self.growing_period.start_date
+            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
+            actual_coop_start = get_next_contract_start_date(ref_date=start_date)
+
             mandate_ref = create_mandate_ref(member)
             buy_cooperative_shares(
                 quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
@@ -377,7 +386,6 @@ class RegistrationWizardViewBase(CookieWizardView):
                 form_dict[STEP_BASE_PRODUCT].save(
                     mandate_ref=mandate_ref,
                     member_id=member.id,
-                    is_registration=True,
                 )
 
                 for dyn_step in self.dynamic_steps:
@@ -386,6 +394,10 @@ class RegistrationWizardViewBase(CookieWizardView):
                             mandate_ref=mandate_ref,
                             member_id=member.id,
                         )
+
+                send_order_confirmation(
+                    member, get_future_subscriptions().filter(member=member)
+                )
         except Exception as e:
             member.delete()
             raise e

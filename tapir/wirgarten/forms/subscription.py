@@ -21,7 +21,6 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
-    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -32,7 +31,6 @@ from tapir.wirgarten.service.member import (
     change_pickup_location,
     get_next_contract_start_date,
     get_or_create_mandate_ref,
-    send_contract_change_confirmation,
     send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
@@ -41,12 +39,11 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_available_product_types,
     get_current_growing_period,
     get_free_product_capacity,
-    get_future_subscriptions,
     get_product_price,
     get_total_price_for_subs,
+    get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -91,6 +88,13 @@ class BaseProductForm(forms.Form):
         self.start_date = kwargs.pop(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
+        if initial and not self.choose_growing_period:
+            next_growing_period = get_next_growing_period()
+            self.choose_growing_period = (
+                next_growing_period
+                and (next_growing_period.start_date - get_today()).days <= 61
+            )
+
         self.intro_template = initial.pop("intro_template", None)
         self.outro_template = initial.pop("outro_template", None)
 
@@ -308,7 +312,6 @@ class BaseProductForm(forms.Form):
         self,
         mandate_ref: MandateReference = None,
         member_id: str = None,
-        is_registration: bool = False,
     ):
         member_id = member_id or self.member_id
 
@@ -385,26 +388,6 @@ class BaseProductForm(forms.Form):
         if new_pickup_location:
             change_date = self.cleaned_data.get("pickup_location_change_date")
             change_pickup_location(member_id, new_pickup_location, change_date)
-
-        if (
-            not is_registration
-            and get_future_subscriptions()
-            .filter(
-                cancellation_ts__isnull=True,
-                member_id=member_id,
-                end_date__gt=(
-                    max(self.start_date, self.growing_period.start_date)
-                    if hasattr(self, "growing_period")
-                    else self.start_date
-                ),
-            )
-            .exists()
-        ):
-            send_contract_change_confirmation(member, self.subs)
-        else:
-            send_order_confirmation(
-                member, get_future_subscriptions().filter(member=member)
-            )
 
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():

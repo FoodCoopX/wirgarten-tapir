@@ -47,7 +47,7 @@ def change_email(request, **kwargs):
     link_validity = relativedelta(minutes=EMAIL_CHANGE_LINK_VALIDITY_MINUTES)
     now = get_now()
     if matching_change_request.exists() and now < (
-        matching_change_request[0].created_at + link_validity
+            matching_change_request[0].created_at + link_validity
     ):
         # token is valid -> actually change email
         user = TapirUser.objects.get(id=user_id)

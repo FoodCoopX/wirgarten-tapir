@@ -64,7 +64,8 @@
             </nav>
              {% endif %}
 
-            <main id="main-content" role="main" {% if request.user and "coop.view" in request.user.roles %}style="margin-left:4em;"{% endif %}>
+        <main id="main-content" role="main"
+              {% if request.user and "coop.view" in request.user.roles %}style="margin-left:4em;"{% endif %}>
                 {% bootstrap_messages %}
                 {% block content %}{% endblock %}
             </main>

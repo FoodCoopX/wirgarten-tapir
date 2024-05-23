@@ -333,7 +333,7 @@ def synchronize_waitlist_segments():
     for waitlist_type in WaitingListEntry.WaitingListType:
         segment_name = get_waitlist_segment_name(waitlist_type)
         for recipient in StaticSegmentRecipient.objects.filter(
-            segment__name=segment_name
+                segment__name=segment_name
         ):
             if not WaitingListEntry.objects.filter(email=recipient.email).exists():
                 print(

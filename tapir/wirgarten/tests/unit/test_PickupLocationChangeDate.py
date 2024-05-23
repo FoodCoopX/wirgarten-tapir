@@ -17,7 +17,7 @@ class PickupLocationChangeDateTestCase(TestCase):
         weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
         with open(
-            "tapir/wirgarten/tests/unit/resources/pickup_location_change_date_validation.csv"
+                "tapir/wirgarten/tests/unit/resources/pickup_location_change_date_validation.csv"
         ) as validation_data:
             validation_data = validation_data.read()
 

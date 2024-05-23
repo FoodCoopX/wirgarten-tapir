@@ -25,10 +25,10 @@ from tapir.wirgarten.views.mailing import TapirMailView
 
 handler403 = "tapir.wirgarten.views.default_redirect.handle_403"
 tapir_mail_path = (
-    settings.TAPIR_MAIL_PATH[1:]
-    if settings.TAPIR_MAIL_PATH.startswith("/")
-    else settings.TAPIR_MAIL_PATH
-) + "/"
+                      settings.TAPIR_MAIL_PATH[1:]
+                      if settings.TAPIR_MAIL_PATH.startswith("/")
+                      else settings.TAPIR_MAIL_PATH
+                  ) + "/"
 
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
@@ -42,13 +42,13 @@ urlpatterns = [
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("wirgarten/", include("tapir.wirgarten.urls")),
-    path(
-        "mailing/",
-        TapirMailView.as_view(),
-        name="tapir_mail",
-        kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
-    ),
-    path(tapir_mail_path, include("tapir_mail.urls")),
+                  path(
+                      "mailing/",
+                      TapirMailView.as_view(),
+                      name="tapir_mail",
+                      kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
+                  ),
+                  path(tapir_mail_path, include("tapir_mail.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

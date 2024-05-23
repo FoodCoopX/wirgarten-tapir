@@ -1,11 +1,8 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from tapir_mail.service.segment import resolve_segments, segment_registry
+from tapir_mail.service.segment import resolve_segments
 
-from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import parameter_definition
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.tapirmail import Segments, _register_segments
 from tapir.wirgarten.tests.factories import (
@@ -77,7 +74,7 @@ class SegmentTest(TapirIntegrationTest):
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withActiveSubscriptionStartsInFuture_memberIsNotIncluded(
-        self,
+            self,
     ):
         expected_member_ids = [self.member_with_subscription.id]
         start_date_next_month = get_next_contract_start_date(ref_date=self.NOW.date())

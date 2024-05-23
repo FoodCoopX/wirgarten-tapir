@@ -22,14 +22,14 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
         self.other_url = settings.TAPIR_MAIL_PATH
 
     def test_tapirMailPermissionMiddleWare_publicTrackingAccess_requestIsPassedThrough(
-        self,
+            self,
     ):
         request = self.factory.get(self.tracking_url)
         response = self.middleware(request)
         self.assertIsNone(response)
 
     def test_tapirMailPermissionMiddleWare_nonPublicPathWithoutPermission_permissionDeniedExceptionThrown(
-        self,
+            self,
     ):
         request = self.factory.get(self.other_url)
         self.user.roles = []
@@ -38,7 +38,7 @@ class TapirMailPermissionMiddlewareTest(TapirIntegrationTest):
             self.middleware(request)
 
     def test_tapirMailPermissionMiddleWare_nonPublicPathWithPermission_requestIsPassedThrough(
-        self,
+            self,
     ):
         permission = Permission.Email.MANAGE
         self.user.roles.append(permission)

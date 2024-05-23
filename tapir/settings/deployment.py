@@ -1,7 +1,9 @@
 import datetime
 import os
-import environ
+
 import celery.schedules
+import environ
+
 from tapir.settings.base import BASE_DIR
 
 env = environ.Env()
@@ -134,7 +136,6 @@ KEYCLOAK_ADMIN_CONFIG = dict(
 )
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
-
 
 # Tapir Mail
 DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")

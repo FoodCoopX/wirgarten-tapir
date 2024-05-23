@@ -21,7 +21,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
+from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,

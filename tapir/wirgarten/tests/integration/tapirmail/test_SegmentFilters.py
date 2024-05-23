@@ -1,7 +1,6 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from tapir.wirgarten.utils import get_today
 from tapir_mail.service.segment import resolve_segments
 
 from tapir.wirgarten.tapirmail import (
@@ -23,6 +22,7 @@ from tapir.wirgarten.tests.test_utils import (
     mock_timezone,
     set_bypass_keycloak,
 )
+from tapir.wirgarten.utils import get_today
 
 
 class SegmentFilterTest(TapirIntegrationTest):

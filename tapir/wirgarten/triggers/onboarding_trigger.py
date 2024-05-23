@@ -37,9 +37,9 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     @classmethod
     @transaction.atomic
     def _on_create(
-        cls,
-        email_configuration_version: EmailConfigurationVersion,
-        trigger_data: OnboardingTriggerData,
+            cls,
+            email_configuration_version: EmailConfigurationVersion,
+            trigger_data: OnboardingTriggerData,
     ):
         for recipient in resolve_segments(**email_configuration_version.segment_data):
             cls._delete_unsent_config_dispatch(
@@ -64,7 +64,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
     @transaction.atomic
     def on_subscription_updated(cls, subscription: Subscription):
         for version in EmailConfigurationVersion.objects.filter(
-            status=ReleaseStatus.RELEASED
+                status=ReleaseStatus.RELEASED
         ):
             trigger_data = next(
                 (
@@ -92,7 +92,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
 
     @classmethod
     def _delete_unsent_config_dispatch(
-        cls, version: EmailConfigurationVersion, recipient: Member
+            cls, version: EmailConfigurationVersion, recipient: Member
     ):
         EmailConfigurationDispatch.objects.filter(
             email_configuration_version=version,
@@ -102,10 +102,10 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
 
     @classmethod
     def _create_new_config_dispatch(
-        cls,
-        version: EmailConfigurationVersion,
-        recipient: Member,
-        trigger_data: OnboardingTriggerData,
+            cls,
+            version: EmailConfigurationVersion,
+            recipient: Member,
+            trigger_data: OnboardingTriggerData,
     ):
         first_subscription = recipient.subscription_set.order_by("start_date").first()
         if not first_subscription:

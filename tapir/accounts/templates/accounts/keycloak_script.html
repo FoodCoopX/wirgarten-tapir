@@ -1,4 +1,4 @@
-{% load keycloak %} 
+{% load keycloak %}
 {% load tapir_static %} 
 {% keycloak_config as conf %}
 
@@ -40,7 +40,7 @@
             setTimeout(addLogoutFunction, 100);
         }
     }
-    
+
     const refreshToken = (keycloak, minValidity) => keycloak.updateToken(minValidity)
         .then(() => {
             console.log("Token refreshed successfully");
@@ -55,11 +55,11 @@
         if (!iframe) {
             return;
         }
-        
+
         iframe.contentWindow.postMessage({
             type: 'NEW_TOKEN',
             token: token
-        }, window.location.origin);  
+        }, window.location.origin);
     }
     
     const keycloak = new Keycloak({{ conf| safe }});
@@ -99,7 +99,7 @@
             hideLoadingScreen();
 
             setCookie("token", keycloak.token);
-            
+
             if (document.location.pathname === '/login') {
                 window.location.replace(getRedirectUrl());
             }

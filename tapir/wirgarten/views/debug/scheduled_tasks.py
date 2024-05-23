@@ -1,12 +1,13 @@
 import importlib
 import json
-from contextlib import redirect_stdout
-from io import StringIO
 import sys
 import traceback
+from contextlib import redirect_stdout
+from io import StringIO
 from typing import Any, Dict
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponse, JsonResponse
@@ -14,7 +15,6 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from django.conf import settings
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ScheduledTask
 from tapir.wirgarten.utils import get_now

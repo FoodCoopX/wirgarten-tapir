@@ -13,7 +13,7 @@ class TapirMailPermissionMiddleware:
     def __call__(self, request):
         # PUBLIC TRACKING PIXEL LINK ACCESS
         if re.match(
-            settings.TAPIR_MAIL_PATH + r"/?api/tracking/(.*)/track/?", request.path
+                settings.TAPIR_MAIL_PATH + r"/?api/tracking/(.*)/track/?", request.path
         ) or re.match(
             settings.TAPIR_MAIL_PATH + r"/?api/media_library/get_file/(.*)",
             request.path,
@@ -22,7 +22,7 @@ class TapirMailPermissionMiddleware:
 
         # REQUIRE PERMISSION FOR ALL OTHER PATHS
         if request.path.startswith(
-            settings.TAPIR_MAIL_PATH
+                settings.TAPIR_MAIL_PATH
         ) and not request.user.has_perm(Permission.Email.MANAGE):
             raise PermissionDenied()
 

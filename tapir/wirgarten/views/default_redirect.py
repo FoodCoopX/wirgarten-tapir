@@ -1,11 +1,12 @@
 import inspect
+
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 
-from django.conf import settings
 from tapir.wirgarten.constants import Permission
 
 

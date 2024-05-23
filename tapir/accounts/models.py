@@ -13,13 +13,13 @@ from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir import utils
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 log = logging.getLogger(__name__)
 
@@ -229,7 +229,7 @@ class KeycloakUser(AbstractUser):
             content=f"Hallo {self.first_name},<br/><br/>"
             f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
             f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
+                    f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
             f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
             f"<br/><br/>Grüße, dein WirGarten Team",
         )
