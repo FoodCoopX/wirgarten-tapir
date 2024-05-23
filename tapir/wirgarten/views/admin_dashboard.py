@@ -4,6 +4,7 @@ import json
 from math import floor
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, DateField, ExpressionWrapper, F, Max, Sum
 from django.db.models.functions import ExtractYear
@@ -12,9 +13,7 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.views.decorators.http import require_GET
 
-from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import ProductTypes
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
@@ -78,7 +77,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         try:
-            harvest_share_type = ProductType.objects.get(id=base_product_id)
+            self.harvest_share_type = ProductType.objects.get(id=base_product_id)
         except ProductType.DoesNotExist:
             context["no_base_product_type"] = True
             return context
@@ -150,7 +149,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Subscription.objects.filter(
                 start_date__lte=today,
                 end_date__gte=today,
-                product__type=harvest_share_type,
+                product__type=self.harvest_share_type,
             )
         )
 
@@ -420,6 +419,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         contract_labels.append("nur Geno-Anteile")
         contract_data.append(
             context["active_members"]
-            - contract_types.get(ProductTypes.HARVEST_SHARES, 0)
+            - contract_types.get(self.harvest_share_type.name, 0)
         )
         return contract_data, contract_labels

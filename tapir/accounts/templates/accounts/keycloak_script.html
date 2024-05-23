@@ -1,6 +1,5 @@
 {% load keycloak %}
-{% load tapir_static %}
-
+{% load tapir_static %} 
 {% keycloak_config as conf %}
 
 <script src="{% keycloak_public_url %}/js/keycloak.js"></script>
@@ -14,7 +13,8 @@
     }
 
     const setCookie = (name, value) => {
-        document.cookie = name + "=" + value + "; SameSite=Lax;";
+        document.cookie = name + "=" + value + "; Path=/; SameSite=Lax;";
+        sendTokenToIframe(keycloak.token)
     }
 
     const deleteAllCookies = () => {
@@ -41,6 +41,27 @@
         }
     }
 
+    const refreshToken = (keycloak, minValidity) => keycloak.updateToken(minValidity)
+        .then(() => {
+            console.log("Token refreshed successfully");
+            setCookie("token", keycloak.token);
+        })
+        .catch(() => {
+            console.log("Failed to refresh token. User is logged out.");
+        });
+
+    const sendTokenToIframe = (token) => {
+        const iframe = document.getElementById('tapirMailIframe');
+        if (!iframe) {
+            return;
+        }
+
+        iframe.contentWindow.postMessage({
+            type: 'NEW_TOKEN',
+            token: token
+        }, window.location.origin);
+    }
+    
     const keycloak = new Keycloak({{ conf| safe }});
 
     const hideLoadingScreen = () => {
@@ -67,14 +88,7 @@
         token: savedToken,
         onTokenExpired: () => {
             console.log("Token expired, refreshing...");
-            keycloak.updateToken(10)
-                .then(() => {
-                    console.log("Token refreshed successfully");
-                    setCookie("token", keycloak.token);
-                })
-                .catch(() => {
-                    console.log("Failed to refresh token. User is logged out.");
-                });
+            refreshToken(keycloak, 10)
         },
     }).then((authenticated) => {
         console.log("authenticated: ", authenticated)
@@ -93,6 +107,15 @@
             addLogoutFunction();
 
             console.log("Keycloak initialized successfully");
+
+            const iframe = document.getElementById('tapirMailIframe');
+            if (iframe) {
+                // keep the token in the iframe up to date
+                const refreshInterval = 2 * 60;
+                setInterval(() => {
+                    refreshToken(keycloak, refreshInterval + 10)
+                }, refreshInterval * 1000)
+            }
         }
     }).catch((err) => {
         deleteAllCookies();

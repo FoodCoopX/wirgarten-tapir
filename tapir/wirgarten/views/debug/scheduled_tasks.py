@@ -1,12 +1,13 @@
 import importlib
 import json
-from contextlib import redirect_stdout
-from io import StringIO
 import sys
 import traceback
+from contextlib import redirect_stdout
+from io import StringIO
 from typing import Any, Dict
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponse, JsonResponse
@@ -14,7 +15,6 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
-from django.conf import settings
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import ScheduledTask
 from tapir.wirgarten.utils import get_now
@@ -62,7 +62,11 @@ class JobsListView(
         scheduled = []
         for key, value in settings.CELERY_BEAT_SCHEDULE.items():
             schedule = value["schedule"]
-            cron_expression = f"{schedule._orig_minute} {schedule._orig_hour} {schedule._orig_day_of_month} {schedule._orig_month_of_year} {schedule._orig_day_of_week}"
+            cron_expression = (
+                f"{schedule._orig_minute} {schedule._orig_hour} {schedule._orig_day_of_month} {schedule._orig_month_of_year} {schedule._orig_day_of_week}"
+                if hasattr(schedule, "_orig_minute")
+                else str(schedule)
+            )  # FIXME: proper display of non-cron schedule objects
 
             scheduled.append(
                 {"name": key, "task": value["task"], "schedule": cron_expression}

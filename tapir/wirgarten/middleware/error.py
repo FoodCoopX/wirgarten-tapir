@@ -1,16 +1,12 @@
 import os
-import sys
 import traceback
 
-from django.http import HttpResponseServerError
-from django.views import debug
-from django.utils.deprecation import MiddlewareMixin
-
 from django.conf import settings
+
 from tapir.wirgarten.utils import get_now
 
 
-class GlobalServerErrorHandlerMiddleware(MiddlewareMixin):
+class GlobalServerErrorHandlerMiddleware:
     """
     This middleware catches all unhandled exceptions and saves the stacktrace to the 'settings.ERROR_LOG_DIR' file.
     """

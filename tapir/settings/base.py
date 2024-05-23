@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
+from importlib import resources
 from pathlib import Path
 
 import environ
@@ -39,7 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "django_bootstrap5",
+    "django_drf_filepond",
     "bootstrap_datepicker_plus",
+    "tapir_mail",
     "tapir.core",
     "tapir.log",
     "tapir.utils",
@@ -69,7 +72,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "tapir.accounts.middleware.KeycloakMiddleware",
-    "tapir.wirgarten.error_middleware.GlobalServerErrorHandlerMiddleware",
+    "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
+    "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
 
 X_FRAME_OPTIONS = "ALLOWALL"
@@ -82,10 +86,19 @@ ROOT_URLCONF = "tapir.urls"
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+
+def get_tapir_mail_template_dir():
+    with resources.path("tapir_mail", "__ui__") as path:
+        return str(path)
+
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "tapir/templates")],
+        "DIRS": [
+            os.path.join(BASE_DIR, "tapir/templates"),
+            get_tapir_mail_template_dir(),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -114,8 +127,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+
+def get_tapir_mail_static_dir():
+    with resources.path("tapir_mail", "__static__") as path:
+        return str(path)
+
+
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = "static"
+STATICFILES_DIRS = [
+    get_tapir_mail_static_dir(),
+]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
 SELECT2_CSS = "core/select2/4.0.13/css/select2.min.css"

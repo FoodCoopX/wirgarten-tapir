@@ -2,13 +2,13 @@ import itertools
 import json
 import re
 
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import generic
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.decorators import permission_required
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
@@ -170,7 +170,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["buttons"] = json.dumps(
             {
                 "period": {
-                    g["id"]: {"delete": g["status"] is "upcoming"}
+                    g["id"]: {"delete": g["status"] == "upcoming"}
                     for g in context["growing_periods"]
                 },
                 "capacity": {

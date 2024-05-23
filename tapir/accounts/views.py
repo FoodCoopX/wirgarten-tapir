@@ -1,16 +1,18 @@
 import base64
 import json
-from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from django.conf import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.wirgarten.service.email import send_email
+from tapir.wirgarten.tapirmail import Events
 
 # FIXME: this file has a dependency on tapir/wirgarten! Replace the send_email call as soon as the mail module is ready
 
@@ -40,6 +42,11 @@ def change_email(request, **kwargs):
         EmailChangeRequest.objects.filter(user_id=user_id).delete()
         # delete expired change requests
         EmailChangeRequest.objects.filter(created_at__lte=now - link_validity).delete()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+            new_email,
+        )
 
         # send confirmation to old email address
         send_email(

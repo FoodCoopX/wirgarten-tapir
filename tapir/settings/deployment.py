@@ -1,5 +1,10 @@
-import environ
+import datetime
+import os
+
 import celery.schedules
+import environ
+
+from tapir.settings.base import BASE_DIR
 
 env = environ.Env()
 
@@ -42,7 +47,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },
@@ -51,7 +56,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },
@@ -63,26 +68,56 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
         "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
     },
+    "resolve_segment_and_create_email_dispatches_task": {
+        "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
+        "schedule": datetime.timedelta(minutes=1),
+    },
+    "send_email_dispatch_batch_task": {
+        "task": "tapir_mail.tasks.send_email_dispatch_batch_task",
+        "schedule": datetime.timedelta(minutes=1),
+    },
+    "check_email_bounces": {
+        "task": "tapir_mail.tasks.check_email_bounces",
+        "schedule": datetime.timedelta(minutes=1),
+    },
 }
 
-# django-environ EMAIL_URL mechanism is a bit hairy with passwords with slashes in them, so use this instead
+EMAIL_DISPATCH_BATCH_SIZE = (
+    200  # job runs 1x/minute --> 200 * 60 = 12,000 emails per hour maximum
+)
+
+# if True, email will not be sent and set to ERROR if it contains unknown tokens. If False, unknown tokens are just stripped and ignored.
+EMAIL_TOKENS_STRICT_VALIDATION = True
+
 EMAIL_ENV = env("EMAIL_ENV", default="dev")
+EMAIL_PORT_IMAP = env.str("EMAIL_PORT_IMAP", default=993)
+EMAIL_PORT = env.str("EMAIL_PORT", default=587)
+# the next 2 options are mutually exclusive!
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 if EMAIL_ENV == "dev":
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-    EMAIL_HOST_SENDER = "dev@example.com"
+    EMAIL_HOST = "email_host"
+    EMAIL_HOST_USER = "email_host_user"
+    EMAIL_HOST_PASSWORD = "email_host_password"
+    EMAIL_HOST_SENDER = "test_host_sender@example.com"
+    EMAIL_BOUNCE_ADDRESS = "bounce@example.com"
+    EMAIL_HOST_SENDER_NAME = "Test host sender"
 elif EMAIL_ENV == "test":
     # Local SMTP
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 elif EMAIL_ENV == "prod":
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = env.str("EMAIL_HOST")
-    EMAIL_HOST_SENDER = env.str("EMAIL_HOST_SENDER")
+    EMAIL_HOST_SENDER = env.str(
+        "EMAIL_HOST_SENDER"
+    )  # The address that the client will see
+    EMAIL_HOST_SENDER_NAME = env.str("EMAIL_HOST_SENDER_NAME")
+    EMAIL_BOUNCE_ADDRESS = env.str(
+        "EMAIL_BOUNCE_ADDRESS"
+    )  # The address that the mail will be sent from
     EMAIL_HOST_USER = env.str("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
-    EMAIL_PORT = env.str("EMAIL_PORT", default=587)
-    # the next 2 options are mutually exclusive!
-    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
-    EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
     EMAIL_AUTO_BCC = env.str("EMAIL_AUTO_BCC", default=None)
 
 
@@ -101,3 +136,38 @@ KEYCLOAK_ADMIN_CONFIG = dict(
 )
 
 CSP_FRAME_SRC = ["'self'", KEYCLOAK_ADMIN_CONFIG["PUBLIC_URL"]]
+
+# Tapir Mail
+DJANGO_DRF_FILEPOND_UPLOAD_TMP = os.path.join(BASE_DIR, "filepond_temp_uploads")
+DJANGO_DRF_FILEPOND_FILE_STORE_PATH = os.path.join(BASE_DIR, "filepond_stored_uploads")
+
+MJML_BACKEND_MODE = "cmd"
+MJML_EXEC_CMD = [
+    "mjml",
+    "--config.juicePreserveTags",
+    "true",
+    "--config.validationLevel",
+    "skip",
+    "--config.minify",
+    "true",
+    "--config.beautify",
+    "false",
+    "--config.keepComments",
+    "false",
+    "--config.minifyOptions",
+    '{"removeComments": true}',
+]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CELERY_BROKER_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+TAPIR_MAIL_PATH = "/tapirmail"
+os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
+os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH
