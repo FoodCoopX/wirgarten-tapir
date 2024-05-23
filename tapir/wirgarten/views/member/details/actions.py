@@ -1,7 +1,6 @@
 import base64
 import json
 
-from click import Parameter
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -21,6 +20,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
