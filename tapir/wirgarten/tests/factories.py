@@ -19,6 +19,8 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
+    ProductCapacity,
+    ProductPrice,
 )
 from tapir.wirgarten.service.payment import generate_mandate_ref
 
@@ -57,6 +59,11 @@ class ProductTypeFactory(factory.django.DjangoModelFactory):
     delivery_cycle = NO_DELIVERY[0]
 
 
+class ProductCapacityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductCapacity
+
+
 class ProductFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Product
@@ -71,6 +78,15 @@ class ProductFactory(factory.django.DjangoModelFactory):
         ProductFactory._type_counts[self.type.id] += 1
         # If it's the first Product for this type, set base to True
         return ProductFactory._type_counts[self.type.id] == 1
+
+
+class ProductPriceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductPrice
+
+    product = factory.SubFactory(ProductFactory)
+    price = factory.Faker("random_float", min=30, max=150)
+    valid_from = TODAY
 
 
 class MandateReferenceFactory(factory.django.DjangoModelFactory):
