@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
@@ -566,11 +567,27 @@ def get_cheapest_product_price(
     if isinstance(product_type, ProductType):
         product_type = product_type.id
 
-    product_prices = ProductPrice.objects.filter(product__type_id=product_type)
-    if len(product_prices) > 1:
-        product_prices.filter(valid_from__lte=reference_date).order_by("price")
+    products = Product.objects.filter(type__id=product_type)
+    if products.count() == 0:
+        raise ObjectDoesNotExist("No products found")
 
-    return product_prices.first().price
+    all_prices = ProductPrice.objects.filter(product__type__id=product_type)
+    if all_prices.count() == 1:
+        return all_prices[0].price
+
+    cheapest_price = float("inf")
+    for product in products:
+        prices = ProductPrice.objects.filter(
+            product=product, valid_from__lte=reference_date
+        ).order_by("valid_from")
+        if prices.count() == 0:
+            continue
+        cheapest_price = min(cheapest_price, prices.last().price)
+
+    if cheapest_price == float("inf"):
+        raise ObjectDoesNotExist("No price found")
+
+    return cheapest_price
 
 
 def is_product_type_available(
