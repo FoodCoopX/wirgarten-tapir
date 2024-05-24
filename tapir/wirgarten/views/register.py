@@ -111,7 +111,8 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
 
-    def get_summary_form(self):
+    @classmethod
+    def get_summary_form(cls):
         raise not NotImplementedError(
             "Please implement get_summary_form in the inherited class()"
         )

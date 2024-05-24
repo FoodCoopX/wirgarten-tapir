@@ -289,12 +289,15 @@ def get_add_subscription_form(request, **kwargs):
         ).save()
 
         if is_base_product_type:
+            date_filter = next_start_date
+            if next_period:
+                date_filter = max(next_start_date, next_period.start_date)
             if (
                 get_future_subscriptions()
                 .filter(
                     cancellation_ts__isnull=True,
                     member_id=member_id,
-                    end_date__gt=(max(next_start_date, next_period.start_date)),
+                    end_date__gt=date_filter,
                 )
                 .exists()
             ):
