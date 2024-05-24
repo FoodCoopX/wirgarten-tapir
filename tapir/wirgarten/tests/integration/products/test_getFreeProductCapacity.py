@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
 
 
-class TapirGetFreeProductCapacity(TapirIntegrationTest):
+class TestGetFreeProductCapacity(TapirIntegrationTest):
     def setUp(self):
         set_bypass_keycloak()
 
