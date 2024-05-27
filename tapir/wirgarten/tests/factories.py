@@ -59,11 +59,6 @@ class ProductTypeFactory(factory.django.DjangoModelFactory):
     delivery_cycle = NO_DELIVERY[0]
 
 
-class ProductCapacityFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = ProductCapacity
-
-
 class ProductFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Product
@@ -104,6 +99,15 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory):
 
     start_date = TODAY + relativedelta(day=1)
     end_date = start_date + relativedelta(years=1, days=-1)
+
+
+class ProductCapacityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductCapacity
+
+    period = factory.SubFactory(GrowingPeriodFactory)
+    product_type = factory.SubFactory(ProductTypeFactory)
+    capacity = factory.Faker("random_float", min=1000, max=5000)
 
 
 class SubscriptionFactory(factory.django.DjangoModelFactory):

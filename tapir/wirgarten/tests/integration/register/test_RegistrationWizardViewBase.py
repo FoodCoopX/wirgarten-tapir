@@ -1,57 +1,96 @@
-from django.core.validators import MinValueValidator, URLValidator
+import datetime
+
 from django.template.response import TemplateResponse
 from formtools.wizard.views import StepsHelper
-from icecream import ic
 
-from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import parameter_definition, ParameterMeta
-from tapir.wirgarten.models import Product, ProductType
-from tapir.wirgarten.parameters import Parameter, ParameterCategory
-from tapir.wirgarten.tests.factories import ProductFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.configuration.models import TapirParameter
+from tapir.wirgarten.models import Product
+from tapir.wirgarten.parameters import (
+    Parameter,
+    ParameterDefinitions,
+)
+from tapir.wirgarten.tests.factories import (
+    ProductFactory,
+    GrowingPeriodFactory,
+    ProductCapacityFactory,
+    ProductPriceFactory,
+    SubscriptionFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
+from tapir.wirgarten.views.register import (
+    STEP_BASE_PRODUCT,
+    STEP_BASE_PRODUCT_NOT_AVAILABLE,
+)
 
 
 class TestRegistrationWizardViewBase(TapirIntegrationTest):
     def setUp(self):
-        product: Product = ProductFactory.create()
-        parameter_definition(
-            key=Parameter.COOP_BASE_PRODUCT_TYPE,
-            label="Basis Produkttyp",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=product.type.id,
-            description="Der Basis Produkttyp.",
-            category=ParameterCategory.COOP,
-            meta=ParameterMeta(
-                options=list(map(lambda x: (x.id, x.name), ProductType.objects.all()))
-            ),
+        ParameterDefinitions().import_definitions()
+
+    def create_growing_period_with_one_subscription(self, year: int):
+        self.product: Product = ProductFactory.create()
+        param = TapirParameter.objects.get(pk=Parameter.COOP_BASE_PRODUCT_TYPE)
+        param.value = self.product.type.id
+        param.save()
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=year, month=1, day=1),
+            end_date=datetime.date(year=year, month=12, day=31),
+        )
+        ProductCapacityFactory.create(
+            period=growing_period, product_type=self.product.type, capacity=100
+        )
+        SubscriptionFactory.create(
+            period=growing_period, quantity=1, product=self.product
         )
 
-        parameter_definition(
-            key=Parameter.COOP_MIN_SHARES,
-            label="Mindestanzahl Genossenschaftsanteile",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
-            category=ParameterCategory.COOP,
-            order_priority=1000,
-            meta=ParameterMeta(validators=[MinValueValidator(limit_value=0)]),
-        )
-
-        parameter_definition(
-            key=Parameter.COOP_STATUTE_LINK,
-            label="Link zur Satzung",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="https://lueneburg.wirgarten.com/satzung",
-            description="Der Link zur Satzung der Genossenschaft.",
-            category=ParameterCategory.COOP,
-            meta=ParameterMeta(validators=[URLValidator()]),
-        )
+        return growing_period
 
     def test_RegistrationWizardViewBase_currentGrowingPeriodIsFull_showsWaitingList(
         self,
     ):
+        mock_timezone(self, datetime.datetime(year=2023, month=6, day=1))
+        growing_period = self.create_growing_period_with_one_subscription(2023)
+        ProductPriceFactory.create(
+            price=75, product=self.product, valid_from=growing_period.start_date
+        )
+
         response: TemplateResponse = self.client.get("/wirgarten/register")
         steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
-        ic(steps_helper)
-        ic(steps_helper.all)
-        self.assertNotIn("coop_shares", steps_helper.all)
+
+        self.assertNotIn(STEP_BASE_PRODUCT, steps_helper.all)
+        self.assertIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
+
+    def test_RegistrationWizardViewBase_currentGrowingPeriodHasFreeCapacity_showsBaseProductStep(
+        self,
+    ):
+        mock_timezone(self, datetime.datetime(year=2023, month=6, day=1))
+        growing_period = self.create_growing_period_with_one_subscription(2023)
+        ProductPriceFactory.create(
+            price=50, product=self.product, valid_from=growing_period.start_date
+        )
+
+        response: TemplateResponse = self.client.get("/wirgarten/register")
+        steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
+
+        self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
+        self.assertNotIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
+
+    def test_RegistrationWizardViewBase_contractStartDateIsOnTheFollowingGrowingPeriod_checkTheFollowingGrowingPeriod(
+        self,
+    ):
+        mock_timezone(self, datetime.datetime(year=2023, month=12, day=21))
+        current_growing_period = self.create_growing_period_with_one_subscription(2023)
+        next_growing_period = self.create_growing_period_with_one_subscription(2024)
+        ProductPriceFactory.create(
+            price=75, product=self.product, valid_from=current_growing_period.start_date
+        )
+        ProductPriceFactory.create(
+            price=25, product=self.product, valid_from=next_growing_period.start_date
+        )
+
+        response: TemplateResponse = self.client.get("/wirgarten/register")
+        steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
+
+        self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
+        self.assertNotIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)

@@ -118,16 +118,13 @@ def get_current_growing_period(
     if reference_date is None:
         reference_date = get_today()
 
-    try:
-        return (
-            GrowingPeriod.objects.filter(
-                start_date__lte=reference_date, end_date__gte=reference_date
-            )
-            .order_by("start_date")
-            .first()
+    return (
+        GrowingPeriod.objects.filter(
+            start_date__lte=reference_date, end_date__gte=reference_date
         )
-    except GrowingPeriod.DoesNotExist:
-        return None
+        .order_by("start_date")
+        .first()
+    )
 
 
 @transaction.atomic
@@ -604,4 +601,4 @@ def is_product_type_available(
 
     return get_free_product_capacity(
         product_type_id=product_type, reference_date=reference_date
-    ) > get_cheapest_product_price(product_type, reference_date)
+    ) >= get_cheapest_product_price(product_type, reference_date)
