@@ -94,3 +94,24 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
 
         self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
         self.assertNotIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
+
+    def test_RegistrationWizardViewBase_currentGrowingPeriodHasMembersInTrial_freeCapacityShouldIncludeMembersInTrial(
+        self,
+    ):
+        mock_timezone(self, datetime.datetime(year=2023, month=6, day=1))
+        growing_period = self.create_growing_period_with_one_subscription(2023)
+        ProductPriceFactory.create(
+            price=40, product=self.product, valid_from=growing_period.start_date
+        )
+        SubscriptionFactory.create(
+            period=growing_period,
+            quantity=1,
+            product=self.product,
+            start_date=datetime.datetime(year=2023, month=6, day=15),
+        )
+
+        response: TemplateResponse = self.client.get("/wirgarten/register")
+        steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
+
+        self.assertNotIn(STEP_BASE_PRODUCT, steps_helper.all)
+        self.assertIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
