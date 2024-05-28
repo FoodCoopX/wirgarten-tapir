@@ -430,6 +430,9 @@ class ProductPrice(TapirModel):
             Index(fields=["-valid_from"], name="idx_productprice_valid_from"),
         ]
 
+    def __str__(self):
+        return f"{self.product} - {self.price} - {self.id}"
+
 
 class HarvestShareProduct(Product):
     """

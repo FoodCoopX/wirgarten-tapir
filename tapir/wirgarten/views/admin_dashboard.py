@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import json
-from math import floor
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -40,6 +39,7 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_next_growing_period,
     get_product_price,
+    get_free_product_capacity,
 )
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
@@ -245,13 +245,16 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self,
         context,
         base_type_id,
-        reference_date=get_next_contract_start_date(),
+        reference_date=None,
         prefix="current",
     ):
-        active_capacities = {
+        if reference_date is None:
+            reference_date = get_next_contract_start_date()
+
+        active_product_capacities = {
             c.product_type.id: c for c in get_active_product_capacities(reference_date)
         }
-        active_subs = get_active_subscriptions(reference_date).order_by(
+        active_subscriptions = get_active_subscriptions(reference_date).order_by(
             "-product__type"
         )
 
@@ -265,51 +268,51 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context[KEY_USED_CAPACITY] = []
         context[KEY_FREE_CAPACITY] = []
 
-        pt_to_subs = {
-            product_type.id: list(subs)
-            for product_type, subs in itertools.groupby(
-                active_subs, key=lambda x: x.product.type
+        product_type_to_subscriptions_map = {
+            product_type.id: list(subscriptions)
+            for product_type, subscriptions in itertools.groupby(
+                active_subscriptions, key=lambda subscription: subscription.product.type
             )
         }
-        for capacity in sorted(
-            active_capacities.values(),
+
+        sorted_product_capacities = sorted(
+            active_product_capacities.values(),
             key=lambda c: c.product_type_id == base_type_id,
             reverse=True,
-        ):
-            product_type = capacity.product_type
-            subs = pt_to_subs.get(product_type.id, [])
+        )
 
-            total = float(capacity.capacity)
-            if total == 0:
-                total = 1  # avoid division by zero
+        for product_capacity in sorted_product_capacities:
+            product_type = product_capacity.product_type
+            subscriptions = product_type_to_subscriptions_map.get(product_type.id, [])
 
-            used = sum(
-                map(
-                    lambda x: x.quantity * float(get_product_price(x.product).price),
-                    subs,
-                )
-            )
-            context[KEY_USED_CAPACITY].append(used / total * 100)
-            context[KEY_FREE_CAPACITY].append(100 - (used / total * 100))
+            total_capacity = (
+                float(product_capacity.capacity) or 1
+            )  # "or 1" to avoid a division by 0
+
+            free_capacity = get_free_product_capacity(product_type.id, reference_date)
+            used_capacity = total_capacity - free_capacity
+
+            context[KEY_USED_CAPACITY].append(used_capacity / total_capacity * 100)
+            context[KEY_FREE_CAPACITY].append(free_capacity / total_capacity * 100)
             context[KEY_CAPACITY_LINKS].append(
-                f"{reverse_lazy('wirgarten:product')}?periodId={capacity.period.id}&capacityId={capacity.id}"
+                f"{reverse_lazy('wirgarten:product')}?periodId={product_capacity.period.id}&capacityId={product_capacity.id}"
             )
-            base_product = Product.objects.filter(
-                type=capacity.product_type, base=True
-            ).first()
-            if base_product:
-                base_share_value = get_product_price(base_product).price
-                if base_share_value:
-                    base_share_count = floor((total - used) / float(base_share_value))
+            base_product = Product.objects.get(
+                type=product_capacity.product_type, base=True
+            )
+
+            base_share_value = float(get_product_price(base_product).price)
+            free_share_count = round(free_capacity / base_share_value, 2)
+            used_share_count = round(used_capacity / base_share_value, 2)
 
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{round(used / float(base_share_value))} Anteile vergeben ({format_currency(used)} €)",
+                    f"{used_share_count} Anteile vergeben ({format_currency(used_capacity)} €)",
                     (
-                        f"{base_share_count} Anteile noch frei ({format_currency(total - used)} €)"
+                        f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
                     )
-                    if base_share_count
+                    if free_share_count > 0
                     else "Keine Anteile mehr frei",
                 ],
             )
