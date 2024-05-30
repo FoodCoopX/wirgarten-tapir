@@ -301,7 +301,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 type=product_capacity.product_type, base=True
             )
 
-            base_share_value = float(get_product_price(base_product).price)
+            base_share_value = float(
+                get_product_price(base_product, reference_date).price
+            )
             free_share_count = round(free_capacity / base_share_value, 2)
             used_share_count = round(used_capacity / base_share_value, 2)
 
