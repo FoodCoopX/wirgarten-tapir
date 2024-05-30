@@ -19,10 +19,13 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
+    ProductCapacity,
+    ProductPrice,
 )
 from tapir.wirgarten.service.payment import generate_mandate_ref
 
 NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
+
 TODAY = NOW.date()
 
 
@@ -73,6 +76,15 @@ class ProductFactory(factory.django.DjangoModelFactory):
         return ProductFactory._type_counts[self.type.id] == 1
 
 
+class ProductPriceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductPrice
+
+    product = factory.SubFactory(ProductFactory)
+    price = factory.Faker("random_float", min=30, max=150)
+    valid_from = TODAY
+
+
 class MandateReferenceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = MandateReference
@@ -88,6 +100,15 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory):
 
     start_date = TODAY + relativedelta(day=1)
     end_date = start_date + relativedelta(years=1, days=-1)
+
+
+class ProductCapacityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductCapacity
+
+    period = factory.SubFactory(GrowingPeriodFactory)
+    product_type = factory.SubFactory(ProductTypeFactory)
+    capacity = factory.Faker("random_float", min=1000, max=5000)
 
 
 class SubscriptionFactory(factory.django.DjangoModelFactory):

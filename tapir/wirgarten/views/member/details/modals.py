@@ -10,7 +10,6 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
-
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -39,6 +38,8 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
     get_next_contract_start_date,
+    send_contract_change_confirmation,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
@@ -46,12 +47,12 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
+    get_future_subscriptions,
 )
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
-    format_subscription_list_html,
     get_now,
     get_today,
     member_detail_url,
@@ -286,6 +287,25 @@ def get_add_subscription_form(request, **kwargs):
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=form.subs,
         ).save()
+
+        if is_base_product_type:
+            date_filter = next_start_date
+            if next_period:
+                date_filter = max(next_start_date, next_period.start_date)
+            if (
+                get_future_subscriptions()
+                .filter(
+                    cancellation_ts__isnull=True,
+                    member_id=member_id,
+                    end_date__gt=date_filter,
+                )
+                .exists()
+            ):
+                send_contract_change_confirmation(member, form.subs)
+            else:
+                send_order_confirmation(
+                    member, get_future_subscriptions().filter(member=member)
+                )
 
     return get_form_modal(
         request=request,

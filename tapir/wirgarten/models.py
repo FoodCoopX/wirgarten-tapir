@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
     F,
-    Q,
     Index,
     JSONField,
     OuterRef,
@@ -134,7 +133,7 @@ class ProductType(TapirModel):
         max_length=16,
         choices=DeliveryCycle,
         null=False,
-        default=NO_DELIVERY,
+        default=NO_DELIVERY[0],
         verbose_name=_("Lieferzyklus"),
     )
     contract_link = models.CharField(
