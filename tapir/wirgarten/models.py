@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
     F,
-    Q,
     Index,
     JSONField,
     OuterRef,
@@ -430,6 +429,9 @@ class ProductPrice(TapirModel):
             Index(fields=["product"], name="idx_productprice_product"),
             Index(fields=["-valid_from"], name="idx_productprice_valid_from"),
         ]
+
+    def __str__(self):
+        return f"{self.product} - {self.price} - {self.id}"
 
 
 class HarvestShareProduct(Product):
