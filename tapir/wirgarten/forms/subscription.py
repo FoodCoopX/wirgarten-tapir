@@ -21,7 +21,6 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
-    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -41,12 +40,12 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_available_product_types,
     get_current_growing_period,
     get_free_product_capacity,
     get_future_subscriptions,
     get_product_price,
     get_total_price_for_subs,
+    get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -88,11 +87,19 @@ class BaseProductForm(forms.Form):
         self.require_at_least_one = kwargs.pop("enable_validation", False)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
+
         self.start_date = kwargs.pop(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
         self.intro_template = initial.pop("intro_template", None)
         self.outro_template = initial.pop("outro_template", None)
+
+        if initial and not self.choose_growing_period:
+            next_growing_period = get_next_growing_period()
+            self.choose_growing_period = (
+                next_growing_period
+                and (next_growing_period.start_date - get_today()).days <= 61
+            )
 
         super().__init__(*args, **kwargs)
 

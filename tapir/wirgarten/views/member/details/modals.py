@@ -10,7 +10,6 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
-
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -51,7 +50,6 @@ from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
-    format_subscription_list_html,
     get_now,
     get_today,
     member_detail_url,
