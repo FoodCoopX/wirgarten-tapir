@@ -1,4 +1,4 @@
-from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -9,7 +9,6 @@ from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
-from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
@@ -43,7 +42,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import get_now, get_today
 
 
-def questionaire_trafficsource_view(request, **kwargs):
+def questionaire_trafficsource_view(request, **_):
     if request.method == "POST":
         form = MarketingFeedbackForm(request.POST)
         if form.is_valid():
@@ -98,7 +97,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         today = get_today()
         self.growing_period = get_current_growing_period(
-            today + relativedelta(months=1, day=1)
+            get_next_contract_start_date(today)
         )
 
         if not self.growing_period:
@@ -109,7 +108,8 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
 
-    def get_summary_form():
+    @classmethod
+    def get_summary_form(cls):
         raise not NotImplementedError(
             "Please implement get_summary_form in the inherited class()"
         )
@@ -124,7 +124,7 @@ class RegistrationWizardViewBase(CookieWizardView):
             (STEP_COOP_SHARES_NOT_AVAILABLE, EmptyForm),
         ]
         steps_kwargs = settings.REGISTRATION_STEPS
-        if not STEP_BASE_PRODUCT in steps_kwargs:
+        if STEP_BASE_PRODUCT not in steps_kwargs:
             base_product = ProductType.objects.get(id=base_prod_id)
             steps_kwargs[STEP_BASE_PRODUCT] = {
                 "product_type_id": base_prod_id,
@@ -138,7 +138,7 @@ class RegistrationWizardViewBase(CookieWizardView):
             if x.id != base_prod_id
         ]:
             step = "additional_product_" + pt.name
-            if not step in steps_kwargs:
+            if step not in steps_kwargs:
                 steps_kwargs[step] = {
                     "product_type_id": pt.id,
                     "title": pt.name,
@@ -192,41 +192,35 @@ class RegistrationWizardViewBase(CookieWizardView):
                 **{f: False for f in self.dynamic_steps},
             }
 
-        try:
-            _coop_shares_without_harvest_shares_possible = get_parameter_value(
-                Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
-            )
+        _coop_shares_without_harvest_shares_possible = get_parameter_value(
+            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+        )
 
-            _show_harvest_shares = is_product_type_available(
-                ProductType.objects.get(
-                    id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-                ),
-                reference_date=self.start_date,
-            )
+        _show_harvest_shares = is_product_type_available(
+            ProductType.objects.get(
+                id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+            ),
+            reference_date=self.start_date,
+        )
 
-            return {
-                STEP_BASE_PRODUCT: _show_harvest_shares,
-                STEP_BASE_PRODUCT_NOT_AVAILABLE: self.coop_shares_only == False
-                and not _show_harvest_shares,
-                STEP_COOP_SHARES: (lambda x: has_selected_base_product(x))
+        return {
+            STEP_BASE_PRODUCT: _show_harvest_shares,
+            STEP_BASE_PRODUCT_NOT_AVAILABLE: self.coop_shares_only == False
+            and not _show_harvest_shares,
+            STEP_COOP_SHARES: (lambda x: has_selected_base_product(x))
+            if not _coop_shares_without_harvest_shares_possible
+            else True,
+            STEP_COOP_SHARES_NOT_AVAILABLE: (
+                (lambda x: not has_selected_base_product(x))
                 if not _coop_shares_without_harvest_shares_possible
-                else True,
-                STEP_COOP_SHARES_NOT_AVAILABLE: (
-                    (lambda x: not has_selected_base_product(x))
-                    if not _coop_shares_without_harvest_shares_possible
-                    else False
-                ),
-                **{
-                    f: lambda x: has_selected_base_product(x)
-                    for f in self.dynamic_steps
-                },
-                STEP_PICKUP_LOCATION: lambda x: has_selected_base_product(x),
-                STEP_SUMMARY: lambda x: has_selected_base_product(x)
-                if self.coop_shares_only == False
-                else True,
-            }
-        except Exception as e:
-            print("Could not init registration wizard conditions: ", e)
+                else False
+            ),
+            **{f: lambda x: has_selected_base_product(x) for f in self.dynamic_steps},
+            STEP_PICKUP_LOCATION: lambda x: has_selected_base_product(x),
+            STEP_SUMMARY: lambda x: has_selected_base_product(x)
+            if self.coop_shares_only == False
+            else True,
+        }
 
     def has_step(self, step):
         return step in self.storage.data["step_data"]
@@ -304,7 +298,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
                 if is_base_product_selected(base_prod_data):
                     for dyn_step in self.dynamic_steps:
-                        if not "additional_shares" in initial:
+                        if "additional_shares" not in initial:
                             initial["additional_shares"] = {}
                         if self.has_step(dyn_step):
                             initial["additional_shares"][
