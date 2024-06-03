@@ -21,7 +21,6 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
-    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -41,7 +40,6 @@ from tapir.wirgarten.service.payment import (
 )
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_available_product_types,
     get_current_growing_period,
     get_free_product_capacity,
     get_future_subscriptions,
@@ -330,52 +328,54 @@ class BaseProductForm(forms.Form):
         )
 
         for key, quantity in self.cleaned_data.items():
-            if (
+            if not (
                 key.startswith(BASE_PRODUCT_FIELD_PREFIX)
                 and quantity is not None
                 and quantity > 0
             ):
-                product = Product.objects.get(
-                    type=self.product_type,
-                    name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
-                )
+                continue
 
-                solidarity_options = (
-                    {
-                        "solidarity_price": 0.0,
-                        "solidarity_price_absolute": self.cleaned_data[
-                            "solidarity_price_absolute_harvest_shares"
-                        ],
-                    }
-                    if self.cleaned_data["solidarity_price_harvest_shares"] == "custom"
-                    else {
-                        "solidarity_price": self.cleaned_data[
-                            "solidarity_price_harvest_shares"
-                        ]
-                    }
-                )
+            product = Product.objects.get(
+                type=self.product_type,
+                name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
+            )
 
-                sub = Subscription.objects.create(
-                    member_id=member_id,
-                    product=product,
-                    period=self.growing_period,
-                    quantity=quantity,
-                    start_date=self.start_date,
-                    end_date=self.growing_period.end_date,
-                    mandate_ref=mandate_ref,
-                    consent_ts=(
-                        now
-                        if self.product_type.contract_link
-                        and self.cleaned_data["consent_harvest_shares"]
-                        else None
-                    ),
-                    withdrawal_consent_ts=now,
-                    trial_end_date_override=existing_trial_end_date,
-                    trial_disabled=existing_trial_end_date is None,
-                    **solidarity_options,
-                )
+            solidarity_options = (
+                {
+                    "solidarity_price": 0.0,
+                    "solidarity_price_absolute": self.cleaned_data[
+                        "solidarity_price_absolute_harvest_shares"
+                    ],
+                }
+                if self.cleaned_data["solidarity_price_harvest_shares"] == "custom"
+                else {
+                    "solidarity_price": self.cleaned_data[
+                        "solidarity_price_harvest_shares"
+                    ]
+                }
+            )
 
-                self.subs.append(sub)
+            sub = Subscription.objects.create(
+                member_id=member_id,
+                product=product,
+                period=self.growing_period,
+                quantity=quantity,
+                start_date=self.start_date,
+                end_date=self.growing_period.end_date,
+                mandate_ref=mandate_ref,
+                consent_ts=(
+                    now
+                    if self.product_type.contract_link
+                    and self.cleaned_data["consent_harvest_shares"]
+                    else None
+                ),
+                withdrawal_consent_ts=now,
+                trial_end_date_override=existing_trial_end_date,
+                trial_disabled=existing_trial_end_date is None,
+                **solidarity_options,
+            )
+
+            self.subs.append(sub)
 
         member = Member.objects.get(id=member_id)
         member.sepa_consent = now
@@ -414,14 +414,9 @@ class BaseProductForm(forms.Form):
                 return True
         return False
 
-    def is_valid(self):
-        super().is_valid()
-
-        has_harvest_shares = self.has_harvest_shares()
-        if (
-            self.product_type.contract_link
-            and has_harvest_shares
-            and not self.cleaned_data.get("consent_harvest_shares", False)
+    def validate_harvest_shares_consent(self):
+        if self.product_type.contract_link and not self.cleaned_data.get(
+            "consent_harvest_shares", False
         ):
             self.add_error(
                 "consent_harvest_shares",
@@ -430,62 +425,88 @@ class BaseProductForm(forms.Form):
                 ),
             )
 
+    def validate_pickup_location(self):
+        if not MemberPickupLocation.objects.filter(member_id=self.member_id).exists():
+            self.add_error(None, _("Bitte wähle einen Abholort aus!"))
+            return False
+
+    def get_pickup_location(self):
+        pickup_location = self.cleaned_data.get("pickup_location")
+        if pickup_location:
+            return pickup_location
+
+        member_pickup_locations = MemberPickupLocation.objects.filter(
+            member_id=self.member_id
+        )
+        if member_pickup_locations.count() == 1:
+            return member_pickup_locations.get().pickup_location
+
+        next_month = get_today() + relativedelta(months=1, day=1)
+        return (
+            member_pickup_locations.filter(valid_from__lte=next_month)
+            .order_by("-valid_from")
+            .first()
+            .pickup_location
+        )
+
+    def calculate_capacity_used_by_the_ordered_products(self):
+        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+
+        total = 0.0
+        for key, quantity in self.cleaned_data.items():
+            if not key.startswith(BASE_PRODUCT_FIELD_PREFIX) or not quantity:
+                continue
+            next_month = get_today() + relativedelta(months=1, day=1)
+            product = Product.objects.get(
+                type_id=base_prod_type_id,
+                name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
+            )
+            total += float(get_product_price(product, next_month).price) * quantity
+        return total
+
+    def validate_pickup_location_capacity(self):
+        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
+        capability = get_active_pickup_location_capabilities().get(
+            pickup_location=self.get_pickup_location(),
+            product_type__id=base_prod_type_id,
+        )
+        product_type = ProductType.objects.get(id=base_prod_type_id)
+        validate_pickup_location_capacity(
+            self,
+            capability,
+            product_type,
+            self.start_date,
+            ordered_capacity,
+            self.member_id,
+        )
+
+    def validate_total_capacity(self):
+        free_capacity = get_free_product_capacity(
+            product_type_id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+            reference_date=self.start_date,
+        )
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
+        if free_capacity < ordered_capacity:
+            self.add_error(
+                None,
+                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {free_capacity}€",
+            )
+
+    def is_valid(self):
+        super().is_valid()
+
+        has_harvest_shares = self.has_harvest_shares()
         if self.require_at_least_one and not has_harvest_shares:
             self.add_error(
                 None, f"Bitte wähle mindestens einen {self.product_type.name}!"
             )
 
-        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        new_pickup_location = self.cleaned_data.get("pickup_location")
-        if has_harvest_shares and self.member_id:
-            product_type = ProductType.objects.get(id=base_prod_type_id)
-            next_month = get_today() + relativedelta(months=1, day=1)
-            qs = MemberPickupLocation.objects.filter(member_id=self.member_id)
-            if len(qs) > 1:
-                latest_pickup_location = (
-                    qs.filter(valid_from__lte=next_month)
-                    .order_by("-valid_from")
-                    .first()
-                )
-            elif len(qs) == 1:
-                latest_pickup_location = qs.first()
-            else:
-                self.add_error(None, _("Bitte wähle einen Abholort aus!"))
-                return False
-
-            total = 0.0
-            for key, quantity in self.cleaned_data.items():
-                if key.startswith(BASE_PRODUCT_FIELD_PREFIX) and (
-                    quantity is not None and quantity > 0
-                ):
-                    product = Product.objects.get(
-                        type_id=base_prod_type_id,
-                        name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
-                    )
-                    total += (
-                        float(get_product_price(product, next_month).price) * quantity
-                    )
-
-            capability = (
-                get_active_pickup_location_capabilities()
-                .filter(
-                    pickup_location=(
-                        new_pickup_location
-                        if new_pickup_location
-                        else latest_pickup_location.pickup_location
-                    ),
-                    product_type__id=base_prod_type_id,
-                )
-                .first()
-            )
-            validate_pickup_location_capacity(
-                self,
-                capability,
-                product_type,
-                self.start_date,
-                total,
-                self.member_id,
-            )
+        if has_harvest_shares:
+            self.validate_harvest_shares_consent()
+            self.validate_pickup_location()
+            self.validate_pickup_location_capacity()
+            self.validate_total_capacity()
 
         return len(self.errors) == 0
 

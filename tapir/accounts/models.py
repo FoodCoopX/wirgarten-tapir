@@ -13,13 +13,13 @@ from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir import utils
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 log = logging.getLogger(__name__)
 
