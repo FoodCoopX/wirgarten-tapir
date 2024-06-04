@@ -21,6 +21,7 @@ from tapir.wirgarten.tests.factories import (
     MemberPickupLocationFactory,
     PickupLocationCapabilityFactory,
     GrowingPeriodFactory,
+    SubscriptionFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -74,12 +75,17 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.client.force_login(member)
 
     def send_add_subscription_request(
-        self, nb_m_shares, nb_l_shares, growing_period=None, solidarity_price_factor=0.0
+        self,
+        nb_m_shares,
+        nb_l_shares,
+        growing_period=None,
+        solidarity_price_factor=0.0,
+        member=None,
     ):
         if growing_period is None:
             growing_period = GrowingPeriod.objects.get()
 
-        member = Member.objects.get()
+        member = member or Member.objects.get()
         url = f"{reverse('wirgarten:member_add_subscription', args=[member.id])}?productType=Ernteanteile"
         return self.client.post(
             url,
@@ -170,3 +176,41 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         self.assertEqual(Subscription.objects.count(), 1)
+
+    def test_baseProductForm_notEnoughSolidarityAvailable_cantAddSubscriptionWithSolidarity(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=500)
+        member = Member.objects.get()
+        current_growing_period = GrowingPeriod.objects.get()
+        SubscriptionFactory.create(
+            solidarity_price=0.05, product=Product.objects.get(name="M"), quantity=1
+        )
+
+        response = self.send_add_subscription_request(
+            1, 0, current_growing_period, -0.15, member
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(
+            1,
+            Subscription.objects.count(),
+            "No subscription should have been created",
+        )
+
+    def test_baseProductForm_enoughSolidarityAvailable_canAddSubscriptionWithSolidarity(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=500)
+        member = Member.objects.get()
+        current_growing_period = GrowingPeriod.objects.get()
+        SubscriptionFactory.create(
+            solidarity_price=0.25, product=Product.objects.get(name="M"), quantity=1
+        )
+
+        response = self.send_add_subscription_request(
+            1, 0, current_growing_period, -0.15, member
+        )
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(2, Subscription.objects.count())

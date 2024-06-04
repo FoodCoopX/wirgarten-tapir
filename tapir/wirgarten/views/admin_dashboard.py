@@ -28,7 +28,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    get_solidarity_overplus,
+    get_automatically_calculated_solidarity_excess,
     get_total_payment_amount,
 )
 from tapir.wirgarten.service.products import (
@@ -133,7 +133,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             WaitingListEntry.WaitingListType.HARVEST_SHARES, 0
         )
 
-        context["solidarity_overplus"] = get_solidarity_overplus()
+        context[
+            "solidarity_overplus"
+        ] = get_automatically_calculated_solidarity_excess()
         context["status_seperate_coop_shares"] = get_parameter_value(
             Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         )
