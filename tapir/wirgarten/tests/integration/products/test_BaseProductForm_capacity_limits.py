@@ -10,6 +10,8 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
     Member,
     GrowingPeriod,
+    Product,
+    ProductType,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
 from tapir.wirgarten.tests.factories import (
@@ -18,6 +20,7 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberPickupLocationFactory,
     PickupLocationCapabilityFactory,
+    GrowingPeriodFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -37,6 +40,10 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
             product_type__name="Ernteanteile",
             product_type__delivery_cycle=WEEKLY[0],
         )
+        growing_period = GrowingPeriod.objects.get()
+        growing_period.start_date = datetime.date(year=2023, month=1, day=1)
+        growing_period.end_date = datetime.date(year=2023, month=12, day=31)
+        growing_period.save()
 
         parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
         parameter.value = product_capacity.product_type.id
@@ -66,24 +73,33 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
 
         self.client.force_login(member)
 
-    def test_baseProductForm_enoughCapacity_allSubscriptionsCreated(self):
-        self.create_test_data_and_login(capacity=200)
+    def send_add_subscription_request(
+        self, nb_m_shares, nb_l_shares, growing_period=None, solidarity_price_factor=0.0
+    ):
+        if growing_period is None:
+            growing_period = GrowingPeriod.objects.get()
 
         member = Member.objects.get()
         url = f"{reverse('wirgarten:member_add_subscription', args=[member.id])}?productType=Ernteanteile"
-        response = self.client.post(
+        return self.client.post(
             url,
             data={
-                "growing_period": GrowingPeriod.objects.get().id,
-                "base_product_M": 2,
-                "base_product_L": 1,
-                "solidarity_price_harvest_shares": 0.0,
+                "growing_period": growing_period.id,
+                "base_product_M": nb_m_shares,
+                "base_product_L": nb_l_shares,
+                "solidarity_price_harvest_shares": solidarity_price_factor,
             },
         )
+
+    def test_baseProductForm_enoughCapacity_allSubscriptionsCreated(self):
+        self.create_test_data_and_login(capacity=200)
+
+        response = self.send_add_subscription_request(2, 1)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(Subscription.objects.count(), 2)
 
+        member = Member.objects.get()
         subscription_m: Subscription = Subscription.objects.get(product__name="M")
         self.assertEqual(member.id, subscription_m.member_id)
         self.assertEqual(2, subscription_m.quantity)
@@ -95,17 +111,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
     def test_baseProductForm_notEnoughCapacity_noSubscriptionsCreated(self):
         self.create_test_data_and_login(capacity=150)
 
-        member = Member.objects.get()
-        url = f"{reverse('wirgarten:member_add_subscription', args=[member.id])}?productType=Ernteanteile"
-        response = self.client.post(
-            url,
-            data={
-                "growing_period": GrowingPeriod.objects.get().id,
-                "base_product_M": 2,
-                "base_product_L": 1,
-                "solidarity_price_harvest_shares": 0.0,
-            },
-        )
+        response = self.send_add_subscription_request(2, 1)
 
         self.assertStatusCode(response, 200)
         self.assertNotEqual(
@@ -118,3 +124,49 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertFalse(
             Subscription.objects.exists(), "No subscription should have been created"
         )
+
+    def test_baseProductForm_priceChangesBetweenNowAndContractStart_newPriceIsUsedForCalculations(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=75)
+
+        ProductPriceFactory.create(
+            product=Product.objects.get(name="M"),
+            price=80,
+            valid_from=datetime.date(year=2023, month=6, day=15),
+        )
+
+        response = self.send_add_subscription_request(1, 0)
+
+        self.assertStatusCode(response, 200)
+        self.assertFalse(
+            Subscription.objects.exists(), "No subscription should have been created"
+        )
+
+    def test_baseProductForm_severalGrowingPeriods_theCapacityOfTheChosenGrowingPeriodGetsChecked(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=40)
+        current_growing_period = GrowingPeriod.objects.get()
+
+        future_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2024, month=1, day=1)
+        )
+        ProductCapacityFactory.create(
+            period=future_growing_period,
+            capacity=60,
+            product_type=ProductType.objects.get(),
+        )
+
+        response = self.send_add_subscription_request(1, 0, current_growing_period)
+
+        self.assertStatusCode(response, 200)
+        self.assertFalse(
+            Subscription.objects.exists(),
+            "No subscription should have been created",
+        )
+
+        response = self.send_add_subscription_request(1, 0, future_growing_period)
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(Subscription.objects.count(), 1)

@@ -316,13 +316,6 @@ class BaseProductForm(forms.Form):
         now = get_now()
 
         self.subs = []
-        if not hasattr(self, "growing_period"):
-            self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period()
-            )
-
-        self.start_date = max(self.start_date, self.growing_period.start_date)
-
         existing_trial_end_date = cancel_subs_for_edit(
             member_id, self.start_date, self.product_type
         )
@@ -495,6 +488,13 @@ class BaseProductForm(forms.Form):
 
     def is_valid(self):
         super().is_valid()
+
+        if not hasattr(self, "growing_period"):
+            self.growing_period = self.cleaned_data.get(
+                "growing_period", get_current_growing_period()
+            )
+
+        self.start_date = max(self.start_date, self.growing_period.start_date)
 
         has_harvest_shares = self.has_harvest_shares()
         if self.require_at_least_one and not has_harvest_shares:
