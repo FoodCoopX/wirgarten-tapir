@@ -350,12 +350,19 @@ class RegistrationWizardViewBase(CookieWizardView):
                     valid_from=get_today(),
                 )
 
-            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(
-                ref_date=self.start_date
+            start_date = (
+                self.start_date
                 if hasattr(self, "start_date")
                 else get_next_contract_start_date()
             )
+            self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
+                "growing_period", get_current_growing_period()
+            )
+            if self.growing_period and self.growing_period.start_date > get_today():
+                start_date = self.growing_period.start_date
+            # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
+            actual_coop_start = get_next_contract_start_date(ref_date=start_date)
+
             mandate_ref = create_mandate_ref(member)
             buy_cooperative_shares(
                 quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
@@ -371,7 +378,6 @@ class RegistrationWizardViewBase(CookieWizardView):
                 form_dict[STEP_BASE_PRODUCT].save(
                     mandate_ref=mandate_ref,
                     member_id=member.id,
-                    is_registration=True,
                 )
 
                 for dyn_step in self.dynamic_steps:
