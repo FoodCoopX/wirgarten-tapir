@@ -12,6 +12,7 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     Product,
     ProductType,
+    PickupLocationCapability,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
 from tapir.wirgarten.tests.factories import (
@@ -214,3 +215,21 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         self.assertEqual(2, Subscription.objects.count())
+
+    def test_baseProductForm_notEnoughCapacityInPickupLocation_noSubscriptionsCreated(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=150)
+
+        pickup_location_capability: PickupLocationCapability = (
+            PickupLocationCapability.objects.get()
+        )
+        pickup_location_capability.max_capacity = 25
+        pickup_location_capability.save()
+
+        response = self.send_add_subscription_request(1, 0)
+
+        self.assertStatusCode(response, 200)
+        self.assertFalse(
+            Subscription.objects.exists(), "No subscription should have been created"
+        )

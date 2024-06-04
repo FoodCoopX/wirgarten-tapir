@@ -534,33 +534,29 @@ class BaseProductForm(forms.Form):
 def validate_pickup_location_capacity(
     form, capability, product_type, start_date, total_member_amount, member_id
 ):
-    if capability.max_capacity:
-        current_member_amount = float(
-            sum(
-                [
-                    s.total_price_without_soli
-                    for s in get_active_subscriptions(start_date).filter(
-                        member_id=member_id,
-                        product__type_id=product_type.id,
-                    )
-                ]
-            )
-        )
-        diff_member_amount = total_member_amount - current_member_amount
-        new_total_amount = (
-            get_current_capacity(capability, start_date) + diff_member_amount
-        ) / float(product_type.base_price(reference_date=start_date))
+    if not capability.max_capacity:
+        return
 
-        if new_total_amount > capability.max_capacity:
-            form.add_error(
-                "pickup_location", "Abholort ist voll"
-            )  # this is not displayed
-            form.add_error(
-                None,
-                _(
-                    "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-                ),
-            )
+    current_member_amount = float(
+        sum(
+            [
+                s.total_price_without_soli
+                for s in get_active_subscriptions(start_date).filter(
+                    member_id=member_id,
+                    product__type_id=product_type.id,
+                )
+            ]
+        )
+    )
+    diff_member_amount = total_member_amount - current_member_amount
+    new_total_amount = get_current_capacity(capability, start_date) + diff_member_amount
+
+    if new_total_amount > capability.max_capacity:
+        form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
+        form.add_error(
+            None,
+            _("Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."),
+        )
 
 
 class AdditionalProductForm(forms.Form):
