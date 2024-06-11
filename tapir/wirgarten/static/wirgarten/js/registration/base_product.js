@@ -1,7 +1,7 @@
 let soliElem = document.getElementsByName("solidarity_price_harvest_shares")[0];
 if (!soliElem) {
   soliElem = document.getElementsByName(
-    "base_product-solidarity_price_harvest_shares"
+    "base_product-solidarity_price_harvest_shares",
   )[0];
 }
 const origOptions = [...soliElem.options];
@@ -25,11 +25,11 @@ var initHarvestShareSummary = (
 ) => {
   const resultElem = document.getElementById("harvest_shares_total");
   let customSoliElem = document.getElementById(
-    "id_solidarity_price_absolute_harvest_shares"
+    "id_solidarity_price_absolute_harvest_shares",
   );
   if (!customSoliElem) {
     customSoliElem = document.getElementById(
-      "id_base_product-solidarity_price_absolute_harvest_shares"
+      "id_base_product-solidarity_price_absolute_harvest_shares",
     );
   }
 
@@ -50,12 +50,15 @@ var initHarvestShareSummary = (
     }
   };
   const warningCannotReduceElem = document.getElementById(
-    "warning-cannot-reduce"
+    "warning-cannot-reduce",
   );
   let totalWithoutSoli = calculateTotalWithoutSoliPrice();
   const initDependentFields = () => {
     while (calculateTotalWithoutSoliPrice() > capacity_total) {
       event.target.value--;
+      if (isNaN(event.target.value)) {
+        break;
+      }
     }
 
     resultElem.innerText = calculateTotal().toFixed(2);
@@ -98,7 +101,7 @@ var initHarvestShareSummary = (
   };
 
   customSoliElem.addEventListener("change", (e) => {
-    if (e.target.value === 0 || e.target.value === NaN) {
+    if (e.target.value === 0 || isNaN(e.target.value)) {
       e.target.value = 0;
     }
 
@@ -129,7 +132,7 @@ var initHarvestShareSummary = (
 
     const newSelectEl = soliElem.cloneNode(true);
 
-    for (option of options) {
+    for (const option of options) {
       newSelectEl.appendChild(option);
     }
 
@@ -137,11 +140,9 @@ var initHarvestShareSummary = (
     soliElem = newSelectEl;
 
     const optArr = Array.from(options);
-    const newSelected = optArr.some((o) => o.value === selected)
+    soliElem.value = optArr.some((o) => o.value === selected)
       ? selected
       : optArr[optArr.length - 1].value;
-
-    soliElem.value = newSelected;
 
     resultElem.innerText = calculateTotal().toFixed(2);
     soliElem.addEventListener("change", (e) => {
@@ -177,9 +178,9 @@ var initHarvestShareSummary = (
     input.min = 0;
     input.max = Math.max(
       0,
-      Math.min(10, Math.floor(capacity_total / parseFloat(price)))
+      Math.min(10, Math.floor(capacity_total / parseFloat(price))),
     );
-    if (input.max < 1) {
+    if (input.max < 1 && parseFloat(input.value) === 0) {
       input.readOnly = true;
       input.disabled = true;
     } else {
@@ -191,7 +192,7 @@ var initHarvestShareSummary = (
 
   if (noCapacity) {
     soliElem.readOnly = true;
-    noCapacityWarningElem = document.getElementById("no-capacity-warning");
+    var noCapacityWarningElem = document.getElementById("no-capacity-warning");
     if (noCapacityWarningElem) noCapacityWarningElem.style.display = "block";
   }
 
