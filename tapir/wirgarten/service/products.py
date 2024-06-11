@@ -279,8 +279,8 @@ def get_product_price(product: str | Product, reference_date: date = None):
     # If there's only one price, return it
     if prices.count() == 1:
         return prices.first()
-    else:  # Otherwise, return the price valid up to the reference date
-        return prices.filter(valid_from__lte=reference_date).first()
+    # Otherwise, return the price valid up to the reference date
+    return prices.filter(valid_from__lte=reference_date).first()
 
 
 @transaction.atomic
