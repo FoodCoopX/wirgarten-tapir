@@ -36,7 +36,7 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
-    get_solidarity_overplus,
+    get_automatically_calculated_solidarity_excess,
 )
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -63,14 +63,14 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_solidarity_total(reference_date: date = get_today()) -> float:
+def get_available_solidarity(reference_date: date = get_today()) -> float:
     val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
         return 1000.0
     elif val == 2:  # automatic calculation
-        return get_solidarity_overplus(reference_date) or 0.0
+        return get_automatically_calculated_solidarity_excess(reference_date) or 0.0
 
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
@@ -160,7 +160,7 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{get_solidarity_total(start_date)}".replace(
+                solidarity_total = f"{get_available_solidarity(start_date)}".replace(
                     ",", "."
                 )
                 self.solidarity_total.append(solidarity_total)
@@ -180,7 +180,7 @@ class BaseProductForm(forms.Form):
         else:
             self.growing_period = get_current_growing_period(self.start_date)
             self.solidarity_total = [
-                f"{get_solidarity_total(max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date))}".replace(
                     ",", "."
                 )
             ]
@@ -325,64 +325,44 @@ class BaseProductForm(forms.Form):
         now = get_now()
 
         self.subs = []
-        if not hasattr(self, "growing_period"):
-            self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period()
-            )
-
-        self.start_date = max(self.start_date, self.growing_period.start_date)
-
         existing_trial_end_date = cancel_subs_for_edit(
             member_id, self.start_date, self.product_type
         )
 
         for key, quantity in self.cleaned_data.items():
-            if (
+            if not (
                 key.startswith(BASE_PRODUCT_FIELD_PREFIX)
                 and quantity is not None
                 and quantity > 0
             ):
-                product = Product.objects.get(
-                    type=self.product_type,
-                    name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
-                )
+                continue
 
-                solidarity_options = (
-                    {
-                        "solidarity_price": 0.0,
-                        "solidarity_price_absolute": self.cleaned_data[
-                            "solidarity_price_absolute_harvest_shares"
-                        ],
-                    }
-                    if self.cleaned_data["solidarity_price_harvest_shares"] == "custom"
-                    else {
-                        "solidarity_price": self.cleaned_data[
-                            "solidarity_price_harvest_shares"
-                        ]
-                    }
-                )
+            product = Product.objects.get(
+                type=self.product_type,
+                name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
+            )
 
-                sub = Subscription.objects.create(
-                    member_id=member_id,
-                    product=product,
-                    period=self.growing_period,
-                    quantity=quantity,
-                    start_date=self.start_date,
-                    end_date=self.growing_period.end_date,
-                    mandate_ref=mandate_ref,
-                    consent_ts=(
-                        now
-                        if self.product_type.contract_link
-                        and self.cleaned_data["consent_harvest_shares"]
-                        else None
-                    ),
-                    withdrawal_consent_ts=now,
-                    trial_end_date_override=existing_trial_end_date,
-                    trial_disabled=existing_trial_end_date is None,
-                    **solidarity_options,
-                )
+            sub = Subscription.objects.create(
+                member_id=member_id,
+                product=product,
+                period=self.growing_period,
+                quantity=quantity,
+                start_date=self.start_date,
+                end_date=self.growing_period.end_date,
+                mandate_ref=mandate_ref,
+                consent_ts=(
+                    now
+                    if self.product_type.contract_link
+                    and self.cleaned_data["consent_harvest_shares"]
+                    else None
+                ),
+                withdrawal_consent_ts=now,
+                trial_end_date_override=existing_trial_end_date,
+                trial_disabled=existing_trial_end_date is None,
+                **self.build_solidarity_fields(),
+            )
 
-                self.subs.append(sub)
+            self.subs.append(sub)
 
         member = Member.objects.get(id=member_id)
         member.sepa_consent = now
@@ -413,6 +393,17 @@ class BaseProductForm(forms.Form):
                 member, get_future_subscriptions().filter(member=member)
             )
 
+    def build_solidarity_fields(self):
+        selected_option = self.cleaned_data["solidarity_price_harvest_shares"]
+        if selected_option == "custom":
+            return {
+                "solidarity_price": 0.0,
+                "solidarity_price_absolute": self.cleaned_data[
+                    "solidarity_price_absolute_harvest_shares"
+                ],
+            }
+        return {"solidarity_price": selected_option}
+
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
             if key.startswith(BASE_PRODUCT_FIELD_PREFIX) and (
@@ -421,14 +412,9 @@ class BaseProductForm(forms.Form):
                 return True
         return False
 
-    def is_valid(self):
-        super().is_valid()
-
-        has_harvest_shares = self.has_harvest_shares()
-        if (
-            self.product_type.contract_link
-            and has_harvest_shares
-            and not self.cleaned_data.get("consent_harvest_shares", False)
+    def validate_harvest_shares_consent(self):
+        if self.product_type.contract_link and not self.cleaned_data.get(
+            "consent_harvest_shares", False
         ):
             self.add_error(
                 "consent_harvest_shares",
@@ -437,62 +423,119 @@ class BaseProductForm(forms.Form):
                 ),
             )
 
+    def validate_pickup_location(self):
+        if not MemberPickupLocation.objects.filter(member_id=self.member_id).exists():
+            self.add_error(None, _("Bitte wähle einen Abholort aus!"))
+            return False
+
+    def get_pickup_location(self):
+        pickup_location = self.cleaned_data.get("pickup_location")
+        if pickup_location:
+            return pickup_location
+
+        member_pickup_locations = MemberPickupLocation.objects.filter(
+            member_id=self.member_id
+        )
+        if member_pickup_locations.count() == 1:
+            return member_pickup_locations.get().pickup_location
+
+        next_month = get_today() + relativedelta(months=1, day=1)
+        return (
+            member_pickup_locations.filter(valid_from__lte=next_month)
+            .order_by("-valid_from")
+            .first()
+            .pickup_location
+        )
+
+    def calculate_capacity_used_by_the_ordered_products(self):
+        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+
+        total = 0.0
+        for key, quantity in self.cleaned_data.items():
+            if not key.startswith(BASE_PRODUCT_FIELD_PREFIX) or not quantity:
+                continue
+            next_month = get_today() + relativedelta(months=1, day=1)
+            product = Product.objects.get(
+                type_id=base_prod_type_id,
+                name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
+            )
+            total += float(get_product_price(product, next_month).price) * quantity
+        return total
+
+    def validate_pickup_location_capacity(self):
+        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
+        capability = get_active_pickup_location_capabilities().get(
+            pickup_location=self.get_pickup_location(),
+            product_type__id=base_prod_type_id,
+        )
+        product_type = ProductType.objects.get(id=base_prod_type_id)
+        validate_pickup_location_capacity(
+            self,
+            capability,
+            product_type,
+            self.start_date,
+            ordered_capacity,
+            self.member_id,
+        )
+
+    def validate_total_capacity(self):
+        free_capacity = get_free_product_capacity(
+            product_type_id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+            reference_date=self.start_date,
+        )
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
+        if free_capacity < ordered_capacity:
+            self.add_error(
+                None,
+                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {free_capacity}€",
+            )
+
+    def validate_solidarity_price(self):
+        solidarity_fields = self.build_solidarity_fields()
+        ordered_solidarity_factor = float(
+            solidarity_fields["solidarity_price_absolute"]
+            if "solidarity_price_absolute" in solidarity_fields.keys()
+            else solidarity_fields["solidarity_price"]
+        )
+        if ordered_solidarity_factor >= 0:
+            return
+
+        excess_solidarity = get_available_solidarity(self.start_date)
+
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
+        solidarity_part_of_the_ordered_capacity = (
+            ordered_capacity * -ordered_solidarity_factor
+        )
+
+        if solidarity_part_of_the_ordered_capacity > excess_solidarity:
+            self.add_error(
+                "solidarity_price_harvest_shares",
+                "Der Solidartopf ist leider nicht ausreichend ausgefüllt.",
+            )
+
+    def is_valid(self):
+        super().is_valid()
+
+        if not hasattr(self, "growing_period"):
+            self.growing_period = self.cleaned_data.get(
+                "growing_period", get_current_growing_period()
+            )
+
+        self.start_date = max(self.start_date, self.growing_period.start_date)
+
+        has_harvest_shares = self.has_harvest_shares()
         if self.require_at_least_one and not has_harvest_shares:
             self.add_error(
                 None, f"Bitte wähle mindestens einen {self.product_type.name}!"
             )
 
-        base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        new_pickup_location = self.cleaned_data.get("pickup_location")
-        if has_harvest_shares and self.member_id:
-            product_type = ProductType.objects.get(id=base_prod_type_id)
-            next_month = get_today() + relativedelta(months=1, day=1)
-            qs = MemberPickupLocation.objects.filter(member_id=self.member_id)
-            if len(qs) > 1:
-                latest_pickup_location = (
-                    qs.filter(valid_from__lte=next_month)
-                    .order_by("-valid_from")
-                    .first()
-                )
-            elif len(qs) == 1:
-                latest_pickup_location = qs.first()
-            else:
-                self.add_error(None, _("Bitte wähle einen Abholort aus!"))
-                return False
-
-            total = 0.0
-            for key, quantity in self.cleaned_data.items():
-                if key.startswith(BASE_PRODUCT_FIELD_PREFIX) and (
-                    quantity is not None and quantity > 0
-                ):
-                    product = Product.objects.get(
-                        type_id=base_prod_type_id,
-                        name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
-                    )
-                    total += (
-                        float(get_product_price(product, next_month).price) * quantity
-                    )
-
-            capability = (
-                get_active_pickup_location_capabilities()
-                .filter(
-                    pickup_location=(
-                        new_pickup_location
-                        if new_pickup_location
-                        else latest_pickup_location.pickup_location
-                    ),
-                    product_type__id=base_prod_type_id,
-                )
-                .first()
-            )
-            validate_pickup_location_capacity(
-                self,
-                capability,
-                product_type,
-                self.start_date,
-                total,
-                self.member_id,
-            )
+        if has_harvest_shares:
+            self.validate_harvest_shares_consent()
+            self.validate_pickup_location()
+            self.validate_pickup_location_capacity()
+            self.validate_total_capacity()
+            self.validate_solidarity_price()
 
         return len(self.errors) == 0
 
@@ -500,33 +543,29 @@ class BaseProductForm(forms.Form):
 def validate_pickup_location_capacity(
     form, capability, product_type, start_date, total_member_amount, member_id
 ):
-    if capability.max_capacity:
-        current_member_amount = float(
-            sum(
-                [
-                    s.total_price_without_soli
-                    for s in get_active_subscriptions(start_date).filter(
-                        member_id=member_id,
-                        product__type_id=product_type.id,
-                    )
-                ]
-            )
-        )
-        diff_member_amount = total_member_amount - current_member_amount
-        new_total_amount = (
-            get_current_capacity(capability, start_date) + diff_member_amount
-        ) / float(product_type.base_price(reference_date=start_date))
+    if not capability.max_capacity:
+        return
 
-        if new_total_amount > capability.max_capacity:
-            form.add_error(
-                "pickup_location", "Abholort ist voll"
-            )  # this is not displayed
-            form.add_error(
-                None,
-                _(
-                    "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
-                ),
-            )
+    current_member_amount = float(
+        sum(
+            [
+                s.total_price_without_soli
+                for s in get_active_subscriptions(start_date).filter(
+                    member_id=member_id,
+                    product__type_id=product_type.id,
+                )
+            ]
+        )
+    )
+    diff_member_amount = total_member_amount - current_member_amount
+    new_total_amount = get_current_capacity(capability, start_date) + diff_member_amount
+
+    if new_total_amount > capability.max_capacity:
+        form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
+        form.add_error(
+            None,
+            _("Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."),
+        )
 
 
 class AdditionalProductForm(forms.Form):

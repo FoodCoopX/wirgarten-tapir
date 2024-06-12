@@ -192,6 +192,9 @@ class PickupLocationCapability(TapirModel):
         PickupLocation, null=False, on_delete=models.DO_NOTHING
     )
 
+    def __str__(self):
+        return f"Location:{self.pickup_location.name} ProductType:{self.product_type.name} Capacity:{self.max_capacity}"
+
 
 class DeliveryExceptionPeriod(TapirModel):
     """

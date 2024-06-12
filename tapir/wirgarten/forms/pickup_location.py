@@ -27,7 +27,6 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
-    get_available_product_types,
     get_product_price,
 )
 from tapir.wirgarten.utils import get_today

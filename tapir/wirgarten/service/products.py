@@ -536,6 +536,7 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
     active_product_capacities = get_active_product_capacities(reference_date).filter(
         product_type_id=product_type_id
     )
+
     if active_product_capacities.exists():
         total_capacity = float(active_product_capacities.first().capacity)
         used_capacity = sum(

@@ -21,6 +21,7 @@ from tapir.wirgarten.models import (
     Subscription,
     ProductCapacity,
     ProductPrice,
+    PickupLocationCapability,
 )
 from tapir.wirgarten.service.payment import generate_mandate_ref
 
@@ -124,6 +125,7 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
     )
+    solidarity_price = factory.Faker("random_float", min=-0.25, max=0.25)
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory):
@@ -137,6 +139,15 @@ class PickupLocationFactory(factory.django.DjangoModelFactory):
     info = factory.Faker("sentence")
     coords_lon = 0
     coords_lat = 0
+
+
+class PickupLocationCapabilityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = PickupLocationCapability
+
+    product_type = factory.SubFactory(ProductTypeFactory)
+    max_capacity = factory.Faker("random_int", min=1000, max=2000)
+    pickup_location = factory.SubFactory(PickupLocationFactory)
 
 
 class MemberPickupLocationFactory(factory.django.DjangoModelFactory):

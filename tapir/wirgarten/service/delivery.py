@@ -102,10 +102,9 @@ def generate_future_deliveries(member: Member, limit: int = None):
 
     deliveries = []
 
-    last_growing_period = GrowingPeriod.objects.order_by("-end_date")[:1]
-    if not last_growing_period.exists():
+    last_growing_period = GrowingPeriod.objects.order_by("-end_date").first()
+    if not last_growing_period:
         return deliveries
-    last_growing_period = last_growing_period[0]
 
     next_delivery_date = get_next_delivery_date()
 

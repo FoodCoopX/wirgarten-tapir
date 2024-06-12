@@ -168,7 +168,9 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     return total_amount
 
 
-def get_solidarity_overplus(reference_date: date = None) -> float:
+def get_automatically_calculated_solidarity_excess(
+    reference_date: date = None,
+) -> float:
     """
     Returns the total solidarity price sum for the active subscriptions during the reference date.
 
