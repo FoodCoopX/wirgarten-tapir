@@ -71,30 +71,22 @@ class ContractStatusFilterTestCase(TestCase):
         )
 
     def test_contractRenewed_default_returnsOnlyMembersWithRenewedContract(self):
-        contract_status_filter = ContractStatusFilter()
-        result_queryset = contract_status_filter.filter(
-            Member.objects.all(), "Contract Renewed"
-        )
         expected_in = [self.member_with_renewed_contract]
-        self.check_results(expected_in, result_queryset)
+        self.check_results(expected_in, "Contract Renewed")
 
     def test_contractCancelled_default_returnsOnlyMembersWithCancelledContract(self):
-        contract_status_filter = ContractStatusFilter()
-        result_queryset = contract_status_filter.filter(
-            Member.objects.all(), "Contract Cancelled"
-        )
         expected_in = [self.member_that_cancelled_after_trial_period]
-        self.check_results(expected_in, result_queryset)
+        self.check_results(expected_in, "Contract Cancelled")
 
     def test_undecided_default_returnsOnlyUndecidedMembers(self):
+        expected_in = [self.member_without_renewed_contract]
+        self.check_results(expected_in, "Undecided")
+
+    def check_results(self, expected_in, filter_type):
         contract_status_filter = ContractStatusFilter()
         result_queryset = contract_status_filter.filter(
-            Member.objects.all(), "Undecided"
+            Member.objects.all(), filter_type
         )
-        expected_in = [self.member_without_renewed_contract]
-        self.check_results(expected_in, result_queryset)
-
-    def check_results(self, expected_in, result_queryset):
         for member in Member.objects.all():
             assert_function = (
                 self.assertIn if member in expected_in else self.assertNotIn
