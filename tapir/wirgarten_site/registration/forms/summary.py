@@ -6,7 +6,7 @@ from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
-from tapir.wirgarten.models import HarvestShareProduct, Product, ProductType
+from tapir.wirgarten.models import Product, ProductType
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
 from tapir.wirgarten.service.products import get_product_price

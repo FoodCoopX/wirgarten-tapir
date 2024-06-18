@@ -358,7 +358,6 @@ class BaseProductForm(forms.Form):
                 ),
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
-                trial_disabled=existing_trial_end_date is None,
                 **self.build_solidarity_fields(),
             )
 
@@ -532,8 +531,9 @@ class BaseProductForm(forms.Form):
 
         if has_harvest_shares:
             self.validate_harvest_shares_consent()
-            self.validate_pickup_location()
-            self.validate_pickup_location_capacity()
+            if self.member_id:
+                self.validate_pickup_location()
+                self.validate_pickup_location_capacity()
             self.validate_total_capacity()
             self.validate_solidarity_price()
 
@@ -800,7 +800,6 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
-                        trial_disabled=existing_trial_end_date is None,
                     )
                 )
 

@@ -4,7 +4,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
+from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY, NO_DELIVERY
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -78,6 +78,9 @@ def get_next_delivery_date_for_product_type(
 
     if reference_date is None:
         reference_date = get_today()
+
+    if product_type.delivery_cycle == NO_DELIVERY[0]:
+        return reference_date
 
     next_delivery_date = get_next_delivery_date(reference_date)
     _, week_num, _ = next_delivery_date.isocalendar()
