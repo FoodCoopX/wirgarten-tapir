@@ -9,9 +9,7 @@ from django.db.models import Case, ExpressionWrapper, F, OuterRef, Subquery, Sum
 from django.db.models.functions import Coalesce, TruncMonth
 from django.forms import CheckboxInput
 from django.forms.widgets import Select
-from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import View
 from django_filters import (
     BooleanFilter,
     ChoiceFilter,
@@ -36,56 +34,68 @@ from tapir.wirgarten.views.filters import MultiFieldFilter
 
 class ContractStatusFilter(ChoiceFilter):
     def filter(self, qs, value):
+        if not value:
+            return qs
+
         # Filter members with an active subscription which is not cancelled
-        if value:
-            today = get_today()
-            qs = qs.filter(
-                subscription__start_date__lte=today,
-                subscription__end_date__gte=today,
-            )
+        today = get_today()
+        qs = qs.filter(
+            subscription__start_date__lte=today,
+            subscription__end_date__gte=today,
+        )
 
         if value == "Contract Renewed":
-            # Get the upcoming growing period
-            growing_period = get_next_growing_period()
-
-            # Filter members with at least one subscription starting in the upcoming growing period
-            qs = qs.filter(
-                subscription__start_date__gte=growing_period.start_date,
-                subscription__start_date__lte=growing_period.end_date,
-            )
-
+            qs = self.filter_contract_renewed(qs)
         elif value == "Contract Cancelled":
-            trial_period_end = ExpressionWrapper(
-                TruncMonth(F("subscription__start_date"))
-                + timedelta(
-                    days=relativedelta(months=1).days,
-                    seconds=relativedelta(months=1).seconds,
-                ),
-                output_field=models.DateField(),
-            )
-
-            qs = qs.annotate(trial_period_end=trial_period_end).filter(
-                subscription__cancellation_ts__gt=F("trial_period_end"),
-                subscription__cancellation_ts__isnull=False,
-            )
-
+            qs = self.filter_contract_cancelled(qs)
         elif value == "Undecided":
-            growing_period = get_next_growing_period()
-
-            # Calculate the trial period start date
-            trial_period_start = get_today() + relativedelta(months=-1, day=1)
-
-            # Filter members with no active subscriptions that started within the last month
-            qs = qs.filter(subscription__start_date__lte=trial_period_start).exclude(
-                subscription__cancellation_ts__isnull=False,
-            )
-
-            qs = qs.exclude(
-                subscription__start_date__gte=growing_period.start_date,
-                subscription__start_date__lte=growing_period.end_date,
-            )
+            qs = self.filter_undecided(qs)
 
         return qs.distinct()
+
+    @staticmethod
+    def filter_contract_renewed(qs):
+        # Get the upcoming growing period
+        growing_period = get_next_growing_period()
+
+        # Filter members with at least one subscription starting in the upcoming growing period
+        return qs.filter(
+            subscription__start_date__gte=growing_period.start_date,
+            subscription__start_date__lte=growing_period.end_date,
+        )
+
+    @staticmethod
+    def filter_contract_cancelled(qs):
+        trial_period_end = ExpressionWrapper(
+            TruncMonth(F("subscription__start_date"))
+            + timedelta(
+                days=relativedelta(months=1).days,
+                seconds=relativedelta(months=1).seconds,
+            ),
+            output_field=models.DateField(),
+        )
+
+        return qs.annotate(trial_period_end=trial_period_end).filter(
+            subscription__cancellation_ts__gt=F("trial_period_end"),
+            subscription__cancellation_ts__isnull=False,
+        )
+
+    @staticmethod
+    def filter_undecided(qs):
+        growing_period = get_next_growing_period()
+
+        # Calculate the trial period start date
+        trial_period_start = get_today() + relativedelta(months=-1, day=1)
+
+        # Filter members with no active subscriptions that started within the last month
+        qs = qs.filter(subscription__start_date__lte=trial_period_start).exclude(
+            subscription__cancellation_ts__isnull=False,
+        )
+
+        return qs.exclude(
+            subscription__start_date__gte=growing_period.start_date,
+            subscription__start_date__lte=growing_period.end_date,
+        )
 
 
 class MemberFilter(FilterSet):

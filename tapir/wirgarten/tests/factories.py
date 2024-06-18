@@ -82,7 +82,7 @@ class ProductPriceFactory(factory.django.DjangoModelFactory):
         model = ProductPrice
 
     product = factory.SubFactory(ProductFactory)
-    price = factory.Faker("random_float", min=30, max=150)
+    price = factory.Faker("pyfloat", min_value=30, max_value=150)
     valid_from = TODAY
 
 
@@ -109,7 +109,7 @@ class ProductCapacityFactory(factory.django.DjangoModelFactory):
 
     period = factory.SubFactory(GrowingPeriodFactory)
     product_type = factory.SubFactory(ProductTypeFactory)
-    capacity = factory.Faker("random_float", min=1000, max=5000)
+    capacity = factory.Faker("pyfloat", min_value=1000, max_value=5000)
 
 
 class SubscriptionFactory(factory.django.DjangoModelFactory):
@@ -125,7 +125,7 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
     )
-    solidarity_price = factory.Faker("random_float", min=-0.25, max=0.25)
+    solidarity_price = factory.Faker("pyfloat", min_value=-0.25, max_value=0.25)
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory):
