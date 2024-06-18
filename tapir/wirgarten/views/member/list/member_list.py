@@ -37,6 +37,9 @@ class ContractStatusFilter(ChoiceFilter):
         if not value:
             return qs
 
+        if value not in ["Contract Renewed", "Contract Cancelled", "Undecided"]:
+            raise ValueError(f"Unknown filter value: {value}")
+
         # Filter members with an active subscription which is not cancelled
         today = get_today()
         qs = qs.filter(
@@ -69,8 +72,7 @@ class ContractStatusFilter(ChoiceFilter):
         trial_period_end = ExpressionWrapper(
             TruncMonth(F("subscription__start_date"))
             + timedelta(
-                days=relativedelta(months=1).days,
-                seconds=relativedelta(months=1).seconds,
+                days=30,
             ),
             output_field=models.DateField(),
         )
