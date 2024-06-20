@@ -1,10 +1,8 @@
 import os
-import sys
 import traceback
 
-from django.http import HttpResponseServerError
-from django.views import debug
 from django.conf import settings
+
 from tapir.wirgarten.utils import get_now
 
 
@@ -36,6 +34,7 @@ class GlobalServerErrorHandlerMiddleware:
                 os.makedirs(error_log_dir)
 
             with open(error_log_filename, "w") as error_log_file:
+                error_log_file.write(f"Error while calling URL: {request.path}\n")
                 traceback.print_exc(file=error_log_file)
 
             print(
