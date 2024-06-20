@@ -204,7 +204,7 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
 def get_renew_contracts_form(request, **kwargs):
     member_id = kwargs.pop("pk")
     check_permission_or_self(member_id, request)
-
+    kwargs["member_id"] = member_id
     kwargs["start_date"] = get_next_growing_period().start_date
 
     @transaction.atomic

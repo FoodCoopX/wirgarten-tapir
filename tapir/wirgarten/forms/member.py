@@ -583,7 +583,8 @@ class SubscriptionRenewalForm(Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            *args, **{k: v for k, v in kwargs.items() if k != "start_date"}
+            *args,
+            **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
         )
         self.start_date = kwargs["start_date"]
         self.available_product_types = [p.id for p in get_available_product_types()]
