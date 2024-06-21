@@ -146,7 +146,7 @@ class PickupLocationCapabilityFactory(factory.django.DjangoModelFactory):
         model = PickupLocationCapability
 
     product_type = factory.SubFactory(ProductTypeFactory)
-    max_capacity = factory.Faker("random_int", min=1000, max=2000)
+    max_capacity = factory.Faker("random_int", min=10, max=30)
     pickup_location = factory.SubFactory(PickupLocationFactory)
 
 

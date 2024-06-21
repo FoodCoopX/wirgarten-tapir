@@ -224,10 +224,10 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         pickup_location_capability: PickupLocationCapability = (
             PickupLocationCapability.objects.get()
         )
-        pickup_location_capability.max_capacity = 25
+        pickup_location_capability.max_capacity = 1
         pickup_location_capability.save()
 
-        response = self.send_add_subscription_request(1, 0)
+        response = self.send_add_subscription_request(0, 1)
 
         self.assertStatusCode(response, 200)
         self.assertFalse(
