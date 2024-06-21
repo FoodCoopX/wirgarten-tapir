@@ -187,7 +187,9 @@ class PickupLocationCapability(TapirModel):
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
     )
-    max_capacity = models.PositiveSmallIntegerField(null=True)
+    max_capacity = models.PositiveSmallIntegerField(
+        null=True
+    )  # This is the capacity in NUMBER of M equivalent share, not the capacity in COST of M equivalent share.
     pickup_location = models.ForeignKey(
         PickupLocation, null=False, on_delete=models.DO_NOTHING
     )

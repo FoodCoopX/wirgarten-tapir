@@ -2,10 +2,10 @@ from datetime import date, datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import transaction
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from django.conf import settings
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (

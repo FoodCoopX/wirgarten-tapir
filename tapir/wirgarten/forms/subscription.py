@@ -358,7 +358,6 @@ class BaseProductForm(forms.Form):
                 ),
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
-                trial_disabled=existing_trial_end_date is None,
                 **self.build_solidarity_fields(),
             )
 
@@ -532,8 +531,9 @@ class BaseProductForm(forms.Form):
 
         if has_harvest_shares:
             self.validate_harvest_shares_consent()
-            self.validate_pickup_location()
-            self.validate_pickup_location_capacity()
+            if self.member_id:
+                self.validate_pickup_location()
+                self.validate_pickup_location_capacity()
             self.validate_total_capacity()
             self.validate_solidarity_price()
 
@@ -560,7 +560,10 @@ def validate_pickup_location_capacity(
     diff_member_amount = total_member_amount - current_member_amount
     new_total_amount = get_current_capacity(capability, start_date) + diff_member_amount
 
-    if new_total_amount > capability.max_capacity:
+    base_product = Product.objects.get(type=capability.product_type, base=True)
+    base_product_price = get_product_price(base_product, start_date).price
+
+    if new_total_amount > capability.max_capacity * base_product_price:
         form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
         form.add_error(
             None,
@@ -800,7 +803,6 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
-                        trial_disabled=existing_trial_end_date is None,
                     )
                 )
 
