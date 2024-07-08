@@ -166,7 +166,7 @@ class CoopShareTransactionFactory(factory.django.DjangoModelFactory):
     member = factory.SubFactory(MemberFactory)
     transaction_type = factory.Faker(
         "random_element", elements=["purchase"]
-    )  # cancallation, transfer_in, transfer_out (not implemented yet)
+    )  # cancellation, transfer_in, transfer_out (not implemented yet)
     quantity = factory.Faker("random_int", min=1, max=10)
     share_price = 50
     valid_at = factory.Faker("date_object")

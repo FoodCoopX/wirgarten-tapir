@@ -225,10 +225,54 @@ class ProductCapacity(TapirModel):
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
 
 
+class MemberQuerySet(models.QuerySet):
+    def with_active_subscription(self, reference_date: datetime.date | None = None):
+        from tapir.wirgarten.service.products import get_active_subscriptions
+
+        return self.filter(
+            id__in=get_active_subscriptions(reference_date)
+            .values_list("member", flat=True)
+            .distinct()
+        )
+
+    def without_active_subscription(self, reference_date: datetime.date | None = None):
+        return self.exclude(
+            id__in=Member.objects.with_active_subscription(reference_date)
+        ).distinct()
+
+    def with_shares(self, reference_date: datetime.date | None = None):
+        if reference_date is None:
+            reference_date = get_today()
+
+        members_with_nb_shares_annotation = Member.objects.annotate(
+            total_shares=models.Sum(
+                models.Case(
+                    models.When(
+                        coopsharetransaction__valid_at__lte=reference_date,
+                        then=models.F("coopsharetransaction__quantity"),
+                    ),
+                    default=0,
+                    output_field=models.IntegerField(),
+                )
+            )
+        )
+
+        return self.filter(
+            id__in=members_with_nb_shares_annotation.filter(total_shares__gte=1)
+        )
+
+    def without_shares(self, reference_date: datetime.date | None = None):
+        return self.exclude(
+            id__in=Member.objects.with_shares(reference_date)
+        ).distinct()
+
+
 class Member(TapirUser):
     """
     A member of WirGarten. Usually a member has coop shares and optionally other subscriptions.
     """
+
+    objects = MemberQuerySet.as_manager()
 
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
@@ -802,7 +846,9 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             suffix = f"übertragen an {self.transfer_member}"
         elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
             suffix = f"empfangen von {self.transfer_member}"
-        return f"{prefix} {suffix}"
+        else:
+            suffix = f"Unknown transaction type ({self.transaction_type})"
+        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member.id}"
 
 
 class Deliveries(TapirModel):
