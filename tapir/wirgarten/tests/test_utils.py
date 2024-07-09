@@ -6,6 +6,7 @@ import factory.random
 from django.core.cache import cache
 from django.test import TestCase, Client, SimpleTestCase
 from rest_framework.test import APIClient
+
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import parameter_definition
 from tapir.wirgarten.parameters import Parameter
@@ -40,15 +41,17 @@ class TapirUnitTest(TapirFactoryMixin, SimpleTestCase):
 
 def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> None:
     # Patch for timezone.now()
-    patcher_now = patch("django.utils.timezone.now")
-    test.mock_now = patcher_now.start()
-    test.addCleanup(patcher_now.stop)
+    if not hasattr(test, "mock_now"):
+        patcher_now = patch("django.utils.timezone.now")
+        test.mock_now = patcher_now.start()
+        test.addCleanup(patcher_now.stop)
     test.mock_now.return_value = now
 
     # Patch for timezone.localdate()
-    patcher_localdate = patch("django.utils.timezone.localdate")
-    test.mock_localdate = patcher_localdate.start()
-    test.addCleanup(patcher_localdate.stop)
+    if not hasattr(test, "mock_localdate"):
+        patcher_localdate = patch("django.utils.timezone.localdate")
+        test.mock_localdate = patcher_localdate.start()
+        test.addCleanup(patcher_localdate.stop)
     test.mock_localdate.return_value = now.date()
 
 

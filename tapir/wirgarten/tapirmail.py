@@ -19,7 +19,9 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.products import get_next_growing_period
+from tapir.wirgarten.service.products import (
+    get_next_growing_period,
+)
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
 from tapir.wirgarten.utils import get_today
 
@@ -85,58 +87,24 @@ def _register_segments():
     base = Member.objects.all()
     register_base_segment(base)
 
-    def get_member_ids(annotation, filter_condition):
-        return base.filter(
-            id__in=Member.objects.annotate(**annotation)
-            .filter(**filter_condition)
-            .values_list("id", flat=True)
-        )
-
-    shares_annotation = {
-        "total_shares": models.Sum(
-            models.Case(
-                models.When(
-                    coopsharetransaction__valid_at__lte=get_today(),
-                    then=models.F("coopsharetransaction__quantity"),
-                ),
-                default=0,
-                output_field=models.IntegerField(),
-            )
-        )
-    }
-
-    subscription_annotation = {
-        "active_subscription_count": models.Count(
-            models.Case(
-                models.When(
-                    subscription__start_date__lte=get_today(),
-                    subscription__end_date__gte=get_today(),
-                    then=1,
-                ),
-                output_field=models.IntegerField(),
-            )
-        )
-    }
-
     register_segment(
         Segments.COOP_MEMBERS,
-        lambda: get_member_ids(shares_annotation, {"total_shares__gte": 1}),
+        lambda: Member.objects.with_shares(),
     )
+
     register_segment(
         Segments.NON_COOP_MEMBERS,
-        lambda: get_member_ids(shares_annotation, {"total_shares": 0}),
+        lambda: Member.objects.without_shares(),
     )
+
     register_segment(
         Segments.WITH_ACTIVE_SUBSCRIPTION,
-        lambda: get_member_ids(
-            subscription_annotation, {"active_subscription_count__gte": 1}
-        ),
+        lambda: Member.objects.with_active_subscription(),
     )
+
     register_segment(
         Segments.WITHOUT_ACTIVE_SUBSCRIPTION,
-        lambda: get_member_ids(
-            subscription_annotation, {"active_subscription_count": 0}
-        ),
+        lambda: Member.objects.without_active_subscription(),
     )
 
 

@@ -1,11 +1,9 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from tapir_mail.service.segment import resolve_segments, segment_registry
+from tapir_mail.service.segment import resolve_segments
 
-from tapir.configuration.models import TapirParameterDatatype
-from tapir.configuration.parameter import parameter_definition
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.tapirmail import Segments, _register_segments
 from tapir.wirgarten.tests.factories import (
@@ -39,7 +37,8 @@ class SegmentTest(TapirIntegrationTest):
             id="has_sub"
         )
 
-    def ids(self, collection):
+    @staticmethod
+    def ids(collection):
         return set([m.id for m in collection])
 
     def test_resolveSegment_coopMembers_correctResult(self):
@@ -93,3 +92,22 @@ class SegmentTest(TapirIntegrationTest):
         )
 
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
+
+    def test_resolveSegment_dateHasChangedSinceSegmentRegistration_correctResult(self):
+        subscription = Subscription.objects.get()
+        subscription.end_date = self.NOW + datetime.timedelta(days=15)
+        subscription.save()
+
+        expected_member_ids = [self.member_with_subscription.id]
+        segment_members = resolve_segments(
+            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+        )
+        self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
+
+        mock_timezone(self, self.NOW + datetime.timedelta(days=30))
+
+        expected_member_ids = set()
+        segment_members = resolve_segments(
+            add_segments=[Segments.WITH_ACTIVE_SUBSCRIPTION]
+        )
+        self.assertSetEqual(self.ids(segment_members), expected_member_ids)
