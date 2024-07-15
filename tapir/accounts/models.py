@@ -33,7 +33,8 @@ class KeycloakUserQuerySet(models.QuerySet):
 
 
 class KeycloakUserManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
-    def normalize_email(self, email: str) -> str:
+    @staticmethod
+    def normalize_email(email: str) -> str:
         return email.strip()
 
 
