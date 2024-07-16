@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 
-from tapir.accounts.models import TapirUser
+from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -267,12 +267,18 @@ class MemberQuerySet(models.QuerySet):
         ).distinct()
 
 
+class TapirUserManager(models.Manager.from_queryset(MemberQuerySet)):
+    @staticmethod
+    def normalize_email(email: str) -> str:
+        return KeycloakUserManager.normalize_email(email)
+
+
 class Member(TapirUser):
     """
     A member of WirGarten. Usually a member has coop shares and optionally other subscriptions.
     """
 
-    objects = MemberQuerySet.as_manager()
+    objects = TapirUserManager()
 
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
