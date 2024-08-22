@@ -33,10 +33,12 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
     get_next_contract_start_date,
+    send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_current_growing_period,
+    get_future_subscriptions,
     is_product_type_available,
 )
 from tapir.wirgarten.utils import get_now, get_today
@@ -386,6 +388,10 @@ class RegistrationWizardViewBase(CookieWizardView):
                             mandate_ref=mandate_ref,
                             member_id=member.id,
                         )
+
+                send_order_confirmation(
+                    member, get_future_subscriptions().filter(member=member)
+                )
         except Exception as e:
             member.delete()
             raise e

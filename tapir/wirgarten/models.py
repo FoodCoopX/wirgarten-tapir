@@ -404,6 +404,51 @@ class Member(TapirUser):
         except CoopShareTransaction.DoesNotExist:
             return None
 
+    @property
+    def base_subscriptions_text(self):
+        """
+        Returns a human readable string stating which base products the member has subscribed,
+        sorted by their price in ascending order.
+
+        Examples:
+        - “einen M-Ernteanteil”
+        - “2 M-Ernteanteile”
+        - “einen S-Ernteanteil + 2 M-Ernteanteile”
+        - “einen S-Ernteanteil + M-Ernteanteil + L-Ernteanteil”
+        """
+
+        from collections import Counter
+        from django.utils.translation import gettext as _
+        from tapir.wirgarten.service.products import get_product_price, get_active_subscriptions
+
+        # Get all active base subscriptions for the member
+        subscriptions = get_active_subscriptions().filter(member_id=self.id, product__base=True)
+
+        # Count the quantity of each base product subscribed
+        product_counts = Counter()
+        for sub in subscriptions:
+            product_counts[sub.product] += sub.quantity
+
+        # Create a list of tuples (product, quantity, price) and sort by price
+        product_info = []
+        today = get_today()
+        for product, quantity in product_counts.items():
+            price = get_product_price(product, today).price
+            product_info.append((f"{product.name}-Ernteanteil", quantity, price))
+
+        # Sort products by price (ascending)
+        product_info.sort(key=lambda x: x[2])
+
+        # Create the human-readable text
+        base_subscription_texts = []
+        for product_name, quantity, _ in product_info:
+            if quantity == 1:
+                base_subscription_texts.append(f"einen {product_name}")
+            else:
+                base_subscription_texts.append(f"{quantity} {product_name}e")
+
+        return " + ".join(base_subscription_texts)
+
     def __str__(self):
         return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
 

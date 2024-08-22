@@ -210,11 +210,13 @@
 
     const handleRenewal = () => {
         const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
-        {% if available_product_types|get_value:base_product_type_name %}
-        renewalModal.show()
-        {% else %}
-        handleShowWaitlist();
-        {% endif %}
+        if ({{next_available_product_types|safe}}.includes("{{base_product_type_name}}")) {
+            renewalModal.show()
+        }
+        else {
+            handleShowWaitlist();
+        }
+        
     }
 
     const handleRenewSameConditions = () => {
@@ -233,6 +235,6 @@
     }
 
     const handleShowWaitlist = () => {
-         FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', "Warteliste");
+         FormModal.load("{% url 'wirgarten:waitlist_harvestshares' %}", "Warteliste");
     }
 </script>

@@ -88,7 +88,7 @@ def get_active_product_types(reference_date: date = None) -> iter:
     ).order_by(*product_type_order_by())
 
 
-def get_available_product_types(reference_date: date = None) -> iter:
+def get_available_product_types(reference_date: date = None) -> list:
     if reference_date is None:
         reference_date = get_today()
 
