@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import parameter_definition
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.tapirmail import configure_mail_module
 
 
 class TapirFactoryMixin:
@@ -24,6 +25,7 @@ class TapirIntegrationTest(TapirFactoryMixin, TestCase):
         self.client = Client()
         self.apiClient = APIClient()
         cache.clear()
+        configure_mail_module()
 
     def assertStatusCode(self, response, expected_status_code):
         self.assertEqual(
