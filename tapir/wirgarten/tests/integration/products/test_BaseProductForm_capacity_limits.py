@@ -24,6 +24,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     SubscriptionFactory,
 )
+from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
     mock_timezone,
@@ -35,6 +36,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         ParameterDefinitions().import_definitions()
         now = datetime.datetime(year=2023, month=6, day=12)
         mock_timezone(self, now)
+        configure_mail_module()
 
     def create_test_data_and_login(self, capacity):
         product_capacity: ProductCapacity = ProductCapacityFactory.create(
