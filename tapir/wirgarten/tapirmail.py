@@ -176,7 +176,7 @@ def _register_tokens():
             "Kontoempfänger": "account_owner",
             "IBAN": "iban",
             "Beitrittsdatum": "coop_entry_date",
-            "Ernteanteilsgrößen": "base_subscriptions_text"
+            "Ernteanteilsgrößen": "base_subscriptions_text",
         },
         general_tokens={
             "WirGarten Standort": lambda: get_parameter_value(Parameter.SITE_NAME),

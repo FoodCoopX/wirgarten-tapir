@@ -10,6 +10,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
+
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -293,7 +294,7 @@ def get_add_subscription_form(request, **kwargs):
             date_filter = next_start_date
             if next_period:
                 date_filter = max(next_start_date, next_period.start_date)
-       
+
             if (
                 get_future_subscriptions()
                 .filter(

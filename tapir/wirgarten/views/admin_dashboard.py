@@ -107,11 +107,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
         context["coop_shares_value"] = format_currency(
             (
-                CoopShareTransaction.objects
-                    .filter(valid_at__lt=next_contract_start_date)
-                    .aggregate(quantity=Sum("quantity")).get(
-                        "quantity", 0
-                    )
+                CoopShareTransaction.objects.filter(
+                    valid_at__lt=next_contract_start_date
+                )
+                .aggregate(quantity=Sum("quantity"))
+                .get("quantity", 0)
                 or 0
             )
             * settings.COOP_SHARE_PRICE

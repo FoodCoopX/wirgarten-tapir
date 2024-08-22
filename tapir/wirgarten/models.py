@@ -419,10 +419,15 @@ class Member(TapirUser):
 
         from collections import Counter
         from django.utils.translation import gettext as _
-        from tapir.wirgarten.service.products import get_product_price, get_active_subscriptions
+        from tapir.wirgarten.service.products import (
+            get_product_price,
+            get_active_subscriptions,
+        )
 
         # Get all active base subscriptions for the member
-        subscriptions = get_active_subscriptions().filter(member_id=self.id, product__base=True)
+        subscriptions = get_active_subscriptions().filter(
+            member_id=self.id, product__base=True
+        )
 
         # Count the quantity of each base product subscribed
         product_counts = Counter()
