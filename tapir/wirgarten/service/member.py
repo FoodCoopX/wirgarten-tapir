@@ -2,9 +2,10 @@ from datetime import date, datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
-
 from django.conf import settings
+from django.db import transaction
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
@@ -28,8 +29,14 @@ from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import get_future_subscriptions
 from tapir.wirgarten.service.tasks import schedule_task_unique
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
-from tapir.wirgarten.utils import format_date, get_now, get_today
+from tapir.wirgarten.utils import (
+    format_date,
+    format_subscription_list_html,
+    get_now,
+    get_today,
+)
 
 
 @transaction.atomic
@@ -336,7 +343,23 @@ def send_cancellation_confirmation_email(
             kwargs={"member_id": member_id},
         )
 
+    future_deliveries = generate_future_deliveries(member)
+    TransactionalTrigger.fire_action(
+        Events.TRIAL_CANCELLATION,
+        member.email,
+        {
+            "contract_list": contract_list,
+            "contract_end_date": format_date(contract_end_date),
+            "last_pickup_date": format_date(
+                datetime.strptime(
+                    future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
+                ).date()
+            ),
+        },
+    )
+
     if not skip_email:
+        # TODO: remove this once migrated to mail module
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(
@@ -381,9 +404,23 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
         },
     )
 
+    TransactionalTrigger.fire_action(
+        Events.MEMBERAREA_CHANGE_CONTRACT,
+        member.email,
+        {
+            "contract_start_date": format_date(contract_start_date),
+            "contract_end_date": format_date(subs[0].end_date),
+            "first_pickup_date": format_date(
+                get_next_delivery_date(contract_start_date)
+            ),
+            "contract_list": format_subscription_list_html(subs),
+        },
+    )
+
     last_delivery_date = datetime.strptime(
         future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
     ).date()
+
     schedule_task_unique(
         task=send_email_member_contract_end_reminder,
         eta=last_delivery_date + relativedelta(days=1),
@@ -414,6 +451,17 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
             "contract_end_date": format_date(subs[0].end_date),
             "first_pickup_date": future_deliveries[0]["delivery_date"],
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
+        },
+    )
+
+    TransactionalTrigger.fire_action(
+        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        member.email,
+        {
+            "contract_start_date": format_date(contract_start_date),
+            "contract_end_date": format_date(subs[0].end_date),
+            "first_pickup_date": future_deliveries[0]["delivery_date"],
+            "contract_list": format_subscription_list_html(subs),
         },
     )
 

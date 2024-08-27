@@ -3,9 +3,11 @@ from decimal import Decimal
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
+from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -40,10 +42,13 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
 
 def product_type_order_by(id_field: str = "id", name_field: str = "name"):
     """
-    The result of the function is meant to be passed to the order_by clause of QuerySets referencing (directly or indirectly) product types.
-    The base product type which is configured via parameter is the first result. In case the parameter is not there, only the name field will be used to order.
+    The result of the function is meant to be passed to the order_by clause of QuerySets referencing
+    (directly or indirectly) product types.
+    The base product type which is configured via parameter is the first result. In case the parameter is not there,
+    only the name field will be used to order.
 
-    It is basically a workaround to use this order by condition in a static way although it depends on the parameter to be there.
+    It is basically a workaround to use this order by condition in a static way,
+    although it depends on the parameter to be there.
 
     :param id_field: name/path of the "id" field. E.g. "product_type__id"
     :param name_field: name/path of the "name" field. E.g. "product_type__name"
@@ -97,14 +102,11 @@ def get_next_growing_period(
     if reference_date is None:
         reference_date = get_today()
 
-    try:
-        return (
-            GrowingPeriod.objects.filter(start_date__gt=reference_date)
-            .order_by("start_date")
-            .first()
-        )
-    except GrowingPeriod.DoesNotExist:
-        return None
+    return (
+        GrowingPeriod.objects.filter(start_date__gt=reference_date)
+        .order_by("start_date")
+        .first()
+    )
 
 
 def get_current_growing_period(
@@ -113,16 +115,13 @@ def get_current_growing_period(
     if reference_date is None:
         reference_date = get_today()
 
-    try:
-        return (
-            GrowingPeriod.objects.filter(
-                start_date__lte=reference_date, end_date__gte=reference_date
-            )
-            .order_by("start_date")
-            .first()
+    return (
+        GrowingPeriod.objects.filter(
+            start_date__lte=reference_date, end_date__gte=reference_date
         )
-    except GrowingPeriod.DoesNotExist:
-        return None
+        .order_by("start_date")
+        .first()
+    )
 
 
 @transaction.atomic
@@ -212,7 +211,7 @@ def get_future_subscriptions(reference_date: date = None):
     :param reference_date: the date on which the capacity must be active
     :return: queryset of active and future subscriptions
     """
-    if reference_date == None:
+    if reference_date is None:
         reference_date = get_today()
 
     return Subscription.objects.filter(end_date__gte=reference_date).order_by(
@@ -243,6 +242,7 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     :param name: the name of the product
     :param price: the price
     :param capacity_id: gets information about the growing period and product type via the capacity
+    :param base: whether the product is the base product
     :return: the newly created product
     """
     pc = ProductCapacity.objects.get(id=capacity_id)
@@ -271,7 +271,7 @@ def get_product_price(product: str | Product, reference_date: date = None):
     """
     if reference_date is None:
         reference_date = get_today()
-    if type(product) == Product:
+    if isinstance(product, Product):
         product = product.id
 
     prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
@@ -279,8 +279,8 @@ def get_product_price(product: str | Product, reference_date: date = None):
     # If there's only one price, return it
     if prices.count() == 1:
         return prices.first()
-    else:  # Otherwise, return the price valid up to the reference date
-        return prices.filter(valid_from__lte=reference_date).first()
+    # Otherwise, return the price valid up to the reference date
+    return prices.filter(valid_from__lte=reference_date).first()
 
 
 @transaction.atomic
@@ -295,6 +295,7 @@ def update_product(
 
     :param id_: the id of the product to update
     :param name: the name of the product
+    :param base: whether the product is the base product
     :param price: the price of the product
     :param growing_period_id: the growing period id
     :return:
@@ -349,7 +350,7 @@ def get_next_product_price_change_date(growing_period_id: str):
 def delete_product(id_: str):
     """
     Deletes a product. If there are any subscriptions for the product (also historic ones), the product
-    gets deleted by flag (deleted=True). Otherwise it will be hard deleted.
+    gets deleted by flag (deleted=True). Otherwise, it will be hard deleted.
 
     :param id_: the id of the product to delete
     """
@@ -405,7 +406,7 @@ def create_product_type_capacity(
             single_subscription_only=single_subscription_only,
         )
         if not ProductType.objects.exists():
-            Parameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
+            TapirParameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
                 value=pt.id
             )
 
@@ -472,10 +473,8 @@ def update_product_type_capacity(
 @transaction.atomic
 def delete_product_type_capacity(id_: str):
     """
-    Deletes a product capacity by
+    Deletes a product capacity by id
 
-    :param period_id:
-    :param product_type_id:
     :return:
     """
 
@@ -500,7 +499,8 @@ def create_or_update_default_tax_rate(
     """
     Updates the default tax rate for the given product type id.
 
-    If a default tax rate already exists, set the end date to end of the month and create a new default tax rate for next month.
+    If a default tax rate already exists, set the end date to end of the month
+    and create a new default tax rate for next month.
     Otherwise, just create a tax rate valid from today.
 
     :param product_type_id:
@@ -530,23 +530,20 @@ def create_or_update_default_tax_rate(
 
 
 def get_free_product_capacity(product_type_id: str, reference_date: date = None):
-    if reference_date == None:
+    if reference_date is None:
         reference_date = get_today()
-
-    from tapir.wirgarten.service.member import get_next_contract_start_date
-
-    next_month = get_next_contract_start_date(reference_date)
 
     active_product_capacities = get_active_product_capacities(reference_date).filter(
         product_type_id=product_type_id
     )
+
     if active_product_capacities.exists():
         total_capacity = float(active_product_capacities.first().capacity)
         used_capacity = sum(
             map(
                 lambda sub: float(get_product_price(sub.product, reference_date).price)
                 * sub.quantity,
-                get_active_subscriptions(next_month).filter(
+                get_active_subscriptions(reference_date).filter(
                     product__type_id=product_type_id
                 ),
             )
@@ -559,26 +556,42 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
 def get_cheapest_product_price(
     product_type: ProductType | str, reference_date: date = None
 ):
-    if reference_date == None:
+    if reference_date is None:
         reference_date = get_today()
 
-    if type(product_type) == ProductType:
+    if isinstance(product_type, ProductType):
         product_type = product_type.id
 
-    product_prices = ProductPrice.objects.filter(product__type_id=product_type)
-    if len(product_prices) > 1:
-        product_prices.filter(valid_from__lte=reference_date).order_by("price")
+    products = Product.objects.filter(type__id=product_type)
+    if products.count() == 0:
+        raise ObjectDoesNotExist("No products found")
 
-    return product_prices.first().price
+    all_prices = ProductPrice.objects.filter(product__type__id=product_type)
+    if all_prices.count() == 1:
+        return all_prices[0].price
+
+    cheapest_price = float("inf")
+    for product in products:
+        prices = ProductPrice.objects.filter(
+            product=product, valid_from__lte=reference_date
+        ).order_by("valid_from")
+        if prices.count() == 0:
+            continue
+        cheapest_price = min(cheapest_price, prices.last().price)
+
+    if cheapest_price == float("inf"):
+        raise ObjectDoesNotExist("No price found")
+
+    return cheapest_price
 
 
 def is_product_type_available(
     product_type: ProductType | str, reference_date: date = None
 ) -> bool:
-    if reference_date == None:
+    if reference_date is None:
         reference_date = get_today()
 
-    if type(product_type) == ProductType:
+    if isinstance(product_type, ProductType):
         product_type = product_type.id
 
     if not Product.objects.filter(type_id=product_type, deleted=False).exists():
@@ -586,4 +599,4 @@ def is_product_type_available(
 
     return get_free_product_capacity(
         product_type_id=product_type, reference_date=reference_date
-    ) > get_cheapest_product_price(product_type, reference_date)
+    ) >= get_cheapest_product_price(product_type, reference_date)
