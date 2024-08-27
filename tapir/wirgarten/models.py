@@ -418,16 +418,20 @@ class Member(TapirUser):
         """
 
         from collections import Counter
-        from django.utils.translation import gettext as _
         from tapir.wirgarten.service.products import (
             get_product_price,
-            get_active_subscriptions,
+            get_future_subscriptions
         )
 
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+
         # Get all active base subscriptions for the member
-        subscriptions = get_active_subscriptions().filter(
-            member_id=self.id, product__base=True
+        subscriptions = get_future_subscriptions().filter(
+            member_id=self.id, product__type__id=base_product_type_id
         )
+
+        if not subscriptions:
+            return ""
 
         # Count the quantity of each base product subscribed
         product_counts = Counter()
@@ -439,7 +443,7 @@ class Member(TapirUser):
         today = get_today()
         for product, quantity in product_counts.items():
             price = get_product_price(product, today).price
-            product_info.append((f"{product.name}-Ernteanteil", quantity, price))
+            product_info.append((f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}", quantity, price))
 
         # Sort products by price (ascending)
         product_info.sort(key=lambda x: x[2])
@@ -450,7 +454,7 @@ class Member(TapirUser):
             if quantity == 1:
                 base_subscription_texts.append(f"einen {product_name}")
             else:
-                base_subscription_texts.append(f"{quantity} {product_name}e")
+                base_subscription_texts.append(f"{quantity} {product_name}")
 
         return " + ".join(base_subscription_texts)
 
