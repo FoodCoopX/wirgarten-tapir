@@ -420,7 +420,7 @@ class Member(TapirUser):
         from collections import Counter
         from tapir.wirgarten.service.products import (
             get_product_price,
-            get_future_subscriptions
+            get_future_subscriptions,
         )
 
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
@@ -443,7 +443,13 @@ class Member(TapirUser):
         today = get_today()
         for product, quantity in product_counts.items():
             price = get_product_price(product, today).price
-            product_info.append((f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}", quantity, price))
+            product_info.append(
+                (
+                    f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}",
+                    quantity,
+                    price,
+                )
+            )
 
         # Sort products by price (ascending)
         product_info.sort(key=lambda x: x[2])
