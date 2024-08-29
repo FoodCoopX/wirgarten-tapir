@@ -420,13 +420,13 @@ class Member(TapirUser):
         from collections import Counter
         from tapir.wirgarten.service.products import (
             get_product_price,
-            get_future_subscriptions,
+            get_active_subscriptions,
         )
 
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
 
         # Get all active base subscriptions for the member
-        subscriptions = get_future_subscriptions().filter(
+        subscriptions = get_active_subscriptions().filter(
             member_id=self.id, product__type__id=base_product_type_id
         )
 
