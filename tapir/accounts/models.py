@@ -13,6 +13,7 @@ from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir import utils
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
@@ -32,7 +33,8 @@ class KeycloakUserQuerySet(models.QuerySet):
 
 
 class KeycloakUserManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
-    def normalize_email(self, email: str) -> str:
+    @staticmethod
+    def normalize_email(email: str) -> str:
         return email.strip()
 
 
@@ -167,7 +169,7 @@ class KeycloakUser(AbstractUser):
 
             if email_changed:
                 if self.email_verified():
-                    self.start_email_change_process(self.email)
+                    self.start_email_change_process(self.email, original.email)
                     # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
                     self.email = original.email
                 else:  # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
@@ -197,7 +199,7 @@ class KeycloakUser(AbstractUser):
         )
 
     @transaction.atomic
-    def start_email_change_process(self, new_email: str):
+    def start_email_change_process(self, new_email: str, orig_email: str):
         EmailChangeRequest.objects.filter(user_id=self.id).delete()
         email_change_request = EmailChangeRequest.objects.create(
             new_email=new_email, user_id=self.id
@@ -211,16 +213,24 @@ class KeycloakUser(AbstractUser):
                 }
             ).encode()
         ).decode()
+        verify_link = f"{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={'token': email_change_token})}"
 
         from tapir.wirgarten.service.email import send_email
+        from tapir.wirgarten.tapirmail import Events
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+            orig_email,
+            {"verify_link": verify_link},
+        )
 
         send_email(
-            to_email=[new_email],
+            to_email=[orig_email],
             subject=_("Änderung deiner Email-Adresse"),
             content=f"Hallo {self.first_name},<br/><br/>"
             f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
             f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={"token": email_change_token})}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
+            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
             f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
             f"<br/><br/>Grüße, dein WirGarten Team",
         )

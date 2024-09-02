@@ -170,7 +170,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["buttons"] = json.dumps(
             {
                 "period": {
-                    g["id"]: {"delete": g["status"] is "upcoming"}
+                    g["id"]: {"delete": g["status"] == "upcoming"}
                     for g in context["growing_periods"]
                 },
                 "capacity": {

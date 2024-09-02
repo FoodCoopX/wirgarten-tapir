@@ -4,7 +4,7 @@ from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import Permission, ProductTypes
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     GrowingPeriod,

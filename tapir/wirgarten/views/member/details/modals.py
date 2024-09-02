@@ -1,12 +1,12 @@
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from dateutil.relativedelta import relativedelta
-
-from django.conf import settings
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
@@ -34,9 +34,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import (
-    calculate_pickup_location_change_date,
-)
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
@@ -51,7 +49,9 @@ from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_next_growing_period,
     is_product_type_available,
+    get_future_subscriptions,
 )
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
@@ -80,6 +80,8 @@ def get_member_personal_data_edit_form(request, **kwargs):
         UpdateTapirUserLogEntry().populate(
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
+
+        TransactionalTrigger.fire_action(Events.MEMBERAREA_CHANGE_DATA, member.email)
 
         member.save()
 
@@ -138,11 +140,18 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).delete()
 
         pl = PickupLocation.objects.get(id=pickup_location_id)
+        change_date_str = format_date(change_date)
         TextLogEntry().populate(
             actor=request.user,
             user=member,
-            text=f"Abholort geändert zum {format_date(change_date)}: {member.pickup_location} -> {pl}",
+            text=f"Abholort geändert zum {change_date_str}: {member.pickup_location} -> {pl}",
         ).save()
+
+        TransactionalTrigger.fire_action(
+            Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+            member.email,
+            {"pickup_location": pl.name, "pickup_location_start_date": change_date_str},
+        )
 
     return get_form_modal(
         request=request,
@@ -197,7 +206,7 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
 def get_renew_contracts_form(request, **kwargs):
     member_id = kwargs.pop("pk")
     check_permission_or_self(member_id, request)
-
+    kwargs["member_id"] = member_id
     kwargs["start_date"] = get_next_growing_period().start_date
 
     @transaction.atomic
@@ -282,12 +291,16 @@ def get_add_subscription_form(request, **kwargs):
         ).save()
 
         if is_base_product_type:
+            date_filter = next_start_date
+            if next_period:
+                date_filter = max(next_start_date, next_period.start_date)
+
             if (
                 get_future_subscriptions()
                 .filter(
                     cancellation_ts__isnull=True,
                     member_id=member_id,
-                    end_date__gt=(max(next_start_date, next_period.start_date)),
+                    end_date__gt=date_filter,
                 )
                 .exists()
             ):

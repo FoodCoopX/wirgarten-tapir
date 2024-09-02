@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
     F,
-    Q,
     Index,
     JSONField,
     OuterRef,
@@ -18,7 +17,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 
-from tapir.accounts.models import TapirUser
+from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -134,7 +133,7 @@ class ProductType(TapirModel):
         max_length=16,
         choices=DeliveryCycle,
         null=False,
-        default=NO_DELIVERY,
+        default=NO_DELIVERY[0],
         verbose_name=_("Lieferzyklus"),
     )
     contract_link = models.CharField(
@@ -188,10 +187,15 @@ class PickupLocationCapability(TapirModel):
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
     )
-    max_capacity = models.PositiveSmallIntegerField(null=True)
+    max_capacity = models.PositiveSmallIntegerField(
+        null=True
+    )  # This is the capacity in NUMBER of M equivalent share, not the capacity in COST of M equivalent share.
     pickup_location = models.ForeignKey(
         PickupLocation, null=False, on_delete=models.DO_NOTHING
     )
+
+    def __str__(self):
+        return f"Location:{self.pickup_location.name} ProductType:{self.product_type.name} Capacity:{self.max_capacity}"
 
 
 class DeliveryExceptionPeriod(TapirModel):
@@ -221,10 +225,60 @@ class ProductCapacity(TapirModel):
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
 
 
+class MemberQuerySet(models.QuerySet):
+    def with_active_subscription(self, reference_date: datetime.date | None = None):
+        from tapir.wirgarten.service.products import get_active_subscriptions
+
+        return self.filter(
+            id__in=get_active_subscriptions(reference_date)
+            .values_list("member", flat=True)
+            .distinct()
+        )
+
+    def without_active_subscription(self, reference_date: datetime.date | None = None):
+        return self.exclude(
+            id__in=Member.objects.with_active_subscription(reference_date)
+        ).distinct()
+
+    def with_shares(self, reference_date: datetime.date | None = None):
+        if reference_date is None:
+            reference_date = get_today()
+
+        members_with_nb_shares_annotation = Member.objects.annotate(
+            total_shares=models.Sum(
+                models.Case(
+                    models.When(
+                        coopsharetransaction__valid_at__lte=reference_date,
+                        then=models.F("coopsharetransaction__quantity"),
+                    ),
+                    default=0,
+                    output_field=models.IntegerField(),
+                )
+            )
+        )
+
+        return self.filter(
+            id__in=members_with_nb_shares_annotation.filter(total_shares__gte=1)
+        )
+
+    def without_shares(self, reference_date: datetime.date | None = None):
+        return self.exclude(
+            id__in=Member.objects.with_shares(reference_date)
+        ).distinct()
+
+
+class TapirUserManager(models.Manager.from_queryset(MemberQuerySet)):
+    @staticmethod
+    def normalize_email(email: str) -> str:
+        return KeycloakUserManager.normalize_email(email)
+
+
 class Member(TapirUser):
     """
     A member of WirGarten. Usually a member has coop shares and optionally other subscriptions.
     """
+
+    objects = TapirUserManager()
 
     account_owner = models.CharField(_("Account owner"), max_length=150, null=True)
     iban = IBANField(_("IBAN"), null=True)
@@ -268,9 +322,6 @@ class Member(TapirUser):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        if not self.member_no and self.coop_shares_quantity > 0:
-            self.member_no = self.generate_member_no()
-
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
                 Parameter.MEMBER_BYPASS_KEYCLOAK
@@ -353,6 +404,66 @@ class Member(TapirUser):
         except CoopShareTransaction.DoesNotExist:
             return None
 
+    @property
+    def base_subscriptions_text(self):
+        """
+        Returns a human readable string stating which base products the member has subscribed,
+        sorted by their price in ascending order.
+
+        Examples:
+        - “einen M-Ernteanteil”
+        - “2 M-Ernteanteile”
+        - “einen S-Ernteanteil + 2 M-Ernteanteile”
+        - “einen S-Ernteanteil + M-Ernteanteil + L-Ernteanteil”
+        """
+
+        from collections import Counter
+        from tapir.wirgarten.service.products import (
+            get_product_price,
+            get_active_subscriptions,
+        )
+
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+
+        # Get all active base subscriptions for the member
+        subscriptions = get_active_subscriptions().filter(
+            member_id=self.id, product__type__id=base_product_type_id
+        )
+
+        if not subscriptions:
+            return ""
+
+        # Count the quantity of each base product subscribed
+        product_counts = Counter()
+        for sub in subscriptions:
+            product_counts[sub.product] += sub.quantity
+
+        # Create a list of tuples (product, quantity, price) and sort by price
+        product_info = []
+        today = get_today()
+        for product, quantity in product_counts.items():
+            price = get_product_price(product, today).price
+            product_info.append(
+                (
+                    f"{product.name}-{product.type.name[:-1] if quantity == 1 else product.type.name}",
+                    quantity,
+                    price,
+                )
+            )
+
+        # Sort products by price (ascending)
+        product_info.sort(key=lambda x: x[2])
+
+        # Create the human-readable text
+        base_subscription_texts = []
+        for product_name, quantity, _ in product_info:
+            if quantity == 1:
+                base_subscription_texts.append(f"einen {product_name}")
+            else:
+                base_subscription_texts.append(f"{quantity} {product_name}")
+
+        return " + ".join(base_subscription_texts)
+
     def __str__(self):
         return f"[{self.member_no if self.member_no else '---'}] {self.first_name} {self.last_name} ({self.email})"
 
@@ -433,6 +544,9 @@ class ProductPrice(TapirModel):
             Index(fields=["product"], name="idx_productprice_product"),
             Index(fields=["-valid_from"], name="idx_productprice_valid_from"),
         ]
+
+    def __str__(self):
+        return f"{self.product} - {self.price} - {self.id}"
 
 
 class HarvestShareProduct(Product):
@@ -778,7 +892,7 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             raise ValidationError(
                 {
                     "transfer_member": _(
-                        "For TRASNFER_OUT and TRANSFER_IN, the transfer_member must be set."
+                        "For TRANSFER_OUT and TRANSFER_IN, the transfer_member must be set."
                     )
                 }
             )
@@ -798,7 +912,9 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
             suffix = f"übertragen an {self.transfer_member}"
         elif self.transaction_type == self.CoopShareTransactionType.TRANSFER_IN:
             suffix = f"empfangen von {self.transfer_member}"
-        return f"{prefix} {suffix}"
+        else:
+            suffix = f"Unknown transaction type ({self.transaction_type})"
+        return f"{prefix} {suffix} - Valid at:{self.valid_at} - Member:{self.member.id}"
 
 
 class Deliveries(TapirModel):
