@@ -31,7 +31,6 @@ from tapir.wirgarten.service.member import (
     change_pickup_location,
     get_next_contract_start_date,
     get_or_create_mandate_ref,
-    send_contract_change_confirmation,
     send_order_confirmation,
 )
 from tapir.wirgarten.service.payment import (
@@ -42,7 +41,6 @@ from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_current_growing_period,
     get_free_product_capacity,
-    get_future_subscriptions,
     get_product_price,
     get_total_price_for_subs,
     get_next_growing_period,
@@ -663,9 +661,9 @@ class AdditionalProductForm(forms.Form):
             subs = get_active_subscriptions_grouped_by_product_type(member)
 
             today = get_today()
-            next_delivery_date = get_next_delivery_date(
-                today + relativedelta(days=2)
-            )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
+            next_delivery_date = get_next_delivery_date(today + relativedelta(days=2))
+            # FIXME: the +2 days should be a configurable threshold.
+            # FIXME: It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
 
             def add_pickup_location_fields():
@@ -696,31 +694,15 @@ class AdditionalProductForm(forms.Form):
                     ],
                 )
 
-            capability = get_active_pickup_location_capabilities().filter(
-                pickup_location=member.pickup_location,
-                product_type__id=self.product_type.id,
+            capability = (
+                get_active_pickup_location_capabilities()
+                .filter(
+                    pickup_location=member.pickup_location,
+                    product_type__id=self.product_type.id,
+                )
+                .first()
             )
-            if capability.exists():
-                capability = capability.first()
-                if capability.max_capacity:
-                    total = 0.0
-                    for key, quantity in self.cleaned_data.items():
-                        if key.startswith(BASE_PRODUCT_FIELD_PREFIX) and (
-                            quantity is not None and quantity > 0
-                        ):
-                            product = Product.objects.get(
-                                type_id=self.product_type.id,
-                                name__iexact=key.replace(self.field_prefix, ""),
-                            )
-                            total += float(get_product_price(product, next_month).price)
-
-                    current_capacity = (
-                        get_current_capacity(capability, next_month) + total
-                    ) / float(self.product_type.base_price)
-                    free_capacity = capability.max_capacity - current_capacity
-                    if current_capacity > free_capacity:
-                        add_pickup_location_fields()
-            else:
+            if not capability:
                 add_pickup_location_fields()
 
         self.prices = ",".join(
@@ -729,12 +711,6 @@ class AdditionalProductForm(forms.Form):
                 self.products.keys(),
             )
         )
-
-    def has_shares_selected(self):
-        for key, val in self.cleaned_data.items():
-            if key.startswith(self.field_prefix) and val is not None and val > 0:
-                return True
-        return False
 
     @transaction.atomic
     def save(
@@ -797,9 +773,23 @@ class AdditionalProductForm(forms.Form):
             member = Member.objects.get(id=member_id)
             send_order_confirmation(member, self.subs)
 
-    def is_valid(self):
-        super().is_valid()
+    def has_shares_selected(self):
+        return self.get_total_ordered_quantity() > 0
 
+    def get_total_ordered_quantity(self):
+        total = 0.0
+        for key, quantity in self.cleaned_data.items():
+            if key.startswith(self.field_prefix) and (
+                quantity is not None and quantity > 0
+            ):
+                product = Product.objects.get(
+                    type_id=self.product_type.id,
+                    name__iexact=key.replace(self.field_prefix, ""),
+                )
+                total += float(get_product_price(product).price)
+        return total
+
+    def validate_contract_signed(self):
         has_shares_selected = self.has_shares_selected()
         if (
             self.product_type.contract_link
@@ -811,57 +801,83 @@ class AdditionalProductForm(forms.Form):
                 f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen.",
             )
 
+    def validate_pickup_location(self) -> bool:
         new_pickup_location = self.cleaned_data.get("pickup_location")
-        if not new_pickup_location and has_shares_selected and self.member_id:
-            next_month = get_today() + relativedelta(months=1, day=1)
-            latest_pickup_location = (
-                MemberPickupLocation.objects.filter(
-                    member_id=self.member_id, valid_from__lte=next_month
-                )
-                .order_by("-valid_from")
-                .first()
+        has_shares_selected = self.has_shares_selected()
+        if new_pickup_location or not has_shares_selected or not self.member_id:
+            return True
+
+        next_month = get_today() + relativedelta(months=1, day=1)
+        latest_member_pickup_location = (
+            MemberPickupLocation.objects.filter(
+                member_id=self.member_id, valid_from__lte=next_month
             )
-            if not latest_pickup_location:
-                self.add_error(None, _("Bitte wähle einen Abholort aus!"))
-                return False
-            else:
-                latest_pickup_location = latest_pickup_location.pickup_location
+            .order_by("-valid_from")
+            .first()
+        )
+        if not latest_member_pickup_location:
+            self.add_error(None, _("Bitte wähle einen Abholort aus!"))
+            return False
 
-            total = 0.0
-            for key, quantity in self.cleaned_data.items():
-                if key.startswith(self.field_prefix) and (
-                    quantity is not None and quantity > 0
-                ):
-                    product = Product.objects.get(
-                        type_id=self.product_type.id,
-                        name__iexact=key.replace(self.field_prefix, ""),
-                    )
-                    total += float(get_product_price(product).price)
-
-            capability = get_active_pickup_location_capabilities().filter(
+        latest_pickup_location = latest_member_pickup_location.pickup_location
+        capability = (
+            get_active_pickup_location_capabilities()
+            .filter(
                 pickup_location=latest_pickup_location,
                 product_type__id=self.product_type.id,
             )
-            if not capability.exists():
-                self.add_error(
-                    "pickup_location", "Abholort unterstützt Produkt nicht"
-                )  # this is not displayed
-                self.add_error(
-                    None,
-                    f"An deinem Abholort können leider keine {self.product_type.name} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
-                )
-            else:
-                capability = capability.first()
-                validate_pickup_location_capacity(
-                    self,
-                    capability,
-                    self.product_type,
-                    self.start_date,
-                    total,
-                    self.member_id,
-                )
+            .first()
+        )
+        if capability is None:
+            self.add_error(
+                "pickup_location", "Abholort unterstützt Produkt nicht"
+            )  # this is not displayed
+            self.add_error(
+                None,
+                f"An deinem Abholort können leider keine {self.product_type.name} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
+            )
+            return False
 
-        return len(self.errors) == 0
+        validate_pickup_location_capacity(
+            self,
+            capability,
+            self.product_type,
+            self.start_date,
+            self.get_total_ordered_quantity(),
+            self.member_id,
+        )
+
+        return True
+
+    def validate_has_base_product_subscription_at_same_growing_period(self):
+        if not self.member_id or not self.has_shares_selected():
+            return
+
+        growing_period = getattr(
+            self,
+            "growing_period",
+            self.cleaned_data.pop("growing_period", get_current_growing_period()),
+        )
+        if not Subscription.objects.filter(
+            member__id=self.member_id,
+            period=growing_period,
+            product__type__id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+        ).exists():
+            self.add_error(
+                None,
+                "Um Anteile von diese zusätzliche Produkte zu bestellen, "
+                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+            )
+
+    def is_valid(self):
+        result = super().is_valid()
+
+        self.validate_contract_signed()
+        self.validate_has_base_product_subscription_at_same_growing_period()
+        if not self.validate_pickup_location():
+            return False
+
+        return result and len(self.errors) == 0
 
 
 def cancel_subs_for_edit(
