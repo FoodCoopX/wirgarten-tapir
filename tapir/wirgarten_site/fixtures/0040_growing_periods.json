@@ -3,8 +3,8 @@
     "model": "wirgarten.GrowingPeriod",
     "pk": "0tb7z5RrTL",
     "fields": {
-      "start_date": "2023-07-01",
-      "end_date": "2024-06-30"
+      "start_date": "2024-07-01",
+      "end_date": "2025-06-30"
     }
   }
 ]
