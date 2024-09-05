@@ -1,6 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
@@ -46,7 +47,6 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
     get_next_growing_period,
     is_product_type_available,
     get_future_subscriptions,
@@ -326,10 +326,11 @@ def get_add_coop_shares_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
     check_permission_or_self(member_id, request)
+    member = Member.objects.get(pk=member_id)
 
     if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
-        member = Member.objects.get(pk=member_id)
+
         wl_kwargs = kwargs.copy()
         wl_kwargs["initial"] = {
             "first_name": member.first_name,
@@ -338,6 +339,11 @@ def get_add_coop_shares_form(request, **kwargs):
             "privacy_consent": (member.privacy_consent is not None),
         }
         return get_coop_shares_waiting_list_form(request, **wl_kwargs)
+
+    if member.is_in_coop_trial():
+        raise PermissionDenied(
+            "Mitglieder die im Probezeit sind dürfen keine weitere Anteile zeichnen"
+        )
 
     today = get_today()
     kwargs["initial"] = {
