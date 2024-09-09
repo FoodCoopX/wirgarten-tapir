@@ -47,6 +47,7 @@ from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_transfer_form,
     get_edit_price_form,
     get_member_personal_data_create_form,
+    get_edit_dates_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -69,7 +70,6 @@ from tapir.wirgarten.views.product_cfg import (
 )
 from tapir.wirgarten.views.register import (
     RegistrationWizardConfirmView,
-    RegistrationWizardViewBase,
     questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.waitlist import WaitingListView, export_waitinglist
@@ -271,6 +271,11 @@ urlpatterns = [
         "contracts/<str:pk>/editprice",
         get_edit_price_form,
         name="subscription_edit_price",
+    ),
+    path(
+        "contracts/<str:pk>/editdates",
+        get_edit_dates_form,
+        name="subscription_edit_dates",
     ),
     path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
     path(
