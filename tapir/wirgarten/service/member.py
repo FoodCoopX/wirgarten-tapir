@@ -27,7 +27,10 @@ from tapir.wirgarten.service.delivery import (
 )
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
-from tapir.wirgarten.service.products import get_future_subscriptions
+from tapir.wirgarten.service.products import (
+    get_future_subscriptions,
+    get_active_subscriptions,
+)
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
@@ -306,11 +309,10 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
     today = get_today()
     min_start_date = today + relativedelta(day=1, months=-1)
 
-    subs = get_future_subscriptions().filter(
+    subs = get_active_subscriptions().filter(
         member_id=member_id,
         cancellation_ts__isnull=True,
         start_date__gte=min_start_date,
-        start_date__lte=today,
         end_date__gt=today,
     )
 

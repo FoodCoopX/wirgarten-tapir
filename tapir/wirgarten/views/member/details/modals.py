@@ -46,7 +46,6 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
     get_next_growing_period,
     is_product_type_available,
     get_future_subscriptions,
