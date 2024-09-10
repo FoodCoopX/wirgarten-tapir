@@ -305,13 +305,13 @@ def get_subscriptions_in_trial_period(member: int | str | Member):
     member_id = resolve_member_id(member)
     today = get_today()
     min_start_date = today + relativedelta(day=1, months=-1)
-    next_month = today + relativedelta(day=1, months=1)
 
     subs = get_future_subscriptions().filter(
         member_id=member_id,
         cancellation_ts__isnull=True,
         start_date__gte=min_start_date,
-        end_date__gt=next_month,
+        start_date__lte=today,
+        end_date__gt=today,
     )
 
     return subs.filter(id__in=[sub.id for sub in subs if sub.trial_end_date > today])

@@ -45,7 +45,7 @@ from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_future_subscriptions,
 )
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import format_date, get_today, get_now
 
 
 class PersonalDataForm(ModelForm):
@@ -543,7 +543,7 @@ class TrialCancellationForm(Form):
         cancel_coop = self.is_cancel_coop_selected()
 
         subs_to_cancel = self.get_subs_to_cancel()
-        now = datetime.now(tz=timezone.utc)
+        now = get_now()
         for sub in subs_to_cancel:
             sub.cancellation_ts = now
             sub.end_date = self.next_trial_end_date
