@@ -69,7 +69,6 @@ from tapir.wirgarten.views.product_cfg import (
 )
 from tapir.wirgarten.views.register import (
     RegistrationWizardConfirmView,
-    RegistrationWizardViewBase,
     questionaire_trafficsource_view,
 )
 from tapir.wirgarten.views.waitlist import WaitingListView, export_waitinglist

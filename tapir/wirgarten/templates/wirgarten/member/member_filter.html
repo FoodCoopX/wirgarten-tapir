@@ -46,7 +46,7 @@
     {% include 'wirgarten/generic/action-button.html' with onclick='handleTransferCoopShares()' disabled=True title='Genossenschaftsanteile übertragen' type='primary' icon='move_down' class='needs-member' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleCancelCoopShares()' disabled=True title='Genossenschaftsanteile kündigen' type='primary' icon='free_cancellation' class='needs-member' %}
     {% endif %}
-    {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member needs-unverified-email' %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
     <div style="width: 1em"></div>
     {% include 'wirgarten/generic/action-button.html' with onclick='handleTrialCancellation()' disabled=True title='Verträge kündigen' type='danger' icon='free_cancellation' class='needs-member needs-trial-period' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
@@ -72,7 +72,7 @@
 {% for member in object_list %}
 
 <tr id="member-{{member.id}}"
-    onClick="handleSelectMember('{{member.id}}', '{{ member.email_verified }}'.toLowerCase(), '{{ member.has_trial_contracts }}'.toLowerCase())"
+    onClick="handleSelectMember('{{member.id}}', '{{ member.has_trial_contracts }}'.toLowerCase())"
     class="tr-clickable member-row">
     <td class="text-center">{{ member.member_no|default:'-' }}</td>
     <td>{{ member.first_name }}</td>
@@ -93,7 +93,6 @@
 <script>
     const memberRows = document.getElementsByClassName('member-row');
     const buttons = document.getElementsByClassName('needs-member');
-    const verifyDependentButtons = document.getElementsByClassName('needs-unverified-email');
     const trialDependentButtons = document.getElementsByClassName('needs-trial-period');
 
     const activateRow = () => {
@@ -112,10 +111,6 @@
                 btn.disabled = false;
             }
 
-            for(btn of verifyDependentButtons){
-                btn.disabled = params.verified === "true";
-            }
-
             for(btn of trialDependentButtons){
                 if(params.trial === "true"){
                     btn.classList.add('btn-outline-warning')
@@ -128,14 +123,13 @@
         }
     }
 
-    const handleSelectMember = (memberId, emailVerified, trial) => {
+    const handleSelectMember = (memberId, trial) => {
         const params = Tapir.getUrlParams();
 
         if(params.member === memberId){
             handleShowMemberDetailsPage();
         } else {
             params.member = memberId;
-            params.verified = emailVerified;
             params.trial = trial;
 
             Tapir.replaceUrlParams(params);
