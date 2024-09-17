@@ -1,4 +1,3 @@
-import distutils
 from enum import Enum
 
 from django.db import models
@@ -32,11 +31,21 @@ class TapirParameter(models.Model):
         elif self.datatype == TapirParameterDatatype.DECIMAL.value:
             return float(self.value)
         elif self.datatype == TapirParameterDatatype.BOOLEAN.value:
-            return bool(distutils.util.strtobool(self.value))
+            return bool(self.str2bool(self.value))
         elif self.datatype == TapirParameterDatatype.STRING.value:
             return self.value
         else:
             raise TypeError("""Unknown parameter type: {}""".format(self.datatype))
+
+    @staticmethod
+    def str2bool(value: str):
+        value = value.lower()
+        if value in {"yes", "true", "t", "y", "1"}:
+            return True
+        if value in {"no", "false", "f", "n", "0"}:
+            return False
+
+        raise ValueError(f"Could not convert value '{value}' to bool")
 
 
 class TapirParameterDefinitionImporter:
