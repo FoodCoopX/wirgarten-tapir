@@ -135,9 +135,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             WaitingListEntry.WaitingListType.HARVEST_SHARES, 0
         )
 
-        context[
-            "solidarity_overplus"
-        ] = get_automatically_calculated_solidarity_excess()
+        context["solidarity_overplus"] = (
+            get_automatically_calculated_solidarity_excess()
+        )
         context["status_seperate_coop_shares"] = get_parameter_value(
             Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         )
@@ -317,10 +317,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                     product_type.name,
                     f"{used_share_count} Anteile vergeben ({format_currency(used_capacity)} €)",
                     (
-                        f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
-                    )
-                    if free_share_count > 0
-                    else "Keine Anteile mehr frei",
+                        (
+                            f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
+                        )
+                        if free_share_count > 0
+                        else "Keine Anteile mehr frei"
+                    ),
                 ],
             )
 

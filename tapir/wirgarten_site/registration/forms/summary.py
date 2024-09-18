@@ -96,12 +96,9 @@ class SummaryForm(forms.Form):
             )  # get pickup location text
             delivery_date_offset = pl.delivery_date_offset
 
-        self.harvest_shares_info[
-            "first_delivery_date"
-        ] = get_next_delivery_date_for_product_type(
-            base_type, start_date
-        ) + relativedelta(
-            days=delivery_date_offset
+        self.harvest_shares_info["first_delivery_date"] = (
+            get_next_delivery_date_for_product_type(base_type, start_date)
+            + relativedelta(days=delivery_date_offset)
         )
 
         coop_share_price = settings.COOP_SHARE_PRICE
