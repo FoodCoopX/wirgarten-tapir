@@ -226,9 +226,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         has_future_subs = future_subs.exists()
         if cancelled and not has_future_subs:
-            context[
-                "renewal_status"
-            ] = "cancelled"  # --> show cancellation confirmation
+            context["renewal_status"] = (
+                "cancelled"  # --> show cancellation confirmation
+            )
         elif has_future_subs:
             context["renewal_status"] = "renewed"  # --> show renewal confirmation
             if not future_subs.filter(

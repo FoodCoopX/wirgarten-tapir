@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+
 import datetime
 import email.utils
 import os
@@ -155,7 +156,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },
@@ -164,7 +165,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": celery.schedules.crontab(
             day_of_week="tuesday",
             minute=0,
-            hour=3
+            hour=3,
             # once a week, Tuesday at 03:00
         ),
     },

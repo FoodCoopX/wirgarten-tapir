@@ -249,9 +249,9 @@ class ExportSubscriptionList(View):
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = f'attachment; filename="Verträge_gefiltert_{get_now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="Verträge_gefiltert_{get_now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        )
         writer = csv.writer(response, delimiter=";", quoting=csv.QUOTE_ALL)
 
         # Write header row
@@ -293,9 +293,11 @@ class ExportSubscriptionList(View):
                         sub.product.type.name,
                         sub.product.name,
                         soliprice_str,
-                        sub.member.pickup_location.name
-                        if sub.member.pickup_location
-                        else "",
+                        (
+                            sub.member.pickup_location.name
+                            if sub.member.pickup_location
+                            else ""
+                        ),
                     ]
                 )
 
