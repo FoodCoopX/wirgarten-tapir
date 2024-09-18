@@ -10,6 +10,7 @@
 <h4>{{total_contracts|default:0}} {% translate 'Verträge' %}</h4>
 <span style="display: flex; flex-direction:row;">
     {% if perms.accounts.manage %}
+    {% include 'wirgarten/generic/action-button.html' with onclick='handleEditDates()' disabled=True title='Laufzeit ändern' type='primary' icon='edit_calendar' class='needs-contract' %}
     {% include 'wirgarten/generic/action-button.html' with onclick='handleEditPrice()' disabled=True title='Betrag ändern' type='primary' icon='edit' class='needs-contract' %}
     {% endif %}
     <div style="width: 1em"></div>
@@ -103,6 +104,14 @@
 
         if(params.contract){
             FormModal.load(`/wirgarten/contracts/${params.contract}/editprice`, 'Betrag ändern')
+        }
+    }
+
+    const handleEditDates = () => {
+        const params = Tapir.getUrlParams();
+
+        if(params.contract){
+            FormModal.load(`/wirgarten/contracts/${params.contract}/editdates`, 'Laufzeit ändern')
         }
     }
 
