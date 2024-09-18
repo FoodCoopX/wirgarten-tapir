@@ -3,11 +3,13 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
     get_current_capacity,
@@ -936,5 +938,36 @@ class EditSubscriptionPriceForm(forms.Form):
             self.subscription.solidarity_price_absolute = None
         else:
             self.subscription.price_override = None
+        self.subscription.save()
+        return self.subscription
+
+
+class EditSubscriptionDatesForm(forms.Form):
+    start_date = forms.DateField(widget=DateInput)
+    end_date = forms.DateField(widget=DateInput)
+
+    def __init__(self, *args, **kwargs):
+        self.subscription_id = kwargs.pop("pk", None)
+        self.subscription = Subscription.objects.get(id=self.subscription_id)
+        super().__init__(*args, **kwargs)
+
+    def get_initial_for_field(self, field, field_name):
+        if field_name == "start_date":
+            return self.subscription.start_date
+        if field_name == "end_date":
+            return self.subscription.end_date
+        return super().get_initial_for_field(field, field_name)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if cleaned_data.get("start_date") > cleaned_data.get("end_date"):
+            raise ValidationError("Das Anfangsdatum muss vor dem Endsdatum sein")
+
+        return cleaned_data
+
+    def save(self):
+        self.subscription.start_date = self.cleaned_data["start_date"]
+        self.subscription.end_date = self.cleaned_data["end_date"]
         self.subscription.save()
         return self.subscription

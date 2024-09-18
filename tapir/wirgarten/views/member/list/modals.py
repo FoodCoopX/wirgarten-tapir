@@ -1,3 +1,9 @@
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db import transaction
+from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
+
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CoopShareCancelForm,
@@ -5,7 +11,10 @@ from tapir.wirgarten.forms.member import (
     NonTrialCancellationForm,
     PersonalDataForm,
 )
-from tapir.wirgarten.forms.subscription import EditSubscriptionPriceForm
+from tapir.wirgarten.forms.subscription import (
+    EditSubscriptionPriceForm,
+    EditSubscriptionDatesForm,
+)
 from tapir.wirgarten.models import SubscriptionChangeLogEntry
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.utils import (
@@ -14,11 +23,6 @@ from tapir.wirgarten.utils import (
     member_detail_url,
 )
 from tapir.wirgarten.views.modal import get_form_modal
-from django.db import transaction
-from django.contrib.auth.decorators import login_required, permission_required
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_http_methods
-from django.urls import reverse_lazy
 
 
 @require_http_methods(["GET", "POST"])
@@ -111,6 +115,24 @@ def get_edit_price_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form=EditSubscriptionPriceForm,
+        handler=lambda x: x.save(),
+        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
+        + "?contract="
+        + str(contract_id),
+        **kwargs,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+@csrf_protect
+@permission_required(Permission.Accounts.MANAGE)
+def get_edit_dates_form(request, **kwargs):
+    contract_id = kwargs["pk"]
+
+    return get_form_modal(
+        request=request,
+        form=EditSubscriptionDatesForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
         + "?contract="
