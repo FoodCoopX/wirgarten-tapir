@@ -209,9 +209,11 @@ class RegistrationWizardViewBase(CookieWizardView):
             STEP_BASE_PRODUCT: _show_harvest_shares,
             STEP_BASE_PRODUCT_NOT_AVAILABLE: self.coop_shares_only == False
             and not _show_harvest_shares,
-            STEP_COOP_SHARES: (lambda x: has_selected_base_product(x))
-            if not _coop_shares_without_harvest_shares_possible
-            else True,
+            STEP_COOP_SHARES: (
+                (lambda x: has_selected_base_product(x))
+                if not _coop_shares_without_harvest_shares_possible
+                else True
+            ),
             STEP_COOP_SHARES_NOT_AVAILABLE: (
                 (lambda x: not has_selected_base_product(x))
                 if not _coop_shares_without_harvest_shares_possible
@@ -219,9 +221,9 @@ class RegistrationWizardViewBase(CookieWizardView):
             ),
             **{f: lambda x: has_selected_base_product(x) for f in self.dynamic_steps},
             STEP_PICKUP_LOCATION: lambda x: has_selected_base_product(x),
-            STEP_SUMMARY: lambda x: has_selected_base_product(x)
-            if self.coop_shares_only == False
-            else True,
+            STEP_SUMMARY: lambda x: (
+                has_selected_base_product(x) if self.coop_shares_only == False else True
+            ),
         }
 
     def has_step(self, step):
@@ -303,9 +305,9 @@ class RegistrationWizardViewBase(CookieWizardView):
                         if "additional_shares" not in initial:
                             initial["additional_shares"] = {}
                         if self.has_step(dyn_step):
-                            initial["additional_shares"][
-                                dyn_step
-                            ] = self.get_cleaned_data_for_step(dyn_step)
+                            initial["additional_shares"][dyn_step] = (
+                                self.get_cleaned_data_for_step(dyn_step)
+                            )
                     initial["pickup_location"] = self.get_cleaned_data_for_step(
                         STEP_PICKUP_LOCATION
                     )

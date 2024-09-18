@@ -197,9 +197,9 @@ class ExportMembersView(View):
 
         # Create response object with CSV content
         response = HttpResponse(content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = f'attachment; filename="Mitglieder_gefiltert_{get_now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="Mitglieder_gefiltert_{get_now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        )
         writer = csv.writer(response, delimiter=";")
 
         # Write header row

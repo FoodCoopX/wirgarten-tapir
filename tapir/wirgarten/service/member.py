@@ -344,17 +344,20 @@ def send_cancellation_confirmation_email(
         )
 
     future_deliveries = generate_future_deliveries(member)
+
+    last_pickup_date = "Letzte Abholung schon vergangen"
+    if len(future_deliveries) > 0:
+        last_pickup_date = format_date(
+            datetime.strptime(future_deliveries[-1]["delivery_date"], "%Y-%m-%d").date()
+        )
+
     TransactionalTrigger.fire_action(
         Events.TRIAL_CANCELLATION,
         member.email,
         {
             "contract_list": contract_list,
             "contract_end_date": format_date(contract_end_date),
-            "last_pickup_date": format_date(
-                datetime.strptime(
-                    future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
-                ).date()
-            ),
+            "last_pickup_date": last_pickup_date,
         },
     )
 

@@ -92,9 +92,11 @@ class ProductTypeForm(forms.Form):
         self.fields["single_subscription_only"] = forms.BooleanField(
             required=False,
             label=_("Nur Einzelabonnement möglich"),
-            initial=product_type.single_subscription_only
-            if product_type is not None
-            else False,
+            initial=(
+                product_type.single_subscription_only
+                if product_type is not None
+                else False
+            ),
         )
         self.fields["capacity"] = forms.FloatField(
             initial=initial_capacity, required=True, label=_("Produkt Kapazität (in €)")
