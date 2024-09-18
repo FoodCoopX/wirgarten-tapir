@@ -133,9 +133,11 @@ def generate_future_deliveries(member: Member, limit: int = None):
                 pickup_location=pickup_location
             )
             next_delivery_date += relativedelta(
-                days=opening_times[0].day_of_week - next_delivery_date.weekday()
-                if opening_times
-                else 0
+                days=(
+                    opening_times[0].day_of_week - next_delivery_date.weekday()
+                    if opening_times
+                    else 0
+                )
             )
 
             opening_times = enumerate(

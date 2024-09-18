@@ -41,9 +41,11 @@ def send_email(to_email: List[str], subject: str, content: str, variables: dict 
         subject=subject,
         body=email_body,
         to=to_email,
-        bcc=[settings.EMAIL_AUTO_BCC]
-        if hasattr(settings, "EMAIL_AUTO_BCC") and settings.EMAIL_AUTO_BCC
-        else None,
+        bcc=(
+            [settings.EMAIL_AUTO_BCC]
+            if hasattr(settings, "EMAIL_AUTO_BCC") and settings.EMAIL_AUTO_BCC
+            else None
+        ),
         from_email=settings.EMAIL_HOST_SENDER,
         headers={
             "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
@@ -88,13 +90,15 @@ def add_member_vars(to_email):
         return {
             "member": member,
             # FIXME: return None is not optimal...
-            "last_pickup_date": format_date(
-                datetime.strptime(
-                    future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
-                ).date()
-            )
-            if len(future_deliveries) > 0
-            else None,
+            "last_pickup_date": (
+                format_date(
+                    datetime.strptime(
+                        future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
+                    ).date()
+                )
+                if len(future_deliveries) > 0
+                else None
+            ),
         }
     except Member.DoesNotExist:
         return {}

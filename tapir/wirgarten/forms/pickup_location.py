@@ -131,9 +131,9 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             "icon": capa["product_type__icon_link"],
             "max_capacity": max_capa,
             "current_capacity": current_capa,
-            "next_capacity_diff": f"{'+' if capa_diff > 0 else ''} {capa_diff}"
-            if capa_diff != 0
-            else "",
+            "next_capacity_diff": (
+                f"{'+' if capa_diff > 0 else ''} {capa_diff}" if capa_diff != 0 else ""
+            ),
             "capacity_percent": (current_capa / max_capa) if max_capa else None,
         }
 
@@ -410,9 +410,7 @@ class PickupLocationEditForm(forms.Form):
 
         if "id" in kwargs:
             self.pickup_location = PickupLocation.objects.get(id=kwargs["id"])
-            self.fields[
-                "coords"
-            ].initial = (
+            self.fields["coords"].initial = (
                 f"{self.pickup_location.coords_lon},{self.pickup_location.coords_lat}"
             )
             self.fields["name"].initial = self.pickup_location.name
@@ -421,9 +419,9 @@ class PickupLocationEditForm(forms.Form):
             self.fields["city"].initial = self.pickup_location.city
             self.fields["info"].initial = self.pickup_location.info
             self.fields["access_code"].initial = self.pickup_location.access_code
-            self.fields[
-                "messenger_group_link"
-            ].initial = self.pickup_location.messenger_group_link
+            self.fields["messenger_group_link"].initial = (
+                self.pickup_location.messenger_group_link
+            )
             self.fields["contact_name"].initial = self.pickup_location.contact_name
             self.fields["photo_link"].initial = self.pickup_location.photo_link
 
@@ -466,9 +464,9 @@ class PickupLocationEditForm(forms.Form):
                 key = "pt_" + ptc.product_type.id
                 if key in self.fields:
                     self.fields[key].initial = True
-                    self.fields[
-                        "pt_capa_" + ptc.product_type.id
-                    ].initial = ptc.max_capacity
+                    self.fields["pt_capa_" + ptc.product_type.id].initial = (
+                        ptc.max_capacity
+                    )
 
         self.product_types = list(map(lambda x: x.id, self.product_types))
 

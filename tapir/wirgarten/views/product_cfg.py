@@ -105,9 +105,11 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
                 "name": product.name,
                 "type_id": product.type.id,
                 "price": price,
-                "share": round(price[-1]["price"] / base_share_value, 2)
-                if base_share_value
-                else "?",
+                "share": (
+                    round(price[-1]["price"] / base_share_value, 2)
+                    if base_share_value
+                    else "?"
+                ),
                 "deleted": product.deleted,
                 "base": product.base,
             }
