@@ -190,17 +190,17 @@ class BaseProductForm(forms.Form):
             ]
 
         for prod_field in harvest_share_products:
-            self.fields[
-                f"{BASE_PRODUCT_FIELD_PREFIX}{prod_field.name}"
-            ] = forms.IntegerField(
-                required=False,
-                max_value=10,
-                min_value=0,
-                initial=0,
-                label=_(f"{prod_field.name}-{self.product_type.name}"),
-                help_text="""{:.2f} € inkl. MwSt / Monat""".format(
-                    prices[prod_field.id]
-                ),
+            self.fields[f"{BASE_PRODUCT_FIELD_PREFIX}{prod_field.name}"] = (
+                forms.IntegerField(
+                    required=False,
+                    max_value=10,
+                    min_value=0,
+                    initial=0,
+                    label=_(f"{prod_field.name}-{self.product_type.name}"),
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
+                        prices[prod_field.id]
+                    ),
+                )
             )
 
         self.fields["solidarity_price_harvest_shares"] = forms.ChoiceField(

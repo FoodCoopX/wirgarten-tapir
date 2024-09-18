@@ -486,12 +486,10 @@ class TrialCancellationForm(Form):
                 )
 
         if is_new_member():
-            found = self.member.coopsharetransaction_set.filter(
+            self.share_ownership = self.member.coopsharetransaction_set.filter(
                 transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
                 valid_at__gt=self.next_trial_end_date,
-            )
-            if found.exists():
-                self.share_ownership = found[0]
+            ).first()
 
             self.fields["cancel_coop"] = BooleanField(
                 label="Beitrittserklärung zur Genossenschaft widerrufen", required=False
