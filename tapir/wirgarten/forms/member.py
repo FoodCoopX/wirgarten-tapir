@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     Payment,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
@@ -44,8 +45,9 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_future_subscriptions,
+    get_active_subscriptions,
 )
-from tapir.wirgarten.utils import format_date, get_today
+from tapir.wirgarten.utils import format_date, get_today, get_now
 
 
 class PersonalDataForm(ModelForm):
@@ -537,17 +539,40 @@ class TrialCancellationForm(Form):
             ]
         )
 
+    def cancel_subscription(self, subscription: Subscription):
+        subscription.cancellation_ts = get_now()
+        subscription.end_date = self.next_trial_end_date
+        subscription.save()
+
     @transaction.atomic
     def save(self, **kwargs):
         skip_emails = kwargs.pop("skip_emails", False)
         cancel_coop = self.is_cancel_coop_selected()
 
         subs_to_cancel = self.get_subs_to_cancel()
-        now = datetime.now(tz=timezone.utc)
         for sub in subs_to_cancel:
-            sub.cancellation_ts = now
-            sub.end_date = self.next_trial_end_date
-            sub.save()
+            self.cancel_subscription(sub)
+
+        for cancelled_subscription in subs_to_cancel:
+            # If the member first renewed during their trial period, but then cancels,
+            # we also cancel the renewed contracts.
+            is_any_subscription_of_same_type_still_active = (
+                get_active_subscriptions()
+                .filter(
+                    member__id=self.member_id,
+                    period=cancelled_subscription.period,
+                    product__type=cancelled_subscription.product.type,
+                    cancellation_ts=None,
+                )
+                .exists()
+            )
+            if not is_any_subscription_of_same_type_still_active:
+                for future_subscription in get_future_subscriptions().filter(
+                    member__id=self.member_id,
+                    product__type=cancelled_subscription.product.type,
+                    cancellation_ts=None,
+                ):
+                    self.cancel_subscription(future_subscription)
 
         if cancel_coop:
             if self.share_ownership.payment:
