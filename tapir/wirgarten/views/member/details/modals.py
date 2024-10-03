@@ -280,15 +280,7 @@ def get_add_subscription_form(request, **kwargs):
 
     @transaction.atomic
     def save(form):
-        form.save(member_id=member_id)
-
         member = Member.objects.get(id=member_id)
-        SubscriptionChangeLogEntry().populate(
-            actor=request.user,
-            user=member,
-            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=form.subs,
-        ).save()
 
         if is_base_product_type:
             date_filter = next_start_date
@@ -304,11 +296,22 @@ def get_add_subscription_form(request, **kwargs):
                 )
                 .exists()
             ):
+                form.save(member_id=member_id)
                 send_contract_change_confirmation(member, form.subs)
             else:
+                form.save(member_id=member_id)
                 send_order_confirmation(
                     member, get_future_subscriptions().filter(member=member)
                 )
+        else:
+            form.save(member_id=member_id)
+
+        SubscriptionChangeLogEntry().populate(
+            actor=request.user,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=form.subs,
+        ).save()
 
     return get_form_modal(
         request=request,

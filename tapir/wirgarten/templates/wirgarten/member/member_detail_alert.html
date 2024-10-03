@@ -209,6 +209,7 @@
     }
 
     const handleRenewal = () => {
+        {% if next_available_product_types %}
         const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
         if ({{next_available_product_types|safe}}.includes("{{base_product_type_name}}")) {
             renewalModal.show()
@@ -216,6 +217,7 @@
         else {
             handleShowWaitlist();
         }
+        {% endif %}
         
     }
 

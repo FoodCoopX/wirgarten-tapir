@@ -358,8 +358,7 @@
                             'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning'
                         {% endif %})
                 {% else %}
-                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>
-                        {% if not object.iban %}<br />- Bitte trage deine Bankverbindung ein.{% endif %}")
+                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br />- Bitte trage deine Bankverbindung ein.{% endif %}")
                 {% endif %}
             }
 
