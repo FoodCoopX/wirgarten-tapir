@@ -121,11 +121,14 @@ def get_pickup_location_choice_form(request, **kwargs):
             if member.pickup_location is not None
             else get_today()
         )
+        old_pickup_location = member.pickup_location
 
-        qs = MemberPickupLocation.objects.filter(member=member)
-        existing = qs.filter(valid_from=change_date)
-        if existing.exists():
-            found = existing.first()
+        member_pickup_locations = MemberPickupLocation.objects.filter(member=member)
+        member_pickup_location_valid_from_same_date = member_pickup_locations.filter(
+            valid_from=change_date
+        )
+        if member_pickup_location_valid_from_same_date.exists():
+            found = member_pickup_location_valid_from_same_date.first()
             found.pickup_location_id = pickup_location_id
             found.save()
         else:
@@ -139,18 +142,21 @@ def get_pickup_location_choice_form(request, **kwargs):
             member=member, valid_from__gt=change_date
         ).delete()
 
-        pl = PickupLocation.objects.get(id=pickup_location_id)
+        new_pickup_location = PickupLocation.objects.get(id=pickup_location_id)
         change_date_str = format_date(change_date)
         TextLogEntry().populate(
             actor=request.user,
             user=member,
-            text=f"Abholort geändert zum {change_date_str}: {member.pickup_location} -> {pl}",
+            text=f"Abholort geändert zum {change_date_str}: {old_pickup_location} -> {new_pickup_location}",
         ).save()
 
         TransactionalTrigger.fire_action(
             Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
             member.email,
-            {"pickup_location": pl.name, "pickup_location_start_date": change_date_str},
+            {
+                "pickup_location": new_pickup_location.name,
+                "pickup_location_start_date": change_date_str,
+            },
         )
 
     return get_form_modal(
