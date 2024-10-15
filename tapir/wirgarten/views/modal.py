@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 from django.views.decorators.http import require_http_methods
 
 
@@ -48,6 +49,6 @@ def get_form_modal(
     else:
         form = form(instance=instance, **kwargs) if instance else form(**kwargs)
 
-    return render(
+    return TemplateResponse(
         request, "wirgarten/generic/modal/form-modal-content.html", {"form": form}
     )

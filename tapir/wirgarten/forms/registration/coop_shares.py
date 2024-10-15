@@ -3,7 +3,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
-from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
@@ -67,14 +66,22 @@ class CooperativeShareForm(forms.Form):
 
     def clean(self):
         cleaned_data = super(CooperativeShareForm, self).clean()
-        ic(cleaned_data)
-        if self.member_is_student:
-            # The person already exists and is a student: they can order as few shares as they want
-            return cleaned_data
 
         if cleaned_data.get("is_student", False):
             # The person is registering and is a student: they cannot order any shares
             cleaned_data["cooperative_shares"] = 0
+            return cleaned_data
+
+        if self.member_is_student:
+            # The person already exists and is a student: they can order as few shares as they want, minimum 1
+            if cleaned_data.get("cooperative_shares") < settings.COOP_SHARE_PRICE:
+                self.add_error(
+                    "cooperative_shares",
+                    ValidationError(
+                        MinValueValidator.message,
+                        params={"limit_value": settings.COOP_SHARE_PRICE},
+                    ),
+                )
             return cleaned_data
 
         if cleaned_data.get("cooperative_shares") < self.min_amount:
@@ -83,7 +90,8 @@ class CooperativeShareForm(forms.Form):
             self.add_error(
                 "cooperative_shares",
                 ValidationError(
-                    MinValueValidator.message, params={"limit_value": self.min_amount}
+                    MinValueValidator.message,
+                    params={"limit_value": self.min_amount},
                 ),
             )
 
