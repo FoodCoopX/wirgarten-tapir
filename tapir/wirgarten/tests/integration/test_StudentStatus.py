@@ -16,6 +16,7 @@ from tapir.wirgarten.parameters import (
     ParameterDefinitions,
     Parameter,
 )
+from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     ProductCapacityFactory,
@@ -32,6 +33,7 @@ class TestStudentStatus(TapirIntegrationTest):
         TapirParameter.objects.filter(
             key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")
+        configure_mail_module()
 
     def test_cooperativeShareForm_fromTheMemberProfile_doesntShowStudentStatusField(
         self,
