@@ -361,6 +361,8 @@ def get_add_coop_shares_form(request, **kwargs):
             start_date=today,
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
+        show_student_checkbox=False,
+        member_is_student=member.is_student,
         **kwargs,
     )
 

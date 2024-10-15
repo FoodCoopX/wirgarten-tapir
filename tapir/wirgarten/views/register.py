@@ -27,6 +27,7 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
+    Member,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
@@ -325,11 +326,13 @@ class RegistrationWizardViewBase(CookieWizardView):
     @transaction.atomic
     def save_member(self, form_dict):
         personal_details_form = form_dict[STEP_PERSONAL_DETAILS]
-        member = personal_details_form.forms[0].instance
+        member: Member = personal_details_form.forms[0].instance
 
         member.account_owner = personal_details_form.cleaned_data["account_owner"]
         member.iban = personal_details_form.cleaned_data["iban"]
         member.is_active = False
+
+        member.is_student = form_dict[STEP_COOP_SHARES].cleaned_data["is_student"]
 
         now = get_now()
         member.sepa_consent = now
@@ -368,13 +371,16 @@ class RegistrationWizardViewBase(CookieWizardView):
             actual_coop_start = get_next_contract_start_date(ref_date=start_date)
 
             mandate_ref = create_mandate_ref(member)
-            buy_cooperative_shares(
-                quantity=form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
-                / settings.COOP_SHARE_PRICE,
-                member=member,
-                start_date=actual_coop_start,
-                mandate_ref=mandate_ref,
-            )
+            if not member.is_student:
+                buy_cooperative_shares(
+                    quantity=form_dict[STEP_COOP_SHARES].cleaned_data[
+                        "cooperative_shares"
+                    ]
+                    / settings.COOP_SHARE_PRICE,
+                    member=member,
+                    start_date=actual_coop_start,
+                    mandate_ref=mandate_ref,
+                )
 
             if STEP_BASE_PRODUCT in form_dict and is_base_product_selected(
                 form_dict[STEP_BASE_PRODUCT].cleaned_data
