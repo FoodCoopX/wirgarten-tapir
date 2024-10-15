@@ -59,7 +59,7 @@ class PersonalDataForm(ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k != "street_2":
+            if k not in ["street_2", "is_student"]:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -88,6 +88,7 @@ class PersonalDataForm(ModelForm):
             "city",
             "country",
             "birthdate",
+            "is_student",
         ]
         widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
 
