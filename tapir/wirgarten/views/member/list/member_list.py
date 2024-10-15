@@ -7,7 +7,6 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import models
 from django.db.models import Case, ExpressionWrapper, F, OuterRef, Subquery, Sum, When
 from django.db.models.functions import Coalesce, TruncMonth
-from django.forms import CheckboxInput
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -122,10 +121,14 @@ class MemberFilter(FilterSet):
         method="filter_email_verified",
         widget=Select(choices=[("", "-----------"), (True, "Ja"), (False, "Nein")]),
     )
-    no_coop_shares = BooleanFilter(
-        label="Keine Geno-Anteile",
-        method="filter_no_coop_shares",
-        widget=CheckboxInput(),
+    membership_type = ChoiceFilter(
+        label="Mitgliedschafts-Typ",
+        method="filter_membership_type",
+        choices=[
+            ("mitglied", "Mitglied (inklusive Studenten die Mitglied sind)"),
+            ("student", "Student (egal ob Mitglied oder nicht)"),
+            ("nicht-mitglied", "Nicht mitglied und nicht student"),
+        ],
     )
 
     o = OrderingFilter(
@@ -179,11 +182,13 @@ class MemberFilter(FilterSet):
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 
-    def filter_no_coop_shares(self, queryset, name, value):
-        if value:
-            return queryset.filter(coop_shares_total_value__lte=0)
-        else:
+    def filter_membership_type(self, queryset, name, value):
+        if value == "mitglied":
             return queryset.filter(coop_shares_total_value__gt=0)
+        if value == "student":
+            return queryset.filter(is_student=True)
+        if value == "nicht-mitglied":
+            return queryset.filter(coop_shares_total_value__lte=0, is_student=False)
 
     def __init__(self, data=None, *args, **kwargs):
         if data is None:
