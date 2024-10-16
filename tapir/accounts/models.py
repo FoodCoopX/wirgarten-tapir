@@ -18,6 +18,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir import utils
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
+from tapir.settings import DEBUG
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
 
@@ -93,6 +94,8 @@ class KeycloakUser(AbstractUser):
         ).save()
 
     def has_perm(self, perm, obj=None):
+        if DEBUG and self.is_superuser:
+            return True
         return perm in self.roles
 
     @transaction.atomic

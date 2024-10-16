@@ -31,7 +31,7 @@ from tapir.wirgarten.views.modal import get_form_modal
 def get_coop_share_transfer_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=CoopShareTransferForm,
+        form_class=CoopShareTransferForm,
         handler=lambda x: transfer_coop_shares(
             origin_member_id=kwargs["pk"],
             target_member_id=x.cleaned_data["receiver"],
@@ -49,7 +49,7 @@ def get_coop_share_transfer_form(request, **kwargs):
 def get_coop_share_cancel_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=CoopShareCancelForm,
+        form_class=CoopShareCancelForm,
         handler=lambda x: cancel_coop_shares(
             member=kwargs["pk"],
             quantity=x.cleaned_data["quantity"],
@@ -67,7 +67,7 @@ def get_coop_share_cancel_form(request, **kwargs):
 def get_member_personal_data_create_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=PersonalDataForm,
+        form_class=PersonalDataForm,
         handler=lambda x: x.instance.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
         **kwargs,
@@ -96,7 +96,7 @@ def get_cancel_non_trial_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=NonTrialCancellationForm,
+        form_class=NonTrialCancellationForm,
         handler=save,
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="
@@ -114,7 +114,7 @@ def get_edit_price_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=EditSubscriptionPriceForm,
+        form_class=EditSubscriptionPriceForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
         + "?contract="
@@ -132,7 +132,7 @@ def get_edit_dates_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=EditSubscriptionDatesForm,
+        form_class=EditSubscriptionDatesForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
         + "?contract="

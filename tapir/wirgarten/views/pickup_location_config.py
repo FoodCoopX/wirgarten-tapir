@@ -60,7 +60,7 @@ def get_pickup_location_add_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=PickupLocationEditForm,
+        form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:pickup_locations")
         + "?selected="
@@ -77,7 +77,7 @@ def get_pickup_location_edit_form(request, **kwargs):
     """
     return get_form_modal(
         request=request,
-        form=PickupLocationEditForm,
+        form_class=PickupLocationEditForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: PAGE_ROOT + "?selected=" + x.id,
         **kwargs
