@@ -146,3 +146,31 @@ class TestStudentStatus(TapirIntegrationTest):
         self.client.post(url, data)
 
         self.assertEqual(1, member_subscriptions.count())
+
+    def test_personalDataFormForm_loggedInAsNormalMember_studentStatusCheckboxDisabled(
+        self,
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        url = reverse("wirgarten:member_edit", args=[member.id])
+        response: TemplateResponse = self.client.get(url)
+
+        form_fields = response.context_data["form"].fields
+        self.assertIn("is_student", form_fields.keys())
+        self.assertTrue(form_fields["is_student"].disabled)
+
+    def test_personalDataFormForm_loggedInAsAdmin_studentStatusCheckboxEnabled(
+        self,
+    ):
+        member_to_edit = MemberFactory.create()
+        member_logged_in: Member = MemberFactory.create(is_superuser=True)
+
+        self.client.force_login(member_logged_in)
+
+        url = reverse("wirgarten:member_edit", args=[member_to_edit.id])
+        response: TemplateResponse = self.client.get(url)
+
+        form_fields = response.context_data["form"].fields
+        self.assertIn("is_student", form_fields.keys())
+        self.assertFalse(form_fields["is_student"].disabled)
