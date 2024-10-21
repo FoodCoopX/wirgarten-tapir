@@ -24,6 +24,8 @@ from django.utils.translation import gettext_lazy as _
 from tapir.accounts.models import KeycloakUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
@@ -50,7 +52,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_today, get_now
 
 
-class PersonalDataForm(ModelForm):
+class PersonalDataForm(FormWithRequestMixin, ModelForm):
     n_columns = 2
 
     def __init__(self, *args, **kwargs):
@@ -59,7 +61,7 @@ class PersonalDataForm(ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k != "street_2":
+            if k not in ["street_2", "is_student"]:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -75,6 +77,9 @@ class PersonalDataForm(ModelForm):
         self.fields["country"].label = _("Land")
         self.fields["birthdate"].label = _("Geburtsdatum")
 
+        if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
+            self.fields["is_student"].disabled = True
+
     class Meta:
         model = Member
         fields = [
@@ -88,6 +93,7 @@ class PersonalDataForm(ModelForm):
             "city",
             "country",
             "birthdate",
+            "is_student",
         ]
         widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
 
