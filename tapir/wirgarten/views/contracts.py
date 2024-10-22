@@ -9,10 +9,9 @@ from django.db.models import OuterRef, Subquery, Sum
 from django.forms import CheckboxInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView, View
-from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter
+from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFilter
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
@@ -28,6 +27,9 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+)
 from tapir.wirgarten.service.products import product_type_order_by
 from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
@@ -149,6 +151,15 @@ class SubscriptionListFilter(FilterSet):
         method="filter_show_only_ended_contracts",
         widget=CheckboxInput,
     )
+    membership_type = ChoiceFilter(
+        label="Mitgliedschafts-Typ",
+        method="filter_membership_type",
+        choices=[
+            ("mitglied", "Reguläre Mitglieder"),
+            ("student", "Befreit (u.a. Student*innen)"),
+            ("nicht-mitglied", "Weder Mitglied noch befreit"),
+        ],
+    )
 
     def filter_pickup_location(self, queryset, name, value):
         if value:
@@ -207,6 +218,20 @@ class SubscriptionListFilter(FilterSet):
             if value
             else queryset.filter(end_date__gte=today)
         )
+
+    def filter_membership_type(self, queryset, name, value):
+        queryset = annotate_member_queryset_with_coop_shares_total_value(
+            queryset, outer_ref="member__id"
+        )
+
+        if value == "mitglied":
+            return queryset.filter(coop_shares_total_value__gt=0)
+
+        queryset = queryset.filter(coop_shares_total_value__lte=0)
+        if value == "student":
+            return queryset.filter(member__is_student=True)
+        if value == "nicht-mitglied":
+            return queryset.filter(member__is_student=False)
 
 
 class SubscriptionListView(PermissionRequiredMixin, FilterView):

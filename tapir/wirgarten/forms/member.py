@@ -18,6 +18,7 @@ from django.forms import (
     ModelForm,
     ModelMultipleChoiceField,
     MultipleChoiceField,
+    HiddenInput,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -186,8 +187,11 @@ class PersonalDataRegistrationForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        personal_data_form = PersonalDataForm(*args, **kwargs)
+        personal_data_form.fields["is_student"].widget = HiddenInput()
+
         self.forms = [
-            PersonalDataForm(*args, **kwargs),
+            personal_data_form,
             PaymentDataForm(*args, **kwargs),
             ConsentForm(*args, **kwargs),
         ]
