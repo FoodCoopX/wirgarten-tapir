@@ -189,9 +189,9 @@ class MemberFilter(FilterSet):
 
         queryset = queryset.filter(coop_shares_total_value__lte=0)
         if value == "student":
-            return queryset.filter(member__is_student=True)
+            return queryset.filter(is_student=True)
         if value == "nicht-mitglied":
-            return queryset.filter(member__is_student=False)
+            return queryset.filter(is_student=False)
 
     def __init__(self, data=None, *args, **kwargs):
         if data is None:
