@@ -1,9 +1,22 @@
 from datetime import date, datetime
+from decimal import Decimal
 from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db import transaction
+from django.db.models import (
+    Subquery,
+    OuterRef,
+    Sum,
+    F,
+    DecimalField,
+    ExpressionWrapper,
+    Case,
+    When,
+    FloatField,
+)
+from django.db.models.functions import Coalesce
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import TapirUser
@@ -478,4 +491,69 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
         task=send_email_member_contract_end_reminder,
         eta=last_delivery_date + relativedelta(days=1),
         kwargs={"member_id": member.id},
+    )
+
+
+def annotate_member_queryset_with_coop_shares_total_value(queryset, outer_ref="id"):
+    today = get_today()
+    overnext_month = today + relativedelta(months=2)
+
+    return queryset.annotate(
+        coop_shares_total_value=Coalesce(
+            Subquery(
+                CoopShareTransaction.objects.filter(
+                    member_id=OuterRef(outer_ref),
+                    valid_at__lte=overnext_month,
+                    # I do this to include new members in the list, which will join the coop soon
+                )
+                .values("member_id")
+                .annotate(total_value=Sum(F("quantity") * F("share_price")))
+                .values("total_value"),
+                output_field=DecimalField(),
+            ),
+            Decimal(0.0),
+        )
+    )
+
+
+def annotate_member_queryset_with_monthly_payment(queryset):
+    today = get_today()
+
+    return queryset.annotate(
+        monthly_payment=Subquery(
+            Subscription.objects.filter(
+                member_id=OuterRef("id"),
+                start_date__lte=today,
+                end_date__gte=today,
+                product__productprice__valid_from__lte=today,
+            )
+            .annotate(
+                monthly_payment=ExpressionWrapper(
+                    Case(
+                        When(
+                            solidarity_price_absolute__isnull=True,
+                            then=(
+                                F("product__productprice__price")
+                                * F("quantity")
+                                * (1 + F("solidarity_price"))
+                            ),
+                        ),
+                        When(
+                            solidarity_price_absolute__isnull=False,
+                            then=(
+                                (F("product__productprice__price") * F("quantity"))
+                                + F("solidarity_price_absolute")
+                            ),
+                        ),
+                        default=0.0,
+                        output_field=FloatField(),
+                    ),
+                    output_field=FloatField(),
+                )
+            )
+            .values("member_id")
+            .annotate(total=Sum("monthly_payment"))
+            .values("total"),
+            output_field=FloatField(),
+        )
     )
