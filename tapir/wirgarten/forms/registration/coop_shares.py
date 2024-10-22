@@ -61,37 +61,34 @@ class CooperativeShareForm(forms.Form):
                 "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             ),
             help_text=f'<a href="{get_parameter_value(Parameter.COOP_STATUTE_LINK)}" target="_blank">Satzung der Genossenschaft</a>',
-            required=True,
+            required=False,
         )
 
     def clean(self):
         cleaned_data = super(CooperativeShareForm, self).clean()
 
         if cleaned_data.get("is_student", False):
-            # The person is registering and is a student: they cannot order any shares
+            # The person is registering and is a student: they cannot order any shares and cannot become a member
             cleaned_data["cooperative_shares"] = 0
+            cleaned_data["statute_consent"] = False
             return cleaned_data
 
-        if self.member_is_student:
-            # The person already exists and is a student: they can order as few shares as they want, minimum 1
-            if cleaned_data.get("cooperative_shares") < settings.COOP_SHARE_PRICE:
-                self.add_error(
-                    "cooperative_shares",
-                    ValidationError(
-                        MinValueValidator.message,
-                        params={"limit_value": settings.COOP_SHARE_PRICE},
-                    ),
-                )
-            return cleaned_data
-
-        if cleaned_data.get("cooperative_shares") < self.min_amount:
-            # not-students must follow the normal rules
-            # for minimum amount of coop shares relative to the number of ernteanteile
+        min_amount = (
+            settings.COOP_SHARE_PRICE if self.member_is_student else self.min_amount
+        )
+        if cleaned_data.get("cooperative_shares") < min_amount:
             self.add_error(
                 "cooperative_shares",
                 ValidationError(
                     MinValueValidator.message,
                     params={"limit_value": self.min_amount},
+                ),
+            )
+        if not cleaned_data.get("statute_consent", False):
+            self.add_error(
+                "statute_consent",
+                ValidationError(
+                    self.fields["statute_consent"].error_messages["required"],
                 ),
             )
 
