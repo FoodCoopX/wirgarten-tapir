@@ -18,7 +18,6 @@ from django.forms import (
     ModelForm,
     ModelMultipleChoiceField,
     MultipleChoiceField,
-    HiddenInput,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -182,13 +181,17 @@ class MarketingFeedbackForm(Form):
 
 class PersonalDataRegistrationForm(Form):
     n_columns = 2
-    colspans = {"sepa_consent": 2, "withdrawal_consent": 2, "privacy_consent": 2}
+    colspans = {
+        "sepa_consent": 2,
+        "withdrawal_consent": 2,
+        "privacy_consent": 2,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         personal_data_form = PersonalDataForm(*args, **kwargs)
-        personal_data_form.fields["is_student"].widget = HiddenInput()
+        personal_data_form.fields.pop("is_student")
 
         self.forms = [
             personal_data_form,

@@ -33,16 +33,28 @@ function initStudentCheckboxEvents() {
   const sharesInput = document.getElementById(
     "id_coop_shares-cooperative_shares",
   );
-  if (!studentCheckbox || !sharesInput) {
+  const consentCheckbox = document.getElementById(
+    "id_coop_shares-statute_consent",
+  );
+
+  if (!studentCheckbox) {
     return;
   }
 
-  studentCheckbox.addEventListener("change", (event) => {
-    sharesInput.disabled = event.target.checked;
-    if (sharesInput.disabled) {
+  function updateFieldsEnabledDependingOnStudentStatus() {
+    sharesInput.disabled = studentCheckbox.checked;
+    consentCheckbox.disabled = studentCheckbox.checked;
+    if (studentCheckbox) {
       sharesInput.value = 0;
+      consentCheckbox.checked = false;
     }
+  }
+
+  studentCheckbox.addEventListener("change", (event) => {
+    updateFieldsEnabledDependingOnStudentStatus();
   });
+
+  updateFieldsEnabledDependingOnStudentStatus();
 }
 
 document.addEventListener("DOMContentLoaded", initStudentCheckboxEvents);
