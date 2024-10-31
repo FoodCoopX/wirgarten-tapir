@@ -99,6 +99,11 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
 
+    def clean_email(self):
+        if "email" not in self.cleaned_data.keys():
+            return None
+        return self.cleaned_data["email"].strip().lower()
+
     def _validate_duplicate_email_keycloak(self):
         try:
             kc = KeycloakUser.get_keycloak_client()
@@ -116,7 +121,6 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     def _validate_duplicate_email(self):
         email = self.cleaned_data["email"]
-        email_changed = not self.instance or (self.instance.email != email)
 
         duplicate_email_query = Member.objects.filter(email=email)
         if self.instance and self.instance.id:
