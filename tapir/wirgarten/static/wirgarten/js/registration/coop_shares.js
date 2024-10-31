@@ -44,7 +44,7 @@ function initStudentCheckboxEvents() {
   function updateFieldsEnabledDependingOnStudentStatus() {
     sharesInput.disabled = studentCheckbox.checked;
     consentCheckbox.disabled = studentCheckbox.checked;
-    if (studentCheckbox) {
+    if (studentCheckbox.checked) {
       sharesInput.value = 0;
       consentCheckbox.checked = false;
     }
