@@ -289,6 +289,7 @@ class Member(TapirUser):
     privacy_consent = models.DateTimeField(_("Privacy consent"), null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=False)
     member_no = models.IntegerField(_("Mitgliedsnummer"), unique=True, null=True)
+    is_student = models.BooleanField(_("Student*in"), default=False)
 
     @property
     def pickup_location(self):

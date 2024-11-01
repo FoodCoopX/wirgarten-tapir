@@ -87,7 +87,7 @@ def get_member_personal_data_edit_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=PersonalDataForm,
+        form_class=PersonalDataForm,
         instance=Member.objects.get(pk=pk),
         handler=lambda x: save(x.instance),
         redirect_url_resolver=lambda _: member_detail_url(pk),
@@ -161,7 +161,7 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=PickupLocationChoiceForm,
+        form_class=PickupLocationChoiceForm,
         handler=update_pickup_location,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
@@ -180,7 +180,7 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=WaitingListForm,
+        form_class=WaitingListForm,
         handler=lambda x: create_wait_list_entry(
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
@@ -195,7 +195,7 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
 def get_coop_shares_waiting_list_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=WaitingListForm,
+        form_class=WaitingListForm,
         handler=lambda x: create_wait_list_entry(
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
@@ -232,7 +232,7 @@ def get_renew_contracts_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=SubscriptionRenewalForm,
+        form_class=SubscriptionRenewalForm,
         handler=lambda x: save(x),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
@@ -321,7 +321,7 @@ def get_add_subscription_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=form_type,
+        form_class=form_type,
         handler=save,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
@@ -360,13 +360,15 @@ def get_add_coop_shares_form(request, **kwargs):
     }
     return get_form_modal(
         request=request,
-        form=CooperativeShareForm,
+        form_class=CooperativeShareForm,
         handler=lambda x: buy_cooperative_shares(
             x.cleaned_data["cooperative_shares"] / settings.COOP_SHARE_PRICE,
             member_id,
             start_date=today,
         ),
         redirect_url_resolver=lambda _: member_detail_url(member_id),
+        show_student_checkbox=False,
+        member_is_student=member.is_student,
         **kwargs,
     )
 
@@ -400,7 +402,7 @@ def get_cancel_trial_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=TrialCancellationForm,
+        form_class=TrialCancellationForm,
         handler=save,
         redirect_url_resolver=lambda x: member_detail_url(member_id)
         + "?cancelled="
@@ -433,7 +435,7 @@ def get_member_payment_data_edit_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=PaymentDataForm,
+        form_class=PaymentDataForm,
         instance=instance,
         handler=lambda x: update_payment_data(
             member=instance,
@@ -467,7 +469,7 @@ def get_cancellation_reason_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=CancellationReasonForm,
+        form_class=CancellationReasonForm,
         handler=save,
         redirect_url_resolver=lambda x: member_detail_url(member_id),
     )

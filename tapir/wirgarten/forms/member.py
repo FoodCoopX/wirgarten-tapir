@@ -24,6 +24,8 @@ from django.utils.translation import gettext_lazy as _
 from tapir.accounts.models import KeycloakUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
 from tapir.wirgarten.forms.registration.consents import ConsentForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
@@ -50,7 +52,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import format_date, get_today, get_now
 
 
-class PersonalDataForm(ModelForm):
+class PersonalDataForm(FormWithRequestMixin, ModelForm):
     n_columns = 2
 
     def __init__(self, *args, **kwargs):
@@ -59,7 +61,7 @@ class PersonalDataForm(ModelForm):
 
         super(PersonalDataForm, self).__init__(*args, **kwargs)
         for k, v in self.fields.items():
-            if k != "street_2":
+            if k not in ["street_2", "is_student"]:
                 v.required = True
 
         self.fields["first_name"].disabled = not can_edit_name_and_birthdate
@@ -75,6 +77,9 @@ class PersonalDataForm(ModelForm):
         self.fields["country"].label = _("Land")
         self.fields["birthdate"].label = _("Geburtsdatum")
 
+        if self.request and not self.request.user.has_perm(Permission.Accounts.MANAGE):
+            self.fields["is_student"].disabled = True
+
     class Meta:
         model = Member
         fields = [
@@ -88,10 +93,16 @@ class PersonalDataForm(ModelForm):
             "city",
             "country",
             "birthdate",
+            "is_student",
         ]
         widgets = {"birthdate": DatePickerInput(options={"format": "DD.MM.YYYY"})}
 
     phone_number = TapirPhoneNumberField(label=_("Telefon-Nr"))
+
+    def clean_email(self):
+        if "email" not in self.cleaned_data.keys():
+            return None
+        return self.cleaned_data["email"].strip().lower()
 
     def _validate_duplicate_email_keycloak(self):
         try:
@@ -110,7 +121,6 @@ class PersonalDataForm(ModelForm):
 
     def _validate_duplicate_email(self):
         email = self.cleaned_data["email"]
-        email_changed = not self.instance or (self.instance.email != email)
 
         duplicate_email_query = Member.objects.filter(email=email)
         if self.instance and self.instance.id:
@@ -175,13 +185,20 @@ class MarketingFeedbackForm(Form):
 
 class PersonalDataRegistrationForm(Form):
     n_columns = 2
-    colspans = {"sepa_consent": 2, "withdrawal_consent": 2, "privacy_consent": 2}
+    colspans = {
+        "sepa_consent": 2,
+        "withdrawal_consent": 2,
+        "privacy_consent": 2,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        personal_data_form = PersonalDataForm(*args, **kwargs)
+        personal_data_form.fields.pop("is_student")
+
         self.forms = [
-            PersonalDataForm(*args, **kwargs),
+            personal_data_form,
             PaymentDataForm(*args, **kwargs),
             ConsentForm(*args, **kwargs),
         ]

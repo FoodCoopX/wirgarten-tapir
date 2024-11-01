@@ -1,7 +1,6 @@
-from django.utils.translation import gettext_lazy as _
-
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from localflavor.generic.validators import IBANValidator
 
 from tapir.configuration.parameter import get_parameter_value
@@ -9,7 +8,7 @@ from tapir.wirgarten.parameters import Parameter
 
 
 class PaymentDataForm(forms.Form):
-    account_owner = forms.CharField(label=_("Kontoinhaber"))
+    account_owner = forms.CharField(label=_("Kontoinhaber*in"))
     iban = forms.CharField(label=_("IBAN"))
 
     def __init__(self, *args, instance=None, **kwargs):

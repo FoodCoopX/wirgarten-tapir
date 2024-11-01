@@ -2,13 +2,13 @@ import itertools
 import json
 import re
 
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import generic
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.contrib.auth.decorators import permission_required
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
@@ -191,7 +191,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
 def get_product_type_capacity_edit_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=ProductTypeForm,
+        form_class=ProductTypeForm,
         handler=lambda form: update_product_type_capacity(
             id_=kwargs[KW_CAPACITY_ID],
             name=form.cleaned_data["name"],
@@ -234,7 +234,7 @@ def get_product_type_capacity_add_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=ProductTypeForm,
+        form_class=ProductTypeForm,
         handler=handler,
         redirect_url_resolver=redirect_url,
         **kwargs,
@@ -258,7 +258,7 @@ def delete_product_type(request, **kwargs):
 def get_product_edit_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=ProductForm,
+        form_class=ProductForm,
         handler=lambda form: update_product(
             id_=form.cleaned_data["id"],
             name=form.cleaned_data["name"],
@@ -284,7 +284,7 @@ def get_product_add_form(request, **kwargs):
 
     return get_form_modal(
         request=request,
-        form=ProductForm,
+        form_class=ProductForm,
         handler=lambda form: create_product(
             name=form.cleaned_data["name"],
             price=form.cleaned_data["price"],
@@ -313,7 +313,7 @@ def delete_product_handler(request, **kwargs):
 def get_period_add_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=GrowingPeriodForm,
+        form_class=GrowingPeriodForm,
         handler=lambda form: create_growing_period(
             start_date=form.cleaned_data["start_date"],
             end_date=form.cleaned_data["end_date"],
@@ -329,7 +329,7 @@ def get_period_add_form(request, **kwargs):
 def get_period_copy_form(request, **kwargs):
     return get_form_modal(
         request=request,
-        form=GrowingPeriodForm,
+        form_class=GrowingPeriodForm,
         handler=lambda form: copy_growing_period(
             growing_period_id=form.cleaned_data["id"],
             start_date=form.cleaned_data["start_date"],

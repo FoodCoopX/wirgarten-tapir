@@ -1,13 +1,11 @@
 from datetime import timedelta
-from decimal import Decimal
 from urllib.parse import parse_qs, urlencode
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import models
-from django.db.models import Case, ExpressionWrapper, F, OuterRef, Subquery, Sum, When
-from django.db.models.functions import Coalesce, TruncMonth
-from django.forms import CheckboxInput
+from django.db.models import ExpressionWrapper, F, OuterRef, Subquery
+from django.db.models.functions import TruncMonth
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -21,11 +19,13 @@ from django_filters.views import FilterView
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
-    CoopShareTransaction,
     Member,
     MemberPickupLocation,
     PickupLocation,
-    Subscription,
+)
+from tapir.wirgarten.service.member import (
+    annotate_member_queryset_with_coop_shares_total_value,
+    annotate_member_queryset_with_monthly_payment,
 )
 from tapir.wirgarten.service.products import get_next_growing_period
 from tapir.wirgarten.utils import get_today
@@ -122,10 +122,14 @@ class MemberFilter(FilterSet):
         method="filter_email_verified",
         widget=Select(choices=[("", "-----------"), (True, "Ja"), (False, "Nein")]),
     )
-    no_coop_shares = BooleanFilter(
-        label="Keine Geno-Anteile",
-        method="filter_no_coop_shares",
-        widget=CheckboxInput(),
+    membership_type = ChoiceFilter(
+        label="Mitgliedschafts-Typ",
+        method="filter_membership_type",
+        choices=[
+            ("mitglied", "Reguläre Mitglieder"),
+            ("student", "Befreit (u.a. Student*innen)"),
+            ("nicht-mitglied", "Weder Mitglied noch befreit"),
+        ],
     )
 
     o = OrderingFilter(
@@ -179,11 +183,15 @@ class MemberFilter(FilterSet):
                 new_queryset = new_queryset.exclude(id=member.id)
         return new_queryset
 
-    def filter_no_coop_shares(self, queryset, name, value):
-        if value:
-            return queryset.filter(coop_shares_total_value__lte=0)
-        else:
+    def filter_membership_type(self, queryset, name, value):
+        if value == "mitglied":
             return queryset.filter(coop_shares_total_value__gt=0)
+
+        queryset = queryset.filter(coop_shares_total_value__lte=0)
+        if value == "student":
+            return queryset.filter(is_student=True)
+        if value == "nicht-mitglied":
+            return queryset.filter(is_student=False)
 
     def __init__(self, data=None, *args, **kwargs):
         if data is None:
@@ -219,58 +227,8 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         return context
 
     def get_queryset(self):
-        today = get_today()
-        overnext_month = today + relativedelta(months=2)
+        queryset = super().get_queryset()
+        queryset = annotate_member_queryset_with_coop_shares_total_value(queryset)
+        queryset = annotate_member_queryset_with_monthly_payment(queryset)
 
-        return Member.objects.annotate(
-            coop_shares_total_value=Coalesce(
-                Subquery(
-                    CoopShareTransaction.objects.filter(
-                        member_id=OuterRef("id"),
-                        valid_at__lte=overnext_month,
-                        # I do this to include new members in the list, which will join the coop soon
-                    )
-                    .values("member_id")
-                    .annotate(total_value=Sum(F("quantity") * F("share_price")))
-                    .values("total_value"),
-                    output_field=models.DecimalField(),
-                ),
-                Decimal(0.0),
-            ),
-            monthly_payment=Subquery(
-                Subscription.objects.filter(
-                    member_id=OuterRef("id"),
-                    start_date__lte=today,
-                    end_date__gte=today,
-                    product__productprice__valid_from__lte=today,
-                )
-                .annotate(
-                    monthly_payment=ExpressionWrapper(
-                        Case(
-                            When(
-                                solidarity_price_absolute__isnull=True,
-                                then=(
-                                    F("product__productprice__price")
-                                    * F("quantity")
-                                    * (1 + F("solidarity_price"))
-                                ),
-                            ),
-                            When(
-                                solidarity_price_absolute__isnull=False,
-                                then=(
-                                    (F("product__productprice__price") * F("quantity"))
-                                    + F("solidarity_price_absolute")
-                                ),
-                            ),
-                            default=0.0,
-                            output_field=models.FloatField(),
-                        ),
-                        output_field=models.FloatField(),
-                    )
-                )
-                .values("member_id")
-                .annotate(total=Sum("monthly_payment"))
-                .values("total"),
-                output_field=models.FloatField(),
-            ),
-        )
+        return queryset
