@@ -1,163 +1,168 @@
 {% extends "core/base.html" %}
-
 {% load django_bootstrap5 %}
 {% load i18n %}
 {% load tapir_static %}
 {% load wirgarten %}
 {% load configuration %}
-
 {% block content %}
-<div style="margin-top: 2em; display: grid; grid-gap: 1em; grid-template-columns: 1fr 1em 1fr 1em 1fr">
-    <div class="card">
-        <div style="display: flex; flex-direction: row;" class="card-header">
-            <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}</h5>
-            {% if perms.coop.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Anbauperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Anbauperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
-            <div style="width: 3em"></div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Anbauperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
-            {% endif %}
+    <div style="margin-top: 2em;
+                display: grid;
+                grid-gap: 1em;
+                grid-template-columns: 1fr 1em 1fr 1em 1fr">
+        <div class="card">
+            <div style="display: flex; flex-direction: row;" class="card-header">
+                <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}</h5>
+                {% if perms.coop.manage %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Anbauperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Anbauperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
+                    <div style="width: 3em"></div>
+                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Anbauperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
+                {% endif %}
+            </div>
+            <div style="overflow: auto" class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr style="text-align: center">
+                            <th>Status</th>
+                            <th style="text-align: center">Start</th>
+                            <th style="text-align: center">Ende</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list_growing_periods">
+                        {% for period in growing_periods %}
+                            <tr style="text-align: center"
+                                id="period-{{ period.id }}"
+                                class="tr-clickable"
+                                onclick="select_period('{{ period.id }}', '{{ pe_c_map }}')">
+                                {% if period.status == 'active' %}
+                                    <td>
+                                        <span class="badge bg-success">Aktuell</span>
+                                    </td>
+                                {% elif period.status == 'upcoming' %}
+                                    <td>
+                                        <span class="badge bg-primary">Geplant</span>
+                                    </td>
+                                {% elif period.status == 'old' %}
+                                    <td>
+                                        <span class="badge bg-secondary">Alt</span>
+                                    </td>
+                                {% endif %}
+                                <td>{{ period|get_value:'start_date' }}</td>
+                                <td>{{ period|get_value:'end_date' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div style="overflow: auto" class="card-body">
-            <table class="table">
-                <thead>
-                <tr style="text-align: center">
-                    <th>Status</th>
-                    <th style="text-align: center">Start</th>
-                    <th style="text-align: center">Ende</th>
-                </tr>
-                </thead>
-
-                <tbody id="list_growing_periods">
-                {% for period in growing_periods %}
-                <tr style="text-align: center" id="period-{{period.id}}" class="tr-clickable"
-                    onclick="select_period('{{period.id}}', '{{ pe_c_map }}')">
-                    {% if period.status == 'active' %}
-                    <td><span class="badge bg-success">Aktuell</span></td>
-                    {% elif period.status == 'upcoming' %}
-                    <td><span class="badge bg-primary">Geplant</span></td>
-                    {% elif period.status == 'old' %}
-                    <td><span class="badge bg-secondary">Alt</span></td>
-                    {% endif %}
-                    <td>{{ period|get_value:'start_date' }}</td>
-                    <td> {{ period|get_value:'end_date' }}</td>
-                </tr>
-
-                {% endfor %}
-                </tbody>
-            </table>
+        <span style="margin: auto" class="material-icons">arrow_forward</span>
+        <div class="card">
+            <div style="display: flex;flex-direction: row" class="card-header">
+                <h5 style="margin: auto; width: 100%">{% translate 'Kapazitäten' %}</h5>
+                {% if perms.products.manage %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityAddForm()' title='Produkttyp hinzufügen' disabled=True class='need-growing-period' type='success' icon='add' id='add-capacity-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityEditForm()' title='Produkttyp/Kapazität bearbeiten' disabled=True class='need-product-type' type='primary' icon='edit' id='edit-capacity-btn' %}
+                    <div style="width: 3em"></div>
+                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
+                {% endif %}
+            </div>
+            <div style="overflow: auto" class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Lieferzyklus</th>
+                            <th style="text-align: right">Kapazität</th>
+                            <th style="text-align: right">MWST</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list_capacities">
+                        {% for capacity in capacities %}
+                            <tr id="c-{{ capacity.id }}"
+                                class="tr-clickable"
+                                style="display: none"
+                                onclick="select_capacity('{{ capacity.id }}', '{{ capacity.product_type.id }}', '{{ c_p_map }}')">
+                                <td>
+                                    <img width="28" src="{{ capacity.product_type.icon_link }}" />
+                                </td>
+                                <th>
+                                    {% translate capacity.product_type.name %}
+                                    {% with base_type='wirgarten.coop.base_product_type'|parameter %}
+                                        {% if base_type == capacity.product_type.id %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
+                                    {% endwith %}
+                                </th>
+                                <td>{{ capacity.product_type.delivery_cycle }}</td>
+                                <td style="text-align: right">{{ capacity.capacity }} €</td>
+                                <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-
-    <span style="margin: auto" class="material-icons">arrow_forward</span>
-
-    <div class="card">
-        <div style="display: flex;flex-direction: row" class="card-header">
-            <h5 style="margin: auto; width: 100%">{% translate 'Kapazitäten' %}</h5>
-            {% if perms.products.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityAddForm()' title='Produkttyp hinzufügen' disabled=True class='need-growing-period' type='success' icon='add' id='add-capacity-btn' %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityEditForm()' title='Produkttyp/Kapazität bearbeiten' disabled=True class='need-product-type' type='primary' icon='edit' id='edit-capacity-btn' %}
-            <div style="width: 3em"></div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
-            {% endif %}
+        <span style="margin: auto" class="material-icons">arrow_forward</span>
+        <div class="card">
+            <div style="display: flex;flex-direction: row" class="card-header">
+                <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
+                {% if perms.products.manage %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getProductEditForm()' title='Produkt bearbeiten' disabled=True class='need-product' type='primary' icon='edit' id='edit-product-btn' %}
+                    <div style="width: 3em"></div>
+                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
+                {% endif %}
+            </div>
+            <div style="overflow: auto" class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Größe</th>
+                            <th style="text-align:right">Preis</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list_product">
+                        {% for product in products %}
+                            <tr style="display: none"
+                                id="p-{{ product.id }}"
+                                class="tr-clickable"
+                                onclick="select_product('{{ product.id }}')">
+                                <th>
+                                    {% if product.deleted %}
+                                        <del>{% translate product.name %}</del>
+                                        <span class="badge bg-danger">Gelöscht</span>
+                                    {% else %}
+                                    {% endif %}
+                                    {% translate product.name %}
+                                    {% if product.base %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
+                                </th>
+                                <td>{{ product.share }}</td>
+                                <td style="text-align: right">
+                                    {% if product.prices.1 and product.prices.1.price != product.prices.0.price %}
+                                        <del>{{ product.prices.1.price }} €</del>
+                                        {{ product.prices.0.price }} €
+                                        <br />
+                                        <small>gültig ab {{ product.prices.0.valid_from }}
+                                            <br />
+                                        </small>
+                                    {% else %}
+                                        {{ product.prices.0.price }} €
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div style="overflow: auto" class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Lieferzyklus</th>
-                    <th style="text-align: right">Kapazität</th>
-                    <th style="text-align: right">MWST</th>
-                </tr>
-                </thead>
-                <tbody id="list_capacities">
-                {% for capacity in capacities %}
-                <tr id="c-{{capacity.id}}" class="tr-clickable" style="display: none"
-                    onclick="select_capacity('{{capacity.id}}', '{{capacity.product_type.id}}', '{{ c_p_map }}')">
-                    <td><img width="28" src="{{capacity.product_type.icon_link}}"/></td>
-                    <th>{% translate capacity.product_type.name %}
-                    {% with base_type='wirgarten.coop.base_product_type'|parameter %}
-                        {% if base_type == capacity.product_type.id %}
-                        &nbsp;&nbsp;<span
-                            class="badge bg-danger">Basis</span>
-                        {% endif %}
-                        {% endwith %}
-                    </th>
-                    <td>{{ capacity.product_type.delivery_cycle }}</td>
-                    <td style="text-align: right">{{ capacity.capacity }} €</td>
-                    <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <span style="margin: auto" class="material-icons">arrow_forward</span>
-
-    <div class="card">
-        <div style="display: flex;flex-direction: row" class="card-header">
-            <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
-            {% if perms.products.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='getProductEditForm()' title='Produkt bearbeiten' disabled=True class='need-product' type='primary' icon='edit' id='edit-product-btn' %}
-            <div style="width: 3em"></div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
-            {% endif %}
-        </div>
-        <div style="overflow: auto" class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Größe</th>
-                    <th style="text-align:right">Preis</th>
-                </tr>
-                </thead>
-                <tbody id="list_product">
-                {% for product in products %}
-                <tr style="display: none" id="p-{{product.id}}" class="tr-clickable"
-                    onclick="select_product('{{product.id}}')">
-                    <th>
-                        {% if product.deleted %}
-                        <del>{% translate product.name %}</del>
-                        <span class="badge bg-danger">Gelöscht</span>
-                        {% else %}
-                        {% endif %}{% translate product.name %}
-                        {% if product.base %}&nbsp;&nbsp;<span
-                            class="badge bg-danger">Basis</span>
-                        {% endif %}
-                    </th>
-                    <td>{{ product.share }}</td>
-                    <td style="text-align: right">
-                        {% if product.price.1 and product.price.1.price != product.price.0.price %}
-                        <del>{{product.price.1.price}} €</del>
-                        {{ product.price.0.price }} €
-                        <br/>
-                        <small>gültig ab {{ product.price.0.valid_from }}<br/></small>
-                        {% else %}
-                        {{ product.price.0.price }} €
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!--
+        <!--
         <div style="grid-column: 1/4;" class="card my-1">
             <div style="display: flex;flex-direction: row" class="card-header">
                 <h5 style="margin: auto; width: 100%">{% translate 'Details' %}:</h5>
             </div>
             <div id="list_details_growing_periods">
                 {% for period in growing_periods %}
-                <div id="details_growing_period_{{period.id}}"
-                     style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr"
-                     class="card-body">
+                <div id="details_growing_period_{{period.id}}" style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr" class="card-body">
                     <div style="padding-bottom: 1em; display: grid; grid-template-columns: 10em 10em 1fr">
                         <div style="grid-column: 1/2">{% translate 'Anbauperiode' %}</div>
                         <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>
@@ -167,8 +172,7 @@
                     </div>
                     <div style="overflow: auto;" class="list_details_product_types">
                         {% for product_type in product_types %}
-                        <div id="details_product_type_{{product_type.id}}{{period.id}}"
-                             style="display:none; grid-template-columns: 1fr 1fr">
+                        <div id="details_product_type_{{product_type.id}}{{period.id}}" style="display:none; grid-template-columns: 1fr 1fr">
                             <div>
                                 <div style="grid-column: 1/2; display: grid;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                     <p style="grid-area: 1/1/2/2">Product Type:</p>
@@ -183,8 +187,7 @@
                             <div class="list_details_products" style="grid-column: 2/3; flex-direction: column">
                                 {% for product in products %}
                                 {% if product.type.id == product_type.id %}
-                                <div id="details_product_{{product.id}}{{period.id}}"
-                                     style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
+                                <div id="details_product_{{product.id}}{{period.id}}" style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                     <p style="grid-area: 1/1/2/2">Product:</p>
                                     <strong style="grid-area: 1/2/2/3">{{ product.name }}</strong>
                                     <p style="grid-column: 2/1/3/2">Price:</p>
@@ -207,15 +210,13 @@
             </div>
         </div>
         -->
-</div>
-
-<script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
-<script>
+    </div>
+    <script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
+    <script>
     const allowedActions = JSON.parse('{{ buttons | safe }}');
     init('{{ c_p_map | safe }}', '{{ pe_c_map | safe }}');
 
 
 
-</script>
-
+    </script>
 {% endblock %}

@@ -36,7 +36,7 @@ class KeycloakUserQuerySet(models.QuerySet):
 class KeycloakUserManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
     @staticmethod
     def normalize_email(email: str) -> str:
-        return email.strip()
+        return email.strip().lower()
 
 
 class KeycloakUser(AbstractUser):

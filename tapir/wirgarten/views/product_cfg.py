@@ -49,80 +49,87 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/product/period_product_cfg_view.html"
     permission_required = Permission.Products.VIEW
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    @staticmethod
+    def get_growing_period_status(period) -> str:
+        today = get_today()
+        if period.end_date < today:
+            return "old"
+        elif period.start_date <= today <= period.end_date:
+            return "active"
+        elif period.start_date > today:
+            return "upcoming"
+        else:
+            return ""
 
-        def get_growing_period_status(period) -> str:
-            today = get_today()
-            if period.end_date < today:
-                return "old"
-            elif period.start_date <= today and period.end_date >= today:
-                return "active"
-            elif period.start_date > today:
-                return "upcoming"
-            else:
-                return ""
+    @staticmethod
+    def get_current_product_price(product_prices: list[ProductPrice]) -> ProductPrice:
+        if len(product_prices) == 1:
+            return product_prices[0]
 
+        valid_product_prices = [
+            product_price
+            for product_price in product_prices
+            if product_price.valid_from <= get_today()
+        ]
+        return sorted(
+            valid_product_prices, key=lambda product_price: product_price.valid_from
+        )[-1]
+
+    @classmethod
+    def build_product_object_for_context(cls, product, product_prices):
+        try:
+            base_product = Product.objects.get(type_id=product.type_id, base=True)
+            base_share_value = get_product_price(base_product).price
+            share_size = round(
+                cls.get_current_product_price(product_prices).price / base_share_value,
+                2,
+            )
+        except Product.DoesNotExist:
+            share_size = "?"
+
+        return {
+            "id": product.id,
+            "name": product.name,
+            "type_id": product.type.id,
+            "prices": product_prices,
+            "share": share_size,
+            "deleted": product.deleted,
+            "base": product.base,
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         # growing periods
         context["growing_periods"] = list(
             map(
-                lambda g: {
-                    "id": g.id,
-                    "status": get_growing_period_status(g),
-                    "start_date": g.start_date,
-                    "end_date": g.end_date,
+                lambda growing_period: {
+                    "id": growing_period.id,
+                    "status": self.get_growing_period_status(growing_period),
+                    "start_date": growing_period.start_date,
+                    "end_date": growing_period.end_date,
                 },
                 GrowingPeriod.objects.all().order_by("-start_date"),
             )
         )
 
-        product_prices = {
-            k: list(
-                map(
-                    lambda price: {
-                        "valid_from": price.valid_from,
-                        "price": price.price,
-                    },
-                    list(v)[:2],
-                )
-            )
-            for k, v in itertools.groupby(
-                ProductPrice.objects.all().order_by("product__id", "-valid_from"),
-                lambda pp: pp.product.id,
-            )
+        product_prices_by_product_id = itertools.groupby(
+            ProductPrice.objects.all().order_by("product__id", "-valid_from"),
+            lambda product_price: product_price.product.id,
+        )
+        product_prices_by_product_id = {
+            product_id: list(product_prices)[:2]
+            for product_id, product_prices in product_prices_by_product_id
         }
 
-        def map_product(product):
-            try:
-                base_product = Product.objects.get(type_id=product.type_id, base=True)
-                base_share_value = get_product_price(base_product).price
-            except Product.DoesNotExist:
-                base_share_value = None
-
-            price = product_prices.get(product.id, [])
-            return {
-                "id": product.id,
-                "name": product.name,
-                "type_id": product.type.id,
-                "price": price,
-                "share": (
-                    round(price[-1]["price"] / base_share_value, 2)
-                    if base_share_value
-                    else "?"
-                ),
-                "deleted": product.deleted,
-                "base": product.base,
-            }
-
         # all products
+        products = [
+            self.build_product_object_for_context(
+                product, product_prices_by_product_id.get(product.id, [])
+            )
+            for product in Product.objects.all().order_by("type")
+        ]
         context["products"] = sorted(
-            list(
-                map(
-                    map_product,
-                    Product.objects.all().order_by("type"),
-                )
-            ),
-            key=lambda p: p["price"][0]["price"],
+            products, key=lambda product: product["prices"][0].price
         )
 
         # growing_periods->product_types
@@ -146,9 +153,8 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
                         lambda p: p["type_id"] == capacity.product_type.id
                         and any(
                             map(
-                                lambda ppi: ppi["valid_from"]
-                                < capacity.period.end_date,
-                                p["price"],
+                                lambda ppi: ppi.valid_from < capacity.period.end_date,
+                                p["prices"],
                             )
                         ),
                         context["products"],
