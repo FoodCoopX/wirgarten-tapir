@@ -55,6 +55,7 @@ class CooperativeShareForm(forms.Form):
                 label=_(
                     "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
                 ),
+                help_text="Die Immatrikulationsbescheinigung muss per Mail an <a href='mailto:lueneburg@wirgarten.com'>lueneburg@wirgarten.com</a> gesendet werden.",
             )
         self.fields["statute_consent"] = forms.BooleanField(
             label=_(
