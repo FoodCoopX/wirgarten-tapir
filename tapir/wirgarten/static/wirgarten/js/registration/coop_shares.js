@@ -47,6 +47,8 @@ function initStudentCheckboxEvents() {
     if (studentCheckbox.checked) {
       sharesInput.value = 0;
       consentCheckbox.checked = false;
+    } else {
+      sharesInput.value = sharesInput.getAttribute("value");
     }
   }
 
