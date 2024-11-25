@@ -285,7 +285,12 @@ def get_product_price(product: str | Product, reference_date: date = None):
 
 @transaction.atomic
 def update_product(
-    id_: str, name: str, base: bool, price: Decimal, growing_period_id: str
+    id_: str,
+    name: str,
+    base: bool,
+    price: Decimal,
+    size: Decimal,
+    growing_period_id: str,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -318,10 +323,11 @@ def update_product(
     if existing_price_change.exists():
         existing_price_change = existing_price_change.first()
         existing_price_change.price = price
+        existing_price_change.size = size
         existing_price_change.save()
     else:
         ProductPrice.objects.create(
-            price=price, product=product, valid_from=price_change_date
+            price=price, product=product, size=size, valid_from=price_change_date
         )
 
     return product

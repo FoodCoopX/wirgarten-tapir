@@ -7,8 +7,6 @@ from tapir.utils.forms import DateInput
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.models import (
     GrowingPeriod,
-    PickupLocation,
-    PickupLocationCapability,
     Product,
     ProductCapacity,
     ProductPrice,
@@ -134,6 +132,7 @@ class ProductForm(forms.Form):
         initial_id = "-"
         initial_name = ""
         initial_price = 0
+        initial_size = 1
 
         if KW_PROD_ID in kwargs:
             initial_id = kwargs[KW_PROD_ID]
@@ -146,6 +145,7 @@ class ProductForm(forms.Form):
             for price in prices:
                 if price.valid_from < period.end_date:
                     initial_price = price.price
+                    initial_size = price.size
 
         self.fields["id"] = forms.CharField(
             initial=initial_id, widget=forms.HiddenInput()
@@ -155,6 +155,9 @@ class ProductForm(forms.Form):
         )
         self.fields["price"] = forms.FloatField(
             initial=initial_price, required=True, label=_("Preis")
+        )
+        self.fields["size"] = forms.FloatField(
+            initial=initial_size, required=True, label=_("Größe")
         )
         self.fields["base"] = forms.BooleanField(
             initial=False, required=False, label=_("Basisprodukt")
