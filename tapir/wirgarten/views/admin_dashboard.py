@@ -314,11 +314,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{used_share_count} Anteile vergeben ({format_currency(used_capacity)} €)",
+                    f"{used_share_count} Anteile vergeben",
                     (
-                        (
-                            f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
-                        )
+                        (f"{free_share_count} Anteile noch frei")
                         if free_share_count > 0
                         else "Keine Anteile mehr frei"
                     ),
