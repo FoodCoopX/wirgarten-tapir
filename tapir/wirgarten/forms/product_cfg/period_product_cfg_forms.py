@@ -97,7 +97,9 @@ class ProductTypeForm(forms.Form):
             ),
         )
         self.fields["capacity"] = forms.FloatField(
-            initial=initial_capacity, required=True, label=_("Produkt Kapazität (in €)")
+            initial=initial_capacity,
+            required=True,
+            label=_("Produkt Kapazität (in Produkt-Größe)"),
         )
         self.fields["delivery_cycle"] = forms.ChoiceField(
             initial=initial_delivery_cycle,

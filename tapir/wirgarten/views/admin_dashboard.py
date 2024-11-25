@@ -287,7 +287,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         for product_capacity in sorted_product_capacities:
             product_type = product_capacity.product_type
-            subscriptions = product_type_to_subscriptions_map.get(product_type.id, [])
 
             total_capacity = (
                 float(product_capacity.capacity) or 1
@@ -305,12 +304,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 type=product_capacity.product_type, base=True
             ).first()
 
-            base_share_value = float(
-                get_product_price(base_product, reference_date).price
+            base_share_size = float(
+                get_product_price(base_product, reference_date).size
             )
 
-            free_share_count = round(free_capacity / base_share_value, 2)
-            used_share_count = round(used_capacity / base_share_value, 2)
+            free_share_count = round(free_capacity / base_share_size, 2)
+            used_share_count = round(used_capacity / base_share_size, 2)
 
             context[KEY_CAPACITY_LABELS].append(
                 [
