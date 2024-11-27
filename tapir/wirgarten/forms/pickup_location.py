@@ -25,6 +25,7 @@ from tapir.wirgarten.service.delivery import (
     get_next_delivery_date,
 )
 from tapir.wirgarten.service.products import (
+    get_active_product_types,
     get_active_subscriptions,
     get_product_price,
 )
@@ -40,7 +41,7 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity_usage(
+def get_current_capacity(
     capability, reference_date=None, additional_subscription_filter=None
 ):
     if (
@@ -59,44 +60,34 @@ def get_current_capacity_usage(
         .values("pickup_location_id")[:1]
     )
 
-    subscriptions = get_active_subscriptions(reference_date)
+    sub_qs = get_active_subscriptions(reference_date)
 
     if additional_subscription_filter:
-        subscriptions = additional_subscription_filter(subscriptions)
+        sub_qs = additional_subscription_filter(sub_qs)
 
-    subscriptions_annotated_with_member_pickup_location = subscriptions.annotate(
-        latest_pickup_location_id=Subquery(latest_member_pickup_location)
-    )
-    relevant_subscriptions_relative_to_capability = (
-        subscriptions_annotated_with_member_pickup_location.filter(
+    total_price = (
+        sub_qs.annotate(
+            latest_pickup_location_id=Subquery(latest_member_pickup_location)
+        )
+        .filter(
             latest_pickup_location_id=capability["pickup_location_id"],
             product__type_id=capability["product_type_id"],
         )
-    )
-
-    latest_valid_product_price = (
-        ProductPrice.objects.filter(
-            product=OuterRef("product"), valid_from__lte=reference_date
-        )
-        .order_by("-valid_from")
-        .values("size")[:1]
-    )
-
-    subscriptions_annotated_with_total_size = (
-        relevant_subscriptions_relative_to_capability.annotate(
-            latest_size=Subquery(
-                latest_valid_product_price,
-                output_field=DecimalField(decimal_places=4),
+        .annotate(
+            latest_price=Subquery(
+                ProductPrice.objects.filter(
+                    product=OuterRef("product"), valid_from__lte=reference_date
+                )
+                .order_by("-valid_from")
+                .values("price")[:1],
+                output_field=DecimalField(decimal_places=2),
             ),
-            total_size_per_subscription=F("latest_size") * F("quantity"),
+            total_price_per_subscription=F("latest_price") * F("quantity"),
         )
+        .aggregate(total_price=Sum("total_price_per_subscription"))["total_price"]
     )
 
-    total_size = subscriptions_annotated_with_total_size.aggregate(
-        total_size=Sum("total_size_per_subscription")
-    )["total_size"]
-
-    return float(total_size) if total_size else 0
+    return float(total_price) if total_price else 0
 
 
 def pickup_location_to_dict(location_capabilities, pickup_location):
@@ -113,7 +104,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             return None
 
         current_capa = round(
-            get_current_capacity_usage(capa, next_delivery_date)
+            get_current_capacity(capa, next_delivery_date)
             / float(
                 get_product_price(
                     base_product,
@@ -124,7 +115,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         )
 
         next_month_capa = round(
-            get_current_capacity_usage(capa, next_month)
+            get_current_capacity(capa, next_month)
             / float(
                 get_product_price(
                     base_product,
@@ -220,64 +211,55 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             "product_type__icon_link",
         )
 
+        product_type_base_prices = {
+            pt.name: pt.base_price(reference_date=reference_date)
+            for pt in get_active_product_types(reference_date=reference_date)
+        }
+
         selected_product_types = {
             product_type_name: sum(
                 map(
-                    lambda subscription: float(
-                        get_product_price(subscription.product).size
-                    )
-                    * (subscription.quantity or 0),
-                    subscriptions,
+                    lambda x: float(get_product_price(x.product).price)
+                    * (x.quantity or 0),
+                    sub,
                 )
             )
-            for product_type_name, subscriptions in initial["subs"].items()
-            if subscriptions
-            and subscriptions[0].product.type.delivery_cycle != NO_DELIVERY[0]
+            / float(product_type_base_prices[product_type_name])
+            for product_type_name, sub in initial["subs"].items()
+            if sub and sub[0].product.type.delivery_cycle != NO_DELIVERY[0]
         }
         selected_product_types = {
-            product_type_name: capacity_usage
-            for product_type_name, capacity_usage in selected_product_types.items()
-            if capacity_usage > 0
+            k: v for k, v in selected_product_types.items() if v > 0
         }
 
         possible_locations = PickupLocation.objects.filter(
-            id__in=map(
-                lambda location_capability: location_capability["pickup_location_id"],
-                location_capabilities,
-            )
+            id__in=map(lambda x: x["pickup_location_id"], location_capabilities)
         )
         next_month = get_today() + relativedelta(months=1, day=1)
-
-        for product_type_name in selected_product_types:
+        for pt_name in selected_product_types:
             possible_locations = possible_locations.filter(
                 id__in=[
-                    capability["pickup_location_id"]
-                    for capability in location_capabilities
-                    if capability["product_type__name"] == product_type_name
+                    capa["pickup_location_id"]
+                    for capa in location_capabilities
+                    if capa["product_type__name"] == pt_name
                 ]
             )
             # get current free capacity for each location and filter out locations with no capacity
-            for possible_location in possible_locations:
-                for location_capability in location_capabilities:
+            for pl in possible_locations:
+                for capa in location_capabilities:
                     if (
-                        possible_location.id
-                        != location_capability["pickup_location_id"]
-                        or not location_capability["max_capacity"]
-                        or location_capability["product_type__name"]
-                        != product_type_name
+                        pl.id == capa["pickup_location_id"]
+                        and capa["max_capacity"]
+                        and capa["product_type__name"] == pt_name
                     ):
-                        continue
+                        current_capacity = get_current_capacity(
+                            capa, next_month
+                        ) / float(product_type_base_prices.get(pt_name, 1))
+                        max_capa = capa["max_capacity"] + 0.1
+                        free_capacity = max_capa - current_capacity
 
-                    current_capacity_usage = get_current_capacity_usage(
-                        location_capability, next_month
-                    )
-                    max_capacity = location_capability["max_capacity"] + 0.1
-                    free_capacity = max_capacity - current_capacity_usage
-
-                    if selected_product_types[product_type_name] > free_capacity:
-                        possible_locations = possible_locations.exclude(
-                            id=possible_location.id
-                        )
+                        if selected_product_types[pt_name] > free_capacity:
+                            possible_locations = possible_locations.exclude(id=pl.id)
 
         super(PickupLocationChoiceField, self).__init__(
             queryset=possible_locations,

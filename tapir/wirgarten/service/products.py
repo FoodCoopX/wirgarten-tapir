@@ -285,12 +285,7 @@ def get_product_price(product: str | Product, reference_date: date = None):
 
 @transaction.atomic
 def update_product(
-    id_: str,
-    name: str,
-    base: bool,
-    price: Decimal,
-    size: Decimal,
-    growing_period_id: str,
+    id_: str, name: str, base: bool, price: Decimal, growing_period_id: str
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -323,11 +318,10 @@ def update_product(
     if existing_price_change.exists():
         existing_price_change = existing_price_change.first()
         existing_price_change.price = price
-        existing_price_change.size = size
         existing_price_change.save()
     else:
         ProductPrice.objects.create(
-            price=price, product=product, size=size, valid_from=price_change_date
+            price=price, product=product, valid_from=price_change_date
         )
 
     return product
@@ -543,23 +537,23 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
         product_type_id=product_type_id
     )
 
-    if not active_product_capacities.exists():
+    if active_product_capacities.exists():
+        total_capacity = float(active_product_capacities.first().capacity)
+        used_capacity = sum(
+            map(
+                lambda sub: float(get_product_price(sub.product, reference_date).price)
+                * sub.quantity,
+                get_active_subscriptions(reference_date).filter(
+                    product__type_id=product_type_id
+                ),
+            )
+        )
+        return total_capacity - used_capacity
+    else:
         return 0
 
-    total_capacity = float(active_product_capacities.first().capacity)
-    used_capacity = sum(
-        map(
-            lambda sub: float(get_product_price(sub.product, reference_date).size)
-            * sub.quantity,
-            get_active_subscriptions(reference_date).filter(
-                product__type_id=product_type_id
-            ),
-        )
-    )
-    return total_capacity - used_capacity
 
-
-def get_smallest_product_size(
+def get_cheapest_product_price(
     product_type: ProductType | str, reference_date: date = None
 ):
     if reference_date is None:
@@ -574,21 +568,21 @@ def get_smallest_product_size(
 
     all_prices = ProductPrice.objects.filter(product__type__id=product_type)
     if all_prices.count() == 1:
-        return all_prices[0].size
+        return all_prices[0].price
 
-    smallest_size = float("inf")
+    cheapest_price = float("inf")
     for product in products:
         prices = ProductPrice.objects.filter(
             product=product, valid_from__lte=reference_date
         ).order_by("valid_from")
         if prices.count() == 0:
             continue
-        smallest_size = min(smallest_size, prices.last().size)
+        cheapest_price = min(cheapest_price, prices.last().price)
 
-    if smallest_size == float("inf"):
+    if cheapest_price == float("inf"):
         raise ObjectDoesNotExist("No price found")
 
-    return smallest_size
+    return cheapest_price
 
 
 def is_product_type_available(
@@ -605,4 +599,4 @@ def is_product_type_available(
 
     return get_free_product_capacity(
         product_type_id=product_type, reference_date=reference_date
-    ) >= get_smallest_product_size(product_type, reference_date)
+    ) >= get_cheapest_product_price(product_type, reference_date)
