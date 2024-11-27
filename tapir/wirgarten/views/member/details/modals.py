@@ -258,6 +258,7 @@ def get_add_subscription_form(request, **kwargs):
 
     if is_base_product_type:
         form_type = BaseProductForm
+
         next_start_date = get_next_contract_start_date()
         next_period = get_next_growing_period()
         if not is_product_type_available(product_type.id, next_start_date) and (

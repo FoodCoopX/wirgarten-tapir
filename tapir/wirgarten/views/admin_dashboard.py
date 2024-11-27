@@ -287,6 +287,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         for product_capacity in sorted_product_capacities:
             product_type = product_capacity.product_type
+            subscriptions = product_type_to_subscriptions_map.get(product_type.id, [])
 
             total_capacity = (
                 float(product_capacity.capacity) or 1
@@ -304,19 +305,21 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 type=product_capacity.product_type, base=True
             ).first()
 
-            base_share_size = float(
-                get_product_price(base_product, reference_date).size
+            base_share_value = float(
+                get_product_price(base_product, reference_date).price
             )
 
-            free_share_count = round(free_capacity / base_share_size, 2)
-            used_share_count = round(used_capacity / base_share_size, 2)
+            free_share_count = round(free_capacity / base_share_value, 2)
+            used_share_count = round(used_capacity / base_share_value, 2)
 
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{used_share_count} Anteile vergeben",
+                    f"{used_share_count} Anteile vergeben ({format_currency(used_capacity)} €)",
                     (
-                        (f"{free_share_count} Anteile noch frei")
+                        (
+                            f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
+                        )
                         if free_share_count > 0
                         else "Keine Anteile mehr frei"
                     ),
