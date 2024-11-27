@@ -26,7 +26,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.products import (
     create_product_type_capacity,
-    get_product_price,
     update_product_type_capacity,
     delete_product_type_capacity,
     create_product,
@@ -77,22 +76,12 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
 
     @classmethod
     def build_product_object_for_context(cls, product, product_prices):
-        try:
-            base_product = Product.objects.get(type_id=product.type_id, base=True)
-            base_share_value = get_product_price(base_product).price
-            share_size = round(
-                cls.get_current_product_price(product_prices).price / base_share_value,
-                2,
-            )
-        except Product.DoesNotExist:
-            share_size = "?"
 
         return {
             "id": product.id,
             "name": product.name,
             "type_id": product.type.id,
             "prices": product_prices,
-            "share": share_size,
             "deleted": product.deleted,
             "base": product.base,
         }
@@ -270,6 +259,7 @@ def get_product_edit_form(request, **kwargs):
             name=form.cleaned_data["name"],
             base=form.cleaned_data["base"],
             price=form.cleaned_data["price"],
+            size=form.cleaned_data["size"],
             growing_period_id=kwargs[KW_PERIOD_ID],
         ),
         redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
