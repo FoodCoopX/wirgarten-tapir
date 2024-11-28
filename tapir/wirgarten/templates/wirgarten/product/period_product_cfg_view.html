@@ -93,7 +93,7 @@
                                     {% endwith %}
                                 </th>
                                 <td>{{ capacity.product_type.delivery_cycle }}</td>
-                                <td style="text-align: right">{{ capacity.capacity }} €</td>
+                                <td style="text-align: right">{{ capacity.capacity|floatformat:-2 }}</td>
                                 <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
                             </tr>
                         {% endfor %}

@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -271,13 +270,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context[KEY_CAPACITY_LABELS] = []
         context[KEY_USED_CAPACITY] = []
         context[KEY_FREE_CAPACITY] = []
-
-        product_type_to_subscriptions_map = {
-            product_type.id: list(subscriptions)
-            for product_type, subscriptions in itertools.groupby(
-                active_subscriptions, key=lambda subscription: subscription.product.type
-            )
-        }
 
         sorted_product_capacities = sorted(
             active_product_capacities.values(),

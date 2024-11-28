@@ -471,7 +471,7 @@ class BaseProductForm(forms.Form):
         if free_capacity < ordered_capacity:
             self.add_error(
                 None,
-                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {free_capacity}€",
+                f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {free_capacity}",
             )
 
     def validate_solidarity_price(self):
