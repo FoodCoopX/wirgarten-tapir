@@ -176,6 +176,17 @@ class BaseProductForm(forms.Form):
                 required=True,
                 empty_label=None,
                 initial=0,
+                help_text=(
+                    None
+                    if self.member_id
+                    else _(
+                        "Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
+                        "als auch kommende Vertragsperiode (ab 1.7.) "
+                        "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
+                        "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
+                        "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen"
+                    )
+                ),
             )
         else:
             self.growing_period = get_current_growing_period(self.start_date)
