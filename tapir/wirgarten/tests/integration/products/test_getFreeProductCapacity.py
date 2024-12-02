@@ -26,12 +26,12 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         product_m = ProductFactory.create()
         ProductPriceFactory.create(
             product=product_m,
-            price=100,
+            size=1,
             valid_from=growing_period.start_date,
         )
 
         ProductCapacityFactory.create(
-            period=growing_period, product_type=product_m.type, capacity=1000
+            period=growing_period, product_type=product_m.type, capacity=100
         )
 
         return growing_period, product_m
@@ -80,7 +80,7 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         product_l = ProductFactory.create(type=product_m.type)
         ProductPriceFactory.create(
             product=product_l,
-            price=150,
+            size=1.5,
             valid_from=growing_period.start_date,
         )
 
@@ -88,7 +88,7 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         SubscriptionFactory.create(period=growing_period, quantity=1, product=product_l)
 
         self.assertEqual(
-            650,
+            96.5,  # 100 - 2 * 1 - 1 * 1.5,
             get_free_product_capacity(
                 product_m.type.id,
                 reference_date=datetime.date(year=2022, month=4, day=1),
@@ -111,7 +111,7 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            900,
+            99,
             get_free_product_capacity(
                 product_m.type.id,
                 reference_date=datetime.date(year=2022, month=3, day=15),
@@ -133,7 +133,7 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            1000,
+            100,
             get_free_product_capacity(
                 product_m.type.id,
                 reference_date=datetime.date(year=2022, month=3, day=15),
@@ -155,7 +155,7 @@ class TestGetFreeProductCapacity(TapirIntegrationTest):
         )
 
         self.assertEqual(
-            900,
+            99,
             get_free_product_capacity(
                 product_m.type.id,
                 reference_date=datetime.date(year=2022, month=4, day=15),

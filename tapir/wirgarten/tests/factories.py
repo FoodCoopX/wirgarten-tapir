@@ -83,6 +83,7 @@ class ProductPriceFactory(factory.django.DjangoModelFactory):
 
     product = factory.SubFactory(ProductFactory)
     price = factory.Faker("pyfloat", min_value=30, max_value=150)
+    size = factory.Faker("pyfloat", min_value=0.5, max_value=2.5)
     valid_from = TODAY
 
 

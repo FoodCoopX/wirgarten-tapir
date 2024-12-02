@@ -220,7 +220,7 @@ class ProductCapacity(TapirModel):
     product_type = models.ForeignKey(
         ProductType, null=False, on_delete=models.DO_NOTHING
     )
-    capacity = models.DecimalField(decimal_places=2, max_digits=20, null=False)
+    capacity = models.DecimalField(decimal_places=4, max_digits=20, null=False)
 
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
 
@@ -532,6 +532,9 @@ class ProductPrice(TapirModel):
     price = models.DecimalField(
         decimal_places=2, max_digits=8, editable=False, null=False
     )
+    size = models.DecimalField(
+        decimal_places=4, max_digits=8, editable=False, null=False
+    )
     valid_from = models.DateField(null=False, editable=False)
 
     class Meta:
@@ -547,7 +550,7 @@ class ProductPrice(TapirModel):
         ]
 
     def __str__(self):
-        return f"{self.product} - {self.price} - {self.id}"
+        return f"{self.product} - {self.price} - {self.size} - {self.valid_from} -{self.id}"
 
 
 class HarvestShareProduct(Product):
@@ -694,6 +697,18 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             )
 
         return self._total_price_without_soli
+
+    def get_used_capacity(self):
+        today = get_today()
+        if not hasattr(self, "_used_capacity"):
+            product_prices = ProductPrice.objects.filter(
+                product_id=self.product_id, valid_from__lte=today
+            ).order_by("product_id", "-valid_from")
+            current_product_price = product_prices.first()
+
+            self._used_capacity = current_product_price.size * self.quantity
+
+        return self._used_capacity
 
     def clean(self):
         if self.start_date >= self.end_date:
