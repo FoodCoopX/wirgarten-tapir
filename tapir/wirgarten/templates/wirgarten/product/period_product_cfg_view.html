@@ -132,22 +132,11 @@
                                         <del>{% translate product.name %}</del>
                                         <span class="badge bg-danger">Gelöscht</span>
                                     {% else %}
-                                        {% translate product.name %}
                                     {% endif %}
+                                    {% translate product.name %}
                                     {% if product.base %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
                                 </th>
-                                <td>
-                                    {% if product.prices.1 and product.prices.1.size != product.prices.0.size %}
-                                        <del>{{ product.prices.1.size|floatformat:-2 }}</del>
-                                        {{ product.prices.0.size|floatformat:-2 }}
-                                        <br />
-                                        <small>gültig ab {{ product.prices.0.valid_from }}
-                                            <br />
-                                        </small>
-                                    {% else %}
-                                        {{ product.prices.0.size|floatformat:-2 }}
-                                    {% endif %}
-                                </td>
+                                <td>{{ product.share }}</td>
                                 <td style="text-align: right">
                                     {% if product.prices.1 and product.prices.1.price != product.prices.0.price %}
                                         <del>{{ product.prices.1.price }} €</del>

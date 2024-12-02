@@ -15,7 +15,6 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
-from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     ProductCapacityFactory,
@@ -25,6 +24,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     SubscriptionFactory,
 )
+from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
     mock_timezone,
@@ -56,13 +56,13 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         ProductPriceFactory.create(
             product__type=product_capacity.product_type,
             product__name="M",
-            size=1,
+            price=50,
             valid_from=datetime.date(year=2023, month=1, day=1),
         )
         ProductPriceFactory.create(
             product__type=product_capacity.product_type,
             product__name="L",
-            size=1.25,
+            price=75,
             valid_from=datetime.date(year=2023, month=1, day=1),
         )
 
@@ -118,7 +118,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertEqual(1, subscription_l.quantity)
 
     def test_baseProductForm_notEnoughCapacity_noSubscriptionsCreated(self):
-        self.create_test_data_and_login(capacity=3)
+        self.create_test_data_and_login(capacity=150)
 
         response = self.send_add_subscription_request(2, 1)
 
@@ -137,11 +137,11 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
     def test_baseProductForm_priceChangesBetweenNowAndContractStart_newPriceIsUsedForCalculations(
         self,
     ):
-        self.create_test_data_and_login(capacity=1.1)
+        self.create_test_data_and_login(capacity=75)
 
         ProductPriceFactory.create(
             product=Product.objects.get(name="M"),
-            size=1.2,
+            price=80,
             valid_from=datetime.date(year=2023, month=6, day=15),
         )
 
@@ -155,7 +155,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
     def test_baseProductForm_severalGrowingPeriods_theCapacityOfTheChosenGrowingPeriodGetsChecked(
         self,
     ):
-        self.create_test_data_and_login(capacity=2)
+        self.create_test_data_and_login(capacity=40)
         current_growing_period = GrowingPeriod.objects.get()
 
         future_growing_period = GrowingPeriodFactory.create(
@@ -163,11 +163,11 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         )
         ProductCapacityFactory.create(
             period=future_growing_period,
-            capacity=5,
+            capacity=60,
             product_type=ProductType.objects.get(),
         )
 
-        response = self.send_add_subscription_request(3, 0, current_growing_period)
+        response = self.send_add_subscription_request(1, 0, current_growing_period)
 
         self.assertStatusCode(response, 200)
         self.assertFalse(
@@ -175,7 +175,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
             "No subscription should have been created",
         )
 
-        response = self.send_add_subscription_request(3, 0, future_growing_period)
+        response = self.send_add_subscription_request(1, 0, future_growing_period)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(Subscription.objects.count(), 1)

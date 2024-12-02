@@ -12,7 +12,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
-    get_current_capacity_usage,
+    get_current_capacity,
 )
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -425,9 +425,7 @@ class BaseProductForm(forms.Form):
             .pickup_location
         )
 
-    def calculate_capacity_used_by_the_ordered_products(
-        self, return_capacity_in_euros: bool = False
-    ):
+    def calculate_capacity_used_by_the_ordered_products(self):
         base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
 
         total = 0.0
@@ -439,10 +437,7 @@ class BaseProductForm(forms.Form):
                 type_id=base_prod_type_id,
                 name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
-            relevant_value = get_product_price(product, next_month).size
-            if return_capacity_in_euros:
-                relevant_value = get_product_price(product, next_month).price
-            total += float(relevant_value) * quantity
+            total += float(get_product_price(product, next_month).price) * quantity
         return total
 
     def validate_pickup_location_capacity(self):
@@ -486,7 +481,7 @@ class BaseProductForm(forms.Form):
 
         excess_solidarity = get_available_solidarity(self.start_date)
 
-        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products(True)
+        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
         solidarity_part_of_the_ordered_capacity = (
             ordered_capacity * -ordered_solidarity_factor
         )
@@ -533,7 +528,7 @@ def validate_pickup_location_capacity(
     current_member_amount = float(
         sum(
             [
-                s.get_used_capacity()
+                s.total_price_without_soli
                 for s in get_active_subscriptions(start_date).filter(
                     member_id=member_id,
                     product__type_id=product_type.id,
@@ -542,11 +537,12 @@ def validate_pickup_location_capacity(
         )
     )
     diff_member_amount = total_member_amount - current_member_amount
-    new_total_amount = (
-        get_current_capacity_usage(capability, start_date) + diff_member_amount
-    )
+    new_total_amount = get_current_capacity(capability, start_date) + diff_member_amount
 
-    if new_total_amount > capability.max_capacity:
+    base_product = Product.objects.get(type=capability.product_type, base=True)
+    base_product_price = get_product_price(base_product, start_date).price
+
+    if new_total_amount > capability.max_capacity * base_product_price:
         form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
         form.add_error(
             None,
@@ -792,7 +788,7 @@ class AdditionalProductForm(forms.Form):
                     type_id=self.product_type.id,
                     name__iexact=key.replace(self.field_prefix, ""),
                 )
-                total += float(get_product_price(product).size)
+                total += float(get_product_price(product).price)
         return total
 
     def validate_contract_signed(self):
