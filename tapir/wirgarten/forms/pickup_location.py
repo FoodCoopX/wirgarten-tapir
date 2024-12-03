@@ -118,7 +118,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 get_product_price(
                     base_product,
                     next_delivery_date,
-                ).price
+                ).size
             ),
             2,
         )
@@ -129,7 +129,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 get_product_price(
                     base_product,
                     next_month,
-                ).price
+                ).size
             ),
             2,
         )
