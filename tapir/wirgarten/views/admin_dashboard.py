@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import json
 
 from dateutil.relativedelta import relativedelta
@@ -272,13 +271,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context[KEY_USED_CAPACITY] = []
         context[KEY_FREE_CAPACITY] = []
 
-        product_type_to_subscriptions_map = {
-            product_type.id: list(subscriptions)
-            for product_type, subscriptions in itertools.groupby(
-                active_subscriptions, key=lambda subscription: subscription.product.type
-            )
-        }
-
         sorted_product_capacities = sorted(
             active_product_capacities.values(),
             key=lambda c: c.product_type_id == base_type_id,
@@ -287,7 +279,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         for product_capacity in sorted_product_capacities:
             product_type = product_capacity.product_type
-            subscriptions = product_type_to_subscriptions_map.get(product_type.id, [])
 
             total_capacity = (
                 float(product_capacity.capacity) or 1
@@ -305,21 +296,19 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 type=product_capacity.product_type, base=True
             ).first()
 
-            base_share_value = float(
-                get_product_price(base_product, reference_date).price
+            base_share_size = float(
+                get_product_price(base_product, reference_date).size
             )
 
-            free_share_count = round(free_capacity / base_share_value, 2)
-            used_share_count = round(used_capacity / base_share_value, 2)
+            free_share_count = round(free_capacity / base_share_size, 2)
+            used_share_count = round(used_capacity / base_share_size, 2)
 
             context[KEY_CAPACITY_LABELS].append(
                 [
                     product_type.name,
-                    f"{used_share_count} Anteile vergeben ({format_currency(used_capacity)} €)",
+                    f"{used_share_count} Anteile vergeben",
                     (
-                        (
-                            f"{free_share_count} Anteile noch frei ({format_currency(free_capacity)} €)"
-                        )
+                        (f"{free_share_count} Anteile noch frei")
                         if free_share_count > 0
                         else "Keine Anteile mehr frei"
                     ),
