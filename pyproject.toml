@@ -35,7 +35,7 @@ django-webtest = "^1.9.10"
 PyJWT = "2.6.0"
 unidecode = "^1.3.6"
 importlib-resources = "^6.1.0"
-tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1733221253/tapir_mail-0.0.0.dev1733221253-py3-none-any.whl" }
+tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1733225183/tapir_mail-0.0.0.dev1733225183-py3-none-any.whl" }
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"
