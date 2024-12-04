@@ -18,11 +18,7 @@ const calculatePrice = (harvest_share) => {
   return elem.value * price;
 };
 
-var initHarvestShareSummary = (
-  harvest_share_prices,
-  solidarity_total,
-  capacity_total,
-) => {
+var initHarvestShareSummary = (harvest_share_prices, solidarity_total) => {
   const resultElem = document.getElementById("harvest_shares_total");
   let customSoliElem = document.getElementById(
     "id_solidarity_price_absolute_harvest_shares",
@@ -54,13 +50,6 @@ var initHarvestShareSummary = (
   );
   let totalWithoutSoli = calculateTotalWithoutSoliPrice();
   const initDependentFields = () => {
-    while (calculateTotalWithoutSoliPrice() > capacity_total) {
-      event.target.value--;
-      if (isNaN(event.target.value)) {
-        break;
-      }
-    }
-
     resultElem.innerText = calculateTotal().toFixed(2);
     totalWithoutSoli = calculateTotalWithoutSoliPrice();
     if (soliElem.value === "custom") {
@@ -161,7 +150,6 @@ var initHarvestShareSummary = (
     });
   };
 
-  let noCapacity = true;
   harvest_share_prices.split(",").forEach((harvest_share) => {
     const [key, price] = harvest_share.split(":");
     let input = document.getElementsByName("base_product-" + key)[0];
@@ -176,25 +164,8 @@ var initHarvestShareSummary = (
 
     input.addEventListener("change", (e) => handleChange(e, 10));
     input.min = 0;
-    input.max = Math.max(
-      0,
-      Math.min(10, Math.floor(capacity_total / parseFloat(price))),
-    );
-    if (input.max < 1 && parseFloat(input.value) === 0) {
-      input.readOnly = true;
-      input.disabled = true;
-    } else {
-      input.readOnly = false;
-      input.disabled = false;
-      noCapacity = false;
-    }
+    input.max = 10;
   });
-
-  if (noCapacity) {
-    soliElem.readOnly = true;
-    var noCapacityWarningElem = document.getElementById("no-capacity-warning");
-    if (noCapacityWarningElem) noCapacityWarningElem.style.display = "block";
-  }
 
   resultElem.innerText = calculateTotal().toFixed(2);
 
