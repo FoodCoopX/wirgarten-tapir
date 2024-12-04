@@ -1,8 +1,8 @@
-{% load configuration %} {% load tapir_static %}
-
+{% load configuration %}
+{% load tapir_static %}
 <div style="width: 100%; text-align: right; font-size: 1.25rem">
-  = <strong><span id="harvest_shares_total">0.00</span> €</strong> inkl. MwSt /
-  Monat
+    = <strong><span id="harvest_shares_total">0.00</span> €</strong> inkl. MwSt /
+    Monat
 </div>
 <script src="{% static 'wirgarten/js/registration/base_product.js' %}"></script>
 <script>
@@ -11,12 +11,12 @@
     originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a, b) => a + b);
     const growingPeriodSelect = document.getElementById("id_growing_period");
     if (!growingPeriodSelect) {
-    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[0], parseFloat({{ form.free_capacity | safe }}[0]) + originalTotal)
+    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[0])
     } else {
     growingPeriodSelect.addEventListener("change", function () {
-        initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], parseFloat({{ form.free_capacity | safe }}[growingPeriodSelect.selectedIndex]) + originalTotal)
+        initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
     });
-    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], parseFloat({{ form.free_capacity | safe }}[growingPeriodSelect.selectedIndex]) + originalTotal)
+    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
     }
   })
 </script>
