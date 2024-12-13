@@ -701,10 +701,11 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     def get_used_capacity(self):
         today = get_today()
         if not hasattr(self, "_used_capacity"):
-            product_prices = ProductPrice.objects.filter(
-                product_id=self.product_id, valid_from__lte=today
-            ).order_by("product_id", "-valid_from")
-            current_product_price = product_prices.first()
+            from tapir.wirgarten.service.products import get_product_price
+
+            current_product_price = get_product_price(
+                product=self.product, reference_date=today
+            )
 
             self._used_capacity = current_product_price.size * self.quantity
 
@@ -730,7 +731,10 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             )
 
     def __str__(self):
-        return f"{self.quantity} × {self.product.name} {self.product.type.name}"
+        return (
+            f"{self.quantity} × {self.product.name} {self.product.type.name}; "
+            f"from {self.start_date} to {self.end_date}"
+        )
 
     def long_str(self):
         if self.solidarity_price_absolute is not None:
