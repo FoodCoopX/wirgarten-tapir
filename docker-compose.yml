@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   keycloak:
     build:
@@ -26,6 +25,7 @@ services:
       - db
       - selenium
       - keycloak
+      - redis
 
   nginx-proxy:
     image: jwilder/nginx-proxy

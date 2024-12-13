@@ -532,7 +532,43 @@ class BaseProductForm(forms.Form):
             self.validate_total_capacity()
             self.validate_solidarity_price()
 
+        self.validate_cannot_reduce_size()
+
         return len(self.errors) == 0
+
+    def validate_cannot_reduce_size(self):
+        if not self.should_validate_cannot_reduce_size():
+            return
+
+        subscriptions = get_active_subscriptions(self.start_date).filter(
+            member__id=self.member_id
+        )
+        total_current_subscription_size = sum(
+            [subscription.get_used_capacity() for subscription in subscriptions]
+        )
+        ordered_size = self.calculate_capacity_used_by_the_ordered_products()
+        if ordered_size < total_current_subscription_size:
+            self.add_error(
+                None,
+                _(
+                    f"Während eine Vertrag läuft es ist nur erlaubt die Größe des Vertrags zu erhöhen. "
+                    f"Deiner aktueller Vertrag für diese Periode entspricht Größe {total_current_subscription_size:.2f}. "
+                    f"Deiner letzter Auswahl hier entsprach Größe {ordered_size:.2f}."
+                ),
+            )
+
+    def should_validate_cannot_reduce_size(self):
+        # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
+        growing_period = get_current_growing_period(self.start_date)
+        if not growing_period:
+            return False
+        if growing_period.start_date > get_today():
+            return False
+
+        subscriptions = Subscription.objects.filter(
+            member__id=self.member_id, period=growing_period
+        )
+        return subscriptions.exists()
 
 
 def validate_pickup_location_capacity(
