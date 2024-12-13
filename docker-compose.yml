@@ -25,6 +25,7 @@ services:
       - db
       - selenium
       - keycloak
+      - redis
 
   nginx-proxy:
     image: jwilder/nginx-proxy
