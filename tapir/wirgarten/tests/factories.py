@@ -30,7 +30,7 @@ NOW = datetime.datetime(2023, 3, 15, 12, 0, tzinfo=datetime.timezone.utc)
 TODAY = NOW.date()
 
 
-class MemberFactory(factory.django.DjangoModelFactory):
+class MemberFactory(factory.django.DjangoModelFactory[Member]):
     class Meta:
         model = Member
 
@@ -53,7 +53,7 @@ class MemberWithSubscriptionFactory(MemberWithCoopSharesFactory):
         SubscriptionFactory(member=self, **kwargs)
 
 
-class ProductTypeFactory(factory.django.DjangoModelFactory):
+class ProductTypeFactory(factory.django.DjangoModelFactory[ProductType]):
     class Meta:
         model = ProductType
 
@@ -61,7 +61,7 @@ class ProductTypeFactory(factory.django.DjangoModelFactory):
     delivery_cycle = NO_DELIVERY[0]
 
 
-class ProductFactory(factory.django.DjangoModelFactory):
+class ProductFactory(factory.django.DjangoModelFactory[Product]):
     class Meta:
         model = Product
 
@@ -77,7 +77,7 @@ class ProductFactory(factory.django.DjangoModelFactory):
         return ProductFactory._type_counts[self.type.id] == 1
 
 
-class ProductPriceFactory(factory.django.DjangoModelFactory):
+class ProductPriceFactory(factory.django.DjangoModelFactory[ProductPrice]):
     class Meta:
         model = ProductPrice
 
@@ -87,7 +87,7 @@ class ProductPriceFactory(factory.django.DjangoModelFactory):
     valid_from = TODAY
 
 
-class MandateReferenceFactory(factory.django.DjangoModelFactory):
+class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference]):
     class Meta:
         model = MandateReference
 
@@ -96,7 +96,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory):
     start_ts = TODAY - relativedelta(months=1)
 
 
-class GrowingPeriodFactory(factory.django.DjangoModelFactory):
+class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):
     class Meta:
         model = GrowingPeriod
 
@@ -104,7 +104,7 @@ class GrowingPeriodFactory(factory.django.DjangoModelFactory):
     end_date = start_date + relativedelta(years=1, days=-1)
 
 
-class ProductCapacityFactory(factory.django.DjangoModelFactory):
+class ProductCapacityFactory(factory.django.DjangoModelFactory[ProductCapacity]):
     class Meta:
         model = ProductCapacity
 
@@ -113,7 +113,7 @@ class ProductCapacityFactory(factory.django.DjangoModelFactory):
     capacity = factory.Faker("pyfloat", min_value=1000, max_value=5000)
 
 
-class SubscriptionFactory(factory.django.DjangoModelFactory):
+class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     class Meta:
         model = Subscription
 
@@ -129,7 +129,7 @@ class SubscriptionFactory(factory.django.DjangoModelFactory):
     solidarity_price = factory.Faker("pyfloat", min_value=-0.25, max_value=0.25)
 
 
-class PickupLocationFactory(factory.django.DjangoModelFactory):
+class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
     class Meta:
         model = PickupLocation
 
@@ -142,7 +142,9 @@ class PickupLocationFactory(factory.django.DjangoModelFactory):
     coords_lat = 0
 
 
-class PickupLocationCapabilityFactory(factory.django.DjangoModelFactory):
+class PickupLocationCapabilityFactory(
+    factory.django.DjangoModelFactory[PickupLocationCapability]
+):
     class Meta:
         model = PickupLocationCapability
 
@@ -151,7 +153,9 @@ class PickupLocationCapabilityFactory(factory.django.DjangoModelFactory):
     pickup_location = factory.SubFactory(PickupLocationFactory)
 
 
-class MemberPickupLocationFactory(factory.django.DjangoModelFactory):
+class MemberPickupLocationFactory(
+    factory.django.DjangoModelFactory[MemberPickupLocation]
+):
     class Meta:
         model = MemberPickupLocation
 
@@ -160,7 +164,9 @@ class MemberPickupLocationFactory(factory.django.DjangoModelFactory):
     valid_from = TODAY - relativedelta(months=1)
 
 
-class CoopShareTransactionFactory(factory.django.DjangoModelFactory):
+class CoopShareTransactionFactory(
+    factory.django.DjangoModelFactory[CoopShareTransaction]
+):
     class Meta:
         model = CoopShareTransaction
 
@@ -173,7 +179,7 @@ class CoopShareTransactionFactory(factory.django.DjangoModelFactory):
     valid_at = factory.Faker("date_object")
 
 
-class ExportedFileFactory(factory.django.DjangoModelFactory):
+class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):
     class Meta:
         model = ExportedFile
 
@@ -182,7 +188,7 @@ class ExportedFileFactory(factory.django.DjangoModelFactory):
     created_at = NOW
 
 
-class PaymentTransactionFactory(factory.django.DjangoModelFactory):
+class PaymentTransactionFactory(factory.django.DjangoModelFactory[PaymentTransaction]):
     class Meta:
         model = PaymentTransaction
 
@@ -190,7 +196,7 @@ class PaymentTransactionFactory(factory.django.DjangoModelFactory):
     file = factory.SubFactory(ExportedFileFactory)
 
 
-class PaymentFactory(factory.django.DjangoModelFactory):
+class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
     class Meta:
         model = Payment
 
