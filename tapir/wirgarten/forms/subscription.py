@@ -456,6 +456,17 @@ class BaseProductForm(forms.Form):
             total += float(relevant_value) * quantity
         return total
 
+    def calculate_capacity_used_by_the_current_subscriptions(
+        self, product_type_id: str
+    ):
+        next_month = get_today() + relativedelta(months=1, day=1)
+        current_subscriptions = get_active_subscriptions(next_month).filter(
+            member_id=self.member_id, product__type_id=product_type_id
+        )
+        return sum(
+            [subscription.get_used_capacity() for subscription in current_subscriptions]
+        )
+
     def validate_pickup_location_capacity(self):
         base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
@@ -474,12 +485,19 @@ class BaseProductForm(forms.Form):
         )
 
     def validate_total_capacity(self):
+        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         free_capacity = get_free_product_capacity(
-            product_type_id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+            product_type_id=base_product_type_id,
             reference_date=self.start_date,
         )
         ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
-        if free_capacity < ordered_capacity:
+        currently_used_capacity = float(
+            self.calculate_capacity_used_by_the_current_subscriptions(
+                base_product_type_id
+            )
+        )
+
+        if free_capacity < (ordered_capacity - currently_used_capacity):
             self.add_error(
                 None,
                 f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}",

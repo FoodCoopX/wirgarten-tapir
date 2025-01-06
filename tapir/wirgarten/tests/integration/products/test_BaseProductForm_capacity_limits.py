@@ -235,3 +235,48 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertFalse(
             Subscription.objects.exists(), "No subscription should have been created"
         )
+
+    def test_baseProductForm_memberHasActiveSubscriptionsAndOrdersWithinCapacity_sizeOfCurrentSubscriptionsTakenIntoAccountForValidation(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=3)
+
+        member = Member.objects.get()
+        SubscriptionFactory.create(
+            member=member,
+            period=GrowingPeriod.objects.get(),
+            quantity=2,
+            product=Product.objects.get(name="M"),
+        )
+
+        response = self.send_add_subscription_request(3, 0)
+
+        self.assertStatusCode(response, 200)
+
+        subscription: Subscription = Subscription.objects.get(
+            start_date=datetime.date(year=2023, month=7, day=1)
+        )
+        self.assertEqual(member.id, subscription.member_id)
+        self.assertEqual(3, subscription.quantity)
+
+    def test_baseProductForm_memberHasActiveSubscriptionsAndOrdersOverCapacity_sizeOfCurrentSubscriptionsTakenIntoAccountForValidation2(
+        self,
+    ):
+        self.create_test_data_and_login(capacity=3)
+
+        member = Member.objects.get()
+        SubscriptionFactory.create(
+            member=member,
+            period=GrowingPeriod.objects.get(),
+            quantity=2,
+            product=Product.objects.get(name="M"),
+        )
+
+        response = self.send_add_subscription_request(4, 0)
+
+        self.assertStatusCode(response, 200)
+
+        self.assertEqual(1, Subscription.objects.count())
+        subscription: Subscription = Subscription.objects.get()
+        self.assertEqual(member.id, subscription.member_id)
+        self.assertEqual(2, subscription.quantity)
