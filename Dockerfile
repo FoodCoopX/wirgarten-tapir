@@ -13,4 +13,4 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g mjml@4.14.1
-RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry lock --no-update && poetry install && poetry run python manage.py compilemessages
+RUN echo "Building Tapir Version: $TAPIR_VERSION" && pip install poetry && poetry lock && poetry install && poetry run python manage.py compilemessages
