@@ -180,11 +180,11 @@ class BaseProductForm(forms.Form):
                     None
                     if self.member_id
                     else _(
-                        "Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
+                        "<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
                         "als auch kommende Vertragsperiode (ab 1.7.) "
                         "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
                         "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
-                        "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen"
+                        "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen</span>"
                     )
                 ),
             )
