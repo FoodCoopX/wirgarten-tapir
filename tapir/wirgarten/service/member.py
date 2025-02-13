@@ -519,41 +519,47 @@ def annotate_member_queryset_with_coop_shares_total_value(queryset, outer_ref="i
 def annotate_member_queryset_with_monthly_payment(queryset):
     today = get_today()
 
-    return queryset.annotate(
-        monthly_payment=Subquery(
-            Subscription.objects.filter(
-                member_id=OuterRef("id"),
-                start_date__lte=today,
-                end_date__gte=today,
-                product__productprice__valid_from__lte=today,
-            )
-            .annotate(
-                monthly_payment=ExpressionWrapper(
-                    Case(
-                        When(
-                            solidarity_price_absolute__isnull=True,
-                            then=(
-                                F("product__productprice__price")
-                                * F("quantity")
-                                * (1 + F("solidarity_price"))
-                            ),
-                        ),
-                        When(
-                            solidarity_price_absolute__isnull=False,
-                            then=(
-                                (F("product__productprice__price") * F("quantity"))
-                                + F("solidarity_price_absolute")
-                            ),
-                        ),
-                        default=0.0,
-                        output_field=FloatField(),
+    active_subscriptions_per_member = Subscription.objects.filter(
+        member_id=OuterRef("id"),
+        start_date__lte=today,
+        end_date__gte=today,
+        product__productprice__valid_from__lte=today,
+    )
+
+    subscriptions_with_monthly_payment = active_subscriptions_per_member.annotate(
+        monthly_payment=ExpressionWrapper(
+            Case(
+                When(
+                    solidarity_price_absolute__isnull=True,
+                    then=(
+                        F("product__productprice__price")
+                        * F("quantity")
+                        * (1 + F("solidarity_price"))
                     ),
-                    output_field=FloatField(),
-                )
-            )
-            .values("member_id")
-            .annotate(total=Sum("monthly_payment"))
-            .values("total"),
+                ),
+                When(
+                    solidarity_price_absolute__isnull=False,
+                    then=(
+                        (F("product__productprice__price") * F("quantity"))
+                        + F("solidarity_price_absolute")
+                    ),
+                ),
+                default=0.0,
+                output_field=FloatField(),
+            ),
+            output_field=FloatField(),
+        )
+    )
+
+    return queryset.annotate(
+        monthly_payment=Coalesce(
+            Subquery(
+                subscriptions_with_monthly_payment.values("member_id")
+                .annotate(total=Sum("monthly_payment"))
+                .values("total"),
+                output_field=FloatField(),
+            ),
+            0,
             output_field=FloatField(),
         )
     )
