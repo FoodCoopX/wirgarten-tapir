@@ -1,7 +1,9 @@
 import datetime
 import os
-import environ
+
 import celery.schedules
+import environ
+
 from tapir.settings.base import BASE_DIR
 
 env = environ.Env()
@@ -52,10 +54,10 @@ CELERY_BEAT_SCHEDULE = {
     "export_pick_list_csv": {
         "task": "tapir.wirgarten.tasks.export_pick_list_csv",
         "schedule": celery.schedules.crontab(
-            day_of_week="tuesday",
+            day_of_week="monday",
             minute=0,
-            hour=3,
-            # once a week, Tuesday at 03:00
+            hour=4,
+            # once a week, Monday at 04:00
         ),
     },
     "export_payments_per_product_type": {
