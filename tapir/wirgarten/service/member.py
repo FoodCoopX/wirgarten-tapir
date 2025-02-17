@@ -11,9 +11,6 @@ from django.db.models import (
     Sum,
     F,
     DecimalField,
-    ExpressionWrapper,
-    Case,
-    When,
     FloatField,
 )
 from django.db.models.functions import Coalesce
@@ -43,6 +40,9 @@ from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_future_subscriptions,
     get_active_subscriptions,
+)
+from tapir.wirgarten.service.subscriptions import (
+    annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
 )
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tapirmail import Events
@@ -516,45 +516,26 @@ def annotate_member_queryset_with_coop_shares_total_value(queryset, outer_ref="i
     )
 
 
-def annotate_member_queryset_with_monthly_payment(queryset):
-    today = get_today()
-
+def annotate_member_queryset_with_monthly_payment(
+    queryset, reference_date: datetime.date
+):
     active_subscriptions_per_member = Subscription.objects.filter(
         member_id=OuterRef("id"),
-        start_date__lte=today,
-        end_date__gte=today,
-        product__productprice__valid_from__lte=today,
+        start_date__lte=reference_date,
+        end_date__gte=reference_date,
+        product__productprice__valid_from__lte=reference_date,
     )
 
-    subscriptions_with_monthly_payment = active_subscriptions_per_member.annotate(
-        monthly_payment=ExpressionWrapper(
-            Case(
-                When(
-                    solidarity_price_absolute__isnull=True,
-                    then=(
-                        F("product__productprice__price")
-                        * F("quantity")
-                        * (1 + F("solidarity_price"))
-                    ),
-                ),
-                When(
-                    solidarity_price_absolute__isnull=False,
-                    then=(
-                        (F("product__productprice__price") * F("quantity"))
-                        + F("solidarity_price_absolute")
-                    ),
-                ),
-                default=0.0,
-                output_field=FloatField(),
-            ),
-            output_field=FloatField(),
+    active_subscriptions_per_member = (
+        annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
+            active_subscriptions_per_member, reference_date
         )
     )
 
     return queryset.annotate(
         monthly_payment=Coalesce(
             Subquery(
-                subscriptions_with_monthly_payment.values("member_id")
+                active_subscriptions_per_member.values("member_id")
                 .annotate(total=Sum("monthly_payment"))
                 .values("total"),
                 output_field=FloatField(),
