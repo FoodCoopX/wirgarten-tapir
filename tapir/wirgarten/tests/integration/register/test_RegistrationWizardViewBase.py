@@ -107,7 +107,7 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
         mock_timezone(self, datetime.datetime(year=2023, month=6, day=1))
         growing_period = self.create_growing_period_with_one_subscription(2023)
         ProductPriceFactory.create(
-            price=40, product=self.product, valid_from=growing_period.start_date
+            price=40, product=self.product, valid_from=growing_period.start_date, size=1
         )
         SubscriptionFactory.create(
             period=growing_period,
