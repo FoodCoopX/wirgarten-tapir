@@ -520,7 +520,7 @@ def annotate_member_queryset_with_monthly_payment(
     queryset, reference_date: datetime.date
 ):
     active_subscriptions_per_member = Subscription.objects.filter(
-        member_id="8fstrSOcPy",
+        member_id=OuterRef("id"),
         start_date__lte=reference_date,
         end_date__gte=reference_date,
     )
