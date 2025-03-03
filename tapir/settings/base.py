@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     "tapir.utils",
     "tapir.wirgarten",
     "tapir.configuration",
+    "tapir.jokers",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
