@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     "django_extensions",
     "formtools",
     "tapir.wirgarten_site",
+    "rest_framework",
+    "drf_spectacular",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -185,3 +187,12 @@ BOOTSTRAP_DATEPICKER_PLUS = {
         },
     },
 }
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
+SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
