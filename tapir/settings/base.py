@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "tapir.wirgarten_site",
     "rest_framework",
     "drf_spectacular",
+    "django_vite",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -196,3 +197,10 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "manifest_path": "./dist/manifest.json",
+    }
+}
