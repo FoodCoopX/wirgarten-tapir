@@ -523,13 +523,12 @@ def annotate_member_queryset_with_monthly_payment(
         member_id=OuterRef("id"),
         start_date__lte=reference_date,
         end_date__gte=reference_date,
-        product__productprice__valid_from__lte=reference_date,
     )
 
     active_subscriptions_per_member = (
         annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
             active_subscriptions_per_member, reference_date
-        )
+        ).distinct()
     )
 
     return queryset.annotate(
