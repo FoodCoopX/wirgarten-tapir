@@ -4,7 +4,7 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
 from django.core.validators import EmailValidator
 from django.db import transaction
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Q
 from django.forms import (
     BooleanField,
     CharField,
@@ -122,7 +122,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
     def _validate_duplicate_email(self):
         email = self.cleaned_data["email"]
 
-        duplicate_email_query = Member.objects.filter(email=email)
+        duplicate_email_query = Member.objects.filter(
+            Q(email=email) | Q(username=email)
+        )
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
