@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 {% load tapir_static %}
 {% load i18n %}
 {% load log %}
@@ -308,6 +309,12 @@
                             {% endif %}
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    {% vite_asset 'jokers/joker_test_entry.tsx' %}
+                    <span id="joker_test"></span>
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 from django import template
-from django.db.models import Sum
+from django.core.handlers.wsgi import WSGIRequest
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -130,3 +130,16 @@ def add_admin_links(groups, request):
     groups.append(admin_group)
 
     groups.append(debug_group)
+
+
+@register.inclusion_tag(
+    "core/tags/javascript_environment_variables.html", takes_context=True
+)
+def javascript_environment_variables(context):
+    request: WSGIRequest = context["request"]
+    api_root = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}"
+    if request.get_host() == "localhost":
+        api_root = f"{api_root}:8000"
+    return {
+        "env_vars": {"REACT_APP_API_ROOT": api_root},
+    }
