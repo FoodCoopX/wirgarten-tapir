@@ -5,13 +5,31 @@ from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
     PickupLocationOpeningTime,
+    Product,
+    ProductType,
 )
+
+
+class ProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = "__all__"
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = "__all__"
+
+    type = ProductTypeSerializer()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = "__all__"
+
+    product = ProductSerializer()
 
 
 class PickupLocationSerializer(serializers.ModelSerializer):

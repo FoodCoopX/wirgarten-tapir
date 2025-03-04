@@ -7,6 +7,7 @@ models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
+models/DeliveryCycleEnum.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
@@ -38,6 +39,8 @@ models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
 models/PickupLocation.ts
 models/PickupLocationOpeningTime.ts
+models/Product.ts
+models/ProductType.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts

@@ -2131,6 +2131,18 @@ components:
       - pickup_location
       - pickup_location_opening_times
       - subscriptions
+    DeliveryCycleEnum:
+      enum:
+      - no_delivery
+      - weekly
+      - odd_weeks
+      - even_weeks
+      type: string
+      description: |-
+        * `no_delivery` - Keine Lieferung/Abholung
+        * `weekly` - 1x pro Woche
+        * `odd_weeks` - 2x pro Monat (ungerade KW)
+        * `even_weeks` - 2x pro Monat (gerade KW)
     DispatchStatusEnum:
       enum:
       - error
@@ -2948,6 +2960,54 @@ components:
       - day_of_week
       - open_time
       - pickup_location
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        type:
+          $ref: '#/components/schemas/ProductType'
+        name:
+          type: string
+          maxLength: 128
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+          nullable: true
+      required:
+      - name
+      - type
+    ProductType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          title: Produkt Name
+          maxLength: 128
+        delivery_cycle:
+          allOf:
+          - $ref: '#/components/schemas/DeliveryCycleEnum'
+          title: Lieferzyklus
+        contract_link:
+          type: string
+          nullable: true
+          title: Link zu den Vertragsgrundsätzen
+          maxLength: 512
+        icon_link:
+          type: string
+          nullable: true
+          title: Link zum Icon
+          maxLength: 512
+        single_subscription_only:
+          type: boolean
+          title: Nur Einzelabonnement erlaubt
+      required:
+      - name
     RecipientRequest:
       type: object
       properties:
@@ -3204,6 +3264,8 @@ components:
         id:
           type: string
           maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
         admin_confirmed:
           type: string
           format: date-time
@@ -3253,8 +3315,6 @@ components:
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
         member:
-          type: string
-        product:
           type: string
         period:
           type: string
