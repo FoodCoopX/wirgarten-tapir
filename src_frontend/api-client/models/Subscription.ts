@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { Product } from './Product';
+import {
+    ProductFromJSON,
+    ProductFromJSONTyped,
+    ProductToJSON,
+    ProductToJSONTyped,
+} from './Product';
+
 /**
  * 
  * @export
@@ -25,6 +33,12 @@ export interface Subscription {
      * @memberof Subscription
      */
     id?: string;
+    /**
+     * 
+     * @type {Product}
+     * @memberof Subscription
+     */
+    product: Product;
     /**
      * 
      * @type {Date}
@@ -114,12 +128,6 @@ export interface Subscription {
      * @type {string}
      * @memberof Subscription
      */
-    product: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Subscription
-     */
     period: string;
     /**
      * 
@@ -133,11 +141,11 @@ export interface Subscription {
  * Check if a given object implements the Subscription interface.
  */
 export function instanceOfSubscription(value: object): value is Subscription {
+    if (!('product' in value) || value['product'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('endDate' in value) || value['endDate'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
-    if (!('product' in value) || value['product'] === undefined) return false;
     if (!('period' in value) || value['period'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
     return true;
@@ -154,6 +162,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'product': ProductFromJSON(json['product']),
         'adminConfirmed': json['admin_confirmed'] == null ? undefined : (new Date(json['admin_confirmed'])),
         'quantity': json['quantity'],
         'startDate': (new Date(json['start_date'])),
@@ -168,7 +177,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
         'priceOverride': json['price_override'] == null ? undefined : json['price_override'],
         'member': json['member'],
-        'product': json['product'],
         'period': json['period'],
         'mandateRef': json['mandate_ref'],
     };
@@ -186,6 +194,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
     return {
         
         'id': value['id'],
+        'product': ProductToJSON(value['product']),
         'admin_confirmed': value['adminConfirmed'] == null ? undefined : ((value['adminConfirmed'] as any).toISOString()),
         'quantity': value['quantity'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
@@ -200,7 +209,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
         'price_override': value['priceOverride'],
         'member': value['member'],
-        'product': value['product'],
         'period': value['period'],
         'mandate_ref': value['mandateRef'],
     };
