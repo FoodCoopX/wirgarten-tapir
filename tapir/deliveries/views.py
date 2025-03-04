@@ -2,7 +2,6 @@ import datetime
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from icecream import ic
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,7 +23,6 @@ class GetMemberDeliveriesView(APIView):
         check_permission_or_self(member_id, request)
         member = get_object_or_404(Member, id=member_id)
 
-        ic("GOGO", member_id)
         deliveries = GetDeliveriesService.get_deliveries(
             member=member,
             date_from=get_today(),

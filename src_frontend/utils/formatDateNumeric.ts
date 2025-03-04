@@ -1,4 +1,4 @@
-export function formatDate(
+export function formatDateNumeric(
   date: Date | undefined | null,
   includeTime = false,
 ): string {
