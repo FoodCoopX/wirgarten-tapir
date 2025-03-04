@@ -18,7 +18,10 @@ export default defineConfig(() => {
       outDir: resolve(OUTPUT_DIR),
       rollupOptions: {
         input: {
-          home_test: join(INPUT_DIR, "/jokers/joker_test_entry.tsx"),
+          home_test: join(
+            INPUT_DIR,
+            "/member_profile/member_profile_entry.tsx",
+          ),
         },
       },
     },
