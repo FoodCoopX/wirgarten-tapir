@@ -140,21 +140,11 @@
                 </div>
             </div>
             <div id="member-detail-middle-column">
-                <div id="member-pickup-location" class="card">
-                    <h5 class="card-header d-flex justify-content-between align-items-center">
-                        {% translate "Abholung" %}
-                        <button class="btn tapir-btn btn-outline-primary"
-                                {% if lock_functions %}disabled="disabled"{% endif %}
-                                onclick="FormModal.load(`{% url 'wirgarten:member_pickup_location_choice' object.pk %}`, 'Abholort ändern')">
-                            <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                        </button>
-                    </h5>
-                    <div class="card-body">
-                        <div style="overflow-y: scroll; max-height: 30em;">
-                            {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True %}
-                        </div>
-                    </div>
-                </div>
+                <span id="delivery_list_card" data-member-id="{{ object.pk }}">
+                    <span class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                </span>
                 <div class="card">
                     <a href="{% url 'wirgarten:member_payments' object.pk %}"
                        style="text-decoration:none;
@@ -176,13 +166,6 @@
                 </div>
             </div>
             <div id="member-detail-right-column">
-                <div class="row mb-2">
-                    <span id="delivery_list_card" data-member-id="{{ object.pk }}">
-                        <span class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </span>
-                    </span>
-                </div>
                 <div class="row">
                     <div>
                         <div class="card">
