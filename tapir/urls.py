@@ -50,7 +50,7 @@ urlpatterns = [
         kwargs={"TAPIR_MAIL_PATH": settings.TAPIR_MAIL_PATH},
     ),
     path(tapir_mail_path, include("tapir_mail.urls")),
-    path("jokers/", include("tapir.jokers.urls")),
+    path("jokers/", include("tapir.deliveries.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

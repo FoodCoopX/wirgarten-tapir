@@ -3,6 +3,27 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /jokers/api/member_deliveries:
+    get:
+      operationId: jokers_api_member_deliveries_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - jokers
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Delivery'
+          description: ''
   /jokers/api/member_jokers:
     get:
       operationId: jokers_api_member_jokers_list
@@ -2071,6 +2092,45 @@ components:
       - content
       - name
       - release_status
+    DayOfWeekEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      type: integer
+      description: |-
+        * `0` - Montag
+        * `1` - Dienstag
+        * `2` - Mittwoch
+        * `3` - Donnerstag
+        * `4` - Freitag
+        * `5` - Samstag
+        * `6` - Sonntag
+    Delivery:
+      type: object
+      properties:
+        delivery_date:
+          type: string
+          format: date
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        pickup_location_opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+      required:
+      - delivery_date
+      - pickup_location
+      - pickup_location_opening_times
+      - subscriptions
     DispatchStatusEnum:
       enum:
       - error
@@ -2807,6 +2867,87 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 150
+        coords_lon:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Longitude
+        coords_lat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Latitude
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        info:
+          type: string
+          title: Additional info
+          maxLength: 1024
+        access_code:
+          type: string
+          maxLength: 20
+        messenger_group_link:
+          type: string
+          maxLength: 150
+        contact_name:
+          type: string
+          title: Name of the contact
+          maxLength: 150
+        photo_link:
+          type: string
+          maxLength: 512
+      required:
+      - city
+      - coords_lat
+      - coords_lon
+      - name
+      - postcode
+      - street
+    PickupLocationOpeningTime:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: 0
+          maximum: 32767
+        open_time:
+          type: string
+          format: time
+        close_time:
+          type: string
+          format: time
+        pickup_location:
+          type: string
+      required:
+      - close_time
+      - day_of_week
+      - open_time
+      - pickup_location
     RecipientRequest:
       type: object
       properties:
@@ -3057,6 +3198,76 @@ components:
       - file_name
       - upload_id
       - uploaded
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        cancellation_ts:
+          type: string
+          format: date-time
+          nullable: true
+        solidarity_price:
+          type: number
+          format: double
+        solidarity_price_absolute:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        withdrawal_consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+        price_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        member:
+          type: string
+        product:
+          type: string
+        period:
+          type: string
+        mandate_ref:
+          type: string
+      required:
+      - end_date
+      - mandate_ref
+      - member
+      - period
+      - product
+      - quantity
+      - start_date
     TemporaryUpload:
       type: object
       properties:

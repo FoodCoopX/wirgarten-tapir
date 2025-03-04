@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class JokersConfig(AppConfig):
+class DeliveriesConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "tapir.jokers"
+    name = "tapir.deliveries"

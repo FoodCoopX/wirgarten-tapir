@@ -2,6 +2,7 @@ from datetime import date
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY, NO_DELIVERY
@@ -98,6 +99,9 @@ def get_next_delivery_date_for_product_type(
         )
 
 
+@deprecated(
+    "If possible, use tapir.deliveries.services.get_deliveries_service.GetDeliveriesService.get_deliveries instead"
+)
 def generate_future_deliveries(member: Member, limit: int = None):
     """
     Generates a list of future deliveries for a given member.
