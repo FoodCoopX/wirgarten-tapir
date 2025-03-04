@@ -1,7 +1,5 @@
 import datetime
 
-from icecream import ic
-
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import Subscription, PickupLocationOpeningTime, Member
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -33,7 +31,6 @@ class GetDeliveriesService:
         while (date_to is not None and next_delivery_date <= date_to) or (
             limit is not None and len(deliveries) < limit
         ):
-            ic(next_delivery_date, len(deliveries), date_from, date_to, limit)
             _, week_num, _ = next_delivery_date.isocalendar()
             even_week = week_num % 2 == 0
 
@@ -51,7 +48,6 @@ class GetDeliveriesService:
                 next_delivery_date = get_next_delivery_date(
                     next_delivery_date + datetime.timedelta(days=1)
                 )
-                ic("no subs", next_delivery_date, date_from, date_to, limit)
                 continue
 
             pickup_location = member.get_pickup_location(next_delivery_date)
@@ -76,13 +72,10 @@ class GetDeliveriesService:
             )
 
             if limit and len(deliveries) >= limit:
-                ic("break")
                 break
 
             next_delivery_date = get_next_delivery_date(
                 next_delivery_date + datetime.timedelta(days=1)
             )
-            ic("go next", next_delivery_date)
 
-        ic(deliveries)
         return deliveries

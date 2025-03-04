@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Delivery, Joker, JokersApi } from "../api-client";
 import { useApi } from "../hooks/useApi";
-import { Card } from "react-bootstrap";
+import { Card, Spinner, Table } from "react-bootstrap";
 import TapirButton from "../components/TapirButton.tsx";
-import { formatDate } from "../utils/formatDate.ts";
+import { formatDateText } from "../utils/formatDateText.ts";
+import RelativeTime from "dayjs/plugin/relativeTime";
+import dayjs from "dayjs";
+import "dayjs/locale/de";
 
 interface DeliveryListCardProps {
   memberId: string;
@@ -13,6 +16,10 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   const api = useApi(JokersApi);
   const [jokers, setJokers] = useState<Joker[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+
+  dayjs.extend(RelativeTime);
+  dayjs.locale("de");
 
   useEffect(() => {
     api
@@ -20,10 +27,12 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
       .then(setJokers)
       .catch((error) => alert(error));
 
+    setDeliveriesLoading(true);
     api
       .jokersApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
-      .catch((error) => alert(error));
+      .catch((error) => alert(error))
+      .finally(() => setDeliveriesLoading(false));
   }, []);
 
   return (
@@ -41,59 +50,37 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
         </div>
       </Card.Header>
       <Card.Body>
-        <div>
-          <h2>Jokers</h2>
-          <ul>
-            {jokers.map((joker, index) => {
-              return (
-                <li key={index}>
-                  Joker {index}: {formatDate(joker.date)}
-                </li>
-              );
-            })}
-          </ul>
-          <h2>Deliveries</h2>
-          <ul>
-            {deliveries.map((delivery, index) => {
-              return (
-                <li key={index}>
-                  <div>Delivery {index}: </div>
-                  <ul>
-                    <li>{formatDate(delivery.deliveryDate)}</li>
-                    <li>
-                      Subscriptions:{" "}
-                      <ul>
-                        {delivery.subscriptions.map((subscription) => {
-                          return (
-                            <li>
-                              {subscription.product} x {subscription.quantity}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </li>
-                    <li>Pickup location: {delivery.pickupLocation.name}</li>
-                    <li>
-                      Opening times:{" "}
-                      <ul>
-                        {delivery.pickupLocationOpeningTimes.map(
-                          (openingTimes) => {
-                            return (
-                              <li>
-                                {openingTimes.dayOfWeek}:{" "}
-                                {openingTimes.openTime}:{openingTimes.closeTime}
-                              </li>
-                            );
-                          },
-                        )}
-                      </ul>
-                    </li>
-                  </ul>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        {deliveriesLoading ? (
+          <Spinner />
+        ) : (
+          <Table striped hover responsive className={"text-center"}>
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Produkte</th>
+                <th>Abholort</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveries.map((delivery, index) => {
+                return (
+                  <tr key={index}>
+                    <td>
+                      <div className={"d-flex flex-column"}>
+                        <strong>{formatDateText(delivery.deliveryDate)}</strong>
+                        <small>
+                          {dayjs().to(dayjs(delivery.deliveryDate))}
+                        </small>
+                      </div>
+                    </td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
       </Card.Body>
     </Card>
   );
