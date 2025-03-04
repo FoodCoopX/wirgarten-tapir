@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Joker, JokersApi } from "../api-client";
 import { useApi } from "../hooks/useApi";
+import { Card } from "react-bootstrap";
 
-declare let gettext: (english_text: string) => string;
-
-const JokerTestCard: React.FC = () => {
+const DeliveryListCard: React.FC = () => {
   const api = useApi(JokersApi);
   const [jokers, setJokers] = useState<Joker[]>([]);
 
@@ -16,19 +15,13 @@ const JokerTestCard: React.FC = () => {
   }, []);
 
   return (
-    <div>
-      <h1>Hello from React</h1>
-      <ul>
-        {jokers.map((joker: Joker) => {
-          return (
-            <li>
-              {joker.date.toString()} - {joker.member}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <Card>
+      <Card.Header>
+        <h5>Abholung</h5>
+      </Card.Header>
+      <Card.Body>coucou</Card.Body>
+    </Card>
   );
 };
 
-export default JokerTestCard;
+export default DeliveryListCard;
