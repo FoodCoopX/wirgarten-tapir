@@ -1,4 +1,3 @@
-.openapi-generator-ignore
 apis/JokersApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
@@ -6,6 +5,8 @@ index.ts
 models/BounceTypeEnum.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/DayOfWeekEnum.ts
+models/Delivery.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
@@ -35,6 +36,8 @@ models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
+models/PickupLocation.ts
+models/PickupLocationOpeningTime.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
@@ -45,6 +48,7 @@ models/StaticSegmentRequest.ts
 models/StatusEnum.ts
 models/StoredUpload.ts
 models/StoredUploadRequest.ts
+models/Subscription.ts
 models/TapirmailApiSegmentAvailableFiltersRetrieve200Response.ts
 models/TapirmailApiSegmentAvailableSegmentsRetrieve200Response.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
