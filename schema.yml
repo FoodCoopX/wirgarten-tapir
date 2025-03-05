@@ -2151,10 +2151,13 @@ components:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
         joker_used:
           type: boolean
-        can_joker_be_used:
+        can_joker_be_used_relative_to_date_limit:
+          type: boolean
+        can_joker_be_used_relative_to_max_amount_per_growing_period:
           type: boolean
       required:
-      - can_joker_be_used
+      - can_joker_be_used_relative_to_date_limit
+      - can_joker_be_used_relative_to_max_amount_per_growing_period
       - delivery_date
       - joker_used
       - pickup_location

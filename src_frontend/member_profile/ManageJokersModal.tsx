@@ -20,17 +20,16 @@ interface ManageJokersModalProps {
   onHide: () => void;
   show: boolean;
   memberId: string;
-  deliveries: Delivery[];
 }
 
 const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   onHide,
   show,
   memberId,
-  deliveries,
 }) => {
   const api = useApi(DeliveriesApi);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
   const [growingPeriods, setGrowingPeriods] = useState<GrowingPeriod[]>([]);
   const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
@@ -62,6 +61,11 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       })
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
+
+    api
+      .deliveriesApiMemberDeliveriesList({ memberId: memberId })
+      .then(setDeliveries)
+      .catch((error) => alert(error));
   }
 
   function getWeekdayLimitDisplay() {
@@ -73,8 +77,16 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       return <span>Joker eingesetzt</span>;
     }
 
-    if (!delivery.canJokerBeUsed) {
+    if (!delivery.canJokerBeUsedRelativeToDateLimit) {
       return <span>Joker kann nicht mehr eingesetzt werden</span>;
+    }
+
+    if (!delivery.canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod) {
+      return (
+        <span>
+          Du hast kein Jokers zu verfügung mehr während diese Vertragsjahr
+        </span>
+      );
     }
 
     return (
@@ -135,6 +147,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .finally(() => {
         setRequestLoading(false);
         setSelectedJokerForCancellation(undefined);
+        loadData();
       });
   }
 
@@ -148,7 +161,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       <ListGroup variant="flush">
         <ListGroup.Item>
           Jokers können bis zum {getWeekdayLimitDisplay()} (inklusiv) vor der
-          Lieferungstag eingesetzt oder abgesagt werden
+          Lieferungstag eingesetzt oder abgesagt werden. <br />
+          Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Jokers
+          eingesetzt werden.
         </ListGroup.Item>
         <ListGroup.Item>
           <h5>Eingesetzter Jokers</h5>

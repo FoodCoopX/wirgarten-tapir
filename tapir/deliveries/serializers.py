@@ -51,7 +51,10 @@ class DeliverySerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     pickup_location_opening_times = PickupLocationOpeningTimeSerializer(many=True)
     joker_used = serializers.BooleanField()
-    can_joker_be_used = serializers.BooleanField()
+    can_joker_be_used_relative_to_date_limit = serializers.BooleanField()
+    can_joker_be_used_relative_to_max_amount_per_growing_period = (
+        serializers.BooleanField()
+    )
 
 
 class JokerSerializer(serializers.ModelSerializer):
