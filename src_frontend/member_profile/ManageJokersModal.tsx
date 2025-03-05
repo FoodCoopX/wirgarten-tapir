@@ -7,13 +7,13 @@ import {
   JokerWithCancellationLimit,
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
 import Weekday from "dayjs/plugin/weekday";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import TapirButton from "../components/TapirButton.tsx";
 import { formatDateText } from "../utils/formatDateText.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
 interface ManageJokersModalProps {
   onHide: () => void;
@@ -79,6 +79,38 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     );
   }
 
+  function usedJokersTable() {
+    return (
+      <Table striped hover responsive>
+        <thead>
+          <tr>
+            <th>KW</th>
+            <th>Kann abgesagt werden spätestens am</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>{jokers.map(usedJokerLine)}</tbody>
+      </Table>
+    );
+  }
+
+  function usedJokerLine(jokerWithCancellation: JokerWithCancellationLimit) {
+    return (
+      <tr key={jokerWithCancellation.joker.id}>
+        <td>KW{dayjs(jokerWithCancellation.joker.date).week()}</td>
+        <td>{formatDateText(jokerWithCancellation.cancellationLimit)}</td>
+        <td>
+          <TapirButton
+            text={"Joker absagen"}
+            variant={"outline-primary"}
+            size={"sm"}
+            icon={"cancel"}
+          />
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true}>
       <Modal.Header closeButton>
@@ -93,21 +125,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         </ListGroup.Item>
         <ListGroup.Item>
           <h5>Eingesetzter Jokers</h5>
-          {jokers.length == 0 ? (
-            "Noch kein eingesetzter Joker"
-          ) : (
-            <ul>
-              {jokers.map((jokerWithCancellation) => {
-                return (
-                  <li>
-                    KW{dayjs(jokerWithCancellation.joker.date).week()}, kann
-                    abgesagt werden bist zum{" "}
-                    {formatDateNumeric(jokerWithCancellation.cancellationLimit)}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {jokers.length == 0
+            ? "Noch kein eingesetzte Joker"
+            : usedJokersTable()}
         </ListGroup.Item>
         <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
           <h5>Kommende Lieferungen</h5>
@@ -122,7 +142,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
             <tbody>
               {deliveries.map((delivery) => {
                 return (
-                  <tr>
+                  <tr key={formatDateNumeric(delivery.deliveryDate)}>
                     <td>KW{dayjs(delivery.deliveryDate).week()}</td>
                     <td>{formatDateText(delivery.deliveryDate)}</td>
                     <td>{getJokerStatus(delivery)}</td>
