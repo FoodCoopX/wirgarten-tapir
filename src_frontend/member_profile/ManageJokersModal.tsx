@@ -109,7 +109,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
             </ul>
           )}
         </ListGroup.Item>
-        <ListGroup.Item>
+        <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
           <h5>Kommende Lieferungen</h5>
           <Table striped hover responsive>
             <thead>
