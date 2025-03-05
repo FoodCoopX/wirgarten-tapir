@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Delivery,
-  Joker,
   JokersApi,
   PickupLocation,
   PickupLocationOpeningTime,
@@ -21,7 +20,6 @@ interface DeliveryListCardProps {
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   const api = useApi(JokersApi);
-  const [jokers, setJokers] = useState<Joker[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [selectedPickupLocation, setSelectedPickupLocation] =
@@ -35,11 +33,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   dayjs.locale("de");
 
   useEffect(() => {
-    api
-      .jokersApiMemberJokersList({ memberId: memberId })
-      .then(setJokers)
-      .catch((error) => alert(error));
-
     setDeliveriesLoading(true);
     api
       .jokersApiMemberDeliveriesList({ memberId: memberId })
@@ -76,15 +69,17 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   function productCell(delivery: Delivery) {
     return (
       <div className={"d-flex flex-column"}>
-        {delivery.subscriptions.map((subscription) => {
-          return (
-            <div key={subscription.id}>
-              {subscription.quantity}
-              {" × "}
-              {subscription.product.name} {subscription.product.type.name}
-            </div>
-          );
-        })}
+        {delivery.jokerUsed
+          ? "Joker eingesetzt"
+          : delivery.subscriptions.map((subscription) => {
+              return (
+                <div key={subscription.id}>
+                  {subscription.quantity}
+                  {" × "}
+                  {subscription.product.name} {subscription.product.type.name}
+                </div>
+              );
+            })}
       </div>
     );
   }

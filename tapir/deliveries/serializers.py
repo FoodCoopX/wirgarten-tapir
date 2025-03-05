@@ -49,6 +49,7 @@ class DeliverySerializer(serializers.Serializer):
     pickup_location = PickupLocationSerializer()
     subscriptions = SubscriptionSerializer(many=True)
     pickup_location_opening_times = PickupLocationOpeningTimeSerializer(many=True)
+    joker_used = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):

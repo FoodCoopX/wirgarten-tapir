@@ -65,6 +65,12 @@ export interface Delivery {
      * @memberof Delivery
      */
     pickupLocationOpeningTimes: Array<PickupLocationOpeningTime>;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Delivery
+     */
+    jokerUsed: boolean;
 }
 
 /**
@@ -75,6 +81,7 @@ export function instanceOfDelivery(value: object): value is Delivery {
     if (!('pickupLocation' in value) || value['pickupLocation'] === undefined) return false;
     if (!('subscriptions' in value) || value['subscriptions'] === undefined) return false;
     if (!('pickupLocationOpeningTimes' in value) || value['pickupLocationOpeningTimes'] === undefined) return false;
+    if (!('jokerUsed' in value) || value['jokerUsed'] === undefined) return false;
     return true;
 }
 
@@ -92,6 +99,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'pickupLocation': PickupLocationFromJSON(json['pickup_location']),
         'subscriptions': ((json['subscriptions'] as Array<any>).map(SubscriptionFromJSON)),
         'pickupLocationOpeningTimes': ((json['pickup_location_opening_times'] as Array<any>).map(PickupLocationOpeningTimeFromJSON)),
+        'jokerUsed': json['joker_used'],
     };
 }
 
@@ -110,6 +118,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'pickup_location': PickupLocationToJSON(value['pickupLocation']),
         'subscriptions': ((value['subscriptions'] as Array<any>).map(SubscriptionToJSON)),
         'pickup_location_opening_times': ((value['pickupLocationOpeningTimes'] as Array<any>).map(PickupLocationOpeningTimeToJSON)),
+        'joker_used': value['jokerUsed'],
     };
 }
 

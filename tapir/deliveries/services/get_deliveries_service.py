@@ -1,5 +1,7 @@
 import datetime
 
+from tapir.deliveries.models import Joker
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import Subscription, PickupLocationOpeningTime, Member
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -68,6 +70,7 @@ class GetDeliveriesService:
                     "pickup_location": pickup_location,
                     "subscriptions": active_subs,
                     "pickup_location_opening_times": opening_times,
+                    "joker_used": cls.is_joker_used_in_week(member, next_delivery_date),
                 }
             )
 
@@ -79,3 +82,13 @@ class GetDeliveriesService:
             )
 
         return deliveries
+
+    @classmethod
+    def is_joker_used_in_week(
+        cls, member: Member, delivery_date: datetime.date
+    ) -> bool:
+        week_start = get_monday(delivery_date)
+        week_end = week_start + datetime.timedelta(days=6)
+        return Joker.objects.filter(
+            member=member, date__gte=week_start, date__lte=week_end
+        ).exists()

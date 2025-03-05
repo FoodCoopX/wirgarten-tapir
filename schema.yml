@@ -2126,8 +2126,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
+        joker_used:
+          type: boolean
       required:
       - delivery_date
+      - joker_used
       - pickup_location
       - pickup_location_opening_times
       - subscriptions
