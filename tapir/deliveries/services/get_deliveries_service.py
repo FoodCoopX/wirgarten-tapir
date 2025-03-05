@@ -1,6 +1,7 @@
 import datetime
 
 from tapir.deliveries.models import Joker
+from tapir.deliveries.services.joker_mangement_service import JokerManagementService
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import Subscription, PickupLocationOpeningTime, Member
@@ -71,6 +72,9 @@ class GetDeliveriesService:
                     "subscriptions": active_subs,
                     "pickup_location_opening_times": opening_times,
                     "joker_used": cls.is_joker_used_in_week(member, next_delivery_date),
+                    "can_joker_be_used": JokerManagementService.can_joker_be_used(
+                        next_delivery_date
+                    ),
                 }
             )
 

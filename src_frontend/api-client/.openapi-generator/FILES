@@ -1,4 +1,4 @@
-apis/JokersApi.ts
+apis/DeliveriesApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
 index.ts
@@ -21,7 +21,10 @@ models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/GroupedEmailDispatch.ts
+models/GrowingPeriod.ts
 models/Joker.ts
+models/JokerWithCancellationLimit.ts
+models/MemberJokerInformation.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
 models/PaginatedEmailConfigurationVersionList.ts

@@ -14,6 +14,10 @@ interface TapirButtonProps {
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
+  function textContent() {
+    return props.loading ? "Loading..." : props.text;
+  }
+
   return (
     <Button
       variant={props.variant ?? "undefined"}
@@ -36,9 +40,12 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
             {props.icon}
           </span>
         ))}
-      {props.text && (
-        <h5 className={"mb-0"}>{props.loading ? "Loading..." : props.text}</h5>
-      )}
+      {props.text &&
+        (props.size == "sm" ? (
+          <span>{textContent()}</span>
+        ) : (
+          <h5 className={"mb-0"}>{textContent()}</h5>
+        ))}
     </Button>
   );
 };

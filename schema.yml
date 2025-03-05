@@ -3,16 +3,16 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /jokers/api/member_deliveries:
+  /deliveries/api/member_deliveries:
     get:
-      operationId: jokers_api_member_deliveries_list
+      operationId: deliveries_api_member_deliveries_list
       parameters:
       - in: query
         name: member_id
         schema:
           type: string
       tags:
-      - jokers
+      - deliveries
       security:
       - cookieAuth: []
       responses:
@@ -24,16 +24,16 @@ paths:
                 items:
                   $ref: '#/components/schemas/Delivery'
           description: ''
-  /jokers/api/member_jokers:
+  /deliveries/api/member_joker_information:
     get:
-      operationId: jokers_api_member_jokers_list
+      operationId: deliveries_api_member_joker_information_retrieve
       parameters:
       - in: query
         name: member_id
         schema:
           type: string
       tags:
-      - jokers
+      - deliveries
       security:
       - cookieAuth: []
       responses:
@@ -41,9 +41,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Joker'
+                $ref: '#/components/schemas/MemberJokerInformation'
           description: ''
   /tapirmail/api/email_configuration/:
     get:
@@ -2128,7 +2126,10 @@ components:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
         joker_used:
           type: boolean
+        can_joker_be_used:
+          type: boolean
       required:
+      - can_joker_be_used
       - delivery_date
       - joker_used
       - pickup_location
@@ -2548,6 +2549,21 @@ components:
       required:
       - count
       - recipient
+    GrowingPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+      required:
+      - end_date
+      - start_date
     Joker:
       type: object
       properties:
@@ -2562,6 +2578,37 @@ components:
       required:
       - date
       - member
+    JokerWithCancellationLimit:
+      type: object
+      properties:
+        joker:
+          $ref: '#/components/schemas/Joker'
+        cancellation_limit:
+          type: string
+          format: date
+      required:
+      - cancellation_limit
+      - joker
+    MemberJokerInformation:
+      type: object
+      properties:
+        used_jokers:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerWithCancellationLimit'
+        max_jokers_per_growing_period:
+          type: integer
+        growing_periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrowingPeriod'
+        weekday_limit:
+          type: integer
+      required:
+      - growing_periods
+      - max_jokers_per_growing_period
+      - used_jokers
+      - weekday_limit
     PaginatedEmailConfigurationDispatchList:
       type: object
       required:

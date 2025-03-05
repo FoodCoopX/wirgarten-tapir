@@ -6,10 +6,18 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
-from tapir.deliveries.serializers import JokerSerializer, DeliverySerializer
+from tapir.deliveries.serializers import (
+    DeliverySerializer,
+    MemberJokerInformationSerializer,
+)
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.wirgarten.models import Member
+from tapir.deliveries.services.joker_mangement_service import (
+    JokerManagementService,
+)
+from tapir.wirgarten.models import Member, GrowingPeriod
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
@@ -35,16 +43,42 @@ class GetMemberDeliveriesView(APIView):
         )
 
 
-class GetMemberJokersView(APIView):
+class GetMemberJokerInformationView(APIView):
     @extend_schema(
-        responses={200: JokerSerializer(many=True)},
+        responses={200: MemberJokerInformationSerializer()},
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def get(self, request):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
 
+        growing_periods = GrowingPeriod.objects.filter(
+            end_date__gte=get_today()
+        ).order_by("start_date")
+        jokers = Joker.objects.filter(
+            member_id=member_id, date__gte=growing_periods.first().start_date
+        )
+        joker_data = [
+            {
+                "joker": joker,
+                "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
+                    joker.date
+                ),
+            }
+            for joker in jokers
+        ]
+        data = {
+            "used_jokers": joker_data,
+            "max_jokers_per_growing_period": get_parameter_value(
+                Parameter.JOKERS_AMOUNT_PER_CONTRACT
+            ),
+            "growing_periods": growing_periods,
+            "weekday_limit": get_parameter_value(
+                Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+            ),
+        }
+
         return Response(
-            JokerSerializer(Joker.objects.filter(member_id=member_id), many=True).data,
+            MemberJokerInformationSerializer(data).data,
             status=status.HTTP_200_OK,
         )

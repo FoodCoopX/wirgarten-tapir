@@ -16,31 +16,31 @@
 import * as runtime from '../runtime';
 import type {
   Delivery,
-  Joker,
+  MemberJokerInformation,
 } from '../models/index';
 import {
     DeliveryFromJSON,
     DeliveryToJSON,
-    JokerFromJSON,
-    JokerToJSON,
+    MemberJokerInformationFromJSON,
+    MemberJokerInformationToJSON,
 } from '../models/index';
 
-export interface JokersApiMemberDeliveriesListRequest {
+export interface DeliveriesApiMemberDeliveriesListRequest {
     memberId?: string;
 }
 
-export interface JokersApiMemberJokersListRequest {
+export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
     memberId?: string;
 }
 
 /**
  * 
  */
-export class JokersApi extends runtime.BaseAPI {
+export class DeliveriesApi extends runtime.BaseAPI {
 
     /**
      */
-    async jokersApiMemberDeliveriesListRaw(requestParameters: JokersApiMemberDeliveriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Delivery>>> {
+    async deliveriesApiMemberDeliveriesListRaw(requestParameters: DeliveriesApiMemberDeliveriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Delivery>>> {
         const queryParameters: any = {};
 
         if (requestParameters['memberId'] != null) {
@@ -50,7 +50,7 @@ export class JokersApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/jokers/api/member_deliveries`,
+            path: `/deliveries/api/member_deliveries`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -61,14 +61,14 @@ export class JokersApi extends runtime.BaseAPI {
 
     /**
      */
-    async jokersApiMemberDeliveriesList(requestParameters: JokersApiMemberDeliveriesListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Delivery>> {
-        const response = await this.jokersApiMemberDeliveriesListRaw(requestParameters, initOverrides);
+    async deliveriesApiMemberDeliveriesList(requestParameters: DeliveriesApiMemberDeliveriesListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Delivery>> {
+        const response = await this.deliveriesApiMemberDeliveriesListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async jokersApiMemberJokersListRaw(requestParameters: JokersApiMemberJokersListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Joker>>> {
+    async deliveriesApiMemberJokerInformationRetrieveRaw(requestParameters: DeliveriesApiMemberJokerInformationRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MemberJokerInformation>> {
         const queryParameters: any = {};
 
         if (requestParameters['memberId'] != null) {
@@ -78,19 +78,19 @@ export class JokersApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/jokers/api/member_jokers`,
+            path: `/deliveries/api/member_joker_information`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(JokerFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => MemberJokerInformationFromJSON(jsonValue));
     }
 
     /**
      */
-    async jokersApiMemberJokersList(requestParameters: JokersApiMemberJokersListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Joker>> {
-        const response = await this.jokersApiMemberJokersListRaw(requestParameters, initOverrides);
+    async deliveriesApiMemberJokerInformationRetrieve(requestParameters: DeliveriesApiMemberJokerInformationRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberJokerInformation> {
+        const response = await this.deliveriesApiMemberJokerInformationRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

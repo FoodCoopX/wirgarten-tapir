@@ -2,12 +2,12 @@ from django.urls import path
 
 from tapir.deliveries import views
 
-app_name = "Jokers"
+app_name = "Deliveries"
 urlpatterns = [
     path(
-        "api/member_jokers",
-        views.GetMemberJokersView.as_view(),
-        name="member_jokers",
+        "api/member_joker_information",
+        views.GetMemberJokerInformationView.as_view(),
+        name="member_joker_information",
     ),
     path(
         "api/member_deliveries",

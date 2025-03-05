@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
+  DeliveriesApi,
   Delivery,
-  JokersApi,
   PickupLocation,
   PickupLocationOpeningTime,
 } from "../api-client";
@@ -13,13 +13,14 @@ import RelativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
 import PickupLocationModal from "./PickupLocationModal.tsx";
+import ManageJokersModal from "./ManageJokersModal.tsx";
 
 interface DeliveryListCardProps {
   memberId: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
-  const api = useApi(JokersApi);
+  const api = useApi(DeliveriesApi);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [selectedPickupLocation, setSelectedPickupLocation] =
@@ -28,6 +29,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
     selectedPickupLocationOpeningTimes,
     setSelectedPickupLocationOpeningTimes,
   ] = useState<PickupLocationOpeningTime[]>([]);
+  const [showManageJokersModal, setShowManageJokersModal] = useState(false);
 
   dayjs.extend(RelativeTime);
   dayjs.locale("de");
@@ -35,7 +37,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   useEffect(() => {
     setDeliveriesLoading(true);
     api
-      .jokersApiMemberDeliveriesList({ memberId: memberId })
+      .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
       .catch((error) => alert(error))
       .finally(() => setDeliveriesLoading(false));
@@ -113,11 +115,21 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
             className={"d-flex justify-content-between align-items-center mb-0"}
           >
             <h5 className={"mb-0"}>Abholung</h5>
-            <TapirButton
-              text={"Bearbeiten"}
-              icon={"edit"}
-              variant={"outline-primary"}
-            />
+            <span className={"d-flex gap-2"}>
+              <TapirButton
+                text={"Jokers"}
+                icon={"free_cancellation"}
+                variant={"outline-primary"}
+                onClick={() => {
+                  setShowManageJokersModal(true);
+                }}
+              />
+              <TapirButton
+                text={"Bearbeiten"}
+                icon={"edit"}
+                variant={"outline-primary"}
+              />
+            </span>
           </div>
         </Card.Header>
         <Card.Body className={"p-0"}>
@@ -154,6 +166,12 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
           onHide={() => setSelectedPickupLocation(undefined)}
         />
       )}
+      <ManageJokersModal
+        deliveries={deliveries}
+        show={showManageJokersModal}
+        onHide={() => setShowManageJokersModal(false)}
+        memberId={memberId}
+      />
     </>
   );
 };

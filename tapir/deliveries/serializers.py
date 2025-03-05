@@ -7,6 +7,7 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Product,
     ProductType,
+    GrowingPeriod,
 )
 
 
@@ -50,9 +51,28 @@ class DeliverySerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     pickup_location_opening_times = PickupLocationOpeningTimeSerializer(many=True)
     joker_used = serializers.BooleanField()
+    can_joker_be_used = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Joker
         fields = "__all__"
+
+
+class GrowingPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrowingPeriod
+        fields = "__all__"
+
+
+class JokerWithCancellationLimitSerializer(serializers.Serializer):
+    joker = JokerSerializer()
+    cancellation_limit = serializers.DateField()
+
+
+class MemberJokerInformationSerializer(serializers.Serializer):
+    used_jokers = JokerWithCancellationLimitSerializer(many=True)
+    max_jokers_per_growing_period = serializers.IntegerField()
+    growing_periods = GrowingPeriodSerializer(many=True)
+    weekday_limit = serializers.IntegerField()
