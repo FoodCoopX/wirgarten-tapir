@@ -1,7 +1,7 @@
 import datetime
 
 from tapir.deliveries.models import Joker
-from tapir.deliveries.services.joker_mangement_service import JokerManagementService
+from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import Subscription, PickupLocationOpeningTime, Member

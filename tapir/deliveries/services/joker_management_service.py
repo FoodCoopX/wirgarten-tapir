@@ -1,6 +1,7 @@
 import datetime
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.models import Joker
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -24,3 +25,11 @@ class JokerManagementService:
     @classmethod
     def can_joker_be_used(cls, reference_date: datetime.date) -> bool:
         return cls.get_date_limit_for_joker_changes(reference_date) > get_today()
+
+    @classmethod
+    def can_joker_be_cancelled(cls, joker: Joker) -> bool:
+        return get_today() <= cls.get_date_limit_for_joker_changes(joker.date)
+
+    @classmethod
+    def cancel_joker(cls, joker: Joker):
+        joker.delete()

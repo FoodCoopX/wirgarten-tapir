@@ -3,6 +3,31 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /deliveries/api/cancel_joker:
+    post:
+      operationId: deliveries_api_cancel_joker_create
+      parameters:
+      - in: query
+        name: joker_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /deliveries/api/member_deliveries:
     get:
       operationId: deliveries_api_member_deliveries_list

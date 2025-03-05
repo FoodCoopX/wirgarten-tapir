@@ -13,7 +13,7 @@ from tapir.deliveries.serializers import (
     MemberJokerInformationSerializer,
 )
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.deliveries.services.joker_mangement_service import (
+from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
 from tapir.wirgarten.models import Member, GrowingPeriod
@@ -80,5 +80,29 @@ class GetMemberJokerInformationView(APIView):
 
         return Response(
             MemberJokerInformationSerializer(data).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class CancelJokerView(APIView):
+    @extend_schema(
+        responses={200: str, 403: str},
+        parameters=[OpenApiParameter(name="joker_id", type=str)],
+    )
+    def post(self, request):
+        joker_id = request.query_params.get("joker_id")
+        joker = get_object_or_404(Joker, id=joker_id)
+        check_permission_or_self(joker.member_id, request)
+
+        if not JokerManagementService.can_joker_be_cancelled(joker):
+            return Response(
+                "Es ist zu spät um dieses Joker abzusagen",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        JokerManagementService.cancel_joker(joker)
+
+        return Response(
+            "Joker abgesagt",
             status=status.HTTP_200_OK,
         )

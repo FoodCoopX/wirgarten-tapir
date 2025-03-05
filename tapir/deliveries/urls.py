@@ -14,4 +14,9 @@ urlpatterns = [
         views.GetMemberDeliveriesView.as_view(),
         name="member_deliveries",
     ),
+    path(
+        "api/cancel_joker",
+        views.CancelJokerView.as_view(),
+        name="cancel_joker",
+    ),
 ]

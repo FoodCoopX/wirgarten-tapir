@@ -25,6 +25,10 @@ import {
     MemberJokerInformationToJSON,
 } from '../models/index';
 
+export interface DeliveriesApiCancelJokerCreateRequest {
+    jokerId?: string;
+}
+
 export interface DeliveriesApiMemberDeliveriesListRequest {
     memberId?: string;
 }
@@ -37,6 +41,38 @@ export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
  * 
  */
 export class DeliveriesApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async deliveriesApiCancelJokerCreateRaw(requestParameters: DeliveriesApiCancelJokerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['jokerId'] != null) {
+            queryParameters['joker_id'] = requestParameters['jokerId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/api/cancel_joker`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async deliveriesApiCancelJokerCreate(requestParameters: DeliveriesApiCancelJokerCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.deliveriesApiCancelJokerCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

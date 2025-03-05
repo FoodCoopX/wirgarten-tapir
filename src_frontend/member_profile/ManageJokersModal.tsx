@@ -4,6 +4,7 @@ import {
   DeliveriesApi,
   Delivery,
   GrowingPeriod,
+  Joker,
   JokerWithCancellationLimit,
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
@@ -35,6 +36,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
     useState(-1);
   const [weekdayLimit, setWeekdayLimit] = useState(6);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [selectedJokerForCancellation, setSelectedJokerForCancellation] =
+    useState<Joker>();
 
   dayjs.extend(Weekday);
   dayjs.extend(WeekOfYear);
@@ -43,6 +47,10 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   useEffect(() => {
     if (!show) return;
 
+    loadData();
+  }, [show, memberId]);
+
+  function loadData() {
     setInfoLoading(true);
     api
       .deliveriesApiMemberJokerInformationRetrieve({ memberId: memberId })
@@ -54,7 +62,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       })
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
-  }, [show, memberId]);
+  }
 
   function getWeekdayLimitDisplay() {
     return dayjs().weekday(weekdayLimit).format("dddd");
@@ -75,6 +83,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         variant={"outline-primary"}
         size={"sm"}
         icon={"free_cancellation"}
+        disabled={requestLoading}
       />
     );
   }
@@ -105,10 +114,28 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
             variant={"outline-primary"}
             size={"sm"}
             icon={"cancel"}
+            onClick={() => cancelJoker(jokerWithCancellation.joker)}
+            disabled={requestLoading}
+            loading={
+              jokerWithCancellation.joker == selectedJokerForCancellation
+            }
           />
         </td>
       </tr>
     );
+  }
+
+  function cancelJoker(joker: Joker) {
+    setRequestLoading(true);
+    setSelectedJokerForCancellation(joker);
+    api
+      .deliveriesApiCancelJokerCreate({ jokerId: joker.id })
+      .then(() => loadData())
+      .catch((error) => alert(error))
+      .finally(() => {
+        setRequestLoading(false);
+        setSelectedJokerForCancellation(undefined);
+      });
   }
 
   return (
