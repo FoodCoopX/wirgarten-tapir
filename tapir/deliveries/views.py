@@ -72,10 +72,10 @@ class GetMemberJokerInformationView(APIView):
             "max_jokers_per_growing_period": get_parameter_value(
                 Parameter.JOKERS_AMOUNT_PER_CONTRACT
             ),
-            "growing_periods": growing_periods,
             "weekday_limit": get_parameter_value(
                 Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
             ),
+            "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(),
         }
 
         return Response(
@@ -126,7 +126,7 @@ class UseJokerView(APIView):
 
         if not JokerManagementService.can_joker_be_used(member, date):
             return Response(
-                "Du darfst kein Joker an dem Liefertag einsetzen",
+                "Du darfst an dem Liefertag kein Joker einsetzen",
                 status=status.HTTP_403_FORBIDDEN,
             )
 

@@ -76,13 +76,7 @@ export interface Delivery {
      * @type {boolean}
      * @memberof Delivery
      */
-    canJokerBeUsedRelativeToDateLimit: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof Delivery
-     */
-    canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod: boolean;
+    canJokerBeUsed: boolean;
 }
 
 /**
@@ -94,8 +88,7 @@ export function instanceOfDelivery(value: object): value is Delivery {
     if (!('subscriptions' in value) || value['subscriptions'] === undefined) return false;
     if (!('pickupLocationOpeningTimes' in value) || value['pickupLocationOpeningTimes'] === undefined) return false;
     if (!('jokerUsed' in value) || value['jokerUsed'] === undefined) return false;
-    if (!('canJokerBeUsedRelativeToDateLimit' in value) || value['canJokerBeUsedRelativeToDateLimit'] === undefined) return false;
-    if (!('canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod' in value) || value['canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod'] === undefined) return false;
+    if (!('canJokerBeUsed' in value) || value['canJokerBeUsed'] === undefined) return false;
     return true;
 }
 
@@ -114,8 +107,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'subscriptions': ((json['subscriptions'] as Array<any>).map(SubscriptionFromJSON)),
         'pickupLocationOpeningTimes': ((json['pickup_location_opening_times'] as Array<any>).map(PickupLocationOpeningTimeFromJSON)),
         'jokerUsed': json['joker_used'],
-        'canJokerBeUsedRelativeToDateLimit': json['can_joker_be_used_relative_to_date_limit'],
-        'canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod': json['can_joker_be_used_relative_to_max_amount_per_growing_period'],
+        'canJokerBeUsed': json['can_joker_be_used'],
     };
 }
 
@@ -135,8 +127,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'subscriptions': ((value['subscriptions'] as Array<any>).map(SubscriptionToJSON)),
         'pickup_location_opening_times': ((value['pickupLocationOpeningTimes'] as Array<any>).map(PickupLocationOpeningTimeToJSON)),
         'joker_used': value['jokerUsed'],
-        'can_joker_be_used_relative_to_date_limit': value['canJokerBeUsedRelativeToDateLimit'],
-        'can_joker_be_used_relative_to_max_amount_per_growing_period': value['canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod'],
+        'can_joker_be_used': value['canJokerBeUsed'],
     };
 }
 

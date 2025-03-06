@@ -133,6 +133,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
+        from tapir.deliveries.services.joker_management_service import (
+            JokerManagementService,
+        )
 
         parameter_definition(
             key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
@@ -816,8 +819,12 @@ Dein WirGarten-Team""",
             zB: max 2 jokers pro Mitglied in August.
             Format: startDatum-endDatum-anzahlAnJokers;startDatum-endDatum-anzahlAnJokers
             Beispiel: 01.08-31.08-2;15.02-20.03-3 heißt max 2 jokers zwischen den 01.08 und den 31.08
-            und max 3 jokers zwischen den 15.02 und den 20.03
+            und max 3 jokers zwischen den 15.02 und den 20.03.
+            Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
             """,
             category=ParameterCategory.JOKERS,
             order_priority=3,
+            meta=ParameterMeta(
+                validators=[JokerManagementService.validate_joker_restrictions]
+            ),
         )

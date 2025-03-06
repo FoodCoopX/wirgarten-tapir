@@ -72,10 +72,7 @@ class GetDeliveriesService:
                     "subscriptions": active_subs,
                     "pickup_location_opening_times": opening_times,
                     "joker_used": cls.is_joker_used_in_week(member, next_delivery_date),
-                    "can_joker_be_used_relative_to_date_limit": JokerManagementService.can_joker_be_used_relative_to_date_limit(
-                        next_delivery_date
-                    ),
-                    "can_joker_be_used_relative_to_max_amount_per_growing_period": JokerManagementService.can_joker_be_used_relative_to_max_amount_per_growing_period(
+                    "can_joker_be_used": JokerManagementService.can_joker_be_used(
                         member, next_delivery_date
                     ),
                 }

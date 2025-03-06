@@ -21,8 +21,8 @@ models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/GroupedEmailDispatch.ts
-models/GrowingPeriod.ts
 models/Joker.ts
+models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
 models/MemberJokerInformation.ts
 models/PaginatedEmailConfigurationDispatchList.ts

@@ -2181,13 +2181,10 @@ components:
             $ref: '#/components/schemas/PickupLocationOpeningTime'
         joker_used:
           type: boolean
-        can_joker_be_used_relative_to_date_limit:
-          type: boolean
-        can_joker_be_used_relative_to_max_amount_per_growing_period:
+        can_joker_be_used:
           type: boolean
       required:
-      - can_joker_be_used_relative_to_date_limit
-      - can_joker_be_used_relative_to_max_amount_per_growing_period
+      - can_joker_be_used
       - delivery_date
       - joker_used
       - pickup_location
@@ -2607,21 +2604,6 @@ components:
       required:
       - count
       - recipient
-    GrowingPeriod:
-      type: object
-      properties:
-        id:
-          type: string
-          maxLength: 10
-        start_date:
-          type: string
-          format: date
-        end_date:
-          type: string
-          format: date
-      required:
-      - end_date
-      - start_date
     Joker:
       type: object
       properties:
@@ -2636,6 +2618,25 @@ components:
       required:
       - date
       - member
+    JokerRestriction:
+      type: object
+      properties:
+        start_day:
+          type: integer
+        start_month:
+          type: integer
+        end_day:
+          type: integer
+        end_month:
+          type: integer
+        max_jokers:
+          type: integer
+      required:
+      - end_day
+      - end_month
+      - max_jokers
+      - start_day
+      - start_month
     JokerWithCancellationLimit:
       type: object
       properties:
@@ -2656,14 +2657,14 @@ components:
             $ref: '#/components/schemas/JokerWithCancellationLimit'
         max_jokers_per_growing_period:
           type: integer
-        growing_periods:
-          type: array
-          items:
-            $ref: '#/components/schemas/GrowingPeriod'
         weekday_limit:
           type: integer
+        joker_restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerRestriction'
       required:
-      - growing_periods
+      - joker_restrictions
       - max_jokers_per_growing_period
       - used_jokers
       - weekday_limit

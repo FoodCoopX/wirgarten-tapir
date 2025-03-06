@@ -167,7 +167,6 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
         />
       )}
       <ManageJokersModal
-        deliveries={deliveries}
         show={showManageJokersModal}
         onHide={() => setShowManageJokersModal(false)}
         memberId={memberId}

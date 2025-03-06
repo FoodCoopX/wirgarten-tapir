@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ListGroup, Modal, Spinner, Table } from "react-bootstrap";
+import { ListGroup, Modal, Placeholder, Spinner, Table } from "react-bootstrap";
 import {
   DeliveriesApi,
   Delivery,
-  GrowingPeriod,
   Joker,
+  JokerRestriction,
   JokerWithCancellationLimit,
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
@@ -30,10 +30,11 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   const api = useApi(DeliveriesApi);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
-  const [growingPeriods, setGrowingPeriods] = useState<GrowingPeriod[]>([]);
   const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
     useState(-1);
+  const [restrictions, setRestrictions] = useState<JokerRestriction[]>([]);
   const [weekdayLimit, setWeekdayLimit] = useState(6);
   const [requestLoading, setRequestLoading] = useState(false);
   const [selectedJokerForCancellation, setSelectedJokerForCancellation] =
@@ -48,27 +49,28 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   useEffect(() => {
     if (!show) return;
 
+    setInfoLoading(true);
     loadData();
   }, [show, memberId]);
 
   function loadData() {
-    setInfoLoading(true);
     api
       .deliveriesApiMemberJokerInformationRetrieve({ memberId: memberId })
       .then((info) => {
         setJokers(info.usedJokers);
-        setGrowingPeriods(info.growingPeriods);
         setMaxJokersPerGrowingPeriod(info.maxJokersPerGrowingPeriod);
         setWeekdayLimit(info.weekdayLimit);
+        setRestrictions(info.jokerRestrictions);
       })
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
 
-    setDeliveries([]);
+    setDeliveriesLoading(true);
     api
       .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
-      .catch((error) => alert(error));
+      .catch((error) => alert(error))
+      .finally(() => setDeliveriesLoading(false));
   }
 
   function getWeekdayLimitDisplay() {
@@ -80,16 +82,8 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       return <span>Joker eingesetzt</span>;
     }
 
-    if (!delivery.canJokerBeUsedRelativeToDateLimit) {
-      return <span>Joker kann nicht mehr eingesetzt werden</span>;
-    }
-
-    if (!delivery.canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod) {
-      return (
-        <span>
-          Du hast kein Jokers zu verfügung mehr während diese Vertragsjahr
-        </span>
-      );
+    if (!delivery.canJokerBeUsed) {
+      return <span>Joker kann nicht eingesetzt werden</span>;
     }
 
     return (
@@ -173,6 +167,22 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       });
   }
 
+  function loadingPlaceholder() {
+    return Array.from(Array(7).keys()).map((index) => {
+      return (
+        <tr key={index}>
+          {Array.from(Array(3).keys()).map((index) => {
+            return (
+              <td key={index}>
+                <Placeholder lg={10} />
+              </td>
+            );
+          })}
+        </tr>
+      );
+    });
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true}>
       <Modal.Header closeButton>
@@ -191,6 +201,22 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
             Lieferungstag eingesetzt oder abgesagt werden. <br />
             Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Jokers
             eingesetzt werden.
+            {restrictions.length > 0 && (
+              <>
+                <br />
+                Zusätzliche Einschränkungen:
+                <ul>
+                  {restrictions.map((restriction, index) => (
+                    <li key={index}>
+                      Zwischen dem {restriction.startDay}.
+                      {restriction.startMonth}. und dem {restriction.endDay}.
+                      {restriction.endMonth}. dürfen maximal{" "}
+                      {restriction.maxJokers} Jokers eingesetzt werden.
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </ListGroup.Item>
           <ListGroup.Item>
             <h5>Eingesetzter Jokers</h5>
@@ -209,15 +235,17 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {deliveries.map((delivery) => {
-                  return (
-                    <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                      <td>KW{dayjs(delivery.deliveryDate).week()}</td>
-                      <td>{formatDateText(delivery.deliveryDate)}</td>
-                      <td>{getJokerStatus(delivery)}</td>
-                    </tr>
-                  );
-                })}
+                {deliveriesLoading
+                  ? loadingPlaceholder()
+                  : deliveries.map((delivery) => {
+                      return (
+                        <tr key={formatDateNumeric(delivery.deliveryDate)}>
+                          <td>KW{dayjs(delivery.deliveryDate).week()}</td>
+                          <td>{formatDateText(delivery.deliveryDate)}</td>
+                          <td>{getJokerStatus(delivery)}</td>
+                        </tr>
+                      );
+                    })}
               </tbody>
             </Table>
           </ListGroup.Item>

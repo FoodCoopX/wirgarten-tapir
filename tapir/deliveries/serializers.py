@@ -51,10 +51,7 @@ class DeliverySerializer(serializers.Serializer):
     subscriptions = SubscriptionSerializer(many=True)
     pickup_location_opening_times = PickupLocationOpeningTimeSerializer(many=True)
     joker_used = serializers.BooleanField()
-    can_joker_be_used_relative_to_date_limit = serializers.BooleanField()
-    can_joker_be_used_relative_to_max_amount_per_growing_period = (
-        serializers.BooleanField()
-    )
+    can_joker_be_used = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):
@@ -74,8 +71,16 @@ class JokerWithCancellationLimitSerializer(serializers.Serializer):
     cancellation_limit = serializers.DateField()
 
 
+class JokerRestrictionSerializer(serializers.Serializer):
+    start_day = serializers.IntegerField()
+    start_month = serializers.IntegerField()
+    end_day = serializers.IntegerField()
+    end_month = serializers.IntegerField()
+    max_jokers = serializers.IntegerField()
+
+
 class MemberJokerInformationSerializer(serializers.Serializer):
     used_jokers = JokerWithCancellationLimitSerializer(many=True)
     max_jokers_per_growing_period = serializers.IntegerField()
-    growing_periods = GrowingPeriodSerializer(many=True)
     weekday_limit = serializers.IntegerField()
+    joker_restrictions = JokerRestrictionSerializer(many=True)
