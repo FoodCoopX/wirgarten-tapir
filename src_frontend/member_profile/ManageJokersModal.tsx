@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ListGroup, Modal, Table } from "react-bootstrap";
+import { ListGroup, Modal, Spinner, Table } from "react-bootstrap";
 import {
   DeliveriesApi,
   Delivery,
@@ -38,6 +38,8 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   const [requestLoading, setRequestLoading] = useState(false);
   const [selectedJokerForCancellation, setSelectedJokerForCancellation] =
     useState<Joker>();
+  const [selectedDeliveryForJokerUse, setSelectedDeliveryForJokerUse] =
+    useState<Delivery>();
 
   dayjs.extend(Weekday);
   dayjs.extend(WeekOfYear);
@@ -62,6 +64,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
 
+    setDeliveries([]);
     api
       .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
@@ -96,6 +99,8 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         size={"sm"}
         icon={"free_cancellation"}
         disabled={requestLoading}
+        loading={selectedDeliveryForJokerUse == delivery}
+        onClick={() => useJoker(delivery)}
       />
     );
   }
@@ -151,6 +156,23 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       });
   }
 
+  function useJoker(delivery: Delivery) {
+    setRequestLoading(true);
+    setSelectedDeliveryForJokerUse(delivery);
+    api
+      .deliveriesApiUseJokerCreate({
+        memberId: memberId,
+        date: delivery.deliveryDate,
+      })
+      .then(() => loadData())
+      .catch((error) => alert(error))
+      .finally(() => {
+        setRequestLoading(false);
+        setSelectedDeliveryForJokerUse(undefined);
+        loadData();
+      });
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true}>
       <Modal.Header closeButton>
@@ -158,43 +180,49 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
           <h4>Jokers verwalten</h4>
         </Modal.Title>
       </Modal.Header>
-      <ListGroup variant="flush">
-        <ListGroup.Item>
-          Jokers können bis zum {getWeekdayLimitDisplay()} (inklusiv) vor der
-          Lieferungstag eingesetzt oder abgesagt werden. <br />
-          Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Jokers
-          eingesetzt werden.
-        </ListGroup.Item>
-        <ListGroup.Item>
-          <h5>Eingesetzter Jokers</h5>
-          {jokers.length == 0
-            ? "Noch kein eingesetzte Joker"
-            : usedJokersTable()}
-        </ListGroup.Item>
-        <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
-          <h5>Kommende Lieferungen</h5>
-          <Table striped hover responsive>
-            <thead>
-              <tr>
-                <th>KW</th>
-                <th>Datum der Lieferung</th>
-                <th>Joker Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deliveries.map((delivery) => {
-                return (
-                  <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                    <td>KW{dayjs(delivery.deliveryDate).week()}</td>
-                    <td>{formatDateText(delivery.deliveryDate)}</td>
-                    <td>{getJokerStatus(delivery)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        </ListGroup.Item>
-      </ListGroup>
+      {infoLoading ? (
+        <Modal.Body>
+          <Spinner />
+        </Modal.Body>
+      ) : (
+        <ListGroup variant="flush">
+          <ListGroup.Item>
+            Jokers können bis zum {getWeekdayLimitDisplay()} (inklusiv) vor der
+            Lieferungstag eingesetzt oder abgesagt werden. <br />
+            Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Jokers
+            eingesetzt werden.
+          </ListGroup.Item>
+          <ListGroup.Item>
+            <h5>Eingesetzter Jokers</h5>
+            {jokers.length == 0
+              ? "Noch kein eingesetzte Joker"
+              : usedJokersTable()}
+          </ListGroup.Item>
+          <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
+            <h5>Kommende Lieferungen</h5>
+            <Table striped hover responsive>
+              <thead>
+                <tr>
+                  <th>KW</th>
+                  <th>Datum der Lieferung</th>
+                  <th>Joker Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deliveries.map((delivery) => {
+                  return (
+                    <tr key={formatDateNumeric(delivery.deliveryDate)}>
+                      <td>KW{dayjs(delivery.deliveryDate).week()}</td>
+                      <td>{formatDateText(delivery.deliveryDate)}</td>
+                      <td>{getJokerStatus(delivery)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </ListGroup.Item>
+        </ListGroup>
+      )}
     </Modal>
   );
 };

@@ -55,3 +55,18 @@ class JokerManagementService:
     @classmethod
     def cancel_joker(cls, joker: Joker):
         joker.delete()
+
+    @classmethod
+    def can_joker_be_used(cls, member: Member, reference_date: datetime.date) -> bool:
+        if Joker.objects.filter(
+            member=member,
+            date__week=reference_date.isocalendar().week,
+            date__year=reference_date.year,
+        ).exists():
+            return False
+
+        return cls.can_joker_be_used_relative_to_date_limit(
+            reference_date
+        ) and cls.can_joker_be_used_relative_to_max_amount_per_growing_period(
+            member, reference_date
+        )

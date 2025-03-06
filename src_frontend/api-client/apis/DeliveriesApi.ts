@@ -37,6 +37,11 @@ export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
     memberId?: string;
 }
 
+export interface DeliveriesApiUseJokerCreateRequest {
+    date?: Date;
+    memberId?: string;
+}
+
 /**
  * 
  */
@@ -127,6 +132,42 @@ export class DeliveriesApi extends runtime.BaseAPI {
      */
     async deliveriesApiMemberJokerInformationRetrieve(requestParameters: DeliveriesApiMemberJokerInformationRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberJokerInformation> {
         const response = await this.deliveriesApiMemberJokerInformationRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesApiUseJokerCreateRaw(requestParameters: DeliveriesApiUseJokerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['date'] != null) {
+            queryParameters['date'] = (requestParameters['date'] as any).toISOString().substring(0,10);
+        }
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/api/use_joker`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async deliveriesApiUseJokerCreate(requestParameters: DeliveriesApiUseJokerCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.deliveriesApiUseJokerCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

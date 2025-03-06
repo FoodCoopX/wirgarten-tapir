@@ -57,7 +57,7 @@ class GetMemberJokerInformationView(APIView):
         ).order_by("start_date")
         jokers = Joker.objects.filter(
             member_id=member_id, date__gte=growing_periods.first().start_date
-        )
+        ).order_by("date")
         joker_data = [
             {
                 "joker": joker,
@@ -104,5 +104,35 @@ class CancelJokerView(APIView):
 
         return Response(
             "Joker abgesagt",
+            status=status.HTTP_200_OK,
+        )
+
+
+class UseJokerView(APIView):
+    @extend_schema(
+        responses={200: str, 403: str},
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="date", type=datetime.date),
+        ],
+    )
+    def post(self, request):
+        member_id = request.query_params.get("member_id")
+        date_string = request.query_params.get("date")
+        date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+        check_permission_or_self(member_id, request)
+
+        member = get_object_or_404(Member, id=member_id)
+
+        if not JokerManagementService.can_joker_be_used(member, date):
+            return Response(
+                "Du darfst kein Joker an dem Liefertag einsetzen",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        Joker.objects.create(member=member, date=date)
+
+        return Response(
+            "Joker angesetzt",
             status=status.HTTP_200_OK,
         )

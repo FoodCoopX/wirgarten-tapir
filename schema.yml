@@ -68,6 +68,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberJokerInformation'
           description: ''
+  /deliveries/api/use_joker:
+    post:
+      operationId: deliveries_api_use_joker_create
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list

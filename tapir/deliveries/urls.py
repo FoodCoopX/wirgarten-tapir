@@ -19,4 +19,9 @@ urlpatterns = [
         views.CancelJokerView.as_view(),
         name="cancel_joker",
     ),
+    path(
+        "api/use_joker",
+        views.UseJokerView.as_view(),
+        name="use_joker",
+    ),
 ]
