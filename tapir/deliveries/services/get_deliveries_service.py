@@ -13,39 +13,20 @@ class GetDeliveriesService:
     def get_deliveries(
         cls,
         member: Member,
-        limit: int = None,
-        date_from: datetime.date = None,
-        date_to: datetime.date = None,
+        date_from: datetime.date,
+        date_to: datetime.date,
     ):
         deliveries = []
 
-        if date_from is None:
-            date_from = (
-                Subscription.objects.filter(member=member)
-                .order_by("start_date")
-                .first()
-                .start_date
-            )
-
-        if date_to is None and limit is None:
-            limit = 10
-
-        iteration = 0
         next_delivery_date = get_next_delivery_date(date_from)
-        while (date_to is not None and next_delivery_date <= date_to) or (
-            limit is not None and iteration < limit
-        ):
+        while next_delivery_date <= date_to:
             delivery_object = cls.build_delivery_object(member, next_delivery_date)
             if delivery_object:
                 deliveries.append(delivery_object)
 
-            if limit and iteration >= limit:
-                break
-
             next_delivery_date = get_next_delivery_date(
                 next_delivery_date + datetime.timedelta(days=1)
             )
-            iteration += 1
 
         return deliveries
 
