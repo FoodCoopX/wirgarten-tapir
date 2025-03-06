@@ -20,17 +20,21 @@ interface ManageJokersModalProps {
   onHide: () => void;
   show: boolean;
   memberId: string;
+  deliveries: Delivery[];
+  loadDeliveries: () => void;
+  deliveriesLoading: boolean;
 }
 
 const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   onHide,
   show,
   memberId,
+  deliveries,
+  loadDeliveries,
+  deliveriesLoading,
 }) => {
   const api = useApi(DeliveriesApi);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
-  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
   const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
     useState(-1);
@@ -65,12 +69,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
 
-    setDeliveriesLoading(true);
-    api
-      .deliveriesApiMemberDeliveriesList({ memberId: memberId })
-      .then(setDeliveries)
-      .catch((error) => alert(error))
-      .finally(() => setDeliveriesLoading(false));
+    loadDeliveries();
   }
 
   function getWeekdayLimitDisplay() {

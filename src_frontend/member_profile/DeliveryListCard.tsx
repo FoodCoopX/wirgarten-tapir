@@ -35,13 +35,17 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
   dayjs.locale("de");
 
   useEffect(() => {
+    loadDeliveries();
+  }, []);
+
+  function loadDeliveries() {
     setDeliveriesLoading(true);
     api
       .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
       .catch((error) => alert(error))
       .finally(() => setDeliveriesLoading(false));
-  }, []);
+  }
 
   function loadingPlaceholder() {
     return Array.from(Array(7).keys()).map((index) => {
@@ -170,6 +174,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
         show={showManageJokersModal}
         onHide={() => setShowManageJokersModal(false)}
         memberId={memberId}
+        deliveries={deliveries}
+        loadDeliveries={loadDeliveries}
+        deliveriesLoading={deliveriesLoading}
       />
     </>
   );
