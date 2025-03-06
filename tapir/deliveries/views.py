@@ -55,9 +55,12 @@ class GetMemberJokerInformationView(APIView):
         growing_periods = GrowingPeriod.objects.filter(
             end_date__gte=get_today()
         ).order_by("start_date")
-        jokers = Joker.objects.filter(
-            member_id=member_id, date__gte=growing_periods.first().start_date
-        ).order_by("date")
+        jokers = []
+        if growing_periods.exists():
+            jokers = Joker.objects.filter(
+                member_id=member_id, date__gte=growing_periods.first().start_date
+            ).order_by("date")
+
         joker_data = [
             {
                 "joker": joker,
@@ -67,6 +70,7 @@ class GetMemberJokerInformationView(APIView):
             }
             for joker in jokers
         ]
+
         data = {
             "used_jokers": joker_data,
             "max_jokers_per_growing_period": get_parameter_value(
