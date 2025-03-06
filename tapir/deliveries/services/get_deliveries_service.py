@@ -4,7 +4,11 @@ from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
-from tapir.wirgarten.models import Subscription, PickupLocationOpeningTime, Member
+from tapir.wirgarten.models import (
+    Subscription,
+    PickupLocationOpeningTime,
+    Member,
+)
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 
 
@@ -52,6 +56,25 @@ class GetDeliveriesService:
         opening_times = PickupLocationOpeningTime.objects.filter(
             pickup_location=pickup_location
         )
+        delivery_date = cls.update_delivery_date_to_opening_times(
+            opening_times, delivery_date
+        )
+
+        return {
+            "delivery_date": delivery_date,
+            "pickup_location": pickup_location,
+            "pickup_location_opening_times": opening_times,
+            "subscriptions": active_subs,
+            "joker_used": cls.is_joker_used_in_week(member, delivery_date),
+            "can_joker_be_used": JokerManagementService.can_joker_be_used(
+                member, delivery_date
+            ),
+        }
+
+    @classmethod
+    def update_delivery_date_to_opening_times(
+        cls, opening_times, delivery_date: datetime.date
+    ):
         delivery_date += datetime.timedelta(
             days=(
                 opening_times[0].day_of_week - delivery_date.weekday()
@@ -59,17 +82,7 @@ class GetDeliveriesService:
                 else 0
             )
         )
-
-        return {
-            "delivery_date": delivery_date,
-            "pickup_location": pickup_location,
-            "subscriptions": active_subs,
-            "pickup_location_opening_times": opening_times,
-            "joker_used": cls.is_joker_used_in_week(member, delivery_date),
-            "can_joker_be_used": JokerManagementService.can_joker_be_used(
-                member, delivery_date
-            ),
-        }
+        return delivery_date
 
     @classmethod
     def is_joker_used_in_week(
