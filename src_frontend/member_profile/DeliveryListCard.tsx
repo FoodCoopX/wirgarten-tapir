@@ -18,9 +18,13 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
 interface DeliveryListCardProps {
   memberId: string;
+  areJokersEnabled: boolean;
 }
 
-const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
+const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
+  memberId,
+  areJokersEnabled,
+}) => {
   const api = useApi(DeliveriesApi);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
@@ -121,14 +125,16 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
           >
             <h5 className={"mb-0"}>Abholung</h5>
             <span className={"d-flex gap-2"}>
-              <TapirButton
-                text={"Jokers"}
-                icon={"free_cancellation"}
-                variant={"outline-primary"}
-                onClick={() => {
-                  setShowManageJokersModal(true);
-                }}
-              />
+              {areJokersEnabled && (
+                <TapirButton
+                  text={"Jokers"}
+                  icon={"free_cancellation"}
+                  variant={"outline-primary"}
+                  onClick={() => {
+                    setShowManageJokersModal(true);
+                  }}
+                />
+              )}
               <TapirButton
                 text={"Bearbeiten"}
                 icon={"edit"}
@@ -171,14 +177,16 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
           onHide={() => setSelectedPickupLocation(undefined)}
         />
       )}
-      <ManageJokersModal
-        show={showManageJokersModal}
-        onHide={() => setShowManageJokersModal(false)}
-        memberId={memberId}
-        deliveries={deliveries}
-        loadDeliveries={loadDeliveries}
-        deliveriesLoading={deliveriesLoading}
-      />
+      {areJokersEnabled && (
+        <ManageJokersModal
+          show={showManageJokersModal}
+          onHide={() => setShowManageJokersModal(false)}
+          memberId={memberId}
+          deliveries={deliveries}
+          loadDeliveries={loadDeliveries}
+          deliveriesLoading={deliveriesLoading}
+        />
+      )}
     </>
   );
 };

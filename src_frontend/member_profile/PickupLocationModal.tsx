@@ -49,7 +49,10 @@ const PickupLocationModal: React.FC<PickupLocationModalProps> = ({
           )}
           {pickupLocation.messengerGroupLink && (
             <>
-              Signal Gruppe: {pickupLocation.messengerGroupLink}
+              Signal Gruppe:{" "}
+              <a href={pickupLocation.messengerGroupLink}>
+                {pickupLocation.messengerGroupLink}
+              </a>
               <br />
             </>
           )}
