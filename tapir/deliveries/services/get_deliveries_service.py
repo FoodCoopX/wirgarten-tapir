@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.utils.shortcuts import get_monday
@@ -9,6 +10,7 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Member,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 
 
@@ -88,6 +90,9 @@ class GetDeliveriesService:
     def is_joker_used_in_week(
         cls, member: Member, delivery_date: datetime.date
     ) -> bool:
+        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+            return False
+
         week_start = get_monday(delivery_date)
         week_end = week_start + datetime.timedelta(days=6)
         return Joker.objects.filter(

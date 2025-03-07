@@ -4,9 +4,10 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -88,3 +89,24 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertFalse(Joker.objects.exists())
         date = datetime.date(year=2024, month=7, day=23)
         mock_can_joker_be_used.assert_called_once_with(user, date)
+
+    @patch.object(JokerManagementService, "can_joker_be_used")
+    def test_useJokerView_jokerFeatureDisabled_returns403(
+        self, mock_can_joker_be_used: Mock
+    ):
+        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+            value="False"
+        )
+
+        user = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create()
+        self.client.force_login(user)
+        mock_can_joker_be_used.return_value = True
+
+        response = self.client.post(
+            f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
+        )
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        self.assertEqual(0, Joker.objects.count())
+        mock_can_joker_be_used.assert_not_called()

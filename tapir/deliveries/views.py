@@ -49,6 +49,12 @@ class GetMemberJokerInformationView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def get(self, request):
+        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+            return Response(
+                "The joker feature is disabled",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
 
@@ -94,6 +100,12 @@ class CancelJokerView(APIView):
         parameters=[OpenApiParameter(name="joker_id", type=str)],
     )
     def post(self, request):
+        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+            return Response(
+                "The joker feature is disabled",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         joker_id = request.query_params.get("joker_id")
         joker = get_object_or_404(Joker, id=joker_id)
         check_permission_or_self(joker.member_id, request)
@@ -121,6 +133,12 @@ class UseJokerView(APIView):
         ],
     )
     def post(self, request):
+        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+            return Response(
+                "The joker feature is disabled",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         member_id = request.query_params.get("member_id")
         date_string = request.query_params.get("date")
         date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()

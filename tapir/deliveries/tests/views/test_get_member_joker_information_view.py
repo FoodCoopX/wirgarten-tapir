@@ -4,6 +4,7 @@ import json
 from rest_framework import status
 from rest_framework.reverse import reverse
 
+from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
@@ -115,3 +116,22 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
         self.assertEqual(
             "2023-07-15", response_content["used_jokers"][0]["joker"]["date"]
         )
+
+    def test_getMemberJokerInformationView_jokerFeatureDisabled_returns403(
+        self,
+    ):
+        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+            value="False"
+        )
+
+        user = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create()
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("Deliveries:member_joker_information")
+            + "?member_id="
+            + other_member.id
+        )
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)

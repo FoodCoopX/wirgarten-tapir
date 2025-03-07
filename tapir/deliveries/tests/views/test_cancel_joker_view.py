@@ -4,9 +4,10 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -89,3 +90,25 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
         mock_can_joker_be_cancelled.assert_called_once_with(joker)
+
+    @patch.object(JokerManagementService, "cancel_joker")
+    def test_cancelJokerView_jokerFeatureDisabled_returns403(
+        self, mock_cancel_joker: Mock
+    ):
+        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+            value="False"
+        )
+
+        user = MemberFactory.create(is_superuser=True)
+        other_member = MemberFactory.create()
+        joker = Joker.objects.create(
+            member=other_member, date=datetime.date(year=2024, month=5, day=1)
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("Deliveries:cancel_joker") + "?joker_id=" + joker.id
+        )
+
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        mock_cancel_joker.assert_not_called()
