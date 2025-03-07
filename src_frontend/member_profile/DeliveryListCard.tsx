@@ -114,7 +114,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
 
   return (
     <>
-      <Card>
+      <Card style={{ marginBottom: "1rem" }}>
         <Card.Header>
           <div
             className={"d-flex justify-content-between align-items-center mb-0"}
