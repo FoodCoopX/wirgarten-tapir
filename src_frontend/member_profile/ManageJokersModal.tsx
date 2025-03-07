@@ -206,7 +206,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                 Zusätzliche Einschränkungen:
                 <ul>
                   {restrictions.map((restriction, index) => (
-                    <li key={index}>
+                    <li
+                      key={restriction.startDay + "-" + restriction.startMonth}
+                    >
                       Zwischen dem {restriction.startDay}.
                       {restriction.startMonth}. und dem {restriction.endDay}.
                       {restriction.endMonth}. dürfen maximal{" "}

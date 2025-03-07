@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/de";
 import PickupLocationModal from "./PickupLocationModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
 interface DeliveryListCardProps {
   memberId: string;
@@ -151,7 +152,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({ memberId }) => {
                   ? loadingPlaceholder()
                   : deliveries.map((delivery, index) => {
                       return (
-                        <tr key={index}>
+                        <tr key={formatDateNumeric(delivery.deliveryDate)}>
                           <td>{dateCell(delivery)}</td>
                           <td>{productCell(delivery)}</td>
                           <td>{pickupLocationCell(delivery)}</td>

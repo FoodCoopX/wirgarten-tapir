@@ -65,7 +65,7 @@ const PickupLocationModal: React.FC<PickupLocationModalProps> = ({
           <ul>
             {openingTimes.map((openingTime) => {
               return (
-                <li>
+                <li key={openingTime.dayOfWeek + " " + openingTime.openTime}>
                   {dayjs()
                     .day(openingTime.dayOfWeek + 1)
                     .format("dddd")}
