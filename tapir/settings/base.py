@@ -142,6 +142,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
+    "dist",
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
