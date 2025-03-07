@@ -34,7 +34,7 @@ class GetMemberDeliveriesView(APIView):
         deliveries = GetDeliveriesService.get_deliveries(
             member=member,
             date_from=get_today(),
-            date_to=get_today() + datetime.timedelta(days=30 * 6),
+            date_to=get_today() + datetime.timedelta(days=365),
         )
 
         return Response(
