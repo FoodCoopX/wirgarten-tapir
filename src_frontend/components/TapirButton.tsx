@@ -7,10 +7,10 @@ interface TapirButtonProps {
   icon?: string;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
-  size?: "sm" | "lg" | undefined;
+  size?: "sm" | "lg";
   style?: React.CSSProperties;
   loading?: boolean;
-  type?: "submit" | "reset" | "button" | undefined;
+  type?: "submit" | "reset" | "button";
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
