@@ -3,6 +3,7 @@
 export * from './BounceTypeEnum';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
+export * from './CsvExport';
 export * from './DayOfWeekEnum';
 export * from './Delivery';
 export * from './DeliveryCycleEnum';
@@ -18,6 +19,8 @@ export * from './EmailDispatchRequest';
 export * from './EmailDispatchWithRetries';
 export * from './EmailTemplate';
 export * from './EmailTemplateRequest';
+export * from './ExportSegment';
+export * from './ExportSegmentColumn';
 export * from './GroupedEmailDispatch';
 export * from './Joker';
 export * from './JokerRestriction';

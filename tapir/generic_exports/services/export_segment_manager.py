@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import Callable, List, Any
+from typing import Callable, List, Any, Dict
 
 from django.db.models import QuerySet
 
@@ -23,9 +23,8 @@ class ExportSegment:
 
 
 class ExportSegmentManager:
-    registered_export_segments: List[ExportSegment] = []
+    registered_export_segments: Dict[str, ExportSegment] = {}
 
     @classmethod
     def register_segment(cls, segment: ExportSegment):
-        cls.registered_export_segments.append(segment)
-        cls.registered_export_segments.sort(key=lambda x: x.id)
+        cls.registered_export_segments[segment.id] = segment

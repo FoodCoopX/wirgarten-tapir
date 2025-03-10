@@ -1,10 +1,12 @@
 apis/DeliveriesApi.ts
+apis/GenericExportsApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
 index.ts
 models/BounceTypeEnum.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/CsvExport.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
@@ -20,6 +22,8 @@ models/EmailDispatchRequest.ts
 models/EmailDispatchWithRetries.ts
 models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
+models/ExportSegment.ts
+models/ExportSegmentColumn.ts
 models/GroupedEmailDispatch.ts
 models/Joker.ts
 models/JokerRestriction.ts

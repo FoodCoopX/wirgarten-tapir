@@ -98,6 +98,38 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/csv_export_list:
+    get:
+      operationId: generic_exports_csv_export_list_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CsvExport'
+          description: ''
+  /generic_exports/export_segments:
+    get:
+      operationId: generic_exports_export_segments_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExportSegment'
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2145,6 +2177,39 @@ components:
       - content
       - name
       - release_status
+    CsvExport:
+      type: object
+      properties:
+        export_segment_id:
+          type: string
+        export_segment_name:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        separator:
+          type: string
+        file_name:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportSegmentColumn'
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+      required:
+      - columns
+      - description
+      - email_recipients
+      - export_segment_id
+      - export_segment_name
+      - file_name
+      - name
+      - separator
     DayOfWeekEnum:
       enum:
       - 0
@@ -2594,6 +2659,37 @@ components:
       required:
       - content
       - name
+    ExportSegment:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportSegmentColumn'
+      required:
+      - columns
+      - description
+      - display_name
+      - id
+    ExportSegmentColumn:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - display_name
+      - id
     GroupedEmailDispatch:
       type: object
       properties:
