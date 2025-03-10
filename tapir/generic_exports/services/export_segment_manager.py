@@ -1,0 +1,31 @@
+import datetime
+from dataclasses import dataclass
+from typing import Callable, List, Any
+
+from django.db.models import QuerySet
+
+
+@dataclass
+class ExportSegmentColumn:
+    id: str
+    display_name: str
+    description: str
+    get_value: Callable[[Any, datetime.datetime], str]
+
+
+@dataclass
+class ExportSegment:
+    id: str
+    display_name: str
+    description: str
+    get_queryset: Callable[[datetime.datetime], QuerySet]
+    get_available_columns: Callable[[], List[ExportSegmentColumn]]
+
+
+class ExportSegmentManager:
+    registered_export_segments: List[ExportSegment] = []
+
+    @classmethod
+    def register_segment(cls, segment: ExportSegment):
+        cls.registered_export_segments.append(segment)
+        cls.registered_export_segments.sort(key=lambda x: x.id)
