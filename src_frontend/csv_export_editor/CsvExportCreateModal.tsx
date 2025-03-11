@@ -15,6 +15,7 @@ interface CsvExportCreateModalProps {
   onHide: () => void;
   segments: ExportSegment[];
   loadExports: () => void;
+  csrfToken: string;
 }
 
 const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
@@ -22,8 +23,9 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
   onHide,
   segments,
   loadExports,
+  csrfToken,
 }) => {
-  const api = useApi(GenericExportsApi);
+  const api = useApi(GenericExportsApi, csrfToken);
 
   const [exportName, setExportName] = useState("");
   const [exportSegment, setExportSegment] = useState<ExportSegment>();
@@ -35,6 +37,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
   );
   const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
   const [createLoading, setCreateLoading] = useState(false);
+  const [formValidated, setFormValidated] = useState(false);
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
@@ -54,14 +57,19 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
   function createExport() {
     if (!exportSegment) return;
 
+    const form = document.getElementById(
+      "createCsvExportModalForm",
+    ) as HTMLFormElement;
+    if (!form.reportValidity()) return;
+
     setCreateLoading(true);
 
     const columnIds = exportColumns.map((column) => column.id);
     api
-      .genericExportsCreateCsvExportCreate({
-        createCsvExportRequest: {
+      .genericExportsCsvExportsCreate({
+        csvExportModelRequest: {
           exportSegmentId: exportSegment.id,
-          columnsIds: columnIds,
+          columnIds: columnIds,
           description: exportDescription,
           name: exportName,
           emailRecipients: exportEmailRecipients,
@@ -88,7 +96,11 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
         <h5 className={"mb-0"}>Neues Export erzeugen</h5>
       </Modal.Header>
       <Modal.Body>
-        <Form className={"d-flex flex-column gap-2"}>
+        <Form
+          className={"d-flex flex-column gap-2"}
+          id={"createCsvExportModalForm"}
+          validated={formValidated}
+        >
           <Row>
             <Col>
               <Form.Group controlId={"form.name"}>
@@ -97,6 +109,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   type={"text"}
                   placeholder={"Name"}
                   onChange={(event) => setExportName(event.target.value)}
+                  required={true}
                 />
               </Form.Group>
             </Col>
@@ -134,6 +147,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   type={"text"}
                   placeholder={"Trennzeichen"}
                   onChange={onSeparatorChanged}
+                  required={true}
                 />
                 <Form.Text>Nur ein Zeichen</Form.Text>
               </Form.Group>
@@ -145,6 +159,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   type={"text"}
                   placeholder={"Datei-Name"}
                   onChange={(event) => setExportFileName(event.target.value)}
+                  required={true}
                 />
               </Form.Group>
             </Col>

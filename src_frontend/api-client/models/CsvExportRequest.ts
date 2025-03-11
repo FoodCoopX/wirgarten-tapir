@@ -13,80 +13,80 @@
  */
 
 import { mapValues } from '../runtime';
-import type { ExportSegmentColumn } from './ExportSegmentColumn';
+import type { ExportSegmentColumnRequest } from './ExportSegmentColumnRequest';
 import {
-    ExportSegmentColumnFromJSON,
-    ExportSegmentColumnFromJSONTyped,
-    ExportSegmentColumnToJSON,
-    ExportSegmentColumnToJSONTyped,
-} from './ExportSegmentColumn';
+    ExportSegmentColumnRequestFromJSON,
+    ExportSegmentColumnRequestFromJSONTyped,
+    ExportSegmentColumnRequestToJSON,
+    ExportSegmentColumnRequestToJSONTyped,
+} from './ExportSegmentColumnRequest';
 
 /**
  * 
  * @export
- * @interface CsvExport
+ * @interface CsvExportRequest
  */
-export interface CsvExport {
+export interface CsvExportRequest {
     /**
      * 
      * @type {number}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     id?: number;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     exportSegmentId: string;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     exportSegmentName: string;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     name: string;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     description: string;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     separator: string;
     /**
      * 
      * @type {string}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     fileName: string;
     /**
      * 
-     * @type {Array<ExportSegmentColumn>}
-     * @memberof CsvExport
+     * @type {Array<ExportSegmentColumnRequest>}
+     * @memberof CsvExportRequest
      */
-    columns: Array<ExportSegmentColumn>;
+    columns: Array<ExportSegmentColumnRequest>;
     /**
      * 
      * @type {Array<string>}
-     * @memberof CsvExport
+     * @memberof CsvExportRequest
      */
     emailRecipients: Array<string>;
 }
 
 /**
- * Check if a given object implements the CsvExport interface.
+ * Check if a given object implements the CsvExportRequest interface.
  */
-export function instanceOfCsvExport(value: object): value is CsvExport {
+export function instanceOfCsvExportRequest(value: object): value is CsvExportRequest {
     if (!('exportSegmentId' in value) || value['exportSegmentId'] === undefined) return false;
     if (!('exportSegmentName' in value) || value['exportSegmentName'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
@@ -98,11 +98,11 @@ export function instanceOfCsvExport(value: object): value is CsvExport {
     return true;
 }
 
-export function CsvExportFromJSON(json: any): CsvExport {
-    return CsvExportFromJSONTyped(json, false);
+export function CsvExportRequestFromJSON(json: any): CsvExportRequest {
+    return CsvExportRequestFromJSONTyped(json, false);
 }
 
-export function CsvExportFromJSONTyped(json: any, ignoreDiscriminator: boolean): CsvExport {
+export function CsvExportRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CsvExportRequest {
     if (json == null) {
         return json;
     }
@@ -115,16 +115,16 @@ export function CsvExportFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'description': json['description'],
         'separator': json['separator'],
         'fileName': json['file_name'],
-        'columns': ((json['columns'] as Array<any>).map(ExportSegmentColumnFromJSON)),
+        'columns': ((json['columns'] as Array<any>).map(ExportSegmentColumnRequestFromJSON)),
         'emailRecipients': json['email_recipients'],
     };
 }
 
-  export function CsvExportToJSON(json: any): CsvExport {
-      return CsvExportToJSONTyped(json, false);
+  export function CsvExportRequestToJSON(json: any): CsvExportRequest {
+      return CsvExportRequestToJSONTyped(json, false);
   }
 
-  export function CsvExportToJSONTyped(value?: CsvExport | null, ignoreDiscriminator: boolean = false): any {
+  export function CsvExportRequestToJSONTyped(value?: CsvExportRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -138,7 +138,7 @@ export function CsvExportFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'description': value['description'],
         'separator': value['separator'],
         'file_name': value['fileName'],
-        'columns': ((value['columns'] as Array<any>).map(ExportSegmentColumnToJSON)),
+        'columns': ((value['columns'] as Array<any>).map(ExportSegmentColumnRequestToJSON)),
         'email_recipients': value['emailRecipients'],
     };
 }

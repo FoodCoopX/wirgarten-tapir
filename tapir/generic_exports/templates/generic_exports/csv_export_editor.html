@@ -4,5 +4,6 @@
     {% vite_asset 'csv_export_editor/csv_export_editor_entry.tsx' %}
 {% endblock head %}
 {% block content %}
+    {% csrf_token %}
     <span id="csv_export_editor"></span>
 {% endblock content %}

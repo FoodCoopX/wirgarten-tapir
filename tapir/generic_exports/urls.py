@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.generic_exports import views
 
@@ -14,14 +15,8 @@ urlpatterns = [
         views.GetExportSegmentsView.as_view(),
         name="export_segments",
     ),
-    path(
-        "csv_export_list",
-        views.GetCsvExportsView.as_view(),
-        name="csv_export_list",
-    ),
-    path(
-        "create_csv_export",
-        views.CreateCsvExportView.as_view(),
-        name="create_csv_export",
-    ),
 ]
+
+router = DefaultRouter()
+router.register(r"csv_exports", views.CsvExportViewSet, basename="csv_exports")
+urlpatterns += router.urls

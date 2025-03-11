@@ -1,18 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { CsvExport, ExportSegment, GenericExportsApi } from "../api-client";
+import {
+  CsvExportModel,
+  ExportSegment,
+  GenericExportsApi,
+} from "../api-client";
 import CsvExportTable from "./CsvExportTable.tsx";
 import CsvExportCreateModal from "./CsvExportCreateModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 
-const CsvExportEditor: React.FC = () => {
-  const api = useApi(GenericExportsApi);
+interface CsvExportEditorProps {
+  csrfToken: string;
+}
+
+const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
+  const api = useApi(GenericExportsApi, csrfToken);
   const [segments, setSegments] = useState<ExportSegment[]>([]);
   const [segmentsLoading, setSegmentsLoading] = useState(false);
-  const [exports, setExports] = useState<CsvExport[]>([]);
+  const [exports, setExports] = useState<CsvExportModel[]>([]);
   const [exportsLoading, setExportsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [exportSelectedForDeletion, setExportSelectedForDeletion] =
+    useState<CsvExportModel>();
 
   useEffect(() => {
     setSegmentsLoading(true);
@@ -23,15 +34,24 @@ const CsvExportEditor: React.FC = () => {
       .finally(() => setSegmentsLoading(false));
 
     loadExports();
+    console.log(csrfToken);
   }, []);
 
   function loadExports() {
     setExportsLoading(true);
     api
-      .genericExportsCsvExportListList()
+      .genericExportsCsvExportsList()
       .then(setExports)
       .catch(alert)
       .finally(() => setExportsLoading(false));
+  }
+
+  function deleteExport(exp: CsvExportModel) {
+    api
+      .genericExportsCsvExportsDestroy({ id: exp.id })
+      .then(() => loadExports())
+      .catch(alert)
+      .finally(() => setExportSelectedForDeletion(undefined));
   }
 
   return (
@@ -56,7 +76,15 @@ const CsvExportEditor: React.FC = () => {
               </div>
             </Card.Header>
             <Card.Body>
-              <CsvExportTable exports={exports} loading={exportsLoading} />
+              <CsvExportTable
+                exports={exports}
+                loading={exportsLoading}
+                onExportEdit={() => {
+                  alert("Not implemented");
+                }}
+                segments={segmentsLoading ? [] : segments}
+                onExportDeleteClicked={setExportSelectedForDeletion}
+              />
             </Card.Body>
           </Card>
         </Col>
@@ -66,7 +94,18 @@ const CsvExportEditor: React.FC = () => {
         onHide={() => setShowCreateModal(false)}
         segments={segments}
         loadExports={loadExports}
+        csrfToken={csrfToken}
       />
+      {exportSelectedForDeletion && (
+        <ConfirmDeleteModal
+          open={true}
+          message={
+            'Export "' + exportSelectedForDeletion.name + '" wirklich löschen?'
+          }
+          onConfirm={() => deleteExport(exportSelectedForDeletion)}
+          onCancel={() => setExportSelectedForDeletion(undefined)}
+        />
+      )}
     </>
   );
 };

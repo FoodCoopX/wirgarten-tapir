@@ -6,8 +6,8 @@ index.ts
 models/BounceTypeEnum.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
-models/CreateCsvExportRequest.ts
-models/CsvExport.ts
+models/CsvExportModel.ts
+models/CsvExportModelRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
@@ -38,6 +38,7 @@ models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
 models/PatchedBundledEmailConfigurationRequest.ts
+models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
 models/PatchedEmailConfigurationRequest.ts
 models/PatchedEmailTemplateRequest.ts

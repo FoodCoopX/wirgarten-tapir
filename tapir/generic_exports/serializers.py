@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.generic_exports.models import CsvExport
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 
 
@@ -17,6 +18,7 @@ class ExportSegmentSerializer(serializers.Serializer):
 
 
 class CsvExportSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
     export_segment_id = serializers.CharField()
     export_segment_name = serializers.CharField()
     name = serializers.CharField()
@@ -25,6 +27,12 @@ class CsvExportSerializer(serializers.Serializer):
     file_name = serializers.CharField()
     columns = ExportSegmentColumnSerializer(many=True)
     email_recipients = serializers.ListField(child=serializers.EmailField())
+
+
+class CsvExportModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CsvExport
+        fields = "__all__"
 
 
 class CreateCsvExportSerializer(serializers.Serializer):

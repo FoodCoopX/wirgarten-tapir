@@ -98,35 +98,9 @@ paths:
               schema:
                 type: string
           description: ''
-  /generic_exports/create_csv_export:
-    post:
-      operationId: generic_exports_create_csv_export_create
-      tags:
-      - generic_exports
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateCsvExportRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CreateCsvExportRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateCsvExportRequest'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CsvExport'
-          description: ''
-  /generic_exports/csv_export_list:
+  /generic_exports/csv_exports/:
     get:
-      operationId: generic_exports_csv_export_list_list
+      operationId: generic_exports_csv_exports_list
       tags:
       - generic_exports
       security:
@@ -138,8 +112,133 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CsvExport'
+                  $ref: '#/components/schemas/CsvExportModel'
           description: ''
+    post:
+      operationId: generic_exports_csv_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+  /generic_exports/csv_exports/{id}/:
+    get:
+      operationId: generic_exports_csv_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_csv_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_csv_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_csv_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /generic_exports/export_segments:
     get:
       operationId: generic_exports_export_segments_list
@@ -2203,73 +2302,79 @@ components:
       - content
       - name
       - release_status
-    CreateCsvExportRequest:
+    CsvExportModel:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         export_segment_id:
           type: string
-          minLength: 1
+          maxLength: 512
         name:
           type: string
-          minLength: 1
+          maxLength: 512
         description:
           type: string
-          minLength: 1
         separator:
           type: string
-          minLength: 1
+          maxLength: 1
         file_name:
           type: string
-          minLength: 1
-        columns_ids:
+          maxLength: 512
+        column_ids:
           type: array
           items:
             type: string
-            minLength: 1
+            maxLength: 512
         email_recipients:
           type: array
           items:
             type: string
             format: email
-            minLength: 1
+            maxLength: 254
       required:
-      - columns_ids
-      - description
-      - email_recipients
       - export_segment_id
       - file_name
+      - id
       - name
       - separator
-    CsvExport:
+    CsvExportModelRequest:
       type: object
       properties:
         export_segment_id:
           type: string
-        export_segment_name:
-          type: string
+          minLength: 1
+          maxLength: 512
         name:
           type: string
+          minLength: 1
+          maxLength: 512
         description:
           type: string
         separator:
           type: string
+          minLength: 1
+          maxLength: 1
         file_name:
           type: string
-        columns:
+          minLength: 1
+          maxLength: 512
+        column_ids:
           type: array
           items:
-            $ref: '#/components/schemas/ExportSegmentColumn'
+            type: string
+            minLength: 1
+            maxLength: 512
         email_recipients:
           type: array
           items:
             type: string
             format: email
+            minLength: 1
+            maxLength: 254
       required:
-      - columns
-      - description
-      - email_recipients
       - export_segment_id
-      - export_segment_name
       - file_name
       - name
       - separator
@@ -3018,6 +3123,40 @@ components:
           allOf:
           - $ref: '#/components/schemas/SegmentDataRequest'
           nullable: true
+    PatchedCsvExportModelRequest:
+      type: object
+      properties:
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          minLength: 1
+          maxLength: 1
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
