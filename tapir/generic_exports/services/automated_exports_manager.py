@@ -14,13 +14,10 @@ class AutomatedExportsManager:
             automated_export_cycle=CsvExport.AutomatedExportCycle.NEVER
         ):
             datetime_of_last_export = cls.get_datetime_of_latest_export(export)
+            # There is at most one export a day, so it is enough to check of the date
+            # Checking for the time is tricky because if timezones.
             if AutomatedExportResult.objects.filter(
-                export_definition=export,
-                datetime__year=datetime_of_last_export.year,
-                datetime__month=datetime_of_last_export.month,
-                datetime__day=datetime_of_last_export.day,
-                datetime__hour=datetime_of_last_export.hour,
-                datetime__minute=datetime_of_last_export.minute,
+                export_definition=export, datetime__date=datetime_of_last_export.date()
             ).exists():
                 continue
             cls.do_export(export, datetime_of_last_export)

@@ -30,6 +30,9 @@ class CsvExport(TapirModel):
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
 
+    def __str__(self):
+        return self.name
+
 
 class AutomatedExportResult(TapirModel):
     export_definition = models.ForeignKey(CsvExport, on_delete=models.CASCADE)
