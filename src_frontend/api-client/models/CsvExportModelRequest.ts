@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AutomatedExportCycleEnum } from './AutomatedExportCycleEnum';
+import {
+    AutomatedExportCycleEnumFromJSON,
+    AutomatedExportCycleEnumFromJSONTyped,
+    AutomatedExportCycleEnumToJSON,
+    AutomatedExportCycleEnumToJSONTyped,
+} from './AutomatedExportCycleEnum';
+
 /**
  * 
  * @export
@@ -67,7 +75,27 @@ export interface CsvExportModelRequest {
      * @memberof CsvExportModelRequest
      */
     emailRecipients?: Array<string>;
+    /**
+     * 
+     * @type {AutomatedExportCycleEnum}
+     * @memberof CsvExportModelRequest
+     */
+    automatedExportCycle: AutomatedExportCycleEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof CsvExportModelRequest
+     */
+    automatedExportDay: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof CsvExportModelRequest
+     */
+    automatedExportHour: string;
 }
+
+
 
 /**
  * Check if a given object implements the CsvExportModelRequest interface.
@@ -77,6 +105,9 @@ export function instanceOfCsvExportModelRequest(value: object): value is CsvExpo
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('separator' in value) || value['separator'] === undefined) return false;
     if (!('fileName' in value) || value['fileName'] === undefined) return false;
+    if (!('automatedExportCycle' in value) || value['automatedExportCycle'] === undefined) return false;
+    if (!('automatedExportDay' in value) || value['automatedExportDay'] === undefined) return false;
+    if (!('automatedExportHour' in value) || value['automatedExportHour'] === undefined) return false;
     return true;
 }
 
@@ -98,6 +129,9 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
         'fileName': json['file_name'],
         'columnIds': json['column_ids'] == null ? undefined : json['column_ids'],
         'emailRecipients': json['email_recipients'] == null ? undefined : json['email_recipients'],
+        'automatedExportCycle': AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
+        'automatedExportDay': json['automated_export_day'],
+        'automatedExportHour': json['automated_export_hour'],
     };
 }
 
@@ -120,6 +154,9 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
         'file_name': value['fileName'],
         'column_ids': value['columnIds'],
         'email_recipients': value['emailRecipients'],
+        'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
+        'automated_export_day': value['automatedExportDay'],
+        'automated_export_hour': value['automatedExportHour'],
     };
 }
 

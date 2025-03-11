@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Col, Form, Modal, Row } from "react-bootstrap";
 import {
+  AutomatedExportCycleEnum,
   CsvExportModel,
   ExportSegment,
   ExportSegmentColumn,
@@ -39,6 +40,11 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     [],
   );
   const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
+  const [exportCycle, setExportCycle] = useState<AutomatedExportCycleEnum>(
+    AutomatedExportCycleEnum.Never,
+  );
+  const [exportDay, setExportDay] = useState(1);
+  const [exportHour, setExportHour] = useState("03:00");
   const [loading, setLoading] = useState(false);
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
@@ -84,6 +90,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportFileName(exportToEdit.fileName);
       setExportEmailRecipients(exportToEdit.emailRecipients ?? []);
       setExportColumns(getExportColumns(exportToEdit));
+      setExportCycle(exportToEdit.automatedExportCycle);
+      setExportDay(exportToEdit.automatedExportDay);
+      setExportHour(exportToEdit.automatedExportHour);
     } else {
       setExportName("");
       setExportSegment(segments[0]);
@@ -92,6 +101,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportFileName("");
       setExportEmailRecipients([]);
       setExportColumns([]);
+      setExportCycle(AutomatedExportCycleEnum.Never);
+      setExportDay(1);
+      setExportHour("00:00");
     }
   }, [exportToEdit]);
 
@@ -114,12 +126,15 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       emailRecipients: exportEmailRecipients,
       fileName: exportFileName,
       separator: exportSeparator,
+      automatedExportCycle: exportCycle,
+      automatedExportDay: exportDay,
+      automatedExportHour: exportHour,
     };
 
     let promise;
     if (exportToEdit) {
       promise = api.genericExportsCsvExportsUpdate({
-        id: exportToEdit.id,
+        id: exportToEdit.id!,
         csvExportModelRequest: request,
       });
     } else {
@@ -140,6 +155,16 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   function onSeparatorChanged(event: ChangeEvent<HTMLInputElement>) {
     event.target.value = event.target.value.slice(0, 1);
     setExportSeparator(event.target.value);
+  }
+
+  function cycleOptions() {
+    return {
+      yearly: "Jährlich",
+      monthly: "Monatlich",
+      weekly: "Wöchentlich",
+      daily: "Täglich",
+      never: "nie",
+    };
   }
 
   return (
@@ -225,22 +250,79 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
               </Form.Group>
             </Col>
           </Row>
-
-          <Form.Group controlId={"form.emails"}>
-            <Form.Label>Empfängers</Form.Label>
-            <EmailInput
-              onEmailListChange={setExportEmailRecipients}
-              addresses={exportEmailRecipients}
-            />
-          </Form.Group>
-          <Form.Group controlId={"form.columns"}>
-            <Form.Label>Spalten</Form.Label>
-            <ColumnInput
-              onSelectedColumnsChange={setExportColumns}
-              availableColumns={exportSegment ? exportSegment.columns : []}
-              selectedColumns={exportColumns}
-            />
-          </Form.Group>
+          <Row>
+            <Col>
+              <Form.Group controlId={"form.emails"}>
+                <Form.Label>Empfängers</Form.Label>
+                <EmailInput
+                  onEmailListChange={setExportEmailRecipients}
+                  addresses={exportEmailRecipients}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group controlId={"form.columns"}>
+                <Form.Label>Spalten</Form.Label>
+                <ColumnInput
+                  onSelectedColumnsChange={setExportColumns}
+                  availableColumns={exportSegment ? exportSegment.columns : []}
+                  selectedColumns={exportColumns}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group controlId={"form.cycle"}>
+                <Form.Label>Automatisiertes Export Zyklus</Form.Label>
+                <Form.Select
+                  onChange={(event) =>
+                    setExportCycle(
+                      event.target.value as AutomatedExportCycleEnum,
+                    )
+                  }
+                >
+                  {Object.entries(cycleOptions()).map(([key, value]) => {
+                    return (
+                      <option
+                        key={key}
+                        value={key}
+                        selected={exportCycle === key}
+                      >
+                        {value}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId={"form.day"}>
+                <Form.Label>Tag</Form.Label>
+                <Form.Control
+                  type={"number"}
+                  onChange={(event) =>
+                    setExportDay(parseInt(event.target.value))
+                  }
+                  required={true}
+                  value={exportDay}
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId={"form.hour"}>
+                <Form.Label>Uhrzeit</Form.Label>
+                <Form.Control
+                  type={"time"}
+                  onChange={(event) => setExportHour(event.target.value)}
+                  required={true}
+                  value={exportHour}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         </Form>
       </Modal.Body>
       <Modal.Footer>

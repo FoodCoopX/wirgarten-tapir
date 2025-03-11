@@ -3,6 +3,7 @@ apis/GenericExportsApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
 index.ts
+models/AutomatedExportCycleEnum.ts
 models/BounceTypeEnum.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts

@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AutomatedExportCycleEnum';
 export * from './BounceTypeEnum';
 export * from './BuildCsvExportResponse';
 export * from './BundledEmailConfiguration';

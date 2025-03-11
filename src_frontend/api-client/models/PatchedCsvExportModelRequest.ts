@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AutomatedExportCycleEnum } from './AutomatedExportCycleEnum';
+import {
+    AutomatedExportCycleEnumFromJSON,
+    AutomatedExportCycleEnumFromJSONTyped,
+    AutomatedExportCycleEnumToJSON,
+    AutomatedExportCycleEnumToJSONTyped,
+} from './AutomatedExportCycleEnum';
+
 /**
  * 
  * @export
@@ -67,7 +75,27 @@ export interface PatchedCsvExportModelRequest {
      * @memberof PatchedCsvExportModelRequest
      */
     emailRecipients?: Array<string>;
+    /**
+     * 
+     * @type {AutomatedExportCycleEnum}
+     * @memberof PatchedCsvExportModelRequest
+     */
+    automatedExportCycle?: AutomatedExportCycleEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof PatchedCsvExportModelRequest
+     */
+    automatedExportDay?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchedCsvExportModelRequest
+     */
+    automatedExportHour?: string;
 }
+
+
 
 /**
  * Check if a given object implements the PatchedCsvExportModelRequest interface.
@@ -94,6 +122,9 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'fileName': json['file_name'] == null ? undefined : json['file_name'],
         'columnIds': json['column_ids'] == null ? undefined : json['column_ids'],
         'emailRecipients': json['email_recipients'] == null ? undefined : json['email_recipients'],
+        'automatedExportCycle': json['automated_export_cycle'] == null ? undefined : AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
+        'automatedExportDay': json['automated_export_day'] == null ? undefined : json['automated_export_day'],
+        'automatedExportHour': json['automated_export_hour'] == null ? undefined : json['automated_export_hour'],
     };
 }
 
@@ -116,6 +147,9 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'file_name': value['fileName'],
         'column_ids': value['columnIds'],
         'email_recipients': value['emailRecipients'],
+        'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
+        'automated_export_day': value['automatedExportDay'],
+        'automated_export_hour': value['automatedExportHour'],
     };
 }
 

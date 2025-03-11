@@ -5,6 +5,13 @@ from tapir.core.models import TapirModel
 
 
 class CsvExport(TapirModel):
+    class AutomatedExportCycle(models.TextChoices):
+        YEARLY = "yearly", "Jährlich"
+        MONTHLY = "monthly", "Monatlich"
+        WEEKLY = "weekly", "Wöchentlich"
+        DAILY = "daily", "Täglich"
+        NEVER = "never", "Nie"
+
     export_segment_id = models.CharField(max_length=512)
     name = models.CharField(max_length=512, unique=True)
     description = models.TextField(blank=True)
@@ -16,4 +23,8 @@ class CsvExport(TapirModel):
     email_recipients = ArrayField(
         base_field=models.EmailField(), default=list, blank=True
     )
-    # TODO : schedule for automated exports
+    automated_export_cycle = models.CharField(
+        max_length=512, choices=AutomatedExportCycle.choices
+    )
+    automated_export_day = models.IntegerField()
+    automated_export_hour = models.TimeField()

@@ -2249,6 +2249,20 @@ paths:
           description: ''
 components:
   schemas:
+    AutomatedExportCycleEnum:
+      enum:
+      - yearly
+      - monthly
+      - weekly
+      - daily
+      - never
+      type: string
+      description: |-
+        * `yearly` - Jährlich
+        * `monthly` - Monatlich
+        * `weekly` - Wöchentlich
+        * `daily` - Täglich
+        * `never` - Nie
     BounceTypeEnum:
       enum:
       - soft
@@ -2367,7 +2381,19 @@ components:
             type: string
             format: email
             maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
       required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
       - export_segment_id
       - file_name
       - name
@@ -2410,7 +2436,19 @@ components:
             format: email
             minLength: 1
             maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
       required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
       - export_segment_id
       - file_name
       - name
@@ -3198,6 +3236,15 @@ components:
             format: email
             minLength: 1
             maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
