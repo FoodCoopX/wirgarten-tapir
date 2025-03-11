@@ -13,7 +13,7 @@ class PickupLocationSegmentProvider:
         return [
             ExportSegment(
                 id="pickup_locations.all",
-                display_name="TEST_SEGMENT - Alle Abholorte",
+                display_name="Alle Abholorte",
                 description="",
                 get_queryset=cls.get_queryset_all_pickup_stations,
                 get_available_columns=PickupLocationColumnProvider.get_pickup_location_columns,

@@ -16,16 +16,16 @@ class MemberSegmentProvider:
         return [
             ExportSegment(
                 id="members.all",
-                display_name="TEST_SEGMENT - Alle Mitglieder",
-                description="TEST_SEGMENT - Alle Mitglieder, "
+                display_name="Alle Mitglieder",
+                description="Alle Mitglieder, "
                 "egal ob mit Abo oder nicht, solange sie Genossenschaftsanteile haben",
                 get_queryset=cls.get_queryset_all_members_with_shares,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
             ExportSegment(
                 id="members.with_subscription",
-                display_name="TEST_SEGMENT - Mitglieder mit Abo",
-                description="TEST_SEGMENT - Alle Menschen die ein aktives Abo haben, "
+                display_name="Mitglieder mit Abo",
+                description="Alle Menschen die ein aktives Abo haben, "
                 "egal ob sie Mitglied sind oder nicht ",
                 get_queryset=cls.get_queryset_all_members_with_subscription,
                 get_available_columns=MemberColumnProvider.get_member_columns,

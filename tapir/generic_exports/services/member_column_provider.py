@@ -15,25 +15,25 @@ class MemberColumnProvider:
         return [
             ExportSegmentColumn(
                 id="member.first_name",
-                display_name="TEST_COLUMN - Vorname",
+                display_name="Vorname",
                 description="",
                 get_value=cls.get_value_member_first_name,
             ),
             ExportSegmentColumn(
                 id="member.last_name",
-                display_name="TEST_COLUMN - Nachname",
+                display_name="Nachname",
                 description="",
                 get_value=cls.get_value_member_last_name,
             ),
             ExportSegmentColumn(
                 id="member.number",
-                display_name="TEST_COLUMN - Mitgliedsnummer",
+                display_name="Mitgliedsnummer",
                 description="",
                 get_value=cls.get_value_member_number,
             ),
             ExportSegmentColumn(
                 id="member.subscriptions",
-                display_name="TEST_COLUMN - Produkte",
+                display_name="Produkte",
                 description="",
                 get_value=cls.get_value_member_number,
             ),
