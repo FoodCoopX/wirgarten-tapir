@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Col, Form, Modal, Row } from "react-bootstrap";
 import {
+  CsvExportModel,
   ExportSegment,
   ExportSegmentColumn,
   GenericExportsApi,
@@ -10,20 +11,22 @@ import ColumnInput from "./ColumnInput.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
-interface CsvExportCreateModalProps {
+interface CsvExportModalProps {
   show: boolean;
   onHide: () => void;
   segments: ExportSegment[];
   loadExports: () => void;
   csrfToken: string;
+  exportToEdit?: CsvExportModel;
 }
 
-const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
+const CsvExportModal: React.FC<CsvExportModalProps> = ({
   show,
   onHide,
   segments,
   loadExports,
   csrfToken,
+  exportToEdit,
 }) => {
   const api = useApi(GenericExportsApi, csrfToken);
 
@@ -36,8 +39,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
     [],
   );
   const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
-  const [createLoading, setCreateLoading] = useState(false);
-  const [formValidated, setFormValidated] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
@@ -54,7 +56,46 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
     setExportSegment(segments[0]);
   }, [show]);
 
-  function createExport() {
+  function getSegmentById(segmentId: string) {
+    for (const segment of segments) {
+      if (segment.id === segmentId) return segment;
+    }
+    alert("Segment not found " + segmentId);
+    return undefined;
+  }
+
+  function getExportColumns(exp: CsvExportModel) {
+    const segment = getSegmentById(exp.exportSegmentId);
+    if (!segment) {
+      return [];
+    }
+
+    return segment.columns.filter((column) =>
+      exp.columnIds?.includes(column.id),
+    );
+  }
+
+  useEffect(() => {
+    if (exportToEdit) {
+      setExportName(exportToEdit.name);
+      setExportSegment(getSegmentById(exportToEdit.exportSegmentId));
+      setExportDescription(exportToEdit.description ?? "");
+      setExportSeparator(exportToEdit.separator);
+      setExportFileName(exportToEdit.fileName);
+      setExportEmailRecipients(exportToEdit.emailRecipients ?? []);
+      setExportColumns(getExportColumns(exportToEdit));
+    } else {
+      setExportName("");
+      setExportSegment(segments[0]);
+      setExportDescription("");
+      setExportSeparator(",");
+      setExportFileName("");
+      setExportEmailRecipients([]);
+      setExportColumns([]);
+    }
+  }, [exportToEdit]);
+
+  function save() {
     if (!exportSegment) return;
 
     const form = document.getElementById(
@@ -62,27 +103,38 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
     ) as HTMLFormElement;
     if (!form.reportValidity()) return;
 
-    setCreateLoading(true);
+    setLoading(true);
 
     const columnIds = exportColumns.map((column) => column.id);
-    api
-      .genericExportsCsvExportsCreate({
-        csvExportModelRequest: {
-          exportSegmentId: exportSegment.id,
-          columnIds: columnIds,
-          description: exportDescription,
-          name: exportName,
-          emailRecipients: exportEmailRecipients,
-          fileName: exportFileName,
-          separator: exportSeparator,
-        },
-      })
+    const request = {
+      exportSegmentId: exportSegment.id,
+      columnIds: columnIds,
+      description: exportDescription,
+      name: exportName,
+      emailRecipients: exportEmailRecipients,
+      fileName: exportFileName,
+      separator: exportSeparator,
+    };
+
+    let promise;
+    if (exportToEdit) {
+      promise = api.genericExportsCsvExportsUpdate({
+        id: exportToEdit.id,
+        csvExportModelRequest: request,
+      });
+    } else {
+      promise = api.genericExportsCsvExportsCreate({
+        csvExportModelRequest: request,
+      });
+    }
+
+    promise
       .then(() => {
         loadExports();
         onHide();
       })
       .catch(alert)
-      .finally(() => setCreateLoading(false));
+      .finally(() => setLoading(false));
   }
 
   function onSeparatorChanged(event: ChangeEvent<HTMLInputElement>) {
@@ -99,7 +151,6 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
         <Form
           className={"d-flex flex-column gap-2"}
           id={"createCsvExportModalForm"}
-          validated={formValidated}
         >
           <Row>
             <Col>
@@ -110,6 +161,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   placeholder={"Name"}
                   onChange={(event) => setExportName(event.target.value)}
                   required={true}
+                  value={exportName}
                 />
               </Form.Group>
             </Col>
@@ -119,7 +171,13 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                 <Form.Select onChange={onSegmentSelectChanged}>
                   {segments.map((segment) => {
                     return (
-                      <option key={segment.id} value={segment.id}>
+                      <option
+                        key={segment.id}
+                        value={segment.id}
+                        selected={
+                          exportSegment && segment.id == exportSegment.id
+                        }
+                      >
                         {segment.displayName}
                       </option>
                     );
@@ -136,6 +194,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                 placeholder={"Beschreibung"}
                 as={"textarea"}
                 onChange={(event) => setExportDescription(event.target.value)}
+                value={exportDescription}
               />
             </Form.Group>
           </Row>
@@ -148,6 +207,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   placeholder={"Trennzeichen"}
                   onChange={onSeparatorChanged}
                   required={true}
+                  value={exportSeparator}
                 />
                 <Form.Text>Nur ein Zeichen</Form.Text>
               </Form.Group>
@@ -160,6 +220,7 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
                   placeholder={"Datei-Name"}
                   onChange={(event) => setExportFileName(event.target.value)}
                   required={true}
+                  value={exportFileName}
                 />
               </Form.Group>
             </Col>
@@ -184,15 +245,15 @@ const CsvExportCreateModal: React.FC<CsvExportCreateModalProps> = ({
       </Modal.Body>
       <Modal.Footer>
         <TapirButton
-          text={"Erzeugen"}
+          text={exportToEdit ? "Speichern" : "Erzeugen"}
           icon={"add_circle"}
           variant={"primary"}
-          onClick={createExport}
-          loading={createLoading}
+          onClick={save}
+          loading={loading}
         />
       </Modal.Footer>
     </Modal>
   );
 };
 
-export default CsvExportCreateModal;
+export default CsvExportModal;

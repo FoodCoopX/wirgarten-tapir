@@ -7,7 +7,7 @@ import {
   GenericExportsApi,
 } from "../api-client";
 import CsvExportTable from "./CsvExportTable.tsx";
-import CsvExportCreateModal from "./CsvExportCreateModal.tsx";
+import CsvExportModal from "./CsvExportModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 
@@ -21,8 +21,10 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
   const [segmentsLoading, setSegmentsLoading] = useState(false);
   const [exports, setExports] = useState<CsvExportModel[]>([]);
   const [exportsLoading, setExportsLoading] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCsvExportModal, setShowCsvExportModal] = useState(false);
   const [exportSelectedForDeletion, setExportSelectedForDeletion] =
+    useState<CsvExportModel>();
+  const [exportSelectedForEdition, setExportSelectedForEdition] =
     useState<CsvExportModel>();
 
   useEffect(() => {
@@ -68,9 +70,12 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                 <h5 className={"mb-0"}>CSV-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
-                  text={"Neues Exports erzeugen"}
+                  text={"Neues Export erzeugen"}
                   icon={"add_circle"}
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => {
+                    setExportSelectedForEdition(undefined);
+                    setShowCsvExportModal(true);
+                  }}
                   disabled={segmentsLoading}
                 />
               </div>
@@ -79,8 +84,9 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
               <CsvExportTable
                 exports={exports}
                 loading={exportsLoading}
-                onExportEdit={() => {
-                  alert("Not implemented");
+                onExportEdit={(exp) => {
+                  setExportSelectedForEdition(exp);
+                  setShowCsvExportModal(true);
                 }}
                 segments={segmentsLoading ? [] : segments}
                 onExportDeleteClicked={setExportSelectedForDeletion}
@@ -89,12 +95,13 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
           </Card>
         </Col>
       </Row>
-      <CsvExportCreateModal
-        show={showCreateModal}
-        onHide={() => setShowCreateModal(false)}
+      <CsvExportModal
+        show={showCsvExportModal}
+        onHide={() => setShowCsvExportModal(false)}
         segments={segments}
         loadExports={loadExports}
         csrfToken={csrfToken}
+        exportToEdit={exportSelectedForEdition}
       />
       {exportSelectedForDeletion && (
         <ConfirmDeleteModal
