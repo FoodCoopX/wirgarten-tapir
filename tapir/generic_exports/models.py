@@ -2,6 +2,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from tapir.core.models import TapirModel
+from tapir.wirgarten.models import ExportedFile
 
 
 class CsvExport(TapirModel):
@@ -28,3 +29,9 @@ class CsvExport(TapirModel):
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
+
+
+class AutomatedExportResult(TapirModel):
+    export_definition = models.ForeignKey(CsvExport, on_delete=models.CASCADE)
+    file = models.ForeignKey(ExportedFile, on_delete=models.CASCADE)
+    datetime = models.DateTimeField()
