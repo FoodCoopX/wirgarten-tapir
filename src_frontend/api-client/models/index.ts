@@ -3,6 +3,7 @@
 export * from './BounceTypeEnum';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
+export * from './CreateCsvExportRequest';
 export * from './CsvExport';
 export * from './DayOfWeekEnum';
 export * from './Delivery';

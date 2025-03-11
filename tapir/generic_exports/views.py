@@ -122,6 +122,7 @@ class CreateCsvExportView(APIView):
 
         request_serializer = CreateCsvExportSerializer(data=request.data)
         request_serializer.is_valid(raise_exception=True)
+
         export = CsvExport.objects.create(
             export_segment_id=request_serializer.validated_data["export_segment_id"],
             name=request_serializer.validated_data["name"],
@@ -129,12 +130,10 @@ class CreateCsvExportView(APIView):
             separator=request_serializer.validated_data["separator"],
             file_name=request_serializer.validated_data["file_name"],
             email_recipients=request_serializer.validated_data["email_recipients"],
-            column_ids=request_serializer.validated_data["column_ids"],
+            column_ids=request_serializer.validated_data["columns_ids"],
         )
 
         return Response(
-            CsvExportSerializer(
-                GetCsvExportsView.build_export_data(export), many=True
-            ).data,
+            CsvExportSerializer(GetCsvExportsView.build_export_data(export)).data,
             status=status.HTTP_200_OK,
         )

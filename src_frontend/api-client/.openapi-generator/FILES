@@ -6,6 +6,7 @@ index.ts
 models/BounceTypeEnum.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/CreateCsvExportRequest.ts
 models/CsvExport.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts

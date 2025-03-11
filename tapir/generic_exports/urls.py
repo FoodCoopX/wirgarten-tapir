@@ -19,4 +19,9 @@ urlpatterns = [
         views.GetCsvExportsView.as_view(),
         name="csv_export_list",
     ),
+    path(
+        "create_csv_export",
+        views.CreateCsvExportView.as_view(),
+        name="create_csv_export",
+    ),
 ]

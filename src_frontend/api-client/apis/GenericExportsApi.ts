@@ -15,20 +15,61 @@
 
 import * as runtime from '../runtime';
 import type {
+  CreateCsvExportRequest,
   CsvExport,
   ExportSegment,
 } from '../models/index';
 import {
+    CreateCsvExportRequestFromJSON,
+    CreateCsvExportRequestToJSON,
     CsvExportFromJSON,
     CsvExportToJSON,
     ExportSegmentFromJSON,
     ExportSegmentToJSON,
 } from '../models/index';
 
+export interface GenericExportsCreateCsvExportCreateRequest {
+    createCsvExportRequest: CreateCsvExportRequest;
+}
+
 /**
  * 
  */
 export class GenericExportsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async genericExportsCreateCsvExportCreateRaw(requestParameters: GenericExportsCreateCsvExportCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CsvExport>> {
+        if (requestParameters['createCsvExportRequest'] == null) {
+            throw new runtime.RequiredError(
+                'createCsvExportRequest',
+                'Required parameter "createCsvExportRequest" was null or undefined when calling genericExportsCreateCsvExportCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/generic_exports/create_csv_export`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateCsvExportRequestToJSON(requestParameters['createCsvExportRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CsvExportFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsCreateCsvExportCreate(requestParameters: GenericExportsCreateCsvExportCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CsvExport> {
+        const response = await this.genericExportsCreateCsvExportCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

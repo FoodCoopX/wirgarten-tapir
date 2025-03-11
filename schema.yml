@@ -98,6 +98,32 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/create_csv_export:
+    post:
+      operationId: generic_exports_create_csv_export_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCsvExportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateCsvExportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateCsvExportRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExport'
+          description: ''
   /generic_exports/csv_export_list:
     get:
       operationId: generic_exports_csv_export_list_list
@@ -2177,6 +2203,43 @@ components:
       - content
       - name
       - release_status
+    CreateCsvExportRequest:
+      type: object
+      properties:
+        export_segment_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        separator:
+          type: string
+          minLength: 1
+        file_name:
+          type: string
+          minLength: 1
+        columns_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+      required:
+      - columns_ids
+      - description
+      - email_recipients
+      - export_segment_id
+      - file_name
+      - name
+      - separator
     CsvExport:
       type: object
       properties:

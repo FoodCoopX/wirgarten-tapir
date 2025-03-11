@@ -22,13 +22,17 @@ const CsvExportEditor: React.FC = () => {
       .catch(alert)
       .finally(() => setSegmentsLoading(false));
 
+    loadExports();
+  }, []);
+
+  function loadExports() {
     setExportsLoading(true);
     api
       .genericExportsCsvExportListList()
       .then(setExports)
       .catch(alert)
       .finally(() => setExportsLoading(false));
-  }, []);
+  }
 
   return (
     <>
@@ -41,12 +45,13 @@ const CsvExportEditor: React.FC = () => {
                   "d-flex justify-content-between align-items-center mb-0"
                 }
               >
-                <span>CSV-Export Editor</span>
+                <h5 className={"mb-0"}>CSV-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
                   text={"Neues Exports erzeugen"}
                   icon={"add_circle"}
                   onClick={() => setShowCreateModal(true)}
+                  disabled={segmentsLoading}
                 />
               </div>
             </Card.Header>
@@ -60,6 +65,7 @@ const CsvExportEditor: React.FC = () => {
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         segments={segments}
+        loadExports={loadExports}
       />
     </>
   );
