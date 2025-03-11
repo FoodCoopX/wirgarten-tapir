@@ -4,6 +4,5 @@ export function getCsrfToken() {
     alert("Failed to load csrf token");
     return "";
   }
-  console.log("GOT " + (csrf_elements[0] as HTMLInputElement).value);
   return (csrf_elements[0] as HTMLInputElement).value;
 }
