@@ -19,7 +19,7 @@ class CsvExportBuilder:
     def create_exported_file(
         cls, csv_export: CsvExport, reference_datetime: datetime.datetime
     ):
-        ExportedFile.objects.create(
+        return ExportedFile.objects.create(
             name=cls.build_file_name(csv_export.file_name, reference_datetime),
             type=ExportedFile.FileType.CSV,
             file=bytes(

@@ -10,6 +10,7 @@ import CsvExportTable from "./CsvExportTable.tsx";
 import CsvExportModal from "./CsvExportModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
+import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
 
 interface CsvExportEditorProps {
   csrfToken: string;
@@ -25,6 +26,8 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
   const [exportSelectedForDeletion, setExportSelectedForDeletion] =
     useState<CsvExportModel>();
   const [exportSelectedForEdition, setExportSelectedForEdition] =
+    useState<CsvExportModel>();
+  const [exportSelectedForBuild, setExportSelectedForBuild] =
     useState<CsvExportModel>();
 
   useEffect(() => {
@@ -50,7 +53,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
 
   function deleteExport(exp: CsvExportModel) {
     api
-      .genericExportsCsvExportsDestroy({ id: exp.id })
+      .genericExportsCsvExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
       .catch(alert)
       .finally(() => setExportSelectedForDeletion(undefined));
@@ -90,6 +93,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                 }}
                 segments={segmentsLoading ? [] : segments}
                 onExportDeleteClicked={setExportSelectedForDeletion}
+                onExportBuildClicked={setExportSelectedForBuild}
               />
             </Card.Body>
           </Card>
@@ -111,6 +115,14 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
           }
           onConfirm={() => deleteExport(exportSelectedForDeletion)}
           onCancel={() => setExportSelectedForDeletion(undefined)}
+        />
+      )}
+      {exportSelectedForBuild && (
+        <CsvExportBuildModal
+          exportToBuild={exportSelectedForBuild}
+          show={true}
+          csrfToken={csrfToken}
+          onHide={() => setExportSelectedForBuild(undefined)}
         />
       )}
     </>

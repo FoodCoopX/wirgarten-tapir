@@ -9,14 +9,16 @@ interface CsvExportTableProps {
   onExportEdit: (exp: CsvExportModel) => void;
   segments: ExportSegment[];
   onExportDeleteClicked: (exp: CsvExportModel) => void;
+  onExportBuildClicked: (exp: CsvExportModel) => void;
 }
 
-const CsvExportEditor: React.FC<CsvExportTableProps> = ({
+const CsvExportTable: React.FC<CsvExportTableProps> = ({
   exports,
   loading,
   onExportEdit,
   segments,
   onExportDeleteClicked,
+  onExportBuildClicked,
 }) => {
   function loadingPlaceholders() {
     return Array.from(Array(7).keys()).map((index) => {
@@ -57,6 +59,12 @@ const CsvExportEditor: React.FC<CsvExportTableProps> = ({
                 onClick={() => onExportEdit(exp)}
               />
               <TapirButton
+                variant={"outline-primary"}
+                icon={"attach_file"}
+                size={"sm"}
+                onClick={() => onExportBuildClicked(exp)}
+              />
+              <TapirButton
                 variant={"outline-danger"}
                 icon={"delete"}
                 size={"sm"}
@@ -84,4 +92,4 @@ const CsvExportEditor: React.FC<CsvExportTableProps> = ({
   );
 };
 
-export default CsvExportEditor;
+export default CsvExportTable;

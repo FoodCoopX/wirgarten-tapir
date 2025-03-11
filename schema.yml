@@ -98,6 +98,30 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/build_csv_export:
+    get:
+      operationId: generic_exports_build_csv_export_retrieve
+      parameters:
+      - in: query
+        name: csv_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildCsvExportResponse'
+          description: ''
   /generic_exports/csv_exports/:
     get:
       operationId: generic_exports_csv_exports_list
@@ -146,8 +170,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this csv export.
+          type: string
+        description: A unique value identifying this csv export.
         required: true
       tags:
       - generic_exports
@@ -166,8 +190,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this csv export.
+          type: string
+        description: A unique value identifying this csv export.
         required: true
       tags:
       - generic_exports
@@ -198,8 +222,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this csv export.
+          type: string
+        description: A unique value identifying this csv export.
         required: true
       tags:
       - generic_exports
@@ -229,8 +253,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: integer
-        description: A unique integer value identifying this csv export.
+          type: string
+        description: A unique value identifying this csv export.
         required: true
       tags:
       - generic_exports
@@ -2237,6 +2261,16 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
+    BuildCsvExportResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+        file_as_string:
+          type: string
+      required:
+      - file_as_string
+      - file_name
     BundledEmailConfiguration:
       type: object
       properties:
@@ -2306,8 +2340,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          readOnly: true
+          type: string
+          maxLength: 10
         export_segment_id:
           type: string
           maxLength: 512
@@ -2336,12 +2370,15 @@ components:
       required:
       - export_segment_id
       - file_name
-      - id
       - name
       - separator
     CsvExportModelRequest:
       type: object
       properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
         export_segment_id:
           type: string
           minLength: 1
@@ -3126,6 +3163,10 @@ components:
     PatchedCsvExportModelRequest:
       type: object
       properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
         export_segment_id:
           type: string
           minLength: 1

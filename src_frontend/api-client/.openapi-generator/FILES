@@ -4,6 +4,7 @@ apis/TapirmailApi.ts
 apis/index.ts
 index.ts
 models/BounceTypeEnum.ts
+models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/CsvExportModel.ts

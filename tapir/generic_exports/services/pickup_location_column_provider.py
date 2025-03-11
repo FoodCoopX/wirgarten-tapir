@@ -61,7 +61,7 @@ class PickupLocationColumnProvider:
 
         return "-".join(
             [
-                member.member_no
+                member.member_no or "Nicht mitglied"
                 for member in members_annotated_with_pickup_location.filter(
                     current_pickup_location_id=location.id
                 )

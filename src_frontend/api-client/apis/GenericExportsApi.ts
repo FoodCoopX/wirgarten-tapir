@@ -15,12 +15,15 @@
 
 import * as runtime from '../runtime';
 import type {
+  BuildCsvExportResponse,
   CsvExportModel,
   CsvExportModelRequest,
   ExportSegment,
   PatchedCsvExportModelRequest,
 } from '../models/index';
 import {
+    BuildCsvExportResponseFromJSON,
+    BuildCsvExportResponseToJSON,
     CsvExportModelFromJSON,
     CsvExportModelToJSON,
     CsvExportModelRequestFromJSON,
@@ -31,25 +34,30 @@ import {
     PatchedCsvExportModelRequestToJSON,
 } from '../models/index';
 
+export interface GenericExportsBuildCsvExportRetrieveRequest {
+    csvExportId?: string;
+    referenceDatetime?: Date;
+}
+
 export interface GenericExportsCsvExportsCreateRequest {
     csvExportModelRequest: CsvExportModelRequest;
 }
 
 export interface GenericExportsCsvExportsDestroyRequest {
-    id: number;
+    id: string;
 }
 
 export interface GenericExportsCsvExportsPartialUpdateRequest {
-    id: number;
+    id: string;
     patchedCsvExportModelRequest?: PatchedCsvExportModelRequest;
 }
 
 export interface GenericExportsCsvExportsRetrieveRequest {
-    id: number;
+    id: string;
 }
 
 export interface GenericExportsCsvExportsUpdateRequest {
-    id: number;
+    id: string;
     csvExportModelRequest: CsvExportModelRequest;
 }
 
@@ -57,6 +65,38 @@ export interface GenericExportsCsvExportsUpdateRequest {
  * 
  */
 export class GenericExportsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async genericExportsBuildCsvExportRetrieveRaw(requestParameters: GenericExportsBuildCsvExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildCsvExportResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['csvExportId'] != null) {
+            queryParameters['csv_export_id'] = requestParameters['csvExportId'];
+        }
+
+        if (requestParameters['referenceDatetime'] != null) {
+            queryParameters['reference_datetime'] = (requestParameters['referenceDatetime'] as any).toISOString();
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/generic_exports/build_csv_export`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BuildCsvExportResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsBuildCsvExportRetrieve(requestParameters: GenericExportsBuildCsvExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildCsvExportResponse> {
+        const response = await this.genericExportsBuildCsvExportRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

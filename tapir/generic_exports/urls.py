@@ -15,6 +15,11 @@ urlpatterns = [
         views.GetExportSegmentsView.as_view(),
         name="export_segments",
     ),
+    path(
+        "build_csv_export",
+        views.BuildCsvExportView.as_view(),
+        name="build_csv_export",
+    ),
 ]
 
 router = DefaultRouter()

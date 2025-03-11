@@ -63,3 +63,8 @@ class CreateCsvExportSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"Invalid column ID: {column_id}")
 
         return data
+
+
+class BuildCsvExportResponseSerializer(serializers.Serializer):
+    file_name = serializers.CharField()
+    file_as_string = serializers.CharField()

@@ -24,6 +24,12 @@ export interface CsvExportModelRequest {
      * @type {string}
      * @memberof CsvExportModelRequest
      */
+    id?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CsvExportModelRequest
+     */
     exportSegmentId: string;
     /**
      * 
@@ -84,6 +90,7 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
     }
     return {
         
+        'id': json['id'] == null ? undefined : json['id'],
         'exportSegmentId': json['export_segment_id'],
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -105,6 +112,7 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
 
     return {
         
+        'id': value['id'],
         'export_segment_id': value['exportSegmentId'],
         'name': value['name'],
         'description': value['description'],

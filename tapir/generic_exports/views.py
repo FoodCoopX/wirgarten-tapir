@@ -1,6 +1,9 @@
+import datetime
+
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,7 +13,9 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.generic_exports.serializers import (
     ExportSegmentSerializer,
     CsvExportModelSerializer,
+    BuildCsvExportResponseSerializer,
 )
+from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.wirgarten.constants import Permission
 
@@ -57,3 +62,37 @@ class CsvExportViewSet(viewsets.ModelViewSet):
     queryset = CsvExport.objects.all().order_by("name")
     serializer_class = CsvExportModelSerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class BuildCsvExportView(APIView):
+    @extend_schema(
+        responses={200: BuildCsvExportResponseSerializer()},
+        parameters=[
+            OpenApiParameter(name="csv_export_id", type=str),
+            OpenApiParameter(name="reference_datetime", type=datetime.datetime),
+        ],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        csv_export = get_object_or_404(
+            CsvExport, id=request.query_params.get("csv_export_id")
+        )
+        reference_datetime = datetime.datetime.fromisoformat(
+            request.query_params.get("reference_datetime")
+        )
+
+        exported_file = CsvExportBuilder.create_exported_file(
+            csv_export, reference_datetime
+        )
+
+        return Response(
+            BuildCsvExportResponseSerializer(
+                {
+                    "file_name": exported_file.name,
+                    "file_as_string": exported_file.file.decode("utf-8"),
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )

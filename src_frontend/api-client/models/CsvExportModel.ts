@@ -21,10 +21,10 @@ import { mapValues } from '../runtime';
 export interface CsvExportModel {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof CsvExportModel
      */
-    readonly id: number;
+    id?: string;
     /**
      * 
      * @type {string}
@@ -73,7 +73,6 @@ export interface CsvExportModel {
  * Check if a given object implements the CsvExportModel interface.
  */
 export function instanceOfCsvExportModel(value: object): value is CsvExportModel {
-    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('exportSegmentId' in value) || value['exportSegmentId'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('separator' in value) || value['separator'] === undefined) return false;
@@ -91,7 +90,7 @@ export function CsvExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
     }
     return {
         
-        'id': json['id'],
+        'id': json['id'] == null ? undefined : json['id'],
         'exportSegmentId': json['export_segment_id'],
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -106,13 +105,14 @@ export function CsvExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
       return CsvExportModelToJSONTyped(json, false);
   }
 
-  export function CsvExportModelToJSONTyped(value?: Omit<CsvExportModel, 'id'> | null, ignoreDiscriminator: boolean = false): any {
+  export function CsvExportModelToJSONTyped(value?: CsvExportModel | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
+        'id': value['id'],
         'export_segment_id': value['exportSegmentId'],
         'name': value['name'],
         'description': value['description'],

@@ -1,8 +1,10 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from tapir.core.models import TapirModel
 
-class CsvExport(models.Model):
+
+class CsvExport(TapirModel):
     export_segment_id = models.CharField(max_length=512)
     name = models.CharField(max_length=512, unique=True)
     description = models.TextField(blank=True)

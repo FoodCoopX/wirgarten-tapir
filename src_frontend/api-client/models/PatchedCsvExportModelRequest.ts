@@ -24,6 +24,12 @@ export interface PatchedCsvExportModelRequest {
      * @type {string}
      * @memberof PatchedCsvExportModelRequest
      */
+    id?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchedCsvExportModelRequest
+     */
     exportSegmentId?: string;
     /**
      * 
@@ -80,6 +86,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
     }
     return {
         
+        'id': json['id'] == null ? undefined : json['id'],
         'exportSegmentId': json['export_segment_id'] == null ? undefined : json['export_segment_id'],
         'name': json['name'] == null ? undefined : json['name'],
         'description': json['description'] == null ? undefined : json['description'],
@@ -101,6 +108,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
 
     return {
         
+        'id': value['id'],
         'export_segment_id': value['exportSegmentId'],
         'name': value['name'],
         'description': value['description'],
