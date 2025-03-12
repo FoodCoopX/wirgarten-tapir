@@ -1,7 +1,7 @@
 import factory
 from faker import Faker
 
-from tapir.generic_exports.models import CsvExport
+from tapir.generic_exports.models import CsvExport, AutomatedExportCycle
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.wirgarten.models import ExportedFile
 
@@ -22,7 +22,7 @@ class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
     separator = factory.Faker("random_element", elements=[",", ";", "-"])
     automated_export_cycle = factory.Faker(
         "random_element",
-        elements=[x[0] for x in CsvExport.AutomatedExportCycle.choices],
+        elements=[x[0] for x in AutomatedExportCycle.choices],
     )
     automated_export_day = factory.Faker("pyint", min_value=1, max_value=365)
     automated_export_hour = factory.Faker("time")

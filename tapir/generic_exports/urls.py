@@ -20,8 +20,14 @@ urlpatterns = [
         views.BuildCsvExportView.as_view(),
         name="build_csv_export",
     ),
+    path(
+        "pdf_export_editor",
+        views.PdfExportEditorView.as_view(),
+        name="pdf_export_editor",
+    ),
 ]
 
 router = DefaultRouter()
 router.register(r"csv_exports", views.CsvExportViewSet, basename="csv_exports")
+router.register(r"pdf_exports", views.PdfExportViewSet, basename="pdf_exports")
 urlpatterns += router.urls

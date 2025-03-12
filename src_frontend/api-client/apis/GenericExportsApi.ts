@@ -20,6 +20,9 @@ import type {
   CsvExportModelRequest,
   ExportSegment,
   PatchedCsvExportModelRequest,
+  PatchedPdfExportModelRequest,
+  PdfExportModel,
+  PdfExportModelRequest,
 } from '../models/index';
 import {
     BuildCsvExportResponseFromJSON,
@@ -32,6 +35,12 @@ import {
     ExportSegmentToJSON,
     PatchedCsvExportModelRequestFromJSON,
     PatchedCsvExportModelRequestToJSON,
+    PatchedPdfExportModelRequestFromJSON,
+    PatchedPdfExportModelRequestToJSON,
+    PdfExportModelFromJSON,
+    PdfExportModelToJSON,
+    PdfExportModelRequestFromJSON,
+    PdfExportModelRequestToJSON,
 } from '../models/index';
 
 export interface GenericExportsBuildCsvExportRetrieveRequest {
@@ -59,6 +68,28 @@ export interface GenericExportsCsvExportsRetrieveRequest {
 export interface GenericExportsCsvExportsUpdateRequest {
     id: string;
     csvExportModelRequest: CsvExportModelRequest;
+}
+
+export interface GenericExportsPdfExportsCreateRequest {
+    pdfExportModelRequest: PdfExportModelRequest;
+}
+
+export interface GenericExportsPdfExportsDestroyRequest {
+    id: string;
+}
+
+export interface GenericExportsPdfExportsPartialUpdateRequest {
+    id: string;
+    patchedPdfExportModelRequest?: PatchedPdfExportModelRequest;
+}
+
+export interface GenericExportsPdfExportsRetrieveRequest {
+    id: string;
+}
+
+export interface GenericExportsPdfExportsUpdateRequest {
+    id: string;
+    pdfExportModelRequest: PdfExportModelRequest;
 }
 
 /**
@@ -313,6 +344,200 @@ export class GenericExportsApi extends runtime.BaseAPI {
      */
     async genericExportsExportSegmentsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ExportSegment>> {
         const response = await this.genericExportsExportSegmentsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsCreateRaw(requestParameters: GenericExportsPdfExportsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PdfExportModel>> {
+        if (requestParameters['pdfExportModelRequest'] == null) {
+            throw new runtime.RequiredError(
+                'pdfExportModelRequest',
+                'Required parameter "pdfExportModelRequest" was null or undefined when calling genericExportsPdfExportsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PdfExportModelRequestToJSON(requestParameters['pdfExportModelRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PdfExportModelFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsCreate(requestParameters: GenericExportsPdfExportsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PdfExportModel> {
+        const response = await this.genericExportsPdfExportsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsDestroyRaw(requestParameters: GenericExportsPdfExportsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling genericExportsPdfExportsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsDestroy(requestParameters: GenericExportsPdfExportsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.genericExportsPdfExportsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PdfExportModel>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PdfExportModelFromJSON));
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PdfExportModel>> {
+        const response = await this.genericExportsPdfExportsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsPartialUpdateRaw(requestParameters: GenericExportsPdfExportsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PdfExportModel>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling genericExportsPdfExportsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedPdfExportModelRequestToJSON(requestParameters['patchedPdfExportModelRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PdfExportModelFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsPartialUpdate(requestParameters: GenericExportsPdfExportsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PdfExportModel> {
+        const response = await this.genericExportsPdfExportsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsRetrieveRaw(requestParameters: GenericExportsPdfExportsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PdfExportModel>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling genericExportsPdfExportsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PdfExportModelFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsRetrieve(requestParameters: GenericExportsPdfExportsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PdfExportModel> {
+        const response = await this.genericExportsPdfExportsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsUpdateRaw(requestParameters: GenericExportsPdfExportsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PdfExportModel>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling genericExportsPdfExportsUpdate().'
+            );
+        }
+
+        if (requestParameters['pdfExportModelRequest'] == null) {
+            throw new runtime.RequiredError(
+                'pdfExportModelRequest',
+                'Required parameter "pdfExportModelRequest" was null or undefined when calling genericExportsPdfExportsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/generic_exports/pdf_exports/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PdfExportModelRequestToJSON(requestParameters['pdfExportModelRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PdfExportModelFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsPdfExportsUpdate(requestParameters: GenericExportsPdfExportsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PdfExportModel> {
+        const response = await this.genericExportsPdfExportsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

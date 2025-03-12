@@ -1,12 +1,12 @@
 import mimetypes
 
-from tapir.generic_exports.models import AutomatedExportResult
+from tapir.generic_exports.models import AutomatedCsvExportResult
 from tapir.wirgarten.service.email import send_email, Attachment
 
 
 class ExportMailSender:
     @classmethod
-    def send_mails_for_export(cls, export_result: AutomatedExportResult):
+    def send_mails_for_export(cls, export_result: AutomatedCsvExportResult):
         if len(export_result.export_definition.email_recipients) == 0:
             return
 

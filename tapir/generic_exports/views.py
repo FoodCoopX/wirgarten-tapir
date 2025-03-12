@@ -8,12 +8,13 @@ from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.generic_exports.models import CsvExport
+from tapir.generic_exports.models import CsvExport, PdfExport
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.generic_exports.serializers import (
     ExportSegmentSerializer,
     CsvExportModelSerializer,
     BuildCsvExportResponseSerializer,
+    PdfExportModelSerializer,
 )
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
@@ -96,3 +97,14 @@ class BuildCsvExportView(APIView):
             ).data,
             status=status.HTTP_200_OK,
         )
+
+
+class PdfExportEditorView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Coop.MANAGE
+    template_name = "generic_exports/pdf_export_editor.html"
+
+
+class PdfExportViewSet(viewsets.ModelViewSet):
+    queryset = PdfExport.objects.all().order_by("name")
+    serializer_class = PdfExportModelSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]

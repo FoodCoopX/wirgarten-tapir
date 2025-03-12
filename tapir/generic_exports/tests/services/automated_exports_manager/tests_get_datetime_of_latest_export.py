@@ -2,7 +2,7 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
-from tapir.generic_exports.models import CsvExport
+from tapir.generic_exports.models import AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
@@ -17,7 +17,7 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
-        export.automated_export_cycle = CsvExport.AutomatedExportCycle.YEARLY
+        export.automated_export_cycle = AutomatedExportCycle.YEARLY
         expected = Mock()
         mock_yearly.return_value = expected
 
@@ -36,7 +36,7 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
-        export.automated_export_cycle = CsvExport.AutomatedExportCycle.MONTHLY
+        export.automated_export_cycle = AutomatedExportCycle.MONTHLY
         expected = Mock()
         mock_monthly.return_value = expected
 
@@ -55,7 +55,7 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
-        export.automated_export_cycle = CsvExport.AutomatedExportCycle.WEEKLY
+        export.automated_export_cycle = AutomatedExportCycle.WEEKLY
         expected = Mock()
         mock_weekly.return_value = expected
 
@@ -74,7 +74,7 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
-        export.automated_export_cycle = CsvExport.AutomatedExportCycle.DAILY
+        export.automated_export_cycle = AutomatedExportCycle.DAILY
         expected = Mock()
         mock_daily.return_value = expected
 
@@ -93,7 +93,7 @@ class TestGetDatetimeOfLatestExport(SimpleTestCase):
         self, mock_yearly: Mock, mock_monthly: Mock, mock_weekly: Mock, mock_daily: Mock
     ):
         export = Mock()
-        export.automated_export_cycle = CsvExport.AutomatedExportCycle.NEVER
+        export.automated_export_cycle = AutomatedExportCycle.NEVER
 
         result = AutomatedExportsManager.get_datetime_of_latest_export(export)
 

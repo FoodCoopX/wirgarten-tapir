@@ -1,6 +1,6 @@
 from unittest.mock import patch, Mock
 
-from tapir.generic_exports.models import AutomatedExportResult
+from tapir.generic_exports.models import AutomatedCsvExportResult
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 class TestDoExport(TapirIntegrationTest):
     @patch.object(ExportMailSender, "send_mails_for_export")
-    @patch.object(AutomatedExportResult, "objects")
+    @patch.object(AutomatedCsvExportResult, "objects")
     @patch.object(CsvExportBuilder, "create_exported_file")
     def test_doExport_default_createsExportedFileAndExportResult(
         self,

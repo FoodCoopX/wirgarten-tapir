@@ -279,6 +279,147 @@ paths:
                 items:
                   $ref: '#/components/schemas/ExportSegment'
           description: ''
+  /generic_exports/pdf_exports/:
+    get:
+      operationId: generic_exports_pdf_exports_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    post:
+      operationId: generic_exports_pdf_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+  /generic_exports/pdf_exports/{id}/:
+    get:
+      operationId: generic_exports_pdf_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_pdf_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_pdf_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_pdf_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -3304,6 +3445,48 @@ components:
         content:
           type: string
           minLength: 1
+    PatchedPdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
     PatchedStaticSegmentRecipientRequest:
       type: object
       properties:
@@ -3391,6 +3574,102 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PdfExportModel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        export_segment_id:
+          type: string
+          maxLength: 512
+        name:
+          type: string
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
+    PdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
     PickupLocation:
       type: object
       properties:

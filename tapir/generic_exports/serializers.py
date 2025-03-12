@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tapir.generic_exports.models import CsvExport
+from tapir.generic_exports.models import CsvExport, PdfExport
 
 
 class ExportSegmentColumnSerializer(serializers.Serializer):
@@ -25,3 +25,9 @@ class CsvExportModelSerializer(serializers.ModelSerializer):
 class BuildCsvExportResponseSerializer(serializers.Serializer):
     file_name = serializers.CharField()
     file_as_string = serializers.CharField()
+
+
+class PdfExportModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PdfExport
+        fields = "__all__"

@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
-from tapir.generic_exports.models import CsvExport, AutomatedExportResult
+from tapir.generic_exports.models import AutomatedCsvExportResult, AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
@@ -15,9 +15,7 @@ class TestDoAutomatedExports(TapirIntegrationTest):
     def test_doAutomatedExports_exportHasCycleNever_noExportDone(
         self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
     ):
-        CsvExportFactory.create(
-            automated_export_cycle=CsvExport.AutomatedExportCycle.NEVER
-        )
+        CsvExportFactory.create(automated_export_cycle=AutomatedExportCycle.NEVER)
 
         AutomatedExportsManager.do_automated_exports()
 
@@ -30,11 +28,11 @@ class TestDoAutomatedExports(TapirIntegrationTest):
         self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
     ):
         export = CsvExportFactory.create(
-            automated_export_cycle=CsvExport.AutomatedExportCycle.DAILY
+            automated_export_cycle=AutomatedExportCycle.DAILY
         )
         target_date = datetime.datetime(year=2023, month=12, day=5)
         mock_get_datetime_of_latest_export.return_value = target_date
-        AutomatedExportResult.objects.create(
+        AutomatedCsvExportResult.objects.create(
             export_definition=export,
             datetime=target_date,
             file=ExportedFileFactory.create(),
@@ -51,11 +49,11 @@ class TestDoAutomatedExports(TapirIntegrationTest):
         self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
     ):
         export = CsvExportFactory.create(
-            automated_export_cycle=CsvExport.AutomatedExportCycle.DAILY
+            automated_export_cycle=AutomatedExportCycle.DAILY
         )
         target_date = datetime.datetime(year=2023, month=12, day=5)
         mock_get_datetime_of_latest_export.return_value = target_date
-        AutomatedExportResult.objects.create(
+        AutomatedCsvExportResult.objects.create(
             export_definition=export,
             datetime=target_date - datetime.timedelta(days=1),
             file=ExportedFileFactory.create(),

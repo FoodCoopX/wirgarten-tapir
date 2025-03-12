@@ -26,6 +26,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/csv_export_editor/csv_export_editor_entry.tsx",
           ),
+          pdf_export_editor: join(
+            INPUT_DIR,
+            "/pdf_export_editor/pdf_export_editor_entry.tsx",
+          ),
         },
       },
     },
