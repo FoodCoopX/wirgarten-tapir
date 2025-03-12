@@ -2,7 +2,7 @@
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
 export * from './BounceTypeEnum';
-export * from './BuildCsvExportResponse';
+export * from './BuildExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
 export * from './CsvExportModel';

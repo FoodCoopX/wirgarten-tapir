@@ -120,7 +120,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildCsvExportResponse'
+                $ref: '#/components/schemas/BuildExportResponse'
+          description: ''
+  /generic_exports/build_pdf_export:
+    get:
+      operationId: generic_exports_build_pdf_export_retrieve
+      parameters:
+      - in: query
+        name: pdf_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildExportResponse'
           description: ''
   /generic_exports/csv_exports/:
     get:
@@ -2416,7 +2440,7 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    BuildCsvExportResponse:
+    BuildExportResponse:
       type: object
       properties:
         file_name:

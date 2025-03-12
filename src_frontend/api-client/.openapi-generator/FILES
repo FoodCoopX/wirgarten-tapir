@@ -5,7 +5,7 @@ apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
 models/BounceTypeEnum.ts
-models/BuildCsvExportResponse.ts
+models/BuildExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/CsvExportModel.ts

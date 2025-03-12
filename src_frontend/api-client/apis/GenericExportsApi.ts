@@ -15,7 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
-  BuildCsvExportResponse,
+  BuildExportResponse,
   CsvExportModel,
   CsvExportModelRequest,
   ExportSegment,
@@ -25,8 +25,8 @@ import type {
   PdfExportModelRequest,
 } from '../models/index';
 import {
-    BuildCsvExportResponseFromJSON,
-    BuildCsvExportResponseToJSON,
+    BuildExportResponseFromJSON,
+    BuildExportResponseToJSON,
     CsvExportModelFromJSON,
     CsvExportModelToJSON,
     CsvExportModelRequestFromJSON,
@@ -45,6 +45,11 @@ import {
 
 export interface GenericExportsBuildCsvExportRetrieveRequest {
     csvExportId?: string;
+    referenceDatetime?: Date;
+}
+
+export interface GenericExportsBuildPdfExportRetrieveRequest {
+    pdfExportId?: string;
     referenceDatetime?: Date;
 }
 
@@ -99,7 +104,7 @@ export class GenericExportsApi extends runtime.BaseAPI {
 
     /**
      */
-    async genericExportsBuildCsvExportRetrieveRaw(requestParameters: GenericExportsBuildCsvExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildCsvExportResponse>> {
+    async genericExportsBuildCsvExportRetrieveRaw(requestParameters: GenericExportsBuildCsvExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildExportResponse>> {
         const queryParameters: any = {};
 
         if (requestParameters['csvExportId'] != null) {
@@ -119,13 +124,45 @@ export class GenericExportsApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BuildCsvExportResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BuildExportResponseFromJSON(jsonValue));
     }
 
     /**
      */
-    async genericExportsBuildCsvExportRetrieve(requestParameters: GenericExportsBuildCsvExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildCsvExportResponse> {
+    async genericExportsBuildCsvExportRetrieve(requestParameters: GenericExportsBuildCsvExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildExportResponse> {
         const response = await this.genericExportsBuildCsvExportRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async genericExportsBuildPdfExportRetrieveRaw(requestParameters: GenericExportsBuildPdfExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildExportResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['pdfExportId'] != null) {
+            queryParameters['pdf_export_id'] = requestParameters['pdfExportId'];
+        }
+
+        if (requestParameters['referenceDatetime'] != null) {
+            queryParameters['reference_datetime'] = (requestParameters['referenceDatetime'] as any).toISOString();
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/generic_exports/build_pdf_export`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BuildExportResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async genericExportsBuildPdfExportRetrieve(requestParameters: GenericExportsBuildPdfExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildExportResponse> {
+        const response = await this.genericExportsBuildPdfExportRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

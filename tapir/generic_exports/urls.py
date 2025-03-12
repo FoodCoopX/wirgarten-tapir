@@ -6,14 +6,14 @@ from tapir.generic_exports import views
 app_name = "generic_exports"
 urlpatterns = [
     path(
-        "csv_export_editor",
-        views.CsvExportEditorView.as_view(),
-        name="csv_export_editor",
-    ),
-    path(
         "export_segments",
         views.GetExportSegmentsView.as_view(),
         name="export_segments",
+    ),
+    path(
+        "csv_export_editor",
+        views.CsvExportEditorView.as_view(),
+        name="csv_export_editor",
     ),
     path(
         "build_csv_export",
@@ -24,6 +24,11 @@ urlpatterns = [
         "pdf_export_editor",
         views.PdfExportEditorView.as_view(),
         name="pdf_export_editor",
+    ),
+    path(
+        "build_pdf_export",
+        views.BuildPdfExportView.as_view(),
+        name="build_pdf_export",
     ),
 ]
 
