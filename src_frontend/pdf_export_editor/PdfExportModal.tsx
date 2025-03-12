@@ -229,7 +229,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                     setExportOneFilePerEntry(event.target.checked)
                   }
                   required={false}
-                  value={exportFileName}
+                  checked={exportOneFilePerEntry}
                 />
               </Form.Group>
             </Col>

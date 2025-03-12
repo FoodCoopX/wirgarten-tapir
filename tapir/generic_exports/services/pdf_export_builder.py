@@ -64,9 +64,12 @@ class PdfExportBuilder:
 
     @classmethod
     def create_single_file(cls, pdf_export, reference_datetime, context):
+        rendered_file_name = cls.build_template_object(pdf_export.file_name).render(
+            context
+        )
         return ExportedFile.objects.create(
             name=CsvExportBuilder.build_file_name(
-                pdf_export.file_name, reference_datetime, "pdf"
+                rendered_file_name, reference_datetime, "pdf"
             ),
             type=ExportedFile.FileType.PDF,
             file=cls.render_pdf(
