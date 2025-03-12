@@ -74,6 +74,12 @@ export interface PatchedCsvExportModelRequest {
      * @type {Array<string>}
      * @memberof PatchedCsvExportModelRequest
      */
+    customColumnNames?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof PatchedCsvExportModelRequest
+     */
     emailRecipients?: Array<string>;
     /**
      * 
@@ -121,6 +127,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'separator': json['separator'] == null ? undefined : json['separator'],
         'fileName': json['file_name'] == null ? undefined : json['file_name'],
         'columnIds': json['column_ids'] == null ? undefined : json['column_ids'],
+        'customColumnNames': json['custom_column_names'] == null ? undefined : json['custom_column_names'],
         'emailRecipients': json['email_recipients'] == null ? undefined : json['email_recipients'],
         'automatedExportCycle': json['automated_export_cycle'] == null ? undefined : AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
         'automatedExportDay': json['automated_export_day'] == null ? undefined : json['automated_export_day'],
@@ -146,6 +153,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'separator': value['separator'],
         'file_name': value['fileName'],
         'column_ids': value['columnIds'],
+        'custom_column_names': value['customColumnNames'],
         'email_recipients': value['emailRecipients'],
         'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
         'automated_export_day': value['automatedExportDay'],

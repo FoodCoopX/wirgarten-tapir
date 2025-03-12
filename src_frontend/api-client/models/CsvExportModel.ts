@@ -74,6 +74,12 @@ export interface CsvExportModel {
      * @type {Array<string>}
      * @memberof CsvExportModel
      */
+    customColumnNames?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CsvExportModel
+     */
     emailRecipients?: Array<string>;
     /**
      * 
@@ -128,6 +134,7 @@ export function CsvExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
         'separator': json['separator'],
         'fileName': json['file_name'],
         'columnIds': json['column_ids'] == null ? undefined : json['column_ids'],
+        'customColumnNames': json['custom_column_names'] == null ? undefined : json['custom_column_names'],
         'emailRecipients': json['email_recipients'] == null ? undefined : json['email_recipients'],
         'automatedExportCycle': AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
         'automatedExportDay': json['automated_export_day'],
@@ -153,6 +160,7 @@ export function CsvExportModelFromJSONTyped(json: any, ignoreDiscriminator: bool
         'separator': value['separator'],
         'file_name': value['fileName'],
         'column_ids': value['columnIds'],
+        'custom_column_names': value['customColumnNames'],
         'email_recipients': value['emailRecipients'],
         'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
         'automated_export_day': value['automatedExportDay'],

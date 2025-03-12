@@ -54,6 +54,16 @@ class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
 
         self.column_ids = column_ids
 
+    @factory.post_generation
+    def custom_column_names(self: CsvExport, create, names, **kwargs):
+        if not create:
+            return
+
+        if not names:
+            names = [fake.bs() for _ in self.column_ids]
+
+        self.custom_column_names = names
+
 
 class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):
     class Meta:

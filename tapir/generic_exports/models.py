@@ -1,4 +1,5 @@
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from tapir.core.models import TapirModel
@@ -21,6 +22,9 @@ class CsvExport(TapirModel):
     column_ids = ArrayField(
         base_field=models.CharField(max_length=512), default=list, blank=True
     )
+    custom_column_names = ArrayField(
+        base_field=models.CharField(max_length=512), default=list, blank=True
+    )
     email_recipients = ArrayField(
         base_field=models.EmailField(), default=list, blank=True
     )
@@ -32,6 +36,12 @@ class CsvExport(TapirModel):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        if len(self.column_ids) != len(self.custom_column_names):
+            raise ValidationError(
+                f"There should be as many column ids as column names. IDs: {self.column_ids}, Names: {self.custom_column_names}"
+            )
 
 
 class AutomatedExportResult(TapirModel):

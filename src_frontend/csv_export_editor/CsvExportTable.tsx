@@ -46,7 +46,7 @@ const CsvExportTable: React.FC<CsvExportTableProps> = ({
   function loadedContent() {
     return exports.map((exp) => {
       return (
-        <tr>
+        <tr key={exp.id}>
           <td>{exp.name}</td>
           <td>{exp.description}</td>
           <td>{getSegmentName(exp.exportSegmentId)}</td>

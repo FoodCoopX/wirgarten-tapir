@@ -42,7 +42,7 @@ class CsvExportBuilder:
         writer = csv.writer(result, delimiter=csv_export.separator)
 
         # Header row
-        writer.writerow([column.display_name for column in columns])
+        writer.writerow([name for name in csv_export.custom_column_names])
 
         for db_object in queryset:
             writer.writerow(

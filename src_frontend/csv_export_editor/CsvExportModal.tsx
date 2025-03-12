@@ -40,6 +40,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     [],
   );
   const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
+  const [exportColumnsNames, setExportColumnsNames] = useState<string[]>([]);
   const [exportCycle, setExportCycle] = useState<AutomatedExportCycleEnum>(
     AutomatedExportCycleEnum.Never,
   );
@@ -90,6 +91,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportFileName(exportToEdit.fileName);
       setExportEmailRecipients(exportToEdit.emailRecipients ?? []);
       setExportColumns(getExportColumns(exportToEdit));
+      setExportColumnsNames(exportToEdit.customColumnNames ?? []);
       setExportCycle(exportToEdit.automatedExportCycle);
       setExportDay(exportToEdit.automatedExportDay);
       setExportHour(exportToEdit.automatedExportHour);
@@ -101,6 +103,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportFileName("");
       setExportEmailRecipients([]);
       setExportColumns([]);
+      setExportColumnsNames([]);
       setExportCycle(AutomatedExportCycleEnum.Never);
       setExportDay(1);
       setExportHour("00:00");
@@ -121,6 +124,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     const request = {
       exportSegmentId: exportSegment.id,
       columnIds: columnIds,
+      customColumnNames: exportColumnsNames,
       description: exportDescription,
       name: exportName,
       emailRecipients: exportEmailRecipients,
@@ -266,9 +270,13 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
               <Form.Group controlId={"form.columns"}>
                 <Form.Label>Spalten</Form.Label>
                 <ColumnInput
-                  onSelectedColumnsChange={setExportColumns}
+                  onSelectedColumnsChange={(columns, columnNames) => {
+                    setExportColumns(columns);
+                    setExportColumnsNames(columnNames);
+                  }}
                   availableColumns={exportSegment ? exportSegment.columns : []}
                   selectedColumns={exportColumns}
+                  columnNames={exportColumnsNames}
                 />
               </Form.Group>
             </Col>

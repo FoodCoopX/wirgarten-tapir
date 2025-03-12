@@ -16,6 +16,7 @@ class TestCreateExportedFile(TapirIntegrationTest):
             export_segment_id="members.all",
             column_ids=["member.first_name", "member.last_name"],
             separator=":",
+            custom_column_names=["test_custom_1", "test_custom_2"],
         )
         MemberWithCoopSharesFactory.create(first_name="FN1", last_name="LN1")
         MemberWithCoopSharesFactory.create(first_name="FN2", last_name="LN2")
@@ -26,5 +27,5 @@ class TestCreateExportedFile(TapirIntegrationTest):
                 year=2024, month=3, day=5, hour=12, minute=17
             ),
         )
-        expected = "Vorname:Nachname\r\nFN1:LN1\r\nFN2:LN2\r\n"
+        expected = "test_custom_1:test_custom_2\r\nFN1:LN1\r\nFN2:LN2\r\n"
         self.assertEqual(expected, result)

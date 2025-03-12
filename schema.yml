@@ -2375,6 +2375,11 @@ components:
           items:
             type: string
             maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            maxLength: 512
         email_recipients:
           type: array
           items:
@@ -2424,6 +2429,12 @@ components:
           minLength: 1
           maxLength: 512
         column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
           type: array
           items:
             type: string
@@ -3224,6 +3235,12 @@ components:
           minLength: 1
           maxLength: 512
         column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
           type: array
           items:
             type: string

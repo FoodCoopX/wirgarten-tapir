@@ -1,10 +1,15 @@
-import React from "react";
-import { Badge, Form } from "react-bootstrap";
+import React, { ChangeEvent } from "react";
+import { Form, Table } from "react-bootstrap";
 import { ExportSegmentColumn } from "../api-client";
+import TapirButton from "../components/TapirButton.tsx";
 
 interface ColumnInputProps {
-  onSelectedColumnsChange: (columns: ExportSegmentColumn[]) => void;
+  onSelectedColumnsChange: (
+    columns: ExportSegmentColumn[],
+    columnNames: string[],
+  ) => void;
   selectedColumns: ExportSegmentColumn[];
+  columnNames: string[];
   autoFocus?: boolean;
   availableColumns: ExportSegmentColumn[];
 }
@@ -12,12 +17,16 @@ interface ColumnInputProps {
 const ColumnInput: React.FC<ColumnInputProps> = ({
   onSelectedColumnsChange,
   selectedColumns = [],
+  columnNames,
   availableColumns,
 }) => {
   function addExportColumnToSelection(columnId: string) {
     for (const column of availableColumns) {
       if (column.id === columnId) {
-        onSelectedColumnsChange([...selectedColumns, column]);
+        onSelectedColumnsChange(
+          [...selectedColumns, column],
+          [...columnNames, ""],
+        );
         return;
       }
     }
@@ -27,27 +36,30 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
   function removeExportColumnFromSelection(
     columnToRemove: ExportSegmentColumn,
   ) {
-    onSelectedColumnsChange(
-      selectedColumns.filter((column) => column.id !== columnToRemove.id),
+    const indexToRemove = selectedColumns.findIndex(
+      (column) => column.id === columnToRemove.id,
     );
+    const newSelectedColumns = [
+      ...selectedColumns.slice(0, indexToRemove),
+      ...selectedColumns.slice(indexToRemove + 1),
+    ];
+    const newColumnNames = [
+      ...columnNames.slice(0, indexToRemove),
+      ...columnNames.slice(indexToRemove + 1),
+    ];
+    onSelectedColumnsChange(newSelectedColumns, newColumnNames);
+  }
+
+  function onNameChanged(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    index: number,
+  ) {
+    columnNames[index] = event.target.value;
+    onSelectedColumnsChange(selectedColumns, [...columnNames]);
   }
 
   return (
     <>
-      <div className={"d-flex flex-column gap-2 mb-1"}>
-        {Array.from(selectedColumns).map((column) => (
-          <div>
-            <Badge
-              onClick={() => removeExportColumnFromSelection(column)}
-              style={{ cursor: "pointer" }}
-              key={column.id}
-            >
-              {column.displayName}
-            </Badge>{" "}
-            <Form.Text>{column.description}</Form.Text>
-          </div>
-        ))}
-      </div>
       <Form.Select
         onChange={(event) => {
           addExportColumnToSelection(event.target.value);
@@ -62,7 +74,46 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
             </option>
           ))}
       </Form.Select>
-      <Form.Text>Click on a selected column to deselect it.</Form.Text>
+      <Table striped hover responsive>
+        <thead>
+          <tr>
+            <th>Interne Spalten-Name</th>
+            <th>Spalten-Name in der exportierte Datei</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {selectedColumns.map((column, index) => {
+            return (
+              <tr key={column.id}>
+                <td>
+                  <span style={{ fontSize: ".875em" }} className={"text-wrap"}>
+                    {column.displayName}
+                  </span>
+                </td>
+                <td>
+                  <Form.Control
+                    type={"text"}
+                    placeholder={column.displayName}
+                    size={"sm"}
+                    required={true}
+                    value={columnNames[index]}
+                    onChange={(event) => onNameChanged(event, index)}
+                  ></Form.Control>
+                </td>
+                <td>
+                  <TapirButton
+                    icon={"delete"}
+                    variant={"outline-danger"}
+                    size={"sm"}
+                    onClick={() => removeExportColumnFromSelection(column)}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
     </>
   );
 };
