@@ -26,7 +26,7 @@ class TestDoExport(TapirIntegrationTest):
         export_result = Mock()
         mock_result_objects.create.return_value = export_result
 
-        AutomatedExportsManager.do_export(export, reference_datetime)
+        AutomatedExportsManager.do_single_csv_export(export, reference_datetime)
 
         mock_create_exported_file.assert_called_once_with(export, reference_datetime)
         mock_result_objects.create.assert_called_once_with(

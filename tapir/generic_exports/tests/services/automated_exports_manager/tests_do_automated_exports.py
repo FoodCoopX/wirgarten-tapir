@@ -17,7 +17,7 @@ class TestDoAutomatedExports(TapirIntegrationTest):
     ):
         CsvExportFactory.create(automated_export_cycle=AutomatedExportCycle.NEVER)
 
-        AutomatedExportsManager.do_automated_exports()
+        AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_not_called()
         mock_do_export.assert_not_called()
@@ -38,7 +38,7 @@ class TestDoAutomatedExports(TapirIntegrationTest):
             file=ExportedFileFactory.create(),
         )
 
-        AutomatedExportsManager.do_automated_exports()
+        AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
         mock_do_export.assert_not_called()
@@ -59,7 +59,7 @@ class TestDoAutomatedExports(TapirIntegrationTest):
             file=ExportedFileFactory.create(),
         )
 
-        AutomatedExportsManager.do_automated_exports()
+        AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
         mock_do_export.assert_called_once_with(export, target_date)
