@@ -69,9 +69,11 @@ class AutomatedExportsManager:
         start_of_previous_month = (
             now.replace(day=1) - datetime.timedelta(days=1)
         ).replace(day=1)
-        return start_of_previous_month + datetime.timedelta(
+        result = start_of_previous_month + datetime.timedelta(
             days=export.automated_export_day - 1
         )
+        result = cls.set_time(result, export.automated_export_hour)
+        return result
 
     @classmethod
     def get_datetime_of_latest_weekly_export(cls, export: CsvExport):
@@ -85,9 +87,11 @@ class AutomatedExportsManager:
             return result
 
         start_of_previous_week = start_of_week - datetime.timedelta(days=7)
-        return start_of_previous_week + datetime.timedelta(
+        result = start_of_previous_week + datetime.timedelta(
             days=export.automated_export_day - 1
         )
+        result = cls.set_time(result, export.automated_export_hour)
+        return result
 
     @classmethod
     def get_datetime_of_latest_daily_export(cls, export: CsvExport):
