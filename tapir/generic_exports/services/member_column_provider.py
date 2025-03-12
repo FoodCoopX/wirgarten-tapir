@@ -14,25 +14,25 @@ class MemberColumnProvider:
     def get_member_columns(cls):
         return [
             ExportSegmentColumn(
-                id="member.first_name",
+                id="member_first_name",
                 display_name="Vorname",
                 description="",
                 get_value=cls.get_value_member_first_name,
             ),
             ExportSegmentColumn(
-                id="member.last_name",
+                id="member_last_name",
                 display_name="Nachname",
                 description="",
                 get_value=cls.get_value_member_last_name,
             ),
             ExportSegmentColumn(
-                id="member.number",
+                id="member_number",
                 display_name="Mitgliedsnummer",
                 description="",
                 get_value=cls.get_value_member_number,
             ),
             ExportSegmentColumn(
-                id="member.subscriptions",
+                id="member_subscriptions",
                 display_name="Produkte",
                 description="",
                 get_value=cls.get_value_member_number,

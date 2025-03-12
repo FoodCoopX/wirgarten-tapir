@@ -136,7 +136,7 @@ export class GenericExportsApi extends runtime.BaseAPI {
 
     /**
      */
-    async genericExportsBuildPdfExportRetrieveRaw(requestParameters: GenericExportsBuildPdfExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildExportResponse>> {
+    async genericExportsBuildPdfExportRetrieveRaw(requestParameters: GenericExportsBuildPdfExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         if (requestParameters['pdfExportId'] != null) {
@@ -156,12 +156,16 @@ export class GenericExportsApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BuildExportResponseFromJSON(jsonValue));
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      */
-    async genericExportsBuildPdfExportRetrieve(requestParameters: GenericExportsBuildPdfExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildExportResponse> {
+    async genericExportsBuildPdfExportRetrieve(requestParameters: GenericExportsBuildPdfExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.genericExportsBuildPdfExportRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }

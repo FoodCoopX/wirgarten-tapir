@@ -12,19 +12,19 @@ class PickupLocationColumnProvider:
     def get_pickup_location_columns(cls):
         return [
             ExportSegmentColumn(
-                id="pickup_location.name",
+                id="pickup_location_name",
                 display_name="Name",
                 description="",
                 get_value=cls.get_value_pickup_location_name,
             ),
             ExportSegmentColumn(
-                id="pickup_location.number_of_member",
+                id="pickup_location_number_of_member",
                 display_name="Anzahl an Mitglieder",
                 description="Anzahl an Mitglieder die an diese Abholstation abholen",
                 get_value=cls.get_value_pickup_location_number_of_member,
             ),
             ExportSegmentColumn(
-                id="pickup_location.member_ids",
+                id="pickup_location_member_ids",
                 display_name="Nummer der Mitglieder die an diese Abholstation abholen",
                 description="Nummer der Mitglieder die an diese Abholstation abholen",
                 get_value=cls.get_value_pickup_location_member_ids,

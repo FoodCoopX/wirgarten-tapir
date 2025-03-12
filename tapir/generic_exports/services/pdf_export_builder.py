@@ -66,16 +66,13 @@ class PdfExportBuilder:
     def create_single_file(cls, pdf_export, reference_datetime, context):
         return ExportedFile.objects.create(
             name=CsvExportBuilder.build_file_name(
-                pdf_export.file_name, reference_datetime
+                pdf_export.file_name, reference_datetime, "pdf"
             ),
             type=ExportedFile.FileType.PDF,
-            file=bytes(
-                cls.render_pdf(
-                    pdf_export.template,
-                    context,
-                ).write_pdf(),
-                "utf-8",
-            ),
+            file=cls.render_pdf(
+                pdf_export.template,
+                context,
+            ).write_pdf(),
         )
 
     @classmethod
@@ -94,8 +91,10 @@ class PdfExportBuilder:
 
     @classmethod
     def render_pdf(cls, template_as_string: str, context: dict) -> Document:
+        template_object = cls.build_template_object(template_as_string)
+        rendered_template = template_object.render(context)
         document = weasyprint.HTML(
-            string=cls.build_template_object(template_as_string).render(context),
+            string=rendered_template,
             base_url=settings.WEASYPRINT_BASEURL,
             url_fetcher=django_url_fetcher,
         )

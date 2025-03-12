@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, permissions
@@ -113,7 +114,7 @@ class PdfExportViewSet(viewsets.ModelViewSet):
 
 class BuildPdfExportView(APIView):
     @extend_schema(
-        responses={200: BuildExportResponseSerializer()},
+        responses={200: str},
         parameters=[
             OpenApiParameter(name="pdf_export_id", type=str),
             OpenApiParameter(name="reference_datetime", type=datetime.datetime),
@@ -135,11 +136,6 @@ class BuildPdfExportView(APIView):
         )
 
         return Response(
-            BuildExportResponseSerializer(
-                {
-                    "file_name": exported_files[0].name,
-                    "file_as_string": exported_files[0].file.decode("utf-8"),
-                }
-            ).data,
+            reverse("wirgarten:exported_files_download", args=[exported_files[0].id]),
             status=status.HTTP_200_OK,
         )

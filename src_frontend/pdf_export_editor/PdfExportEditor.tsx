@@ -10,6 +10,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import PdfExportTable from "./PdfExportTable.tsx";
 import PdfExportModal from "./PdfExportModal.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
+import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
 
 interface PdfExportEditorProps {
   csrfToken: string;
@@ -117,6 +118,14 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
           }
           onConfirm={() => deleteExport(exportSelectedForDeletion)}
           onCancel={() => setExportSelectedForDeletion(undefined)}
+        />
+      )}
+      {exportSelectedForBuild && (
+        <PdfExportBuildModal
+          exportToBuild={exportSelectedForBuild}
+          show={true}
+          csrfToken={csrfToken}
+          onHide={() => setExportSelectedForBuild(undefined)}
         />
       )}
     </>

@@ -144,7 +144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildExportResponse'
+                type: string
           description: ''
   /generic_exports/csv_exports/:
     get:
