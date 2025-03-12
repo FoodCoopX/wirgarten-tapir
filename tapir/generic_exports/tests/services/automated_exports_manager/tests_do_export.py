@@ -1,15 +1,14 @@
 from unittest.mock import patch, Mock
 
-from django.test import SimpleTestCase
-
 from tapir.generic_exports.models import AutomatedExportResult
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
 )
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestDoExport(SimpleTestCase):
+class TestDoExport(TapirIntegrationTest):
     @patch.object(AutomatedExportResult, "objects")
     @patch.object(CsvExportBuilder, "create_exported_file")
     def test_doExport_default_createsExportedFileAndExportResult(
