@@ -31,9 +31,7 @@ class CsvExportBuilder:
     def build_csv_export_string(
         cls, csv_export: CsvExport, reference_datetime: datetime.datetime
     ):
-        segment = ExportSegmentManager.registered_export_segments[
-            csv_export.export_segment_id
-        ]
+        segment = ExportSegmentManager.get_segment_by_id(csv_export.export_segment_id)
         queryset = segment.get_queryset(reference_datetime)
         columns = [
             cls.get_column_by_id(segment, column_id)

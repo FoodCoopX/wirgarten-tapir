@@ -28,3 +28,7 @@ class ExportSegmentManager:
     @classmethod
     def register_segment(cls, segment: ExportSegment):
         cls.registered_export_segments[segment.id] = segment
+
+    @classmethod
+    def get_segment_by_id(cls, segment_id: str) -> ExportSegment:
+        return cls.registered_export_segments[segment_id]
