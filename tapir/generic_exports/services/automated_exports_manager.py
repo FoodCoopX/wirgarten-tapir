@@ -40,6 +40,7 @@ class AutomatedExportsManager:
             return cls.get_datetime_of_latest_weekly_export(export)
         if export.automated_export_cycle == CsvExport.AutomatedExportCycle.DAILY:
             return cls.get_datetime_of_latest_daily_export(export)
+        return None
 
     @classmethod
     def get_datetime_of_latest_yearly_export(cls, export: CsvExport):
