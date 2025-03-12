@@ -10,9 +10,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestDoAutomatedExports(TapirIntegrationTest):
-    def setUp(self) -> None:
-        pass
-
     @patch.object(AutomatedExportsManager, "do_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
     def test_doAutomatedExports_exportHasCycleNever_noExportDone(
