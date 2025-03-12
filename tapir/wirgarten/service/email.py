@@ -1,11 +1,12 @@
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
-from django.conf import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member
@@ -14,7 +15,20 @@ from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.utils import format_date, get_today
 
 
-def send_email(to_email: List[str], subject: str, content: str, variables: dict = {}):
+@dataclass
+class Attachment:
+    file_name: str
+    content: str
+    mime_type: str
+
+
+def send_email(
+    to_email: List[str],
+    subject: str,
+    content: str,
+    variables: dict = None,
+    attachments: List[Attachment] = None,
+):
     """
     Send an email to a list of recipients. The email is sent as HTML using the email/email_base.html template.
 
@@ -22,7 +36,13 @@ def send_email(to_email: List[str], subject: str, content: str, variables: dict 
     :param subject: subject of the email
     :param content: content of the email
     :param variables: additional variables to be used in the email template
+    :param attachments: attached files
     """
+
+    if variables is None:
+        variables = {}
+    if attachments is None:
+        attachments = []
 
     variables.update(get_default_vars(to_email))
     content = content.format(**variables)
@@ -51,6 +71,10 @@ def send_email(to_email: List[str], subject: str, content: str, variables: dict 
             "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
         },
     )
+
+    for attachment in attachments:
+        email.attach(attachment.file_name, attachment.content, attachment.mime_type)
+
     email.content_subtype = "html"
     email.send()
 

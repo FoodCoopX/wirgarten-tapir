@@ -1,7 +1,5 @@
 import datetime
 
-from icecream import ic
-
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.tests.factories import CsvExportFactory
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -29,5 +27,4 @@ class TestCreateExportedFile(TapirIntegrationTest):
             ),
         )
         expected = "Vorname:Nachname\r\nFN1:LN1\r\nFN2:LN2\r\n"
-        ic(expected, result)
         self.assertEqual(expected, result)

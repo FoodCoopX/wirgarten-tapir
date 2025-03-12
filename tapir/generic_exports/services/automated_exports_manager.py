@@ -4,6 +4,7 @@ from django.db import transaction
 
 from tapir.generic_exports.models import CsvExport, AutomatedExportResult
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
+from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.wirgarten.utils import get_now
 
 
@@ -26,9 +27,10 @@ class AutomatedExportsManager:
     @transaction.atomic
     def do_export(cls, export, reference_datetime):
         file = CsvExportBuilder.create_exported_file(export, reference_datetime)
-        AutomatedExportResult.objects.create(
+        result = AutomatedExportResult.objects.create(
             export_definition=export, datetime=reference_datetime, file=file
         )
+        ExportMailSender.send_mails_for_export(result)
 
     @classmethod
     def get_datetime_of_latest_export(cls, export: CsvExport):
