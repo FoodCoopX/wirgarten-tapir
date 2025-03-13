@@ -151,7 +151,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered={true}>
+    <Modal show={show} onHide={onHide} centered={true} size={"xl"}>
       <Modal.Header closeButton>
         <h5 className={"mb-0"}>Neues Export erzeugen</h5>
       </Modal.Header>
@@ -162,140 +162,146 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         >
           <Row>
             <Col>
-              <Form.Group controlId={"form.name"}>
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  type={"text"}
-                  placeholder={"Name"}
-                  onChange={(event) => setExportName(event.target.value)}
-                  required={true}
-                  value={exportName}
-                />
-              </Form.Group>
+              <Row>
+                <Col>
+                  <Form.Group controlId={"form.name"}>
+                    <Form.Label>Name</Form.Label>
+                    <Form.Control
+                      type={"text"}
+                      placeholder={"Name"}
+                      onChange={(event) => setExportName(event.target.value)}
+                      required={true}
+                      value={exportName}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group controlId={"form.segment"}>
+                    <Form.Label>Datensegment</Form.Label>
+                    <Form.Select onChange={onSegmentSelectChanged}>
+                      {segments.map((segment) => {
+                        return (
+                          <option
+                            key={segment.id}
+                            value={segment.id}
+                            selected={
+                              exportSegment && segment.id == exportSegment.id
+                            }
+                          >
+                            {segment.displayName}
+                          </option>
+                        );
+                      })}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Form.Group controlId={"form.description"}>
+                  <Form.Label>Beschreibung</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    placeholder={"Beschreibung"}
+                    as={"textarea"}
+                    onChange={(event) =>
+                      setExportDescription(event.target.value)
+                    }
+                    value={exportDescription}
+                  />
+                </Form.Group>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Group controlId={"form.file name"}>
+                    <Form.Label>Datei-Name</Form.Label>
+                    <Form.Control
+                      type={"text"}
+                      placeholder={"Datei-Name"}
+                      onChange={(event) =>
+                        setExportFileName(event.target.value)
+                      }
+                      required={true}
+                      value={exportFileName}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group controlId={"form.OneFilePerEntry"}>
+                    <Form.Label>
+                      Eine Datei pro Eintrag im Datensegment erzeugen
+                    </Form.Label>
+                    <Form.Check
+                      onChange={(event) =>
+                        setExportOneFilePerEntry(event.target.checked)
+                      }
+                      required={false}
+                      checked={exportOneFilePerEntry}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Group controlId={"form.emails"}>
+                    <Form.Label>Empfängers</Form.Label>
+                    <EmailInput
+                      onEmailListChange={setExportEmailRecipients}
+                      addresses={exportEmailRecipients}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Group controlId={"form.cycle"}>
+                    <Form.Label>Automatisiertes Export Zyklus</Form.Label>
+                    <Form.Select
+                      onChange={(event) =>
+                        setExportCycle(
+                          event.target.value as AutomatedExportCycleEnum,
+                        )
+                      }
+                    >
+                      {Object.entries(cycleOptions()).map(([key, value]) => {
+                        return (
+                          <option
+                            key={key}
+                            value={key}
+                            selected={exportCycle === key}
+                          >
+                            {value}
+                          </option>
+                        );
+                      })}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group controlId={"form.day"}>
+                    <Form.Label>Tag</Form.Label>
+                    <Form.Control
+                      type={"number"}
+                      onChange={(event) =>
+                        setExportDay(parseInt(event.target.value))
+                      }
+                      required={true}
+                      value={exportDay}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group controlId={"form.hour"}>
+                    <Form.Label>Uhrzeit</Form.Label>
+                    <Form.Control
+                      type={"time"}
+                      onChange={(event) => setExportHour(event.target.value)}
+                      required={true}
+                      value={exportHour}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
             </Col>
-            <Col>
-              <Form.Group controlId={"form.segment"}>
-                <Form.Label>Datensegment</Form.Label>
-                <Form.Select onChange={onSegmentSelectChanged}>
-                  {segments.map((segment) => {
-                    return (
-                      <option
-                        key={segment.id}
-                        value={segment.id}
-                        selected={
-                          exportSegment && segment.id == exportSegment.id
-                        }
-                      >
-                        {segment.displayName}
-                      </option>
-                    );
-                  })}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Form.Group controlId={"form.description"}>
-              <Form.Label>Beschreibung</Form.Label>
-              <Form.Control
-                type={"text"}
-                placeholder={"Beschreibung"}
-                as={"textarea"}
-                onChange={(event) => setExportDescription(event.target.value)}
-                value={exportDescription}
-              />
-            </Form.Group>
-          </Row>
-          <Row>
-            <Col>
-              <Form.Group controlId={"form.file name"}>
-                <Form.Label>Datei-Name</Form.Label>
-                <Form.Control
-                  type={"text"}
-                  placeholder={"Datei-Name"}
-                  onChange={(event) => setExportFileName(event.target.value)}
-                  required={true}
-                  value={exportFileName}
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group controlId={"form.OneFilePerEntry"}>
-                <Form.Label>
-                  Eine Datei pro Eintrag im Datensegment erzeugen
-                </Form.Label>
-                <Form.Check
-                  onChange={(event) =>
-                    setExportOneFilePerEntry(event.target.checked)
-                  }
-                  required={false}
-                  checked={exportOneFilePerEntry}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Form.Group controlId={"form.emails"}>
-                <Form.Label>Empfängers</Form.Label>
-                <EmailInput
-                  onEmailListChange={setExportEmailRecipients}
-                  addresses={exportEmailRecipients}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Form.Group controlId={"form.cycle"}>
-                <Form.Label>Automatisiertes Export Zyklus</Form.Label>
-                <Form.Select
-                  onChange={(event) =>
-                    setExportCycle(
-                      event.target.value as AutomatedExportCycleEnum,
-                    )
-                  }
-                >
-                  {Object.entries(cycleOptions()).map(([key, value]) => {
-                    return (
-                      <option
-                        key={key}
-                        value={key}
-                        selected={exportCycle === key}
-                      >
-                        {value}
-                      </option>
-                    );
-                  })}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group controlId={"form.day"}>
-                <Form.Label>Tag</Form.Label>
-                <Form.Control
-                  type={"number"}
-                  onChange={(event) =>
-                    setExportDay(parseInt(event.target.value))
-                  }
-                  required={true}
-                  value={exportDay}
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group controlId={"form.hour"}>
-                <Form.Label>Uhrzeit</Form.Label>
-                <Form.Control
-                  type={"time"}
-                  onChange={(event) => setExportHour(event.target.value)}
-                  required={true}
-                  value={exportHour}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
             <Col>
               <Form.Group controlId={"form.template"}>
                 <Form.Label>Template</Form.Label>
@@ -306,6 +312,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                   onChange={(event) => setExportTemplate(event.target.value)}
                   required={true}
                   value={exportTemplate}
+                  rows={17}
                 />
               </Form.Group>
             </Col>

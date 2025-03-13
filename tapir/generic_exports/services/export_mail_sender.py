@@ -1,13 +1,18 @@
 import mimetypes
 from typing import List
 
-from tapir.generic_exports.models import AutomatedCsvExportResult
+from tapir.generic_exports.models import (
+    AutomatedCsvExportResult,
+    AutomatedPdfExportResult,
+)
 from tapir.wirgarten.service.email import send_email, Attachment
 
 
 class ExportMailSender:
     @classmethod
-    def send_mails_for_export(cls, export_results: List[AutomatedCsvExportResult]):
+    def send_mails_for_export(
+        cls, export_results: List[AutomatedCsvExportResult | AutomatedPdfExportResult]
+    ):
         # results are assumed to come all from the same definition
         export_definition = export_results[0].export_definition
         if len(export_definition.email_recipients) == 0:

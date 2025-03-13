@@ -14,7 +14,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.generic_exports.serializers import (
     ExportSegmentSerializer,
     CsvExportModelSerializer,
-    BuildExportResponseSerializer,
+    BuildCsvExportResponseSerializer,
     PdfExportModelSerializer,
 )
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
@@ -69,7 +69,7 @@ class CsvExportViewSet(viewsets.ModelViewSet):
 
 class BuildCsvExportView(APIView):
     @extend_schema(
-        responses={200: BuildExportResponseSerializer()},
+        responses={200: BuildCsvExportResponseSerializer()},
         parameters=[
             OpenApiParameter(name="csv_export_id", type=str),
             OpenApiParameter(name="reference_datetime", type=datetime.datetime),
@@ -91,7 +91,7 @@ class BuildCsvExportView(APIView):
         )
 
         return Response(
-            BuildExportResponseSerializer(
+            BuildCsvExportResponseSerializer(
                 {
                     "file_name": exported_file.name,
                     "file_as_string": exported_file.file.decode("utf-8"),

@@ -9,23 +9,23 @@ from tapir.generic_exports.tests.factories import CsvExportFactory, ExportedFile
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestDoAutomatedExports(TapirIntegrationTest):
-    @patch.object(AutomatedExportsManager, "do_export")
+class TestDoAutomatedCsvExports(TapirIntegrationTest):
+    @patch.object(AutomatedExportsManager, "do_single_csv_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
-    def test_doAutomatedExports_exportHasCycleNever_noExportDone(
-        self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
+    def test_doAutomatedCsvExports_exportHasCycleNever_noExportDone(
+        self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):
         CsvExportFactory.create(automated_export_cycle=AutomatedExportCycle.NEVER)
 
         AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_not_called()
-        mock_do_export.assert_not_called()
+        mock_do_single_csv_export.assert_not_called()
 
-    @patch.object(AutomatedExportsManager, "do_export")
+    @patch.object(AutomatedExportsManager, "do_single_csv_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
-    def test_doAutomatedExports_alreadyExportedAtTargetDate_noExportDone(
-        self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
+    def test_doAutomatedCsvExports_alreadyExportedAtTargetDate_noExportDone(
+        self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):
         export = CsvExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
@@ -41,12 +41,12 @@ class TestDoAutomatedExports(TapirIntegrationTest):
         AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
-        mock_do_export.assert_not_called()
+        mock_do_single_csv_export.assert_not_called()
 
-    @patch.object(AutomatedExportsManager, "do_export")
+    @patch.object(AutomatedExportsManager, "do_single_csv_export")
     @patch.object(AutomatedExportsManager, "get_datetime_of_latest_export")
-    def test_doAutomatedExports_noExportAtTargetDate_exportDone(
-        self, mock_get_datetime_of_latest_export: Mock, mock_do_export: Mock
+    def test_doAutomatedCsvExports_noExportAtTargetDate_exportDone(
+        self, mock_get_datetime_of_latest_export: Mock, mock_do_single_csv_export: Mock
     ):
         export = CsvExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
@@ -62,4 +62,4 @@ class TestDoAutomatedExports(TapirIntegrationTest):
         AutomatedExportsManager.do_automated_csv_exports()
 
         mock_get_datetime_of_latest_export.assert_called_once_with(export)
-        mock_do_export.assert_called_once_with(export, target_date)
+        mock_do_single_csv_export.assert_called_once_with(export, target_date)

@@ -56,7 +56,7 @@ class AutomatedExportsManager:
     def do_single_pdf_export(cls, export, reference_datetime):
         files = PdfExportBuilder.create_exported_files(export, reference_datetime)
         results = [
-            AutomatedCsvExportResult.objects.create(
+            AutomatedPdfExportResult.objects.create(
                 export_definition=export, datetime=reference_datetime, file=file
             )
             for file in files

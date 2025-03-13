@@ -22,7 +22,7 @@ class CsvExportModelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class BuildExportResponseSerializer(serializers.Serializer):
+class BuildCsvExportResponseSerializer(serializers.Serializer):
     file_name = serializers.CharField()
     file_as_string = serializers.CharField()
 

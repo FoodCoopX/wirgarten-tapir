@@ -9,11 +9,11 @@ from tapir.generic_exports.services.export_mail_sender import ExportMailSender
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestDoExport(TapirIntegrationTest):
+class TestDoSingleCsvExport(TapirIntegrationTest):
     @patch.object(ExportMailSender, "send_mails_for_export")
     @patch.object(AutomatedCsvExportResult, "objects")
     @patch.object(CsvExportBuilder, "create_exported_file")
-    def test_doExport_default_createsExportedFileAndExportResult(
+    def test_doSingleCsvExport_default_createsExportedFileAndExportResultAndSendsMail(
         self,
         mock_create_exported_file: Mock,
         mock_result_objects: Mock,
@@ -32,4 +32,4 @@ class TestDoExport(TapirIntegrationTest):
         mock_result_objects.create.assert_called_once_with(
             export_definition=export, datetime=reference_datetime, file=created_file
         )
-        mock_send_mails_for_export.assert_called_once_with(export_result)
+        mock_send_mails_for_export.assert_called_once_with([export_result])
