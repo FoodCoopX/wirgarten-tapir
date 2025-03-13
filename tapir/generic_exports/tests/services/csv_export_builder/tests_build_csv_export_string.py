@@ -14,7 +14,7 @@ class TestCreateExportedFile(TapirIntegrationTest):
     def test_buildCsvExportString_default_returnsCorrectString(self):
         export = CsvExportFactory.create(
             export_segment_id="members.all",
-            column_ids=["member.first_name", "member.last_name"],
+            column_ids=["member_first_name", "member_last_name"],
             separator=":",
             custom_column_names=["test_custom_1", "test_custom_2"],
         )

@@ -20,7 +20,7 @@ class CsvExportBuilder:
         cls, csv_export: CsvExport, reference_datetime: datetime.datetime
     ):
         return ExportedFile.objects.create(
-            name=cls.build_file_name(csv_export.file_name, reference_datetime),
+            name=cls.build_file_name(csv_export.file_name, reference_datetime, "csv"),
             type=ExportedFile.FileType.CSV,
             file=bytes(
                 cls.build_csv_export_string(csv_export, reference_datetime), "utf-8"
@@ -65,12 +65,15 @@ class CsvExportBuilder:
 
     @classmethod
     def build_file_name(
-        cls, base_name: str, reference_datetime: datetime.datetime
+        cls, base_name: str, reference_datetime: datetime.datetime, extension: str
     ) -> str:
+        if not extension.startswith("."):
+            extension = "." + extension
+
         name = base_name
-        if base_name.endswith(".csv"):
-            name = base_name[:-4]
+        if base_name.endswith(extension):
+            name = base_name[: -len(extension)]
 
         name += "." + reference_datetime.strftime("%Y.%m.%d %H.%M")
-        name += ".csv"
+        name += extension
         return name

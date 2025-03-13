@@ -9,9 +9,11 @@ from tapir.generic_exports.services.automated_exports_manager import (
 
 
 class TestTasks(SimpleTestCase):
-    @patch.object(AutomatedExportsManager, "do_automated_exports")
+    @patch.object(AutomatedExportsManager, "do_automated_pdf_exports")
+    @patch.object(AutomatedExportsManager, "do_automated_csv_exports")
     def test_doAutomatedExports_default_callsService(
-        self, mock_do_automated_exports: Mock
+        self, mock_do_automated_csv_exports: Mock, mock_do_automated_pdf_exports: Mock
     ):
         tasks.do_automated_exports()
-        mock_do_automated_exports.assert_called_once_with()
+        mock_do_automated_csv_exports.assert_called_once_with()
+        mock_do_automated_pdf_exports.assert_called_once_with()

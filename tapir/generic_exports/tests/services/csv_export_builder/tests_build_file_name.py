@@ -10,7 +10,7 @@ class TestBuildFileName(SimpleTestCase):
         self.assertEqual(
             "test_name.2024.03.25 06.45.csv",
             CsvExportBuilder.build_file_name(
-                "test_name.csv", datetime.datetime(2024, 3, 25, 6, 45)
+                "test_name.csv", datetime.datetime(2024, 3, 25, 6, 45), "csv"
             ),
         )
 
@@ -18,6 +18,6 @@ class TestBuildFileName(SimpleTestCase):
         self.assertEqual(
             "test_name.2024.03.25 06.45.csv",
             CsvExportBuilder.build_file_name(
-                "test_name", datetime.datetime(2024, 3, 25, 6, 45)
+                "test_name", datetime.datetime(2024, 3, 25, 6, 45), "csv"
             ),
         )

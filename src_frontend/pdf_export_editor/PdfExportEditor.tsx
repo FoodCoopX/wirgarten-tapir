@@ -2,33 +2,33 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
-  CsvExportModel,
   ExportSegment,
   GenericExportsApi,
+  PdfExportModel,
 } from "../api-client";
-import CsvExportTable from "./CsvExportTable.tsx";
-import CsvExportModal from "./CsvExportModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
+import PdfExportTable from "./PdfExportTable.tsx";
+import PdfExportModal from "./PdfExportModal.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
-import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
+import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
 
-interface CsvExportEditorProps {
+interface PdfExportEditorProps {
   csrfToken: string;
 }
 
-const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
+const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
   const api = useApi(GenericExportsApi, csrfToken);
   const [segments, setSegments] = useState<ExportSegment[]>([]);
   const [segmentsLoading, setSegmentsLoading] = useState(false);
-  const [exports, setExports] = useState<CsvExportModel[]>([]);
+  const [exports, setExports] = useState<PdfExportModel[]>([]);
   const [exportsLoading, setExportsLoading] = useState(false);
-  const [showCsvExportModal, setShowCsvExportModal] = useState(false);
+  const [showPdfExportModal, setShowPdfExportModal] = useState(false);
   const [exportSelectedForDeletion, setExportSelectedForDeletion] =
-    useState<CsvExportModel>();
+    useState<PdfExportModel>();
   const [exportSelectedForEdition, setExportSelectedForEdition] =
-    useState<CsvExportModel>();
+    useState<PdfExportModel>();
   const [exportSelectedForBuild, setExportSelectedForBuild] =
-    useState<CsvExportModel>();
+    useState<PdfExportModel>();
 
   useEffect(() => {
     setSegmentsLoading(true);
@@ -44,15 +44,15 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
   function loadExports() {
     setExportsLoading(true);
     api
-      .genericExportsCsvExportsList()
+      .genericExportsPdfExportsList()
       .then(setExports)
       .catch(alert)
       .finally(() => setExportsLoading(false));
   }
 
-  function deleteExport(exp: CsvExportModel) {
+  function deleteExport(exp: PdfExportModel) {
     api
-      .genericExportsCsvExportsDestroy({ id: exp.id! })
+      .genericExportsPdfExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
       .catch(alert)
       .finally(() => setExportSelectedForDeletion(undefined));
@@ -69,38 +69,42 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                   "d-flex justify-content-between align-items-center mb-0"
                 }
               >
-                <h5 className={"mb-0"}>CSV-Export Editor</h5>
+                <h5 className={"mb-0"}>PDF-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
                   text={"Neues Export erzeugen"}
                   icon={"add_circle"}
-                  onClick={() => {
-                    setExportSelectedForEdition(undefined);
-                    setShowCsvExportModal(true);
-                  }}
+                  onClick={() => setShowPdfExportModal(true)}
                   disabled={segmentsLoading}
                 />
               </div>
             </Card.Header>
             <Card.Body>
-              <CsvExportTable
+              <PdfExportTable
                 exports={exports}
                 loading={exportsLoading}
                 onExportEdit={(exp) => {
                   setExportSelectedForEdition(exp);
-                  setShowCsvExportModal(true);
+                  setShowPdfExportModal(true);
                 }}
                 segments={segmentsLoading ? [] : segments}
-                onExportDeleteClicked={setExportSelectedForDeletion}
-                onExportBuildClicked={setExportSelectedForBuild}
+                onExportDeleteClicked={(exp) => {
+                  setExportSelectedForDeletion(exp);
+                }}
+                onExportBuildClicked={(exp) => {
+                  setExportSelectedForBuild(exp);
+                }}
               />
             </Card.Body>
           </Card>
         </Col>
       </Row>
-      <CsvExportModal
-        show={showCsvExportModal}
-        onHide={() => setShowCsvExportModal(false)}
+      <PdfExportModal
+        show={showPdfExportModal}
+        onHide={() => {
+          setShowPdfExportModal(false);
+          setExportSelectedForEdition(undefined);
+        }}
         segments={segments}
         loadExports={loadExports}
         csrfToken={csrfToken}
@@ -117,7 +121,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
         />
       )}
       {exportSelectedForBuild && (
-        <CsvExportBuildModal
+        <PdfExportBuildModal
           exportToBuild={exportSelectedForBuild}
           show={true}
           csrfToken={csrfToken}
@@ -128,4 +132,4 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
   );
 };
 
-export default CsvExportEditor;
+export default PdfExportEditor;

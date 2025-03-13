@@ -2,7 +2,7 @@
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
 export * from './BounceTypeEnum';
-export * from './BuildCsvExportResponse';
+export * from './BuildExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
 export * from './CsvExportModel';
@@ -41,10 +41,13 @@ export * from './PatchedCsvExportModelRequest';
 export * from './PatchedEmailConfigurationDispatchRequest';
 export * from './PatchedEmailConfigurationRequest';
 export * from './PatchedEmailTemplateRequest';
+export * from './PatchedPdfExportModelRequest';
 export * from './PatchedStaticSegmentRecipientRequest';
 export * from './PatchedStaticSegmentRequest';
 export * from './PatchedStoredUploadRequest';
 export * from './PatchedTemporaryUploadRequest';
+export * from './PdfExportModel';
+export * from './PdfExportModelRequest';
 export * from './PickupLocation';
 export * from './PickupLocationOpeningTime';
 export * from './Product';

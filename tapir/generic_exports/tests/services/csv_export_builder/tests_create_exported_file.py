@@ -31,6 +31,6 @@ class TestCreateExportedFile(SimpleTestCase):
             name="output_file_name", type="csv", file=bytes("file_as_string", "utf-8")
         )
         mock_build_file_name.assert_called_once_with(
-            "input_file_name", reference_datetime
+            "input_file_name", reference_datetime, "csv"
         )
         mock_build_csv_export_string.assert_called_once_with(export, reference_datetime)

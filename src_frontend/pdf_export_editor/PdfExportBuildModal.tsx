@@ -1,21 +1,17 @@
 import React, { useState } from "react";
 import { Form, Modal } from "react-bootstrap";
-import {
-  BuildExportResponse,
-  CsvExportModel,
-  GenericExportsApi,
-} from "../api-client";
+import { GenericExportsApi, PdfExportModel } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
-interface CsvExportBuildModalProps {
+interface PdfExportBuildModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
-  exportToBuild: CsvExportModel;
+  exportToBuild: PdfExportModel;
 }
 
-const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
+const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
   show,
   onHide,
   csrfToken,
@@ -29,8 +25,8 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
   function buildExport() {
     setLoading(true);
     api
-      .genericExportsBuildCsvExportRetrieve({
-        csvExportId: exportToBuild.id,
+      .genericExportsBuildPdfExportRetrieve({
+        pdfExportId: exportToBuild.id,
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
@@ -41,14 +37,9 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
       });
   }
 
-  function downloadExportFile(response: BuildExportResponse) {
+  function downloadExportFile(url: string) {
     const element = document.createElement("a");
-    element.setAttribute(
-      "href",
-      "data:text/plain;charset=utf-8," +
-        encodeURIComponent(response.fileAsString),
-    );
-    element.setAttribute("download", response.fileName);
+    element.setAttribute("href", url);
 
     element.style.display = "none";
     element.click();
@@ -62,7 +53,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
       <Modal.Body>
         <Form
           className={"d-flex flex-column gap-2"}
-          id={"createCsvExportBuildModalForm"}
+          id={"createPdfExportBuildModalForm"}
         >
           <Form.Group controlId={"form.name"}>
             <Form.Label>Datum</Form.Label>
@@ -87,4 +78,4 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
   );
 };
 
-export default CsvExportBuildModal;
+export default PdfExportBuildModal;
