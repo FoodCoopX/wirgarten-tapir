@@ -31,6 +31,7 @@ class ParameterCategory:
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
     EMAIL = "Email"
+    JOKERS = "Jokers"
 
 
 class Parameter:
@@ -116,6 +117,9 @@ class Parameter:
     EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
         f"{PREFIX}.email.contract_change_confirmation.content"
     )
+    JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
+    JOKERS_AMOUNT_PER_CONTRACT = f"{PREFIX}.jokers.amount_per_contract"
+    JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
 
 
 from tapir.configuration.models import (
@@ -129,6 +133,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
+        from tapir.deliveries.services.joker_management_service import (
+            JokerManagementService,
+        )
 
         parameter_definition(
             key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
@@ -780,5 +787,44 @@ Dein WirGarten-Team""",
                     validate_html,
                 ],
                 textarea=True,
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_ENABLED,
+            label="Joker-Feature einschalten",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Temporäre Liefer-Pausen pro Mitglied erlauben",
+            category=ParameterCategory.JOKERS,
+            order_priority=1,
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_AMOUNT_PER_CONTRACT,
+            label="Jokers pro Jahr",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=4,
+            description="Anzahl an Jokers das ein Mitglied pro Vertragsjahr einsetzen darf",
+            category=ParameterCategory.JOKERS,
+            order_priority=2,
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_RESTRICTIONS,
+            label="Besondere Einschränkungen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="01.08-31.08-2;",
+            description="""Perioden in die Anzahl an Jokers das ein Mitglied einsetzen darf limitiert ist. 
+            zB: max 2 jokers pro Mitglied in August.
+            Format: startDatum-endDatum-anzahlAnJokers;startDatum-endDatum-anzahlAnJokers
+            Beispiel: 01.08-31.08-2;15.02-20.03-3 heißt max 2 jokers zwischen den 01.08 und den 31.08
+            und max 3 jokers zwischen den 15.02 und den 20.03.
+            Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
+            """,
+            category=ParameterCategory.JOKERS,
+            order_priority=3,
+            meta=ParameterMeta(
+                validators=[JokerManagementService.validate_joker_restrictions]
             ),
         )

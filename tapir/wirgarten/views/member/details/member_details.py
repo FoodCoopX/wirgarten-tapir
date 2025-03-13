@@ -170,6 +170,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 "new_email": email_change_requests[0].new_email
             }
 
+        context["jokersEnabled"] = (
+            "true" if get_parameter_value(Parameter.JOKERS_ENABLED) else "false"
+        )
+
         return context
 
     def add_renewal_notice_context(self, context, next_month, today):

@@ -80,6 +80,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir_mail.tasks.check_email_bounces",
         "schedule": datetime.timedelta(minutes=1),
     },
+    "do_automated_exports": {
+        "task": "tapir.generic_exports.tasks.do_automated_exports",
+        "schedule": datetime.timedelta(minutes=1),
+    },
 }
 
 EMAIL_DISPATCH_BATCH_SIZE = (

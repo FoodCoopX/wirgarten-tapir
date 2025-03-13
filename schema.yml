@@ -1,0 +1,4285 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /deliveries/api/cancel_joker:
+    post:
+      operationId: deliveries_api_cancel_joker_create
+      parameters:
+      - in: query
+        name: joker_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /deliveries/api/member_deliveries:
+    get:
+      operationId: deliveries_api_member_deliveries_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Delivery'
+          description: ''
+  /deliveries/api/member_joker_information:
+    get:
+      operationId: deliveries_api_member_joker_information_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberJokerInformation'
+          description: ''
+  /deliveries/api/use_joker:
+    post:
+      operationId: deliveries_api_use_joker_create
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /generic_exports/build_csv_export:
+    get:
+      operationId: generic_exports_build_csv_export_retrieve
+      parameters:
+      - in: query
+        name: csv_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildExportResponse'
+          description: ''
+  /generic_exports/build_pdf_export:
+    get:
+      operationId: generic_exports_build_pdf_export_retrieve
+      parameters:
+      - in: query
+        name: pdf_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /generic_exports/csv_exports/:
+    get:
+      operationId: generic_exports_csv_exports_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    post:
+      operationId: generic_exports_csv_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+  /generic_exports/csv_exports/{id}/:
+    get:
+      operationId: generic_exports_csv_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_csv_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_csv_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_csv_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /generic_exports/export_segments:
+    get:
+      operationId: generic_exports_export_segments_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExportSegment'
+          description: ''
+  /generic_exports/pdf_exports/:
+    get:
+      operationId: generic_exports_pdf_exports_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    post:
+      operationId: generic_exports_pdf_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+  /generic_exports/pdf_exports/{id}/:
+    get:
+      operationId: generic_exports_pdf_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_pdf_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_pdf_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_pdf_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/email_configuration/:
+    get:
+      operationId: tapirmail_api_email_configuration_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationList'
+          description: ''
+    post:
+      operationId: tapirmail_api_email_configuration_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfiguration'
+          description: ''
+  /tapirmail/api/email_configuration/{id}/:
+    get:
+      operationId: tapirmail_api_email_configuration_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfiguration'
+          description: ''
+    put:
+      operationId: tapirmail_api_email_configuration_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfiguration'
+          description: ''
+    patch:
+      operationId: tapirmail_api_email_configuration_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfiguration'
+          description: ''
+    delete:
+      operationId: tapirmail_api_email_configuration_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/email_configuration/{id}/duplicate/:
+    get:
+      operationId: tapirmail_api_email_configuration_duplicate_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfiguration'
+          description: ''
+  /tapirmail/api/email_configuration/{id}/versions/:
+    get:
+      operationId: tapirmail_api_email_configuration_versions_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration.
+        required: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationVersionList'
+          description: ''
+  /tapirmail/api/email_configuration_dispatch/:
+    get:
+      operationId: tapirmail_api_email_configuration_dispatch_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationDispatchList'
+          description: ''
+    post:
+      operationId: tapirmail_api_email_configuration_dispatch_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfigurationDispatch'
+          description: ''
+  /tapirmail/api/email_configuration_dispatch/{id}/:
+    get:
+      operationId: tapirmail_api_email_configuration_dispatch_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration dispatch.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfigurationDispatch'
+          description: ''
+    put:
+      operationId: tapirmail_api_email_configuration_dispatch_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration dispatch.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfigurationDispatch'
+          description: ''
+    patch:
+      operationId: tapirmail_api_email_configuration_dispatch_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration dispatch.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailConfigurationDispatch'
+          description: ''
+    delete:
+      operationId: tapirmail_api_email_configuration_dispatch_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration dispatch.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/email_configuration_dispatch/{id}/retryall/:
+    post:
+      operationId: tapirmail_api_email_configuration_dispatch_retryall_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration dispatch.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_dispatch/last_sent/:
+    get:
+      operationId: tapirmail_api_email_configuration_dispatch_last_sent_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationDispatchList'
+          description: ''
+  /tapirmail/api/email_configuration_dispatch/next_sends/:
+    get:
+      operationId: tapirmail_api_email_configuration_dispatch_next_sends_list
+      description: Returns the list of email config dispatch that will be sent next.
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailConfigurationDispatchList'
+          description: ''
+  /tapirmail/api/email_configuration_version/:
+    get:
+      operationId: tapirmail_api_email_configuration_version_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BundledEmailConfiguration'
+          description: ''
+    post:
+      operationId: tapirmail_api_email_configuration_version_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/{id}/:
+    get:
+      operationId: tapirmail_api_email_configuration_version_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundledEmailConfiguration'
+          description: ''
+    put:
+      operationId: tapirmail_api_email_configuration_version_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BundledEmailConfigurationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundledEmailConfiguration'
+          description: ''
+    patch:
+      operationId: tapirmail_api_email_configuration_version_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundledEmailConfiguration'
+          description: ''
+    delete:
+      operationId: tapirmail_api_email_configuration_version_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/email_configuration_version/{id}/archive/:
+    post:
+      operationId: tapirmail_api_email_configuration_version_archive_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/{id}/draft/:
+    post:
+      operationId: tapirmail_api_email_configuration_version_draft_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/{id}/get_bundled_info/:
+    get:
+      operationId: tapirmail_api_email_configuration_version_get_bundled_info_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundledEmailConfiguration'
+          description: ''
+  /tapirmail/api/email_configuration_version/{id}/release/:
+    post:
+      operationId: tapirmail_api_email_configuration_version_release_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_configuration_version/{id}/send_test_email/:
+    post:
+      operationId: email_configuration_version_send_test_email
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email configuration version.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecipientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecipientRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /tapirmail/api/email_dispatch/:
+    get:
+      operationId: tapirmail_api_email_dispatch_list
+      parameters:
+      - in: query
+        name: config_dispatch_id
+        schema:
+          type: string
+      - in: query
+        name: dispatch_status
+        schema:
+          type: string
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailDispatchWithRetriesList'
+          description: ''
+  /tapirmail/api/email_dispatch/{id}/:
+    get:
+      operationId: tapirmail_api_email_dispatch_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email dispatch.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDispatch'
+          description: ''
+  /tapirmail/api/email_dispatch/{id}/retry/:
+    post:
+      operationId: tapirmail_api_email_dispatch_retry_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email dispatch.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailDispatchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailDispatchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailDispatchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDispatch'
+          description: ''
+  /tapirmail/api/email_dispatch/get_failed_dispatches/:
+    get:
+      operationId: tapirmail_api_email_dispatch_get_failed_dispatches_list
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: recipient
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailDispatchList'
+          description: ''
+  /tapirmail/api/email_dispatch/recipients_with_errors/:
+    get:
+      operationId: tapirmail_api_email_dispatch_recipients_with_errors_list
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupedEmailDispatchList'
+          description: ''
+  /tapirmail/api/email_template/:
+    get:
+      operationId: tapirmail_api_email_template_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    post:
+      operationId: tapirmail_api_email_template_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+  /tapirmail/api/email_template/{id}/:
+    get:
+      operationId: tapirmail_api_email_template_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    put:
+      operationId: tapirmail_api_email_template_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    patch:
+      operationId: tapirmail_api_email_template_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    delete:
+      operationId: tapirmail_api_email_template_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/email_template_paginated/:
+    get:
+      operationId: tapirmail_api_email_template_paginated_list
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmailTemplateList'
+          description: ''
+    post:
+      operationId: tapirmail_api_email_template_paginated_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+  /tapirmail/api/email_template_paginated/{id}/:
+    get:
+      operationId: tapirmail_api_email_template_paginated_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    put:
+      operationId: tapirmail_api_email_template_paginated_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTemplateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    patch:
+      operationId: tapirmail_api_email_template_paginated_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+          description: ''
+    delete:
+      operationId: tapirmail_api_email_template_paginated_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this email template.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/media_library/filepond/fetch/:
+    get:
+      operationId: tapirmail_api_media_library_filepond_fetch_retrieve
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/media_library/filepond/load/:
+    get:
+      operationId: tapirmail_api_media_library_filepond_load_retrieve
+      description: |-
+        Expect the upload ID to be provided with the 'id' parameter
+        This may be either an upload_id that is stored in the StoredUpload
+        table or it may be the path to a file (relative to the fixed upload
+        directory specified by the DJANGO_DRF_FILEPOND_FILE_STORE_PATH
+        setting parameter).
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/media_library/filepond/patch/{chunk_id}:
+    patch:
+      operationId: tapirmail_api_media_library_filepond_patch_partial_update
+      description: |-
+        This view handles a PATCH request containing a file chunk as part of the
+        filepond chunked upload support. The chunk will relate to an existing
+        chunked upload configuration created when a new chunked upload request
+        was made to the ProcessView.
+        See: https://pqina.nl/filepond/docs/patterns/api/server/#process-chunks
+        for details of how chunked uploads are handled in filepond.
+        Assuming everything in the request is valid, this view will store the
+        chunk.
+      parameters:
+      - in: path
+        name: chunk_id
+        schema:
+          type: string
+          pattern: ^[0-9a-zA-Z]{22}$
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/media_library/filepond/process/:
+    post:
+      operationId: tapirmail_api_media_library_filepond_process_create
+      description: |-
+        This view receives an uploaded file from the filepond client. It
+        stores the file in a temporary location and generates a unique ID which
+        it associates with the temporary upload. The unique ID is returned to
+        the client. If and when the parent form is finally submitted, the unique
+        ID is provided and the file is then moved from the temporary store into
+        permanent storage in line with the requirements of the parent application.
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/media_library/filepond/restore/:
+    get:
+      operationId: tapirmail_api_media_library_filepond_restore_retrieve
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/media_library/filepond/revert/:
+    delete:
+      operationId: tapirmail_api_media_library_filepond_revert_destroy
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/media_library/stored_upload/:
+    get:
+      operationId: storeduploads_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoredUpload'
+          description: ''
+    post:
+      operationId: storeduploads_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoredUpload'
+          description: ''
+  /tapirmail/api/media_library/stored_upload/{upload_id}/:
+    get:
+      operationId: storeduploads_retrieve
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this stored upload.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoredUpload'
+          description: ''
+    put:
+      operationId: storeduploads_update
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this stored upload.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StoredUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoredUpload'
+          description: ''
+    patch:
+      operationId: storeduploads_partial_update
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this stored upload.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStoredUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStoredUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStoredUploadRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoredUpload'
+          description: ''
+    delete:
+      operationId: storeduploads_destroy
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this stored upload.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/media_library/temporary_upload/:
+    get:
+      operationId: temporaryuploads_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemporaryUpload'
+          description: ''
+    post:
+      operationId: temporaryuploads_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemporaryUpload'
+          description: ''
+  /tapirmail/api/media_library/temporary_upload/{upload_id}/:
+    get:
+      operationId: temporaryuploads_retrieve
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this temporary upload.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemporaryUpload'
+          description: ''
+    put:
+      operationId: temporaryuploads_update
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this temporary upload.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemporaryUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemporaryUpload'
+          description: ''
+    patch:
+      operationId: temporaryuploads_partial_update
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this temporary upload.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemporaryUpload'
+          description: ''
+    delete:
+      operationId: temporaryuploads_destroy
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+        description: A unique value identifying this temporary upload.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/segment/available_filters/:
+    get:
+      operationId: tapirmail_api_segment_available_filters_retrieve
+      description: Get a list of available filters.
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  filters:
+                    type: array
+                    items:
+                      type: string
+          description: ''
+  /tapirmail/api/segment/available_segments/:
+    get:
+      operationId: tapirmail_api_segment_available_segments_retrieve
+      description: Get a list of available segments.
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  segments:
+                    type: array
+                    items:
+                      type: string
+                  staticSegments:
+                    type: array
+                    items:
+                      type: string
+          description: ''
+  /tapirmail/api/segment/combine/:
+    post:
+      operationId: tapirmail_api_segment_combine_create
+      description: Combine segments and filters and get the result.
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentDataRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SegmentDataRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SegmentDataRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  recipients:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        email:
+                          type: string
+          description: ''
+  /tapirmail/api/static_segment/:
+    get:
+      operationId: tapirmail_api_static_segment_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaticSegment'
+          description: ''
+    post:
+      operationId: tapirmail_api_static_segment_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegment'
+          description: ''
+  /tapirmail/api/static_segment/{id}/:
+    get:
+      operationId: tapirmail_api_static_segment_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegment'
+          description: ''
+    put:
+      operationId: tapirmail_api_static_segment_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegment'
+          description: ''
+    patch:
+      operationId: tapirmail_api_static_segment_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegment'
+          description: ''
+    delete:
+      operationId: tapirmail_api_static_segment_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/static_segment_recipient/:
+    get:
+      operationId: tapirmail_api_static_segment_recipient_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaticSegmentRecipient'
+          description: ''
+    post:
+      operationId: tapirmail_api_static_segment_recipient_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegmentRecipient'
+          description: ''
+  /tapirmail/api/static_segment_recipient/{id}/:
+    get:
+      operationId: tapirmail_api_static_segment_recipient_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment recipient.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegmentRecipient'
+          description: ''
+    put:
+      operationId: tapirmail_api_static_segment_recipient_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment recipient.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaticSegmentRecipientRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegmentRecipient'
+          description: ''
+    patch:
+      operationId: tapirmail_api_static_segment_recipient_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment recipient.
+        required: true
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaticSegmentRecipient'
+          description: ''
+    delete:
+      operationId: tapirmail_api_static_segment_recipient_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this static segment recipient.
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /tapirmail/api/tokens/get_tokens/:
+    get:
+      operationId: tapirmail_api_tokens_get_tokens_retrieve
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+  /tapirmail/api/tracking/{id}/track/:
+    get:
+      operationId: tapirmail_api_tracking_track_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /tapirmail/api/trigger_tokens/get_tokens/:
+    get:
+      operationId: tapirmail_api_trigger_tokens_get_tokens_retrieve
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+  /tapirmail/api/triggers/:
+    get:
+      operationId: tapirmail_api_triggers_list
+      description: Get a list of available triggers.
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TriggerDefinition'
+          description: ''
+components:
+  schemas:
+    AutomatedExportCycleEnum:
+      enum:
+      - yearly
+      - monthly
+      - weekly
+      - daily
+      - never
+      type: string
+      description: |-
+        * `yearly` - Jährlich
+        * `monthly` - Monatlich
+        * `weekly` - Wöchentlich
+        * `daily` - Täglich
+        * `never` - Nie
+    BounceTypeEnum:
+      enum:
+      - soft
+      - hard
+      - unknown
+      - not_analyzed
+      type: string
+      description: |-
+        * `soft` - Soft
+        * `hard` - Hard
+        * `unknown` - Unknown
+        * `not_analyzed` - Not analyzed
+    BuildExportResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+        file_as_string:
+          type: string
+      required:
+      - file_as_string
+      - file_name
+    BundledEmailConfiguration:
+      type: object
+      properties:
+        triggers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerData'
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+        subject:
+          type: string
+          nullable: true
+        release_status:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        segment_data:
+          allOf:
+          - $ref: '#/components/schemas/SegmentData'
+          nullable: true
+      required:
+      - content
+      - name
+      - release_status
+    BundledEmailConfigurationRequest:
+      type: object
+      properties:
+        triggers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerDataRequest'
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          minLength: 1
+        subject:
+          type: string
+          nullable: true
+        release_status:
+          type: string
+          minLength: 1
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        segment_data:
+          allOf:
+          - $ref: '#/components/schemas/SegmentDataRequest'
+          nullable: true
+      required:
+      - content
+      - name
+      - release_status
+    CsvExportModel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        export_segment_id:
+          type: string
+          maxLength: 512
+        name:
+          type: string
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          maxLength: 1
+        file_name:
+          type: string
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - name
+      - separator
+    CsvExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          minLength: 1
+          maxLength: 1
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - name
+      - separator
+    DayOfWeekEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      type: integer
+      description: |-
+        * `0` - Montag
+        * `1` - Dienstag
+        * `2` - Mittwoch
+        * `3` - Donnerstag
+        * `4` - Freitag
+        * `5` - Samstag
+        * `6` - Sonntag
+    Delivery:
+      type: object
+      properties:
+        delivery_date:
+          type: string
+          format: date
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        pickup_location_opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+        joker_used:
+          type: boolean
+        can_joker_be_used:
+          type: boolean
+      required:
+      - can_joker_be_used
+      - delivery_date
+      - joker_used
+      - pickup_location
+      - pickup_location_opening_times
+      - subscriptions
+    DeliveryCycleEnum:
+      enum:
+      - no_delivery
+      - weekly
+      - odd_weeks
+      - even_weeks
+      type: string
+      description: |-
+        * `no_delivery` - Keine Lieferung/Abholung
+        * `weekly` - 1x pro Woche
+        * `odd_weeks` - 2x pro Monat (ungerade KW)
+        * `even_weeks` - 2x pro Monat (gerade KW)
+    DispatchStatusEnum:
+      enum:
+      - error
+      - bounced
+      - opened
+      - unknown
+      - sending
+      type: string
+      description: |-
+        * `error` - Fehler beim Versand
+        * `bounced` - Bounce
+        * `opened` - Geöffnet
+        * `unknown` - Nicht geöffnet
+        * `sending` - Wird versendet
+    EmailConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        released_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        last_updated_draft_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        can_be_deleted:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+      required:
+      - can_be_deleted
+      - created_at
+      - last_updated_draft_date
+      - name
+      - released_date
+      - updated_at
+    EmailConfigurationDispatch:
+      type: object
+      properties:
+        id:
+          type: string
+        email_configuration_version:
+          $ref: '#/components/schemas/EmailConfigurationVersion'
+        scheduled_time:
+          type: string
+          format: date-time
+        override_recipients:
+          type: object
+          additionalProperties: {}
+        sent_count:
+          type: integer
+          readOnly: true
+        opened_count:
+          type: integer
+          readOnly: true
+        error_count:
+          type: integer
+          readOnly: true
+      required:
+      - email_configuration_version
+      - error_count
+      - id
+      - opened_count
+      - override_recipients
+      - scheduled_time
+      - sent_count
+    EmailConfigurationDispatchRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        email_configuration_version:
+          $ref: '#/components/schemas/EmailConfigurationVersionRequest'
+        scheduled_time:
+          type: string
+          format: date-time
+        override_recipients:
+          type: object
+          additionalProperties: {}
+      required:
+      - email_configuration_version
+      - id
+      - override_recipients
+      - scheduled_time
+    EmailConfigurationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+      required:
+      - name
+    EmailConfigurationVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        triggers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerData'
+        email_configuration:
+          $ref: '#/components/schemas/EmailConfiguration'
+        segment_data:
+          $ref: '#/components/schemas/SegmentData'
+        can_be_deleted:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        content:
+          type: string
+          nullable: true
+        subject:
+          type: string
+          nullable: true
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - can_be_deleted
+      - created_at
+      - email_configuration
+      - segment_data
+      - updated_at
+    EmailConfigurationVersionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        triggers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerDataRequest'
+        email_configuration:
+          $ref: '#/components/schemas/EmailConfigurationRequest'
+        segment_data:
+          $ref: '#/components/schemas/SegmentDataRequest'
+        content:
+          type: string
+          nullable: true
+          minLength: 1
+        subject:
+          type: string
+          nullable: true
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - email_configuration
+      - segment_data
+    EmailDispatch:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        email_configuration_dispatch:
+          $ref: '#/components/schemas/EmailConfigurationDispatch'
+        dispatch_status:
+          $ref: '#/components/schemas/DispatchStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        recipient:
+          type: string
+          format: email
+          maxLength: 254
+        recipient_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        additional_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        sent_time:
+          type: string
+          format: date-time
+          nullable: true
+        opened_time:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        bounce_message:
+          type: string
+          nullable: true
+        bounce_type:
+          $ref: '#/components/schemas/BounceTypeEnum'
+        next_retry:
+          type: string
+          nullable: true
+      required:
+      - created_at
+      - dispatch_status
+      - email_configuration_dispatch
+      - recipient
+      - updated_at
+    EmailDispatchRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        email_configuration_dispatch:
+          $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
+        dispatch_status:
+          $ref: '#/components/schemas/DispatchStatusEnum'
+        recipient:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        recipient_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        additional_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        sent_time:
+          type: string
+          format: date-time
+          nullable: true
+        opened_time:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        bounce_message:
+          type: string
+          nullable: true
+        bounce_type:
+          $ref: '#/components/schemas/BounceTypeEnum'
+        next_retry:
+          type: string
+          minLength: 1
+          nullable: true
+      required:
+      - dispatch_status
+      - email_configuration_dispatch
+      - recipient
+    EmailDispatchWithRetries:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        email_configuration_dispatch:
+          $ref: '#/components/schemas/EmailConfigurationDispatch'
+        dispatch_status:
+          $ref: '#/components/schemas/DispatchStatusEnum'
+        previous_retries:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailDispatch'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        recipient:
+          type: string
+          format: email
+          maxLength: 254
+        recipient_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        additional_tokens:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        sent_time:
+          type: string
+          format: date-time
+          nullable: true
+        opened_time:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        bounce_message:
+          type: string
+          nullable: true
+        bounce_type:
+          $ref: '#/components/schemas/BounceTypeEnum'
+        next_retry:
+          type: string
+          nullable: true
+      required:
+      - created_at
+      - dispatch_status
+      - email_configuration_dispatch
+      - previous_retries
+      - recipient
+      - updated_at
+    EmailTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        content:
+          type: string
+      required:
+      - content
+      - created_at
+      - name
+      - updated_at
+    EmailTemplateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        content:
+          type: string
+          minLength: 1
+      required:
+      - content
+      - name
+    ExportSegment:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportSegmentColumn'
+      required:
+      - columns
+      - description
+      - display_name
+      - id
+    ExportSegmentColumn:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - display_name
+      - id
+    GroupedEmailDispatch:
+      type: object
+      properties:
+        recipient:
+          type: string
+        count:
+          type: integer
+      required:
+      - count
+      - recipient
+    Joker:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        date:
+          type: string
+          format: date
+        member:
+          type: string
+      required:
+      - date
+      - member
+    JokerRestriction:
+      type: object
+      properties:
+        start_day:
+          type: integer
+        start_month:
+          type: integer
+        end_day:
+          type: integer
+        end_month:
+          type: integer
+        max_jokers:
+          type: integer
+      required:
+      - end_day
+      - end_month
+      - max_jokers
+      - start_day
+      - start_month
+    JokerWithCancellationLimit:
+      type: object
+      properties:
+        joker:
+          $ref: '#/components/schemas/Joker'
+        cancellation_limit:
+          type: string
+          format: date
+      required:
+      - cancellation_limit
+      - joker
+    MemberJokerInformation:
+      type: object
+      properties:
+        used_jokers:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerWithCancellationLimit'
+        max_jokers_per_growing_period:
+          type: integer
+        weekday_limit:
+          type: integer
+        joker_restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerRestriction'
+      required:
+      - joker_restrictions
+      - max_jokers_per_growing_period
+      - used_jokers
+      - weekday_limit
+    PaginatedEmailConfigurationDispatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailConfigurationDispatch'
+    PaginatedEmailConfigurationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailConfiguration'
+    PaginatedEmailConfigurationVersionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailConfigurationVersion'
+    PaginatedEmailDispatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailDispatch'
+    PaginatedEmailDispatchWithRetriesList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailDispatchWithRetries'
+    PaginatedEmailTemplateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplate'
+    PaginatedGroupedEmailDispatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupedEmailDispatch'
+    PatchedBundledEmailConfigurationRequest:
+      type: object
+      properties:
+        triggers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerDataRequest'
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          minLength: 1
+        subject:
+          type: string
+          nullable: true
+        release_status:
+          type: string
+          minLength: 1
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        segment_data:
+          allOf:
+          - $ref: '#/components/schemas/SegmentDataRequest'
+          nullable: true
+    PatchedCsvExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          minLength: 1
+          maxLength: 1
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+    PatchedEmailConfigurationDispatchRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        email_configuration_version:
+          $ref: '#/components/schemas/EmailConfigurationVersionRequest'
+        scheduled_time:
+          type: string
+          format: date-time
+        override_recipients:
+          type: object
+          additionalProperties: {}
+    PatchedEmailConfigurationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+    PatchedEmailTemplateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        content:
+          type: string
+          minLength: 1
+    PatchedPdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+    PatchedStaticSegmentRecipientRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 255
+        last_name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        custom_data:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        segment:
+          type: string
+          minLength: 1
+    PatchedStaticSegmentRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+    PatchedStoredUploadRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file_name:
+          type: string
+          minLength: 1
+        file:
+          type: string
+          format: binary
+        uploaded:
+          type: string
+          format: date-time
+        uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+    PatchedTemporaryUploadRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file_name:
+          type: string
+          minLength: 1
+        file_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file:
+          type: string
+          format: binary
+        upload_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        upload_type:
+          $ref: '#/components/schemas/UploadTypeEnum'
+        uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+    PdfExportModel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        export_segment_id:
+          type: string
+          maxLength: 512
+        name:
+          type: string
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
+    PdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
+    PickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 150
+        coords_lon:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Longitude
+        coords_lat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Latitude
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        info:
+          type: string
+          title: Additional info
+          maxLength: 1024
+        access_code:
+          type: string
+          maxLength: 20
+        messenger_group_link:
+          type: string
+          maxLength: 150
+        contact_name:
+          type: string
+          title: Name of the contact
+          maxLength: 150
+        photo_link:
+          type: string
+          maxLength: 512
+      required:
+      - city
+      - coords_lat
+      - coords_lon
+      - name
+      - postcode
+      - street
+    PickupLocationOpeningTime:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        day_of_week:
+          allOf:
+          - $ref: '#/components/schemas/DayOfWeekEnum'
+          minimum: 0
+          maximum: 32767
+        open_time:
+          type: string
+          format: time
+        close_time:
+          type: string
+          format: time
+        pickup_location:
+          type: string
+      required:
+      - close_time
+      - day_of_week
+      - open_time
+      - pickup_location
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        type:
+          $ref: '#/components/schemas/ProductType'
+        name:
+          type: string
+          maxLength: 128
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+          nullable: true
+      required:
+      - name
+      - type
+    ProductType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          title: Produkt Name
+          maxLength: 128
+        delivery_cycle:
+          allOf:
+          - $ref: '#/components/schemas/DeliveryCycleEnum'
+          title: Lieferzyklus
+        contract_link:
+          type: string
+          nullable: true
+          title: Link zu den Vertragsgrundsätzen
+          maxLength: 512
+        icon_link:
+          type: string
+          nullable: true
+          title: Link zum Icon
+          maxLength: 512
+        single_subscription_only:
+          type: boolean
+          title: Nur Einzelabonnement erlaubt
+      required:
+      - name
+    RecipientRequest:
+      type: object
+      properties:
+        recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+      required:
+      - recipients
+    SegmentData:
+      type: object
+      properties:
+        add_segments:
+          type: array
+          items:
+            type: string
+        static_segments:
+          type: array
+          items:
+            type: string
+        static_segments_subtractive:
+          type: array
+          items:
+            type: string
+          nullable: true
+        remove_segments:
+          type: array
+          items:
+            type: string
+        filter_list:
+          type: array
+          items:
+            type: string
+      required:
+      - add_segments
+      - filter_list
+      - remove_segments
+      - static_segments
+      - static_segments_subtractive
+    SegmentDataRequest:
+      type: object
+      properties:
+        add_segments:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        static_segments:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        static_segments_subtractive:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          nullable: true
+        remove_segments:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        filter_list:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - add_segments
+      - filter_list
+      - remove_segments
+      - static_segments
+      - static_segments_subtractive
+    StaticSegment:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaticSegmentRecipient'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+      required:
+      - created_at
+      - name
+      - recipients
+      - updated_at
+    StaticSegmentRecipient:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        first_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        last_name:
+          type: string
+          nullable: true
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        custom_data:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        segment:
+          type: string
+      required:
+      - created_at
+      - email
+      - segment
+      - updated_at
+    StaticSegmentRecipientRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 255
+        last_name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        custom_data:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        segment:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - segment
+    StaticSegmentRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - name
+    StatusEnum:
+      enum:
+      - draft
+      - released
+      - archived
+      - error
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `released` - Released
+        * `archived` - Archived
+        * `error` - Error
+    StoredUpload:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          maxLength: 22
+          minLength: 22
+        file_name:
+          type: string
+        file:
+          type: string
+          format: uri
+        uploaded:
+          type: string
+          format: date-time
+        stored:
+          type: string
+          format: date-time
+          readOnly: true
+        uploaded_by:
+          type: string
+          nullable: true
+      required:
+      - file
+      - file_name
+      - stored
+      - upload_id
+      - uploaded
+    StoredUploadRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file_name:
+          type: string
+          minLength: 1
+        file:
+          type: string
+          format: binary
+        uploaded:
+          type: string
+          format: date-time
+        uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+      required:
+      - file
+      - file_name
+      - upload_id
+      - uploaded
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        cancellation_ts:
+          type: string
+          format: date-time
+          nullable: true
+        solidarity_price:
+          type: number
+          format: double
+        solidarity_price_absolute:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        withdrawal_consent_ts:
+          type: string
+          format: date-time
+          nullable: true
+        trial_disabled:
+          type: boolean
+        trial_end_date_override:
+          type: string
+          format: date
+          nullable: true
+        price_override:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        member:
+          type: string
+        period:
+          type: string
+        mandate_ref:
+          type: string
+      required:
+      - end_date
+      - mandate_ref
+      - member
+      - period
+      - product
+      - quantity
+      - start_date
+    TemporaryUpload:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          maxLength: 22
+          minLength: 22
+        file_name:
+          type: string
+        file_id:
+          type: string
+          maxLength: 22
+          minLength: 22
+        file:
+          type: string
+          format: uri
+        upload_name:
+          type: string
+          maxLength: 512
+        uploaded:
+          type: string
+          format: date-time
+          readOnly: true
+        upload_type:
+          $ref: '#/components/schemas/UploadTypeEnum'
+        uploaded_by:
+          type: string
+          nullable: true
+      required:
+      - file
+      - file_id
+      - file_name
+      - upload_id
+      - upload_name
+      - upload_type
+      - uploaded
+    TemporaryUploadRequest:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file_name:
+          type: string
+          minLength: 1
+        file_id:
+          type: string
+          minLength: 22
+          maxLength: 22
+        file:
+          type: string
+          format: binary
+        upload_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        upload_type:
+          $ref: '#/components/schemas/UploadTypeEnum'
+        uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+      required:
+      - file
+      - file_id
+      - file_name
+      - upload_id
+      - upload_name
+      - upload_type
+    TriggerData:
+      type: object
+      properties:
+        trigger_id:
+          type: string
+        trigger_field_values:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - trigger_field_values
+      - trigger_id
+    TriggerDataRequest:
+      type: object
+      properties:
+        trigger_id:
+          type: string
+          minLength: 1
+        trigger_field_values:
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 1
+      required:
+      - trigger_field_values
+      - trigger_id
+    TriggerDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        field_definitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerFieldDefinition'
+      required:
+      - field_definitions
+      - id
+      - name
+    TriggerFieldDefinition:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          type: string
+        field_name:
+          type: string
+        additional_data:
+          type: object
+          additionalProperties: {}
+      required:
+      - field_name
+      - label
+      - type
+    UploadTypeEnum:
+      enum:
+      - F
+      - U
+      type: string
+      description: |-
+        * `F` - Uploaded file data
+        * `U` - Remote file URL
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

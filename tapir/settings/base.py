@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -48,6 +49,8 @@ INSTALLED_APPS = [
     "tapir.utils",
     "tapir.wirgarten",
     "tapir.configuration",
+    "tapir.deliveries",
+    "tapir.generic_exports",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
@@ -57,6 +60,9 @@ INSTALLED_APPS = [
     "django_extensions",
     "formtools",
     "tapir.wirgarten_site",
+    "rest_framework",
+    "drf_spectacular",
+    "django_vite",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -137,6 +143,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
+    "dist",
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -182,4 +189,20 @@ BOOTSTRAP_DATEPICKER_PLUS = {
             "format": "DD.MM.YYYY HH:mm",
         },
     },
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
+SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "manifest_path": "./dist/manifest.json",
+    }
 }

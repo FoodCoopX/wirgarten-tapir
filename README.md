@@ -1,5 +1,7 @@
 # Tapir Member & Subscription Management System
 
+[![Python code test coverage](https://sonarcloud.io/api/project_badges/measure?project=FoodCoopX_wirgarten-tapir&metric=coverage)](https://sonarcloud.io/summary/overall?id=FoodCoopX_wirgarten-tapir&branch=master)
+
 Tapir is a member and subscription management system to be used by [WirGarten e.V](https://www.wirgarten.com/).
 
 Tapir [has a trunk](https://www.youtube.com/watch?v=JgwBecM_E6Q), but not quite such a beautiful one as
