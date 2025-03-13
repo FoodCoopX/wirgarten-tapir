@@ -11,12 +11,12 @@ from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestGetExportSegmentsView(TapirIntegrationTest):
+class TestBuildCsvExportView(TapirIntegrationTest):
     def setUp(self) -> None:
         ParameterDefinitions().import_definitions()
 
     @patch.object(CsvExportBuilder, "create_exported_file")
-    def test_getExportSegmentsView_default_returnsCorrectData(
+    def test_buildCsvExportView_default_returnsCorrectData(
         self, mock_create_exported_file: Mock
     ):
         user = MemberFactory.create(is_superuser=True)
@@ -41,7 +41,7 @@ class TestGetExportSegmentsView(TapirIntegrationTest):
         expected = {"file_name": "Test name", "file_as_string": "Test file content"}
         self.assertEqual(expected, result)
 
-    def test_getExportSegmentsView_loggedInAsNormalUser_returns403(self):
+    def test_buildCsvExportView_loggedInAsNormalUser_returns403(self):
         user = MemberFactory.create()
         self.client.force_login(user)
 
