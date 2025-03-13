@@ -14,7 +14,7 @@ class TestSendMailForExport(SimpleTestCase):
         export_result = Mock()
         export_result.export_definition.email_recipients = []
 
-        ExportMailSender.send_mails_for_export(export_result)
+        ExportMailSender.send_mails_for_export([export_result])
 
         mock_send_email.assert_not_called()
 
@@ -33,7 +33,7 @@ class TestSendMailForExport(SimpleTestCase):
         export_result.file.file.decode.return_value = "test file content"
         mock_mimetypes.guess_type.return_value = ("test mime type", "unused")
 
-        ExportMailSender.send_mails_for_export(export_result)
+        ExportMailSender.send_mails_for_export([export_result])
 
         mock_send_email.assert_called_once_with(
             to_email=[
@@ -41,7 +41,7 @@ class TestSendMailForExport(SimpleTestCase):
                 "test_mail_2",
             ],
             subject="Automatisiertes Export aus Tapir: test_definition_name",
-            content="Anbei die Datei test_file_name",
+            content="Anbei die Dateien: test_file_name",
             attachments=[
                 Attachment(
                     file_name="test_file_name",
