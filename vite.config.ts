@@ -18,9 +18,17 @@ export default defineConfig(() => {
       outDir: resolve(OUTPUT_DIR),
       rollupOptions: {
         input: {
-          home_test: join(
+          member_profile: join(
             INPUT_DIR,
             "/member_profile/member_profile_entry.tsx",
+          ),
+          csv_export_editor: join(
+            INPUT_DIR,
+            "/csv_export_editor/csv_export_editor_entry.tsx",
+          ),
+          pdf_export_editor: join(
+            INPUT_DIR,
+            "/pdf_export_editor/pdf_export_editor_entry.tsx",
           ),
         },
       },

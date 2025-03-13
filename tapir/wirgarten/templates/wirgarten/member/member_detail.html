@@ -16,6 +16,7 @@
     {% vite_asset 'member_profile/member_profile_entry.tsx' %}
 {% endblock head %}
 {% block content %}
+    {% csrf_token %}
     {% with False as lock_functions %}
         <div id="member-detail-container">
             <div id="member-detail-left-column">

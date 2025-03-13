@@ -89,6 +89,18 @@ def add_admin_links(groups, request):
             url=reverse_lazy("wirgarten:payment_transactions"),
         )
 
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        admin_group.add_link(
+            display_name=_("CSV-Exports"),
+            material_icon="attach_file",
+            url=reverse_lazy("generic_exports:csv_export_editor"),
+        )
+        admin_group.add_link(
+            display_name=_("PDF-Exports"),
+            material_icon="attach_file",
+            url=reverse_lazy("generic_exports:pdf_export_editor"),
+        )
+
     if request.user.has_perm(Permission.Accounts.VIEW):
         members_group = SidebarLinkGroup(name=_("Mitglieder"))
         members_group.add_link(

@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import DeliveryListCard from "./DeliveryListCard.tsx";
+import { getCsrfToken } from "../utils/getCsrfToken.ts";
 
 const domNode = document.getElementById("delivery_list_card");
 if (domNode) {
@@ -8,6 +9,7 @@ if (domNode) {
     <DeliveryListCard
       memberId={domNode.dataset.memberId!}
       areJokersEnabled={domNode.dataset.jokersEnabled! == "true"}
+      csrfToken={getCsrfToken()}
     />,
   );
 } else {

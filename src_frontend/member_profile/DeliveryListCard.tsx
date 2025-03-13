@@ -19,13 +19,15 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
+  csrfToken: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
+  csrfToken,
 }) => {
-  const api = useApi(DeliveriesApi);
+  const api = useApi(DeliveriesApi, csrfToken);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [selectedPickupLocation, setSelectedPickupLocation] =

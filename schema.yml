@@ -98,6 +98,352 @@ paths:
               schema:
                 type: string
           description: ''
+  /generic_exports/build_csv_export:
+    get:
+      operationId: generic_exports_build_csv_export_retrieve
+      parameters:
+      - in: query
+        name: csv_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildExportResponse'
+          description: ''
+  /generic_exports/build_pdf_export:
+    get:
+      operationId: generic_exports_build_pdf_export_retrieve
+      parameters:
+      - in: query
+        name: pdf_export_id
+        schema:
+          type: string
+      - in: query
+        name: reference_datetime
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /generic_exports/csv_exports/:
+    get:
+      operationId: generic_exports_csv_exports_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    post:
+      operationId: generic_exports_csv_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+  /generic_exports/csv_exports/{id}/:
+    get:
+      operationId: generic_exports_csv_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_csv_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_csv_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsvExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_csv_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this csv export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /generic_exports/export_segments:
+    get:
+      operationId: generic_exports_export_segments_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExportSegment'
+          description: ''
+  /generic_exports/pdf_exports/:
+    get:
+      operationId: generic_exports_pdf_exports_list
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    post:
+      operationId: generic_exports_pdf_exports_create
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+  /generic_exports/pdf_exports/{id}/:
+    get:
+      operationId: generic_exports_pdf_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    put:
+      operationId: generic_exports_pdf_exports_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PdfExportModelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    patch:
+      operationId: generic_exports_pdf_exports_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfExportModel'
+          description: ''
+    delete:
+      operationId: generic_exports_pdf_exports_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pdf export.
+        required: true
+      tags:
+      - generic_exports
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2068,6 +2414,20 @@ paths:
           description: ''
 components:
   schemas:
+    AutomatedExportCycleEnum:
+      enum:
+      - yearly
+      - monthly
+      - weekly
+      - daily
+      - never
+      type: string
+      description: |-
+        * `yearly` - Jährlich
+        * `monthly` - Monatlich
+        * `weekly` - Wöchentlich
+        * `daily` - Täglich
+        * `never` - Nie
     BounceTypeEnum:
       enum:
       - soft
@@ -2080,6 +2440,16 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
+    BuildExportResponse:
+      type: object
+      properties:
+        file_name:
+          type: string
+        file_as_string:
+          type: string
+      required:
+      - file_as_string
+      - file_name
     BundledEmailConfiguration:
       type: object
       properties:
@@ -2145,6 +2515,120 @@ components:
       - content
       - name
       - release_status
+    CsvExportModel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        export_segment_id:
+          type: string
+          maxLength: 512
+        name:
+          type: string
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          maxLength: 1
+        file_name:
+          type: string
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - name
+      - separator
+    CsvExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          minLength: 1
+          maxLength: 1
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - name
+      - separator
     DayOfWeekEnum:
       enum:
       - 0
@@ -2594,6 +3078,37 @@ components:
       required:
       - content
       - name
+    ExportSegment:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportSegmentColumn'
+      required:
+      - columns
+      - description
+      - display_name
+      - id
+    ExportSegmentColumn:
+      type: object
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - display_name
+      - id
     GroupedEmailDispatch:
       type: object
       properties:
@@ -2859,6 +3374,59 @@ components:
           allOf:
           - $ref: '#/components/schemas/SegmentDataRequest'
           nullable: true
+    PatchedCsvExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        separator:
+          type: string
+          minLength: 1
+          maxLength: 1
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        column_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        custom_column_names:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
@@ -2901,6 +3469,48 @@ components:
         content:
           type: string
           minLength: 1
+    PatchedPdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
     PatchedStaticSegmentRecipientRequest:
       type: object
       properties:
@@ -2988,6 +3598,102 @@ components:
           type: string
           minLength: 1
           nullable: true
+    PdfExportModel:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        export_segment_id:
+          type: string
+          maxLength: 512
+        name:
+          type: string
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
+    PdfExportModelRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        export_segment_id:
+          type: string
+          minLength: 1
+          maxLength: 512
+        name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        description:
+          type: string
+        file_name:
+          type: string
+          minLength: 1
+          maxLength: 512
+        email_recipients:
+          type: array
+          items:
+            type: string
+            format: email
+            minLength: 1
+            maxLength: 254
+        automated_export_cycle:
+          $ref: '#/components/schemas/AutomatedExportCycleEnum'
+        automated_export_day:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        automated_export_hour:
+          type: string
+          format: time
+        template:
+          type: string
+          minLength: 1
+        generate_one_file_for_every_segment_entry:
+          type: boolean
+      required:
+      - automated_export_cycle
+      - automated_export_day
+      - automated_export_hour
+      - export_segment_id
+      - file_name
+      - generate_one_file_for_every_segment_entry
+      - name
+      - template
     PickupLocation:
       type: object
       properties:
