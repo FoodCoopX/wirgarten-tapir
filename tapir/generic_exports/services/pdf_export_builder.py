@@ -56,7 +56,7 @@ class PdfExportBuilder:
         ]
 
         return [
-            cls.build_content_for_entry(
+            cls.build_context_for_entry(
                 entry, segment, reference_datetime, used_column_ids
             )
             for entry in segment.get_queryset(reference_datetime)
@@ -79,7 +79,7 @@ class PdfExportBuilder:
         )
 
     @classmethod
-    def build_content_for_entry(
+    def build_context_for_entry(
         cls,
         db_object,
         segment: ExportSegment,
