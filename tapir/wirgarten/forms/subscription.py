@@ -576,6 +576,9 @@ class BaseProductForm(forms.Form):
             )
 
     def should_validate_cannot_reduce_size(self):
+        if self.is_admin:
+            return False
+
         # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
         growing_period = get_current_growing_period(self.start_date)
         if not growing_period:
