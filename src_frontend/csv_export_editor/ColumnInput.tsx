@@ -58,6 +58,27 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
     onSelectedColumnsChange(selectedColumns, [...columnNames]);
   }
 
+  function moveColumnUp(indexToMoveUp: number) {
+    swapColumnIndexes(indexToMoveUp, indexToMoveUp - 1);
+  }
+
+  function moveColumnDown(indexToMoveDown: number) {
+    swapColumnIndexes(indexToMoveDown, indexToMoveDown + 1);
+  }
+
+  function swapColumnIndexes(indexA: number, indexB: number) {
+    const columnA = selectedColumns[indexA];
+    const nameA = columnNames[indexA];
+    const columnB = selectedColumns[indexB];
+    const nameB = columnNames[indexB];
+    selectedColumns[indexB] = columnA;
+    columnNames[indexB] = nameA;
+    selectedColumns[indexA] = columnB;
+    columnNames[indexA] = nameB;
+
+    onSelectedColumnsChange([...selectedColumns], [...columnNames]);
+  }
+
   return (
     <>
       <Form.Select
@@ -102,12 +123,30 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
                   ></Form.Control>
                 </td>
                 <td>
-                  <TapirButton
-                    icon={"delete"}
-                    variant={"outline-danger"}
-                    size={"sm"}
-                    onClick={() => removeExportColumnFromSelection(column)}
-                  />
+                  <span className={"d-flex flex-row gap-0"}>
+                    <TapirButton
+                      icon="arrow_drop_up"
+                      variant={"outline-primary"}
+                      size={"sm"}
+                      disabled={index === 0}
+                      onClick={() => moveColumnUp(index)}
+                      type={"button"}
+                    />
+                    <TapirButton
+                      icon="arrow_drop_down"
+                      variant={"outline-primary"}
+                      size={"sm"}
+                      disabled={index === selectedColumns.length - 1}
+                      onClick={() => moveColumnDown(index)}
+                      type={"button"}
+                    />
+                    <TapirButton
+                      icon={"delete"}
+                      variant={"outline-danger"}
+                      size={"sm"}
+                      onClick={() => removeExportColumnFromSelection(column)}
+                    />
+                  </span>
                 </td>
               </tr>
             );
