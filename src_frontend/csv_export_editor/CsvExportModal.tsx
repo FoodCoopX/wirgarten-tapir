@@ -200,7 +200,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered={true}>
+    <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
         <h5 className={"mb-0"}>Neuen Export erzeugen</h5>
       </Modal.Header>

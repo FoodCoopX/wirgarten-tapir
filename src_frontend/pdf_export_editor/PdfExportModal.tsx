@@ -253,52 +253,62 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
               </Row>
               <Row>
                 <Col>
-                  <Form.Group controlId={"form.cycle"}>
-                    <Form.Label>Automatisierter Export-Zyklus</Form.Label>
-                    <Form.Select
-                      onChange={(event) =>
-                        setExportCycle(
-                          event.target.value as AutomatedExportCycleEnum,
-                        )
-                      }
-                    >
-                      {Object.entries(cycleOptions()).map(([key, value]) => {
-                        return (
-                          <option
-                            key={key}
-                            value={key}
-                            selected={exportCycle === key}
-                          >
-                            {value}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group controlId={"form.day"}>
-                    <Form.Label>Tag</Form.Label>
-                    <Form.Control
-                      type={"number"}
-                      onChange={(event) =>
-                        setExportDay(parseInt(event.target.value))
-                      }
-                      required={true}
-                      value={exportDay}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group controlId={"form.hour"}>
-                    <Form.Label>Uhrzeit</Form.Label>
-                    <Form.Control
-                      type={"time"}
-                      onChange={(event) => setExportHour(event.target.value)}
-                      required={true}
-                      value={exportHour}
-                    />
-                  </Form.Group>
+                  <Row>
+                    <Col>
+                      <Form.Group controlId={"form.cycle"}>
+                        <Form.Label>Automatisierter Export-Zyklus</Form.Label>
+                        <Form.Select
+                          onChange={(event) =>
+                            setExportCycle(
+                              event.target.value as AutomatedExportCycleEnum,
+                            )
+                          }
+                        >
+                          {Object.entries(cycleOptions()).map(
+                            ([key, value]) => {
+                              return (
+                                <option
+                                  key={key}
+                                  value={key}
+                                  selected={exportCycle === key}
+                                >
+                                  {value}
+                                </option>
+                              );
+                            },
+                          )}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>
+                      <Form.Group controlId={"form.day"}>
+                        <Form.Label>Tag</Form.Label>
+                        <Form.Control
+                          type={"number"}
+                          onChange={(event) =>
+                            setExportDay(parseInt(event.target.value))
+                          }
+                          required={true}
+                          value={exportDay}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col>
+                      <Form.Group controlId={"form.hour"}>
+                        <Form.Label>Uhrzeit</Form.Label>
+                        <Form.Control
+                          type={"time"}
+                          onChange={(event) =>
+                            setExportHour(event.target.value)
+                          }
+                          required={true}
+                          value={exportHour}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
             </Col>
