@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -646,6 +647,7 @@ class AdditionalProductForm(forms.Form):
         self.outro_template = initial.pop("outro_template", None)
 
         self.field_prefix = self.product_type.id + "_"
+        ic(self.field_prefix)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         self.start_date = kwargs.pop(
             "start_date", initial.get("start_date", get_next_contract_start_date())
@@ -821,6 +823,8 @@ class AdditionalProductForm(forms.Form):
         )
 
         self.subs = []
+        print(self.cleaned_data)
+        print(self.field_prefix)
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and quantity and quantity > 0:
                 product = Product.objects.get(
