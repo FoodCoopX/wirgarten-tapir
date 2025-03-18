@@ -1,3 +1,4 @@
+import calendar
 import datetime
 
 from tapir.configuration.parameter import get_parameter_value
@@ -52,4 +53,9 @@ class NoticePeriodManager:
         for _ in range(notice_period):
             max_date = max_date.replace(day=1) - datetime.timedelta(days=1)
 
-        return max_date.replace(day=subscription.end_date.day)
+        _, nb_days_in_month = calendar.monthrange(max_date.year, max_date.month)
+        target_day = subscription.end_date.day
+        if target_day > nb_days_in_month:
+            target_day = nb_days_in_month
+
+        return max_date.replace(day=target_day)

@@ -1,3 +1,6 @@
+import datetime
+from unittest.mock import Mock
+
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.models import NoticePeriod
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -85,3 +88,55 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         )
 
         self.assertEqual(2, result)
+
+    def test_getMaxCancellationDate_default_returnsCorrectDate(self):
+        product_type = ProductTypeFactory.create()
+        growing_period = GrowingPeriodFactory.create()
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+        ).update(value=2)
+
+        subscription = Mock()
+        subscription.product.type = product_type
+        subscription.period = growing_period
+        subscription.end_date = datetime.date(year=2025, month=5, day=31)
+
+        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+
+        self.assertEqual(datetime.date(year=2025, month=3, day=31), result)
+
+    def test_getMaxCancellationDate_maxCancellationDateIsPreviousYear_returnsCorrectDate(
+        self,
+    ):
+        product_type = ProductTypeFactory.create()
+        growing_period = GrowingPeriodFactory.create()
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+        ).update(value=2)
+
+        subscription = Mock()
+        subscription.product.type = product_type
+        subscription.period = growing_period
+        subscription.end_date = datetime.date(year=2025, month=2, day=28)
+
+        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+
+        self.assertEqual(datetime.date(year=2024, month=12, day=28), result)
+
+    def test_getMaxCancellationDate_monthOfMaxDateHasLessDaysThanSubscriptionEndMonth_returnsCorrectDate(
+        self,
+    ):
+        product_type = ProductTypeFactory.create()
+        growing_period = GrowingPeriodFactory.create()
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+        ).update(value=2)
+
+        subscription = Mock()
+        subscription.product.type = product_type
+        subscription.period = growing_period
+        subscription.end_date = datetime.date(year=2025, month=4, day=30)
+
+        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+
+        self.assertEqual(datetime.date(year=2025, month=2, day=28), result)
