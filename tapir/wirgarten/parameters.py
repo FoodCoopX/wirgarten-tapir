@@ -797,7 +797,7 @@ Dein WirGarten-Team""",
             initial_value=True,
             description="Temporäre Liefer-Pausen pro Mitglied erlauben",
             category=ParameterCategory.JOKERS,
-            order_priority=1,
+            order_priority=3,
         )
 
         parameter_definition(
@@ -823,7 +823,7 @@ Dein WirGarten-Team""",
             Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
             """,
             category=ParameterCategory.JOKERS,
-            order_priority=3,
+            order_priority=1,
             meta=ParameterMeta(
                 validators=[JokerManagementService.validate_joker_restrictions]
             ),
