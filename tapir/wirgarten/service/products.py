@@ -85,7 +85,8 @@ def get_active_product_types(reference_date: date = None) -> iter:
 
     return ProductType.objects.filter(
         id__in=ProductCapacity.objects.filter(
-            period__start_date__lte=reference_date, period__end_date__gte=reference_date
+            period__start_date__lte=reference_date,
+            period__end_date__gte=reference_date,
         ).values("product_type__id")
     ).order_by(*product_type_order_by())
 

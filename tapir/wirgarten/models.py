@@ -227,6 +227,9 @@ class ProductCapacity(TapirModel):
 
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
 
+    def __str__(self):
+        return f"{self.period} - {self.product_type} - {self.capacity}"
+
 
 class MemberQuerySet(models.QuerySet):
     def with_active_subscription(self, reference_date: datetime.date | None = None):
