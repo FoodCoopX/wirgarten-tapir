@@ -52,8 +52,9 @@ class AutomaticSubscriptionRenewalService:
 
         Subscription.objects.create(
             member=subscription.member,
-            period=subscription.period,
+            period=next_growing_period,
             product=subscription.product,
+            quantity=subscription.quantity,
             start_date=next_growing_period.start_date,
             end_date=next_growing_period.end_date,
             solidarity_price=subscription.solidarity_price,
