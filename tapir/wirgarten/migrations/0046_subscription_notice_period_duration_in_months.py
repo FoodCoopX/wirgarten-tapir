@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wirgarten', '0045_producttype_is_affected_by_jokers'),
+        ("wirgarten", "0045_producttype_is_affected_by_jokers"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='subscription',
-            name='notice_period_duration_in_months',
+            model_name="subscription",
+            name="notice_period_duration_in_months",
             field=models.IntegerField(null=True),
         ),
     ]
