@@ -16,16 +16,20 @@ import PickupLocationModal from "./PickupLocationModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
+declare let FormModal: { load: (url: string, title: string) => void };
+
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   csrfToken: string;
+  pickupLocationModalUrl: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
   csrfToken,
+  pickupLocationModalUrl,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -141,6 +145,9 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
                 text={"Abholort ändern"}
                 icon={"edit"}
                 variant={"outline-primary"}
+                onClick={() =>
+                  FormModal.load(pickupLocationModalUrl, "Abholort ändern")
+                }
               />
             </span>
           </div>
