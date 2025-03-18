@@ -3,6 +3,7 @@ from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework import status
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
@@ -18,9 +19,10 @@ class TestCancelJokerView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions()
         mock_timezone(self, factories.NOW)
 
+    @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_tryToCancelJokerOfAnotherMember_returns403(
-        self, mock_cancel_joker: Mock
+        self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create()
         other_member = MemberFactory.create()
@@ -35,10 +37,12 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
+        mock_fire_action.assert_not_called()
 
+    @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_cancelJokerOfAnotherMemberAsAdmin_callsCancelJoker(
-        self, mock_cancel_joker: Mock
+        self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
@@ -53,10 +57,17 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         mock_cancel_joker.assert_called_once_with(joker)
+        mock_cancel_joker.assert_called_once_with(joker)
+        mock_fire_action.assert_called_once_with(
+            "deliveries.joker_cancelled",
+            other_member.email,
+            {"joker_date": datetime.date(year=2024, month=5, day=1)},
+        )
 
+    @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_cancelOwnJokerAsNormalMember_callsCancelJoker(
-        self, mock_cancel_joker: Mock
+        self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create(is_superuser=False)
         joker = Joker.objects.create(
@@ -70,11 +81,20 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         mock_cancel_joker.assert_called_once_with(joker)
+        mock_fire_action.assert_called_once_with(
+            "deliveries.joker_cancelled",
+            user.email,
+            {"joker_date": datetime.date(year=2024, month=5, day=1)},
+        )
 
+    @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "can_joker_be_cancelled")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_jokerCannotBeCancelled_returns403(
-        self, mock_cancel_joker: Mock, mock_can_joker_be_cancelled: Mock
+        self,
+        mock_cancel_joker: Mock,
+        mock_can_joker_be_cancelled: Mock,
+        mock_fire_action: Mock,
     ):
         user = MemberFactory.create(is_superuser=False)
         joker = Joker.objects.create(
@@ -90,10 +110,12 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
         mock_can_joker_be_cancelled.assert_called_once_with(joker)
+        mock_fire_action.assert_not_called()
 
+    @patch.object(TransactionalTrigger, "fire_action")
     @patch.object(JokerManagementService, "cancel_joker")
     def test_cancelJokerView_jokerFeatureDisabled_returns403(
-        self, mock_cancel_joker: Mock
+        self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
         TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
             value="False"
@@ -112,3 +134,4 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
+        mock_fire_action.assert_not_called()

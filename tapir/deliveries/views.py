@@ -5,8 +5,10 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.apps import DeliveriesConfig
 from tapir.deliveries.models import Joker
 from tapir.deliveries.serializers import (
     DeliverySerializer,
@@ -118,6 +120,12 @@ class CancelJokerView(APIView):
 
         JokerManagementService.cancel_joker(joker)
 
+        TransactionalTrigger.fire_action(
+            DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
+            joker.member.email,
+            {"joker_date": joker.date},
+        )
+
         return Response(
             "Joker abgesagt",
             status=status.HTTP_200_OK,
@@ -152,7 +160,13 @@ class UseJokerView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        Joker.objects.create(member=member, date=date)
+        joker = Joker.objects.create(member=member, date=date)
+
+        TransactionalTrigger.fire_action(
+            DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
+            member.email,
+            {"joker_date": joker.date},
+        )
 
         return Response(
             "Joker angesetzt",
