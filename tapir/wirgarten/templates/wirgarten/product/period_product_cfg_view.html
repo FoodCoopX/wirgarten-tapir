@@ -58,7 +58,7 @@
         <span style="margin: auto" class="material-icons">arrow_forward</span>
         <div class="card">
             <div style="display: flex;flex-direction: row" class="card-header">
-                <h5 style="margin: auto; width: 100%">{% translate 'Kapazitäten' %}</h5>
+                <h5 style="margin: auto; width: 100%">{% translate 'Produkttypen' %}</h5>
                 {% if perms.products.manage %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityAddForm()' title='Produkttyp hinzufügen' disabled=True class='need-growing-period' type='success' icon='add' id='add-capacity-btn' %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityEditForm()' title='Produkttyp/Kapazität bearbeiten' disabled=True class='need-product-type' type='primary' icon='edit' id='edit-capacity-btn' %}

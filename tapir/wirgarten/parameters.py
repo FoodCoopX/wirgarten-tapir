@@ -32,6 +32,7 @@ class ParameterCategory:
     MEMBER_DASHBOARD = "Mitgliederbereich"
     EMAIL = "Email"
     JOKERS = "Joker"
+    SUBSCRIPTIONS = "Verträge"
 
 
 class Parameter:
@@ -120,6 +121,8 @@ class Parameter:
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
     JOKERS_AMOUNT_PER_CONTRACT = f"{PREFIX}.jokers.amount_per_contract"
     JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
+    SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
+    SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
 
 
 from tapir.configuration.models import (
@@ -827,4 +830,24 @@ Dein WirGarten-Team""",
             meta=ParameterMeta(
                 validators=[JokerManagementService.validate_joker_restrictions]
             ),
+        )
+
+        parameter_definition(
+            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL,
+            label="Automatische Verlängerung der Verträge",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=2,
+        )
+
+        parameter_definition(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
+            label="Kündigungsfrist",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Bei automatische Verlängerung der Verträge, in anzahl an Monaten.",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
         )
