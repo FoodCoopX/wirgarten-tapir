@@ -62,12 +62,17 @@ class GetDeliveriesService:
             opening_times, delivery_date
         )
 
+        joker_used = cls.is_joker_used_in_week(member, delivery_date)
+
+        if joker_used:
+            active_subs = active_subs.filter(product__type__is_affected_by_jokers=False)
+
         return {
             "delivery_date": delivery_date,
             "pickup_location": pickup_location,
             "pickup_location_opening_times": opening_times,
             "subscriptions": active_subs,
-            "joker_used": cls.is_joker_used_in_week(member, delivery_date),
+            "joker_used": joker_used,
             "can_joker_be_used": JokerManagementService.can_joker_be_used(
                 member, delivery_date
             ),

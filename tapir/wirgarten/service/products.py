@@ -382,6 +382,7 @@ def create_product_type_capacity(
     capacity: Decimal,
     period_id: str,
     product_type_id: str = "",
+    is_affected_by_jokers: bool = True,
 ):
     """
     Creates or updates the product type and creates the capacity and default tax rate for the given period.
@@ -402,6 +403,7 @@ def create_product_type_capacity(
         pt.contract_link = contract_link
         pt.icon_link = icon_link
         pt.single_subscription_only = single_subscription_only
+        pt.is_affected_by_jokers = is_affected_by_jokers
         pt.save()
     else:
         pt = ProductType.objects.create(
@@ -410,8 +412,9 @@ def create_product_type_capacity(
             contract_link=contract_link,
             icon_link=icon_link,
             single_subscription_only=single_subscription_only,
+            is_affected_by_jokers=is_affected_by_jokers,
         )
-        if not ProductType.objects.exists():
+        if not ProductType.objects.exclude(id=pt.id).exists():
             TapirParameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
                 value=pt.id
             )
@@ -444,6 +447,7 @@ def update_product_type_capacity(
     default_tax_rate: float,
     capacity: Decimal,
     tax_rate_change_date: date,
+    is_affected_by_jokers: bool,
 ):
     """
     Updates the product type and the capacity for the given period.
@@ -466,6 +470,7 @@ def update_product_type_capacity(
     cp.product_type.icon_link = icon_link
     cp.product_type.single_subscription_only = single_subscription_only
     cp.product_type.delivery_cycle = delivery_cycle
+    cp.product_type.is_affected_by_jokers = is_affected_by_jokers
     cp.product_type.save()
 
     # tax rate

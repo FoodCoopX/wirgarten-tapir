@@ -151,6 +151,9 @@ class ProductType(TapirModel):
     single_subscription_only = models.BooleanField(
         default=False, verbose_name=_("Nur Einzelabonnement erlaubt")
     )
+    is_affected_by_jokers = models.BooleanField(
+        default=True, verbose_name=_("Nimmt am Joker-Verfahren teil")
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:

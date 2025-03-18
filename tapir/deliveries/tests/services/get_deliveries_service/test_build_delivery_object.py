@@ -11,6 +11,7 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberWithSubscriptionFactory,
     SubscriptionFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -138,3 +139,27 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self.assertEqual(
             mock_can_joker_be_used_value, delivery_object["can_joker_be_used"]
         )
+
+    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(GetDeliveriesService, "is_joker_used_in_week")
+    def test_buildDeliveryObject_jokerUsed_returnsOnlySubscriptionsFromProductTypesNotAffectedByJokers(
+        self,
+        mock_is_joker_used_in_week: Mock,
+        mock_can_joker_be_used: Mock,
+    ):
+        member = MemberFactory.create()
+        type_1 = ProductTypeFactory.create(is_affected_by_jokers=True)
+        type_2 = ProductTypeFactory.create(is_affected_by_jokers=False)
+        SubscriptionFactory.create(member=member, product__type=type_1)
+        subscription_2 = SubscriptionFactory.create(member=member, product__type=type_2)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+        mock_is_joker_used_in_week_value = Mock()
+        mock_is_joker_used_in_week.return_value = mock_is_joker_used_in_week_value
+        mock_can_joker_be_used_value = Mock()
+        mock_can_joker_be_used.return_value = mock_can_joker_be_used_value
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member, given_delivery_date
+        )
+        self.assertEqual([subscription_2], list(delivery_object["subscriptions"]))

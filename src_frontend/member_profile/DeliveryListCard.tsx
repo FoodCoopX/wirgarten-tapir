@@ -86,17 +86,16 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   function productCell(delivery: Delivery) {
     return (
       <div className={"d-flex flex-column"}>
-        {delivery.jokerUsed
-          ? "Joker eingesetzt"
-          : delivery.subscriptions.map((subscription) => {
-              return (
-                <div key={subscription.id}>
-                  {subscription.quantity}
-                  {" × "}
-                  {subscription.product.name} {subscription.product.type.name}
-                </div>
-              );
-            })}
+        {delivery.jokerUsed && "Joker eingesetzt"}
+        {delivery.subscriptions.map((subscription) => {
+          return (
+            <div key={subscription.id}>
+              {subscription.quantity}
+              {" × "}
+              {subscription.product.name} {subscription.product.type.name}
+            </div>
+          );
+        })}
       </div>
     );
   }

@@ -123,6 +123,12 @@ class ProductTypeForm(forms.Form):
                 initial=next_month,
             )
 
+        self.fields["is_affected_by_jokers"] = forms.BooleanField(
+            initial=product_type.is_affected_by_jokers if product_type else True,
+            required=False,
+            label=_("Nimmt am Joker-Verfahren teil"),
+        )
+
 
 class ProductForm(forms.Form):
     def __init__(self, *args, **kwargs):
