@@ -629,6 +629,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
     )
+    notice_period_duration_in_months = models.IntegerField(null=True)
 
     @property
     def trial_end_date(self):
