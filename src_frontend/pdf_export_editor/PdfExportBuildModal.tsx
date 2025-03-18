@@ -3,6 +3,7 @@ import { Form, Modal } from "react-bootstrap";
 import { GenericExportsApi, PdfExportModel } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import dayjs from "dayjs";
 
 interface PdfExportBuildModalProps {
   show: boolean;
@@ -61,6 +62,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
               type={"datetime-local"}
               onChange={(event) => setDatetime(new Date(event.target.value))}
               required={true}
+              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
             />
           </Form.Group>
         </Form>

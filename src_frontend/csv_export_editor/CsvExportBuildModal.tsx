@@ -7,6 +7,7 @@ import {
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import dayjs from "dayjs";
 
 interface CsvExportBuildModalProps {
   show: boolean;
@@ -68,8 +69,13 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
             <Form.Label>Datum</Form.Label>
             <Form.Control
               type={"datetime-local"}
-              onChange={(event) => setDatetime(new Date(event.target.value))}
+              onChange={(event) => {
+                console.log(event.target.value);
+                console.log(new Date(event.target.value));
+                setDatetime(new Date(event.target.value));
+              }}
               required={true}
+              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
             />
           </Form.Group>
         </Form>
