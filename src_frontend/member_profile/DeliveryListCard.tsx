@@ -104,7 +104,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         <div style={{ width: "32px" }}>
           <TapirButton
             variant={"outline-secondary"}
-            icon={"schedule"}
+            icon={"info"}
             size={"sm"}
             onClick={() => {
               setSelectedPickupLocation(delivery.pickupLocation);
@@ -138,7 +138,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
                 />
               )}
               <TapirButton
-                text={"Bearbeiten"}
+                text={"Abholort ändern"}
                 icon={"edit"}
                 variant={"outline-primary"}
               />
