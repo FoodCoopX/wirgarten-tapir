@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wirgarten', '0044_alter_productcapacity_capacity'),
+        ("wirgarten", "0044_alter_productcapacity_capacity"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='producttype',
-            name='is_affected_by_jokers',
-            field=models.BooleanField(default=True, verbose_name='Nimmt am Joker-Verfahren teil'),
+            model_name="producttype",
+            name="is_affected_by_jokers",
+            field=models.BooleanField(
+                default=True, verbose_name="Nimmt am Joker-Verfahren teil"
+            ),
         ),
     ]
