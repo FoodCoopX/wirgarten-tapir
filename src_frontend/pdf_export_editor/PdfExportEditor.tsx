@@ -72,7 +72,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
                 <h5 className={"mb-0"}>PDF-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
-                  text={"Neues Export erzeugen"}
+                  text={"Neuen Export erzeugen"}
                   icon={"add_circle"}
                   onClick={() => setShowPdfExportModal(true)}
                   disabled={segmentsLoading}

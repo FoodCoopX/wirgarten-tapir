@@ -174,7 +174,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Neues Export erzeugen</h5>
+        <h5 className={"mb-0"}>Neuen Export erzeugen</h5>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -257,7 +257,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
           <Row>
             <Col>
               <Form.Group controlId={"form.emails"}>
-                <Form.Label>Empfängers</Form.Label>
+                <Form.Label>Empfänger</Form.Label>
                 <EmailInput
                   onEmailListChange={setExportEmailRecipients}
                   addresses={exportEmailRecipients}
@@ -284,7 +284,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
           <Row>
             <Col>
               <Form.Group controlId={"form.cycle"}>
-                <Form.Label>Automatisiertes Export Zyklus</Form.Label>
+                <Form.Label>Automatisierter Export-Zyklus</Form.Label>
                 <Form.Select
                   onChange={(event) =>
                     setExportCycle(

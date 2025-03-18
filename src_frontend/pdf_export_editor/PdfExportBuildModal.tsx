@@ -48,7 +48,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Export bauen: {exportToBuild.name}</h5>
+        <h5 className={"mb-0"}>Export erstellen: {exportToBuild.name}</h5>
       </Modal.Header>
       <Modal.Body>
         <Form

@@ -72,7 +72,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
                 <h5 className={"mb-0"}>CSV-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
-                  text={"Neues Export erzeugen"}
+                  text={"Neuen Export erzeugen"}
                   icon={"add_circle"}
                   onClick={() => {
                     setExportSelectedForEdition(undefined);

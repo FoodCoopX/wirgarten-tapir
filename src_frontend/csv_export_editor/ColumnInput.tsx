@@ -77,8 +77,8 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
       <Table striped hover responsive>
         <thead>
           <tr>
-            <th>Interne Spalten-Name</th>
-            <th>Spalten-Name in der exportierte Datei</th>
+            <th>Interne Spaltenname</th>
+            <th>Spaltenname in der exportierte Datei</th>
             <th></th>
           </tr>
         </thead>
