@@ -35,7 +35,7 @@ class MemberColumnProvider:
                 id="member_subscriptions",
                 display_name="Produkte",
                 description="",
-                get_value=cls.get_value_member_number,
+                get_value=cls.get_value_member_subscriptions,
             ),
         ]
 
