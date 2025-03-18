@@ -50,13 +50,41 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
+    if (exportSegment && segmentId === exportSegment.id) return;
+
     for (const segment of segments) {
       if (segment.id === segmentId) {
+        if (!allColumnsEqual(segment)) {
+          setExportColumns([]);
+          setExportColumnsNames([]);
+        }
         setExportSegment(segment);
         return;
       }
     }
     alert("Segment not found " + segmentId);
+  }
+
+  function allColumnsEqual(newSegment: ExportSegment) {
+    if (!exportSegment) return false;
+
+    for (const newColumn of newSegment.columns) {
+      let found = false;
+      for (const oldColumn of exportSegment.columns) {
+        if (newColumn.id === oldColumn.id) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        console.log(exportColumns);
+        console.log(newSegment.columns);
+        console.log(newColumn.id);
+        return false;
+      }
+    }
+
+    return true;
   }
 
   useEffect(() => {
