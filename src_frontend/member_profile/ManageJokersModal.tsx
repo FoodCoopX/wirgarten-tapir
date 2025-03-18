@@ -23,6 +23,7 @@ interface ManageJokersModalProps {
   deliveries: Delivery[];
   loadDeliveries: () => void;
   deliveriesLoading: boolean;
+  csrfToken: string;
 }
 
 const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
@@ -32,8 +33,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   deliveries,
   loadDeliveries,
   deliveriesLoading,
+  csrfToken,
 }) => {
-  const api = useApi(DeliveriesApi);
+  const api = useApi(DeliveriesApi, csrfToken);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
   const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
@@ -205,7 +207,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                 <br />
                 Zusätzliche Einschränkungen:
                 <ul>
-                  {restrictions.map((restriction, index) => (
+                  {restrictions.map((restriction) => (
                     <li
                       key={restriction.startDay + "-" + restriction.startMonth}
                     >

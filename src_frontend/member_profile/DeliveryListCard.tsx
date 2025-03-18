@@ -158,7 +158,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
               <tbody>
                 {deliveriesLoading
                   ? loadingPlaceholder()
-                  : deliveries.map((delivery, index) => {
+                  : deliveries.map((delivery) => {
                       return (
                         <tr key={formatDateNumeric(delivery.deliveryDate)}>
                           <td>{dateCell(delivery)}</td>
@@ -187,6 +187,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           deliveries={deliveries}
           loadDeliveries={loadDeliveries}
           deliveriesLoading={deliveriesLoading}
+          csrfToken={csrfToken}
         />
       )}
     </>
