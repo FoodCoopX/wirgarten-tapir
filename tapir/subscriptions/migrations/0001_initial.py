@@ -9,17 +9,37 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('wirgarten', '0046_subscription_notice_period_duration_in_months'),
+        ("wirgarten", "0046_subscription_notice_period_duration_in_months"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NoticePeriod',
+            name="NoticePeriod",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('duration_in_months', models.IntegerField()),
-                ('growing_period', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='wirgarten.growingperiod')),
-                ('product_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='wirgarten.producttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("duration_in_months", models.IntegerField()),
+                (
+                    "growing_period",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="wirgarten.growingperiod",
+                    ),
+                ),
+                (
+                    "product_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="wirgarten.producttype",
+                    ),
+                ),
             ],
         ),
     ]
