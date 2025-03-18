@@ -31,7 +31,7 @@ class ParameterCategory:
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
     EMAIL = "Email"
-    JOKERS = "Jokers"
+    JOKERS = "Joker"
 
 
 class Parameter:
@@ -802,10 +802,10 @@ Dein WirGarten-Team""",
 
         parameter_definition(
             key=Parameter.JOKERS_AMOUNT_PER_CONTRACT,
-            label="Jokers pro Jahr",
+            label="Joker pro Jahr",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=4,
-            description="Anzahl an Jokers das ein Mitglied pro Vertragsjahr einsetzen darf",
+            description="Anzahl an Joker das ein Mitglied pro Vertragsjahr einsetzen darf",
             category=ParameterCategory.JOKERS,
             order_priority=2,
         )

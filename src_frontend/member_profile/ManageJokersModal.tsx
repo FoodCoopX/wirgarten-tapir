@@ -106,7 +106,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         <thead>
           <tr>
             <th>KW</th>
-            <th>Kann abgesagt werden spätestens am</th>
+            <th>Kann zurückgesetzt werden spätestens am</th>
             <th></th>
           </tr>
         </thead>
@@ -188,7 +188,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     <Modal onHide={onHide} show={show} centered={true}>
       <Modal.Header closeButton>
         <Modal.Title>
-          <h4>Jokers verwalten</h4>
+          <h4>Joker verwalten</h4>
         </Modal.Title>
       </Modal.Header>
       {infoLoading ? (
@@ -198,9 +198,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
-            Jokers können bis zum {getWeekdayLimitDisplay()} (inklusiv) vor der
+            Joker können bis {getWeekdayLimitDisplay()} 23.59 Uhr vor der
             Lieferungstag eingesetzt oder abgesagt werden. <br />
-            Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Jokers
+            Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
             eingesetzt werden.
             {restrictions.length > 0 && (
               <>
@@ -214,7 +214,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                       Zwischen dem {restriction.startDay}.
                       {restriction.startMonth}. und dem {restriction.endDay}.
                       {restriction.endMonth}. dürfen maximal{" "}
-                      {restriction.maxJokers} Jokers eingesetzt werden.
+                      {restriction.maxJokers} Joker eingesetzt werden.
                     </li>
                   ))}
                 </ul>
@@ -222,7 +222,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
             )}
           </ListGroup.Item>
           <ListGroup.Item>
-            <h5>Eingesetzter Jokers</h5>
+            <h5>Eingesetzter Joker</h5>
             {jokers.length == 0
               ? "Noch kein eingesetzte Joker"
               : usedJokersTable()}
