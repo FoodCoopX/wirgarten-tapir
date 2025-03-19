@@ -11,6 +11,9 @@ from tapir.wirgarten.models import Subscription
 
 
 class TestRenewSubscription(SimpleTestCase):
+    @patch.object(
+        AutomaticSubscriptionRenewalService, "get_renewed_subscription_trial_data"
+    )
     @patch.object(NoticePeriodManager, "get_notice_period_duration")
     @patch.object(Subscription, "objects")
     @patch(
@@ -20,7 +23,8 @@ class TestRenewSubscription(SimpleTestCase):
         self,
         mock_get_next_growing_period: Mock,
         mock_subscription_objects: Mock,
-        mock_get_notice_period_duration: Mock(),
+        mock_get_notice_period_duration: Mock,
+        mock_get_renewed_subscription_trial_data: Mock,
     ):
         product_type = Mock()
         product = Mock()
@@ -45,6 +49,13 @@ class TestRenewSubscription(SimpleTestCase):
 
         mock_get_notice_period_duration.return_value = 4
 
+        trial_disabled = Mock()
+        trial_end_date_override = Mock()
+        mock_get_renewed_subscription_trial_data.return_value = (
+            trial_disabled,
+            trial_end_date_override,
+        )
+
         AutomaticSubscriptionRenewalService.renew_subscription(subscription)
 
         mock_get_next_growing_period.assert_called_once_with()
@@ -62,6 +73,7 @@ class TestRenewSubscription(SimpleTestCase):
             solidarity_price=1.2,
             solidarity_price_absolute=Decimal("3.6"),
             mandate_ref=mandate_ref,
-            trial_disabled=True,
+            trial_disabled=trial_disabled,
+            trial_end_date_override=trial_end_date_override,
             notice_period_duration_in_months=4,
         )

@@ -16,6 +16,7 @@ from django.db.models import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
+from typing_extensions import deprecated
 
 from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
@@ -635,6 +636,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     notice_period_duration_in_months = models.IntegerField(null=True)
 
     @property
+    @deprecated(
+        "If possible, use tapir.subscriptions.services.trial_period_manager.TrialPeriodManager.get_end_of_trial_period"
+    )
     def trial_end_date(self):
         if self.trial_disabled:
             return get_today() - relativedelta(days=1)
