@@ -53,6 +53,15 @@ class NoticePeriodManager:
         for _ in range(notice_period):
             max_date = max_date.replace(day=1) - datetime.timedelta(days=1)
 
+        _, nb_days_in_month_subscription_end_date = calendar.monthrange(
+            subscription.end_date.year, subscription.end_date.month
+        )
+        subscription_ends_on_last_day_of_month = (
+            nb_days_in_month_subscription_end_date == subscription.end_date.day
+        )
+        if subscription_ends_on_last_day_of_month:
+            return max_date
+
         _, nb_days_in_month = calendar.monthrange(max_date.year, max_date.month)
         target_day = subscription.end_date.day
         if target_day > nb_days_in_month:
