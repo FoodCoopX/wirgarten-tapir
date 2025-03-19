@@ -120,7 +120,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildExportResponse'
+                $ref: '#/components/schemas/BuildCsvExportResponse'
           description: ''
   /generic_exports/build_pdf_export:
     get:
@@ -444,6 +444,29 @@ paths:
       responses:
         '204':
           description: No response body
+  /subscriptions/cancellation_data:
+    get:
+      operationId: subscriptions_cancellation_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: product_type_name
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancellationData'
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2440,7 +2463,7 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    BuildExportResponse:
+    BuildCsvExportResponse:
       type: object
       properties:
         file_name:
@@ -2515,6 +2538,16 @@ components:
       - content
       - name
       - release_status
+    CancellationData:
+      type: object
+      properties:
+        is_in_trial:
+          type: boolean
+        subscription_end_date:
+          type: string
+          format: date
+      required:
+      - is_in_trial
     CsvExportModel:
       type: object
       properties:
@@ -3821,6 +3854,9 @@ components:
         single_subscription_only:
           type: boolean
           title: Nur Einzelabonnement erlaubt
+        is_affected_by_jokers:
+          type: boolean
+          title: Nimmt am Joker-Verfahren teil
       required:
       - name
     RecipientRequest:
@@ -4128,6 +4164,11 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        notice_period_duration_in_months:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
           nullable: true
         member:
           type: string

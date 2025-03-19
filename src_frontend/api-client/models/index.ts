@@ -2,9 +2,10 @@
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
 export * from './BounceTypeEnum';
-export * from './BuildExportResponse';
+export * from './BuildCsvExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
+export * from './CancellationData';
 export * from './CsvExportModel';
 export * from './CsvExportModelRequest';
 export * from './DayOfWeekEnum';
