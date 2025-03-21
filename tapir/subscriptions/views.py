@@ -4,11 +4,19 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.subscriptions.serializers import CancellationDataSerializer
+from tapir.subscriptions.serializers import (
+    CancellationDataSerializer,
+)
+from tapir.subscriptions.services.coop_membership_manager import CoopMembershipManager
+from tapir.subscriptions.services.subscription_cancellation_manager import (
+    SubscriptionCancellationManager,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.wirgarten.models import Member, ProductType, Subscription
-from tapir.wirgarten.service.products import get_active_subscriptions
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.models import Member
+from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+)
+from tapir.wirgarten.utils import check_permission_or_self
 
 
 class GetCancellationDataView(APIView):
@@ -16,37 +24,39 @@ class GetCancellationDataView(APIView):
         responses={200: CancellationDataSerializer()},
         parameters=[
             OpenApiParameter(name="member_id", type=str),
-            OpenApiParameter(name="product_type_name", type=str),
         ],
     )
     def get(self, request):
         member = get_object_or_404(Member, id=request.query_params.get("member_id"))
         check_permission_or_self(member.id, request)
 
-        product_type = get_object_or_404(
-            ProductType, name=request.query_params.get("product_type_name")
-        )
-        for subscription in get_active_subscriptions().filter(
-            member=member, product__type=product_type
-        ):
-            if TrialPeriodManager.is_subscription_in_trial(subscription):
-                return Response(
-                    CancellationDataSerializer({"is_in_trial": True}).data,
-                    status=status.HTTP_200_OK,
-                )
-
-        subscription_end_date = (
-            Subscription.objects.filter(
-                end_date__gte=get_today(), member=member, product__type=product_type
-            )
-            .order_by("-end_date")
-            .first()
-            .end_date
-        )
+        data = {
+            "can_cancel_coop_membership": CoopMembershipManager.can_member_cancel_coop_membership(
+                member
+            ),
+            "subscribed_products": self.build_subscribed_products_data(member),
+        }
 
         return Response(
-            CancellationDataSerializer(
-                {"is_in_trial": False, "subscription_end_date": subscription_end_date}
-            ).data,
+            CancellationDataSerializer(data).data,
             status=status.HTTP_200_OK,
         )
+
+    @classmethod
+    def build_subscribed_products_data(cls, member):
+        subscribed_products = set()
+        for subscription in get_active_and_future_subscriptions().filter(member=member):
+            subscribed_products.add(subscription.product)
+
+        return [
+            {
+                "product": subscribed_product,
+                "is_in_trial": TrialPeriodManager.is_product_in_trial(
+                    subscribed_product, member
+                ),
+                "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
+                    product=subscribed_product, member=member
+                ),
+            }
+            for subscribed_product in subscribed_products
+        ]

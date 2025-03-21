@@ -12,7 +12,7 @@ from tapir.wirgarten.models import Member, Payment, ProductType, Subscription
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_product_price,
     product_type_order_by,
 )
@@ -186,7 +186,7 @@ def get_automatically_calculated_solidarity_excess(
             lambda sub: sub["quantity"]
             * sub["solidarity_price"]
             * float(get_product_price(sub["product"]).price),
-            get_future_subscriptions(reference_date).values(
+            get_active_and_future_subscriptions(reference_date).values(
                 "quantity", "product", "solidarity_price"
             ),
         )

@@ -27,7 +27,7 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_available_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_today
@@ -84,7 +84,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
         additional_products_available = (
-            get_future_subscriptions()
+            get_active_and_future_subscriptions()
             .filter(
                 member_id=self.object.id,
                 end_date__gt=get_next_contract_start_date(),
@@ -173,6 +173,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["jokersEnabled"] = (
             "true" if get_parameter_value(Parameter.JOKERS_ENABLED) else "false"
         )
+        context["subscriptionAutomaticRenewal"] = get_parameter_value(
+            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        )
 
         return context
 
@@ -225,9 +228,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 harvest_share_subs,
             )
         )
-        future_subs = get_future_subscriptions(next_growing_period.start_date).filter(
-            member_id=self.object.id
-        )
+        future_subs = get_active_and_future_subscriptions(
+            next_growing_period.start_date
+        ).filter(member_id=self.object.id)
         has_future_subs = future_subs.exists()
         if cancelled and not has_future_subs:
             context["renewal_status"] = (

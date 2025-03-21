@@ -127,13 +127,6 @@
                                                     class="btn btn-outline-primary">
                                                 <span class="material-icons">edit</span>
                                             </button>
-                                            {% with sub_totals|get_value:type|default:0 as sub_total %}
-                                                {% if sub_total > 0 %}
-                                                    <div class="subscriptionCancellationButton"
-                                                         data-product-type-name="{{ type }}"
-                                                         data-member-id="{{ object.pk }}"></div>
-                                                {% endif %}
-                                            {% endwith %}
                                         {% else %}
                                             <button data-bs-toggle="tooltip"
                                                     data-bs-placement="bottom"
@@ -146,6 +139,13 @@
                                 </div>
                             </div>
                         {% endfor %}
+                        {% if subscriptionAutomaticRenewal %}
+                            <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
+                                <span class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

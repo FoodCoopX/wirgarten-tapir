@@ -56,6 +56,7 @@ models/PdfExportModelRequest.ts
 models/PickupLocation.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
+models/ProductForCancellation.ts
 models/ProductType.ts
 models/RecipientRequest.ts
 models/SegmentData.ts

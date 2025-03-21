@@ -452,10 +452,6 @@ paths:
         name: member_id
         schema:
           type: string
-      - in: query
-        name: product_type_name
-        schema:
-          type: string
       tags:
       - subscriptions
       security:
@@ -2541,13 +2537,15 @@ components:
     CancellationData:
       type: object
       properties:
-        is_in_trial:
+        can_cancel_coop_membership:
           type: boolean
-        subscription_end_date:
-          type: string
-          format: date
+        subscribed_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductForCancellation'
       required:
-      - is_in_trial
+      - can_cancel_coop_membership
+      - subscribed_products
     CsvExportModel:
       type: object
       properties:
@@ -3827,6 +3825,22 @@ components:
       required:
       - name
       - type
+    ProductForCancellation:
+      type: object
+      properties:
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        is_in_trial:
+          type: boolean
+        cancellation_date:
+          type: string
+          format: date
+      required:
+      - cancellation_date
+      - is_in_trial
+      - product
     ProductType:
       type: object
       properties:

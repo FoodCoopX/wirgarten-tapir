@@ -45,7 +45,7 @@ class TestJokerManagementServiceCanJokerBeUsed(SimpleTestCase):  #
         )
 
         self.assertTrue(
-            JokerManagementService.can_joker_be_used(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_called_once_with(
@@ -87,7 +87,7 @@ class TestJokerManagementServiceCanJokerBeUsed(SimpleTestCase):  #
         mock_can_joker_be_used_relative_to_restrictions.return_value = False
 
         self.assertFalse(
-            JokerManagementService.can_joker_be_used(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_called_once_with(
@@ -131,7 +131,7 @@ class TestJokerManagementServiceCanJokerBeUsed(SimpleTestCase):  #
         )
 
         self.assertFalse(
-            JokerManagementService.can_joker_be_used(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_not_called()
@@ -171,7 +171,7 @@ class TestJokerManagementServiceCanJokerBeUsed(SimpleTestCase):  #
         mock_can_joker_be_used_relative_to_date_limit.return_value = False
 
         self.assertFalse(
-            JokerManagementService.can_joker_be_used(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_not_called()
@@ -209,7 +209,7 @@ class TestJokerManagementServiceCanJokerBeUsed(SimpleTestCase):  #
         mock_does_member_have_a_joker_in_week.return_value = True
 
         self.assertFalse(
-            JokerManagementService.can_joker_be_used(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_not_called()

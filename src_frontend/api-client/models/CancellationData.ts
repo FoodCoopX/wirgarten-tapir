@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ProductForCancellation } from './ProductForCancellation';
+import {
+    ProductForCancellationFromJSON,
+    ProductForCancellationFromJSONTyped,
+    ProductForCancellationToJSON,
+    ProductForCancellationToJSONTyped,
+} from './ProductForCancellation';
+
 /**
  * 
  * @export
@@ -24,20 +32,21 @@ export interface CancellationData {
      * @type {boolean}
      * @memberof CancellationData
      */
-    isInTrial: boolean;
+    canCancelCoopMembership: boolean;
     /**
      * 
-     * @type {Date}
+     * @type {Array<ProductForCancellation>}
      * @memberof CancellationData
      */
-    subscriptionEndDate?: Date;
+    subscribedProducts: Array<ProductForCancellation>;
 }
 
 /**
  * Check if a given object implements the CancellationData interface.
  */
 export function instanceOfCancellationData(value: object): value is CancellationData {
-    if (!('isInTrial' in value) || value['isInTrial'] === undefined) return false;
+    if (!('canCancelCoopMembership' in value) || value['canCancelCoopMembership'] === undefined) return false;
+    if (!('subscribedProducts' in value) || value['subscribedProducts'] === undefined) return false;
     return true;
 }
 
@@ -51,8 +60,8 @@ export function CancellationDataFromJSONTyped(json: any, ignoreDiscriminator: bo
     }
     return {
         
-        'isInTrial': json['is_in_trial'],
-        'subscriptionEndDate': json['subscription_end_date'] == null ? undefined : (new Date(json['subscription_end_date'])),
+        'canCancelCoopMembership': json['can_cancel_coop_membership'],
+        'subscribedProducts': ((json['subscribed_products'] as Array<any>).map(ProductForCancellationFromJSON)),
     };
 }
 
@@ -67,8 +76,8 @@ export function CancellationDataFromJSONTyped(json: any, ignoreDiscriminator: bo
 
     return {
         
-        'is_in_trial': value['isInTrial'],
-        'subscription_end_date': value['subscriptionEndDate'] == null ? undefined : ((value['subscriptionEndDate']).toISOString().substring(0,10)),
+        'can_cancel_coop_membership': value['canCancelCoopMembership'],
+        'subscribed_products': ((value['subscribedProducts'] as Array<any>).map(ProductForCancellationToJSON)),
     };
 }
 

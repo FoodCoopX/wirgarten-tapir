@@ -343,9 +343,9 @@ class Member(TapirUser):
 
     @property
     def has_trial_contracts(self):
-        from tapir.wirgarten.service.products import get_future_subscriptions
+        from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 
-        subs = get_future_subscriptions().filter(member_id=self.id)
+        subs = get_active_and_future_subscriptions().filter(member_id=self.id)
         today = get_today()
         for sub in subs:
             if today < sub.trial_end_date and sub.cancellation_ts is None:

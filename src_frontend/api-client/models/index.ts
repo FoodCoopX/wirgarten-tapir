@@ -52,6 +52,7 @@ export * from './PdfExportModelRequest';
 export * from './PickupLocation';
 export * from './PickupLocationOpeningTime';
 export * from './Product';
+export * from './ProductForCancellation';
 export * from './ProductType';
 export * from './RecipientRequest';
 export * from './SegmentData';

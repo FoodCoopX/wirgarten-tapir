@@ -9,7 +9,6 @@ from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.models import NoticePeriod
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -207,7 +206,7 @@ def get_active_product_capacities(reference_date: date = None):
     ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
-def get_future_subscriptions(reference_date: date = None):
+def get_active_and_future_subscriptions(reference_date: date = None):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
@@ -232,7 +231,7 @@ def get_active_subscriptions(reference_date: date = None):
     if reference_date is None:
         reference_date = get_today()
 
-    return get_future_subscriptions(reference_date).filter(
+    return get_active_and_future_subscriptions(reference_date).filter(
         start_date__lte=reference_date
     )
 

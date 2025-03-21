@@ -24,7 +24,6 @@ import {
 
 export interface SubscriptionsCancellationDataRetrieveRequest {
     memberId?: string;
-    productTypeName?: string;
 }
 
 /**
@@ -39,10 +38,6 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
         if (requestParameters['memberId'] != null) {
             queryParameters['member_id'] = requestParameters['memberId'];
-        }
-
-        if (requestParameters['productTypeName'] != null) {
-            queryParameters['product_type_name'] = requestParameters['productTypeName'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
