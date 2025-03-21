@@ -11,12 +11,12 @@
                 grid-template-columns: 1fr 1em 1fr 1em 1fr">
         <div class="card">
             <div style="display: flex; flex-direction: row;" class="card-header">
-                <h5 style="margin: auto; width: 100%">{% translate 'Anbauperiode' %}</h5>
+                <h5 style="margin: auto; width: 100%">{% translate 'Vertragsperiode' %}</h5>
                 {% if perms.coop.manage %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Anbauperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Anbauperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Vertragsperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Vertragsperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
                     <div style="width: 3em"></div>
-                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Anbauperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Vertragsperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
                 {% endif %}
             </div>
             <div style="overflow: auto" class="card-body">
@@ -175,7 +175,7 @@
                 {% for period in growing_periods %}
                 <div id="details_growing_period_{{period.id}}" style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr" class="card-body">
                     <div style="padding-bottom: 1em; display: grid; grid-template-columns: 10em 10em 1fr">
-                        <div style="grid-column: 1/2">{% translate 'Anbauperiode' %}</div>
+                        <div style="grid-column: 1/2">{% translate 'Vertragsperiode' %}</div>
                         <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>
                             {{period|get_value:'start_date' }}</strong></div>
                         <div style="grid-column: 3/4">{% translate 'Bis' %}: <strong>

@@ -959,7 +959,7 @@ class AdditionalProductForm(forms.Form):
             self.add_error(
                 None,
                 "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
             )
 
     def is_valid(self):
