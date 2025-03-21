@@ -5,6 +5,7 @@ from unittest.mock import patch
 import factory.random
 from django.core.cache import cache
 from django.test import TestCase, Client, SimpleTestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from tapir.configuration.models import TapirParameterDatatype
@@ -41,7 +42,9 @@ class TapirUnitTest(TapirFactoryMixin, SimpleTestCase):
         self.factory_setup()
 
 
-def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> None:
+def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> datetime.datetime:
+    now = timezone.make_aware(now) if timezone.is_naive(now) else now
+
     # Patch for timezone.now()
     if not hasattr(test, "mock_now"):
         patcher_now = patch("django.utils.timezone.now")
@@ -55,6 +58,8 @@ def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> None:
         test.mock_localdate = patcher_localdate.start()
         test.addCleanup(patcher_localdate.stop)
     test.mock_localdate.return_value = now.date()
+
+    return now
 
 
 def set_bypass_keycloak(bypass: bool = True):
