@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
-import {
-  Product,
-  ProductForCancellation,
-  SubscriptionsApi,
-} from "../../api-client";
+import { ProductForCancellation, SubscriptionsApi } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
@@ -28,7 +24,9 @@ const SubscriptionCancellationModal: React.FC<
   const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<
+    ProductForCancellation[]
+  >([]);
   const [cancelCoopMembershipSelected, setCancelCoopMembershipSelected] =
     useState(false);
 
@@ -48,12 +46,12 @@ const SubscriptionCancellationModal: React.FC<
     setSelectedProducts([]);
   }, [show]);
 
-  function changeSelection(product: Product, selected: boolean) {
+  function changeSelection(product: ProductForCancellation, selected: boolean) {
     if (selected && !selectedProducts.includes(product)) {
       setSelectedProducts([...selectedProducts, product]);
     } else if (!selected && selectedProducts.includes(product)) {
       setSelectedProducts(
-        selectedProducts.filter((p: Product) => p !== product),
+        selectedProducts.filter((p: ProductForCancellation) => p !== product),
       );
     }
   }
@@ -71,6 +69,32 @@ const SubscriptionCancellationModal: React.FC<
     }
     result += ".";
     return result;
+  }
+
+  function buildConfirmationModalText() {
+    return (
+      <>
+        <p>Möchtest du wirklich folgenden Verträge kündigen?</p>
+        <ul>
+          {selectedProducts.map(
+            (productForCancellation: ProductForCancellation) => {
+              return (
+                <li>
+                  {productForCancellation.product.type.name +
+                    " (" +
+                    productForCancellation.product.name +
+                    ") zum " +
+                    formatDateText(productForCancellation.cancellationDate)}
+                </li>
+              );
+            },
+          )}
+          {cancelCoopMembershipSelected && (
+            <li>Beitrittserklärung zu genossenschaft</li>
+          )}
+        </ul>
+      </>
+    );
   }
 
   return (
@@ -104,14 +128,12 @@ const SubscriptionCancellationModal: React.FC<
                       <Form.Check
                         onChange={(event) =>
                           changeSelection(
-                            subscribedProduct.product,
+                            subscribedProduct,
                             event.target.checked,
                           )
                         }
                         required={false}
-                        checked={selectedProducts.includes(
-                          subscribedProduct.product,
-                        )}
+                        checked={selectedProducts.includes(subscribedProduct)}
                         label={getCheckboxLabel(subscribedProduct)}
                       />
                     </Form.Group>
@@ -139,18 +161,20 @@ const SubscriptionCancellationModal: React.FC<
             icon={"contract_delete"}
             text={"Verträge kündigen"}
             onClick={() => setShowConfirmationModal(true)}
-            disabled={selectedProducts.length === 0}
+            disabled={
+              !cancelCoopMembershipSelected && selectedProducts.length === 0
+            }
           />
         </Modal.Footer>
       </Modal>
       <ConfirmModal
-        message={"BLABLABLA"}
+        message={buildConfirmationModalText()}
         onCancel={() => setShowConfirmationModal(false)}
         confirmButtonIcon={"contract_delete"}
-        confirmButtonText={"Zum BLABLABLA kündigen"}
+        confirmButtonText={"Kündigung bestätigen"}
         confirmButtonVariant={"danger"}
         open={showConfirmationModal}
-        title={"BLABLABLA"}
+        title={"Verträge kündigen bestätigen"}
         onConfirm={() => {
           alert("YOYO");
           setShowConfirmationModal(false);
