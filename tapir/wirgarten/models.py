@@ -396,6 +396,9 @@ class Member(TapirUser):
         )
 
     @property
+    @deprecated(
+        "Use tapir.coop.services.membership_cancellation_manager.MembershipCancellationManager.get_coop_entry_date instead"
+    )
     def coop_entry_date(self):
         try:
             earliest_coopsharetransaction = self.coopsharetransaction_set.filter(

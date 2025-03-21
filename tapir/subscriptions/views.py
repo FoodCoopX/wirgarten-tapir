@@ -8,11 +8,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_cancellation_manager import (
+    MembershipCancellationManager,
+)
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
 )
-from tapir.subscriptions.services.coop_membership_manager import CoopMembershipManager
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -37,7 +39,7 @@ class GetCancellationDataView(APIView):
         check_permission_or_self(member.id, request)
 
         data = {
-            "can_cancel_coop_membership": CoopMembershipManager.can_member_cancel_coop_membership(
+            "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
                 member
             ),
             "subscribed_products": self.build_subscribed_products_data(member),
@@ -99,7 +101,9 @@ class CancelSubscriptionsView(APIView):
 
         if (
             cancel_coop_membership
-            and not CoopMembershipManager.can_member_cancel_coop_membership(member)
+            and not MembershipCancellationManager.can_member_cancel_coop_membership(
+                member
+            )
         ):
             return self.build_response(
                 False,
@@ -143,7 +147,7 @@ class CancelSubscriptionsView(APIView):
                 SubscriptionCancellationManager.cancel_subscriptions(product, member)
 
             if cancel_coop_membership:
-                CoopMembershipManager.cancel_coop_membership(member)
+                MembershipCancellationManager.cancel_coop_membership(member)
 
         return Response("OK", status=status.HTTP_200_OK)
 
