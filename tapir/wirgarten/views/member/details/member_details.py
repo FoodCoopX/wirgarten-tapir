@@ -133,11 +133,15 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             else None
         )
 
-        self.add_renewal_notice_context(context, next_month, today)
+        subscription_automatic_renewal = get_parameter_value(
+            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        )
+        if not subscription_automatic_renewal:
+            self.add_renewal_notice_context(context, next_month, today)
 
         subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
         context["subscriptions_in_trial"] = []
-        if subs_in_trial:
+        if subs_in_trial and not subscription_automatic_renewal:
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"].extend(subs_in_trial)
             context["next_trial_end_date"] = min(
@@ -151,6 +155,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 quantity=Sum(F("quantity"))
             )["quantity"]
             > 0
+            and not subscription_automatic_renewal
         ):
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"].append(
