@@ -9,4 +9,9 @@ urlpatterns = [
         views.GetCancellationDataView.as_view(),
         name="cancellation_data",
     ),
+    path(
+        "cancel_subscriptions",
+        views.CancelSubscriptionsView.as_view(),
+        name="cancel_subscriptions",
+    ),
 ]

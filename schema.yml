@@ -444,6 +444,35 @@ paths:
       responses:
         '204':
           description: No response body
+  /subscriptions/cancel_subscriptions:
+    post:
+      operationId: subscriptions_cancel_subscriptions_create
+      parameters:
+      - in: query
+        name: cancel_coop_membership
+        schema:
+          type: boolean
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: product_ids
+        schema:
+          type: array
+          items:
+            type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelSubscriptionsViewResponse'
+          description: ''
   /subscriptions/cancellation_data:
     get:
       operationId: subscriptions_cancellation_data_retrieve
@@ -2534,6 +2563,18 @@ components:
       - content
       - name
       - release_status
+    CancelSubscriptionsViewResponse:
+      type: object
+      properties:
+        subscriptions_cancelled:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - errors
+      - subscriptions_cancelled
     CancellationData:
       type: object
       properties:

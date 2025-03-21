@@ -5,6 +5,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
+from tapir.wirgarten.utils import get_now
 
 
 class SubscriptionCancellationManager:
@@ -25,3 +26,20 @@ class SubscriptionCancellationManager:
                 return TrialPeriodManager.get_earliest_trial_cancellation_date()
 
         return subscriptions.last().end_date
+
+    @classmethod
+    def cancel_subscriptions(cls, product: Product, member: Member):
+        cancellation_date = cls.get_earliest_possible_cancellation_date(
+            product=product, member=member
+        )
+
+        for subscription in get_active_and_future_subscriptions().filter(
+            member=member, product=product
+        ):
+            if subscription.start_date > cancellation_date:
+                subscription.delete()
+                continue
+
+            subscription.cancellation_ts = get_now()
+            subscription.end_date = cancellation_date
+            subscription.save()

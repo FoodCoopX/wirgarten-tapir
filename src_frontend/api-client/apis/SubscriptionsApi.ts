@@ -15,12 +15,21 @@
 
 import * as runtime from '../runtime';
 import type {
+  CancelSubscriptionsViewResponse,
   CancellationData,
 } from '../models/index';
 import {
+    CancelSubscriptionsViewResponseFromJSON,
+    CancelSubscriptionsViewResponseToJSON,
     CancellationDataFromJSON,
     CancellationDataToJSON,
 } from '../models/index';
+
+export interface SubscriptionsCancelSubscriptionsCreateRequest {
+    cancelCoopMembership?: boolean;
+    memberId?: string;
+    productIds?: Array<string>;
+}
 
 export interface SubscriptionsCancellationDataRetrieveRequest {
     memberId?: string;
@@ -30,6 +39,42 @@ export interface SubscriptionsCancellationDataRetrieveRequest {
  * 
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async subscriptionsCancelSubscriptionsCreateRaw(requestParameters: SubscriptionsCancelSubscriptionsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CancelSubscriptionsViewResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['cancelCoopMembership'] != null) {
+            queryParameters['cancel_coop_membership'] = requestParameters['cancelCoopMembership'];
+        }
+
+        if (requestParameters['memberId'] != null) {
+            queryParameters['member_id'] = requestParameters['memberId'];
+        }
+
+        if (requestParameters['productIds'] != null) {
+            queryParameters['product_ids'] = requestParameters['productIds'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/cancel_subscriptions`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CancelSubscriptionsViewResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsCancelSubscriptionsCreate(requestParameters: SubscriptionsCancelSubscriptionsCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CancelSubscriptionsViewResponse> {
+        const response = await this.subscriptionsCancelSubscriptionsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

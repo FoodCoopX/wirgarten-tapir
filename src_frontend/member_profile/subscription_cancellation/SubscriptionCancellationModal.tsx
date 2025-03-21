@@ -29,6 +29,8 @@ const SubscriptionCancellationModal: React.FC<
   >([]);
   const [cancelCoopMembershipSelected, setCancelCoopMembershipSelected] =
     useState(false);
+  const [confirmationLoading, setConfirmationLoading] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -44,6 +46,7 @@ const SubscriptionCancellationModal: React.FC<
 
   useEffect(() => {
     setSelectedProducts([]);
+    setErrors([]);
   }, [show]);
 
   function changeSelection(product: ProductForCancellation, selected: boolean) {
@@ -97,6 +100,28 @@ const SubscriptionCancellationModal: React.FC<
     );
   }
 
+  function onConfirm() {
+    setConfirmationLoading(true);
+    const productIds = selectedProducts.map(
+      (productForCancellation) => productForCancellation.product.id!,
+    );
+    api
+      .subscriptionsCancelSubscriptionsCreate({
+        memberId: memberId,
+        productIds: productIds,
+        cancelCoopMembership: cancelCoopMembershipSelected,
+      })
+      .then((response) => {
+        if (response.subscriptionsCancelled) {
+          location.reload();
+          return;
+        }
+        setErrors(response.errors);
+      })
+      .catch(alert)
+      .finally(() => setConfirmationLoading(false));
+  }
+
   return (
     <>
       <Modal
@@ -118,6 +143,12 @@ const SubscriptionCancellationModal: React.FC<
               className={"d-flex flex-column gap-2"}
               id={"subscriptionCancellationModalForm"}
             >
+              {errors.map((error, index) => (
+                <div className={"text-danger"} key={index}>
+                  {error}
+                </div>
+              ))}
+
               {subscribedProducts.map(
                 (subscribedProduct: ProductForCancellation) => {
                   return (
@@ -164,6 +195,7 @@ const SubscriptionCancellationModal: React.FC<
             disabled={
               !cancelCoopMembershipSelected && selectedProducts.length === 0
             }
+            loading={confirmationLoading}
           />
         </Modal.Footer>
       </Modal>
@@ -176,7 +208,7 @@ const SubscriptionCancellationModal: React.FC<
         open={showConfirmationModal}
         title={"Verträge kündigen bestätigen"}
         onConfirm={() => {
-          alert("YOYO");
+          onConfirm();
           setShowConfirmationModal(false);
         }}
       />
