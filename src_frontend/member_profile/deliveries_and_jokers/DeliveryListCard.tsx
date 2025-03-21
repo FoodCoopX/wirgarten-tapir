@@ -4,17 +4,17 @@ import {
   Delivery,
   PickupLocation,
   PickupLocationOpeningTime,
-} from "../api-client";
-import { useApi } from "../hooks/useApi";
+} from "../../api-client";
+import { useApi } from "../../hooks/useApi.ts";
 import { Card, Placeholder, Table } from "react-bootstrap";
-import TapirButton from "../components/TapirButton.tsx";
-import { formatDateText } from "../utils/formatDateText.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
 import PickupLocationModal from "./PickupLocationModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 declare let FormModal: { load: (url: string, title: string) => void };
 

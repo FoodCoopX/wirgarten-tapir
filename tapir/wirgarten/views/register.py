@@ -39,7 +39,7 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_current_growing_period,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     is_product_type_available,
 )
 from tapir.wirgarten.utils import get_now, get_today
@@ -398,7 +398,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                         )
 
                 send_order_confirmation(
-                    member, get_future_subscriptions().filter(member=member)
+                    member, get_active_and_future_subscriptions().filter(member=member)
                 )
         except Exception as e:
             member.delete()

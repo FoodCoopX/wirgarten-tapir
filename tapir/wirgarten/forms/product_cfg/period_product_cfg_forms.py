@@ -3,6 +3,9 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.models import NoticePeriod
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.models import (
@@ -13,6 +16,7 @@ from tapir.wirgarten.models import (
     ProductType,
     TaxRate,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
@@ -35,6 +39,9 @@ class ProductTypeForm(forms.Form):
         initial_tax_rate = 0
         initial_capacity = 0.0
         product_type = None
+        initial_notice_period = get_parameter_value(
+            Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+        )
 
         if KW_PERIOD_ID in kwargs:
             initial_period_id = kwargs[KW_PERIOD_ID]
@@ -54,6 +61,9 @@ class ProductTypeForm(forms.Form):
 
                 initial_name = product_type.name
                 initial_delivery_cycle = product_type.delivery_cycle
+                initial_notice_period = NoticePeriodManager.get_notice_period_duration(
+                    product_type=product_type, growing_period=self.capacity.period
+                )
 
             else:  # create NEW -> lets choose from existing product types
                 prod_types_without_capacity = [(None, _("--- Neu anlegen ---"))]
@@ -87,15 +97,6 @@ class ProductTypeForm(forms.Form):
             label=_("Link zu den Vertragsgrundsätzen"),
             initial=product_type.contract_link if product_type is not None else "",
         )
-        self.fields["single_subscription_only"] = forms.BooleanField(
-            required=False,
-            label=_("Nur Einzelabonnement möglich"),
-            initial=(
-                product_type.single_subscription_only
-                if product_type is not None
-                else False
-            ),
-        )
         self.fields["capacity"] = forms.FloatField(
             initial=initial_capacity,
             required=True,
@@ -107,6 +108,13 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
+        if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+            self.fields["notice_period"] = forms.IntegerField(
+                initial=initial_notice_period,
+                required=True,
+                label=_("Kündigungsfrist"),
+                help_text=_("Anzahl an Monaten"),
+            )
 
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
@@ -123,6 +131,15 @@ class ProductTypeForm(forms.Form):
                 initial=next_month,
             )
 
+        self.fields["single_subscription_only"] = forms.BooleanField(
+            required=False,
+            label=_("Nur Einzelabonnement möglich"),
+            initial=(
+                product_type.single_subscription_only
+                if product_type is not None
+                else False
+            ),
+        )
         self.fields["is_affected_by_jokers"] = forms.BooleanField(
             initial=product_type.is_affected_by_jokers if product_type else True,
             required=False,

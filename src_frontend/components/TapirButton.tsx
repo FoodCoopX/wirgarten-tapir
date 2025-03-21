@@ -11,6 +11,7 @@ interface TapirButtonProps {
   style?: React.CSSProperties;
   loading?: boolean;
   type?: "submit" | "reset" | "button";
+  fontSize?: number;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -36,7 +37,10 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
         (props.loading ? (
           <Spinner size="sm" />
         ) : (
-          <span className={"material-icons"} style={{ fontSize: "16px" }}>
+          <span
+            className={"material-icons"}
+            style={{ fontSize: (props.fontSize ?? 16) + "px" }}
+          >
             {props.icon}
           </span>
         ))}

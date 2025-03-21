@@ -1,19 +1,39 @@
 import { createRoot } from "react-dom/client";
-import DeliveryListCard from "./DeliveryListCard.tsx";
+import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
+import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
 
-const domNode = document.getElementById("delivery_list_card");
-if (domNode) {
-  const root = createRoot(domNode);
+const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
+if (domNodeDeliveryListCard) {
+  const root = createRoot(domNodeDeliveryListCard);
 
   root.render(
     <DeliveryListCard
-      memberId={domNode.dataset.memberId!}
-      areJokersEnabled={domNode.dataset.jokersEnabled! == "true"}
+      memberId={domNodeDeliveryListCard.dataset.memberId!}
+      areJokersEnabled={
+        domNodeDeliveryListCard.dataset.jokersEnabled! == "true"
+      }
       csrfToken={getCsrfToken()}
-      pickupLocationModalUrl={domNode.dataset.pickupLocationModalUrl!}
+      pickupLocationModalUrl={
+        domNodeDeliveryListCard.dataset.pickupLocationModalUrl!
+      }
     />,
   );
 } else {
   console.error("Failed to render delivery list card from React");
+}
+
+const domNodeSubscriptionCancellationCard = document.getElementById(
+  "subscription_cancellation_card",
+);
+if (domNodeSubscriptionCancellationCard) {
+  // Element is absent if Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL is turned off.
+  const root = createRoot(domNodeSubscriptionCancellationCard);
+
+  root.render(
+    <SubscriptionCancellationCard
+      memberId={domNodeSubscriptionCancellationCard.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
 }

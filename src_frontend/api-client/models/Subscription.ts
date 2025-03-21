@@ -119,6 +119,12 @@ export interface Subscription {
     priceOverride?: string | null;
     /**
      * 
+     * @type {number}
+     * @memberof Subscription
+     */
+    noticePeriodDurationInMonths?: number | null;
+    /**
+     * 
      * @type {string}
      * @memberof Subscription
      */
@@ -176,6 +182,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
         'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
         'priceOverride': json['price_override'] == null ? undefined : json['price_override'],
+        'noticePeriodDurationInMonths': json['notice_period_duration_in_months'] == null ? undefined : json['notice_period_duration_in_months'],
         'member': json['member'],
         'period': json['period'],
         'mandateRef': json['mandate_ref'],
@@ -208,6 +215,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trial_disabled': value['trialDisabled'],
         'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
         'price_override': value['priceOverride'],
+        'notice_period_duration_in_months': value['noticePeriodDurationInMonths'],
         'member': value['member'],
         'period': value['period'],
         'mandate_ref': value['mandateRef'],

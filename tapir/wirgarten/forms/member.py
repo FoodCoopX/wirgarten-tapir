@@ -46,7 +46,7 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_active_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_today, get_now
@@ -401,7 +401,7 @@ class NonTrialCancellationForm(Form):
         super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
 
         base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        self.subs = get_future_subscriptions().filter(
+        self.subs = get_active_and_future_subscriptions().filter(
             member_id=self.member_id,
             end_date__gte=get_today() + relativedelta(months=1, day=1),
         )
@@ -586,7 +586,7 @@ class TrialCancellationForm(Form):
                 .exists()
             )
             if not is_any_subscription_of_same_type_still_active:
-                for future_subscription in get_future_subscriptions().filter(
+                for future_subscription in get_active_and_future_subscriptions().filter(
                     member__id=self.member_id,
                     product__type=cancelled_subscription.product.type,
                     cancellation_ts=None,
@@ -664,7 +664,7 @@ class SubscriptionRenewalForm(Form):
             form.save(*args, **kwargs)
 
         member_id = kwargs["member_id"]
-        self.subs = get_future_subscriptions(self.start_date).filter(
+        self.subs = get_active_and_future_subscriptions(self.start_date).filter(
             member_id=member_id, cancellation_ts__isnull=True
         )
 

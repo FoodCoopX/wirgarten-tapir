@@ -73,7 +73,7 @@ class GetDeliveriesService:
             "pickup_location_opening_times": opening_times,
             "subscriptions": active_subs,
             "joker_used": joker_used,
-            "can_joker_be_used": JokerManagementService.can_joker_be_used(
+            "can_joker_be_used": JokerManagementService.can_joker_be_used_in_week(
                 member, delivery_date
             ),
         }

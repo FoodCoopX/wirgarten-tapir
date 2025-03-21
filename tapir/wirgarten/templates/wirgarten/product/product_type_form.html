@@ -1,12 +1,13 @@
 {% load django_bootstrap5 %}
 
-<div class="form-fields">
+<div class="form-fields d-flex flex-row flex-wrap gap-2">
     {% for field in form %}
-    <div class="form-field" id="{{ field.name }}">
-        {% bootstrap_field field %}
-    </div>
+        <div class="form-field" id="{{ field.name }}" style="width: 375px">
+            {% bootstrap_field field %}
+        </div>
     {% endfor %}
 </div>
+
 <script>
     const fields = document.getElementsByClassName("form-field");
 
@@ -20,7 +21,7 @@
     }
 
     const productTypeSelect = document.getElementById("id_product_type");
-    if(productTypeSelect){
+    if (productTypeSelect) {
         productTypeSelect.addEventListener("change", (e) => handleProductTypeChange(e.target.value));
         handleProductTypeChange(productTypeSelect.value);
     }

@@ -6,15 +6,15 @@ import {
   Joker,
   JokerRestriction,
   JokerWithCancellationLimit,
-} from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
+} from "../../api-client";
+import { useApi } from "../../hooks/useApi.ts";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
 import Weekday from "dayjs/plugin/weekday";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
-import TapirButton from "../components/TapirButton.tsx";
-import { formatDateText } from "../utils/formatDateText.ts";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 interface ManageJokersModalProps {
   onHide: () => void;

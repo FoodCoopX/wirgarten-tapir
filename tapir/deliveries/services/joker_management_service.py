@@ -6,10 +6,11 @@ from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
-from tapir.utils.shortcuts import get_monday
+from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
+    DateLimitForDeliveryChangeCalculator,
+)
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import Parameter
-from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
 
@@ -25,16 +26,9 @@ class JokerManagementService:
 
     @classmethod
     def get_date_limit_for_joker_changes(cls, reference_date: datetime.date):
-        # at the latest, jokers can be used or cancelled at the returned date.
-        # One day after the returned date, they cannot be changed anymore
-
-        weekday_limit = get_parameter_value(
-            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+        return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
+            reference_date
         )
-        weekday_delivery = get_parameter_value(Parameter.DELIVERY_DAY)
-        diff_in_days = (weekday_delivery - weekday_limit) % 7
-        next_delivery_date = get_next_delivery_date(get_monday(reference_date))
-        return next_delivery_date - datetime.timedelta(days=diff_in_days)
 
     @classmethod
     def can_joker_be_used_relative_to_date_limit(
@@ -69,7 +63,9 @@ class JokerManagementService:
         joker.delete()
 
     @classmethod
-    def can_joker_be_used(cls, member: Member, reference_date: datetime.date) -> bool:
+    def can_joker_be_used_in_week(
+        cls, member: Member, reference_date: datetime.date
+    ) -> bool:
         return (
             not cls.does_member_have_a_joker_in_week(member, reference_date)
             and cls.can_joker_be_used_relative_to_date_limit(reference_date)

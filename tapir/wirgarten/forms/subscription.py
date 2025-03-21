@@ -7,8 +7,10 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
@@ -352,6 +354,14 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
+            notice_period_duration_in_months = None
+            if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                notice_period_duration_in_months = (
+                    NoticePeriodManager.get_notice_period_duration(
+                        self.product_type, self.growing_period
+                    )
+                )
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
@@ -369,6 +379,7 @@ class BaseProductForm(forms.Form):
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
+                notice_period_duration_in_months=notice_period_duration_in_months,
             )
 
             self.subs.append(sub)
@@ -636,6 +647,7 @@ class AdditionalProductForm(forms.Form):
         self.outro_template = initial.pop("outro_template", None)
 
         self.field_prefix = self.product_type.id + "_"
+        ic(self.field_prefix)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         self.start_date = kwargs.pop(
             "start_date", initial.get("start_date", get_next_contract_start_date())
@@ -811,12 +823,21 @@ class AdditionalProductForm(forms.Form):
         )
 
         self.subs = []
+        print(self.cleaned_data)
+        print(self.field_prefix)
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and quantity and quantity > 0:
                 product = Product.objects.get(
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
+                notice_period_duration_in_months = None
+                if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                    notice_period_duration_in_months = (
+                        NoticePeriodManager.get_notice_period_duration(
+                            self.product_type, self.growing_period
+                        )
+                    )
                 self.subs.append(
                     Subscription(
                         member_id=member_id,
@@ -829,6 +850,7 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
+                        notice_period_duration_in_months=notice_period_duration_in_months,
                     )
                 )
 
@@ -937,7 +959,7 @@ class AdditionalProductForm(forms.Form):
             self.add_error(
                 None,
                 "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
             )
 
     def is_valid(self):
