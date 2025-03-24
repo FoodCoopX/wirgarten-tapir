@@ -3,6 +3,9 @@ import datetime
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import (
@@ -67,7 +70,7 @@ class GetDeliveriesService:
         if joker_used:
             active_subs = active_subs.filter(product__type__is_affected_by_jokers=False)
 
-        return {
+        return {  # data for DeliverySerializer
             "delivery_date": delivery_date,
             "pickup_location": pickup_location,
             "pickup_location_opening_times": opening_times,
@@ -77,6 +80,9 @@ class GetDeliveriesService:
                 member, delivery_date
             ),
             "can_joker_be_used_relative_to_date_limit": JokerManagementService.can_joker_be_used_relative_to_date_limit(
+                delivery_date
+            ),
+            "is_delivery_cancelled_this_week": WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
                 delivery_date
             ),
         }

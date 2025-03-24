@@ -20,7 +20,15 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
   }
 
   function fontSize() {
-    return props.fontSize ? props.fontSize + "px" : "";
+    if (props.fontSize) {
+      return props.fontSize + "px";
+    }
+
+    if (props.size === "sm") {
+      return "16px";
+    }
+
+    return "";
   }
 
   return (

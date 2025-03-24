@@ -5,6 +5,7 @@ import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import { getPeriodId } from "./get_period_id.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;
@@ -27,18 +28,10 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  function getPeriodId() {
-    const urlParameters = Object.fromEntries(
-      window.location.search
-        .substring(1)
-        .split("&")
-        .map((kv) => kv.split("=")),
-    );
-    return urlParameters["periodId"];
-  }
-
   useEffect(() => {
     setDataLoading(true);
+
+    if (!getPeriodId()) return;
 
     api
       .deliveriesGrowingPeriodsRetrieve({ id: getPeriodId() })
@@ -157,6 +150,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                     );
                   })}
                 </div>
+                <Form.Text>Als KW</Form.Text>
               </Form.Group>
               <TapirButton
                 type={"button"}

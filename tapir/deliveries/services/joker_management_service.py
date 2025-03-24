@@ -9,6 +9,9 @@ from tapir.deliveries.models import Joker
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
 )
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_current_growing_period
@@ -73,6 +76,7 @@ class JokerManagementService:
                 member, reference_date
             )
             and cls.can_joker_be_used_relative_to_restrictions(member, reference_date)
+            and cls.can_joker_be_user_relative_to_weeks_without_delivery(reference_date)
         )
 
     @classmethod
@@ -158,3 +162,11 @@ class JokerManagementService:
                 return False
 
         return True
+
+    @staticmethod
+    def can_joker_be_user_relative_to_weeks_without_delivery(
+        reference_date: datetime.date,
+    ) -> bool:
+        return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
+            reference_date
+        )

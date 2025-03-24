@@ -53,6 +53,7 @@ class DeliverySerializer(serializers.Serializer):
     joker_used = serializers.BooleanField()
     can_joker_be_used = serializers.BooleanField()
     can_joker_be_used_relative_to_date_limit = serializers.BooleanField()
+    is_delivery_cancelled_this_week = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):

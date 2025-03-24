@@ -2881,10 +2881,13 @@ components:
           type: boolean
         can_joker_be_used_relative_to_date_limit:
           type: boolean
+        is_delivery_cancelled_this_week:
+          type: boolean
       required:
       - can_joker_be_used
       - can_joker_be_used_relative_to_date_limit
       - delivery_date
+      - is_delivery_cancelled_this_week
       - joker_used
       - pickup_location
       - pickup_location_opening_times
@@ -3350,8 +3353,8 @@ components:
           type: array
           items:
             type: integer
-            maximum: 2147483647
-            minimum: -2147483648
+            maximum: 53
+            minimum: 1
       required:
       - end_date
       - start_date
@@ -3372,8 +3375,8 @@ components:
           type: array
           items:
             type: integer
-            maximum: 2147483647
-            minimum: -2147483648
+            maximum: 53
+            minimum: 1
       required:
       - end_date
       - start_date
@@ -3752,8 +3755,8 @@ components:
           type: array
           items:
             type: integer
-            maximum: 2147483647
-            minimum: -2147483648
+            maximum: 53
+            minimum: 1
     PatchedPdfExportModelRequest:
       type: object
       properties:

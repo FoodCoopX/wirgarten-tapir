@@ -97,44 +97,53 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       return <span>Joker eingesetzt</span>;
     }
 
-    if (!delivery.canJokerBeUsed) {
-      if (!delivery.canJokerBeUsedRelativeToDateLimit) {
-        return (
-          <span>
-            Joker kann nicht mehr eingesetzt werden{" "}
-            <OverlayTrigger
-              overlay={
-                <Tooltip
-                  id={"tooltip-" + formatDateNumeric(delivery.deliveryDate)}
-                >
-                  Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht den
-                  Joker setzen
-                </Tooltip>
-              }
-            >
-              <Button size={"sm"} variant={"outline-secondary"}>
-                <span className={"material-icons"} style={{ fontSize: "16px" }}>
-                  info
-                </span>
-              </Button>
-            </OverlayTrigger>
-          </span>
-        );
-      }
-      return <span>Joker kann nicht eingesetzt werden</span>;
+    if (delivery.canJokerBeUsed) {
+      return (
+        <TapirButton
+          text={"Joker einsetzen"}
+          variant={"outline-primary"}
+          size={"sm"}
+          icon={"free_cancellation"}
+          disabled={requestLoading}
+          loading={selectedDeliveryForJokerUse == delivery}
+          onClick={() => useJoker(delivery)}
+        />
+      );
     }
 
-    return (
-      <TapirButton
-        text={"Joker einsetzen"}
-        variant={"outline-primary"}
-        size={"sm"}
-        icon={"free_cancellation"}
-        disabled={requestLoading}
-        loading={selectedDeliveryForJokerUse == delivery}
-        onClick={() => useJoker(delivery)}
-      />
-    );
+    if (!delivery.canJokerBeUsedRelativeToDateLimit) {
+      return (
+        <span>
+          Joker kann nicht mehr eingesetzt werden{" "}
+          <OverlayTrigger
+            overlay={
+              <Tooltip
+                id={"tooltip-" + formatDateNumeric(delivery.deliveryDate)}
+              >
+                Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht den
+                Joker setzen
+              </Tooltip>
+            }
+          >
+            <Button size={"sm"} variant={"outline-secondary"}>
+              <span className={"material-icons"} style={{ fontSize: "16px" }}>
+                info
+              </span>
+            </Button>
+          </OverlayTrigger>
+        </span>
+      );
+    }
+
+    if (delivery.isDeliveryCancelledThisWeek) {
+      return (
+        <span>
+          Joker kann nicht eingesetzt werden (keine Lieferung dieser Woche)
+        </span>
+      );
+    }
+
+    return <span>Joker kann nicht eingesetzt werden</span>;
   }
 
   function usedJokersTable() {

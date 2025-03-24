@@ -84,20 +84,28 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   }
 
   function productCell(delivery: Delivery) {
-    return (
-      <div className={"d-flex flex-column"}>
-        {delivery.jokerUsed && "Joker eingesetzt"}
-        {delivery.subscriptions.map((subscription) => {
-          return (
-            <div key={subscription.id}>
-              {subscription.quantity}
-              {" × "}
-              {subscription.product.name} {subscription.product.type.name}
-            </div>
-          );
-        })}
-      </div>
-    );
+    let content = <></>;
+    if (delivery.isDeliveryCancelledThisWeek) {
+      content = <>Keine Lieferung</>;
+    } else if (delivery.jokerUsed) {
+      content = <>Joker eingesetzt</>;
+    } else {
+      content = (
+        <>
+          {delivery.subscriptions.map((subscription) => {
+            return (
+              <div key={subscription.id}>
+                {subscription.quantity}
+                {" × "}
+                {subscription.product.name} {subscription.product.type.name}
+              </div>
+            );
+          })}
+        </>
+      );
+    }
+
+    return <div className={"d-flex flex-column"}>{content}</div>;
   }
 
   function pickupLocationCell(delivery: Delivery) {
