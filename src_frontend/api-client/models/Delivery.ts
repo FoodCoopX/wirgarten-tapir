@@ -77,6 +77,12 @@ export interface Delivery {
      * @memberof Delivery
      */
     canJokerBeUsed: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Delivery
+     */
+    canJokerBeUsedRelativeToDateLimit: boolean;
 }
 
 /**
@@ -89,6 +95,7 @@ export function instanceOfDelivery(value: object): value is Delivery {
     if (!('pickupLocationOpeningTimes' in value) || value['pickupLocationOpeningTimes'] === undefined) return false;
     if (!('jokerUsed' in value) || value['jokerUsed'] === undefined) return false;
     if (!('canJokerBeUsed' in value) || value['canJokerBeUsed'] === undefined) return false;
+    if (!('canJokerBeUsedRelativeToDateLimit' in value) || value['canJokerBeUsedRelativeToDateLimit'] === undefined) return false;
     return true;
 }
 
@@ -108,6 +115,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'pickupLocationOpeningTimes': ((json['pickup_location_opening_times'] as Array<any>).map(PickupLocationOpeningTimeFromJSON)),
         'jokerUsed': json['joker_used'],
         'canJokerBeUsed': json['can_joker_be_used'],
+        'canJokerBeUsedRelativeToDateLimit': json['can_joker_be_used_relative_to_date_limit'],
     };
 }
 
@@ -128,6 +136,7 @@ export function DeliveryFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
         'pickup_location_opening_times': ((value['pickupLocationOpeningTimes'] as Array<any>).map(PickupLocationOpeningTimeToJSON)),
         'joker_used': value['jokerUsed'],
         'can_joker_be_used': value['canJokerBeUsed'],
+        'can_joker_be_used_relative_to_date_limit': value['canJokerBeUsedRelativeToDateLimit'],
     };
 }
 

@@ -13,6 +13,7 @@ from tapir.deliveries.models import Joker
 from tapir.deliveries.serializers import (
     DeliverySerializer,
     MemberJokerInformationSerializer,
+    UsedJokerInGrowingPeriodSerializer,
 )
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
@@ -88,12 +89,39 @@ class GetMemberJokerInformationView(APIView):
                 Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
             ),
             "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(),
+            "used_joker_in_growing_period": self.build_data_used_joker_in_growing_period(
+                member_id
+            ),
         }
 
         return Response(
             MemberJokerInformationSerializer(data).data,
             status=status.HTTP_200_OK,
         )
+
+    @staticmethod
+    def build_data_used_joker_in_growing_period(member_id):
+        growing_periods = GrowingPeriod.objects.filter(
+            end_date__gte=get_today()
+        ).order_by("start_date")
+        data = []
+        for growing_period in growing_periods:
+            nb_used_jokers_in_growing_period = Joker.objects.filter(
+                member_id=member_id,
+                date__gte=growing_period.start_date,
+                date__lte=growing_period.end_date,
+            ).count()
+            data.append(
+                UsedJokerInGrowingPeriodSerializer(
+                    {
+                        "growing_period_start": growing_period.start_date,
+                        "growing_period_end": growing_period.end_date,
+                        "number_of_used_jokers": nb_used_jokers_in_growing_period,
+                    }
+                ).data
+            )
+
+        return data
 
 
 class CancelJokerView(APIView):

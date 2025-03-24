@@ -2669,7 +2669,6 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
             maxLength: 512
         custom_column_names:
           type: array
@@ -2739,8 +2738,11 @@ components:
           type: boolean
         can_joker_be_used:
           type: boolean
+        can_joker_be_used_relative_to_date_limit:
+          type: boolean
       required:
       - can_joker_be_used
+      - can_joker_be_used_relative_to_date_limit
       - delivery_date
       - joker_used
       - pickup_location
@@ -3250,9 +3252,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JokerRestriction'
+        used_joker_in_growing_period:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsedJokerInGrowingPeriod'
       required:
       - joker_restrictions
       - max_jokers_per_growing_period
+      - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
     PaginatedEmailConfigurationDispatchList:
@@ -3475,7 +3482,6 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
             maxLength: 512
         custom_column_names:
           type: array
@@ -4374,6 +4380,21 @@ components:
       description: |-
         * `F` - Uploaded file data
         * `U` - Remote file URL
+    UsedJokerInGrowingPeriod:
+      type: object
+      properties:
+        growing_period_start:
+          type: string
+          format: date
+        growing_period_end:
+          type: string
+          format: date
+        number_of_used_jokers:
+          type: integer
+      required:
+      - growing_period_end
+      - growing_period_start
+      - number_of_used_jokers
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -77,3 +77,4 @@ export * from './TriggerDataRequest';
 export * from './TriggerDefinition';
 export * from './TriggerFieldDefinition';
 export * from './UploadTypeEnum';
+export * from './UsedJokerInGrowingPeriod';

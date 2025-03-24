@@ -81,5 +81,6 @@ models/TriggerDataRequest.ts
 models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
 models/UploadTypeEnum.ts
+models/UsedJokerInGrowingPeriod.ts
 models/index.ts
 runtime.ts

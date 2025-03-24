@@ -76,6 +76,9 @@ class GetDeliveriesService:
             "can_joker_be_used": JokerManagementService.can_joker_be_used_in_week(
                 member, delivery_date
             ),
+            "can_joker_be_used_relative_to_date_limit": JokerManagementService.can_joker_be_used_relative_to_date_limit(
+                delivery_date
+            ),
         }
 
     @classmethod

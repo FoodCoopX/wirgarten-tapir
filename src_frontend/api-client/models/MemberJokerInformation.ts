@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { UsedJokerInGrowingPeriod } from './UsedJokerInGrowingPeriod';
+import {
+    UsedJokerInGrowingPeriodFromJSON,
+    UsedJokerInGrowingPeriodFromJSONTyped,
+    UsedJokerInGrowingPeriodToJSON,
+    UsedJokerInGrowingPeriodToJSONTyped,
+} from './UsedJokerInGrowingPeriod';
 import type { JokerRestriction } from './JokerRestriction';
 import {
     JokerRestrictionFromJSON,
@@ -58,6 +65,12 @@ export interface MemberJokerInformation {
      * @memberof MemberJokerInformation
      */
     jokerRestrictions: Array<JokerRestriction>;
+    /**
+     * 
+     * @type {Array<UsedJokerInGrowingPeriod>}
+     * @memberof MemberJokerInformation
+     */
+    usedJokerInGrowingPeriod: Array<UsedJokerInGrowingPeriod>;
 }
 
 /**
@@ -68,6 +81,7 @@ export function instanceOfMemberJokerInformation(value: object): value is Member
     if (!('maxJokersPerGrowingPeriod' in value) || value['maxJokersPerGrowingPeriod'] === undefined) return false;
     if (!('weekdayLimit' in value) || value['weekdayLimit'] === undefined) return false;
     if (!('jokerRestrictions' in value) || value['jokerRestrictions'] === undefined) return false;
+    if (!('usedJokerInGrowingPeriod' in value) || value['usedJokerInGrowingPeriod'] === undefined) return false;
     return true;
 }
 
@@ -85,6 +99,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
         'maxJokersPerGrowingPeriod': json['max_jokers_per_growing_period'],
         'weekdayLimit': json['weekday_limit'],
         'jokerRestrictions': ((json['joker_restrictions'] as Array<any>).map(JokerRestrictionFromJSON)),
+        'usedJokerInGrowingPeriod': ((json['used_joker_in_growing_period'] as Array<any>).map(UsedJokerInGrowingPeriodFromJSON)),
     };
 }
 
@@ -103,6 +118,7 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
         'max_jokers_per_growing_period': value['maxJokersPerGrowingPeriod'],
         'weekday_limit': value['weekdayLimit'],
         'joker_restrictions': ((value['jokerRestrictions'] as Array<any>).map(JokerRestrictionToJSON)),
+        'used_joker_in_growing_period': ((value['usedJokerInGrowingPeriod'] as Array<any>).map(UsedJokerInGrowingPeriodToJSON)),
     };
 }
 

@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { ListGroup, Modal, Placeholder, Spinner, Table } from "react-bootstrap";
+import {
+  Button,
+  ListGroup,
+  Modal,
+  OverlayTrigger,
+  Placeholder,
+  Spinner,
+  Table,
+  Tooltip,
+} from "react-bootstrap";
 import {
   DeliveriesApi,
   Delivery,
   Joker,
   JokerRestriction,
   JokerWithCancellationLimit,
+  UsedJokerInGrowingPeriod,
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import dayjs from "dayjs";
@@ -47,6 +57,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     useState<Joker>();
   const [selectedDeliveryForJokerUse, setSelectedDeliveryForJokerUse] =
     useState<Delivery>();
+  const [usedJokerInGrowingPeriods, setUsedJokerInGrowingPeriods] = useState<
+    UsedJokerInGrowingPeriod[]
+  >([]);
 
   dayjs.extend(Weekday);
   dayjs.extend(WeekOfYear);
@@ -67,6 +80,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         setMaxJokersPerGrowingPeriod(info.maxJokersPerGrowingPeriod);
         setWeekdayLimit(info.weekdayLimit);
         setRestrictions(info.jokerRestrictions);
+        setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
       })
       .catch((error) => alert(error))
       .finally(() => setInfoLoading(false));
@@ -84,6 +98,29 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     }
 
     if (!delivery.canJokerBeUsed) {
+      if (!delivery.canJokerBeUsedRelativeToDateLimit) {
+        return (
+          <span>
+            Joker kann nicht mehr eingesetzt werden{" "}
+            <OverlayTrigger
+              overlay={
+                <Tooltip
+                  id={"tooltip-" + formatDateNumeric(delivery.deliveryDate)}
+                >
+                  Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht den
+                  Joker setzen
+                </Tooltip>
+              }
+            >
+              <Button size={"sm"} variant={"outline-secondary"}>
+                <span className={"material-icons"} style={{ fontSize: "16px" }}>
+                  info
+                </span>
+              </Button>
+            </OverlayTrigger>
+          </span>
+        );
+      }
       return <span>Joker kann nicht eingesetzt werden</span>;
     }
 
@@ -185,7 +222,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   }
 
   return (
-    <Modal onHide={onHide} show={show} centered={true}>
+    <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
       <Modal.Header closeButton>
         <Modal.Title>
           <h4>Joker verwalten</h4>
@@ -198,7 +235,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
-            Joker können bis {getWeekdayLimitDisplay()} 23.59 Uhr vor der
+            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor der
             Lieferungstag eingesetzt oder abgesagt werden. <br />
             Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
             eingesetzt werden.
@@ -220,6 +257,26 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                 </ul>
               </>
             )}
+          </ListGroup.Item>
+          <ListGroup.Item>
+            <ul>
+              {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
+                return (
+                  <li>
+                    Im Vertragsjahr vom{" "}
+                    {formatDateNumeric(
+                      usedJokerInGrowingPeriod.growingPeriodStart,
+                    )}{" "}
+                    zu{" "}
+                    {formatDateNumeric(
+                      usedJokerInGrowingPeriod.growingPeriodEnd,
+                    )}{" "}
+                    sind {usedJokerInGrowingPeriod.numberOfUsedJokers} Joker aus{" "}
+                    maximal {maxJokersPerGrowingPeriod} eingesetzt.
+                  </li>
+                );
+              })}
+            </ul>
           </ListGroup.Item>
           <ListGroup.Item>
             <h5>Eingesetzter Joker</h5>
