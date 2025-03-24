@@ -141,11 +141,14 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
                 />
               )}
               <TapirButton
-                text={"Abholort ändern"}
+                text={"Verteilstation ändern"}
                 icon={"edit"}
                 variant={"outline-primary"}
                 onClick={() =>
-                  FormModal.load(pickupLocationModalUrl, "Abholort ändern")
+                  FormModal.load(
+                    pickupLocationModalUrl,
+                    "Verteilstation ändern",
+                  )
                 }
               />
             </span>
