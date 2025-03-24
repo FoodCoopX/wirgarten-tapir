@@ -2,9 +2,11 @@
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
 export * from './BounceTypeEnum';
-export * from './BuildExportResponse';
+export * from './BuildCsvExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
+export * from './CancelSubscriptionsViewResponse';
+export * from './CancellationData';
 export * from './CsvExportModel';
 export * from './CsvExportModelRequest';
 export * from './DayOfWeekEnum';
@@ -51,6 +53,7 @@ export * from './PdfExportModelRequest';
 export * from './PickupLocation';
 export * from './PickupLocationOpeningTime';
 export * from './Product';
+export * from './ProductForCancellation';
 export * from './ProductType';
 export * from './RecipientRequest';
 export * from './SegmentData';

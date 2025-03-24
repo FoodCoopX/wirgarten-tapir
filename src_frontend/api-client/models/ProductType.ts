@@ -63,6 +63,12 @@ export interface ProductType {
      * @memberof ProductType
      */
     singleSubscriptionOnly?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    isAffectedByJokers?: boolean;
 }
 
 
@@ -91,6 +97,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'contractLink': json['contract_link'] == null ? undefined : json['contract_link'],
         'iconLink': json['icon_link'] == null ? undefined : json['icon_link'],
         'singleSubscriptionOnly': json['single_subscription_only'] == null ? undefined : json['single_subscription_only'],
+        'isAffectedByJokers': json['is_affected_by_jokers'] == null ? undefined : json['is_affected_by_jokers'],
     };
 }
 
@@ -111,6 +118,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'contract_link': value['contractLink'],
         'icon_link': value['iconLink'],
         'single_subscription_only': value['singleSubscriptionOnly'],
+        'is_affected_by_jokers': value['isAffectedByJokers'],
     };
 }
 

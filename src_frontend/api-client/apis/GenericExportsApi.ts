@@ -15,7 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
-  BuildExportResponse,
+  BuildCsvExportResponse,
   CsvExportModel,
   CsvExportModelRequest,
   ExportSegment,
@@ -25,8 +25,8 @@ import type {
   PdfExportModelRequest,
 } from '../models/index';
 import {
-    BuildExportResponseFromJSON,
-    BuildExportResponseToJSON,
+    BuildCsvExportResponseFromJSON,
+    BuildCsvExportResponseToJSON,
     CsvExportModelFromJSON,
     CsvExportModelToJSON,
     CsvExportModelRequestFromJSON,
@@ -104,7 +104,7 @@ export class GenericExportsApi extends runtime.BaseAPI {
 
     /**
      */
-    async genericExportsBuildCsvExportRetrieveRaw(requestParameters: GenericExportsBuildCsvExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildExportResponse>> {
+    async genericExportsBuildCsvExportRetrieveRaw(requestParameters: GenericExportsBuildCsvExportRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BuildCsvExportResponse>> {
         const queryParameters: any = {};
 
         if (requestParameters['csvExportId'] != null) {
@@ -124,12 +124,12 @@ export class GenericExportsApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => BuildExportResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => BuildCsvExportResponseFromJSON(jsonValue));
     }
 
     /**
      */
-    async genericExportsBuildCsvExportRetrieve(requestParameters: GenericExportsBuildCsvExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildExportResponse> {
+    async genericExportsBuildCsvExportRetrieve(requestParameters: GenericExportsBuildCsvExportRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BuildCsvExportResponse> {
         const response = await this.genericExportsBuildCsvExportRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }

@@ -9,6 +9,7 @@ from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Payable,
@@ -83,7 +84,8 @@ def get_active_product_types(reference_date: date = None) -> iter:
 
     return ProductType.objects.filter(
         id__in=ProductCapacity.objects.filter(
-            period__start_date__lte=reference_date, period__end_date__gte=reference_date
+            period__start_date__lte=reference_date,
+            period__end_date__gte=reference_date,
         ).values("product_type__id")
     ).order_by(*product_type_order_by())
 
@@ -204,7 +206,7 @@ def get_active_product_capacities(reference_date: date = None):
     ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
-def get_future_subscriptions(reference_date: date = None):
+def get_active_and_future_subscriptions(reference_date: date = None):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
@@ -229,7 +231,7 @@ def get_active_subscriptions(reference_date: date = None):
     if reference_date is None:
         reference_date = get_today()
 
-    return get_future_subscriptions(reference_date).filter(
+    return get_active_and_future_subscriptions(reference_date).filter(
         start_date__lte=reference_date
     )
 
@@ -381,6 +383,7 @@ def create_product_type_capacity(
     default_tax_rate: float,
     capacity: Decimal,
     period_id: str,
+    notice_period_duration: int,
     product_type_id: str = "",
     is_affected_by_jokers: bool = True,
 ):
@@ -428,6 +431,12 @@ def create_product_type_capacity(
         tax_rate_change_date=today if period.start_date < today else period.start_date,
     )
 
+    NoticePeriodManager.set_notice_period_duration(
+        product_type=pt,
+        growing_period=period,
+        notice_period_duration=notice_period_duration,
+    )
+
     # capacity
     return ProductCapacity.objects.create(
         period_id=period_id,
@@ -448,6 +457,7 @@ def update_product_type_capacity(
     capacity: Decimal,
     tax_rate_change_date: date,
     is_affected_by_jokers: bool,
+    notice_period_duration: int,
 ):
     """
     Updates the product type and the capacity for the given period.
@@ -461,21 +471,27 @@ def update_product_type_capacity(
     """
 
     # capacity
-    cp = ProductCapacity.objects.get(id=id_)
-    cp.capacity = capacity
-    cp.save()
+    product_capacity = ProductCapacity.objects.get(id=id_)
+    product_capacity.capacity = capacity
+    product_capacity.save()
 
-    cp.product_type.name = name
-    cp.product_type.contract_link = contract_link
-    cp.product_type.icon_link = icon_link
-    cp.product_type.single_subscription_only = single_subscription_only
-    cp.product_type.delivery_cycle = delivery_cycle
-    cp.product_type.is_affected_by_jokers = is_affected_by_jokers
-    cp.product_type.save()
+    product_capacity.product_type.name = name
+    product_capacity.product_type.contract_link = contract_link
+    product_capacity.product_type.icon_link = icon_link
+    product_capacity.product_type.single_subscription_only = single_subscription_only
+    product_capacity.product_type.delivery_cycle = delivery_cycle
+    product_capacity.product_type.is_affected_by_jokers = is_affected_by_jokers
+    product_capacity.product_type.save()
+
+    NoticePeriodManager.set_notice_period_duration(
+        product_type=product_capacity.product_type,
+        growing_period=product_capacity.period,
+        notice_period_duration=notice_period_duration,
+    )
 
     # tax rate
     create_or_update_default_tax_rate(
-        product_type_id=cp.product_type.id,
+        product_type_id=product_capacity.product_type.id,
         tax_rate=default_tax_rate,
         tax_rate_change_date=tax_rate_change_date,
     )

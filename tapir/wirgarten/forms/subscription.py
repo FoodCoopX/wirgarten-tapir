@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
@@ -352,6 +353,14 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
+            notice_period_duration_in_months = None
+            if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                notice_period_duration_in_months = (
+                    NoticePeriodManager.get_notice_period_duration(
+                        self.product_type, self.growing_period
+                    )
+                )
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
@@ -369,6 +378,7 @@ class BaseProductForm(forms.Form):
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
+                notice_period_duration_in_months=notice_period_duration_in_months,
             )
 
             self.subs.append(sub)
@@ -817,6 +827,13 @@ class AdditionalProductForm(forms.Form):
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
+                notice_period_duration_in_months = None
+                if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                    notice_period_duration_in_months = (
+                        NoticePeriodManager.get_notice_period_duration(
+                            self.product_type, self.growing_period
+                        )
+                    )
                 self.subs.append(
                     Subscription(
                         member_id=member_id,
@@ -829,6 +846,7 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
+                        notice_period_duration_in_months=notice_period_duration_in_months,
                     )
                 )
 
@@ -937,7 +955,7 @@ class AdditionalProductForm(forms.Form):
             self.add_error(
                 None,
                 "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
             )
 
     def is_valid(self):

@@ -107,7 +107,7 @@ class SubscriptionListFilter(FilterSet):
         widget=CheckboxInput,
     )
     period = ModelChoiceFilter(
-        label=_("Anbauperiode"),
+        label=_("Vertragsperiode"),
         queryset=GrowingPeriod.objects.all().order_by("-start_date"),
         required=True,
     )

@@ -26,7 +26,7 @@ from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_available_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_next_growing_period,
 )
 from tapir.wirgarten.tapirmail import Events
@@ -141,7 +141,7 @@ def cancel_contract_at_period_end(request, **kwargs):
 
     now = get_now()
     subs = list(
-        get_future_subscriptions().filter(
+        get_active_and_future_subscriptions().filter(
             member_id=member_id,
             period=GrowingPeriod.objects.get(start_date__lte=now, end_date__gte=now),
         )

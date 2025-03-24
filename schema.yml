@@ -120,7 +120,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildExportResponse'
+                $ref: '#/components/schemas/BuildCsvExportResponse'
           description: ''
   /generic_exports/build_pdf_export:
     get:
@@ -444,6 +444,54 @@ paths:
       responses:
         '204':
           description: No response body
+  /subscriptions/cancel_subscriptions:
+    post:
+      operationId: subscriptions_cancel_subscriptions_create
+      parameters:
+      - in: query
+        name: cancel_coop_membership
+        schema:
+          type: boolean
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: product_ids
+        schema:
+          type: array
+          items:
+            type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelSubscriptionsViewResponse'
+          description: ''
+  /subscriptions/cancellation_data:
+    get:
+      operationId: subscriptions_cancellation_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancellationData'
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2440,7 +2488,7 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    BuildExportResponse:
+    BuildCsvExportResponse:
       type: object
       properties:
         file_name:
@@ -2515,6 +2563,30 @@ components:
       - content
       - name
       - release_status
+    CancelSubscriptionsViewResponse:
+      type: object
+      properties:
+        subscriptions_cancelled:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - errors
+      - subscriptions_cancelled
+    CancellationData:
+      type: object
+      properties:
+        can_cancel_coop_membership:
+          type: boolean
+        subscribed_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductForCancellation'
+      required:
+      - can_cancel_coop_membership
+      - subscribed_products
     CsvExportModel:
       type: object
       properties:
@@ -3794,6 +3866,22 @@ components:
       required:
       - name
       - type
+    ProductForCancellation:
+      type: object
+      properties:
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        is_in_trial:
+          type: boolean
+        cancellation_date:
+          type: string
+          format: date
+      required:
+      - cancellation_date
+      - is_in_trial
+      - product
     ProductType:
       type: object
       properties:
@@ -3821,6 +3909,9 @@ components:
         single_subscription_only:
           type: boolean
           title: Nur Einzelabonnement erlaubt
+        is_affected_by_jokers:
+          type: boolean
+          title: Nimmt am Joker-Verfahren teil
       required:
       - name
     RecipientRequest:
@@ -4128,6 +4219,11 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        notice_period_duration_in_months:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
           nullable: true
         member:
           type: string

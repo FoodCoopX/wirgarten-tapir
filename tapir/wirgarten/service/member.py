@@ -38,7 +38,7 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_active_subscriptions,
 )
 from tapir.wirgarten.service.subscriptions import (
@@ -161,7 +161,7 @@ def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
     member_id = resolve_member_id(member)
     mandate_ref = False
     for row in (
-        get_future_subscriptions()
+        get_active_and_future_subscriptions()
         .filter(member_id=member_id)
         .order_by("-start_date")
         .values("mandate_ref")[:1]
@@ -346,7 +346,7 @@ def send_cancellation_confirmation_email(
     if revoke_coop_membership:
         contract_list += "\n- Beitrittserklärung zur Genossenschaft"
 
-    future_subs = get_future_subscriptions(
+    future_subs = get_active_and_future_subscriptions(
         contract_end_date + relativedelta(days=1)
     ).filter(member_id=member_id)
     if (

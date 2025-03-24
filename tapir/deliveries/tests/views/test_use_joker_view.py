@@ -20,9 +20,9 @@ class TestUseJokerView(TapirIntegrationTest):
         mock_timezone(self, factories.NOW)
 
     @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_tryToUseJokerOfAnotherMember_returns403(
-        self, mock_can_joker_be_used: Mock, mock_fire_action: Mock
+        self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create()
         other_member = MemberFactory.create()
@@ -34,18 +34,18 @@ class TestUseJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         self.assertFalse(Joker.objects.exists())
-        mock_can_joker_be_used.assert_not_called()
+        mock_can_joker_be_used_in_week.assert_not_called()
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_useJokerOfAnotherMemberAsAdmin_jokerCreated(
-        self, mock_can_joker_be_used: Mock, mock_fire_action: Mock
+        self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
         self.client.force_login(user)
-        mock_can_joker_be_used.return_value = True
+        mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
             f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
@@ -54,7 +54,7 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, Joker.objects.count())
         date = datetime.date(year=2024, month=7, day=23)
-        mock_can_joker_be_used.assert_called_once_with(other_member, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(other_member, date)
         mock_fire_action.assert_called_once_with(
             "deliveries.joker_used",
             other_member.email,
@@ -62,13 +62,13 @@ class TestUseJokerView(TapirIntegrationTest):
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_useOwnJokerAsNormalMember_jokerCreated(
-        self, mock_can_joker_be_used: Mock, mock_fire_action: Mock
+        self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create(is_superuser=False)
         self.client.force_login(user)
-        mock_can_joker_be_used.return_value = True
+        mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
             f"{reverse('Deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
@@ -80,7 +80,7 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(user, joker.member)
         date = datetime.date(year=2024, month=7, day=23)
         self.assertEqual(date, joker.date)
-        mock_can_joker_be_used.assert_called_once_with(user, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(user, date)
         mock_fire_action.assert_called_once_with(
             "deliveries.joker_used",
             user.email,
@@ -88,13 +88,13 @@ class TestUseJokerView(TapirIntegrationTest):
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_notAllowedToUseJoker_returns403(
-        self, mock_can_joker_be_used: Mock, mock_fire_action: Mock
+        self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
         user = MemberFactory.create(is_superuser=False)
         self.client.force_login(user)
-        mock_can_joker_be_used.return_value = False
+        mock_can_joker_be_used_in_week.return_value = False
 
         response = self.client.post(
             f"{reverse('Deliveries:use_joker')}?member_id={user.id}&date=2024-07-23"
@@ -103,13 +103,13 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         self.assertFalse(Joker.objects.exists())
         date = datetime.date(year=2024, month=7, day=23)
-        mock_can_joker_be_used.assert_called_once_with(user, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(user, date)
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
-    @patch.object(JokerManagementService, "can_joker_be_used")
+    @patch.object(JokerManagementService, "can_joker_be_used_in_week")
     def test_useJokerView_jokerFeatureDisabled_returns403(
-        self, mock_can_joker_be_used: Mock, mock_fire_action: Mock
+        self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
         TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
             value="False"
@@ -118,7 +118,7 @@ class TestUseJokerView(TapirIntegrationTest):
         user = MemberFactory.create(is_superuser=True)
         other_member = MemberFactory.create()
         self.client.force_login(user)
-        mock_can_joker_be_used.return_value = True
+        mock_can_joker_be_used_in_week.return_value = True
 
         response = self.client.post(
             f"{reverse('Deliveries:use_joker')}?member_id={other_member.id}&date=2024-07-23"
@@ -126,5 +126,5 @@ class TestUseJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         self.assertEqual(0, Joker.objects.count())
-        mock_can_joker_be_used.assert_not_called()
+        mock_can_joker_be_used_in_week.assert_not_called()
         mock_fire_action.assert_not_called()

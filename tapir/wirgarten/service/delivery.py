@@ -17,7 +17,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     product_type_order_by,
 )
 from tapir.wirgarten.utils import get_today
@@ -115,7 +115,7 @@ def generate_future_deliveries(member: Member, limit: int = None):
 
     next_delivery_date = get_next_delivery_date()
 
-    subs = get_future_subscriptions().filter(member=member)
+    subs = get_active_and_future_subscriptions().filter(member=member)
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):

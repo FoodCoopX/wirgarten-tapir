@@ -67,7 +67,7 @@
                             <div class="card-footer d-flex justify-content-end">
                                 <div data-bs-toggle="tooltip" title="Anteile bearbeiten">
                                     <button {% if object.is_in_coop_trial %} data-bs-toggle="modal" data-bs-target="#cannotOrderMoreSharesModal" {% else %} onclick="handleAddCoopShares();" {% endif %}
-                                            class="btn btn-outline-success mx-1 px-2"
+                                            class="btn btn-outline-primary"
                                             style="float:right">
                                         <span class="material-icons">add</span>
                                     </button>
@@ -118,25 +118,34 @@
                                         <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
                                         </span>
                                     {% endwith %}
-                                    {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
-                                        <button data-bs-toggle="tooltip"
-                                                data-bs-placement="bottom"
-                                                title="Anteile bearbeiten"
-                                                onclick="handleAddSubscription('{{ type }}')"
-                                                class="btn btn-outline-success mx-1 px-2">
-                                            <span class="material-icons">edit</span>
-                                        </button>
-                                    {% else %}
-                                        <button data-bs-toggle="tooltip"
-                                                data-bs-placement="bottom"
-                                                title="Aktuell nicht verfügbar"
-                                                class="btn btn-outline-secondary mx-1 px-2">
-                                            <span class="material-icons">add</span>
-                                        </button>
-                                    {% endif %}
+                                    <div class="d-flex flex-row gap-2">
+                                        {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
+                                            <button data-bs-toggle="tooltip"
+                                                    data-bs-placement="bottom"
+                                                    title="Anteile bearbeiten"
+                                                    onclick="handleAddSubscription('{{ type }}')"
+                                                    class="btn btn-outline-primary">
+                                                <span class="material-icons">edit</span>
+                                            </button>
+                                        {% else %}
+                                            <button data-bs-toggle="tooltip"
+                                                    data-bs-placement="bottom"
+                                                    title="Aktuell nicht verfügbar"
+                                                    class="btn btn-outline-secondary">
+                                                <span class="material-icons">add</span>
+                                            </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         {% endfor %}
+                        {% if subscriptionAutomaticRenewal %}
+                            <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
+                                <span class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

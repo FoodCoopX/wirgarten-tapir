@@ -125,7 +125,7 @@ def __create_or_update_parameter(
 
         param.order_priority = order_priority
 
-        print("\t[update] ", key)
+        # print("\t[update] ", key)
 
         param.save()
     except ObjectDoesNotExist:

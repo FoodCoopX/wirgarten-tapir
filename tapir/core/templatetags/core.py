@@ -64,7 +64,7 @@ def add_admin_links(groups, request):
         )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
-            display_name=_("Anbauperiode & Produkte"),
+            display_name=_("Vertragsperiode & Produkte"),
             material_icon="agriculture",
             url=reverse_lazy("wirgarten:product"),
         )

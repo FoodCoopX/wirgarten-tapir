@@ -1,13 +1,16 @@
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
+apis/SubscriptionsApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
 models/BounceTypeEnum.ts
-models/BuildExportResponse.ts
+models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/CancelSubscriptionsViewResponse.ts
+models/CancellationData.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts
 models/DayOfWeekEnum.ts
@@ -54,6 +57,7 @@ models/PdfExportModelRequest.ts
 models/PickupLocation.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
+models/ProductForCancellation.ts
 models/ProductType.ts
 models/RecipientRequest.ts
 models/SegmentData.ts

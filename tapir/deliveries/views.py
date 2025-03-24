@@ -154,7 +154,7 @@ class UseJokerView(APIView):
 
         member = get_object_or_404(Member, id=member_id)
 
-        if not JokerManagementService.can_joker_be_used(member, date):
+        if not JokerManagementService.can_joker_be_used_in_week(member, date):
             return Response(
                 "Du darfst an dem Liefertag kein Joker einsetzen",
                 status=status.HTTP_403_FORBIDDEN,

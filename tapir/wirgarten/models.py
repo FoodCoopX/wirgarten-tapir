@@ -16,6 +16,7 @@ from django.db.models import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
+from typing_extensions import deprecated
 
 from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
@@ -227,6 +228,9 @@ class ProductCapacity(TapirModel):
 
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
 
+    def __str__(self):
+        return f"{self.period} - {self.product_type} - {self.capacity}"
+
 
 class MemberQuerySet(models.QuerySet):
     def with_active_subscription(self, reference_date: datetime.date | None = None):
@@ -339,9 +343,9 @@ class Member(TapirUser):
 
     @property
     def has_trial_contracts(self):
-        from tapir.wirgarten.service.products import get_future_subscriptions
+        from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 
-        subs = get_future_subscriptions().filter(member_id=self.id)
+        subs = get_active_and_future_subscriptions().filter(member_id=self.id)
         today = get_today()
         for sub in subs:
             if today < sub.trial_end_date and sub.cancellation_ts is None:
@@ -392,6 +396,9 @@ class Member(TapirUser):
         )
 
     @property
+    @deprecated(
+        "Use tapir.coop.services.membership_cancellation_manager.MembershipCancellationManager.get_coop_entry_date instead"
+    )
     def coop_entry_date(self):
         try:
             earliest_coopsharetransaction = self.coopsharetransaction_set.filter(
@@ -629,8 +636,12 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
     )
+    notice_period_duration_in_months = models.IntegerField(null=True)
 
     @property
+    @deprecated(
+        "If possible, use tapir.subscriptions.services.trial_period_manager.TrialPeriodManager.get_end_of_trial_period"
+    )
     def trial_end_date(self):
         if self.trial_disabled:
             return get_today() - relativedelta(days=1)
