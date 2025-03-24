@@ -19,8 +19,10 @@ from tapir.deliveries.services.get_deliveries_service import GetDeliveriesServic
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
@@ -76,6 +78,7 @@ class GetMemberJokerInformationView(APIView):
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
                     joker.date
                 ),
+                "delivery_date": get_next_delivery_date(get_monday(joker.date)),
             }
             for joker in jokers
         ]

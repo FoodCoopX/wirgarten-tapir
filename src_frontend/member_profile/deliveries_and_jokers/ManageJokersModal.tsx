@@ -143,7 +143,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         <thead>
           <tr>
             <th>KW</th>
-            <th>Kann zurückgesetzt werden spätestens am</th>
+            <th>Lieferungsdatum</th>
             <th></th>
           </tr>
         </thead>
@@ -156,19 +156,36 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     return (
       <tr key={jokerWithCancellation.joker.id}>
         <td>KW{dayjs(jokerWithCancellation.joker.date).week()}</td>
-        <td>{formatDateText(jokerWithCancellation.cancellationLimit)}</td>
+        <td>{formatDateText(jokerWithCancellation.deliveryDate)}</td>
         <td>
-          <TapirButton
-            text={"Joker absagen"}
-            variant={"outline-primary"}
-            size={"sm"}
-            icon={"cancel"}
-            onClick={() => cancelJoker(jokerWithCancellation.joker)}
-            disabled={requestLoading}
-            loading={
-              jokerWithCancellation.joker == selectedJokerForCancellation
-            }
-          />
+          {jokerWithCancellation.cancellationLimit >= new Date() ? (
+            <TapirButton
+              text={"Joker absagen"}
+              variant={"outline-primary"}
+              size={"sm"}
+              icon={"cancel"}
+              onClick={() => cancelJoker(jokerWithCancellation.joker)}
+              disabled={requestLoading}
+              loading={
+                jokerWithCancellation.joker == selectedJokerForCancellation
+              }
+            />
+          ) : (
+            <OverlayTrigger
+              overlay={
+                <Tooltip id={"tooltip-" + jokerWithCancellation.joker.id}>
+                  Du musst bis zum {getWeekdayLimitDisplay()} Mitternacht den
+                  Joker absagen
+                </Tooltip>
+              }
+            >
+              <Button size={"sm"} variant={"outline-secondary"}>
+                <span className={"material-icons"} style={{ fontSize: "16px" }}>
+                  info
+                </span>
+              </Button>
+            </OverlayTrigger>
+          )}
         </td>
       </tr>
     );
@@ -235,6 +252,34 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
+            {usedJokerInGrowingPeriods.length > 0 && (
+              <p>
+                Im aktuellem Vertragsjahr hast du noch{" "}
+                {maxJokersPerGrowingPeriod -
+                  usedJokerInGrowingPeriods[0].numberOfUsedJokers}{" "}
+                Joker zu vergeben.
+              </p>
+            )}
+            <ul>
+              {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
+                return (
+                  <li>
+                    Im Vertragsjahr vom{" "}
+                    {formatDateNumeric(
+                      usedJokerInGrowingPeriod.growingPeriodStart,
+                    )}{" "}
+                    zu{" "}
+                    {formatDateNumeric(
+                      usedJokerInGrowingPeriod.growingPeriodEnd,
+                    )}{" "}
+                    sind {usedJokerInGrowingPeriod.numberOfUsedJokers} Joker aus{" "}
+                    maximal {maxJokersPerGrowingPeriod} eingesetzt.
+                  </li>
+                );
+              })}
+            </ul>
+          </ListGroup.Item>
+          <ListGroup.Item>
             Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor der
             Lieferungstag eingesetzt oder abgesagt werden. <br />
             Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
@@ -258,26 +303,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
               </>
             )}
           </ListGroup.Item>
-          <ListGroup.Item>
-            <ul>
-              {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
-                return (
-                  <li>
-                    Im Vertragsjahr vom{" "}
-                    {formatDateNumeric(
-                      usedJokerInGrowingPeriod.growingPeriodStart,
-                    )}{" "}
-                    zu{" "}
-                    {formatDateNumeric(
-                      usedJokerInGrowingPeriod.growingPeriodEnd,
-                    )}{" "}
-                    sind {usedJokerInGrowingPeriod.numberOfUsedJokers} Joker aus{" "}
-                    maximal {maxJokersPerGrowingPeriod} eingesetzt.
-                  </li>
-                );
-              })}
-            </ul>
-          </ListGroup.Item>
+
           <ListGroup.Item>
             <h5>Eingesetzter Joker</h5>
             {jokers.length == 0

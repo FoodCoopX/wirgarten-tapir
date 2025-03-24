@@ -39,6 +39,12 @@ export interface JokerWithCancellationLimit {
      * @memberof JokerWithCancellationLimit
      */
     cancellationLimit: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof JokerWithCancellationLimit
+     */
+    deliveryDate: Date;
 }
 
 /**
@@ -47,6 +53,7 @@ export interface JokerWithCancellationLimit {
 export function instanceOfJokerWithCancellationLimit(value: object): value is JokerWithCancellationLimit {
     if (!('joker' in value) || value['joker'] === undefined) return false;
     if (!('cancellationLimit' in value) || value['cancellationLimit'] === undefined) return false;
+    if (!('deliveryDate' in value) || value['deliveryDate'] === undefined) return false;
     return true;
 }
 
@@ -62,6 +69,7 @@ export function JokerWithCancellationLimitFromJSONTyped(json: any, ignoreDiscrim
         
         'joker': JokerFromJSON(json['joker']),
         'cancellationLimit': (new Date(json['cancellation_limit'])),
+        'deliveryDate': (new Date(json['delivery_date'])),
     };
 }
 
@@ -78,6 +86,7 @@ export function JokerWithCancellationLimitFromJSONTyped(json: any, ignoreDiscrim
         
         'joker': JokerToJSON(value['joker']),
         'cancellation_limit': ((value['cancellationLimit']).toISOString().substring(0,10)),
+        'delivery_date': ((value['deliveryDate']).toISOString().substring(0,10)),
     };
 }
 

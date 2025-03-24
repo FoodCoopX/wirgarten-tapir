@@ -3234,8 +3234,12 @@ components:
         cancellation_limit:
           type: string
           format: date
+        delivery_date:
+          type: string
+          format: date
       required:
       - cancellation_limit
+      - delivery_date
       - joker
     MemberJokerInformation:
       type: object

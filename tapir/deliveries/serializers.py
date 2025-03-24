@@ -70,6 +70,7 @@ class GrowingPeriodSerializer(serializers.ModelSerializer):
 class JokerWithCancellationLimitSerializer(serializers.Serializer):
     joker = JokerSerializer()
     cancellation_limit = serializers.DateField()
+    delivery_date = serializers.DateField()
 
 
 class JokerRestrictionSerializer(serializers.Serializer):
