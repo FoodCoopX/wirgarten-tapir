@@ -46,9 +46,12 @@ class NoticePeriodManager:
 
     @classmethod
     def get_max_cancellation_date(cls, subscription: Subscription):
-        notice_period = cls.get_notice_period_duration(
-            product_type=subscription.product.type, growing_period=subscription.period
-        )
+        notice_period = subscription.notice_period_duration_in_months
+        if notice_period is None:
+            notice_period = cls.get_notice_period_duration(
+                product_type=subscription.product.type,
+                growing_period=subscription.period,
+            )
         max_date = subscription.end_date
         for _ in range(notice_period):
             max_date = max_date.replace(day=1) - datetime.timedelta(days=1)

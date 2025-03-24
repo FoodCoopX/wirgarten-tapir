@@ -100,10 +100,30 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=5, day=31)
+        subscription.notice_period_duration_in_months = None
 
         result = NoticePeriodManager.get_max_cancellation_date(subscription)
 
         self.assertEqual(datetime.date(year=2025, month=3, day=31), result)
+
+    def test_getMaxCancellationDate_subscriptionHasNoticePeriodField_usePeriodFromSubscriptionInsteadOfDefault(
+        self,
+    ):
+        product_type = ProductTypeFactory.create()
+        growing_period = GrowingPeriodFactory.create()
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+        ).update(value=2)
+
+        subscription = Mock()
+        subscription.product.type = product_type
+        subscription.period = growing_period
+        subscription.end_date = datetime.date(year=2025, month=5, day=31)
+        subscription.notice_period_duration_in_months = 3
+
+        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+
+        self.assertEqual(datetime.date(year=2025, month=2, day=28), result)
 
     def test_getMaxCancellationDate_maxCancellationDateIsPreviousYear_returnsCorrectDate(
         self,
@@ -118,6 +138,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=1, day=31)
+        subscription.notice_period_duration_in_months = None
 
         result = NoticePeriodManager.get_max_cancellation_date(subscription)
 
@@ -136,6 +157,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=4, day=29)
+        subscription.notice_period_duration_in_months = None
 
         result = NoticePeriodManager.get_max_cancellation_date(subscription)
 
@@ -154,6 +176,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=11, day=30)
+        subscription.notice_period_duration_in_months = None
 
         result = NoticePeriodManager.get_max_cancellation_date(subscription)
 
@@ -172,6 +195,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.product.type = product_type
         subscription.period = growing_period
         subscription.end_date = datetime.date(year=2025, month=11, day=17)
+        subscription.notice_period_duration_in_months = None
 
         result = NoticePeriodManager.get_max_cancellation_date(subscription)
 
