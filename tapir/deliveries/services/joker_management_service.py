@@ -100,9 +100,9 @@ class JokerManagementService:
             if restriction_as_string.strip() == "":
                 continue
 
-            start_date_as_string, end_date_as_string, max_jokers_as_string = (
-                restriction_as_string.split("-")
-            )
+            dates, max_jokers_as_string = restriction_as_string.split("[")
+            max_jokers_as_string = max_jokers_as_string.replace("]", "")
+            start_date_as_string, end_date_as_string = dates.split("-")
             start_day_as_string, start_month_as_string = start_date_as_string.split(".")
             end_day_as_string, end_month_as_string = end_date_as_string.split(".")
 

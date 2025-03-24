@@ -817,11 +817,11 @@ Dein WirGarten-Team""",
             key=Parameter.JOKERS_RESTRICTIONS,
             label="Besondere Einschränkungen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="01.08-31.08-2;",
+            initial_value="01.08-31.08[2];",
             description="""Perioden in die Anzahl an Jokers das ein Mitglied einsetzen darf limitiert ist. 
             zB: max 2 jokers pro Mitglied in August.
             Format: startDatum-endDatum-anzahlAnJokers;startDatum-endDatum-anzahlAnJokers
-            Beispiel: 01.08-31.08-2;15.02-20.03-3 heißt max 2 jokers zwischen den 01.08 und den 31.08
+            Beispiel: 01.08-31.08[2];15.02-20.03[3] heißt max 2 jokers zwischen den 01.08 und den 31.08
             und max 3 jokers zwischen den 15.02 und den 20.03.
             Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
             """,

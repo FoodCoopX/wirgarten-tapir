@@ -32,6 +32,6 @@ class TestJokerManagementServiceGetExtraJokerRestrictions(SimpleTestCase):
                 ),
             ],
             JokerManagementService.get_extra_joker_restrictions(
-                "01.08-31.08-2;15.02-20.03-3"
+                "01.08-31.08[2];15.02-20.03[3]"
             ),
         )
