@@ -55,6 +55,14 @@ class CsvExportBuilder:
     def get_column_by_id(
         cls, segment: ExportSegment, column_id: str
     ) -> ExportSegmentColumn:
+        if column_id == "":
+            return ExportSegmentColumn(
+                id="",
+                get_value=lambda _, __: "",
+                display_name="Leere Spalte",
+                description="",
+            )
+
         for column in segment.get_available_columns():
             if column.id == column_id:
                 return column

@@ -4,7 +4,6 @@ import {
   AutomatedExportCycleEnum,
   CsvExportModel,
   ExportSegment,
-  ExportSegmentColumn,
   GenericExportsApi,
 } from "../api-client";
 import EmailInput from "../components/EmailInput";
@@ -39,7 +38,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   const [exportEmailRecipients, setExportEmailRecipients] = useState<string[]>(
     [],
   );
-  const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
+  const [exportColumnIds, setExportColumnIds] = useState<string[]>([]);
   const [exportColumnsNames, setExportColumnsNames] = useState<string[]>([]);
   const [exportCycle, setExportCycle] = useState<AutomatedExportCycleEnum>(
     AutomatedExportCycleEnum.Never,
@@ -55,7 +54,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     for (const segment of segments) {
       if (segment.id === segmentId) {
         if (!allColumnsEqual(segment)) {
-          setExportColumns([]);
+          setExportColumnIds([]);
           setExportColumnsNames([]);
         }
         setExportSegment(segment);
@@ -77,9 +76,6 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
         }
       }
       if (!found) {
-        console.log(exportColumns);
-        console.log(newSegment.columns);
-        console.log(newColumn.id);
         return false;
       }
     }
@@ -99,17 +95,6 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     return undefined;
   }
 
-  function getExportColumns(exp: CsvExportModel) {
-    const segment = getSegmentById(exp.exportSegmentId);
-    if (!segment) {
-      return [];
-    }
-
-    return segment.columns.filter((column) =>
-      exp.columnIds?.includes(column.id),
-    );
-  }
-
   useEffect(() => {
     if (exportToEdit) {
       setExportName(exportToEdit.name);
@@ -118,7 +103,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportSeparator(exportToEdit.separator);
       setExportFileName(exportToEdit.fileName);
       setExportEmailRecipients(exportToEdit.emailRecipients ?? []);
-      setExportColumns(getExportColumns(exportToEdit));
+      setExportColumnIds(exportToEdit.columnIds ?? []);
       setExportColumnsNames(exportToEdit.customColumnNames ?? []);
       setExportCycle(exportToEdit.automatedExportCycle);
       setExportDay(exportToEdit.automatedExportDay);
@@ -130,7 +115,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportSeparator(",");
       setExportFileName("");
       setExportEmailRecipients([]);
-      setExportColumns([]);
+      setExportColumnIds([]);
       setExportColumnsNames([]);
       setExportCycle(AutomatedExportCycleEnum.Never);
       setExportDay(1);
@@ -148,10 +133,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
 
     setLoading(true);
 
-    const columnIds = exportColumns.map((column) => column.id);
     const request = {
       exportSegmentId: exportSegment.id,
-      columnIds: columnIds,
+      columnIds: exportColumnIds,
       customColumnNames: exportColumnsNames,
       description: exportDescription,
       name: exportName,
@@ -299,11 +283,11 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                 <Form.Label>Spalten</Form.Label>
                 <ColumnInput
                   onSelectedColumnsChange={(columns, columnNames) => {
-                    setExportColumns(columns);
+                    setExportColumnIds(columns);
                     setExportColumnsNames(columnNames);
                   }}
                   availableColumns={exportSegment ? exportSegment.columns : []}
-                  selectedColumns={exportColumns}
+                  selectedColumnIds={exportColumnIds}
                   columnNames={exportColumnsNames}
                 />
               </Form.Group>

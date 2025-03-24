@@ -21,7 +21,9 @@ class CsvExport(TapirModel):
     separator = models.CharField(max_length=1)
     file_name = models.CharField(max_length=512)
     column_ids = ArrayField(
-        base_field=models.CharField(max_length=512), default=list, blank=True
+        base_field=models.CharField(max_length=512, blank=True),
+        default=list,
+        blank=True,
     )
     custom_column_names = ArrayField(
         base_field=models.CharField(max_length=512), default=list, blank=True
