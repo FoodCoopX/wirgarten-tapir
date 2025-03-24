@@ -16,7 +16,7 @@ class TestIsProductInTrial(TapirIntegrationTest):
         self.today = mock_timezone(
             self, datetime.datetime(year=2021, month=8, day=10)
         ).date()
-        ParameterDefinitions.import_definitions()
+        ParameterDefinitions().import_definitions()
 
     @patch.object(TrialPeriodManager, "is_subscription_in_trial")
     def test_isProductInTrial_atLeastOneSubscriptionInTrial_returnsTrue(

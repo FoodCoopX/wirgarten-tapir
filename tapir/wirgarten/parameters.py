@@ -132,8 +132,7 @@ from tapir.configuration.models import (
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
-    @classmethod
-    def import_definitions(cls):
+    def import_definitions(self):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
