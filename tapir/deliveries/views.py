@@ -2,9 +2,10 @@ import datetime
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
@@ -14,11 +15,13 @@ from tapir.deliveries.serializers import (
     DeliverySerializer,
     MemberJokerInformationSerializer,
     UsedJokerInGrowingPeriodSerializer,
+    GrowingPeriodSerializer,
 )
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameters import Parameter
@@ -203,3 +206,9 @@ class UseJokerView(APIView):
             "Joker angesetzt",
             status=status.HTTP_200_OK,
         )
+
+
+class GrowingPeriodViewSet(ModelViewSet):
+    queryset = GrowingPeriod.objects.order_by("start_date")
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    serializer_class = GrowingPeriodSerializer

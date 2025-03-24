@@ -16,13 +16,22 @@
 import * as runtime from '../runtime';
 import type {
   Delivery,
+  GrowingPeriod,
+  GrowingPeriodRequest,
   MemberJokerInformation,
+  PatchedGrowingPeriodRequest,
 } from '../models/index';
 import {
     DeliveryFromJSON,
     DeliveryToJSON,
+    GrowingPeriodFromJSON,
+    GrowingPeriodToJSON,
+    GrowingPeriodRequestFromJSON,
+    GrowingPeriodRequestToJSON,
     MemberJokerInformationFromJSON,
     MemberJokerInformationToJSON,
+    PatchedGrowingPeriodRequestFromJSON,
+    PatchedGrowingPeriodRequestToJSON,
 } from '../models/index';
 
 export interface DeliveriesApiCancelJokerCreateRequest {
@@ -40,6 +49,28 @@ export interface DeliveriesApiMemberJokerInformationRetrieveRequest {
 export interface DeliveriesApiUseJokerCreateRequest {
     date?: Date;
     memberId?: string;
+}
+
+export interface DeliveriesGrowingPeriodsCreateRequest {
+    growingPeriodRequest: GrowingPeriodRequest;
+}
+
+export interface DeliveriesGrowingPeriodsDestroyRequest {
+    id: string;
+}
+
+export interface DeliveriesGrowingPeriodsPartialUpdateRequest {
+    id: string;
+    patchedGrowingPeriodRequest?: PatchedGrowingPeriodRequest;
+}
+
+export interface DeliveriesGrowingPeriodsRetrieveRequest {
+    id: string;
+}
+
+export interface DeliveriesGrowingPeriodsUpdateRequest {
+    id: string;
+    growingPeriodRequest: GrowingPeriodRequest;
 }
 
 /**
@@ -168,6 +199,200 @@ export class DeliveriesApi extends runtime.BaseAPI {
      */
     async deliveriesApiUseJokerCreate(requestParameters: DeliveriesApiUseJokerCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.deliveriesApiUseJokerCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsCreateRaw(requestParameters: DeliveriesGrowingPeriodsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrowingPeriod>> {
+        if (requestParameters['growingPeriodRequest'] == null) {
+            throw new runtime.RequiredError(
+                'growingPeriodRequest',
+                'Required parameter "growingPeriodRequest" was null or undefined when calling deliveriesGrowingPeriodsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: GrowingPeriodRequestToJSON(requestParameters['growingPeriodRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrowingPeriodFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsCreate(requestParameters: DeliveriesGrowingPeriodsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrowingPeriod> {
+        const response = await this.deliveriesGrowingPeriodsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsDestroyRaw(requestParameters: DeliveriesGrowingPeriodsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling deliveriesGrowingPeriodsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsDestroy(requestParameters: DeliveriesGrowingPeriodsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deliveriesGrowingPeriodsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<GrowingPeriod>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(GrowingPeriodFromJSON));
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<GrowingPeriod>> {
+        const response = await this.deliveriesGrowingPeriodsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsPartialUpdateRaw(requestParameters: DeliveriesGrowingPeriodsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrowingPeriod>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling deliveriesGrowingPeriodsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedGrowingPeriodRequestToJSON(requestParameters['patchedGrowingPeriodRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrowingPeriodFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsPartialUpdate(requestParameters: DeliveriesGrowingPeriodsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrowingPeriod> {
+        const response = await this.deliveriesGrowingPeriodsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsRetrieveRaw(requestParameters: DeliveriesGrowingPeriodsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrowingPeriod>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling deliveriesGrowingPeriodsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrowingPeriodFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsRetrieve(requestParameters: DeliveriesGrowingPeriodsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrowingPeriod> {
+        const response = await this.deliveriesGrowingPeriodsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsUpdateRaw(requestParameters: DeliveriesGrowingPeriodsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrowingPeriod>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling deliveriesGrowingPeriodsUpdate().'
+            );
+        }
+
+        if (requestParameters['growingPeriodRequest'] == null) {
+            throw new runtime.RequiredError(
+                'growingPeriodRequest',
+                'Required parameter "growingPeriodRequest" was null or undefined when calling deliveriesGrowingPeriodsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/deliveries/growing_periods/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: GrowingPeriodRequestToJSON(requestParameters['growingPeriodRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrowingPeriodFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async deliveriesGrowingPeriodsUpdate(requestParameters: DeliveriesGrowingPeriodsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrowingPeriod> {
+        const response = await this.deliveriesGrowingPeriodsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

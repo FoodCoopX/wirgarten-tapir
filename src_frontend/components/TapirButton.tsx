@@ -19,6 +19,10 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
     return props.loading ? "Loading..." : props.text;
   }
 
+  function fontSize() {
+    return props.fontSize ? props.fontSize + "px" : "";
+  }
+
   return (
     <Button
       variant={props.variant ?? "undefined"}
@@ -31,16 +35,13 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       size={props.size}
       onClick={props.onClick}
       disabled={props.disabled || props.loading}
-      type={props.type}
+      type={props.type ?? "button"}
     >
       {props.icon &&
         (props.loading ? (
           <Spinner size="sm" />
         ) : (
-          <span
-            className={"material-icons"}
-            style={{ fontSize: (props.fontSize ?? 16) + "px" }}
-          >
+          <span className={"material-icons"} style={{ fontSize: fontSize() }}>
             {props.icon}
           </span>
         ))}

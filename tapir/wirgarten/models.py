@@ -2,7 +2,9 @@ import datetime
 from functools import partial
 
 from dateutil.relativedelta import relativedelta
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.db.models import (
     F,
@@ -119,6 +121,13 @@ class GrowingPeriod(TapirModel):
 
     start_date = models.DateField()
     end_date = models.DateField()
+    weeks_without_delivery = ArrayField(
+        base_field=models.IntegerField(
+            validators=[MinValueValidator(1), MaxValueValidator(53)]
+        ),
+        default=list,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{format_date(self.start_date)} - {format_date(self.end_date)}"

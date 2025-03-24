@@ -1,23 +1,32 @@
 {% extends "core/base.html" %}
 {% load django_bootstrap5 %}
+{% load django_vite %}
 {% load i18n %}
 {% load tapir_static %}
 {% load wirgarten %}
 {% load configuration %}
+{% block head %}
+    {% vite_asset 'product_config/product_config_entry.tsx' %}
+{% endblock head %}
 {% block content %}
+    {% csrf_token %}
     <div style="margin-top: 2em;
                 display: grid;
                 grid-gap: 1em;
                 grid-template-columns: 1fr 1em 1fr 1em 1fr">
         <div class="card">
-            <div style="display: flex; flex-direction: row;" class="card-header">
-                <h5 style="margin: auto; width: 100%">{% translate 'Vertragsperiode' %}</h5>
-                {% if perms.coop.manage %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Vertragsperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Vertragsperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
-                    <div style="width: 3em"></div>
-                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Vertragsperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
-                {% endif %}
+            <div class="card-header d-flex flex-row justify-content-between align-items-center">
+                <h5 class="mb-0">{% translate 'Vertragsperiode' %}</h5>
+                <div class="d-flex flex-row">
+                    {% if perms.coop.manage %}
+                        {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Vertragsperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
+                        {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Vertragsperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
+                        {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Vertragsperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
+                        <div id="edit_growing_period_button" class="mx-1">
+                            <span class="spinner-border"></span>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
             <div style="overflow: auto" class="card-body">
                 <table class="table">

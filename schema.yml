@@ -98,6 +98,147 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/growing_periods/:
+    get:
+      operationId: deliveries_growing_periods_list
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    post:
+      operationId: deliveries_growing_periods_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+  /deliveries/growing_periods/{id}/:
+    get:
+      operationId: deliveries_growing_periods_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    put:
+      operationId: deliveries_growing_periods_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    patch:
+      operationId: deliveries_growing_periods_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    delete:
+      operationId: deliveries_growing_periods_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /generic_exports/build_csv_export:
     get:
       operationId: generic_exports_build_csv_export_retrieve
@@ -3193,6 +3334,49 @@ components:
       required:
       - count
       - recipient
+    GrowingPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 2147483647
+            minimum: -2147483648
+      required:
+      - end_date
+      - start_date
+    GrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 2147483647
+            minimum: -2147483648
+      required:
+      - end_date
+      - start_date
     Joker:
       type: object
       properties:
@@ -3551,6 +3735,25 @@ components:
         content:
           type: string
           minLength: 1
+    PatchedGrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 2147483647
+            minimum: -2147483648
     PatchedPdfExportModelRequest:
       type: object
       properties:

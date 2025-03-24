@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.deliveries import views
 
@@ -25,3 +26,9 @@ urlpatterns = [
         name="use_joker",
     ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"growing_periods", views.GrowingPeriodViewSet, basename="growing_periods"
+)
+urlpatterns += router.urls

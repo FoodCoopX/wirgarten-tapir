@@ -31,6 +31,8 @@ models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/GroupedEmailDispatch.ts
+models/GrowingPeriod.ts
+models/GrowingPeriodRequest.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
@@ -47,6 +49,7 @@ models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
 models/PatchedEmailConfigurationRequest.ts
 models/PatchedEmailTemplateRequest.ts
+models/PatchedGrowingPeriodRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
