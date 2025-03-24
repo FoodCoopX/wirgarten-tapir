@@ -12,7 +12,9 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 
 class TestGetEarliestTrialCancellationDate(SimpleTestCase):
     def setUp(self):
-        mock_timezone(self, datetime.datetime(year=2027, month=6, day=4))
+        self.today = mock_timezone(
+            self, datetime.datetime(year=2027, month=6, day=4)
+        ).date()
 
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
@@ -31,7 +33,11 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
 
         result = TrialPeriodManager.get_earliest_trial_cancellation_date()
 
-        self.assertEqual(datetime.date(year=2027, month=6, day=4), result)
+        self.assertEqual(self.today, result)
+        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
+            next_delivery_date
+        )
 
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
@@ -50,7 +56,11 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
 
         result = TrialPeriodManager.get_earliest_trial_cancellation_date()
 
-        self.assertEqual(datetime.date(year=2027, month=6, day=4), result)
+        self.assertEqual(self.today, result)
+        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
+            next_delivery_date
+        )
 
     @patch.object(
         DateLimitForDeliveryChangeCalculator,
@@ -70,3 +80,7 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         result = TrialPeriodManager.get_earliest_trial_cancellation_date()
 
         self.assertEqual(datetime.date(year=2027, month=6, day=11), result)
+        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
+            next_delivery_date
+        )
