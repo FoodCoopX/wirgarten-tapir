@@ -31,7 +31,7 @@ class TrialPeriodManager:
         if reference_date is None:
             reference_date = get_today()
 
-        return cls.get_end_of_trial_period(subscription) > reference_date
+        return cls.get_end_of_trial_period(subscription) >= reference_date
 
     @classmethod
     def get_earliest_trial_cancellation_date(
