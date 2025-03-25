@@ -4,7 +4,7 @@ import datetime
 from typing import TYPE_CHECKING
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
-from tapir.subscriptions.services.weekly_subscription_price_calculator import (
+from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 from tapir.wirgarten.service.products import get_current_growing_period

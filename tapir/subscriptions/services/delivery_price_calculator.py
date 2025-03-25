@@ -65,11 +65,13 @@ class DeliveryPriceCalculator:
             calendar_week = current_date.isocalendar().week
             even_week = calendar_week % 2 == 0
 
-            if delivery_cycle == WEEKLY[0]:
-                count += 1
-            elif delivery_cycle == EVEN_WEEKS[0] and even_week:
-                count += 1
-            elif delivery_cycle == ODD_WEEKS[0] and not even_week:
+            if (
+                delivery_cycle == WEEKLY[0]
+                or delivery_cycle == EVEN_WEEKS[0]
+                and even_week
+                or delivery_cycle == ODD_WEEKS[0]
+                and not even_week
+            ):
                 count += 1
 
             current_date = get_next_delivery_date(

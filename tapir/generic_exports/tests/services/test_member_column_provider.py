@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock, call
 
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
-from tapir.subscriptions.services.weekly_subscription_price_calculator import (
+from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 from tapir.wirgarten.models import Member
