@@ -67,7 +67,7 @@ class MemberSegmentProvider:
     ) -> QuerySet:
         from tapir.wirgarten.models import Member
 
-        growing_period = get_current_growing_period(reference_datetime)
+        growing_period = get_current_growing_period(reference_datetime.date())
         member_ids = Joker.objects.filter(
             date__gte=growing_period.start_date,
             date__lte=reference_datetime.date(),
