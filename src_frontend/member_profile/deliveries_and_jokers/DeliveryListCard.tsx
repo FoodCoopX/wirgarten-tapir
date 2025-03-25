@@ -78,7 +78,10 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     return (
       <div className={"d-flex flex-column"}>
         <strong>{formatDateText(delivery.deliveryDate)}</strong>
-        <small>{dayjs().to(dayjs(delivery.deliveryDate))}</small>
+        <small>
+          KW{dayjs(delivery.deliveryDate).week()},{" "}
+          {dayjs().to(dayjs(delivery.deliveryDate))}
+        </small>
       </div>
     );
   }
