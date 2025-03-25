@@ -76,7 +76,7 @@ class JokerManagementService:
                 member, reference_date
             )
             and cls.can_joker_be_used_relative_to_restrictions(member, reference_date)
-            and cls.can_joker_be_user_relative_to_weeks_without_delivery(reference_date)
+            and cls.can_joker_be_used_relative_to_weeks_without_delivery(reference_date)
         )
 
     @classmethod
@@ -164,7 +164,7 @@ class JokerManagementService:
         return True
 
     @staticmethod
-    def can_joker_be_user_relative_to_weeks_without_delivery(
+    def can_joker_be_used_relative_to_weeks_without_delivery(
         reference_date: datetime.date,
     ) -> bool:
         return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
