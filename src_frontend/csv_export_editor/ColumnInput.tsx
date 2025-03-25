@@ -30,7 +30,7 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
       if (column.id === columnId) {
         onSelectedColumnsChange(
           [...selectedColumnIds, column.id],
-          [...columnNames, ""],
+          [...columnNames, column.displayName],
         );
         return;
       }

@@ -348,7 +348,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       <Modal.Footer>
         <TapirButton
           text={exportToEdit ? "Speichern" : "Erzeugen"}
-          icon={"add_circle"}
+          icon={"save"}
           variant={"primary"}
           onClick={save}
           loading={loading}
