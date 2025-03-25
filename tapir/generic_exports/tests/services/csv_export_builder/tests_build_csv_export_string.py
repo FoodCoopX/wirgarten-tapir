@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import MemberWithCoopSharesFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestCreateExportedFile(TapirIntegrationTest):
+class TestBuildCsvExportString(TapirIntegrationTest):
     def setUp(self) -> None:
         ParameterDefinitions().import_definitions()
 
