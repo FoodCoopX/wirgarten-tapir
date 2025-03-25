@@ -22,4 +22,4 @@ class PickupLocationSegmentProvider:
 
     @classmethod
     def get_queryset_all_pickup_stations(cls, _) -> QuerySet:
-        return PickupLocation.objects.all()
+        return PickupLocation.objects.all().order_by("name")
