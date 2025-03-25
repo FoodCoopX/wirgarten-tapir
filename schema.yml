@@ -28,6 +28,25 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/api/growing_period_with_adjustments:
+    get:
+      operationId: deliveries_api_growing_period_with_adjustments_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriodWithDeliveryDayAdjustments'
+          description: ''
   /deliveries/api/member_deliveries:
     get:
       operationId: deliveries_api_member_deliveries_list
@@ -2904,6 +2923,26 @@ components:
         * `weekly` - 1x pro Woche
         * `odd_weeks` - 2x pro Monat (ungerade KW)
         * `even_weeks` - 2x pro Monat (gerade KW)
+    DeliveryDayAdjustment:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        calendar_week:
+          type: integer
+          maximum: 53
+          minimum: 1
+        adjusted_weekday:
+          type: integer
+          maximum: 6
+          minimum: 0
+        growing_period:
+          type: string
+      required:
+      - adjusted_weekday
+      - calendar_week
+      - growing_period
     DispatchStatusEnum:
       enum:
       - error
@@ -3380,6 +3419,18 @@ components:
       required:
       - end_date
       - start_date
+    GrowingPeriodWithDeliveryDayAdjustments:
+      type: object
+      properties:
+        growing_period:
+          $ref: '#/components/schemas/GrowingPeriod'
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustment'
+      required:
+      - adjustments
+      - growing_period
     Joker:
       type: object
       properties:

@@ -25,6 +25,11 @@ urlpatterns = [
         views.UseJokerView.as_view(),
         name="use_joker",
     ),
+    path(
+        "api/growing_period_with_adjustments",
+        views.GetGrowingPeriodWithDeliveryDayAdjustmentsView.as_view(),
+        name="growing_period_with_adjustments",
+    ),
 ]
 
 router = DefaultRouter()

@@ -18,6 +18,7 @@ import type {
   Delivery,
   GrowingPeriod,
   GrowingPeriodRequest,
+  GrowingPeriodWithDeliveryDayAdjustments,
   MemberJokerInformation,
   PatchedGrowingPeriodRequest,
 } from '../models/index';
@@ -28,6 +29,8 @@ import {
     GrowingPeriodToJSON,
     GrowingPeriodRequestFromJSON,
     GrowingPeriodRequestToJSON,
+    GrowingPeriodWithDeliveryDayAdjustmentsFromJSON,
+    GrowingPeriodWithDeliveryDayAdjustmentsToJSON,
     MemberJokerInformationFromJSON,
     MemberJokerInformationToJSON,
     PatchedGrowingPeriodRequestFromJSON,
@@ -36,6 +39,10 @@ import {
 
 export interface DeliveriesApiCancelJokerCreateRequest {
     jokerId?: string;
+}
+
+export interface DeliveriesApiGrowingPeriodWithAdjustmentsRetrieveRequest {
+    growingPeriodId?: string;
 }
 
 export interface DeliveriesApiMemberDeliveriesListRequest {
@@ -107,6 +114,34 @@ export class DeliveriesApi extends runtime.BaseAPI {
      */
     async deliveriesApiCancelJokerCreate(requestParameters: DeliveriesApiCancelJokerCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.deliveriesApiCancelJokerCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async deliveriesApiGrowingPeriodWithAdjustmentsRetrieveRaw(requestParameters: DeliveriesApiGrowingPeriodWithAdjustmentsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GrowingPeriodWithDeliveryDayAdjustments>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['growingPeriodId'] != null) {
+            queryParameters['growing_period_id'] = requestParameters['growingPeriodId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/deliveries/api/growing_period_with_adjustments`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GrowingPeriodWithDeliveryDayAdjustmentsFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async deliveriesApiGrowingPeriodWithAdjustmentsRetrieve(requestParameters: DeliveriesApiGrowingPeriodWithAdjustmentsRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GrowingPeriodWithDeliveryDayAdjustments> {
+        const response = await this.deliveriesApiGrowingPeriodWithAdjustmentsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

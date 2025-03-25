@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import {
-  BuildExportResponse,
+  BuildCsvExportResponse,
   CsvExportModel,
   GenericExportsApi,
 } from "../api-client";
@@ -42,7 +42,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
       });
   }
 
-  function downloadExportFile(response: BuildExportResponse) {
+  function downloadExportFile(response: BuildCsvExportResponse) {
     const element = document.createElement("a");
     element.setAttribute(
       "href",

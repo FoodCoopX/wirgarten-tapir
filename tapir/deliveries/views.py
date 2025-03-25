@@ -10,12 +10,13 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
-from tapir.deliveries.models import Joker
+from tapir.deliveries.models import Joker, DeliveryDayAdjustment
 from tapir.deliveries.serializers import (
     DeliverySerializer,
     MemberJokerInformationSerializer,
     UsedJokerInGrowingPeriodSerializer,
     GrowingPeriodSerializer,
+    GrowingPeriodWithDeliveryDayAdjustmentsSerializer,
 )
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
@@ -23,6 +24,7 @@ from tapir.deliveries.services.joker_management_service import (
 )
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -212,3 +214,27 @@ class GrowingPeriodViewSet(ModelViewSet):
     queryset = GrowingPeriod.objects.order_by("start_date")
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     serializer_class = GrowingPeriodSerializer
+
+
+class GetGrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
+    @extend_schema(
+        responses={200: GrowingPeriodWithDeliveryDayAdjustmentsSerializer()},
+        parameters=[OpenApiParameter(name="growing_period_id", type=str)],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=request.query_params.get("growing_period_id")
+        )
+        adjustments = DeliveryDayAdjustment.objects.filter(
+            growing_period=growing_period
+        )
+
+        return Response(
+            GrowingPeriodWithDeliveryDayAdjustmentsSerializer(
+                {"growing_period": growing_period, "adjustments": adjustments}
+            ).data,
+            status=status.HTTP_200_OK,
+        )

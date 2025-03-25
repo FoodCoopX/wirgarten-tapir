@@ -1,4 +1,3 @@
-.openapi-generator-ignore
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/SubscriptionsApi.ts
@@ -17,6 +16,7 @@ models/CsvExportModelRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
+models/DeliveryDayAdjustment.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
@@ -34,6 +34,7 @@ models/ExportSegmentColumn.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
+models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
