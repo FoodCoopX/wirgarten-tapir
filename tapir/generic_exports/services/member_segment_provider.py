@@ -73,4 +73,4 @@ class MemberSegmentProvider:
             date__lte=reference_datetime.date(),
         ).values_list("member_id")
 
-        return Member.objects.filter(id__in=member_ids).distinct()
+        return Member.objects.filter(id__in=member_ids).order_by("member_no").distinct()
