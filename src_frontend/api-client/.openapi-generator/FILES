@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/SubscriptionsApi.ts
