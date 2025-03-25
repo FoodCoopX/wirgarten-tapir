@@ -16,37 +16,37 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface DeliveryDayAdjustment
+ * @interface DeliveryDayAdjustmentRequest
  */
-export interface DeliveryDayAdjustment {
+export interface DeliveryDayAdjustmentRequest {
     /**
      * 
      * @type {number}
-     * @memberof DeliveryDayAdjustment
+     * @memberof DeliveryDayAdjustmentRequest
      */
     calendarWeek: number;
     /**
      * 
      * @type {number}
-     * @memberof DeliveryDayAdjustment
+     * @memberof DeliveryDayAdjustmentRequest
      */
     adjustedWeekday: number;
 }
 
 /**
- * Check if a given object implements the DeliveryDayAdjustment interface.
+ * Check if a given object implements the DeliveryDayAdjustmentRequest interface.
  */
-export function instanceOfDeliveryDayAdjustment(value: object): value is DeliveryDayAdjustment {
+export function instanceOfDeliveryDayAdjustmentRequest(value: object): value is DeliveryDayAdjustmentRequest {
     if (!('calendarWeek' in value) || value['calendarWeek'] === undefined) return false;
     if (!('adjustedWeekday' in value) || value['adjustedWeekday'] === undefined) return false;
     return true;
 }
 
-export function DeliveryDayAdjustmentFromJSON(json: any): DeliveryDayAdjustment {
-    return DeliveryDayAdjustmentFromJSONTyped(json, false);
+export function DeliveryDayAdjustmentRequestFromJSON(json: any): DeliveryDayAdjustmentRequest {
+    return DeliveryDayAdjustmentRequestFromJSONTyped(json, false);
 }
 
-export function DeliveryDayAdjustmentFromJSONTyped(json: any, ignoreDiscriminator: boolean): DeliveryDayAdjustment {
+export function DeliveryDayAdjustmentRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): DeliveryDayAdjustmentRequest {
     if (json == null) {
         return json;
     }
@@ -57,11 +57,11 @@ export function DeliveryDayAdjustmentFromJSONTyped(json: any, ignoreDiscriminato
     };
 }
 
-  export function DeliveryDayAdjustmentToJSON(json: any): DeliveryDayAdjustment {
-      return DeliveryDayAdjustmentToJSONTyped(json, false);
+  export function DeliveryDayAdjustmentRequestToJSON(json: any): DeliveryDayAdjustmentRequest {
+      return DeliveryDayAdjustmentRequestToJSONTyped(json, false);
   }
 
-  export function DeliveryDayAdjustmentToJSONTyped(value?: DeliveryDayAdjustment | null, ignoreDiscriminator: boolean = false): any {
+  export function DeliveryDayAdjustmentRequestToJSONTyped(value?: DeliveryDayAdjustmentRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

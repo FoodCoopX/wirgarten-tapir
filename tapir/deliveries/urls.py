@@ -27,7 +27,7 @@ urlpatterns = [
     ),
     path(
         "api/growing_period_with_adjustments",
-        views.GetGrowingPeriodWithDeliveryDayAdjustmentsView.as_view(),
+        views.GrowingPeriodWithDeliveryDayAdjustmentsView.as_view(),
         name="growing_period_with_adjustments",
     ),
 ]

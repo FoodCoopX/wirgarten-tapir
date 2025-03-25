@@ -47,6 +47,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/GrowingPeriodWithDeliveryDayAdjustments'
           description: ''
+    patch:
+      operationId: deliveries_api_growing_period_with_adjustments_partial_update
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /deliveries/api/member_deliveries:
     get:
       operationId: deliveries_api_member_deliveries_list
@@ -2926,23 +2950,23 @@ components:
     DeliveryDayAdjustment:
       type: object
       properties:
-        id:
-          type: string
-          maxLength: 10
         calendar_week:
           type: integer
-          maximum: 53
-          minimum: 1
         adjusted_weekday:
           type: integer
-          maximum: 6
-          minimum: 0
-        growing_period:
-          type: string
       required:
       - adjusted_weekday
       - calendar_week
-      - growing_period
+    DeliveryDayAdjustmentRequest:
+      type: object
+      properties:
+        calendar_week:
+          type: integer
+        adjusted_weekday:
+          type: integer
+      required:
+      - adjusted_weekday
+      - calendar_week
     DispatchStatusEnum:
       enum:
       - error
@@ -3422,15 +3446,28 @@ components:
     GrowingPeriodWithDeliveryDayAdjustments:
       type: object
       properties:
-        growing_period:
-          $ref: '#/components/schemas/GrowingPeriod'
+        growing_period_id:
+          type: string
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
         adjustments:
           type: array
           items:
             $ref: '#/components/schemas/DeliveryDayAdjustment'
       required:
       - adjustments
-      - growing_period
+      - growing_period_end_date
+      - growing_period_id
+      - growing_period_start_date
+      - growing_period_weeks_without_delivery
     Joker:
       type: object
       properties:
@@ -3808,6 +3845,26 @@ components:
             type: integer
             maximum: 53
             minimum: 1
+    PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+          minLength: 1
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustmentRequest'
     PatchedPdfExportModelRequest:
       type: object
       properties:

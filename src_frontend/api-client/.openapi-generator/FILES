@@ -17,6 +17,7 @@ models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
 models/DeliveryDayAdjustment.ts
+models/DeliveryDayAdjustmentRequest.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
@@ -52,6 +53,7 @@ models/PatchedEmailConfigurationDispatchRequest.ts
 models/PatchedEmailConfigurationRequest.ts
 models/PatchedEmailTemplateRequest.ts
 models/PatchedGrowingPeriodRequest.ts
+models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts

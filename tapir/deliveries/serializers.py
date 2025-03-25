@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tapir.deliveries.models import Joker, DeliveryDayAdjustment
+from tapir.deliveries.models import Joker
 from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
@@ -96,12 +96,16 @@ class MemberJokerInformationSerializer(serializers.Serializer):
     used_joker_in_growing_period = UsedJokerInGrowingPeriodSerializer(many=True)
 
 
-class DeliveryDayAdjustmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DeliveryDayAdjustment
-        fields = "__all__"
+class DeliveryDayAdjustmentSerializer(serializers.Serializer):
+    calendar_week = serializers.IntegerField()
+    adjusted_weekday = serializers.IntegerField()
 
 
 class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
-    growing_period = GrowingPeriodSerializer()
+    growing_period_id = serializers.CharField()
+    growing_period_start_date = serializers.DateField()
+    growing_period_end_date = serializers.DateField()
+    growing_period_weeks_without_delivery = serializers.ListField(
+        child=serializers.IntegerField()
+    )
     adjustments = DeliveryDayAdjustmentSerializer(many=True)

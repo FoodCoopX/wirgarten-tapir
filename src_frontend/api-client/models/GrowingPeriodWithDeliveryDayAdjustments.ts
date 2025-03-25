@@ -20,13 +20,6 @@ import {
     DeliveryDayAdjustmentToJSON,
     DeliveryDayAdjustmentToJSONTyped,
 } from './DeliveryDayAdjustment';
-import type { GrowingPeriod } from './GrowingPeriod';
-import {
-    GrowingPeriodFromJSON,
-    GrowingPeriodFromJSONTyped,
-    GrowingPeriodToJSON,
-    GrowingPeriodToJSONTyped,
-} from './GrowingPeriod';
 
 /**
  * 
@@ -36,10 +29,28 @@ import {
 export interface GrowingPeriodWithDeliveryDayAdjustments {
     /**
      * 
-     * @type {GrowingPeriod}
+     * @type {string}
      * @memberof GrowingPeriodWithDeliveryDayAdjustments
      */
-    growingPeriod: GrowingPeriod;
+    growingPeriodId: string;
+    /**
+     * 
+     * @type {Date}
+     * @memberof GrowingPeriodWithDeliveryDayAdjustments
+     */
+    growingPeriodStartDate: Date;
+    /**
+     * 
+     * @type {Date}
+     * @memberof GrowingPeriodWithDeliveryDayAdjustments
+     */
+    growingPeriodEndDate: Date;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof GrowingPeriodWithDeliveryDayAdjustments
+     */
+    growingPeriodWeeksWithoutDelivery: Array<number>;
     /**
      * 
      * @type {Array<DeliveryDayAdjustment>}
@@ -52,7 +63,10 @@ export interface GrowingPeriodWithDeliveryDayAdjustments {
  * Check if a given object implements the GrowingPeriodWithDeliveryDayAdjustments interface.
  */
 export function instanceOfGrowingPeriodWithDeliveryDayAdjustments(value: object): value is GrowingPeriodWithDeliveryDayAdjustments {
-    if (!('growingPeriod' in value) || value['growingPeriod'] === undefined) return false;
+    if (!('growingPeriodId' in value) || value['growingPeriodId'] === undefined) return false;
+    if (!('growingPeriodStartDate' in value) || value['growingPeriodStartDate'] === undefined) return false;
+    if (!('growingPeriodEndDate' in value) || value['growingPeriodEndDate'] === undefined) return false;
+    if (!('growingPeriodWeeksWithoutDelivery' in value) || value['growingPeriodWeeksWithoutDelivery'] === undefined) return false;
     if (!('adjustments' in value) || value['adjustments'] === undefined) return false;
     return true;
 }
@@ -67,7 +81,10 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsFromJSONTyped(json: any, 
     }
     return {
         
-        'growingPeriod': GrowingPeriodFromJSON(json['growing_period']),
+        'growingPeriodId': json['growing_period_id'],
+        'growingPeriodStartDate': (new Date(json['growing_period_start_date'])),
+        'growingPeriodEndDate': (new Date(json['growing_period_end_date'])),
+        'growingPeriodWeeksWithoutDelivery': json['growing_period_weeks_without_delivery'],
         'adjustments': ((json['adjustments'] as Array<any>).map(DeliveryDayAdjustmentFromJSON)),
     };
 }
@@ -83,7 +100,10 @@ export function GrowingPeriodWithDeliveryDayAdjustmentsFromJSONTyped(json: any, 
 
     return {
         
-        'growing_period': GrowingPeriodToJSON(value['growingPeriod']),
+        'growing_period_id': value['growingPeriodId'],
+        'growing_period_start_date': ((value['growingPeriodStartDate']).toISOString().substring(0,10)),
+        'growing_period_end_date': ((value['growingPeriodEndDate']).toISOString().substring(0,10)),
+        'growing_period_weeks_without_delivery': value['growingPeriodWeeksWithoutDelivery'],
         'adjustments': ((value['adjustments'] as Array<any>).map(DeliveryDayAdjustmentToJSON)),
     };
 }

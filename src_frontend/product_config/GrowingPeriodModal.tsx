@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Col, Form, ListGroup, Modal, Row, Spinner } from "react-bootstrap";
-import {
-  DeliveriesApi,
-  DeliveryDayAdjustment,
-  GrowingPeriod,
-} from "../api-client";
+import { DeliveriesApi, DeliveryDayAdjustment } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import { getPeriodIdFromUrl } from "./get_period_id_from_url.ts";
 
@@ -23,9 +18,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   csrfToken,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
-  const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
   const [weeksWithoutDelivery, setWeeksWithoutDelivery] = useState<number[]>(
     [],
   );
@@ -34,6 +28,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!show) return;
+
     setDataLoading(true);
 
     if (!getPeriodIdFromUrl()) return;
@@ -43,12 +39,9 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         growingPeriodId: getPeriodIdFromUrl(),
       })
       .then((response) => {
-        setGrowingPeriod(response.growingPeriod);
-        setStartDate(response.growingPeriod.startDate);
-        setEndDate(response.growingPeriod.endDate);
-        setWeeksWithoutDelivery(
-          response.growingPeriod.weeksWithoutDelivery ?? [],
-        );
+        setStartDate(response.growingPeriodStartDate);
+        setEndDate(response.growingPeriodEndDate);
+        setWeeksWithoutDelivery(response.growingPeriodWeeksWithoutDelivery);
         setAdjustments(response.adjustments);
       })
       .catch(alert)
@@ -56,21 +49,21 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   }, [show]);
 
   function onSave() {
-    if (!growingPeriod) return;
-
     const form = document.getElementById(
       "growingPeriodForm",
     ) as HTMLFormElement;
     if (!form.reportValidity()) return;
 
     setSaving(true);
+
     api
-      .deliveriesGrowingPeriodsUpdate({
-        id: growingPeriod.id!,
-        growingPeriodRequest: {
-          startDate: startDate!,
-          endDate: endDate!,
-          weeksWithoutDelivery: weeksWithoutDelivery,
+      .deliveriesApiGrowingPeriodWithAdjustmentsPartialUpdate({
+        patchedGrowingPeriodWithDeliveryDayAdjustmentsRequest: {
+          growingPeriodId: getPeriodIdFromUrl(),
+          growingPeriodStartDate: startDate,
+          growingPeriodEndDate: endDate,
+          growingPeriodWeeksWithoutDelivery: weeksWithoutDelivery,
+          adjustments: adjustments,
         },
       })
       .then(() => location.reload())
@@ -99,10 +92,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   function onAdjustmentWeekAdd() {
     const newAdjustments = [...adjustments];
     newAdjustments.push({
-      id: undefined,
       calendarWeek: 1,
       adjustedWeekday: 0,
-      growingPeriod: growingPeriod!.id!,
     });
     setAdjustments(newAdjustments);
   }
@@ -128,7 +119,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   }
 
   function getModalBody() {
-    if (dataLoading || !growingPeriod) {
+    if (dataLoading) {
       return (
         <Modal.Body>
           <Spinner />
@@ -141,9 +132,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         <Form id={"growingPeriodForm"}>
           <ListGroup.Item>
             <Form.Group className={"mb-2"}>
-              <Form.Label>
-                Anfangsdatum ({formatDateNumeric(growingPeriod.startDate)})
-              </Form.Label>
+              <Form.Label>Anfangsdatum</Form.Label>
               <Form.Control
                 type={"date"}
                 onChange={(event) => setStartDate(new Date(event.target.value))}
@@ -152,9 +141,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
               />
             </Form.Group>
             <Form.Group className={"mb-2"}>
-              <Form.Label>
-                Enddatum ({formatDateNumeric(growingPeriod.endDate)})
-              </Form.Label>
+              <Form.Label>Enddatum</Form.Label>
               <Form.Control
                 type={"date"}
                 onChange={(event) => setEndDate(new Date(event.target.value))}
@@ -250,6 +237,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                                 parseInt(event.target.value),
                               );
                             }}
+                            value={adjustment.adjustedWeekday}
                           >
                             <option value={0}>Montag</option>
                             <option value={1}>Dienstag</option>
