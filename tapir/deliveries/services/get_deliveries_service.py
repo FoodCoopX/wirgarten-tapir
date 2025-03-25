@@ -34,7 +34,7 @@ class GetDeliveriesService:
                 deliveries.append(delivery_object)
 
             next_delivery_date = get_next_delivery_date(
-                next_delivery_date + datetime.timedelta(days=1)
+                get_monday(next_delivery_date + datetime.timedelta(days=7))
             )
 
         return deliveries
