@@ -102,7 +102,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 404)
 
-    def test_patch_default_updatesGrowingPeriodAndAjustments(self):
+    def test_patch_default_updatesGrowingPeriodAndAdjustments(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
