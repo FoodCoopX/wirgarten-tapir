@@ -53,6 +53,7 @@ class DeliverySerializer(serializers.Serializer):
     joker_used = serializers.BooleanField()
     can_joker_be_used = serializers.BooleanField()
     can_joker_be_used_relative_to_date_limit = serializers.BooleanField()
+    is_delivery_cancelled_this_week = serializers.BooleanField()
 
 
 class JokerSerializer(serializers.ModelSerializer):
@@ -93,3 +94,18 @@ class MemberJokerInformationSerializer(serializers.Serializer):
     weekday_limit = serializers.IntegerField()
     joker_restrictions = JokerRestrictionSerializer(many=True)
     used_joker_in_growing_period = UsedJokerInGrowingPeriodSerializer(many=True)
+
+
+class DeliveryDayAdjustmentSerializer(serializers.Serializer):
+    calendar_week = serializers.IntegerField()
+    adjusted_weekday = serializers.IntegerField()
+
+
+class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
+    growing_period_id = serializers.CharField()
+    growing_period_start_date = serializers.DateField()
+    growing_period_end_date = serializers.DateField()
+    growing_period_weeks_without_delivery = serializers.ListField(
+        child=serializers.IntegerField()
+    )
+    adjustments = DeliveryDayAdjustmentSerializer(many=True)

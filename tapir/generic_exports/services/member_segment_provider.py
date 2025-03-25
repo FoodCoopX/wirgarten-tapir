@@ -39,7 +39,7 @@ class MemberSegmentProvider:
         members = annotate_member_queryset_with_coop_shares_total_value(
             Member.objects.all()
         )
-        return members.filter(coop_shares_total_value__gt=0)
+        return members.filter(coop_shares_total_value__gt=0).order_by("member_no")
 
     @classmethod
     def get_queryset_all_members_with_subscription(
@@ -50,4 +50,4 @@ class MemberSegmentProvider:
         members = annotate_member_queryset_with_monthly_payment(
             Member.objects.all(), reference_datetime.date()
         )
-        return members.filter(monthly_payment__gt=0)
+        return members.filter(monthly_payment__gt=0).order_by("member_no")

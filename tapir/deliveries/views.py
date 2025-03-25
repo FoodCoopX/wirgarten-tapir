@@ -1,25 +1,31 @@
 import datetime
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
-from tapir.deliveries.models import Joker
+from tapir.deliveries.models import Joker, DeliveryDayAdjustment
 from tapir.deliveries.serializers import (
     DeliverySerializer,
     MemberJokerInformationSerializer,
     UsedJokerInGrowingPeriodSerializer,
+    GrowingPeriodSerializer,
+    GrowingPeriodWithDeliveryDayAdjustmentsSerializer,
 )
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import (
     JokerManagementService,
 )
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -201,5 +207,97 @@ class UseJokerView(APIView):
 
         return Response(
             "Joker angesetzt",
+            status=status.HTTP_200_OK,
+        )
+
+
+class GrowingPeriodViewSet(ModelViewSet):
+    queryset = GrowingPeriod.objects.order_by("start_date")
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    serializer_class = GrowingPeriodSerializer
+
+
+class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
+    @extend_schema(
+        responses={200: GrowingPeriodWithDeliveryDayAdjustmentsSerializer()},
+        parameters=[OpenApiParameter(name="growing_period_id", type=str)],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=request.query_params.get("growing_period_id")
+        )
+        adjustments = DeliveryDayAdjustment.objects.filter(
+            growing_period=growing_period
+        ).order_by("calendar_week")
+
+        growing_period.weeks_without_delivery.sort()
+
+        return Response(
+            GrowingPeriodWithDeliveryDayAdjustmentsSerializer(
+                {
+                    "growing_period_id": growing_period.id,
+                    "growing_period_start_date": growing_period.start_date,
+                    "growing_period_end_date": growing_period.end_date,
+                    "growing_period_weeks_without_delivery": growing_period.weeks_without_delivery,
+                    "adjustments": [
+                        {
+                            "calendar_week": adjustment.calendar_week,
+                            "adjusted_weekday": adjustment.adjusted_weekday,
+                        }
+                        for adjustment in adjustments
+                    ],
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        responses={200: str},
+        request=GrowingPeriodWithDeliveryDayAdjustmentsSerializer(),
+    )
+    def patch(self, request):
+        if not request.user.has_perm(Permission.Coop.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        request_serializer = GrowingPeriodWithDeliveryDayAdjustmentsSerializer(
+            data=request.data
+        )
+        request_serializer.is_valid(raise_exception=True)
+
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=request_serializer.validated_data["growing_period_id"]
+        )
+
+        with transaction.atomic():
+            growing_period.start_date = request_serializer.validated_data[
+                "growing_period_start_date"
+            ]
+            growing_period.end_date = request_serializer.validated_data[
+                "growing_period_end_date"
+            ]
+            growing_period.weeks_without_delivery = request_serializer.validated_data[
+                "growing_period_weeks_without_delivery"
+            ]
+            growing_period.save()
+
+            DeliveryDayAdjustment.objects.filter(growing_period=growing_period).delete()
+            DeliveryDayAdjustment.objects.bulk_create(
+                [
+                    DeliveryDayAdjustment(
+                        growing_period=growing_period,
+                        adjusted_weekday=adjustment_data["adjusted_weekday"],
+                        calendar_week=adjustment_data["calendar_week"],
+                    )
+                    for adjustment_data in request_serializer.validated_data[
+                        "adjustments"
+                    ]
+                ]
+            )
+
+        return Response(
+            "OK",
             status=status.HTTP_200_OK,
         )

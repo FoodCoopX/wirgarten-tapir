@@ -28,6 +28,49 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/api/growing_period_with_adjustments:
+    get:
+      operationId: deliveries_api_growing_period_with_adjustments_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriodWithDeliveryDayAdjustments'
+          description: ''
+    patch:
+      operationId: deliveries_api_growing_period_with_adjustments_partial_update
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /deliveries/api/member_deliveries:
     get:
       operationId: deliveries_api_member_deliveries_list
@@ -98,6 +141,147 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/growing_periods/:
+    get:
+      operationId: deliveries_growing_periods_list
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    post:
+      operationId: deliveries_growing_periods_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+  /deliveries/growing_periods/{id}/:
+    get:
+      operationId: deliveries_growing_periods_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    put:
+      operationId: deliveries_growing_periods_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    patch:
+      operationId: deliveries_growing_periods_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    delete:
+      operationId: deliveries_growing_periods_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /generic_exports/build_csv_export:
     get:
       operationId: generic_exports_build_csv_export_retrieve
@@ -2740,10 +2924,13 @@ components:
           type: boolean
         can_joker_be_used_relative_to_date_limit:
           type: boolean
+        is_delivery_cancelled_this_week:
+          type: boolean
       required:
       - can_joker_be_used
       - can_joker_be_used_relative_to_date_limit
       - delivery_date
+      - is_delivery_cancelled_this_week
       - joker_used
       - pickup_location
       - pickup_location_opening_times
@@ -2760,6 +2947,26 @@ components:
         * `weekly` - 1x pro Woche
         * `odd_weeks` - 2x pro Monat (ungerade KW)
         * `even_weeks` - 2x pro Monat (gerade KW)
+    DeliveryDayAdjustment:
+      type: object
+      properties:
+        calendar_week:
+          type: integer
+        adjusted_weekday:
+          type: integer
+      required:
+      - adjusted_weekday
+      - calendar_week
+    DeliveryDayAdjustmentRequest:
+      type: object
+      properties:
+        calendar_week:
+          type: integer
+        adjusted_weekday:
+          type: integer
+      required:
+      - adjusted_weekday
+      - calendar_week
     DispatchStatusEnum:
       enum:
       - error
@@ -3193,6 +3400,74 @@ components:
       required:
       - count
       - recipient
+    GrowingPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+      required:
+      - end_date
+      - start_date
+    GrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+      required:
+      - end_date
+      - start_date
+    GrowingPeriodWithDeliveryDayAdjustments:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustment'
+      required:
+      - adjustments
+      - growing_period_end_date
+      - growing_period_id
+      - growing_period_start_date
+      - growing_period_weeks_without_delivery
     Joker:
       type: object
       properties:
@@ -3551,6 +3826,45 @@ components:
         content:
           type: string
           minLength: 1
+    PatchedGrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+    PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+          minLength: 1
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustmentRequest'
     PatchedPdfExportModelRequest:
       type: object
       properties:

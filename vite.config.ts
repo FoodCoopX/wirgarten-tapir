@@ -30,6 +30,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/pdf_export_editor/pdf_export_editor_entry.tsx",
           ),
+          product_config: join(
+            INPUT_DIR,
+            "/product_config/product_config_entry.tsx",
+          ),
         },
       },
     },

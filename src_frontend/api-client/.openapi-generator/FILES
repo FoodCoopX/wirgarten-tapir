@@ -16,6 +16,8 @@ models/CsvExportModelRequest.ts
 models/DayOfWeekEnum.ts
 models/Delivery.ts
 models/DeliveryCycleEnum.ts
+models/DeliveryDayAdjustment.ts
+models/DeliveryDayAdjustmentRequest.ts
 models/DispatchStatusEnum.ts
 models/EmailConfiguration.ts
 models/EmailConfigurationDispatch.ts
@@ -31,6 +33,9 @@ models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/GroupedEmailDispatch.ts
+models/GrowingPeriod.ts
+models/GrowingPeriodRequest.ts
+models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
@@ -47,6 +52,8 @@ models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
 models/PatchedEmailConfigurationRequest.ts
 models/PatchedEmailTemplateRequest.ts
+models/PatchedGrowingPeriodRequest.ts
+models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts

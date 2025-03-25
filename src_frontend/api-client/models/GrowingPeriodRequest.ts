@@ -16,49 +16,49 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface GrowingPeriod
+ * @interface GrowingPeriodRequest
  */
-export interface GrowingPeriod {
+export interface GrowingPeriodRequest {
     /**
      * 
      * @type {string}
-     * @memberof GrowingPeriod
+     * @memberof GrowingPeriodRequest
      */
     id?: string;
     /**
      * 
      * @type {Date}
-     * @memberof GrowingPeriod
+     * @memberof GrowingPeriodRequest
      */
     startDate: Date;
     /**
      * 
      * @type {Date}
-     * @memberof GrowingPeriod
+     * @memberof GrowingPeriodRequest
      */
     endDate: Date;
     /**
      * 
      * @type {Array<number>}
-     * @memberof GrowingPeriod
+     * @memberof GrowingPeriodRequest
      */
     weeksWithoutDelivery?: Array<number>;
 }
 
 /**
- * Check if a given object implements the GrowingPeriod interface.
+ * Check if a given object implements the GrowingPeriodRequest interface.
  */
-export function instanceOfGrowingPeriod(value: object): value is GrowingPeriod {
+export function instanceOfGrowingPeriodRequest(value: object): value is GrowingPeriodRequest {
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
     if (!('endDate' in value) || value['endDate'] === undefined) return false;
     return true;
 }
 
-export function GrowingPeriodFromJSON(json: any): GrowingPeriod {
-    return GrowingPeriodFromJSONTyped(json, false);
+export function GrowingPeriodRequestFromJSON(json: any): GrowingPeriodRequest {
+    return GrowingPeriodRequestFromJSONTyped(json, false);
 }
 
-export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boolean): GrowingPeriod {
+export function GrowingPeriodRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): GrowingPeriodRequest {
     if (json == null) {
         return json;
     }
@@ -71,11 +71,11 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
     };
 }
 
-  export function GrowingPeriodToJSON(json: any): GrowingPeriod {
-      return GrowingPeriodToJSONTyped(json, false);
+  export function GrowingPeriodRequestToJSON(json: any): GrowingPeriodRequest {
+      return GrowingPeriodRequestToJSONTyped(json, false);
   }
 
-  export function GrowingPeriodToJSONTyped(value?: GrowingPeriod | null, ignoreDiscriminator: boolean = false): any {
+  export function GrowingPeriodRequestToJSONTyped(value?: GrowingPeriodRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
