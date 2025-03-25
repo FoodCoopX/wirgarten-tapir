@@ -3,6 +3,9 @@ from unittest.mock import patch, Mock
 
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import ProductType, Member, PickupLocationOpeningTime
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -68,6 +71,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self,
         mock_get_pickup_location: Mock,
         mock_pickup_location_opening_times_objects: Mock,
+        mock_update_delivery_date_to_opening_times: Mock,
         *_,
     ):
         member = MemberFactory.create()
@@ -79,6 +83,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         mock_opening_times = Mock()
         mock_pickup_location_opening_times_objects.filter.return_value = (
             mock_opening_times
+        )
+        mock_update_delivery_date_to_opening_times.return_value = datetime.date(
+            year=2023, month=6, day=7
         )
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
@@ -163,3 +170,25 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             member, given_delivery_date
         )
         self.assertEqual([subscription_2], list(delivery_object["subscriptions"]))
+
+    @patch.object(WeeksWithoutDeliveryService, "is_delivery_cancelled_this_week")
+    def test_buildDeliveryObject_default_returnsCorrectJokerData(
+        self, mock_is_delivery_cancelled_this_week: Mock
+    ):
+        member = MemberFactory.create()
+        SubscriptionFactory.create(member=member)
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+        mock_is_delivery_cancelled_this_week_value = Mock()
+        mock_is_delivery_cancelled_this_week.return_value = (
+            mock_is_delivery_cancelled_this_week_value
+        )
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member, given_delivery_date
+        )
+
+        self.assertEqual(
+            mock_is_delivery_cancelled_this_week_value,
+            delivery_object["is_delivery_cancelled_this_week"],
+        )
