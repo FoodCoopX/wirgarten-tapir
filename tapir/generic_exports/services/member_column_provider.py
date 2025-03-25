@@ -78,12 +78,6 @@ class MemberColumnProvider:
                 description="Gutschrift [Anzahl genutzte Joker] Joker in [Vertragsjahr]",
                 get_value=cls.get_value_member_joker_credit_details,
             ),
-            ExportSegmentColumn(
-                id="member_subscriptions",
-                display_name="Produkte",
-                description="",
-                get_value=cls.get_value_member_subscriptions,
-            ),
         ]
 
     @classmethod
@@ -156,18 +150,3 @@ class MemberColumnProvider:
         date_from = growing_period.start_date.strftime("%d.%m.%Y")
         date_to = reference_datetime.strftime("%d.%m.%Y")
         return f"Gutschrift {nb_jokers} genutzte Joker in Vertragsjahr {date_from}-{date_to}"
-
-    @classmethod
-    def get_value_member_subscriptions(
-        cls, member: Member, reference_datetime: datetime.datetime
-    ):
-        from tapir.wirgarten.service.products import get_active_subscriptions
-
-        subscriptions_as_string = [
-            f"{subscription.quantity} × {subscription.product.name} {subscription.product.type.name}"
-            for subscription in get_active_subscriptions(
-                reference_datetime.date()
-            ).filter(member=member)
-        ]
-
-        return " - ".join(subscriptions_as_string)
