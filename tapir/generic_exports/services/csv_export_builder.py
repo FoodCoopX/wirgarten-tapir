@@ -32,7 +32,7 @@ class CsvExportBuilder:
         cls, csv_export: CsvExport, reference_datetime: datetime.datetime
     ):
         segment = ExportSegmentManager.get_segment_by_id(csv_export.export_segment_id)
-        queryset = segment.get_queryset(reference_datetime)
+        queryset = segment.get_queryset(reference_datetime).order_by("id")
         columns = [
             cls.get_column_by_id(segment, column_id)
             for column_id in csv_export.column_ids
