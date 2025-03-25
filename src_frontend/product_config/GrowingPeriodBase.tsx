@@ -1,20 +1,17 @@
 import React, { useState } from "react";
-import { GenericExportsApi } from "../api-client";
-import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import GrowingPeriodModal from "./GrowingPeriodModal.tsx";
-import { getPeriodId } from "./get_period_id.ts";
+import { getPeriodIdFromUrl } from "./get_period_id_from_url.ts";
 
 interface GrowingPeriodBaseProps {
   csrfToken: string;
 }
 
 const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
-  const api = useApi(GenericExportsApi, csrfToken);
   const [showModal, setShowModal] = useState(false);
 
   function onClick() {
-    if (!getPeriodId()) {
+    if (!getPeriodIdFromUrl()) {
       alert(
         "Du musst erst die Vertragsperiode die du editieren möchtest auswählen.",
       );

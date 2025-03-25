@@ -1,4 +1,4 @@
-export function getPeriodId() {
+export function getPeriodIdFromUrl() {
   const urlParameters = Object.fromEntries(
     window.location.search
       .substring(1)

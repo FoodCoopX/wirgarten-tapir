@@ -8,5 +8,5 @@ if (domNode) {
 
   root.render(<GrowingPeriodBase csrfToken={getCsrfToken()} />);
 } else {
-  console.error("Failed to render growing period button  from React");
+  console.error("Failed to render growing period button from React");
 }

@@ -5,7 +5,7 @@ import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import { getPeriodId } from "./get_period_id.ts";
+import { getPeriodIdFromUrl } from "./get_period_id_from_url.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;
@@ -31,10 +31,10 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   useEffect(() => {
     setDataLoading(true);
 
-    if (!getPeriodId()) return;
+    if (!getPeriodIdFromUrl()) return;
 
     api
-      .deliveriesGrowingPeriodsRetrieve({ id: getPeriodId() })
+      .deliveriesGrowingPeriodsRetrieve({ id: getPeriodIdFromUrl() })
       .then((growingPeriod) => {
         setGrowingPeriod(growingPeriod);
         setStartDate(growingPeriod.startDate);
@@ -71,9 +71,6 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   function onWeekChanged(index: number, newWeek: number) {
     const newWeeks = [...weeksWithoutDelivery];
     newWeeks[index] = newWeek;
-    console.log("YOYOYO");
-    console.log(weeksWithoutDelivery);
-    console.log(newWeeks);
     setWeeksWithoutDelivery(newWeeks);
   }
 
