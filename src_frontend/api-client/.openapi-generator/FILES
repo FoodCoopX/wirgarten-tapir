@@ -1,5 +1,6 @@
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
+apis/PickupLocationsApi.ts
 apis/SubscriptionsApi.ts
 apis/TapirmailApi.ts
 apis/index.ts
@@ -65,6 +66,9 @@ models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PickingModeEnum.ts
 models/PickupLocation.ts
+models/PickupLocationCapacities.ts
+models/PickupLocationCapacityByBasketSize.ts
+models/PickupLocationCapacityByShare.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts

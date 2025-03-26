@@ -628,6 +628,25 @@ paths:
       responses:
         '204':
           description: No response body
+  /pickup_locations/api/pickup_location_capacities:
+    get:
+      operationId: pickup_locations_api_pickup_location_capacities_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacities'
+          description: ''
   /subscriptions/api/extended_product:
     get:
       operationId: subscriptions_api_extended_product_retrieve
@@ -4260,6 +4279,49 @@ components:
       - name
       - postcode
       - street
+    PickupLocationCapacities:
+      type: object
+      properties:
+        picking_mode:
+          allOf:
+          - $ref: '#/components/schemas/PickingModeEnum'
+          readOnly: true
+        pickup_location_name:
+          type: string
+        capacities_by_shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByShare'
+        capacities_by_basket_size:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByBasketSize'
+      required:
+      - picking_mode
+      - pickup_location_name
+    PickupLocationCapacityByBasketSize:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+        capacity:
+          type: integer
+      required:
+      - basket_size_name
+      - capacity
+    PickupLocationCapacityByShare:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_type_id:
+          type: string
+        capacity:
+          type: integer
+      required:
+      - capacity
+      - product_type_id
+      - product_type_name
     PickupLocationOpeningTime:
       type: object
       properties:
