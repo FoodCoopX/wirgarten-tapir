@@ -8,7 +8,11 @@ import {
   Spinner,
   Table,
 } from "react-bootstrap";
-import { ProductBasketSizeEquivalence, SubscriptionsApi } from "../api-client";
+import {
+  PickingModeEnum,
+  ProductBasketSizeEquivalence,
+  SubscriptionsApi,
+} from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import {
@@ -36,6 +40,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [equivalences, setEquivalences] = useState<
     ProductBasketSizeEquivalence[]
   >([]);
+  const [pickingMode, setPickingMode] = useState<PickingModeEnum>(
+    PickingModeEnum.Share,
+  );
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +64,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setPrice(extendedProduct.price);
         setSize(extendedProduct.size);
         setEquivalences(extendedProduct.basketSizeEquivalences);
+        setPickingMode(extendedProduct.pickingMode);
       })
       .catch(alert)
       .finally(() => setDataLoading(false));
@@ -152,39 +160,41 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </Col>
             </Row>
           </ListGroup.Item>
-          <ListGroup.Item>
-            <Table striped hover responsive>
-              <thead>
-                <tr>
-                  <th>Kistengröße</th>
-                  <th>Menge</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equivalences.map((equivalence, index) => {
-                  return (
-                    <tr key={equivalence.basketSizeName}>
-                      <td>{equivalence.basketSizeName}</td>
-                      <td>
-                        <Form.Control
-                          type={"number"}
-                          min={0}
-                          step={1}
-                          value={equivalence.quantity}
-                          onChange={(event) =>
-                            onEquivalenceChanged(
-                              index,
-                              parseInt(event.target.value),
-                            )
-                          }
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </ListGroup.Item>
+          {pickingMode === PickingModeEnum.Basket && (
+            <ListGroup.Item>
+              <Table striped hover responsive>
+                <thead>
+                  <tr>
+                    <th>Kistengröße</th>
+                    <th>Menge</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {equivalences.map((equivalence, index) => {
+                    return (
+                      <tr key={equivalence.basketSizeName}>
+                        <td>{equivalence.basketSizeName}</td>
+                        <td>
+                          <Form.Control
+                            type={"number"}
+                            min={0}
+                            step={1}
+                            value={equivalence.quantity}
+                            onChange={(event) =>
+                              onEquivalenceChanged(
+                                index,
+                                parseInt(event.target.value),
+                              )
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </ListGroup.Item>
+          )}
         </Form>
       </ListGroup>
     );

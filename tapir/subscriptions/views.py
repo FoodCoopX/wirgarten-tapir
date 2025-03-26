@@ -224,6 +224,8 @@ class ExtendedProductView(APIView):
             ).items()
         ]
 
+        data["picking_mode"] = get_parameter_value(Parameter.PICKING_MODE)
+
         return Response(
             ExtendedProductSerializer(data).data,
             status=status.HTTP_200_OK,

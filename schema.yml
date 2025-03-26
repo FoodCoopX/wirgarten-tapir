@@ -3456,12 +3456,17 @@ components:
             $ref: '#/components/schemas/ProductBasketSizeEquivalence'
         growing_period_id:
           type: string
+        picking_mode:
+          allOf:
+          - $ref: '#/components/schemas/PickingModeEnum'
+          readOnly: true
       required:
       - base
       - basket_size_equivalences
       - deleted
       - id
       - name
+      - picking_mode
       - price
       - size
     GroupedEmailDispatch:
@@ -4190,6 +4195,14 @@ components:
       - generate_one_file_for_every_segment_entry
       - name
       - template
+    PickingModeEnum:
+      enum:
+      - picking_mode_basket
+      - picking_mode_share
+      type: string
+      description: |-
+        * `picking_mode_basket` - Nach Kisten
+        * `picking_mode_share` - Nach Anteile
     PickupLocation:
       type: object
       properties:

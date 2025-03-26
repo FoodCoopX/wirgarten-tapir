@@ -20,6 +20,13 @@ import {
     ProductBasketSizeEquivalenceToJSON,
     ProductBasketSizeEquivalenceToJSONTyped,
 } from './ProductBasketSizeEquivalence';
+import type { PickingModeEnum } from './PickingModeEnum';
+import {
+    PickingModeEnumFromJSON,
+    PickingModeEnumFromJSONTyped,
+    PickingModeEnumToJSON,
+    PickingModeEnumToJSONTyped,
+} from './PickingModeEnum';
 
 /**
  * 
@@ -75,7 +82,15 @@ export interface ExtendedProduct {
      * @memberof ExtendedProduct
      */
     growingPeriodId?: string;
+    /**
+     * 
+     * @type {PickingModeEnum}
+     * @memberof ExtendedProduct
+     */
+    readonly pickingMode: PickingModeEnum;
 }
+
+
 
 /**
  * Check if a given object implements the ExtendedProduct interface.
@@ -88,6 +103,7 @@ export function instanceOfExtendedProduct(value: object): value is ExtendedProdu
     if (!('price' in value) || value['price'] === undefined) return false;
     if (!('size' in value) || value['size'] === undefined) return false;
     if (!('basketSizeEquivalences' in value) || value['basketSizeEquivalences'] === undefined) return false;
+    if (!('pickingMode' in value) || value['pickingMode'] === undefined) return false;
     return true;
 }
 
@@ -109,6 +125,7 @@ export function ExtendedProductFromJSONTyped(json: any, ignoreDiscriminator: boo
         'size': json['size'],
         'basketSizeEquivalences': ((json['basket_size_equivalences'] as Array<any>).map(ProductBasketSizeEquivalenceFromJSON)),
         'growingPeriodId': json['growing_period_id'] == null ? undefined : json['growing_period_id'],
+        'pickingMode': PickingModeEnumFromJSON(json['picking_mode']),
     };
 }
 
@@ -116,7 +133,7 @@ export function ExtendedProductFromJSONTyped(json: any, ignoreDiscriminator: boo
       return ExtendedProductToJSONTyped(json, false);
   }
 
-  export function ExtendedProductToJSONTyped(value?: ExtendedProduct | null, ignoreDiscriminator: boolean = false): any {
+  export function ExtendedProductToJSONTyped(value?: Omit<ExtendedProduct, 'picking_mode'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -59,6 +59,7 @@ export * from './PatchedStoredUploadRequest';
 export * from './PatchedTemporaryUploadRequest';
 export * from './PdfExportModel';
 export * from './PdfExportModelRequest';
+export * from './PickingModeEnum';
 export * from './PickupLocation';
 export * from './PickupLocationOpeningTime';
 export * from './Product';

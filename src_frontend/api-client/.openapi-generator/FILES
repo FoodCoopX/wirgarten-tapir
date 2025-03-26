@@ -63,6 +63,7 @@ models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
+models/PickingModeEnum.ts
 models/PickupLocation.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
