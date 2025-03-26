@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.models import ProductBasketSizeEquivalence
+from tapir.wirgarten.models import Product
 from tapir.wirgarten.parameters import Parameter
 
 
@@ -17,6 +19,16 @@ class BasketSizeService:
         if basket_sizes_as_string is None:
             basket_sizes_as_string = get_parameter_value(Parameter.PICKING_BASKET_SIZES)
 
-        basket_sizes = ";".split(basket_sizes_as_string)
+        basket_sizes = basket_sizes_as_string.split(";")
 
         return [size for size in basket_sizes if size.strip() != ""]
+
+    @classmethod
+    def get_basket_size_equivalences_for_product(cls, product: Product):
+        equivalences = {size_name: 0 for size_name in cls.get_basket_sizes()}
+        for equivalence in ProductBasketSizeEquivalence.objects.filter(product=product):
+            if equivalence.basket_size_name not in equivalences.keys():
+                continue
+
+            equivalences[equivalence.basket_size_name] = equivalence.quantity
+        return equivalences

@@ -4,7 +4,7 @@ import { DeliveriesApi, DeliveryDayAdjustment } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
-import { getPeriodIdFromUrl } from "./get_period_id_from_url.ts";
+import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;

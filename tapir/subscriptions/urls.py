@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.subscriptions import views
 
@@ -14,4 +15,12 @@ urlpatterns = [
         views.CancelSubscriptionsView.as_view(),
         name="cancel_subscriptions",
     ),
+    path(
+        "api/extended_product",
+        views.ExtendedProductView.as_view(),
+        name="extended_product",
+    ),
 ]
+
+router = DefaultRouter()
+urlpatterns += router.urls

@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
-import GrowingPeriodModal from "./GrowingPeriodModal.tsx";
-import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
+import { getProductIdFromUrl } from "./get_parameter_from_url.ts";
+import ProductModal from "./ProductModal.tsx";
 
-interface GrowingPeriodBaseProps {
+interface ProductBaseProps {
   csrfToken: string;
 }
 
-const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
+const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
 
   function onClick() {
-    if (!getPeriodIdFromUrl()) {
-      alert(
-        "Du musst erst die Vertragsperiode die du editieren möchtest auswählen.",
-      );
+    if (!getProductIdFromUrl()) {
+      alert("Du musst erst das Produkt das du editieren möchtest auswählen.");
       return;
     }
     setShowModal(true);
@@ -26,7 +24,7 @@ const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
         variant={"outline-primary"}
         onClick={onClick}
       />
-      <GrowingPeriodModal
+      <ProductModal
         csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -35,4 +33,4 @@ const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
   );
 };
 
-export default GrowingPeriodBase;
+export default ProductBase;

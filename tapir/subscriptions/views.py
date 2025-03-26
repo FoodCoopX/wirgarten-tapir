@@ -11,18 +11,23 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.pickup_locations.services.basket_size_service import BasketSizeService
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
+    ExtendedProductSerializer,
 )
+from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, Product
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
+    get_product_price,
 )
 from tapir.wirgarten.utils import check_permission_or_self
 
@@ -187,5 +192,60 @@ class CancelSubscriptionsView(APIView):
             CancelSubscriptionsViewResponseSerializer(
                 {"subscriptions_cancelled": subscriptions_cancelled, "errors": errors}
             ).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ExtendedProductView(APIView):
+    @extend_schema(
+        responses={200: ExtendedProductSerializer()},
+        parameters=[OpenApiParameter(name="product_id", type=str)],
+    )
+    def get(self, request):
+        if not request.user.has_perm(Permission.Products.VIEW):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        product = get_object_or_404(Product, id=request.query_params.get("product_id"))
+
+        data = {
+            attribute: getattr(product, attribute)
+            for attribute in ["id", "name", "deleted", "base"]
+        }
+
+        product_price_object = get_product_price(product)
+        data.update(
+            {"price": product_price_object.price, "size": product_price_object.size}
+        )
+
+        data["basket_size_equivalences"] = [
+            {"basket_size_name": size_name, "quantity": quantity}
+            for size_name, quantity in BasketSizeService.get_basket_size_equivalences_for_product(
+                product
+            ).items()
+        ]
+
+        return Response(
+            ExtendedProductSerializer(data).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        responses={200: str},
+        request=ExtendedProductSerializer(),
+    )
+    def patch(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        request_serializer = ExtendedProductSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+
+        product = get_object_or_404(Product, id=request_serializer.validated_data["id"])
+
+        with transaction.atomic():
+            ProductUpdater.update_product(product, request_serializer)
+
+        return Response(
+            "OK",
             status=status.HTTP_200_OK,
         )

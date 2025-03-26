@@ -628,6 +628,49 @@ paths:
       responses:
         '204':
           description: No response body
+  /subscriptions/api/extended_product:
+    get:
+      operationId: subscriptions_api_extended_product_retrieve
+      parameters:
+      - in: query
+        name: product_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedProduct'
+          description: ''
+    patch:
+      operationId: subscriptions_api_extended_product_partial_update
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /subscriptions/cancel_subscriptions:
     post:
       operationId: subscriptions_cancel_subscriptions_create
@@ -3390,6 +3433,37 @@ components:
       - description
       - display_name
       - id
+    ExtendedProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+        price:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+        basket_size_equivalences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductBasketSizeEquivalence'
+        growing_period_id:
+          type: string
+      required:
+      - base
+      - basket_size_equivalences
+      - deleted
+      - id
+      - name
+      - price
+      - size
     GroupedEmailDispatch:
       type: object
       properties:
@@ -3826,6 +3900,32 @@ components:
         content:
           type: string
           minLength: 1
+    PatchedExtendedProductRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+        price:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+        basket_size_equivalences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductBasketSizeEquivalenceRequest'
+        growing_period_id:
+          type: string
+          minLength: 1
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -4190,6 +4290,27 @@ components:
       required:
       - name
       - type
+    ProductBasketSizeEquivalence:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - basket_size_name
+      - quantity
+    ProductBasketSizeEquivalenceRequest:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+      required:
+      - basket_size_name
+      - quantity
     ProductForCancellation:
       type: object
       properties:

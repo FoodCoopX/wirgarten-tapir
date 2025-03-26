@@ -32,6 +32,7 @@ models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
+models/ExtendedProduct.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
@@ -52,6 +53,7 @@ models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
 models/PatchedEmailConfigurationRequest.ts
 models/PatchedEmailTemplateRequest.ts
+models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedPdfExportModelRequest.ts
@@ -64,6 +66,8 @@ models/PdfExportModelRequest.ts
 models/PickupLocation.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
+models/ProductBasketSizeEquivalence.ts
+models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
 models/RecipientRequest.ts
