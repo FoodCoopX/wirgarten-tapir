@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "tapir.generic_exports",
     "tapir.subscriptions",
     "tapir.coop",
+    "tapir.pickup_locations",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields

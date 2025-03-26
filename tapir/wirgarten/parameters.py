@@ -7,6 +7,8 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
+
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
     (1, _("Dienstag")),
@@ -26,7 +28,7 @@ class ParameterCategory:
     ADDITIONAL_SHARES = "Zusatzabos"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
-    PICK_LIST = "Kommissionierliste"
+    PICKING = "Kommissionierung"
     PAYMENT = "Zahlungen"
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
@@ -59,8 +61,10 @@ class Parameter:
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
-    PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
-    PICK_LIST_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
+    PICKING_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
+    PICKING_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
+    PICKING_MODE = f"{PREFIX}.picking.picking_mode"
+    PICKING_BASKET_SIZES = f"{PREFIX}.picking.basket_sizes"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
@@ -138,6 +142,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.wirgarten.validators import validate_html
         from tapir.deliveries.services.joker_management_service import (
             JokerManagementService,
+        )
+        from tapir.pickup_locations.services.basket_size_service import (
+            BasketSizeService,
         )
 
         parameter_definition(
@@ -322,21 +329,45 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICK_LIST_PRODUCT_TYPES,
+            key=Parameter.PICKING_PRODUCT_TYPES,
             label="Produkte für Kommisionierliste",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ernteanteile",
             description="Komma-separierte Liste der Zusatzabos für die eine Kommissionierliste erzeugt werden soll.",
-            category=ParameterCategory.PICK_LIST,
+            category=ParameterCategory.PICKING,
+            order_priority=4,
         )
 
         parameter_definition(
-            key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
+            key=Parameter.PICKING_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
-            category=ParameterCategory.PICK_LIST,
+            category=ParameterCategory.PICKING,
+            order_priority=5,
+        )
+
+        parameter_definition(
+            key=Parameter.PICKING_MODE,
+            label="Kommissionierungsmodus",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=PICKING_MODE_SHARE,
+            description="Ob Verteilstation-Kapazitäten nach Anteile oder Kisten berechnet werden",
+            category=ParameterCategory.PICKING,
+            order_priority=3,
+            meta=ParameterMeta(options=OPTIONS_PICKING_MODE),
+        )
+
+        parameter_definition(
+            key=Parameter.PICKING_BASKET_SIZES,
+            label="Kistengrößen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="kleinen Kiste;normalen Kiste;",
+            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleinen Kiste;normalen Kiste;'",
+            category=ParameterCategory.PICKING,
+            order_priority=2,
+            meta=ParameterMeta(validators=[BasketSizeService.validate_basket_sizes]),
         )
 
         parameter_definition(
