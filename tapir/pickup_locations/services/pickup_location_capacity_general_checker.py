@@ -43,19 +43,20 @@ class PickupLocationCapacityGeneralChecker:
 
         picking_mode = get_parameter_value(Parameter.PICKING_MODE)
 
-        if picking_mode is PICKING_MODE_SHARE:
+        if picking_mode == PICKING_MODE_SHARE:
             return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
                 pickup_location,
                 ordered_products_to_quantity_map,
                 already_registered_member,
                 subscription_start,
             )
-        elif picking_mode is PICKING_MODE_BASKET:
+        elif picking_mode == PICKING_MODE_BASKET:
             return (
                 PickupLocationCapacityModeBasketChecker.check_for_picking_mode_basket(
                     pickup_location,
                     ordered_products_to_quantity_map,
                     already_registered_member,
+                    subscription_start,
                 )
             )
         else:

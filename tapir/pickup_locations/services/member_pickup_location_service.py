@@ -35,6 +35,6 @@ class MemberPickupLocationService:
         if not hasattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID):
             member = cls.annotate_member_queryset_with_pickup_location_at_date(
                 Member.objects.filter(id=member.id), reference_date
-            )
+            ).get()
 
         return getattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID)

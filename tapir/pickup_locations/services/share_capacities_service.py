@@ -1,3 +1,5 @@
+from icecream import ic
+
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import PickupLocation, ProductType, PickupLocationCapability
 
@@ -13,7 +15,7 @@ class SharesCapacityService:
                 delivery_cycle=NO_DELIVERY[0]
             )
         }
-
+        ic(pickup_location)
         for capability in PickupLocationCapability.objects.filter(
             pickup_location=pickup_location
         ):

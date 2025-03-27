@@ -1,16 +1,20 @@
 import datetime
 from typing import Dict
 
+from django.db.models import OuterRef, Subquery, DecimalField, F, Sum
+
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.wirgarten.forms.pickup_location import get_current_capacity_usage
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
     Product,
-    PickupLocationCapability,
     ProductType,
+    ProductPrice,
 )
 from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
 
@@ -58,7 +62,7 @@ class PickupLocationCapacityModeShareChecker:
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
     ):
-        current_usage = cls.get_current_capacity_usage(
+        current_usage = cls.get_capacity_usage_at_date(
             pickup_location, product_type, subscription_start
         )
         amount_used_by_member_before_changes = (
@@ -79,18 +83,44 @@ class PickupLocationCapacityModeShareChecker:
         return capacity_usage_after_changes <= available_capacity
 
     @classmethod
-    def get_current_capacity_usage(
+    def get_capacity_usage_at_date(
         cls,
         pickup_location: PickupLocation,
         product_type: ProductType,
-        subscription_start: datetime.date,
+        reference_date: datetime.date,
     ):
-        return get_current_capacity_usage(
-            capability=PickupLocationCapability.objects.get(
-                pickup_location=pickup_location, product_type=product_type
-            ),
-            reference_date=subscription_start,
+        members_at_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
+            Member.objects.all(), reference_date
+        ).filter(
+            **{
+                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
+            }
         )
+
+        subscriptions = get_active_subscriptions(reference_date).filter(
+            member__in=members_at_pickup_location, product__type=product_type
+        )
+        latest_valid_product_price = (
+            ProductPrice.objects.filter(
+                product=OuterRef("product"), valid_from__lte=reference_date
+            )
+            .order_by("-valid_from")
+            .values("size")[:1]
+        )
+
+        subscriptions_annotated_with_total_size = subscriptions.annotate(
+            latest_size=Subquery(
+                latest_valid_product_price,
+                output_field=DecimalField(decimal_places=4),
+            ),
+            total_size_per_subscription=F("latest_size") * F("quantity"),
+        )
+
+        total_size = subscriptions_annotated_with_total_size.aggregate(
+            total_size=Sum("total_size_per_subscription")
+        )["total_size"]
+
+        return float(total_size) if total_size else 0
 
     @classmethod
     def get_capacity_used_by_member_before_changes(

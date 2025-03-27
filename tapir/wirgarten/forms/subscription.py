@@ -916,7 +916,7 @@ class AdditionalProductForm(forms.Form):
 
         validate_pickup_location_capacity(
             form=self,
-            pickup_location=latest_member_pickup_location,
+            pickup_location=latest_member_pickup_location.pickup_location,
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             start_date=self.start_date,
             member_id=self.member_id,
