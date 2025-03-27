@@ -34,6 +34,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/product_config/product_config_entry.tsx",
           ),
+          pickup_location_config: join(
+            INPUT_DIR,
+            "/pickup_location_config/pickup_location_config_entry.tsx",
+          ),
         },
       },
     },

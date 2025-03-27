@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "tapir.generic_exports",
     "tapir.subscriptions",
     "tapir.coop",
+    "tapir.pickup_locations",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
@@ -213,3 +214,5 @@ DJANGO_VITE = {
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
 CORS_ALLOW_CREDENTIALS = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

@@ -132,7 +132,7 @@ def _export_pick_list(product_type, include_equivalents=True):
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
         send_email=get_parameter_value(
-            Parameter.PICK_LIST_SEND_ADMIN_EMAIL
+            Parameter.PICKING_SEND_ADMIN_EMAIL
             if include_equivalents
             else Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
         ),
@@ -145,15 +145,15 @@ def export_pick_list_csv():
     Exports a CSV file containing the pick list for the next delivery.
     """
     all_product_types = {pt.name: pt for pt in get_active_product_types()}
-    include_product_types = get_parameter_value(
-        Parameter.PICK_LIST_PRODUCT_TYPES
-    ).split(",")
+    include_product_types = get_parameter_value(Parameter.PICKING_PRODUCT_TYPES).split(
+        ","
+    )
 
     for type_name in include_product_types:
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICK_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICKING_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], True)

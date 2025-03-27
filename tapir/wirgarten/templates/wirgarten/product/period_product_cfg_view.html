@@ -21,10 +21,10 @@
                     {% if perms.coop.manage %}
                         {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodAddForm()' title='Vertragsperiode hinzufügen' type='dark' icon='add' id='growing-period-add-btn' %}
                         {% include 'wirgarten/generic/action-button.html' with onclick='getGrowingPeriodCopyForm()' title='Vertragsperiode kopieren' disabled=True class='need-growing-period copy-btn' type='success' icon='folder_copy' id='growing-period-copy-form-btn' %}
-                        {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Vertragsperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
                         <div id="edit_growing_period_button" class="mx-1">
                             <span class="spinner-border"></span>
                         </div>
+                        {% include 'wirgarten/generic/action-button.html' with onclick='deleteGrowingPeriod()' title='Vertragsperiode löschen' disabled=True class='need-growing-period delete-btn' type='danger' icon='delete' id='del-growing-period-btn' %}
                     {% endif %}
                 </div>
             </div>
@@ -112,13 +112,16 @@
         </div>
         <span style="margin: auto" class="material-icons">arrow_forward</span>
         <div class="card">
-            <div style="display: flex;flex-direction: row" class="card-header">
+            <div class="d-flex flex-row justify-content-between card-header">
                 <h5 style="margin: auto; width: 100%">{% translate 'Produkte' %}</h5>
                 {% if perms.products.manage %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
-                    {% include 'wirgarten/generic/action-button.html' with onclick='getProductEditForm()' title='Produkt bearbeiten' disabled=True class='need-product' type='primary' icon='edit' id='edit-product-btn' %}
-                    <div style="width: 3em"></div>
-                    {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
+                    <div class="d-flex flex-row">
+                        {% include 'wirgarten/generic/action-button.html' with onclick='getProductAddForm()' title='Produkt hinzufügen' disabled=True class='need-product-type' type='success' icon='add' id='add-product-btn' %}
+                        <div id="edit_product_button" class="mx-1">
+                            <span class="spinner-border"></span>
+                        </div>
+                        {% include 'wirgarten/generic/action-button.html' with onclick='deleteProduct()' title='Produkt löschen' disabled=True class='need-product delete-btn' type='danger' icon='delete' id='del-product-btn' %}
+                    </div>
                 {% endif %}
             </div>
             <div style="overflow: auto" class="card-body">

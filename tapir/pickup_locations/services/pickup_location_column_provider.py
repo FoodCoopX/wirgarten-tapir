@@ -1,9 +1,9 @@
 import datetime
 
-from tapir.deliveries.services.member_pickup_location_service import (
+from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
+from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
-from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.wirgarten.models import PickupLocation, Member
 
 

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import ProductSerializer
+from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
+from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -17,3 +19,15 @@ class CancellationDataSerializer(serializers.Serializer):
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):
     subscriptions_cancelled = serializers.BooleanField()
     errors = serializers.ListField(child=serializers.CharField())
+
+
+class ExtendedProductSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    deleted = serializers.BooleanField()
+    base = serializers.BooleanField()
+    price = serializers.FloatField()
+    size = serializers.FloatField()
+    basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
+    growing_period_id = serializers.CharField(required=False)
+    picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)

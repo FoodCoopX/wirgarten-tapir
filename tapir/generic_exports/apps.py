@@ -17,7 +17,7 @@ class GenericExportsConfig(AppConfig):
         for segment in MemberSegmentProvider.get_member_segments():
             ExportSegmentManager.register_segment(segment)
 
-        from tapir.generic_exports.services.pickup_location_segment_provider import (
+        from tapir.pickup_locations.services.pickup_location_segment_provider import (
             PickupLocationSegmentProvider,
         )
 

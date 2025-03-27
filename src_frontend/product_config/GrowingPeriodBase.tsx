@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
 import GrowingPeriodModal from "./GrowingPeriodModal.tsx";
-import { getPeriodIdFromUrl } from "./get_period_id_from_url.ts";
+import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 
 interface GrowingPeriodBaseProps {
   csrfToken: string;

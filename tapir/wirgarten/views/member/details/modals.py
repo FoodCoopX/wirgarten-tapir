@@ -113,6 +113,8 @@ def get_pickup_location_choice_form(request, **kwargs):
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
+    kwargs["member"] = member
+
     @transaction.atomic
     def update_pickup_location(form):
         pickup_location_id = form.cleaned_data["pickup_location"].id

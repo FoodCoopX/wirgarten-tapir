@@ -17,13 +17,27 @@ import * as runtime from '../runtime';
 import type {
   CancelSubscriptionsViewResponse,
   CancellationData,
+  ExtendedProduct,
+  PatchedExtendedProductRequest,
 } from '../models/index';
 import {
     CancelSubscriptionsViewResponseFromJSON,
     CancelSubscriptionsViewResponseToJSON,
     CancellationDataFromJSON,
     CancellationDataToJSON,
+    ExtendedProductFromJSON,
+    ExtendedProductToJSON,
+    PatchedExtendedProductRequestFromJSON,
+    PatchedExtendedProductRequestToJSON,
 } from '../models/index';
+
+export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
+    patchedExtendedProductRequest?: PatchedExtendedProductRequest;
+}
+
+export interface SubscriptionsApiExtendedProductRetrieveRequest {
+    productId?: string;
+}
 
 export interface SubscriptionsCancelSubscriptionsCreateRequest {
     cancelCoopMembership?: boolean;
@@ -39,6 +53,65 @@ export interface SubscriptionsCancellationDataRetrieveRequest {
  * 
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async subscriptionsApiExtendedProductPartialUpdateRaw(requestParameters: SubscriptionsApiExtendedProductPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/subscriptions/api/extended_product`,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedExtendedProductRequestToJSON(requestParameters['patchedExtendedProductRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async subscriptionsApiExtendedProductPartialUpdate(requestParameters: SubscriptionsApiExtendedProductPartialUpdateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.subscriptionsApiExtendedProductPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async subscriptionsApiExtendedProductRetrieveRaw(requestParameters: SubscriptionsApiExtendedProductRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ExtendedProduct>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['productId'] != null) {
+            queryParameters['product_id'] = requestParameters['productId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/api/extended_product`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ExtendedProductFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsApiExtendedProductRetrieve(requestParameters: SubscriptionsApiExtendedProductRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ExtendedProduct> {
+        const response = await this.subscriptionsApiExtendedProductRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */
