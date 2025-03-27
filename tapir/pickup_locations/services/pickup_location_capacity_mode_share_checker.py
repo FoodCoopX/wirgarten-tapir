@@ -32,6 +32,10 @@ class PickupLocationCapacityModeShareChecker:
             product_type,
             available_capacity,
         ) in product_type_to_available_capacity_map.items():
+            if available_capacity is None:
+                # if the capacity in None, the location has unlimited capacity
+                continue
+
             if not cls.check_capacity_for_product_type(
                 product_type=product_type,
                 available_capacity=available_capacity,

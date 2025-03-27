@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -9,6 +10,9 @@ from django.db.models import DecimalField, F, OuterRef, Subquery, Sum
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
@@ -18,6 +22,7 @@ from tapir.wirgarten.models import (
     Product,
     ProductPrice,
     ProductType,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
@@ -240,44 +245,9 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             if capacity_usage > 0
         }
 
-        possible_locations = PickupLocation.objects.filter(
-            id__in=map(
-                lambda location_capability: location_capability["pickup_location_id"],
-                location_capabilities,
-            )
+        possible_locations = self.get_possible_locations(
+            list(initial["subs"].values()), reference_date
         )
-        next_month = get_today() + relativedelta(months=1, day=1)
-
-        for product_type_name in selected_product_types:
-            possible_locations = possible_locations.filter(
-                id__in=[
-                    capability["pickup_location_id"]
-                    for capability in location_capabilities
-                    if capability["product_type__name"] == product_type_name
-                ]
-            )
-            # get current free capacity for each location and filter out locations with no capacity
-            for possible_location in possible_locations:
-                for location_capability in location_capabilities:
-                    if (
-                        possible_location.id
-                        != location_capability["pickup_location_id"]
-                        or not location_capability["max_capacity"]
-                        or location_capability["product_type__name"]
-                        != product_type_name
-                    ):
-                        continue
-
-                    current_capacity_usage = get_current_capacity_usage(
-                        location_capability, next_month
-                    )
-                    max_capacity = location_capability["max_capacity"] + 0.1
-                    free_capacity = max_capacity - current_capacity_usage
-
-                    if selected_product_types[product_type_name] > free_capacity:
-                        possible_locations = possible_locations.exclude(
-                            id=possible_location.id
-                        )
 
         super(PickupLocationChoiceField, self).__init__(
             queryset=possible_locations,
@@ -290,6 +260,27 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             ),
             **kwargs,
         )
+
+    def get_possible_locations(
+        self, subscriptions: List[Subscription], reference_date: datetime.date
+    ):
+        possible_location_ids = []
+        for pickup_location in PickupLocation.objects.all():
+            ordered_products_to_quantity_map = {
+                subscription.product: subscription.quantity
+                for subscription in subscriptions
+            }
+            member = None
+            if len(subscriptions) > 0:
+                member = list(subscriptions)[0].member
+            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location,
+                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                already_registered_member=member,
+                subscription_start=reference_date,
+            ):
+                possible_location_ids.append(pickup_location.id)
+        return PickupLocation.objects.filter(id__in=possible_location_ids)
 
     def label_from_instance(self, obj):
         return f"<strong>{obj.name}</strong><br/><small>{obj.street}, {obj.postcode} {obj.city}</small>"

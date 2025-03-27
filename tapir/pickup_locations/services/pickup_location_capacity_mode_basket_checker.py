@@ -35,6 +35,10 @@ class PickupLocationCapacityModeBasketChecker:
             basket_size,
             available_capacity,
         ) in basket_size_to_available_capacity_map.items():
+            if available_capacity is None:
+                # if the capacity in None, the location has unlimited capacity
+                continue
+
             if not cls.check_capacity_for_basket_size(
                 basket_size=basket_size,
                 available_capacity=available_capacity,
