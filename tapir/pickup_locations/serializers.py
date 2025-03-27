@@ -15,7 +15,7 @@ class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):
 class PickupLocationCapacityByShareSerializer(serializers.Serializer):
     product_type_name = serializers.CharField()
     product_type_id = serializers.CharField()
-    capacity = serializers.IntegerField()
+    capacity = serializers.IntegerField(required=False)
 
 
 class PickupLocationCapacityByBasketSizeSerializer(serializers.Serializer):
@@ -24,7 +24,8 @@ class PickupLocationCapacityByBasketSizeSerializer(serializers.Serializer):
 
 
 class PickupLocationCapacitiesSerializer(serializers.Serializer):
-    picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
+    picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE)
+    pickup_location_id = serializers.CharField()
     pickup_location_name = serializers.CharField()
     capacities_by_shares = PickupLocationCapacityByShareSerializer(
         many=True, required=False
@@ -35,6 +36,9 @@ class PickupLocationCapacitiesSerializer(serializers.Serializer):
 
     def validate(self, data):
         data = super().validate(data)
+
+        if "picking_mode" not in data.keys():
+            return data
 
         if (
             data["picking_mode"] == PICKING_MODE_BASKET

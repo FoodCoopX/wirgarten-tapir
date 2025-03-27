@@ -46,7 +46,13 @@ export interface PickupLocationCapacities {
      * @type {PickingModeEnum}
      * @memberof PickupLocationCapacities
      */
-    readonly pickingMode: PickingModeEnum;
+    pickingMode: PickingModeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof PickupLocationCapacities
+     */
+    pickupLocationId: string;
     /**
      * 
      * @type {string}
@@ -74,6 +80,7 @@ export interface PickupLocationCapacities {
  */
 export function instanceOfPickupLocationCapacities(value: object): value is PickupLocationCapacities {
     if (!('pickingMode' in value) || value['pickingMode'] === undefined) return false;
+    if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
     return true;
 }
@@ -89,6 +96,7 @@ export function PickupLocationCapacitiesFromJSONTyped(json: any, ignoreDiscrimin
     return {
         
         'pickingMode': PickingModeEnumFromJSON(json['picking_mode']),
+        'pickupLocationId': json['pickup_location_id'],
         'pickupLocationName': json['pickup_location_name'],
         'capacitiesByShares': json['capacities_by_shares'] == null ? undefined : ((json['capacities_by_shares'] as Array<any>).map(PickupLocationCapacityByShareFromJSON)),
         'capacitiesByBasketSize': json['capacities_by_basket_size'] == null ? undefined : ((json['capacities_by_basket_size'] as Array<any>).map(PickupLocationCapacityByBasketSizeFromJSON)),
@@ -99,13 +107,15 @@ export function PickupLocationCapacitiesFromJSONTyped(json: any, ignoreDiscrimin
       return PickupLocationCapacitiesToJSONTyped(json, false);
   }
 
-  export function PickupLocationCapacitiesToJSONTyped(value?: Omit<PickupLocationCapacities, 'picking_mode'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationCapacitiesToJSONTyped(value?: PickupLocationCapacities | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
+        'picking_mode': PickingModeEnumToJSON(value['pickingMode']),
+        'pickup_location_id': value['pickupLocationId'],
         'pickup_location_name': value['pickupLocationName'],
         'capacities_by_shares': value['capacitiesByShares'] == null ? undefined : ((value['capacitiesByShares'] as Array<any>).map(PickupLocationCapacityByShareToJSON)),
         'capacities_by_basket_size': value['capacitiesByBasketSize'] == null ? undefined : ((value['capacitiesByBasketSize'] as Array<any>).map(PickupLocationCapacityByBasketSizeToJSON)),

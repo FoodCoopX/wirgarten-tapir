@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
+from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import PickupLocationCapacitiesSerializer
 from tapir.pickup_locations.services.basket_size_service import BasketSizeService
 from tapir.wirgarten.constants import Permission
@@ -29,6 +30,7 @@ class PickupLocationCapacitiesView(APIView):
         picking_mode = get_parameter_value(Parameter.PICKING_MODE)
 
         data = {
+            "pickup_location_id": pickup_location.id,
             "pickup_location_name": pickup_location.name,
             "picking_mode": picking_mode,
         }
@@ -79,3 +81,68 @@ class PickupLocationCapacitiesView(APIView):
             }
             for product_type_id, capacity_object in capacities.items()
         ]
+
+    @extend_schema(
+        responses={200: str},
+        request=PickupLocationCapacitiesSerializer(),
+    )
+    def patch(self, request):
+        if not request.user.has_perm(Permission.Products.MANAGE):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        request_serializer = PickupLocationCapacitiesSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+
+        pickup_location = get_object_or_404(
+            PickupLocation, id=request_serializer.validated_data["pickup_location_id"]
+        )
+
+        picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+
+        if picking_mode == PICKING_MODE_BASKET:
+            self.save_capacities_by_basket_size(
+                pickup_location,
+                request_serializer.validated_data["capacities_by_basket_size"],
+            )
+
+        if picking_mode == PICKING_MODE_SHARE:
+            self.save_capacities_by_share(
+                pickup_location,
+                request_serializer.validated_data["capacities_by_shares"],
+            )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @staticmethod
+    def save_capacities_by_basket_size(
+        pickup_location: PickupLocation, capacities_by_basket_size
+    ):
+        PickupLocationBasketCapacity.objects.filter(
+            pickup_location=pickup_location
+        ).delete()
+        PickupLocationBasketCapacity.objects.bulk_create(
+            [
+                PickupLocationBasketCapacity(
+                    pickup_location=pickup_location,
+                    basket_size_name=capacity["basket_size_name"],
+                    capacity=capacity["capacity"],
+                )
+                for capacity in capacities_by_basket_size
+            ]
+        )
+
+    @staticmethod
+    def save_capacities_by_share(pickup_location: PickupLocation, capacities_by_shares):
+        PickupLocationCapability.objects.filter(
+            pickup_location=pickup_location
+        ).delete()
+        PickupLocationCapability.objects.bulk_create(
+            [
+                PickupLocationCapability(
+                    pickup_location=pickup_location,
+                    product_type_id=capacity["product_type_id"],
+                    max_capacity=capacity.get("capacity", None),
+                )
+                for capacity in capacities_by_shares
+            ]
+        )

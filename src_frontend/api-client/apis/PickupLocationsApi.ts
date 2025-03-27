@@ -15,12 +15,19 @@
 
 import * as runtime from '../runtime';
 import type {
+  PatchedPickupLocationCapacitiesRequest,
   PickupLocationCapacities,
 } from '../models/index';
 import {
+    PatchedPickupLocationCapacitiesRequestFromJSON,
+    PatchedPickupLocationCapacitiesRequestToJSON,
     PickupLocationCapacitiesFromJSON,
     PickupLocationCapacitiesToJSON,
 } from '../models/index';
+
+export interface PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest {
+    patchedPickupLocationCapacitiesRequest?: PatchedPickupLocationCapacitiesRequest;
+}
 
 export interface PickupLocationsApiPickupLocationCapacitiesRetrieveRequest {
     pickupLocationId?: string;
@@ -30,6 +37,37 @@ export interface PickupLocationsApiPickupLocationCapacitiesRetrieveRequest {
  * 
  */
 export class PickupLocationsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacitiesPartialUpdateRaw(requestParameters: PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/pickup_locations/api/pickup_location_capacities`,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedPickupLocationCapacitiesRequestToJSON(requestParameters['patchedPickupLocationCapacitiesRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacitiesPartialUpdate(requestParameters: PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.pickupLocationsApiPickupLocationCapacitiesPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

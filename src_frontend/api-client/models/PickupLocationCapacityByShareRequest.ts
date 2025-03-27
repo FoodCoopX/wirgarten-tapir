@@ -16,43 +16,43 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface PickupLocationCapacityByShare
+ * @interface PickupLocationCapacityByShareRequest
  */
-export interface PickupLocationCapacityByShare {
+export interface PickupLocationCapacityByShareRequest {
     /**
      * 
      * @type {string}
-     * @memberof PickupLocationCapacityByShare
+     * @memberof PickupLocationCapacityByShareRequest
      */
     productTypeName: string;
     /**
      * 
      * @type {string}
-     * @memberof PickupLocationCapacityByShare
+     * @memberof PickupLocationCapacityByShareRequest
      */
     productTypeId: string;
     /**
      * 
      * @type {number}
-     * @memberof PickupLocationCapacityByShare
+     * @memberof PickupLocationCapacityByShareRequest
      */
     capacity?: number;
 }
 
 /**
- * Check if a given object implements the PickupLocationCapacityByShare interface.
+ * Check if a given object implements the PickupLocationCapacityByShareRequest interface.
  */
-export function instanceOfPickupLocationCapacityByShare(value: object): value is PickupLocationCapacityByShare {
+export function instanceOfPickupLocationCapacityByShareRequest(value: object): value is PickupLocationCapacityByShareRequest {
     if (!('productTypeName' in value) || value['productTypeName'] === undefined) return false;
     if (!('productTypeId' in value) || value['productTypeId'] === undefined) return false;
     return true;
 }
 
-export function PickupLocationCapacityByShareFromJSON(json: any): PickupLocationCapacityByShare {
-    return PickupLocationCapacityByShareFromJSONTyped(json, false);
+export function PickupLocationCapacityByShareRequestFromJSON(json: any): PickupLocationCapacityByShareRequest {
+    return PickupLocationCapacityByShareRequestFromJSONTyped(json, false);
 }
 
-export function PickupLocationCapacityByShareFromJSONTyped(json: any, ignoreDiscriminator: boolean): PickupLocationCapacityByShare {
+export function PickupLocationCapacityByShareRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): PickupLocationCapacityByShareRequest {
     if (json == null) {
         return json;
     }
@@ -64,11 +64,11 @@ export function PickupLocationCapacityByShareFromJSONTyped(json: any, ignoreDisc
     };
 }
 
-  export function PickupLocationCapacityByShareToJSON(json: any): PickupLocationCapacityByShare {
-      return PickupLocationCapacityByShareToJSONTyped(json, false);
+  export function PickupLocationCapacityByShareRequestToJSON(json: any): PickupLocationCapacityByShareRequest {
+      return PickupLocationCapacityByShareRequestToJSONTyped(json, false);
   }
 
-  export function PickupLocationCapacityByShareToJSONTyped(value?: PickupLocationCapacityByShare | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationCapacityByShareRequestToJSONTyped(value?: PickupLocationCapacityByShareRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -74,21 +74,49 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
 
     setSaving(true);
 
-    alert("TODO save");
+    api
+      .pickupLocationsApiPickupLocationCapacitiesPartialUpdate({
+        patchedPickupLocationCapacitiesRequest: {
+          pickingMode: pickingMode,
+          pickupLocationId: getParameterFromUrl(
+            URL_PARAMETER_PICKUP_LOCATION_ID,
+          ),
+          pickupLocationName: locationName,
+          capacitiesByShares:
+            pickingMode === PickingModeEnum.Share
+              ? capacitiesByShare
+              : undefined,
+          capacitiesByBasketSize:
+            pickingMode === PickingModeEnum.Basket
+              ? capacitiesByBasketSize
+              : undefined,
+        },
+      })
+      .then(() => location.reload())
+      .catch(alert)
+      .finally(() => setSaving(false));
   }
 
   function onCapacityByShareChanged(
     productTypeId: string,
-    newCapacity: number,
+    newCapacity: string,
   ) {
     const newCapacities = [...capacitiesByShare];
     for (const capacity of newCapacities) {
       if (capacity.productTypeId === productTypeId) {
-        capacity.capacity = newCapacity;
+        capacity.capacity = parseIntOrUndefined(newCapacity);
         break;
       }
     }
     setCapacitiesByShare(newCapacities);
+  }
+
+  function parseIntOrUndefined(valueAstring: string): number | undefined {
+    const value = parseInt(valueAstring);
+    if (isNaN(value)) {
+      return undefined;
+    }
+    return value;
   }
 
   function getFromByShare() {
@@ -108,14 +136,14 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
               </Form.Label>
               <Form.Control
                 type={"number"}
-                value={capacity.capacity}
+                value={capacity.capacity ?? ""}
                 min={0}
                 step={1}
                 placeholder={"Unbegrenzt"}
                 onChange={(event) => {
                   onCapacityByShareChanged(
                     capacity.productTypeId,
-                    parseInt(event.target.value) ?? null,
+                    event.target.value,
                   );
                 }}
               />
@@ -128,12 +156,12 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
 
   function onCapacityByBasketSizeChanged(
     basketSizeName: string,
-    newCapacity: number,
+    newCapacity: string,
   ) {
     const newCapacities = [...capacitiesByBasketSize];
     for (const capacity of newCapacities) {
       if (capacity.basketSizeName === basketSizeName) {
-        capacity.capacity = newCapacity;
+        capacity.capacity = parseIntOrUndefined(newCapacity);
         break;
       }
     }
@@ -157,14 +185,14 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
               </Form.Label>
               <Form.Control
                 type={"number"}
-                value={capacity.capacity}
+                value={capacity.capacity ?? ""}
                 min={0}
                 step={1}
                 placeholder={"Unbegrenzt"}
                 onChange={(event) => {
                   onCapacityByBasketSizeChanged(
                     capacity.basketSizeName,
-                    parseInt(event.target.value) ?? null,
+                    event.target.value,
                   );
                 }}
               />

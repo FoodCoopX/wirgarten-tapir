@@ -58,6 +58,7 @@ models/PatchedExtendedProductRequest.ts
 models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedPdfExportModelRequest.ts
+models/PatchedPickupLocationCapacitiesRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
@@ -68,7 +69,9 @@ models/PickingModeEnum.ts
 models/PickupLocation.ts
 models/PickupLocationCapacities.ts
 models/PickupLocationCapacityByBasketSize.ts
+models/PickupLocationCapacityByBasketSizeRequest.ts
 models/PickupLocationCapacityByShare.ts
+models/PickupLocationCapacityByShareRequest.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts
