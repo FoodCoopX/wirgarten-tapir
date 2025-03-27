@@ -201,6 +201,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
     }
 
     templateInput.value = before + toInsert + after;
+    setExportTemplate(templateInput.value);
   }
 
   return (
