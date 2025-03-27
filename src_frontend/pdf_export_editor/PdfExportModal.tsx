@@ -163,6 +163,9 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
     );
 
     let toInsert = column.id;
+    if (!exportOneFilePerEntry) {
+      toInsert = "entry." + column.id;
+    }
 
     if (
       templateInput.value.slice(
