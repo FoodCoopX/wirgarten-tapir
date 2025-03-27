@@ -60,7 +60,7 @@ class PickupLocationCapacitiesView(APIView):
     @classmethod
     def build_serializer_data_picking_mode_shares(cls, pickup_location: PickupLocation):
         capacities = {
-            product_type.id: {"product_type_name": product_type.name, "capacity": 0}
+            product_type.id: {"product_type_name": product_type.name, "capacity": None}
             for product_type in ProductType.objects.all()
         }
         for capability in PickupLocationCapability.objects.filter(
@@ -71,4 +71,11 @@ class PickupLocationCapacitiesView(APIView):
 
             capacities[capability.product_type.id]["capacity"] = capability.max_capacity
 
-        return capacities
+        return [
+            {
+                "product_type_id": product_type_id,
+                "product_type_name": capacity_object["product_type_name"],
+                "capacity": capacity_object["capacity"],
+            }
+            for product_type_id, capacity_object in capacities.items()
+        ]

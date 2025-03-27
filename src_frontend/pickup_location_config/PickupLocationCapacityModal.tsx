@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Spinner } from "react-bootstrap";
-import { PickupLocationsApi } from "../api-client";
+import { Form, Modal, Spinner } from "react-bootstrap";
+import {
+  PickingModeEnum,
+  PickupLocationCapacityByBasketSize,
+  PickupLocationCapacityByShare,
+  PickupLocationsApi,
+} from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
@@ -21,6 +26,13 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locationName, setLocationName] = useState("");
+  const [pickingMode, setPickingMode] = useState<PickingModeEnum>();
+  const [capacitiesByShare, setCapacitiesByShare] = useState<
+    PickupLocationCapacityByShare[]
+  >([]);
+  const [capacitiesByBasketSize, setCapacitiesByBasketSize] = useState<
+    PickupLocationCapacityByBasketSize[]
+  >([]);
 
   const URL_PARAMETER_PICKUP_LOCATION_ID = "selected";
 
@@ -40,15 +52,127 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       })
       .then((response) => {
         setLocationName(response.pickupLocationName);
+        setPickingMode(response.pickingMode);
+        switch (response.pickingMode) {
+          case PickingModeEnum.Share:
+            setCapacitiesByShare(response.capacitiesByShares ?? []);
+            break;
+          case PickingModeEnum.Basket:
+            setCapacitiesByBasketSize(response.capacitiesByBasketSize ?? []);
+            break;
+        }
       })
       .catch(alert)
       .finally(() => setDataLoading(false));
   }, [show]);
 
   function onSave() {
+    const form = document.getElementById(
+      "pickupLocationCapacityForm",
+    ) as HTMLFormElement;
+    if (!form.reportValidity()) return;
+
     setSaving(true);
 
     alert("TODO save");
+  }
+
+  function onCapacityByShareChanged(
+    productTypeId: string,
+    newCapacity: number,
+  ) {
+    const newCapacities = [...capacitiesByShare];
+    for (const capacity of newCapacities) {
+      if (capacity.productTypeId === productTypeId) {
+        capacity.capacity = newCapacity;
+        break;
+      }
+    }
+    setCapacitiesByShare(newCapacities);
+  }
+
+  function getFromByShare() {
+    return (
+      <>
+        <Form.Text>
+          Angaben in Anteilsgröße (M-Anteil-Equivalent). <br />
+          0: Kistengröße kann nicht in der Verteilstation geliefert werden.
+          <br />
+          Feld leer: unbegrenzt.
+        </Form.Text>
+        {capacitiesByShare.map((capacity) => {
+          return (
+            <Form.Group key={capacity.productTypeName}>
+              <Form.Label>
+                Maximum Anzahl an {capacity.productTypeName}
+              </Form.Label>
+              <Form.Control
+                type={"number"}
+                value={capacity.capacity}
+                min={0}
+                step={1}
+                placeholder={"Unbegrenzt"}
+                onChange={(event) => {
+                  onCapacityByShareChanged(
+                    capacity.productTypeId,
+                    parseInt(event.target.value) ?? null,
+                  );
+                }}
+              />
+            </Form.Group>
+          );
+        })}
+      </>
+    );
+  }
+
+  function onCapacityByBasketSizeChanged(
+    basketSizeName: string,
+    newCapacity: number,
+  ) {
+    const newCapacities = [...capacitiesByBasketSize];
+    for (const capacity of newCapacities) {
+      if (capacity.basketSizeName === basketSizeName) {
+        capacity.capacity = newCapacity;
+        break;
+      }
+    }
+    setCapacitiesByBasketSize(newCapacities);
+  }
+
+  function getFormByBasketSize() {
+    return (
+      <>
+        <Form.Text>
+          Angaben in Anzahl an Kisten. <br />
+          0: Kistengröße kann nicht in der Verteilstation geliefert werden.
+          <br />
+          Feld leer: unbegrenzt.
+        </Form.Text>
+        {capacitiesByBasketSize.map((capacity) => {
+          return (
+            <Form.Group key={capacity.basketSizeName}>
+              <Form.Label>
+                Maximum Anzahl an {capacity.basketSizeName}
+              </Form.Label>
+              <Form.Control
+                type={"number"}
+                value={capacity.capacity}
+                min={0}
+                step={1}
+                placeholder={"Unbegrenzt"}
+                onChange={(event) => {
+                  onCapacityByBasketSizeChanged(
+                    capacity.basketSizeName,
+                    parseInt(event.target.value) ?? null,
+                  );
+                }}
+              />
+            </Form.Group>
+          );
+        })}
+      </>
+    );
   }
 
   function getModalBody() {
@@ -60,7 +184,15 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       );
     }
 
-    return <Modal.Body>COUCOU</Modal.Body>;
+    return (
+      <Modal.Body>
+        <Form id={"pickupLocationCapacityForm"}>
+          {pickingMode === PickingModeEnum.Basket
+            ? getFormByBasketSize()
+            : getFromByShare()}
+        </Form>
+      </Modal.Body>
+    );
   }
 
   return (

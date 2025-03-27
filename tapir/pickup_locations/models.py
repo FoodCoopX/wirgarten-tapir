@@ -13,4 +13,4 @@ class ProductBasketSizeEquivalence(TapirModel):
 class PickupLocationBasketCapacity(TapirModel):
     basket_size_name = models.CharField(max_length=128)
     pickup_location = models.ForeignKey(PickupLocation, on_delete=models.CASCADE)
-    capacity = models.PositiveIntegerField()
+    capacity = models.PositiveIntegerField(null=True)

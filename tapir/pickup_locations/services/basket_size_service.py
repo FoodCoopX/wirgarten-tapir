@@ -40,7 +40,7 @@ class BasketSizeService:
     def get_basket_size_capacities_for_pickup_location(
         cls, pickup_location: PickupLocation
     ):
-        capacities = {size_name: 0 for size_name in cls.get_basket_sizes()}
+        capacities = {size_name: None for size_name in cls.get_basket_sizes()}
         for equivalence in PickupLocationBasketCapacity.objects.filter(
             pickup_location=pickup_location
         ):

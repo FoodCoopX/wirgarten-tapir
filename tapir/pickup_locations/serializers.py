@@ -20,7 +20,7 @@ class PickupLocationCapacityByShareSerializer(serializers.Serializer):
 
 class PickupLocationCapacityByBasketSizeSerializer(serializers.Serializer):
     basket_size_name = serializers.CharField()
-    capacity = serializers.IntegerField()
+    capacity = serializers.IntegerField(required=False)
 
 
 class PickupLocationCapacitiesSerializer(serializers.Serializer):

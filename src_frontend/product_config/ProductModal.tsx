@@ -71,6 +71,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
   }, [show]);
 
   function onSave() {
+    const form = document.getElementById("productForm") as HTMLFormElement;
+    if (!form.reportValidity()) return;
+
     setSaving(true);
 
     api
@@ -109,7 +112,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
     return (
       <ListGroup variant={"flush"}>
-        <Form>
+        <Form id={"productForm"}>
           <ListGroup.Item>
             <Row>
               <Col>

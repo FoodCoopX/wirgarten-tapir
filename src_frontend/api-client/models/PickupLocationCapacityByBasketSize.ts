@@ -30,7 +30,7 @@ export interface PickupLocationCapacityByBasketSize {
      * @type {number}
      * @memberof PickupLocationCapacityByBasketSize
      */
-    capacity: number;
+    capacity?: number;
 }
 
 /**
@@ -38,7 +38,6 @@ export interface PickupLocationCapacityByBasketSize {
  */
 export function instanceOfPickupLocationCapacityByBasketSize(value: object): value is PickupLocationCapacityByBasketSize {
     if (!('basketSizeName' in value) || value['basketSizeName'] === undefined) return false;
-    if (!('capacity' in value) || value['capacity'] === undefined) return false;
     return true;
 }
 
@@ -53,7 +52,7 @@ export function PickupLocationCapacityByBasketSizeFromJSONTyped(json: any, ignor
     return {
         
         'basketSizeName': json['basket_size_name'],
-        'capacity': json['capacity'],
+        'capacity': json['capacity'] == null ? undefined : json['capacity'],
     };
 }
 

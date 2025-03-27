@@ -4308,7 +4308,6 @@ components:
           type: integer
       required:
       - basket_size_name
-      - capacity
     PickupLocationCapacityByShare:
       type: object
       properties:
