@@ -1,0 +1,40 @@
+from unittest.mock import patch, Mock
+
+from django.urls import reverse
+
+from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    ProductFactory,
+)
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+
+
+class TestExtendedProductViewPath(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
+    def test_patch_loggedInAsNormalUser_returns403(self):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        product = ProductFactory.create()
+
+        url = reverse("subscriptions:extended_product")
+        response = self.client.patch(f"{url}?product_id={product.id}")
+
+        self.assertStatusCode(response, 403)
+
+    @patch.object(ProductUpdater, "update_product")
+    def test_patch_default_callsProductUpdated(self, mock_update_product: Mock):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+        product = ProductFactory.create()
+
+        url = reverse("subscriptions:extended_product")
+        response = self.client.patch(f"{url}?product_id={product.id}")
+
+        self.assertStatusCode(response, 403)
+
+        mock_update_product.assert_called_once()
