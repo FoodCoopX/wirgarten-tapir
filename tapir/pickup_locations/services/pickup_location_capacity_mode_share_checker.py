@@ -1,9 +1,6 @@
 import datetime
 from typing import Dict
 
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
-)
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
@@ -30,15 +27,6 @@ class PickupLocationCapacityModeShareChecker:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
             pickup_location
         )
-
-        if (
-            already_registered_member
-            and MemberPickupLocationService.get_member_pickup_location_id(
-                already_registered_member, subscription_start
-            )
-            != pickup_location.id
-        ):
-            already_registered_member = None
 
         for (
             product_type,
