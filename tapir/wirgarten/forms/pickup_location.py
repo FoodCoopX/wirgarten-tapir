@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
-from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
@@ -203,7 +202,6 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             if capacity_usage > 0
         }
 
-        ic(initial["subs"], initial["subs"].values(), list(initial["subs"].values()))
         subscriptions = []
         for temp in initial["subs"].values():
             subscriptions.extend(temp)
@@ -230,7 +228,6 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         member: Member | None,
     ):
         possible_location_ids = []
-        ic(subscriptions)
         for pickup_location in PickupLocation.objects.all():
             ordered_products_to_quantity_map = {
                 subscription.product: subscription.quantity

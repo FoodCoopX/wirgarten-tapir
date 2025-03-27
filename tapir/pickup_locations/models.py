@@ -9,6 +9,9 @@ class ProductBasketSizeEquivalence(TapirModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
 
+    def __str__(self):
+        return f"Basket:{self.basket_size_name}, product:{self.product}, quantity:{self.quantity}"
+
 
 class PickupLocationBasketCapacity(TapirModel):
     basket_size_name = models.CharField(max_length=128)

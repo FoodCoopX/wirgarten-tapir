@@ -2,7 +2,6 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from icecream import ic
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -123,11 +122,6 @@ class CancelSubscriptionsView(APIView):
             cancel_coop_membership
             and products_selected_for_cancellation != subscribed_products
         ):
-            ic(
-                products_selected_for_cancellation,
-                subscribed_products,
-                products_selected_for_cancellation != subscribed_products,
-            )
             return self.build_response(
                 False,
                 [
@@ -215,9 +209,12 @@ class ExtendedProductView(APIView):
         }
 
         product_price_object = get_product_price(product)
-        data.update(
-            {"price": product_price_object.price, "size": product_price_object.size}
-        )
+        if product_price_object:
+            data.update(
+                {"price": product_price_object.price, "size": product_price_object.size}
+            )
+        else:
+            data.update({"price": 0, "size": 0})
 
         data["basket_size_equivalences"] = [
             {"basket_size_name": size_name, "quantity": quantity}
