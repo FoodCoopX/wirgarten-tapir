@@ -150,17 +150,19 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   />
                 </Form.Group>
               </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
-                  <Form.Control
-                    value={size}
-                    type={"number"}
-                    min={0}
-                    onChange={(e) => setSize(parseFloat(e.target.value))}
-                  />
-                </Form.Group>
-              </Col>
+              {pickingMode === PickingModeEnum.Share && (
+                <Col>
+                  <Form.Group>
+                    <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
+                    <Form.Control
+                      value={size}
+                      type={"number"}
+                      min={0}
+                      onChange={(e) => setSize(parseFloat(e.target.value))}
+                    />
+                  </Form.Group>
+                </Col>
+              )}
             </Row>
           </ListGroup.Item>
           {pickingMode === PickingModeEnum.Basket && (
