@@ -32,9 +32,23 @@ class TestExtendedProductViewPath(TapirIntegrationTest):
         self.client.force_login(member)
         product = ProductFactory.create()
 
-        url = reverse("subscriptions:extended_product")
-        response = self.client.patch(f"{url}?product_id={product.id}")
+        data = {
+            "id": product.id,
+            "name": product.name,
+            "deleted": product.deleted,
+            "base": product.base,
+            "price": 0,
+            "size": 0,
+            "basket_size_equivalences": [],
+        }
 
-        self.assertStatusCode(response, 403)
+        url = reverse("subscriptions:extended_product")
+        response = self.client.patch(
+            f"{url}?product_id={product.id}",
+            data=data,
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
 
         mock_update_product.assert_called_once()
