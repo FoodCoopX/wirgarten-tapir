@@ -8,9 +8,14 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import PickupLocationCapacitiesSerializer
-from tapir.pickup_locations.services.basket_size_service import BasketSizeService
+from tapir.pickup_locations.services.basket_size_capacities_service import (
+    BasketSizeCapacitiesService,
+)
+from tapir.pickup_locations.services.share_capacities_service import (
+    SharesCapacityService,
+)
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import PickupLocation, PickupLocationCapability, ProductType
+from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
 from tapir.wirgarten.parameters import Parameter
 
 
@@ -54,32 +59,24 @@ class PickupLocationCapacitiesView(APIView):
     def build_serializer_data_picking_mode_basket(cls, pickup_location: PickupLocation):
         return [
             {"basket_size_name": basket_size_name, "capacity": capacity}
-            for basket_size_name, capacity in BasketSizeService.get_basket_size_capacities_for_pickup_location(
+            for basket_size_name, capacity in BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
                 pickup_location
             ).items()
         ]
 
     @classmethod
     def build_serializer_data_picking_mode_shares(cls, pickup_location: PickupLocation):
-        capacities = {
-            product_type.id: {"product_type_name": product_type.name, "capacity": None}
-            for product_type in ProductType.objects.all()
-        }
-        for capability in PickupLocationCapability.objects.filter(
-            pickup_location=pickup_location
-        ):
-            if capability.product_type.id not in capacities.keys():
-                continue
-
-            capacities[capability.product_type.id]["capacity"] = capability.max_capacity
+        capacities = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
+            pickup_location
+        )
 
         return [
             {
-                "product_type_id": product_type_id,
-                "product_type_name": capacity_object["product_type_name"],
-                "capacity": capacity_object["capacity"],
+                "product_type_id": product_type.id,
+                "product_type_name": product_type.name,
+                "capacity": capacity,
             }
-            for product_type_id, capacity_object in capacities.items()
+            for product_type, capacity in capacities.items()
         ]
 
     @extend_schema(

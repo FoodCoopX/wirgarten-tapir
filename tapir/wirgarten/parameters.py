@@ -143,8 +143,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.deliveries.services.joker_management_service import (
             JokerManagementService,
         )
-        from tapir.pickup_locations.services.basket_size_service import (
-            BasketSizeService,
+        from tapir.pickup_locations.services.basket_size_capacities_service import (
+            BasketSizeCapacitiesService,
         )
 
         parameter_definition(
@@ -367,7 +367,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleinen Kiste;normalen Kiste;'",
             category=ParameterCategory.PICKING,
             order_priority=2,
-            meta=ParameterMeta(validators=[BasketSizeService.validate_basket_sizes]),
+            meta=ParameterMeta(
+                validators=[BasketSizeCapacitiesService.validate_basket_sizes]
+            ),
         )
 
         parameter_definition(

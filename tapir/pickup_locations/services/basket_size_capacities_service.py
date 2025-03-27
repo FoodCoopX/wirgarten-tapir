@@ -9,7 +9,7 @@ from tapir.wirgarten.models import Product, PickupLocation
 from tapir.wirgarten.parameters import Parameter
 
 
-class BasketSizeService:
+class BasketSizeCapacitiesService:
     @classmethod
     def validate_basket_sizes(cls, basket_sizes_as_string: str):
         try:

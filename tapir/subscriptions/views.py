@@ -11,7 +11,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.pickup_locations.services.basket_size_service import BasketSizeService
+from tapir.pickup_locations.services.basket_size_capacities_service import (
+    BasketSizeCapacitiesService,
+)
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
@@ -219,7 +221,7 @@ class ExtendedProductView(APIView):
 
         data["basket_size_equivalences"] = [
             {"basket_size_name": size_name, "quantity": quantity}
-            for size_name, quantity in BasketSizeService.get_basket_size_equivalences_for_product(
+            for size_name, quantity in BasketSizeCapacitiesService.get_basket_size_equivalences_for_product(
                 product
             ).items()
         ]
