@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -95,6 +96,8 @@ class PickupLocationCapacitiesView(APIView):
         )
 
         picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+        if request_serializer.validated_data["picking_mode"] != picking_mode:
+            raise ValidationError("Invalid picking mode")
 
         if picking_mode == PICKING_MODE_BASKET:
             self.save_capacities_by_basket_size(
@@ -122,7 +125,7 @@ class PickupLocationCapacitiesView(APIView):
                 PickupLocationBasketCapacity(
                     pickup_location=pickup_location,
                     basket_size_name=capacity["basket_size_name"],
-                    capacity=capacity["capacity"],
+                    capacity=capacity.get("capacity", None),
                 )
                 for capacity in capacities_by_basket_size
             ]
