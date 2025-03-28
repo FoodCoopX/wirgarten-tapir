@@ -194,7 +194,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
               </Col>
               <Col>
                 <Form.Group>
-                  <Form.Label>Lieferausnahmen</Form.Label>
+                  <Form.Label>Abweichende Ausliefertage</Form.Label>
                   <div className={"d-flex flex-column gap-2 mb-2"}>
                     {adjustments?.map((adjustment, index) => {
                       return (
