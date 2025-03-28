@@ -75,7 +75,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
             ),
         )
 
-    def test_getCapacityUsedByMemberBeforeChanges_default_inactiveSubscriptioNotCount(
+    def test_getCapacityUsedByMemberBeforeChanges_default_inactiveSubscriptionNotCounted(
         self,
     ):
         ParameterDefinitions().import_definitions()
