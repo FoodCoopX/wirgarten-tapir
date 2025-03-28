@@ -251,12 +251,13 @@ class PickupLocationChoiceForm(forms.Form):
     intro_text_skip_hr = True
 
     def __init__(self, *args, **kwargs):
+        member = kwargs.pop("member", None)
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
             label=_("Abholort"),
             initial=kwargs["initial"],
-            member=kwargs.get("member", None),
+            member=member,
         )
 
     def is_valid(self):
