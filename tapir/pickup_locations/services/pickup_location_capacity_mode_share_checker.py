@@ -63,16 +63,22 @@ class PickupLocationCapacityModeShareChecker:
         ordered_product_to_quantity_map: Dict[Product, int],
     ):
         current_usage = cls.get_capacity_usage_at_date(
-            pickup_location, product_type, subscription_start
+            pickup_location=pickup_location,
+            product_type=product_type,
+            reference_date=subscription_start,
         )
         amount_used_by_member_before_changes = (
             cls.get_capacity_used_by_member_before_changes(
-                member, subscription_start, product_type
+                member=member,
+                subscription_start=subscription_start,
+                product_type=product_type,
             )
         )
         capacity_used_by_the_order = (
             cls.calculate_capacity_used_by_the_ordered_products(
-                ordered_product_to_quantity_map, product_type, subscription_start
+                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                product_type=product_type,
+                reference_date=subscription_start,
             )
         )
         capacity_usage_after_changes = (
