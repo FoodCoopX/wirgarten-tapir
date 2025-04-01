@@ -136,11 +136,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     }
 
     if (delivery.isDeliveryCancelledThisWeek) {
-      return (
-        <span>
-          Joker kann nicht eingesetzt werden (keine Lieferung dieser Woche)
-        </span>
-      );
+      return <span>Keine Lieferung in dieser Woche</span>;
     }
 
     return <span>Joker kann nicht eingesetzt werden</span>;
@@ -261,14 +257,10 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
-            {usedJokerInGrowingPeriods.length > 0 && (
-              <p>
-                Im aktuellem Vertragsjahr hast du noch{" "}
-                {maxJokersPerGrowingPeriod -
-                  usedJokerInGrowingPeriods[0].numberOfUsedJokers}{" "}
-                Joker zu vergeben.
-              </p>
-            )}
+            <p>
+              Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
+              eingesetzt werden.
+            </p>
             <ul>
               {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
                 return (
@@ -291,11 +283,8 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
           <ListGroup.Item>
             Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor der
             Lieferungstag eingesetzt oder abgesagt werden. <br />
-            Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
-            eingesetzt werden.
             {restrictions.length > 0 && (
               <>
-                <br />
                 Zusätzliche Einschränkungen:
                 <ul>
                   {restrictions.map((restriction) => (

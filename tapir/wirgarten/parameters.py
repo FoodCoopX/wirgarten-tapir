@@ -850,7 +850,7 @@ Dein WirGarten-Team""",
             key=Parameter.JOKERS_RESTRICTIONS,
             label="Besondere Einschränkungen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="01.08-31.08[2];",
+            initial_value="01.08.-31.08.[2];",
             description="""Zeiträume, in denen das Mitglied nur eine begrenzte Anzahl an Jokern setzen kann. 
             zB: maximal 2 Joker pro Mitglied im August.
             Format: StartDatum-EndDatum[AnzahlJoker];StartDatum-EndDatum[AnzahlJoker]
