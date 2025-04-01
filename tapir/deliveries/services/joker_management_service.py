@@ -1,4 +1,5 @@
 import datetime
+import re
 from dataclasses import dataclass
 from typing import List
 
@@ -104,11 +105,22 @@ class JokerManagementService:
             if restriction_as_string.strip() == "":
                 continue
 
-            dates, max_jokers_as_string = restriction_as_string.split("[")
-            max_jokers_as_string = max_jokers_as_string.replace("]", "")
-            start_date_as_string, end_date_as_string = dates.split("-")
-            start_day_as_string, start_month_as_string = start_date_as_string.split(".")
-            end_day_as_string, end_month_as_string = end_date_as_string.split(".")
+            # Example: 13.04.-25.06.[12]
+            result = re.search(
+                r"(\d+)\.(\d+)\.-(\d+)\.(\d+)\.\[(\d+)]", restriction_as_string
+            )
+            if result is None:
+                raise ValidationError(
+                    f"Invalid restriction given: {restriction_as_string}"
+                )
+
+            (
+                start_day_as_string,
+                start_month_as_string,
+                end_day_as_string,
+                end_month_as_string,
+                max_jokers_as_string,
+            ) = result.groups()
 
             restrictions.append(
                 cls.JokerRestriction(

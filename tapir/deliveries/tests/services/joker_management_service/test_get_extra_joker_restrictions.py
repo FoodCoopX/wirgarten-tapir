@@ -7,6 +7,8 @@ from tapir.deliveries.services.joker_management_service import JokerManagementSe
 
 
 class TestJokerManagementServiceGetExtraJokerRestrictions(SimpleTestCase):
+    maxDiff = 1000
+
     @patch.object(JokerManagementService, "get_extra_joker_restrictions")
     def test_validateJokerRestrictions_innerFunctionRaisesException_raiseValidationError(
         self, mock_get_extra_joker_restrictions: Mock
@@ -32,6 +34,6 @@ class TestJokerManagementServiceGetExtraJokerRestrictions(SimpleTestCase):
                 ),
             ],
             JokerManagementService.get_extra_joker_restrictions(
-                "01.08-31.08[2];15.02-20.03[3]"
+                "01.08.-31.08.[2];15.02.-20.03.[3]"
             ),
         )
