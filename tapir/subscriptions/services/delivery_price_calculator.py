@@ -18,7 +18,9 @@ class DeliveryPriceCalculator:
         )
         return sum(
             [
-                cls.get_price_of_single_delivery(subscription, reference_date)
+                cls.get_price_of_single_delivery_without_solidarity(
+                    subscription, reference_date
+                )
                 * subscription.quantity
                 for subscription in subscriptions
             ]
@@ -40,7 +42,7 @@ class DeliveryPriceCalculator:
         )
 
     @classmethod
-    def get_price_of_single_delivery(
+    def get_price_of_single_delivery_without_solidarity(
         cls, subscription: Subscription, at_date: datetime.date
     ) -> Decimal:
         product_price = get_product_price(subscription.product, at_date).price

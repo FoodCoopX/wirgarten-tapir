@@ -44,10 +44,9 @@ def get_test_users():
     return json.loads(json_string)["results"]
 
 
-USER_COUNT = 50
+USER_COUNT = 200
 
 
-# @transaction.atomic
 def populate_users():
     # Users generated with https://randomuser.me
     print(f"Creating {USER_COUNT} users, this may take a while")
@@ -59,7 +58,7 @@ def populate_users():
     for index, parsed_user in enumerate(parsed_users[:USER_COUNT]):
         if (index + 1) % 10 == 0:
             print(str(index + 1) + f"/{USER_COUNT}")
-        json_user = JsonUser(parsed_user)
+        json_user = JsonUser.from_parsed_user(parsed_user)
 
         if json_user.get_username() == "roberto.cortes":
             wirgarten_user = TapirUser(is_superuser=True, is_staff=True)
