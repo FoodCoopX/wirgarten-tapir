@@ -4,6 +4,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
     PickupLocationCapacityModeShareChecker,
 )
 from tapir.wirgarten.models import MemberPickupLocation, Subscription
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -19,6 +20,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetCapacityUsageAtDate(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
         member = MemberFactory.create()
         cls.pickup_location = PickupLocationFactory.create()
         cls.reference_date = datetime.date(year=2026, month=3, day=12)
