@@ -3,5 +3,5 @@ PICKING_MODE_SHARE = "picking_mode_share"
 
 OPTIONS_PICKING_MODE = [
     (PICKING_MODE_BASKET, "Nach Kisten"),
-    (PICKING_MODE_SHARE, "Nach Anteile"),
+    (PICKING_MODE_SHARE, "Nach Ernteanteile"),
 ]

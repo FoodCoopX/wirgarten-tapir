@@ -32,8 +32,10 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
         date = datetime.date(year=2020, month=5, day=7)
         subscription.product.type.delivery_cycle = "weekly"
 
-        result = DeliveryPriceCalculator.get_price_of_single_delivery(
-            subscription, date
+        result = (
+            DeliveryPriceCalculator.get_price_of_single_delivery_without_solidarity(
+                subscription, date
+            )
         )
 
         self.assertEqual(3, result)  # 12 * 10 / 40 = 3

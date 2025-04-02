@@ -197,14 +197,12 @@ class PickupLocationCapability(TapirModel):
     The availability of a product at a certain pickup location.
     """
 
-    product_type = models.ForeignKey(
-        ProductType, null=False, on_delete=models.DO_NOTHING
-    )
+    product_type = models.ForeignKey(ProductType, null=False, on_delete=models.CASCADE)
     max_capacity = models.PositiveSmallIntegerField(
         null=True
     )  # This is the capacity in NUMBER of M equivalent share, not the capacity in COST of M equivalent share.
     pickup_location = models.ForeignKey(
-        PickupLocation, null=False, on_delete=models.DO_NOTHING
+        PickupLocation, null=False, on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -218,9 +216,7 @@ class DeliveryExceptionPeriod(TapirModel):
 
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=False)
-    product_type = models.ForeignKey(
-        ProductType, null=True, on_delete=models.DO_NOTHING
-    )
+    product_type = models.ForeignKey(ProductType, null=True, on_delete=models.CASCADE)
     comment = models.CharField(max_length=128, null=False, default="")
 
 
@@ -229,10 +225,8 @@ class ProductCapacity(TapirModel):
     This is used to configure how much of a ProductType can be sold in a growing period.
     """
 
-    period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.DO_NOTHING)
-    product_type = models.ForeignKey(
-        ProductType, null=False, on_delete=models.DO_NOTHING
-    )
+    period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.CASCADE)
+    product_type = models.ForeignKey(ProductType, null=False, on_delete=models.CASCADE)
     capacity = models.DecimalField(decimal_places=4, max_digits=20, null=False)
 
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
@@ -978,9 +972,7 @@ class TaxRate(TapirModel):
     If valid_to == NULL, the tax rate is used as a fallback. If valid_to != NULL and it is now valid, this one is used.
     """
 
-    product_type = models.ForeignKey(
-        ProductType, on_delete=models.DO_NOTHING, null=False
-    )
+    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE, null=False)
     tax_rate = models.FloatField(null=False)
     valid_from = models.DateField(null=False, default=partial(datetime.date.today))
     valid_to = models.DateField(null=True)

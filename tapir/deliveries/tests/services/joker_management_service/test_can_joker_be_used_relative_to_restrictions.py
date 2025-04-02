@@ -29,7 +29,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
         self,
     ):
         TapirParameter.objects.filter(key=Parameter.JOKERS_RESTRICTIONS).update(
-            value="01.08-31.08[2];15.02-20.03[3]"
+            value="01.08.-31.08.[2];15.02.-20.03.[3]"
         )
         member = MemberFactory.create()
         Joker.objects.create(
@@ -50,7 +50,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
         self,
     ):
         TapirParameter.objects.filter(key=Parameter.JOKERS_RESTRICTIONS).update(
-            value="01.08-31.08[2];15.02-20.03[3]"
+            value="01.08.-31.08.[2];15.02.-20.03.[3]"
         )
         member = MemberFactory.create()
         Joker.objects.create(
