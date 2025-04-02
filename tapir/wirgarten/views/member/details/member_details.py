@@ -97,7 +97,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         context["available_product_types"] = {
-            product_type.name: product_type.id == base_product_type.id
+            product_type.name: base_product_type is not None
+            and product_type.id == base_product_type.id
             or (
                 additional_products_available
                 and (
