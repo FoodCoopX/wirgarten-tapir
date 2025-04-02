@@ -12,6 +12,7 @@ interface TapirButtonProps {
   loading?: boolean;
   type?: "submit" | "reset" | "button";
   fontSize?: number;
+  tooltip?: string;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -44,6 +45,7 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       onClick={props.onClick}
       disabled={props.disabled || props.loading}
       type={props.type ?? "button"}
+      title={props.tooltip}
     >
       {props.icon &&
         (props.loading ? (

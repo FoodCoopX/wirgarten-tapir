@@ -27,6 +27,7 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
         icon={"warehouse"}
         variant={"outline-primary"}
         onClick={onClick}
+        tooltip={"Kapazitäten bearbeiten"}
       />
       <PickupLocationCapacityModal
         csrfToken={csrfToken}
