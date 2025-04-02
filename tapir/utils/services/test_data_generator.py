@@ -6,6 +6,7 @@ from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.log.models import LogEntry
 from tapir.utils.config import Organization
 from tapir.utils.services.test_configuration_generator import TestConfigurationGenerator
+from tapir.utils.services.test_joker_generator import TestJokerGenerator
 from tapir.utils.services.test_product_generator import TestProductGenerator
 from tapir.utils.services.test_user_generator import TestUserGenerator
 from tapir.wirgarten.models import (
@@ -63,6 +64,7 @@ class TestDataGenerator:
         TestConfigurationGenerator.update_settings_for_organization(
             cls.GENERATE_TEST_DATA_FOR
         )
+        TestJokerGenerator.generate_jokers()
 
     @classmethod
     def generate_growing_periods(cls):

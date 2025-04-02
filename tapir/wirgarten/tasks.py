@@ -301,7 +301,7 @@ def export_payment_parts_csv(reference_date=None):
 
 
 @shared_task
-def generate_member_numbers():
+def generate_member_numbers(print_results=True):
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today()
     for member in members:
@@ -312,6 +312,7 @@ def generate_member_numbers():
 
                 TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
 
-                print(
-                    f"[task] generate_member_numbers: generated member_no for {member}"
-                )
+                if print_results:
+                    print(
+                        f"[task] generate_member_numbers: generated member_no for {member}"
+                    )
