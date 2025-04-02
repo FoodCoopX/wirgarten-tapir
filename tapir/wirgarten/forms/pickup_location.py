@@ -9,7 +9,6 @@ from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -20,14 +19,11 @@ from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
     PickupLocation,
-    PickupLocationCapability,
     PickupLocationOpeningTime,
     Product,
-    ProductType,
     Subscription,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -324,25 +320,6 @@ class PickupLocationEditForm(forms.Form):
             "sunday_times": 2,
         }
 
-        self.product_types = list(
-            ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0]).order_by("name")
-        )
-
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        for pt in self.product_types:
-            self.fields["pt_" + pt.id] = forms.BooleanField(
-                label=_(pt.name),
-                required=False,
-                initial=pt.id == base_product_type_id,
-                help_text=f"Hier können {pt.name} abgeholt werden",
-            )
-            self.fields["pt_capa_" + pt.id] = forms.IntegerField(
-                label=_("Kapazität (in Anteilen)"),
-                required=False,
-                min_value=0,
-                widget=forms.NumberInput(attrs={"placeholder": "Unbegrenzt"}),
-            )
-
         self.fields["monday_times"] = forms.CharField(
             label=_("Montag"),
             required=False,
@@ -428,18 +405,6 @@ class PickupLocationEditForm(forms.Form):
             self.fields["sunday_times"].initial = ", ".join(
                 opening_times_map[6] if 6 in opening_times_map else []
             )
-
-            for ptc in get_active_pickup_location_capabilities().filter(
-                pickup_location=self.pickup_location
-            ):
-                key = "pt_" + ptc.product_type.id
-                if key in self.fields:
-                    self.fields[key].initial = True
-                    self.fields["pt_capa_" + ptc.product_type.id].initial = (
-                        ptc.max_capacity
-                    )
-
-        self.product_types = list(map(lambda x: x.id, self.product_types))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -547,36 +512,5 @@ class PickupLocationEditForm(forms.Form):
         create_opening_time(4, self.cleaned_data["friday_times"])
         create_opening_time(5, self.cleaned_data["saturday_times"])
         create_opening_time(6, self.cleaned_data["sunday_times"])
-
-        capabilities = list(
-            map(
-                lambda x: x["product_type__id"],
-                PickupLocationCapability.objects.filter(pickup_location=pl).values(
-                    "product_type__id"
-                ),
-            )
-        )
-        for pt in self.product_types:
-            if pt not in capabilities:  # doesn't exist yet
-                if self.cleaned_data["pt_" + pt]:  # is selected
-                    # --> create
-                    PickupLocationCapability.objects.create(
-                        pickup_location=pl,
-                        product_type_id=pt,
-                        max_capacity=self.cleaned_data.get("pt_capa_" + pt, None),
-                    )
-            else:
-                if not self.cleaned_data["pt_" + pt]:  # exists & is not selected
-                    # --> delete
-                    PickupLocationCapability.objects.get(
-                        pickup_location=pl, product_type_id=pt
-                    ).delete()
-                else:
-                    # --> update
-                    plc = PickupLocationCapability.objects.get(
-                        pickup_location=pl, product_type_id=pt
-                    )
-                    plc.max_capacity = self.cleaned_data.get("pt_capa_" + pt, None)
-                    plc.save()
 
         return pl
