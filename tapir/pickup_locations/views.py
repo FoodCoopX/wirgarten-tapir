@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.serializers import PickupLocationSerializer
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import PickupLocationCapacitiesSerializer
@@ -146,3 +148,9 @@ class PickupLocationCapacitiesView(APIView):
                 for capacity in capacities_by_shares
             ]
         )
+
+
+class PickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = PickupLocation.objects.all()
+    serializer_class = PickupLocationSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]

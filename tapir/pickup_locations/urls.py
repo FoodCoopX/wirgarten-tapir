@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.pickup_locations import views
 
@@ -10,3 +11,9 @@ urlpatterns = [
         name="pickup_location_capacities",
     ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"pickup_locations", views.PickupLocationViewSet, basename="pickup_locations"
+)
+urlpatterns += router.urls
