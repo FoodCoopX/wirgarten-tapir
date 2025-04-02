@@ -15,6 +15,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.products import get_current_growing_period
 
 
 class GetDeliveriesService:
@@ -44,18 +45,25 @@ class GetDeliveriesService:
         _, week_num, _ = delivery_date.isocalendar()
         even_week = week_num % 2 == 0
 
-        active_subs = Subscription.objects.filter(
-            member=member,
-            start_date__lte=delivery_date,
-            end_date__gte=delivery_date,
-            product__type__delivery_cycle__in=[
-                WEEKLY[0],
-                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-            ],
+        relevant_subscriptions = cls.get_relevant_subscriptions(
+            member=member, reference_date=delivery_date, even_week=even_week
         )
 
-        if not active_subs.exists():
-            return None
+        if not relevant_subscriptions.exists():
+            if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                return None
+            current_growing_period = get_current_growing_period(delivery_date)
+            relevant_subscriptions = cls.get_relevant_subscriptions(
+                member=member,
+                reference_date=current_growing_period.start_date
+                - datetime.timedelta(days=1),
+                even_week=even_week,
+            )
+            relevant_subscriptions = relevant_subscriptions.filter(
+                cancellation_ts__isnull=True,
+            )
+            if not relevant_subscriptions.exists():
+                return None
 
         pickup_location = member.get_pickup_location(delivery_date)
         opening_times = PickupLocationOpeningTime.objects.filter(
@@ -68,13 +76,15 @@ class GetDeliveriesService:
         joker_used = cls.is_joker_used_in_week(member, delivery_date)
 
         if joker_used:
-            active_subs = active_subs.filter(product__type__is_affected_by_jokers=False)
+            relevant_subscriptions = relevant_subscriptions.filter(
+                product__type__is_affected_by_jokers=False
+            )
 
         return {  # data for DeliverySerializer
             "delivery_date": delivery_date,
             "pickup_location": pickup_location,
             "pickup_location_opening_times": opening_times,
-            "subscriptions": active_subs,
+            "subscriptions": relevant_subscriptions,
             "joker_used": joker_used,
             "can_joker_be_used": JokerManagementService.can_joker_be_used_in_week(
                 member, delivery_date
@@ -86,6 +96,20 @@ class GetDeliveriesService:
                 delivery_date
             ),
         }
+
+    @classmethod
+    def get_relevant_subscriptions(
+        cls, member: Member, reference_date: datetime.date, even_week: bool
+    ):
+        return Subscription.objects.filter(
+            member=member,
+            start_date__lte=reference_date,
+            end_date__gte=reference_date,
+            product__type__delivery_cycle__in=[
+                WEEKLY[0],
+                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
+            ],
+        )
 
     @classmethod
     def update_delivery_date_to_opening_times(

@@ -1,6 +1,7 @@
 import datetime
 from unittest.mock import patch, Mock
 
+from tapir.configuration.models import TapirParameter
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
@@ -8,21 +9,25 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 )
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import ProductType, Member, PickupLocationOpeningTime
-from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     MemberWithSubscriptionFactory,
     SubscriptionFactory,
     ProductTypeFactory,
+    GrowingPeriodFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
     def setUp(self):
-        ParameterDefinitions().import_definitions()
         mock_timezone(self, factories.NOW)
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
 
     def test_buildDeliveryObject_noSubscriptionWithDeliveryOnGivenWeek_returnsNone(
         self,
@@ -192,3 +197,89 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
             mock_is_delivery_cancelled_this_week_value,
             delivery_object["is_delivery_cancelled_this_week"],
         )
+
+    def test_buildDeliveryObject_givenDateIsAfterSubscriptionEndButSubscriptionNotCancelled_returnsPreviousSubscriptions(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        member = MemberFactory.create()
+        past_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2022, month=1, day=1),
+            end_date=datetime.date(year=2022, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+        past_subscription = SubscriptionFactory.create(
+            member=member, period=past_growing_period
+        )
+
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member, given_delivery_date
+        )
+
+        self.assertIsNotNone(delivery_object)
+        self.assertEqual(1, len(delivery_object["subscriptions"]))
+        self.assertIn(past_subscription, delivery_object["subscriptions"])
+
+    def test_buildDeliveryObject_givenDateIsAfterSubscriptionEndAndSubscriptionCancelled_returnsNone(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        member = MemberFactory.create()
+        past_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2022, month=1, day=1),
+            end_date=datetime.date(year=2022, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=past_growing_period,
+            cancellation_ts=datetime.datetime(year=2022, month=11, day=15),
+        )
+
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member, given_delivery_date
+        )
+
+        self.assertIsNone(delivery_object)
+
+    def test_buildDeliveryObject_givenDateIsAfterSubscriptionEndButAutoRenewIsOff_returnsNone(
+        self,
+    ):
+        TapirParameter.objects.filter(
+            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=False)
+        member = MemberFactory.create()
+        past_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2022, month=1, day=1),
+            end_date=datetime.date(year=2022, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
+        SubscriptionFactory.create(member=member, period=past_growing_period)
+
+        ProductType.objects.update(delivery_cycle=WEEKLY[0])
+
+        given_delivery_date = datetime.date(year=2023, month=6, day=5)
+        delivery_object = GetDeliveriesService.build_delivery_object(
+            member, given_delivery_date
+        )
+
+        self.assertIsNone(delivery_object)
