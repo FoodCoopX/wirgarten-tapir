@@ -404,19 +404,22 @@ class NonTrialCancellationForm(Form):
         super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
 
         base_product_type = BaseProductTypeService.get_base_product_type()
-        self.subs = get_active_and_future_subscriptions().filter(
+        self.subscriptions = get_active_and_future_subscriptions().filter(
             member_id=self.member_id,
             end_date__gte=get_today() + relativedelta(months=1, day=1),
         )
         self.member = Member.objects.get(id=self.member_id)
 
-        for sub in self.subs:
-            key = f"{self.KEY_PREFIX}{sub.id}"
+        for subscription in self.subscriptions:
+            key = f"{self.KEY_PREFIX}{subscription.id}"
             self.fields[key] = BooleanField(
-                label=f"{sub.quantity} × {sub.product.name} {sub.product.type.name} ({format_date(sub.start_date)} - {format_date(sub.end_date)})",
+                label=f"{subscription.quantity} × {subscription.product.name} {subscription.product.type.name} ({format_date(subscription.start_date)} - {format_date(subscription.end_date)})",
                 required=False,
             )
-            if len(self.subs) > 1 and sub.product.type.id == base_product_type.id:
+            if (
+                len(self.subscriptions) > 1
+                and subscription.product.type == base_product_type
+            ):
                 self.fields[key].widget = CheckboxInput(
                     attrs={self.BASE_PROD_TYPE_ATTR: "true"}
                 )
@@ -464,7 +467,7 @@ class NonTrialCancellationForm(Form):
         return not self._errors and super(NonTrialCancellationForm, self).is_valid()
 
     def get_subs_to_cancel(self):
-        return self.subs.filter(
+        return self.subscriptions.filter(
             id__in=[
                 key.replace("sub_", "")
                 for key, value in self.cleaned_data.items()
@@ -632,15 +635,14 @@ class SubscriptionRenewalForm(Form):
             **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
         )
         self.start_date = kwargs["start_date"]
-        self.available_product_types = [p.id for p in get_available_product_types()]
 
-        base_product_type_id = BaseProductTypeService.get_base_product_type().id
+        base_product_type = BaseProductTypeService.get_base_product_type()
         self.product_forms = [
             BaseProductForm(*args, **kwargs, enable_validation=True),
             *[
-                AdditionalProductForm(*args, **kwargs, product_type_id=pt)
-                for pt in self.available_product_types
-                if pt != self.base_product_type_id
+                AdditionalProductForm(*args, **kwargs, product_type_id=product_type)
+                for product_type in get_available_product_types()
+                if product_type != base_product_type
             ],
         ]
 

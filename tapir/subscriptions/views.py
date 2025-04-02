@@ -132,10 +132,14 @@ class CancelSubscriptionsView(APIView):
                 ],
             )
 
-        if self.is_at_least_one_additional_product_not_selected(
-            subscribed_products, products_selected_for_cancellation
-        ) and self.are_all_base_products_selected(
-            subscribed_products, products_selected_for_cancellation
+        if (
+            BaseProductTypeService.is_base_product_type_logic_enabled()
+            and self.is_at_least_one_additional_product_not_selected(
+                subscribed_products, products_selected_for_cancellation
+            )
+            and self.are_all_base_products_selected(
+                subscribed_products, products_selected_for_cancellation
+            )
         ):
             return self.build_response(
                 False,

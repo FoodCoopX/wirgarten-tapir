@@ -54,12 +54,12 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
 
         base_product_type = BaseProductTypeService.get_base_product_type()
         harvest_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True, product__type_id=base_product_type.id
+            admin_confirmed__isnull=True, product__type=base_product_type
         ).order_by("created_at")
 
         additional_shares = (
             Subscription.objects.filter(admin_confirmed__isnull=True)
-            .exclude(product__type_id=base_product_type.id)
+            .exclude(product__type=base_product_type)
             .order_by("created_at")
         )
 

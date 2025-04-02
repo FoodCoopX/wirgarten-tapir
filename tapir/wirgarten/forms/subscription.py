@@ -109,9 +109,9 @@ class BaseProductForm(forms.Form):
 
         super().__init__(*args, **kwargs)
 
-        base_product_type_id = BaseProductTypeService.get_base_product_type().id
+        base_product_type = BaseProductTypeService.get_base_product_type()
         harvest_share_products = Product.objects.filter(
-            deleted=False, type_id=base_product_type_id
+            deleted=False, type=base_product_type
         )
         for p in harvest_share_products:
             price = get_product_price(p)
@@ -129,7 +129,7 @@ class BaseProductForm(forms.Form):
             harvest_share_products, key=lambda x: prices[x.id]
         )
 
-        self.product_type = ProductType.objects.get(id=base_product_type_id)
+        self.product_type = base_product_type
         self.products = (
             {
                 """harvest_shares_{variation}""".format(variation=p.product_ptr.name): p
@@ -340,7 +340,7 @@ class BaseProductForm(forms.Form):
 
         now = get_now()
 
-        self.subs = []
+        self.subscriptions = []
         existing_trial_end_date = cancel_subs_for_edit(
             member_id, self.start_date, self.product_type
         )
@@ -386,7 +386,7 @@ class BaseProductForm(forms.Form):
                 notice_period_duration_in_months=notice_period_duration_in_months,
             )
 
-            self.subs.append(sub)
+            self.subscriptions.append(sub)
 
         member = Member.objects.get(id=member_id)
         member.sepa_consent = now
@@ -454,15 +454,12 @@ class BaseProductForm(forms.Form):
     def calculate_capacity_used_by_the_ordered_products(
         self, return_capacity_in_euros: bool = False
     ):
-        base_product_type_id = BaseProductTypeService.get_base_product_type().id
-
         total = 0.0
         for key, quantity in self.cleaned_data.items():
             if not key.startswith(BASE_PRODUCT_FIELD_PREFIX) or not quantity:
                 continue
             next_month = get_today() + relativedelta(months=1, day=1)
             product = Product.objects.get(
-                type_id=base_product_type_id,
                 name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
             relevant_value = get_product_price(product, next_month).size
@@ -483,14 +480,11 @@ class BaseProductForm(forms.Form):
         )
 
     def validate_pickup_location_capacity(self):
-        base_product_type_id = BaseProductTypeService.get_base_product_type().id
-
         ordered_products_to_quantity_map = {}
         for key, quantity in self.cleaned_data.items():
             if not key.startswith(BASE_PRODUCT_FIELD_PREFIX):
                 continue
             product = Product.objects.get(
-                type_id=base_product_type_id,
                 name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
             ordered_products_to_quantity_map[product] = quantity
@@ -819,7 +813,7 @@ class AdditionalProductForm(forms.Form):
             member_id, self.start_date, self.product_type
         )
 
-        self.subs = []
+        self.subscriptions = []
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and quantity and quantity > 0:
                 product = Product.objects.get(
@@ -833,7 +827,7 @@ class AdditionalProductForm(forms.Form):
                             self.product_type, self.growing_period
                         )
                     )
-                self.subs.append(
+                self.subscriptions.append(
                     Subscription(
                         member_id=member_id,
                         product=product,
@@ -849,7 +843,7 @@ class AdditionalProductForm(forms.Form):
                     )
                 )
 
-        Subscription.objects.bulk_create(self.subs)
+        Subscription.objects.bulk_create(self.subscriptions)
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
@@ -859,7 +853,7 @@ class AdditionalProductForm(forms.Form):
 
         if send_mail:
             member = Member.objects.get(id=member_id)
-            send_order_confirmation(member, self.subs)
+            send_order_confirmation(member, self.subscriptions)
 
     def has_shares_selected(self):
         return self.get_total_ordered_quantity() > 0
@@ -939,7 +933,7 @@ class AdditionalProductForm(forms.Form):
         if not Subscription.objects.filter(
             member__id=self.member_id,
             period=growing_period,
-            product__type__id=BaseProductTypeService.get_base_product_type().id,
+            product__type=BaseProductTypeService.get_base_product_type(),
         ).exists():
             self.add_error(
                 None,
@@ -951,7 +945,8 @@ class AdditionalProductForm(forms.Form):
         result = super().is_valid()
 
         self.validate_contract_signed()
-        self.validate_has_base_product_subscription_at_same_growing_period()
+        if BaseProductTypeService.is_base_product_type_logic_enabled():
+            self.validate_has_base_product_subscription_at_same_growing_period()
         if not self.validate_pickup_location():
             return False
 

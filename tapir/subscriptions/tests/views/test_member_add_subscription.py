@@ -29,7 +29,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 class TestMemberAddSubscription(TapirIntegrationTest):
     def setUp(self):
-        ParameterDefinitions().import_definitions()
         now = datetime.datetime(year=2023, month=6, day=12)
         mock_timezone(self, now)
         configure_mail_module()

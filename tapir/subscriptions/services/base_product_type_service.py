@@ -33,3 +33,7 @@ class BaseProductTypeService:
         return [(cls.VALUE_NO_BASE_PRODUCT_TYPE, "Kein Basis Produkttyp")] + list(
             product_type_id_to_product_type_name
         )
+
+    @classmethod
+    def is_base_product_type_logic_enabled(cls):
+        return cls.get_base_product_type() is not None

@@ -97,18 +97,18 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         context["available_product_types"] = {
-            p.name: p.id == base_product_type.id
+            product_type.name: product_type.id == base_product_type.id
             or (
                 additional_products_available
                 and (
-                    p.single_subscription_only
+                    product_type.single_subscription_only
                     and not Subscription.objects.filter(
-                        member_id=self.object.id, product__type_id=p.id
+                        member_id=self.object.id, product__type_id=product_type.id
                     ).exists()
                 )
-                or not p.single_subscription_only
+                or not product_type.single_subscription_only
             )
-            for p in get_available_product_types(reference_date=next_month)
+            for product_type in get_available_product_types(reference_date=next_month)
         }
         context["deliveries"] = generate_future_deliveries(self.object)
 
@@ -213,6 +213,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )  # 1 month before
 
         base_product_type = BaseProductTypeService.get_base_product_type()
+        if not base_product_type:
+            context["show_renewal_warning"] = False
+            return
+
         harvest_share_subs = context["subscriptions"][base_product_type.name]
         context["base_product_type_name"] = base_product_type.name
 

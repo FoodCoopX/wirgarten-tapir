@@ -307,7 +307,7 @@ def get_add_subscription_form(request, **kwargs):
                 .exists()
             ):
                 form.save(member_id=member_id)
-                send_contract_change_confirmation(member, form.subs)
+                send_contract_change_confirmation(member, form.subscriptions)
             else:
                 form.save(member_id=member_id)
                 send_order_confirmation(
@@ -320,7 +320,7 @@ def get_add_subscription_form(request, **kwargs):
             actor=request.user,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=form.subs,
+            subscriptions=form.subscriptions,
         ).save()
 
     return get_form_modal(
