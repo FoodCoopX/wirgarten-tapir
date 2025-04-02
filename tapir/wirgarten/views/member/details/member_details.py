@@ -185,7 +185,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         next_growing_period = get_next_growing_period(today)
         if not (
             next_growing_period
-            and (today + relativedelta(months=3)) > next_growing_period.start_date
+            and (today + relativedelta(months=3)) >= next_growing_period.start_date
         ):
             return
 
