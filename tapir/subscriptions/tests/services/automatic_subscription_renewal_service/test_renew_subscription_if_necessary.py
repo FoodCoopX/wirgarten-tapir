@@ -5,7 +5,7 @@ from django.test import SimpleTestCase
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestRenewSubscriptionIfNecessary(SimpleTestCase):
@@ -25,7 +25,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_must_subscription_be_renewed.assert_not_called()
 
@@ -54,7 +54,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_must_subscription_be_renewed.assert_called_once_with(subscription)
         mock_renew_subscription.assert_not_called()
@@ -82,7 +82,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_must_subscription_be_renewed.assert_called_once_with(subscription)
         mock_renew_subscription.assert_called_once_with(subscription)

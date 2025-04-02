@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
@@ -34,7 +37,7 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
@@ -255,7 +258,7 @@ def get_add_subscription_form(request, **kwargs):
 
     product_type = get_object_or_404(ProductType, name=product_type_name)
     is_base_product_type = (
-        get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE) == product_type.id
+        BaseProductTypeService.get_base_product_type() == product_type
     )
 
     if is_base_product_type:
@@ -338,7 +341,9 @@ def get_add_coop_shares_form(request, **kwargs):
     check_permission_or_self(member_id, request)
     member = Member.objects.get(pk=member_id)
 
-    if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
+    if not get_parameter_value(
+        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+    ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
 
         wl_kwargs = kwargs.copy()

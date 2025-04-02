@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.utils import format_date, get_today
 
@@ -68,7 +68,7 @@ def send_email(
         ),
         from_email=settings.EMAIL_HOST_SENDER,
         headers={
-            "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
+            "From": f"{get_parameter_value(ParameterKeys.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
         },
     )
 
@@ -97,11 +97,11 @@ def add_general_vars():
         "year_current": today.year,
         "year_next": (today + relativedelta(years=1)).year,
         "year_overnext": (today + relativedelta(years=2)).year,
-        "admin_name": get_parameter_value(Parameter.SITE_ADMIN_NAME),
-        "site_name": get_parameter_value(Parameter.SITE_NAME),
-        "admin_telephone": get_parameter_value(Parameter.SITE_ADMIN_TELEPHONE),
-        "admin_image": get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
-        "site_email": get_parameter_value(Parameter.SITE_EMAIL),
+        "admin_name": get_parameter_value(ParameterKeys.SITE_ADMIN_NAME),
+        "site_name": get_parameter_value(ParameterKeys.SITE_NAME),
+        "admin_telephone": get_parameter_value(ParameterKeys.SITE_ADMIN_TELEPHONE),
+        "admin_image": get_parameter_value(ParameterKeys.SITE_ADMIN_IMAGE),
+        "site_email": get_parameter_value(ParameterKeys.SITE_EMAIL),
     }
 
 

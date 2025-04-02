@@ -4,7 +4,8 @@ from unittest.mock import Mock
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.models import NoticePeriod
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import ProductTypeFactory, GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -58,7 +59,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=5)
 
         result = NoticePeriodManager.get_notice_period_duration(
@@ -74,7 +75,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=5)
         NoticePeriod.objects.create(
             product_type=product_type,
@@ -93,7 +94,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
 
         subscription = Mock()
@@ -112,7 +113,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
 
         subscription = Mock()
@@ -131,7 +132,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=1)
 
         subscription = Mock()
@@ -150,7 +151,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
 
         subscription = Mock()
@@ -169,7 +170,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=1)
 
         subscription = Mock()
@@ -188,7 +189,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=1)
 
         subscription = Mock()

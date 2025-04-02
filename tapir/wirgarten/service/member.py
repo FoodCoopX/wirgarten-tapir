@@ -30,7 +30,7 @@ from tapir.wirgarten.models import (
     TransferCoopSharesLogEntry,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     generate_future_deliveries,
     get_next_delivery_date,
@@ -214,7 +214,7 @@ def buy_cooperative_shares(
 
     share_price = settings.COOP_SHARE_PRICE
     due_date = start_date + relativedelta(
-        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY)
     )
     if due_date < start_date:
         due_date = due_date + relativedelta(months=1)
@@ -381,10 +381,10 @@ def send_cancellation_confirmation_email(
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(
-                Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT
+                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT
             ),
             content=get_parameter_value(
-                Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
+                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
             ),
             variables={
                 "contract_end_date": format_date(contract_end_date),
@@ -407,10 +407,10 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
+            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
         ),
         content=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
+            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
         ),
         variables={
             "contract_start_date": format_date(contract_start_date),
@@ -459,10 +459,10 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
+            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
         ),
         content=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
+            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
         ),
         variables={
             "contract_start_date": format_date(contract_start_date),

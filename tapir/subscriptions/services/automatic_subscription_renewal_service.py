@@ -2,7 +2,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_next_growing_period,
@@ -13,7 +13,7 @@ from tapir.wirgarten.utils import get_today
 class AutomaticSubscriptionRenewalService:
     @classmethod
     def renew_subscriptions_if_necessary(cls):
-        if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
             return
 
         for subscription in get_active_subscriptions():
@@ -22,7 +22,7 @@ class AutomaticSubscriptionRenewalService:
 
     @classmethod
     def must_subscription_be_renewed(cls, subscription: Subscription) -> bool:
-        if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
             return False
 
         if subscription.cancellation_ts is not None:

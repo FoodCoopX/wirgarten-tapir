@@ -6,7 +6,7 @@ from tapir.pickup_locations.models import (
     PickupLocationBasketCapacity,
 )
 from tapir.wirgarten.models import Product, PickupLocation
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class BasketSizeCapacitiesService:
@@ -20,7 +20,9 @@ class BasketSizeCapacitiesService:
     @classmethod
     def get_basket_sizes(cls, basket_sizes_as_string: str | None = None):
         if basket_sizes_as_string is None:
-            basket_sizes_as_string = get_parameter_value(Parameter.PICKING_BASKET_SIZES)
+            basket_sizes_as_string = get_parameter_value(
+                ParameterKeys.PICKING_BASKET_SIZES
+            )
 
         basket_sizes = basket_sizes_as_string.split(";")
 

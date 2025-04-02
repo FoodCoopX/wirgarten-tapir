@@ -17,7 +17,7 @@ from tapir.pickup_locations.services.share_capacities_service import (
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -33,7 +33,7 @@ class PickupLocationCapacitiesView(APIView):
             PickupLocation, id=request.query_params.get("pickup_location_id")
         )
 
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE)
 
         data = {
             "pickup_location_id": pickup_location.id,
@@ -95,7 +95,7 @@ class PickupLocationCapacitiesView(APIView):
             PickupLocation, id=request_serializer.validated_data["pickup_location_id"]
         )
 
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE)
         if request_serializer.validated_data["picking_mode"] != picking_mode:
             raise ValidationError("Invalid picking mode")
 

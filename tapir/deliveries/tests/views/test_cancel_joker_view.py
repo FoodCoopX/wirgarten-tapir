@@ -8,7 +8,8 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -117,7 +118,7 @@ class TestCancelJokerView(TapirIntegrationTest):
     def test_cancelJokerView_jokerFeatureDisabled_returns403(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value="False"
         )
 

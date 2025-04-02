@@ -9,7 +9,8 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.models import GrowingPeriod
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -75,11 +76,11 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
             "2023-07-15", response_content["used_jokers"][0]["joker"]["date"]
         )
         self.assertEqual(
-            get_parameter_value(Parameter.JOKERS_AMOUNT_PER_CONTRACT),
+            get_parameter_value(ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT),
             response_content["max_jokers_per_growing_period"],
         )
         self.assertEqual(
-            get_parameter_value(Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL),
+            get_parameter_value(ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL),
             response_content["weekday_limit"],
         )
         self.assertEqual(
@@ -120,7 +121,7 @@ class TestGetMemberJokerInformationView(TapirIntegrationTest):
     def test_getMemberJokerInformationView_jokerFeatureDisabled_returns403(
         self,
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value="False"
         )
 

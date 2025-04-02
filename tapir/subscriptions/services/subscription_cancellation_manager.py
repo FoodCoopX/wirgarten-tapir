@@ -3,7 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Product, Member
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_now
 
@@ -29,7 +29,7 @@ class SubscriptionCancellationManager:
         )
 
         auto_renew_enabled = get_parameter_value(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
 
         for subscription in get_active_and_future_subscriptions().filter(

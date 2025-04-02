@@ -12,7 +12,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     TaxRate,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
@@ -74,7 +74,7 @@ class TestProductGenerator:
             tax_rate=0,
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
-        TapirParameter.objects.filter(key=Parameter.COOP_BASE_PRODUCT_TYPE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=ernteanteile.id
         )
         cls.generate_product(

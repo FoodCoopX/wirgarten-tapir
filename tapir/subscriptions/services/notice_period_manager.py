@@ -4,7 +4,7 @@ import datetime
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.models import NoticePeriod
 from tapir.wirgarten.models import ProductType, GrowingPeriod, Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class NoticePeriodManager:
@@ -42,7 +42,7 @@ class NoticePeriodManager:
         if notice_period:
             return notice_period.duration_in_months
 
-        return get_parameter_value(Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD)
+        return get_parameter_value(ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD)
 
     @classmethod
     def get_max_cancellation_date(cls, subscription: Subscription):

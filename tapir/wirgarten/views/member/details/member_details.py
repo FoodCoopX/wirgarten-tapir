@@ -4,16 +4,18 @@ from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     GrowingPeriod,
     Member,
-    ProductType,
     Subscription,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
@@ -83,19 +85,19 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["coop_shares"] = share_ownerships
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
+        base_product_type = BaseProductTypeService.get_base_product_type()
         additional_products_available = (
             get_active_and_future_subscriptions()
             .filter(
                 member_id=self.object.id,
                 end_date__gt=get_next_contract_start_date(),
-                product__type_id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE),
+                product__type=base_product_type,
             )
             .exists()
         )
 
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
         context["available_product_types"] = {
-            p.name: p.id == base_product_type_id
+            p.name: p.id == base_product_type.id
             or (
                 additional_products_available
                 and (
@@ -134,7 +136,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         subscription_automatic_renewal = get_parameter_value(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         if not subscription_automatic_renewal:
             self.add_renewal_notice_context(context, next_month, today)
@@ -176,10 +178,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             }
 
         context["jokersEnabled"] = (
-            "true" if get_parameter_value(Parameter.JOKERS_ENABLED) else "false"
+            "true" if get_parameter_value(ParameterKeys.JOKERS_ENABLED) else "false"
         )
         context["subscriptionAutomaticRenewal"] = get_parameter_value(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
 
         return context
@@ -210,9 +212,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_month >= next_growing_period.start_date
         )  # 1 month before
 
-        base_product_type = ProductType.objects.get(
-            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        )
+        base_product_type = BaseProductTypeService.get_base_product_type()
         harvest_share_subs = context["subscriptions"][base_product_type.name]
         context["base_product_type_name"] = base_product_type.name
 
@@ -265,36 +265,36 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["renewal_alert"] = {
             "unknown": {
                 "header": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
                     contract_end_date,
                     next_growing_period,
                 ),
                 "content": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
                     contract_end_date,
                     next_growing_period,
                 ),
             },
             "cancelled": {
                 "header": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
                     contract_end_date,
                     next_growing_period,
                 ),
                 "content": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
                     contract_end_date,
                     next_growing_period,
                 ),
             },
             "renewed": {
                 "header": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
                     contract_end_date,
                     next_growing_period,
                 ),
                 "content": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
                     contract_end_date,
                     next_growing_period,
                     contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
@@ -302,12 +302,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             },
             "no_capacity": {
                 "header": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
                     contract_end_date,
                     next_growing_period,
                 ),
                 "content": self.format_param(
-                    Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
+                    ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
                     contract_end_date,
                     next_growing_period,
                 ),

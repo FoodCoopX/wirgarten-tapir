@@ -6,7 +6,9 @@ import random
 
 from faker import Faker
 
-from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime
@@ -14,7 +16,6 @@ from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.subscription import SOLIDARITY_PRICES
 from tapir.wirgarten.models import (
     Member,
-    ProductType,
     GrowingPeriod,
     Subscription,
     PickupLocation,
@@ -22,7 +23,6 @@ from tapir.wirgarten.models import (
     Product,
     HarvestShareProduct,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     get_next_contract_start_date,
@@ -130,9 +130,7 @@ class TestUserGenerator:
 
     @classmethod
     def create_subscriptions_for_user(cls, member: Member, additional_products: bool):
-        base_product_type = ProductType.objects.get(
-            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        )
+        base_product_type = BaseProductTypeService.get_base_product_type()
 
         mandate_ref = get_or_create_mandate_ref(member)
         future_growing_period = cls.get_future_growing_period()

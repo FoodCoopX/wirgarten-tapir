@@ -9,7 +9,7 @@ from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, Payment, ProductType, Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_active_and_future_subscriptions,
@@ -52,7 +52,7 @@ def get_next_payment_date(reference_date: date = None):
     if reference_date is None:
         reference_date = get_today()
 
-    due_day = get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    due_day = get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY)
 
     if reference_date.day < due_day:
         next_payment = reference_date.replace(day=due_day)

@@ -4,7 +4,8 @@ from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.wirgarten.constants import WEEKLY, ODD_WEEKS
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -17,7 +18,7 @@ class TestPickupLocationCapacitiesViewGet(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
-        TapirParameter.objects.filter(key=Parameter.PICKING_BASKET_SIZES).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium;large"
         )
 
@@ -35,7 +36,7 @@ class TestPickupLocationCapacitiesViewGet(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         pickup_location = PickupLocationFactory.create(name="test location name")
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
         PickupLocationBasketCapacity.objects.create(
@@ -68,7 +69,7 @@ class TestPickupLocationCapacitiesViewGet(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         pickup_location = PickupLocationFactory.create(name="test location name")
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
         capability_1 = PickupLocationCapabilityFactory.create(

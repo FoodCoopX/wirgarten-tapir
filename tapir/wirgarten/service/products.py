@@ -8,7 +8,9 @@ from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.models import TapirParameter
-from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -20,7 +22,7 @@ from tapir.wirgarten.models import (
     Subscription,
     TaxRate,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -60,7 +62,7 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
         return [
             Case(
                 When(
-                    **{id_field: get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)},
+                    **{id_field: BaseProductTypeService.get_base_product_type().id},
                     then=Value(0),
                 ),
                 default=1,
@@ -418,9 +420,9 @@ def create_product_type_capacity(
             is_affected_by_jokers=is_affected_by_jokers,
         )
         if not ProductType.objects.exclude(id=pt.id).exists():
-            TapirParameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
-                value=pt.id
-            )
+            TapirParameter.objects.filter(
+                name=ParameterKeys.COOP_BASE_PRODUCT_TYPE
+            ).update(value=pt.id)
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)

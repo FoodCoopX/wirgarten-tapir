@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_available_product_types
 
 
@@ -30,7 +30,7 @@ class CooperativeShareForm(forms.Form):
             )
         )
 
-        default_min_shares = get_parameter_value(Parameter.COOP_MIN_SHARES)
+        default_min_shares = get_parameter_value(ParameterKeys.COOP_MIN_SHARES)
         for prod in self.harvest_shares_products:
             key = BASE_PRODUCT_FIELD_PREFIX + prod.name
             if key in initial and initial.get(key, 0) is not None:
@@ -61,7 +61,7 @@ class CooperativeShareForm(forms.Form):
             label=_(
                 "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             ),
-            help_text=f'<a href="{get_parameter_value(Parameter.COOP_STATUTE_LINK)}" target="_blank">Satzung der Genossenschaft</a>',
+            help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK)}" target="_blank">Satzung der Genossenschaft</a>',
             required=False,
         )
 
