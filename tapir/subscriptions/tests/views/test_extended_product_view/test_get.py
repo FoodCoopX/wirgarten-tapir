@@ -3,7 +3,8 @@ from django.urls import reverse
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.config import PICKING_MODE_BASKET
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     ProductFactory,
@@ -29,7 +30,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
 
     def test_get_productWithoutPriceObjectOrEquivalences_returnsCorrectData(self):
         member = MemberFactory.create(is_superuser=True)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
         self.client.force_login(member)
@@ -61,7 +62,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
 
     def test_get_default_returnsCorrectData(self):
         member = MemberFactory.create(is_superuser=True)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
         self.client.force_login(member)

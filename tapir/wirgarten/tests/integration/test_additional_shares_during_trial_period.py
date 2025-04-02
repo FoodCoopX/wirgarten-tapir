@@ -3,7 +3,8 @@ import datetime
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberWithCoopSharesFactory,
 )
@@ -19,7 +20,7 @@ class TestAdditionalSharesDuringTrialPeriod(TapirIntegrationTest):
     def setUp(self):
         ParameterDefinitions().import_definitions()
         TapirParameter.objects.filter(
-            key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")
         mock_timezone(self, self.NOW)
 

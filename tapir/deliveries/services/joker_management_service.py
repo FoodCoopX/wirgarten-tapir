@@ -14,7 +14,7 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
 
@@ -55,7 +55,7 @@ class JokerManagementService:
         ).count()
 
         return nb_used_jokers_in_growing_period < get_parameter_value(
-            Parameter.JOKERS_AMOUNT_PER_CONTRACT
+            ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT
         )
 
     @classmethod
@@ -95,7 +95,9 @@ class JokerManagementService:
         cls, restrictions_as_string: str = None
     ) -> List[JokerRestriction]:
         if restrictions_as_string is None:
-            restrictions_as_string = get_parameter_value(Parameter.JOKERS_RESTRICTIONS)
+            restrictions_as_string = get_parameter_value(
+                ParameterKeys.JOKERS_RESTRICTIONS
+            )
 
         if restrictions_as_string == "disabled":
             return []

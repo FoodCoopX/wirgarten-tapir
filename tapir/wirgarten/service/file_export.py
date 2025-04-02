@@ -1,12 +1,12 @@
 import csv
-from django.utils.translation import gettext_lazy as _
-
-from django.core.mail import EmailMultiAlternatives
 
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.utils.translation import gettext_lazy as _
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import ExportedFile
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class CsvTextBuilder(object):
@@ -19,7 +19,7 @@ class CsvTextBuilder(object):
 
 def __send_email(file: ExportedFile, recipient: str = None):
     if recipient is None:
-        recipient = [get_parameter_value(Parameter.SITE_ADMIN_EMAIL)]
+        recipient = [get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL)]
     else:
         recipient = recipient.split(",")
 

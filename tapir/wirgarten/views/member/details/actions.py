@@ -20,7 +20,7 @@ from tapir.wirgarten.models import (
     Subscription,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
@@ -166,8 +166,12 @@ def cancel_contract_at_period_end(request, **kwargs):
     # TODO: remove after tapir_mail migration
     send_email(
         to_email=[member.email],
-        subject=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT),
-        content=get_parameter_value(Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT),
+        subject=get_parameter_value(
+            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT
+        ),
+        content=get_parameter_value(
+            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT
+        ),
     )
 
     return HttpResponseRedirect(

@@ -14,7 +14,8 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checke
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     PickupLocationFactory,
     MemberFactory,
@@ -50,7 +51,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         )
         expected = Mock()
         mock_check_for_picking_mode_share.return_value = expected
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
 
@@ -92,7 +93,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         )
         expected = Mock()
         mock_check_for_picking_mode_basket.return_value = expected
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
 
@@ -134,7 +135,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         )
         expected = Mock()
         mock_check_for_picking_mode_basket.return_value = expected
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
 
@@ -160,7 +161,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         pickup_location = PickupLocationFactory.create()
         ordered_products_to_quantity_map = Mock()
         subscription_start = datetime.date(year=2024, month=5, day=1)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value="invalid"
         )
 

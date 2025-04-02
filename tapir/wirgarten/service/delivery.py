@@ -17,7 +17,8 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     ProductType,
 )
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_and_future_subscriptions,
@@ -188,7 +189,7 @@ def calculate_pickup_location_change_date(
         next_delivery_date = get_next_delivery_date(reference_date=reference_date)
     if change_until_weekday is None:
         change_until_weekday = get_parameter_value(
-            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
         )
 
     days_ahead = next_delivery_date.weekday() - change_until_weekday

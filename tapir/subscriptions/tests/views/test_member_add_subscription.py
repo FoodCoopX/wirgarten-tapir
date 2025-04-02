@@ -13,7 +13,8 @@ from tapir.wirgarten.models import (
     ProductType,
     Product,
 )
-from tapir.wirgarten.parameters import Parameter, ParameterDefinitions
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
     ProductCapacityFactory,
@@ -28,7 +29,6 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 class TestMemberAddSubscription(TapirIntegrationTest):
     def setUp(self):
-        ParameterDefinitions().import_definitions()
         now = datetime.datetime(year=2023, month=6, day=12)
         mock_timezone(self, now)
         configure_mail_module()
@@ -52,9 +52,9 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         growing_period.end_date = datetime.date(year=2023, month=12, day=31)
         growing_period.save()
 
-        parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
-        parameter.value = product_capacity_base.product_type.id
-        parameter.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_capacity_base.product_type.id
+        )
 
         ProductPriceFactory.create(
             product__type=product_capacity_base.product_type,
@@ -100,7 +100,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
 
         self.send_add_subscription_request(
@@ -115,10 +115,10 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
 
         self.send_add_subscription_request(
@@ -133,7 +133,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
         base_product_subscription = SubscriptionFactory.create(
             member=Member.objects.get(),
@@ -158,10 +158,10 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
         base_product_subscription = SubscriptionFactory.create(
             member=Member.objects.get(),

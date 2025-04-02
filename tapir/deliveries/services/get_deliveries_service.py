@@ -13,7 +13,7 @@ from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.products import get_current_growing_period
 
@@ -50,7 +50,7 @@ class GetDeliveriesService:
         )
 
         if not relevant_subscriptions.exists():
-            if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+            if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
                 return None
             current_growing_period = get_current_growing_period(delivery_date)
             relevant_subscriptions = cls.get_relevant_subscriptions(
@@ -128,7 +128,7 @@ class GetDeliveriesService:
     def is_joker_used_in_week(
         cls, member: Member, delivery_date: datetime.date
     ) -> bool:
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED):
             return False
 
         week_start = get_monday(delivery_date)

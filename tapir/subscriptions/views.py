@@ -18,6 +18,9 @@ from tapir.subscriptions.serializers import (
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
 )
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
@@ -25,7 +28,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, Product
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -129,10 +132,14 @@ class CancelSubscriptionsView(APIView):
                 ],
             )
 
-        if self.is_at_least_one_additional_product_not_selected(
-            subscribed_products, products_selected_for_cancellation
-        ) and self.are_all_base_products_selected(
-            subscribed_products, products_selected_for_cancellation
+        if (
+            BaseProductTypeService.is_base_product_type_logic_enabled()
+            and self.is_at_least_one_additional_product_not_selected(
+                subscribed_products, products_selected_for_cancellation
+            )
+            and self.are_all_base_products_selected(
+                subscribed_products, products_selected_for_cancellation
+            )
         ):
             return self.build_response(
                 False,
@@ -157,10 +164,10 @@ class CancelSubscriptionsView(APIView):
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
     ):
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type()
         for subscribed_product in subscribed_products:
             if (
-                subscribed_product.type_id == base_product_type_id
+                subscribed_product.type_id == base_product_type.id
                 and subscribed_product not in products_selected_for_cancellation
             ):
                 return False
@@ -172,10 +179,10 @@ class CancelSubscriptionsView(APIView):
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
     ):
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type()
         for subscribed_product in subscribed_products:
             if (
-                subscribed_product.type_id != base_product_type_id
+                subscribed_product.type_id != base_product_type.id
                 and subscribed_product not in products_selected_for_cancellation
             ):
                 return True
@@ -223,7 +230,7 @@ class ExtendedProductView(APIView):
             ).items()
         ]
 
-        data["picking_mode"] = get_parameter_value(Parameter.PICKING_MODE)
+        data["picking_mode"] = get_parameter_value(ParameterKeys.PICKING_MODE)
 
         return Response(
             ExtendedProductSerializer(data).data,

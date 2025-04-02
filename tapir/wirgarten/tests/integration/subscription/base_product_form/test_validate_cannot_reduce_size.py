@@ -8,9 +8,9 @@ from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.forms.subscription import BaseProductForm
 from tapir.wirgarten.models import Subscription, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import (
     ParameterDefinitions,
-    Parameter,
 )
 from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
@@ -31,9 +31,9 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
         mock_timezone(self, self.NOW)
 
         product_type = ProductTypeFactory(name="Ernteanteile", delivery_cycle=WEEKLY[0])
-        parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
-        parameter.value = product_type.id
-        parameter.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_type.id
+        )
 
         self.product_price_s = ProductPriceFactory.create(
             size=0.8, product__name="S", product__type=product_type

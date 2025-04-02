@@ -12,9 +12,9 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     MemberPickupLocation,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import (
     ParameterDefinitions,
-    Parameter,
 )
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
@@ -31,7 +31,7 @@ class TestStudentStatus(TapirIntegrationTest):
     def setUp(self):
         ParameterDefinitions().import_definitions()
         TapirParameter.objects.filter(
-            key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")
         configure_mail_module()
 
@@ -109,9 +109,9 @@ class TestStudentStatus(TapirIntegrationTest):
             end_date=datetime.date(year=2023, month=12, day=31),
         )
 
-        parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
-        parameter.value = product_capacity.product_type.id
-        parameter.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_capacity.product_type.id
+        )
 
         ProductPriceFactory.create(
             product__type=product_capacity.product_type,

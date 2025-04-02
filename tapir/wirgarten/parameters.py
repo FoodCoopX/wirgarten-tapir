@@ -7,7 +7,15 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.models import (
+    TapirParameterDatatype,
+    TapirParameterDefinitionImporter,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -18,8 +26,6 @@ OPTIONS_WEEKDAYS = [
     (5, _("Samstag")),
     (6, _("Sonntag")),
 ]
-
-PREFIX = "wirgarten"
 
 
 class ParameterCategory:
@@ -37,104 +43,6 @@ class ParameterCategory:
     SUBSCRIPTIONS = "Verträge"
 
 
-class Parameter:
-    MEMBER_PICKUP_LOCATION_CHANGE_UNTIL = (
-        f"{PREFIX}.member.pickup_location_change_until"
-    )
-    MEMBER_BYPASS_KEYCLOAK = f"{PREFIX}.temporarily.bypass_keycloak"
-    SITE_NAME = f"{PREFIX}.site.name"
-    SITE_STREET = f"{PREFIX}.site.street"
-    SITE_CITY = f"{PREFIX}.site.city"
-    SITE_EMAIL = f"{PREFIX}.site.email"
-    SITE_ADMIN_EMAIL = f"{PREFIX}.site.admin_email"
-    SITE_ADMIN_NAME = f"{PREFIX}.site.admin_name"
-    SITE_ADMIN_TELEPHONE = f"{PREFIX}.site.admin_telephone"
-    SITE_ADMIN_IMAGE = f"{PREFIX}.site.admin_image"
-    SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
-    SITE_FAQ_LINK = f"{PREFIX}.site.faq_link"
-    COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
-    COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
-    COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
-    COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
-    COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
-    CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
-    HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
-    SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
-    SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
-    PICKING_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
-    PICKING_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
-    PICKING_MODE = f"{PREFIX}.picking.picking_mode"
-    PICKING_BASKET_SIZES = f"{PREFIX}.picking.basket_sizes"
-    PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
-    DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
-    MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
-        f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"
-    )
-    MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT = (
-        f"{PREFIX}.member.dashboard.renewal_alert.unkown.content"
-    )
-    MEMBER_RENEWAL_ALERT_CANCELLED_HEADER = (
-        f"{PREFIX}.member.dashboard.renewal_alert.cancelled.header"
-    )
-    MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT = (
-        f"{PREFIX}.member.dashboard.renewal_alert.cancelled.content"
-    )
-    MEMBER_RENEWAL_ALERT_RENEWED_HEADER = (
-        f"{PREFIX}.member.dashboard.renewal_alert.renewed.header"
-    )
-    MEMBER_RENEWAL_ALERT_RENEWED_CONTENT = (
-        f"{PREFIX}.member.dashboard.renewal_alert.renewed.content"
-    )
-    MEMBER_RENEWAL_ALERT_WAITLIST_HEADER = (
-        f"{PREFIX}.member.dashboard.renewal_alert.waitlist.header"
-    )
-    MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT = (
-        f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
-    )
-    MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
-    EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.cancellation_confirmation.subject"
-    )
-    EMAIL_CANCELLATION_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.cancellation_confirmation.content"
-    )
-    EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.not_renewed_confirmation.subject"
-    )
-    EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.not_renewed_confirmation.content"
-    )
-    EMAIL_CONTRACT_END_REMINDER_SUBJECT = (
-        f"{PREFIX}.email.contract_end_reminder.subject"
-    )
-    EMAIL_CONTRACT_END_REMINDER_CONTENT = (
-        f"{PREFIX}.email.contract_end_reminder.content"
-    )
-    EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.contract_order_confirmation.subject"
-    )
-    EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.contract_order_confirmation.content"
-    )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.contract_change_confirmation.subject"
-    )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.contract_change_confirmation.content"
-    )
-    JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
-    JOKERS_AMOUNT_PER_CONTRACT = f"{PREFIX}.jokers.amount_per_contract"
-    JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
-    SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
-    SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
-
-
-from tapir.configuration.models import (
-    TapirParameterDatatype,
-    TapirParameterDefinitionImporter,
-)
-
-
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
@@ -148,7 +56,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
+            key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
             label="Abholort-Änderung möglich bis",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=6,
@@ -158,7 +66,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_NAME,
+            key=ParameterKeys.SITE_NAME,
             label="Standort Name",
             datatype=TapirParameterDatatype.STRING,
             initial_value="WirGarten Lüneburg eG",
@@ -168,7 +76,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_STREET,
+            key=ParameterKeys.SITE_STREET,
             label="Straße u. Hausnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Vögelser Str. 25",
@@ -178,7 +86,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_CITY,
+            key=ParameterKeys.SITE_CITY,
             label="Postleitzahl u. Ort",
             datatype=TapirParameterDatatype.STRING,
             initial_value="21339 Lüneburg",
@@ -188,7 +96,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_EMAIL,
+            key=ParameterKeys.SITE_EMAIL,
             label="Kontakt Email-Adresse",
             datatype=TapirParameterDatatype.STRING,
             initial_value="lueneburg@wirgarten.com",
@@ -198,7 +106,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_ADMIN_EMAIL,
+            key=ParameterKeys.SITE_ADMIN_EMAIL,
             label="Admin Email",
             datatype=TapirParameterDatatype.STRING,
             initial_value="tapiradmin@wirgarten.com",
@@ -208,7 +116,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_ADMIN_NAME,
+            key=ParameterKeys.SITE_ADMIN_NAME,
             label="Admin/Ansprechpartner Name",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Lukas Heidelberg",
@@ -217,7 +125,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_ADMIN_TELEPHONE,
+            key=ParameterKeys.SITE_ADMIN_TELEPHONE,
             label="Admin/Ansprechpartner Telefonnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="+49 176 34 45 81 48",
@@ -226,7 +134,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_ADMIN_IMAGE,
+            key=ParameterKeys.SITE_ADMIN_IMAGE,
             label="Admin/Ansprechpartner Foto",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/wp-content/uploads/sites/4/2023/03/lukas-heidelberg-higher-res.jpg",
@@ -235,7 +143,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_PRIVACY_LINK,
+            key=ParameterKeys.SITE_PRIVACY_LINK,
             label="Link zur Datenschutzerklärung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/datenschutzerklaerung",
@@ -245,7 +153,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SITE_FAQ_LINK,
+            key=ParameterKeys.SITE_FAQ_LINK,
             label="Link zum Mitglieder-FAQ",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/faq",
@@ -255,7 +163,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.COOP_MIN_SHARES,
+            key=ParameterKeys.COOP_MIN_SHARES,
             label="Mindestanzahl Genossenschaftsanteile",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
@@ -266,7 +174,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.COOP_STATUTE_LINK,
+            key=ParameterKeys.COOP_STATUTE_LINK,
             label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/satzung",
@@ -276,7 +184,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.COOP_INFO_LINK,
+            key=ParameterKeys.COOP_INFO_LINK,
             label="Link zu weiteren Infos über die Genossenschaft",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
@@ -286,7 +194,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
+            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
             label="Solidarpreise möglich",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
@@ -311,7 +219,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SUPPLIER_LIST_PRODUCT_TYPES,
+            key=ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES,
             label="Produkte für Lieferantenlisten",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Hühneranteile",
@@ -320,7 +228,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL,
+            key=ParameterKeys.SUPPLIER_LIST_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
@@ -329,7 +237,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICKING_PRODUCT_TYPES,
+            key=ParameterKeys.PICKING_PRODUCT_TYPES,
             label="Produkte für Kommisionierliste",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ernteanteile",
@@ -339,7 +247,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICKING_SEND_ADMIN_EMAIL,
+            key=ParameterKeys.PICKING_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
@@ -349,7 +257,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICKING_MODE,
+            key=ParameterKeys.PICKING_MODE,
             label="Kommissionierungsmodus",
             datatype=TapirParameterDatatype.STRING,
             initial_value=PICKING_MODE_SHARE,
@@ -360,7 +268,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICKING_BASKET_SIZES,
+            key=ParameterKeys.PICKING_BASKET_SIZES,
             label="Kistengrößen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="kleinen Kiste;normalen Kiste;",
@@ -373,7 +281,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PAYMENT_DUE_DAY,
+            key=ParameterKeys.PAYMENT_DUE_DAY,
             label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=15,
@@ -388,7 +296,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.DELIVERY_DAY,
+            key=ParameterKeys.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
@@ -398,7 +306,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+            key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
             label="Genossenschaftsanteile separat von Ernteanteilen zeichenbar",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
@@ -421,7 +329,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         ]
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="{member.first_name}, dein Ernteanteil läuft bald aus!",
@@ -434,7 +342,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Als <strong>bestehendes Mitglied</strong> hast du <strong>Vorrang</strong> beim Zeichnen von Ernteanteilen und Zusatzabos. Ab sofort kannst du deine Verträge für die <strong>nächste Saison</strong> verlängern.<br/><small>Andernfalls enden deine Verträge automatisch am {contract_end_date}.</small>""",
@@ -451,7 +359,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Schade, dass du gehst {member.first_name}!",
@@ -464,7 +372,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Du wolltest keine neuen Ernteanteile für den Zeitraum <strong>{next_period_start_date} - {next_period_end_date}</strong> zeichnen. Hast du es dir anders überlegt? Dann verlängere jetzt hier deinen Erntevertrag.""",
@@ -481,7 +389,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Schön, dass du dabei bleibst {member.first_name}!",
@@ -494,7 +402,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Verträge wurden verlängert vom <strong>{next_period_start_date} - {next_period_end_date}</strong>.",
@@ -511,7 +419,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Wir haben keine Ernteanteile mehr, {member.first_name}!",
@@ -522,7 +430,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
+            key=ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Verträge enden am <strong>{contract_end_date}</strong>. Leider gibt es keine freien Ernteanteile mehr für die nächste Anbausaison. Wenn du möchtest, benachrichtigen wir dich sobald wir wieder freie Ernteanteile haben.",
@@ -539,7 +447,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_CANCELLATION_REASON_CHOICES,
+            key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES,
             label="Kündigungsgründe",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Menge (zu viel); Menge (zu wenig); Preis; Vielfalt; Qualität; Weg-/Umzug",
@@ -564,14 +472,14 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             )
 
         parameter_definition(
-            key=Parameter.COOP_BASE_PRODUCT_TYPE,
+            key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value=get_default_product_type(),
+            initial_value=BaseProductTypeService.VALUE_NO_BASE_PRODUCT_TYPE,
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
-                options=list(map(lambda x: (x.id, x.name), ProductType.objects.all()))
+                options=BaseProductTypeService.get_options_for_base_product_type_parameter()
             ),
         )
 
@@ -588,7 +496,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         DEFAULT_EMAIL_MEMBER_VARS = ["member", "last_pickup_date"]
 
         parameter_definition(
-            key=Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT,
+            key=ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Kündigungsbestätigung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Kündigungsbestätigung",
@@ -598,7 +506,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT,
+            key=ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT,
             label="Inhalt: Email 'Kündigungsbestätigung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Moin {member.first_name}, 
@@ -628,7 +536,7 @@ Viele Grüße von {admin_name} aus deinem {site_name}""",
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT,
+            key=ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Bestätigung: Explizit nicht verlängert'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Schade, dass du gehst!",
@@ -638,7 +546,7 @@ Viele Grüße von {admin_name} aus deinem {site_name}""",
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT,
+            key=ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT,
             label="Inhalt: Email 'Bestätigung: Explizit nicht verlängert'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Liebe/r {member.first_name},
@@ -673,7 +581,7 @@ P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verl�
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT,
+            key=ParameterKeys.EMAIL_CONTRACT_END_REMINDER_SUBJECT,
             label="Betreff: Email 'Vertrags-/Lieferende'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Dein letzter Ernteanteil",
@@ -683,7 +591,7 @@ P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verl�
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT,
+            key=ParameterKeys.EMAIL_CONTRACT_END_REMINDER_CONTENT,
             label="Inhalt: Email 'Vertrags-/Lieferende'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Liebe/r {member.first_name}
@@ -721,7 +629,7 @@ P.S.: Erzähle gerne Freund:innen, Nachbar:innen, Kolleg:innen in Lüneburg vom 
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
+            key=ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Bestellbestätigung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Vertragsdaten + Informationen zum Mitgliederbereich",
@@ -731,7 +639,7 @@ P.S.: Erzähle gerne Freund:innen, Nachbar:innen, Kolleg:innen in Lüneburg vom 
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT,
+            key=ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT,
             label="Inhalt: Email 'Bestelllbestätigung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Liebe/r {member.first_name},
@@ -772,7 +680,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
         )
 
         parameter_definition(
-            key=Parameter.MEMBER_BYPASS_KEYCLOAK,
+            key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
             label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
@@ -781,7 +689,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT,
+            key=ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Vertragsänderung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Vertragsänderung",
@@ -791,7 +699,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
         )
 
         parameter_definition(
-            key=Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT,
+            key=ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT,
             label="Inhalt: Email 'Vertragsänderung'",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Liebe/r {member.first_name},
@@ -827,7 +735,7 @@ Dein WirGarten-Team""",
         )
 
         parameter_definition(
-            key=Parameter.JOKERS_ENABLED,
+            key=ParameterKeys.JOKERS_ENABLED,
             label="Joker-Feature einschalten",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
@@ -837,7 +745,7 @@ Dein WirGarten-Team""",
         )
 
         parameter_definition(
-            key=Parameter.JOKERS_AMOUNT_PER_CONTRACT,
+            key=ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT,
             label="Joker pro Jahr",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=4,
@@ -847,7 +755,7 @@ Dein WirGarten-Team""",
         )
 
         parameter_definition(
-            key=Parameter.JOKERS_RESTRICTIONS,
+            key=ParameterKeys.JOKERS_RESTRICTIONS,
             label="Besondere Einschränkungen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="01.08.-31.08.[2];",
@@ -865,7 +773,7 @@ Dein WirGarten-Team""",
         )
 
         parameter_definition(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL,
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL,
             label="Automatische Verlängerung der Verträge",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
@@ -875,7 +783,7 @@ Dein WirGarten-Team""",
         )
 
         parameter_definition(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
             label="Kündigungsfrist",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,

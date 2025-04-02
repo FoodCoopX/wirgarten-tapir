@@ -14,7 +14,8 @@ from tapir.wirgarten.models import (
     ProductType,
     PickupLocationCapability,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
@@ -49,9 +50,9 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         growing_period.end_date = datetime.date(year=2023, month=12, day=31)
         growing_period.save()
 
-        parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
-        parameter.value = product_capacity.product_type.id
-        parameter.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_capacity.product_type.id
+        )
 
         ProductPriceFactory.create(
             product__type=product_capacity.product_type,

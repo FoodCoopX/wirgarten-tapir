@@ -10,6 +10,9 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
     MarketingFeedbackForm,
@@ -29,7 +32,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
@@ -119,7 +122,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        base_prod_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type()
         form_list = [
             (STEP_BASE_PRODUCT, BaseProductForm),
             (STEP_BASE_PRODUCT_NOT_AVAILABLE, EmptyForm),
@@ -128,17 +131,18 @@ class RegistrationWizardViewBase(CookieWizardView):
         ]
         steps_kwargs = settings.REGISTRATION_STEPS
         if STEP_BASE_PRODUCT not in steps_kwargs:
-            base_product = ProductType.objects.get(id=base_prod_id)
             steps_kwargs[STEP_BASE_PRODUCT] = {
-                "product_type_id": base_prod_id,
-                "title": base_product.name,
-                "description": base_product.name,
+                "product_type_id": base_product_type.id,
+                "title": base_product_type.name,
+                "description": base_product_type.name,
             }
-        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = base_prod_id
+        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = (
+            base_product_type.id if base_product_type is not None else None
+        )
         for pt in [
             x
             for x in get_available_product_types(get_next_contract_start_date())
-            if x.id != base_prod_id
+            if x.id != base_product_type.id
         ]:
             step = "additional_product_" + pt.name
             if step not in steps_kwargs:
@@ -196,13 +200,11 @@ class RegistrationWizardViewBase(CookieWizardView):
             }
 
         _coop_shares_without_harvest_shares_possible = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         )
 
         _show_harvest_shares = is_product_type_available(
-            ProductType.objects.get(
-                id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-            ),
+            BaseProductTypeService.get_base_product_type(),
             reference_date=self.start_date,
         )
 
@@ -259,8 +261,8 @@ class RegistrationWizardViewBase(CookieWizardView):
             if self.has_step(STEP_BASE_PRODUCT) and is_base_product_selected(
                 self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
             ):
-                base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-                product_type = ProductType.objects.get(id=base_product_id)
+                base_product_type_id = BaseProductTypeService.get_base_product_type().id
+                product_type = ProductType.objects.get(id=base_product_type_id)
                 initial["subs"][product_type.name] = []
                 data = self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
                 for key, quantity in data.items():
@@ -268,9 +270,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                         product_name = key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                         product = Product.objects.get(
                             name__iexact=product_name,
-                            type_id=get_parameter_value(
-                                Parameter.COOP_BASE_PRODUCT_TYPE
-                            ),
+                            type_id=base_product_type_id,
                         )
                         initial["subs"][product_type.name].append(
                             Subscription(product=product, quantity=quantity)

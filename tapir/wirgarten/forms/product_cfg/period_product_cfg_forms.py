@@ -15,7 +15,7 @@ from tapir.wirgarten.models import (
     ProductType,
     TaxRate,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
@@ -39,7 +39,7 @@ class ProductTypeForm(forms.Form):
         initial_capacity = 0.0
         product_type = None
         initial_notice_period = get_parameter_value(
-            Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         )
 
         if KW_PERIOD_ID in kwargs:
@@ -107,7 +107,7 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
-        if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
             self.fields["notice_period"] = forms.IntegerField(
                 initial=initial_notice_period,
                 required=True,

@@ -4,7 +4,8 @@ from unittest.mock import Mock
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -16,7 +17,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
         ParameterDefinitions().import_definitions()
 
     def test_canJokerBeUsedRelativeToRestrictions_noRestrictions_returnsTrue(self):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_RESTRICTIONS).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
             value="disabled"
         )
         self.assertTrue(
@@ -28,7 +29,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
     def test_canJokerBeUsedRelativeToRestrictions_restrictionsAllowNewJoker_returnsTrue(
         self,
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_RESTRICTIONS).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
             value="01.08.-31.08.[2];15.02.-20.03.[3]"
         )
         member = MemberFactory.create()
@@ -49,7 +50,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
     def test_canJokerBeUsedRelativeToRestrictions_restrictionsDontAllowNewJoker_returnsFalse(
         self,
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_RESTRICTIONS).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
             value="01.08.-31.08.[2];15.02.-20.03.[3]"
         )
         member = MemberFactory.create()

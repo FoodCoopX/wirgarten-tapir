@@ -10,7 +10,8 @@ from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
     ProductPriceFactory,
@@ -44,7 +45,7 @@ class TestAdditionalProductForm(TapirIntegrationTest):
         base_product = ProductFactory.create()
         base_product_type = ProductType.objects.get()
         GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(key=Parameter.COOP_BASE_PRODUCT_TYPE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=base_product_type.id
         )
         additional_product: Product = ProductFactory.create()

@@ -27,7 +27,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
@@ -60,7 +60,7 @@ class GetMemberJokerInformationView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def get(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
@@ -92,10 +92,10 @@ class GetMemberJokerInformationView(APIView):
         data = {
             "used_jokers": joker_data,
             "max_jokers_per_growing_period": get_parameter_value(
-                Parameter.JOKERS_AMOUNT_PER_CONTRACT
+                ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT
             ),
             "weekday_limit": get_parameter_value(
-                Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+                ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
             ),
             "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(),
             "used_joker_in_growing_period": self.build_data_used_joker_in_growing_period(
@@ -139,7 +139,7 @@ class CancelJokerView(APIView):
         parameters=[OpenApiParameter(name="joker_id", type=str)],
     )
     def post(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
@@ -178,7 +178,7 @@ class UseJokerView(APIView):
         ],
     )
     def post(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,

@@ -8,7 +8,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.models import Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -27,7 +27,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
 
     @patch(
@@ -46,7 +46,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
 
     @patch(
@@ -69,7 +69,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_get_next_growing_period.assert_called_once_with()
 
@@ -103,7 +103,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_get_next_growing_period.assert_called_once_with()
         mock_subscription_objects.filter.assert_called_once_with(
@@ -147,7 +147,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_get_next_growing_period.assert_called_once_with()
         mock_subscription_objects.filter.assert_called_once_with(
@@ -192,7 +192,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_get_next_growing_period.assert_called_once_with()
         mock_subscription_objects.filter.assert_called_once_with(
@@ -237,7 +237,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
 
         self.assertTrue(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         )
         mock_get_next_growing_period.assert_called_once_with()
         mock_subscription_objects.filter.assert_called_once_with(
