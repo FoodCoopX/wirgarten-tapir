@@ -8,15 +8,21 @@
 <script>
   var originalTotal = 0;
   document.addEventListener("DOMContentLoaded", () => {
-    originalTotal = "{{form.harvest_shares}}".split(',').map(calculatePrice).reduce((a, b) => a + b);
-    const growingPeriodSelect = document.getElementById("id_growing_period");
+    const basePrices = "{{form.harvest_shares}}".split(';')[0]
+    originalTotal = basePrices.split(',').map(calculatePrice).reduce((a, b) => a + b);
+    let growingPeriodSelect = document.getElementById("id_growing_period");
     if (!growingPeriodSelect) {
-    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[0])
+        growingPeriodSelect = document.getElementById("id_base_product-growing_period");
+    }
+    if (!growingPeriodSelect) {
+    initHarvestShareSummary(basePrices, {{ form.solidarity_total | safe }}[0])
     } else {
     growingPeriodSelect.addEventListener("change", function () {
-        initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
+        const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
+        initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
     });
-    initHarvestShareSummary("{{form.harvest_shares}}", {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
+    const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
+    initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
     }
   })
 </script>

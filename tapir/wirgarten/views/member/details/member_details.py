@@ -56,6 +56,15 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
             self.object, today
         )
+        next_growing_period = get_next_growing_period()
+        for subscriptions in context["subscriptions"].values():
+            for subscription in subscriptions:
+                price_at_renewal_date = 0
+                if next_growing_period:
+                    price_at_renewal_date = subscription.total_price(
+                        next_growing_period.start_date
+                    )
+                subscription.price_at_renewal_date = price_at_renewal_date
 
         context["sub_quantities"] = {
             k: sum(map(lambda x: x.quantity, v))
