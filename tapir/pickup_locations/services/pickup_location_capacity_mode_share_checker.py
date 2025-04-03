@@ -1,7 +1,7 @@
 import datetime
 from typing import Dict
 
-from django.db.models import OuterRef, Subquery, DecimalField, F, Sum
+from django.db.models import OuterRef, Subquery, DecimalField, F
 
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -16,7 +16,11 @@ from tapir.wirgarten.models import (
     ProductType,
     ProductPrice,
 )
-from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
+from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
+    get_product_price,
+    get_active_and_future_subscriptions,
+)
 
 
 class PickupLocationCapacityModeShareChecker:
@@ -95,15 +99,13 @@ class PickupLocationCapacityModeShareChecker:
         product_type: ProductType,
         reference_date: datetime.date,
     ):
-        members_at_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
-            Member.objects.all(), reference_date
-        ).filter(
-            **{
-                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
-            }
+        members_at_pickup_location = (
+            MemberPickupLocationService.get_members_at_pickup_location(
+                pickup_location, reference_date
+            )
         )
 
-        subscriptions = get_active_subscriptions(reference_date).filter(
+        subscriptions = get_active_and_future_subscriptions(reference_date).filter(
             member__in=members_at_pickup_location, product__type=product_type
         )
         latest_valid_product_price = (
@@ -122,11 +124,32 @@ class PickupLocationCapacityModeShareChecker:
             total_size_per_subscription=F("latest_size") * F("quantity"),
         )
 
-        total_size = subscriptions_annotated_with_total_size.aggregate(
-            total_size=Sum("total_size_per_subscription")
-        )["total_size"]
+        usage_by_member_and_product = {}
+        for subscription in subscriptions_annotated_with_total_size:
+            if subscription.member not in usage_by_member_and_product.keys():
+                usage_by_member_and_product[subscription.member] = {}
+            if (
+                subscription.product
+                not in usage_by_member_and_product[subscription.member].keys()
+            ):
+                usage_by_member_and_product[subscription.member][
+                    subscription.product
+                ] = 0
+            usage_by_member_and_product[subscription.member][subscription.product] = (
+                max(
+                    usage_by_member_and_product[subscription.member][
+                        subscription.product
+                    ],
+                    subscription.total_size_per_subscription,
+                )
+            )
 
-        return float(total_size) if total_size else 0
+        total_usage = 0
+        for usage_by_product in usage_by_member_and_product.values():
+            for usage in usage_by_product.values():
+                total_usage += usage
+
+        return total_usage
 
     @classmethod
     def get_capacity_used_by_member_before_changes(

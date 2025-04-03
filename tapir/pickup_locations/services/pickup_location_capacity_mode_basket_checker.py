@@ -13,7 +13,10 @@ from tapir.wirgarten.models import (
     PickupLocation,
     Product,
 )
-from tapir.wirgarten.service.products import get_active_subscriptions
+from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
+    get_active_and_future_subscriptions,
+)
 
 
 class PickupLocationCapacityModeBasketChecker:
@@ -97,24 +100,41 @@ class PickupLocationCapacityModeBasketChecker:
             cls.get_product_id_to_basket_size_usage_map(basket_size)
         )
 
-        members_at_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
-            Member.objects.all(), subscription_start
-        ).filter(
-            **{
-                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
-            }
+        members_at_pickup_location = (
+            MemberPickupLocationService.get_members_at_pickup_location(
+                pickup_location, subscription_start
+            )
         )
 
-        usage = 0
-        for subscription in get_active_subscriptions(subscription_start).filter(
-            member__in=members_at_pickup_location
-        ):
-            usage += (
-                product_id_to_basket_size_usage_map[subscription.product_id]
-                * subscription.quantity
+        usage_by_member_and_product = {}
+        for subscription in get_active_and_future_subscriptions(
+            subscription_start
+        ).filter(member__in=members_at_pickup_location):
+            if subscription.member not in usage_by_member_and_product.keys():
+                usage_by_member_and_product[subscription.member] = {}
+            if (
+                subscription.product
+                not in usage_by_member_and_product[subscription.member].keys()
+            ):
+                usage_by_member_and_product[subscription.member][
+                    subscription.product
+                ] = 0
+            usage_by_member_and_product[subscription.member][subscription.product] = (
+                max(
+                    usage_by_member_and_product[subscription.member][
+                        subscription.product
+                    ],
+                    product_id_to_basket_size_usage_map[subscription.product_id]
+                    * subscription.quantity,
+                )
             )
 
-        return usage
+        total_usage = 0
+        for usage_by_product in usage_by_member_and_product.values():
+            for usage in usage_by_product.values():
+                total_usage += usage
+
+        return total_usage
 
     @classmethod
     def get_capacity_used_by_member_before_changes(

@@ -67,6 +67,8 @@ export * from './PickupLocationCapacityByBasketSize';
 export * from './PickupLocationCapacityByBasketSizeRequest';
 export * from './PickupLocationCapacityByShare';
 export * from './PickupLocationCapacityByShareRequest';
+export * from './PickupLocationCapacityChangePoint';
+export * from './PickupLocationCapacityEvolution';
 export * from './PickupLocationOpeningTime';
 export * from './Product';
 export * from './ProductBasketSizeEquivalence';

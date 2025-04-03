@@ -15,7 +15,7 @@
 
 /**
  * * `picking_mode_basket` - Nach Kisten
- * * `picking_mode_share` - Nach Anteile
+ * * `picking_mode_share` - Nach Ernteanteile
  * @export
  */
 export const PickingModeEnum = {
