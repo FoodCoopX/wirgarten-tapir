@@ -1,4 +1,5 @@
 import datetime
+import locale
 
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
@@ -205,21 +206,27 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
         current_date = get_today()
+        usage_at_date_cache_by_product_type = {}
         while current_date < max_date:
             values = []
             for product_type in product_types:
                 capacity = capacities_by_product_type.get(product_type, 0)
+                if product_type not in usage_at_date_cache_by_product_type.keys():
+                    usage_at_date_cache_by_product_type[product_type] = {}
                 if capacity is None:
                     values.append("Unbegrenzt")
                 else:
                     values.append(
-                        str(
-                            capacity
-                            - PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+                        locale.format_string(
+                            "%.2f",
+                            PickupLocationCapacityModeShareChecker.get_free_capacity_at_date(
                                 pickup_location=pickup_location,
                                 product_type=product_type,
                                 reference_date=current_date,
-                            )
+                                usage_at_date_cache=usage_at_date_cache_by_product_type[
+                                    product_type
+                                ],
+                            ),
                         )
                     )
             if len(data_points) == 0 or data_points[-1]["values"] != values:

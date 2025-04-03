@@ -88,30 +88,36 @@ const DashboardPickupLocationCapacityBase: React.FC<
 
   function getDataTable() {
     return (
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>KW</th>
-            <th>Datum</th>
-            {tableHeaders.map((header) => (
-              <th key={header}>{header}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {dataPoints.map((dataPoint) => {
-            return (
-              <tr key={formatDateNumeric(dataPoint.date)}>
-                <td>KW{dayjs(dataPoint.date).week()}</td>
-                <td>{formatDateText(dataPoint.date)}</td>
-                {dataPoint.values.map((value, index) => (
-                  <td key={index}>{value}</td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+      <>
+        <p>
+          Die Tabelle zeigt wie viele Kapazitäten frei sind an der jeweiligem
+          Daten. Es werde nur Änderungen gelistet.
+        </p>
+        <Table striped hover responsive>
+          <thead>
+            <tr>
+              <th>KW</th>
+              <th>Datum</th>
+              {tableHeaders.map((header) => (
+                <th key={header}>{header}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataPoints.map((dataPoint) => {
+              return (
+                <tr key={formatDateNumeric(dataPoint.date)}>
+                  <td>KW{dayjs(dataPoint.date).week()}</td>
+                  <td>{formatDateText(dataPoint.date)}</td>
+                  {dataPoint.values.map((value, index) => (
+                    <td key={index}>{value}</td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      </>
     );
   }
 
