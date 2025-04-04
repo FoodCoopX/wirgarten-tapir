@@ -265,18 +265,19 @@ class PickupLocationCapacityModeShareChecker:
             lambda: cls.get_date_of_last_possible_capacity_change(pickup_location),
         )
         while current_date < date_of_last_possible_capacity_change:
-            if current_date not in usage_at_date_cache.keys():
-                usage_at_date = (
+            usage_at_date = get_from_cache_or_compute(
+                usage_at_date_cache,
+                current_date,
+                lambda: (
                     PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
                         pickup_location=pickup_location,
                         product_type=product_type,
                         reference_date=current_date,
                         cache=cache,
                     )
-                )
-                usage_at_date_cache[current_date] = usage_at_date
+                ),
+            )
 
-            usage_at_date = usage_at_date_cache[current_date]
             max_usage = max(
                 max_usage,
                 usage_at_date,
