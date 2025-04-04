@@ -9,10 +9,13 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
-    get_current_capacity_usage,
 )
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -352,6 +355,14 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
+            notice_period_duration_in_months = None
+            if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                notice_period_duration_in_months = (
+                    NoticePeriodManager.get_notice_period_duration(
+                        self.product_type, self.growing_period
+                    )
+                )
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
@@ -369,6 +380,7 @@ class BaseProductForm(forms.Form):
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
+                notice_period_duration_in_months=notice_period_duration_in_months,
             )
 
             self.subs.append(sub)
@@ -469,19 +481,23 @@ class BaseProductForm(forms.Form):
 
     def validate_pickup_location_capacity(self):
         base_prod_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
-        capability = get_active_pickup_location_capabilities().get(
-            pickup_location=self.get_pickup_location(),
-            product_type__id=base_prod_type_id,
-        )
-        product_type = ProductType.objects.get(id=base_prod_type_id)
+
+        ordered_products_to_quantity_map = {}
+        for key, quantity in self.cleaned_data.items():
+            if not key.startswith(BASE_PRODUCT_FIELD_PREFIX):
+                continue
+            product = Product.objects.get(
+                type_id=base_prod_type_id,
+                name__iexact=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
+            )
+            ordered_products_to_quantity_map[product] = quantity
+
         validate_pickup_location_capacity(
-            self,
-            capability,
-            product_type,
-            self.start_date,
-            ordered_capacity,
-            self.member_id,
+            form=self,
+            pickup_location=self.get_pickup_location(),
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            start_date=self.start_date,
+            member_id=self.member_id,
         )
 
     def validate_total_capacity(self):
@@ -593,28 +609,18 @@ class BaseProductForm(forms.Form):
 
 
 def validate_pickup_location_capacity(
-    form, capability, product_type, start_date, total_member_amount, member_id
+    form, pickup_location, ordered_products_to_quantity_map, start_date, member_id
 ):
-    if not capability.max_capacity:
-        return
+    member = None
+    if member_id:
+        member = Member.objects.get(id=member_id)
 
-    current_member_amount = float(
-        sum(
-            [
-                s.get_used_capacity()
-                for s in get_active_subscriptions(start_date).filter(
-                    member_id=member_id,
-                    product__type_id=product_type.id,
-                )
-            ]
-        )
-    )
-    diff_member_amount = total_member_amount - current_member_amount
-    new_total_amount = (
-        get_current_capacity_usage(capability, start_date) + diff_member_amount
-    )
-
-    if new_total_amount > capability.max_capacity:
+    if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+        pickup_location=pickup_location,
+        ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+        already_registered_member=member,
+        subscription_start=start_date,
+    ):
         form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
         form.add_error(
             None,
@@ -820,6 +826,13 @@ class AdditionalProductForm(forms.Form):
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
+                notice_period_duration_in_months = None
+                if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                    notice_period_duration_in_months = (
+                        NoticePeriodManager.get_notice_period_duration(
+                            self.product_type, self.growing_period
+                        )
+                    )
                 self.subs.append(
                     Subscription(
                         member_id=member_id,
@@ -832,6 +845,7 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
+                        notice_period_duration_in_months=notice_period_duration_in_months,
                     )
                 )
 
@@ -893,32 +907,22 @@ class AdditionalProductForm(forms.Form):
             self.add_error(None, _("Bitte wähle einen Abholort aus!"))
             return False
 
-        latest_pickup_location = latest_member_pickup_location.pickup_location
-        capability = (
-            get_active_pickup_location_capabilities()
-            .filter(
-                pickup_location=latest_pickup_location,
-                product_type__id=self.product_type.id,
+        ordered_products_to_quantity_map = {}
+        for key, quantity in self.cleaned_data.items():
+            if not key.startswith(self.field_prefix):
+                continue
+            product = Product.objects.get(
+                type_id=self.product_type.id,
+                name__iexact=key.replace(self.field_prefix, ""),
             )
-            .first()
-        )
-        if capability is None:
-            self.add_error(
-                "pickup_location", "Abholort unterstützt Produkt nicht"
-            )  # this is not displayed
-            self.add_error(
-                None,
-                f"An deinem Abholort können leider keine {self.product_type.name} abgeholt werden. Bitte wähle einen anderen Abholort aus.",
-            )
-            return False
+            ordered_products_to_quantity_map[product] = quantity
 
         validate_pickup_location_capacity(
-            self,
-            capability,
-            self.product_type,
-            self.start_date,
-            self.get_total_ordered_quantity(),
-            self.member_id,
+            form=self,
+            pickup_location=latest_member_pickup_location.pickup_location,
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            start_date=self.start_date,
+            member_id=self.member_id,
         )
 
         return True
@@ -940,7 +944,7 @@ class AdditionalProductForm(forms.Form):
             self.add_error(
                 None,
                 "Um Anteile von diese zusätzliche Produkte zu bestellen, "
-                "musst du Anteile von der Basis-Produkt an der gleiche Anbauperiode haben.",
+                "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben.",
             )
 
     def is_valid(self):

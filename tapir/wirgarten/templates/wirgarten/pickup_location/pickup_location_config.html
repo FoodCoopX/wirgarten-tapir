@@ -1,77 +1,98 @@
 {% extends "core/base.html" %}
-
+{% load django_vite %}
 {% load i18n %}
 {% load core %}
 {% load wirgarten %}
 {% load tapir_static %}
-
 {% block title %}
-{% translate "Abholorte" %}
+    {% translate "Abholorte" %}
 {% endblock %}
-
+{% block head %}
+    {% vite_asset 'pickup_location_config/pickup_location_config_entry.tsx' %}
+{% endblock head %}
 {% block content %}
-<script src="{% static 'wirgarten/js/pickup-location-config.js' %} "></script>
-<div style="margin-top: 1em">
-    <div class="card">
-        <div class="card-header" style="display: flex; flex-direction:row;">
-            <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
-
-            {% if perms.coop.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
-            <div style="width: 3em"></div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleDelete()' id='delete-location' title='Abholort löschen' disabled=True type='danger' icon='delete'%}
-            {% endif %}
-        </div>
-        <div class="card-body"
-             style="height: calc(100vh - 9em); display:grid; grid-gap: 1em; grid-template-columns: 2fr 1fr">
-            <div style="overflow-y: auto">
-                <table class="table" style="text-align:center">
-                    <thead class="sticky-top" style="background:#fff; margin:0;">
-                    <tr>
-                        <th style="text-align:left">Name</th>
-                        <th style="text-align:left">Öffnungszeiten</th>
-                        <th>Adresse</th>
-                        <th style="text-align:left">Kapaziäten</th>
-                        <th>Mitglieder</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for pl in pickup_locations %}
-                    <tr id="row-{{pl.id}}" class="tr-clickable location-row" onclick="handleRowClick('{{pl.id}}')">
-                        <td style="text-align:left"><strong>{{ pl.name }}</strong></td>
-                        <td><small style="line-height: 1em;">{{pl.opening_times|safe}}</small></td>
-                        <td>{{ pl.street }}<br/><small>{{ pl.postcode }} {{ pl.city }}</small></td>
-                        <td style="white-space:nowrap; text-align:left;">
-                            {% for cap in pl.capabilities %}
-                            <img width="24em" title="{{ cap.name }}"
-                                 src="{{cap.icon}}"/><small> {{cap.current_capacity}} / {{cap.max_capacity|default:'∞'}}{%if cap.capacity_percent %} ({{ cap.capacity_percent|format_percent }}){%endif%}&nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{%else%}red{%endif%}">{{cap.next_capacity_diff}}</span></small><br/>
-                            {% endfor %}
-                        </td>
-                        <td>{% if pl.members == 0 %} - {% else %} {{ pl.members }} {% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    {% csrf_token %}
+    <script src="{% static 'wirgarten/js/pickup-location-config.js' %} "></script>
+    <div style="margin-top: 1em">
+        <div class="card">
+            <div class="card-header" style="display: flex; flex-direction:row;">
+                <h4 style="margin-right: 3em">{{ pickup_locations|length }} Abholorte</h4>
+                {% if perms.coop.manage %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='handleAddPickupLocation()' title='Abholort hinzufügen' type='success' icon='add_location_alt' %}
+                    {% include 'wirgarten/generic/action-button.html' with onclick='handleEdit()' id='edit-location' title='Abholort bearbeiten' disabled=True type='primary' icon='edit' %}
+                    <div id="pickup_location_capacity_edit_button">
+                        <span class="spinner-border"></span>
+                    </div>
+                    {% include 'wirgarten/generic/action-button.html' with onclick='handleDelete()' id='delete-location' title='Abholort löschen' disabled=True type='danger' icon='delete' %}
+                {% endif %}
             </div>
-            <div>
-                {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=data height='100%' callback='handleRowClick' %}
+            <div class="card-body"
+                 style="height: calc(100vh - 9em);
+                        display:grid;
+                        grid-gap: 1em;
+                        grid-template-columns: 2fr 1fr">
+                <div style="overflow-y: auto">
+                    <table class="table" style="text-align:center">
+                        <thead class="sticky-top" style="background:#fff; margin:0;">
+                            <tr>
+                                <th style="text-align:left">Name</th>
+                                <th style="text-align:left">Öffnungszeiten</th>
+                                <th>Adresse</th>
+                                <th style="text-align:left">Kapaziäten</th>
+                                <th>Mitglieder</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pl in pickup_locations %}
+                                <tr id="row-{{ pl.id }}"
+                                    class="tr-clickable location-row"
+                                    onclick="handleRowClick('{{ pl.id }}')">
+                                    <td style="text-align:left">
+                                        <strong>{{ pl.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <small style="line-height: 1em;">{{ pl.opening_times|safe }}</small>
+                                    </td>
+                                    <td>
+                                        {{ pl.street }}
+                                        <br />
+                                        <small>{{ pl.postcode }} {{ pl.city }}</small>
+                                    </td>
+                                    <td style="white-space:nowrap; text-align:left;">
+                                        {% for cap in pl.capabilities %}
+                                            <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}" />
+                                            <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
+                                                {% if cap.capacity_percent %}({{ cap.capacity_percent|format_percent }}){% endif %}
+                                            &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
+                                            <br />
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if pl.members == 0 %}
+                                            -
+                                        {% else %}
+                                            {{ pl.members }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    {% include 'wirgarten/pickup_location/pickup_location_map.html' with data=data height='100%' callback='handleRowClick' %}
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<script>
+    <script>
     const handleAddPickupLocation = () => {
         FormModal.load('{% url 'wirgarten:pickup_locations_add' %}', 'Abholort hinzufügen');
     }
 
     const canDelete = {}
-    {% for pl in pickup_locations %}
-    canDelete["{{pl.id}}"] = {{pl.members}} == 0;
-    {% endfor %}
+    {% for pl in pickup_locations %}canDelete["{{pl.id}}"] = {{pl.members}} == 0;{% endfor %}
 
     initSelected();
-</script>
-
+    </script>
 {% endblock %}

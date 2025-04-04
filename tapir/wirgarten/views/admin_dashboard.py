@@ -35,7 +35,7 @@ from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
     get_current_growing_period,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
     get_free_product_capacity,
@@ -406,7 +406,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         contract_types.update(
             {
                 x["product__type__name"]: x["member_count"]
-                for x in get_future_subscriptions()
+                for x in get_active_and_future_subscriptions()
                 .values("product__type__name")
                 .annotate(member_count=Count("member_id", distinct=True))
                 .order_by("-member_count")

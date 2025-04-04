@@ -5,12 +5,13 @@ import pathlib
 import socket
 from io import StringIO
 
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.db import DEFAULT_DB_ALIAS
-from django.test import TestCase, override_settings, Client
-from django.urls import reverse
 from django.contrib.auth.models import Permission as PermissionModel
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.core.management import call_command
+from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import DesiredCapabilities
@@ -24,10 +25,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from tapir.accounts.templatetags.accounts import format_phone_number
 from tapir.utils.json_user import JsonUser
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Product
-from django.utils import timezone
-from django.core.management import call_command
 from tapir.wirgarten.models import GrowingPeriod
+from tapir.wirgarten.models import Product
 
 TAPIR_SELENIUM_BASE_FIXTURES = ["admin_account.json", "test_data.json"]
 
@@ -81,7 +80,7 @@ class TapirSeleniumTestBase(StaticLiveServerTestCase):
             self.test_users = json.loads(json_string)["results"]
 
         for parsed_user in self.test_users:
-            json_user = JsonUser(parsed_user)
+            json_user = JsonUser.from_parsed_user(parsed_user)
             if json_user.get_username() == searched_username:
                 return json_user
 

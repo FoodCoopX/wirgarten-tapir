@@ -1,25 +1,30 @@
 import json
 from datetime import datetime
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import DecimalField, F, OuterRef, Subquery, Sum
+from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
-from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
+from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
+    PickupLocationCapacityModeShareChecker,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
     PickupLocation,
-    PickupLocationCapability,
     PickupLocationOpeningTime,
     Product,
-    ProductPrice,
+    Subscription,
+    Member,
     ProductType,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -40,65 +45,6 @@ def get_pickup_locations_map_data(pickup_locations, location_capabilities):
     )
 
 
-def get_current_capacity_usage(
-    capability, reference_date=None, additional_subscription_filter=None
-):
-    if (
-        type(capability) is not dict
-    ):  # FIXME: this is dirty, check why this was needed and fix it
-        capability = capability.__dict__
-
-    if reference_date is None:
-        reference_date = get_today()
-
-    latest_member_pickup_location = (
-        MemberPickupLocation.objects.filter(
-            member=OuterRef("member"), valid_from__lte=reference_date
-        )
-        .order_by("-valid_from")
-        .values("pickup_location_id")[:1]
-    )
-
-    subscriptions = get_active_subscriptions(reference_date)
-
-    if additional_subscription_filter:
-        subscriptions = additional_subscription_filter(subscriptions)
-
-    subscriptions_annotated_with_member_pickup_location = subscriptions.annotate(
-        latest_pickup_location_id=Subquery(latest_member_pickup_location)
-    )
-    relevant_subscriptions_relative_to_capability = (
-        subscriptions_annotated_with_member_pickup_location.filter(
-            latest_pickup_location_id=capability["pickup_location_id"],
-            product__type_id=capability["product_type_id"],
-        )
-    )
-
-    latest_valid_product_price = (
-        ProductPrice.objects.filter(
-            product=OuterRef("product"), valid_from__lte=reference_date
-        )
-        .order_by("-valid_from")
-        .values("size")[:1]
-    )
-
-    subscriptions_annotated_with_total_size = (
-        relevant_subscriptions_relative_to_capability.annotate(
-            latest_size=Subquery(
-                latest_valid_product_price,
-                output_field=DecimalField(decimal_places=4),
-            ),
-            total_size_per_subscription=F("latest_size") * F("quantity"),
-        )
-    )
-
-    total_size = subscriptions_annotated_with_total_size.aggregate(
-        total_size=Sum("total_size_per_subscription")
-    )["total_size"]
-
-    return float(total_size) if total_size else 0
-
-
 def pickup_location_to_dict(location_capabilities, pickup_location):
     next_delivery_date = get_next_delivery_date()
     next_month = next_delivery_date + relativedelta(day=1, months=1)
@@ -113,7 +59,13 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
             return None
 
         current_capa = round(
-            get_current_capacity_usage(capa, next_delivery_date)
+            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+                pickup_location=PickupLocation.objects.get(
+                    id=capa["pickup_location_id"]
+                ),
+                product_type=ProductType.objects.get(id=capa["product_type_id"]),
+                reference_date=next_month,
+            )
             / float(
                 get_product_price(
                     base_product,
@@ -124,7 +76,13 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         )
 
         next_month_capa = round(
-            get_current_capacity_usage(capa, next_month)
+            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+                pickup_location=PickupLocation.objects.get(
+                    id=capa["pickup_location_id"]
+                ),
+                product_type=ProductType.objects.get(id=capa["product_type_id"]),
+                reference_date=next_month,
+            )
             / float(
                 get_product_price(
                     base_product,
@@ -209,6 +167,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         initial = kwargs.pop("initial", {"subs": {}})
         next_month = get_today() + relativedelta(months=1, day=1)
         reference_date = kwargs.pop("reference_date", next_month)
+        member = kwargs.pop("member", None)
 
         location_capabilities = get_active_pickup_location_capabilities(
             reference_date=reference_date
@@ -240,44 +199,12 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             if capacity_usage > 0
         }
 
-        possible_locations = PickupLocation.objects.filter(
-            id__in=map(
-                lambda location_capability: location_capability["pickup_location_id"],
-                location_capabilities,
-            )
+        subscriptions = []
+        for temp in initial["subs"].values():
+            subscriptions.extend(temp)
+        possible_locations = self.get_possible_locations(
+            subscriptions, reference_date, member
         )
-        next_month = get_today() + relativedelta(months=1, day=1)
-
-        for product_type_name in selected_product_types:
-            possible_locations = possible_locations.filter(
-                id__in=[
-                    capability["pickup_location_id"]
-                    for capability in location_capabilities
-                    if capability["product_type__name"] == product_type_name
-                ]
-            )
-            # get current free capacity for each location and filter out locations with no capacity
-            for possible_location in possible_locations:
-                for location_capability in location_capabilities:
-                    if (
-                        possible_location.id
-                        != location_capability["pickup_location_id"]
-                        or not location_capability["max_capacity"]
-                        or location_capability["product_type__name"]
-                        != product_type_name
-                    ):
-                        continue
-
-                    current_capacity_usage = get_current_capacity_usage(
-                        location_capability, next_month
-                    )
-                    max_capacity = location_capability["max_capacity"] + 0.1
-                    free_capacity = max_capacity - current_capacity_usage
-
-                    if selected_product_types[product_type_name] > free_capacity:
-                        possible_locations = possible_locations.exclude(
-                            id=possible_location.id
-                        )
 
         super(PickupLocationChoiceField, self).__init__(
             queryset=possible_locations,
@@ -291,6 +218,27 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             **kwargs,
         )
 
+    @staticmethod
+    def get_possible_locations(
+        subscriptions: List[Subscription],
+        reference_date: datetime.date,
+        member: Member | None,
+    ):
+        possible_location_ids = []
+        for pickup_location in PickupLocation.objects.all():
+            ordered_products_to_quantity_map = {
+                subscription.product: subscription.quantity
+                for subscription in subscriptions
+            }
+            if PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location,
+                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                already_registered_member=member,
+                subscription_start=reference_date,
+            ):
+                possible_location_ids.append(pickup_location.id)
+        return PickupLocation.objects.filter(id__in=possible_location_ids)
+
     def label_from_instance(self, obj):
         return f"<strong>{obj.name}</strong><br/><small>{obj.street}, {obj.postcode} {obj.city}</small>"
 
@@ -300,11 +248,13 @@ class PickupLocationChoiceForm(forms.Form):
     intro_text_skip_hr = True
 
     def __init__(self, *args, **kwargs):
+        member = kwargs.pop("member", None)
         super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
             label=_("Abholort"),
             initial=kwargs["initial"],
+            member=member,
         )
 
     def is_valid(self):
@@ -334,7 +284,7 @@ class PickupLocationEditForm(forms.Form):
         )
         self.fields["name"] = forms.CharField(label=_("Name"), required=True)
         self.fields["street"] = forms.CharField(
-            label=("Straße & Hausnummer"), required=True
+            label=_("Straße & Hausnummer"), required=True
         )
         self.fields["postcode"] = forms.CharField(
             label=_("Postleitzahl"), required=True
@@ -370,25 +320,6 @@ class PickupLocationEditForm(forms.Form):
             "saturday_times": 2,
             "sunday_times": 2,
         }
-
-        self.product_types = list(
-            ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0]).order_by("name")
-        )
-
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        for pt in self.product_types:
-            self.fields["pt_" + pt.id] = forms.BooleanField(
-                label=_(pt.name),
-                required=False,
-                initial=pt.id == base_product_type_id,
-                help_text=f"Hier können {pt.name} abgeholt werden",
-            )
-            self.fields["pt_capa_" + pt.id] = forms.IntegerField(
-                label=_("Kapazität (in Anteilen)"),
-                required=False,
-                min_value=0,
-                widget=forms.NumberInput(attrs={"placeholder": "Unbegrenzt"}),
-            )
 
         self.fields["monday_times"] = forms.CharField(
             label=_("Montag"),
@@ -475,18 +406,6 @@ class PickupLocationEditForm(forms.Form):
             self.fields["sunday_times"].initial = ", ".join(
                 opening_times_map[6] if 6 in opening_times_map else []
             )
-
-            for ptc in get_active_pickup_location_capabilities().filter(
-                pickup_location=self.pickup_location
-            ):
-                key = "pt_" + ptc.product_type.id
-                if key in self.fields:
-                    self.fields[key].initial = True
-                    self.fields["pt_capa_" + ptc.product_type.id].initial = (
-                        ptc.max_capacity
-                    )
-
-        self.product_types = list(map(lambda x: x.id, self.product_types))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -594,36 +513,5 @@ class PickupLocationEditForm(forms.Form):
         create_opening_time(4, self.cleaned_data["friday_times"])
         create_opening_time(5, self.cleaned_data["saturday_times"])
         create_opening_time(6, self.cleaned_data["sunday_times"])
-
-        capabilities = list(
-            map(
-                lambda x: x["product_type__id"],
-                PickupLocationCapability.objects.filter(pickup_location=pl).values(
-                    "product_type__id"
-                ),
-            )
-        )
-        for pt in self.product_types:
-            if pt not in capabilities:  # doesn't exist yet
-                if self.cleaned_data["pt_" + pt]:  # is selected
-                    # --> create
-                    PickupLocationCapability.objects.create(
-                        pickup_location=pl,
-                        product_type_id=pt,
-                        max_capacity=self.cleaned_data.get("pt_capa_" + pt, None),
-                    )
-            else:
-                if not self.cleaned_data["pt_" + pt]:  # exists & is not selected
-                    # --> delete
-                    PickupLocationCapability.objects.get(
-                        pickup_location=pl, product_type_id=pt
-                    ).delete()
-                else:
-                    # --> update
-                    plc = PickupLocationCapability.objects.get(
-                        pickup_location=pl, product_type_id=pt
-                    )
-                    plc.max_capacity = self.cleaned_data.get("pt_capa_" + pt, None)
-                    plc.save()
 
         return pl

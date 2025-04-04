@@ -49,7 +49,7 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
@@ -112,6 +112,8 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
+
+    kwargs["member"] = member
 
     @transaction.atomic
     def update_pickup_location(form):
@@ -293,7 +295,7 @@ def get_add_subscription_form(request, **kwargs):
                 date_filter = max(next_start_date, next_period.start_date)
 
             if (
-                get_future_subscriptions()
+                get_active_and_future_subscriptions()
                 .filter(
                     cancellation_ts__isnull=True,
                     member_id=member_id,
@@ -306,7 +308,7 @@ def get_add_subscription_form(request, **kwargs):
             else:
                 form.save(member_id=member_id)
                 send_order_confirmation(
-                    member, get_future_subscriptions().filter(member=member)
+                    member, get_active_and_future_subscriptions().filter(member=member)
                 )
         else:
             form.save(member_id=member_id)

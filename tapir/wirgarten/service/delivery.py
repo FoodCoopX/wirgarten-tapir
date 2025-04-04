@@ -2,8 +2,12 @@ from datetime import date
 from typing import List
 
 from dateutil.relativedelta import relativedelta
+from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.services.delivery_day_adjustment_service import (
+    DeliveryDayAdjustmentService,
+)
 from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY, NO_DELIVERY
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -16,7 +20,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     product_type_order_by,
 )
 from tapir.wirgarten.utils import get_today
@@ -56,7 +60,9 @@ def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = 
         reference_date = get_today()
 
     if delivery_weekday is None:
-        delivery_weekday = get_parameter_value(Parameter.DELIVERY_DAY)
+        delivery_weekday = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
+            reference_date
+        )
 
     if reference_date.weekday() > delivery_weekday:
         next_delivery = reference_date + relativedelta(
@@ -98,6 +104,9 @@ def get_next_delivery_date_for_product_type(
         )
 
 
+@deprecated(
+    "If possible, use tapir.deliveries.services.get_deliveries_service.GetDeliveriesService.get_deliveries instead"
+)
 def generate_future_deliveries(member: Member, limit: int = None):
     """
     Generates a list of future deliveries for a given member.
@@ -111,7 +120,7 @@ def generate_future_deliveries(member: Member, limit: int = None):
 
     next_delivery_date = get_next_delivery_date()
 
-    subs = get_future_subscriptions().filter(member=member)
+    subs = get_active_and_future_subscriptions().filter(member=member)
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):

@@ -2,7 +2,9 @@ import datetime
 from functools import partial
 
 from dateutil.relativedelta import relativedelta
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
 from django.db.models import (
     F,
@@ -16,6 +18,7 @@ from django.db.models import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
+from typing_extensions import deprecated
 
 from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
@@ -118,6 +121,13 @@ class GrowingPeriod(TapirModel):
 
     start_date = models.DateField()
     end_date = models.DateField()
+    weeks_without_delivery = ArrayField(
+        base_field=models.IntegerField(
+            validators=[MinValueValidator(1), MaxValueValidator(53)]
+        ),
+        default=list,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{format_date(self.start_date)} - {format_date(self.end_date)}"
@@ -151,6 +161,9 @@ class ProductType(TapirModel):
     single_subscription_only = models.BooleanField(
         default=False, verbose_name=_("Nur Einzelabonnement erlaubt")
     )
+    is_affected_by_jokers = models.BooleanField(
+        default=True, verbose_name=_("Nimmt am Joker-Verfahren teil")
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:
@@ -176,7 +189,7 @@ class ProductType(TapirModel):
         ]
 
     def __str__(self):
-        return f"<ProductType: {self.name}>"
+        return f"{self.name} ({self.delivery_cycle})"
 
 
 class PickupLocationCapability(TapirModel):
@@ -184,14 +197,12 @@ class PickupLocationCapability(TapirModel):
     The availability of a product at a certain pickup location.
     """
 
-    product_type = models.ForeignKey(
-        ProductType, null=False, on_delete=models.DO_NOTHING
-    )
+    product_type = models.ForeignKey(ProductType, null=False, on_delete=models.CASCADE)
     max_capacity = models.PositiveSmallIntegerField(
         null=True
     )  # This is the capacity in NUMBER of M equivalent share, not the capacity in COST of M equivalent share.
     pickup_location = models.ForeignKey(
-        PickupLocation, null=False, on_delete=models.DO_NOTHING
+        PickupLocation, null=False, on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -205,9 +216,7 @@ class DeliveryExceptionPeriod(TapirModel):
 
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=False)
-    product_type = models.ForeignKey(
-        ProductType, null=True, on_delete=models.DO_NOTHING
-    )
+    product_type = models.ForeignKey(ProductType, null=True, on_delete=models.CASCADE)
     comment = models.CharField(max_length=128, null=False, default="")
 
 
@@ -216,13 +225,14 @@ class ProductCapacity(TapirModel):
     This is used to configure how much of a ProductType can be sold in a growing period.
     """
 
-    period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.DO_NOTHING)
-    product_type = models.ForeignKey(
-        ProductType, null=False, on_delete=models.DO_NOTHING
-    )
+    period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.CASCADE)
+    product_type = models.ForeignKey(ProductType, null=False, on_delete=models.CASCADE)
     capacity = models.DecimalField(decimal_places=4, max_digits=20, null=False)
 
     indexes = [Index(fields=["period"], name="idx_productcapacity_period")]
+
+    def __str__(self):
+        return f"{self.period} - {self.product_type} - {self.capacity}"
 
 
 class MemberQuerySet(models.QuerySet):
@@ -336,9 +346,9 @@ class Member(TapirUser):
 
     @property
     def has_trial_contracts(self):
-        from tapir.wirgarten.service.products import get_future_subscriptions
+        from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 
-        subs = get_future_subscriptions().filter(member_id=self.id)
+        subs = get_active_and_future_subscriptions().filter(member_id=self.id)
         today = get_today()
         for sub in subs:
             if today < sub.trial_end_date and sub.cancellation_ts is None:
@@ -389,6 +399,9 @@ class Member(TapirUser):
         )
 
     @property
+    @deprecated(
+        "Use tapir.coop.services.membership_cancellation_manager.MembershipCancellationManager.get_coop_entry_date instead"
+    )
     def coop_entry_date(self):
         try:
             earliest_coopsharetransaction = self.coopsharetransaction_set.filter(
@@ -626,8 +639,12 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
     )
+    notice_period_duration_in_months = models.IntegerField(null=True)
 
     @property
+    @deprecated(
+        "If possible, use tapir.subscriptions.services.trial_period_manager.TrialPeriodManager.get_end_of_trial_period"
+    )
     def trial_end_date(self):
         if self.trial_disabled:
             return get_today() - relativedelta(days=1)
@@ -955,9 +972,7 @@ class TaxRate(TapirModel):
     If valid_to == NULL, the tax rate is used as a fallback. If valid_to != NULL and it is now valid, this one is used.
     """
 
-    product_type = models.ForeignKey(
-        ProductType, on_delete=models.DO_NOTHING, null=False
-    )
+    product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE, null=False)
     tax_rate = models.FloatField(null=False)
     valid_from = models.DateField(null=False, default=partial(datetime.date.today))
     valid_to = models.DateField(null=True)

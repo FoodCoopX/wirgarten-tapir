@@ -15,7 +15,7 @@ django-filter = "^23.3"
 tablib = "^3.2.0"
 django-phonenumber-field = { extras = ["phonenumbers"], version = "^5.2.0" }
 phonenumbers = "^8.12.44"
-weasyprint = "^52.5"
+weasyprint = "^64.1"
 django-select2 = "^7.10.0"
 django-silk = "^4.2.0"
 gunicorn = "^20.1.0"
@@ -36,6 +36,10 @@ PyJWT = "2.6.0"
 unidecode = "^1.3.6"
 importlib-resources = "^6.1.0"
 tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1733225183/tapir_mail-0.0.0.dev1733225183-py3-none-any.whl" }
+djangorestframework = "^3.14"
+drf-spectacular = "^0.26.4"
+django-vite = "^3.1.0"
+django-weasyprint = "^2.4.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"

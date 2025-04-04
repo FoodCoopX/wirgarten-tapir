@@ -1,7 +1,7 @@
-import itertools
+from collections import defaultdict
 from collections import defaultdict
 from copy import copy
-from datetime import datetime, date
+from datetime import datetime
 from urllib.parse import unquote
 
 from dateutil.relativedelta import relativedelta
@@ -27,9 +27,8 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.payment import get_next_payment_date
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_product_price,
-    get_total_price_for_subs,
 )
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
@@ -152,7 +151,7 @@ def get_previous_payments(member_id) -> dict:
 
 
 def generate_future_payments(member_id, limit: int = None):
-    subs = get_future_subscriptions().filter(member_id=member_id)
+    subs = get_active_and_future_subscriptions().filter(member_id=member_id)
     max_end_date = subs.aggregate(Max("end_date"))["end_date__max"]
 
     payments_per_due_date = {}

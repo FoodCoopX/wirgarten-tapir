@@ -263,10 +263,6 @@ tr.tr-clickable:hover:not(.active) {
   animation: fadeIn 0.3s;
 }
 
-.modal-dialog {
-  max-width: 44em;
-}
-
 @keyframes fadeIn {
   0% {
     opacity: 0;

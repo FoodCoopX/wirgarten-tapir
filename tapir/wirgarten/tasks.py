@@ -21,11 +21,11 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
+from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_product_price,
 )
 from tapir.wirgarten.tapirmail import Events
@@ -132,7 +132,7 @@ def _export_pick_list(product_type, include_equivalents=True):
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
         send_email=get_parameter_value(
-            Parameter.PICK_LIST_SEND_ADMIN_EMAIL
+            Parameter.PICKING_SEND_ADMIN_EMAIL
             if include_equivalents
             else Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
         ),
@@ -145,15 +145,15 @@ def export_pick_list_csv():
     Exports a CSV file containing the pick list for the next delivery.
     """
     all_product_types = {pt.name: pt for pt in get_active_product_types()}
-    include_product_types = get_parameter_value(
-        Parameter.PICK_LIST_PRODUCT_TYPES
-    ).split(",")
+    include_product_types = get_parameter_value(Parameter.PICKING_PRODUCT_TYPES).split(
+        ","
+    )
 
     for type_name in include_product_types:
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICK_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICKING_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], True)
@@ -187,7 +187,7 @@ def send_email_member_contract_end_reminder(member_id: str):
     active_subs = get_active_subscriptions().filter(member=member)
     if (
         active_subs.filter(end_date__lte=next_month).exists()
-        and not get_future_subscriptions()
+        and not get_active_and_future_subscriptions()
         .filter(member=member, start_date__gt=today)
         .exists()
     ):
@@ -301,7 +301,7 @@ def export_payment_parts_csv(reference_date=None):
 
 
 @shared_task
-def generate_member_numbers():
+def generate_member_numbers(print_results=True):
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today()
     for member in members:
@@ -312,6 +312,7 @@ def generate_member_numbers():
 
                 TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
 
-                print(
-                    f"[task] generate_member_numbers: generated member_no for {member}"
-                )
+                if print_results:
+                    print(
+                        f"[task] generate_member_numbers: generated member_no for {member}"
+                    )

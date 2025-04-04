@@ -7,6 +7,8 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
+
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
     (1, _("Dienstag")),
@@ -26,11 +28,13 @@ class ParameterCategory:
     ADDITIONAL_SHARES = "Zusatzabos"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
-    PICK_LIST = "Kommissionierliste"
+    PICKING = "Kommissionierung"
     PAYMENT = "Zahlungen"
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
     EMAIL = "Email"
+    JOKERS = "Joker"
+    SUBSCRIPTIONS = "Verträge"
 
 
 class Parameter:
@@ -57,8 +61,10 @@ class Parameter:
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
-    PICK_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
-    PICK_LIST_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
+    PICKING_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
+    PICKING_PRODUCT_TYPES = f"{PREFIX}.pick_list.product_types"
+    PICKING_MODE = f"{PREFIX}.picking.picking_mode"
+    PICKING_BASKET_SIZES = f"{PREFIX}.picking.basket_sizes"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
@@ -116,6 +122,11 @@ class Parameter:
     EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
         f"{PREFIX}.email.contract_change_confirmation.content"
     )
+    JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
+    JOKERS_AMOUNT_PER_CONTRACT = f"{PREFIX}.jokers.amount_per_contract"
+    JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
+    SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
+    SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
 
 
 from tapir.configuration.models import (
@@ -129,6 +140,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import validate_html
+        from tapir.deliveries.services.joker_management_service import (
+            JokerManagementService,
+        )
+        from tapir.pickup_locations.services.basket_size_capacities_service import (
+            BasketSizeCapacitiesService,
+        )
 
         parameter_definition(
             key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
@@ -312,21 +329,47 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=Parameter.PICK_LIST_PRODUCT_TYPES,
+            key=Parameter.PICKING_PRODUCT_TYPES,
             label="Produkte für Kommisionierliste",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ernteanteile",
             description="Komma-separierte Liste der Zusatzabos für die eine Kommissionierliste erzeugt werden soll.",
-            category=ParameterCategory.PICK_LIST,
+            category=ParameterCategory.PICKING,
+            order_priority=4,
         )
 
         parameter_definition(
-            key=Parameter.PICK_LIST_SEND_ADMIN_EMAIL,
+            key=Parameter.PICKING_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=True,
             description="Wenn aktiv, dann wird automatisch wöchentlich eine Email mit der Kommisionierliste an den Admin versandt.",
-            category=ParameterCategory.PICK_LIST,
+            category=ParameterCategory.PICKING,
+            order_priority=5,
+        )
+
+        parameter_definition(
+            key=Parameter.PICKING_MODE,
+            label="Kommissionierungsmodus",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=PICKING_MODE_SHARE,
+            description="Ob Verteilstation-Kapazitäten nach Anteile oder Kisten berechnet werden",
+            category=ParameterCategory.PICKING,
+            order_priority=3,
+            meta=ParameterMeta(options=OPTIONS_PICKING_MODE),
+        )
+
+        parameter_definition(
+            key=Parameter.PICKING_BASKET_SIZES,
+            label="Kistengrößen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="kleinen Kiste;normalen Kiste;",
+            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleinen Kiste;normalen Kiste;'",
+            category=ParameterCategory.PICKING,
+            order_priority=2,
+            meta=ParameterMeta(
+                validators=[BasketSizeCapacitiesService.validate_basket_sizes]
+            ),
         )
 
         parameter_definition(
@@ -382,7 +425,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="{member.first_name}, dein Ernteanteil läuft bald aus!",
-            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=801,
             meta=ParameterMeta(
@@ -395,7 +438,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Als <strong>bestehendes Mitglied</strong> hast du <strong>Vorrang</strong> beim Zeichnen von Ernteanteilen und Zusatzabos. Ab sofort kannst du deine Verträge für die <strong>nächste Saison</strong> verlängern.<br/><small>Andernfalls enden deine Verträge automatisch am {contract_end_date}.</small>""",
-            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, sofern das Mitglied seine Verträge weder verlängert noch explizit gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=800,
             meta=ParameterMeta(
@@ -412,7 +455,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Schade, dass du gehst {member.first_name}!",
-            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=701,
             meta=ParameterMeta(
@@ -425,7 +468,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
             initial_value="""Du wolltest keine neuen Ernteanteile für den Zeitraum <strong>{next_period_start_date} - {next_period_end_date}</strong> zeichnen. Hast du es dir anders überlegt? Dann verlängere jetzt hier deinen Erntevertrag.""",
-            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge explizit zum Ende der Saison gekündigt hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=700,
             meta=ParameterMeta(
@@ -442,7 +485,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Schön, dass du dabei bleibst {member.first_name}!",
-            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=601,
             meta=ParameterMeta(
@@ -455,7 +498,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Verträge wurden verlängert vom <strong>{next_period_start_date} - {next_period_end_date}</strong>.",
-            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied seine Verträge für die nächste Saison verlängert hat (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=600,
             meta=ParameterMeta(
@@ -472,7 +515,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Wir haben keine Ernteanteile mehr, {member.first_name}!",
-            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Überschrift der Hinweisbox. Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=501,
             meta=ParameterMeta(vars_hint=MEMBER_RENEWAL_ALERT_VARS),
@@ -483,7 +526,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Text: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Deine Verträge enden am <strong>{contract_end_date}</strong>. Leider gibt es keine freien Ernteanteile mehr für die nächste Anbausaison. Wenn du möchtest, benachrichtigen wir dich sobald wir wieder freie Ernteanteile haben.",
-            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Anbauperiode im Mitgliederbereich).",
+            description="Inhalt der Hinweisbox (HTML). Dieser Hinweis wird angezeigt, wenn das Mitglied weder gekündigt noch verlängert hat, aber die Kapazität für Ernteanteile aufgebraucht ist (erscheint 3 Monate vor Beginn der nächsten Vertragsperiode im Mitgliederbereich).",
             category=ParameterCategory.MEMBER_DASHBOARD,
             order_priority=500,
             meta=ParameterMeta(
@@ -781,4 +824,62 @@ Dein WirGarten-Team""",
                 ],
                 textarea=True,
             ),
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_ENABLED,
+            label="Joker-Feature einschalten",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Temporäre Liefer-Pausen pro Mitglied erlauben",
+            category=ParameterCategory.JOKERS,
+            order_priority=3,
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_AMOUNT_PER_CONTRACT,
+            label="Joker pro Jahr",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=4,
+            description="Anzahl an Joker das ein Mitglied pro Vertragsjahr einsetzen darf",
+            category=ParameterCategory.JOKERS,
+            order_priority=2,
+        )
+
+        parameter_definition(
+            key=Parameter.JOKERS_RESTRICTIONS,
+            label="Besondere Einschränkungen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="01.08.-31.08.[2];",
+            description="""Zeiträume, in denen das Mitglied nur eine begrenzte Anzahl an Jokern setzen kann. 
+            zB: maximal 2 Joker pro Mitglied im August.
+            Format: StartDatum-EndDatum[AnzahlJoker];StartDatum-EndDatum[AnzahlJoker]
+            Beispiel: 01.08.-31.08.[2];15.02.-20.03.[3] heißt maximal 2 Joker im Zeitraum 01.08. - 31.08. und maximal 3 Joker im Zeitraum 15.02. - 20.03..
+            Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
+            """,
+            category=ParameterCategory.JOKERS,
+            order_priority=1,
+            meta=ParameterMeta(
+                validators=[JokerManagementService.validate_joker_restrictions]
+            ),
+        )
+
+        parameter_definition(
+            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL,
+            label="Automatische Verlängerung der Verträge",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=2,
+        )
+
+        parameter_definition(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
+            label="Kündigungsfrist",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="Bei automatische Verlängerung der Verträge, in anzahl an Monaten.",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
         )
