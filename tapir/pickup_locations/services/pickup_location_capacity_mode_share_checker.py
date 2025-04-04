@@ -312,17 +312,15 @@ class PickupLocationCapacityModeShareChecker:
         cache: Dict | None = None,
     ):
         if cache is None:
-            cache = {"usage_at_date_cache": {}, "capacities_by_pickup_location": {}}
+            cache = {}
 
-        if "product_type_to_available_capacity_map" not in cache.keys():
-            cache["product_type_to_available_capacity_map"] = (
-                SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-                    pickup_location
-                )
-            )
-        product_type_to_available_capacity_map = cache[
-            "product_type_to_available_capacity_map"
-        ]
+        product_type_to_available_capacity_map = get_from_cache_or_compute(
+            cache,
+            "product_type_to_available_capacity_map",
+            lambda: SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
+                pickup_location
+            ),
+        )
 
         available_capacity = product_type_to_available_capacity_map.get(product_type, 0)
         usage = cls.get_highest_usage_after_date(
