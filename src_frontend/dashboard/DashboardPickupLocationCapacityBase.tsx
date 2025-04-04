@@ -91,7 +91,7 @@ const DashboardPickupLocationCapacityBase: React.FC<
       <>
         <p>
           Die Tabelle zeigt wie viele Kapazitäten frei sind an der jeweiligem
-          Daten. Es werde nur Änderungen gelistet.
+          Daten. Es werden nur Änderungen gelistet.
         </p>
         <Table striped hover responsive>
           <thead>
