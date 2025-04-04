@@ -68,6 +68,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
+        parameter_cache: Dict | None = None,
     ):
         free_capacity = cls.get_free_capacity_at_date(
             product_type=product_type,
@@ -80,6 +81,7 @@ class PickupLocationCapacityModeShareChecker:
                 member=member,
                 subscription_start=subscription_start,
                 product_type=product_type,
+                parameter_cache=parameter_cache,
             )
         )
         capacity_used_by_the_order = (
@@ -103,6 +105,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
+        cache: Dict | None = None,
     ):
         members_at_pickup_location = (
             MemberPickupLocationService.get_members_at_pickup_location(
@@ -111,16 +114,19 @@ class PickupLocationCapacityModeShareChecker:
         )
 
         subscriptions_active_at_reference_date = get_active_subscriptions(
-            reference_date
+            reference_date, cache["parameter_cache"]
         ).filter(member__in=members_at_pickup_location, product__type=product_type)
 
         relevant_subscriptions = subscriptions_active_at_reference_date
-        if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        if get_parameter_value(
+            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache["parameter_cache"]
+        ):
             relevant_subscriptions = cls.extend_subscriptions_with_those_that_will_be_renewed(
                 subscriptions_active_at_reference_date=subscriptions_active_at_reference_date,
                 reference_date=reference_date,
                 product_type=product_type,
                 members_at_pickup_location=members_at_pickup_location,
+                cache=cache,
             )
 
         latest_valid_product_price = (
@@ -152,10 +158,31 @@ class PickupLocationCapacityModeShareChecker:
         reference_date: datetime.date,
         product_type: ProductType,
         members_at_pickup_location,
+        cache: Dict | None = None,
     ):
         relevant_subscriptions = set(subscriptions_active_at_reference_date)
-        current_growing_period = get_current_growing_period(reference_date)
-        for product in Product.objects.filter(type=product_type):
+
+        if cache is not None:
+            if "growing_period_at_date" not in cache.keys():
+                cache["growing_period_at_date"] = {}
+            current_growing_period = get_current_growing_period(
+                reference_date, cache.get("growing_period_at_date", None)
+            )
+        else:
+            current_growing_period = get_current_growing_period(reference_date)
+
+        if cache is not None:
+            if "products_by_product_type" not in cache.keys():
+                cache["products_by_product_type"] = {}
+            if product_type not in cache["products_by_product_type"].keys():
+                cache["products_by_product_type"][product_type] = (
+                    Product.objects.filter(type=product_type)
+                )
+            products = cache["products_by_product_type"][product_type]
+        else:
+            products = Product.objects.filter(type=product_type)
+
+        for product in products:
             members_that_have_a_subscription_of_product_at_reference_date = (
                 subscriptions_active_at_reference_date.filter(
                     product=product
@@ -163,7 +190,8 @@ class PickupLocationCapacityModeShareChecker:
             )
             subscriptions_that_will_get_renewed = (
                 get_active_subscriptions(
-                    current_growing_period.start_date - datetime.timedelta(days=1)
+                    current_growing_period.start_date - datetime.timedelta(days=1),
+                    cache["parameter_cache"],
                 )
                 .filter(
                     member__in=members_at_pickup_location,
@@ -186,6 +214,7 @@ class PickupLocationCapacityModeShareChecker:
         member: Member | None,
         subscription_start: datetime.date,
         product_type: ProductType,
+        parameter_cache: Dict | None = None,
     ):
         if member is None:
             return 0
@@ -194,7 +223,9 @@ class PickupLocationCapacityModeShareChecker:
             sum(
                 [
                     s.get_used_capacity()
-                    for s in get_active_subscriptions(subscription_start).filter(
+                    for s in get_active_subscriptions(
+                        subscription_start, parameter_cache
+                    ).filter(
                         member_id=member.id,
                         product__type_id=product_type.id,
                     )
@@ -224,25 +255,34 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
-        usage_at_date_cache: Dict[datetime.date, float] | None = None,
+        cache: Dict,
     ):
         current_date = reference_date
         max_usage = 0
-        while current_date < cls.get_date_of_last_possible_capacity_change(
-            pickup_location
-        ):
-            usage_at_date = None
-            if usage_at_date_cache and current_date in usage_at_date_cache.keys():
-                usage_at_date = usage_at_date_cache[current_date]
-            if usage_at_date is None:
+        if "date_of_last_possible_capacity_change" not in cache.keys():
+            cache["date_of_last_possible_capacity_change"] = (
+                cls.get_date_of_last_possible_capacity_change(pickup_location)
+            )
+
+        if "usage_at_date_cache" not in cache.keys():
+            cache["usage_at_date_cache"] = {}
+
+        if "parameter_cache" not in cache.keys():
+            cache["parameter_cache"] = {}
+
+        while current_date < cache["date_of_last_possible_capacity_change"]:
+            if current_date not in cache["usage_at_date_cache"].keys():
                 usage_at_date = (
                     PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
                         pickup_location=pickup_location,
                         product_type=product_type,
                         reference_date=current_date,
+                        cache=cache,
                     )
                 )
-                usage_at_date_cache[current_date] = usage_at_date
+                cache["usage_at_date_cache"][current_date] = usage_at_date
+
+            usage_at_date = cache["usage_at_date_cache"][current_date]
             max_usage = max(
                 max_usage,
                 usage_at_date,
@@ -268,18 +308,24 @@ class PickupLocationCapacityModeShareChecker:
         product_type: ProductType,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
-        usage_at_date_cache: Dict[datetime.date, float] | None = None,
+        cache: Dict | None = None,
     ):
-        if usage_at_date_cache is None:
-            usage_at_date_cache = {}
+        if cache is None:
+            cache = {"usage_at_date_cache": {}, "capacities_by_pickup_location": {}}
 
-        product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
-        )
+        if "product_type_to_available_capacity_map" not in cache.keys():
+            cache["product_type_to_available_capacity_map"] = (
+                SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
+                    pickup_location
+                )
+            )
+        product_type_to_available_capacity_map = cache[
+            "product_type_to_available_capacity_map"
+        ]
 
         available_capacity = product_type_to_available_capacity_map.get(product_type, 0)
         usage = cls.get_highest_usage_after_date(
-            pickup_location, product_type, reference_date, usage_at_date_cache
+            pickup_location, product_type, reference_date, cache
         )
         free_capacity = available_capacity - usage
 

@@ -206,13 +206,13 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
         current_date = get_today()
-        usage_at_date_cache_by_product_type = {}
+        cache_by_product_type = {}
         while current_date < max_date:
             values = []
             for product_type in product_types:
                 capacity = capacities_by_product_type.get(product_type, 0)
-                if product_type not in usage_at_date_cache_by_product_type.keys():
-                    usage_at_date_cache_by_product_type[product_type] = {}
+                if product_type not in cache_by_product_type.keys():
+                    cache_by_product_type[product_type] = {}
                 if capacity is None:
                     values.append("Unbegrenzt")
                 else:
@@ -223,9 +223,7 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 pickup_location=pickup_location,
                                 product_type=product_type,
                                 reference_date=current_date,
-                                usage_at_date_cache=usage_at_date_cache_by_product_type[
-                                    product_type
-                                ],
+                                cache=cache_by_product_type[product_type],
                             ),
                         )
                     )

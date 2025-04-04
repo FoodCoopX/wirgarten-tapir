@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -70,9 +71,14 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str):
+def get_parameter_value(key: str, cache: Dict | None = None):
+    if cache and key in cache.keys():
+        return cache[key]
+
     try:
         param = TapirParameter.objects.get(key=key)
+        if cache is not None:
+            cache[key] = param.get_value()
         return param.get_value()
     except ObjectDoesNotExist:
         raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))

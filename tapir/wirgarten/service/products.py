@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
@@ -41,7 +41,9 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
     return round(sum([x.total_price() for x in subs]), 2)
 
 
-def product_type_order_by(id_field: str = "id", name_field: str = "name"):
+def product_type_order_by(
+    id_field: str = "id", name_field: str = "name", parameter_cache: Dict | None = None
+):
     """
     The result of the function is meant to be passed to the order_by clause of QuerySets referencing
     (directly or indirectly) product types.
@@ -60,7 +62,11 @@ def product_type_order_by(id_field: str = "id", name_field: str = "name"):
         return [
             Case(
                 When(
-                    **{id_field: get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)},
+                    **{
+                        id_field: get_parameter_value(
+                            Parameter.COOP_BASE_PRODUCT_TYPE, parameter_cache
+                        )
+                    },
                     then=Value(0),
                 ),
                 default=1,
@@ -112,18 +118,26 @@ def get_next_growing_period(
 
 
 def get_current_growing_period(
-    reference_date: date = None,
+    reference_date: date = None, cache: Dict | None = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
         reference_date = get_today()
 
-    return (
+    if cache and reference_date in cache.keys():
+        return cache[reference_date]
+
+    growing_period = (
         GrowingPeriod.objects.filter(
             start_date__lte=reference_date, end_date__gte=reference_date
         )
         .order_by("start_date")
         .first()
     )
+
+    if cache is not None:
+        cache[reference_date] = growing_period
+
+    return growing_period
 
 
 @transaction.atomic
@@ -206,7 +220,9 @@ def get_active_product_capacities(reference_date: date = None):
     ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
 
 
-def get_active_and_future_subscriptions(reference_date: date = None):
+def get_active_and_future_subscriptions(
+    reference_date: date = None, parameter_cache: Dict | None = None
+):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
@@ -217,11 +233,15 @@ def get_active_and_future_subscriptions(reference_date: date = None):
         reference_date = get_today()
 
     return Subscription.objects.filter(end_date__gte=reference_date).order_by(
-        *product_type_order_by("product__type_id", "product__type__name")
+        *product_type_order_by(
+            "product__type_id", "product__type__name", parameter_cache
+        )
     )
 
 
-def get_active_subscriptions(reference_date: date = None):
+def get_active_subscriptions(
+    reference_date: date = None, parameter_cache: Dict | None = None
+):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
@@ -231,7 +251,7 @@ def get_active_subscriptions(reference_date: date = None):
     if reference_date is None:
         reference_date = get_today()
 
-    return get_active_and_future_subscriptions(reference_date).filter(
+    return get_active_and_future_subscriptions(reference_date, parameter_cache).filter(
         start_date__lte=reference_date
     )
 
