@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, Callable
 
 from django.db.models import OuterRef, Subquery, DecimalField, F, Sum
 
@@ -246,11 +246,11 @@ class PickupLocationCapacityModeShareChecker:
         return total
 
     @classmethod
-    def get_highest_usage_after_date(
+    def get_highest_usage_after_date_generic(
         cls,
         pickup_location: PickupLocation,
-        product_type: ProductType,
         reference_date: datetime.date,
+        lambda_get_usage_at_date: Callable,
         cache: Dict,
     ):
         current_date = reference_date
@@ -264,18 +264,12 @@ class PickupLocationCapacityModeShareChecker:
             "date_of_last_possible_capacity_change",
             lambda: cls.get_date_of_last_possible_capacity_change(pickup_location),
         )
+
         while current_date < date_of_last_possible_capacity_change:
             usage_at_date = get_from_cache_or_compute(
                 usage_at_date_cache,
                 current_date,
-                lambda: (
-                    PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-                        pickup_location=pickup_location,
-                        product_type=product_type,
-                        reference_date=current_date,
-                        cache=cache,
-                    )
-                ),
+                lambda: lambda_get_usage_at_date(current_date),
             )
 
             max_usage = max(
@@ -286,6 +280,28 @@ class PickupLocationCapacityModeShareChecker:
             current_date = get_monday(current_date + datetime.timedelta(days=7))
 
         return max_usage
+
+    @classmethod
+    def get_highest_usage_after_date(
+        cls,
+        pickup_location: PickupLocation,
+        product_type: ProductType,
+        reference_date: datetime.date,
+        cache: Dict,
+    ):
+        return cls.get_highest_usage_after_date_generic(
+            pickup_location=pickup_location,
+            reference_date=reference_date,
+            lambda_get_usage_at_date=lambda data: (
+                PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+                    pickup_location=pickup_location,
+                    product_type=product_type,
+                    reference_date=data,
+                    cache=cache,
+                )
+            ),
+            cache=cache,
+        )
 
     @staticmethod
     def get_date_of_last_possible_capacity_change(pickup_location: PickupLocation):

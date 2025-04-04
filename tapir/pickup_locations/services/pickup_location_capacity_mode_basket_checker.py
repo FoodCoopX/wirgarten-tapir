@@ -12,7 +12,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
-from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -238,42 +238,21 @@ class PickupLocationCapacityModeBasketChecker:
         reference_date: datetime.date,
         cache: Dict,
     ):
-        current_date = reference_date
-        max_usage = 0
-
-        usage_at_date_cache = get_from_cache_or_compute(
-            cache, "usage_at_date_cache", lambda: {}
-        )
-        date_of_last_possible_capacity_change = get_from_cache_or_compute(
-            cache,
-            "date_of_last_possible_capacity_change",
-            lambda: PickupLocationCapacityModeShareChecker.get_date_of_last_possible_capacity_change(
-                pickup_location
-            ),
-        )
-
-        while current_date < date_of_last_possible_capacity_change:
-            usage_at_date = get_from_cache_or_compute(
-                usage_at_date_cache,
-                current_date,
-                lambda: (
+        return (
+            PickupLocationCapacityModeShareChecker.get_highest_usage_after_date_generic(
+                pickup_location=pickup_location,
+                reference_date=reference_date,
+                lambda_get_usage_at_date=lambda date: (
                     PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
                         pickup_location=pickup_location,
                         basket_size=basket_size,
-                        reference_date=current_date,
+                        reference_date=date,
                         cache=cache,
                     )
                 ),
+                cache=cache,
             )
-
-            max_usage = max(
-                max_usage,
-                usage_at_date,
-            )
-
-            current_date = get_monday(current_date + datetime.timedelta(days=7))
-
-        return max_usage
+        )
 
     @classmethod
     def get_free_capacity_at_date(
