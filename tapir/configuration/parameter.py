@@ -8,6 +8,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 
 
 def validate_format_string(value: str, allowed_vars: [str]):
@@ -72,16 +73,13 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
 
 
 def get_parameter_value(key: str, cache: Dict | None = None):
-    if cache and key in cache.keys():
-        return cache[key]
+    def compute():
+        tapir_parameter = TapirParameter.objects.filter(key=key).first()
+        if tapir_parameter is None:
+            raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+        return tapir_parameter.get_value()
 
-    try:
-        param = TapirParameter.objects.get(key=key)
-        if cache is not None:
-            cache[key] = param.get_value()
-        return param.get_value()
-    except ObjectDoesNotExist:
-        raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+    return get_from_cache_or_compute(cache, key, compute)
 
 
 def parameter_definition(

@@ -10,6 +10,7 @@ from django.db.models import Case, IntegerField, Value, When
 from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Payable,
@@ -123,21 +124,16 @@ def get_current_growing_period(
     if reference_date is None:
         reference_date = get_today()
 
-    if cache and reference_date in cache.keys():
-        return cache[reference_date]
-
-    growing_period = (
-        GrowingPeriod.objects.filter(
-            start_date__lte=reference_date, end_date__gte=reference_date
+    def compute():
+        return (
+            GrowingPeriod.objects.filter(
+                start_date__lte=reference_date, end_date__gte=reference_date
+            )
+            .order_by("start_date")
+            .first()
         )
-        .order_by("start_date")
-        .first()
-    )
 
-    if cache is not None:
-        cache[reference_date] = growing_period
-
-    return growing_period
+    return get_from_cache_or_compute(cache, reference_date, compute)
 
 
 @transaction.atomic

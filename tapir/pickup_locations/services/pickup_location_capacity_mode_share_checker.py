@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.utils.shortcuts import get_monday
+from tapir.utils.shortcuts import get_monday, dict_get_or_set, get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -114,12 +114,14 @@ class PickupLocationCapacityModeShareChecker:
         )
 
         subscriptions_active_at_reference_date = get_active_subscriptions(
-            reference_date, cache["parameter_cache"]
+            reference_date,
+            get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
         ).filter(member__in=members_at_pickup_location, product__type=product_type)
 
         relevant_subscriptions = subscriptions_active_at_reference_date
         if get_parameter_value(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache["parameter_cache"]
+            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL,
+            get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
         ):
             relevant_subscriptions = cls.extend_subscriptions_with_those_that_will_be_renewed(
                 subscriptions_active_at_reference_date=subscriptions_active_at_reference_date,
@@ -163,22 +165,24 @@ class PickupLocationCapacityModeShareChecker:
         relevant_subscriptions = set(subscriptions_active_at_reference_date)
 
         if cache is not None:
-            if "growing_period_at_date" not in cache.keys():
-                cache["growing_period_at_date"] = {}
+            growing_period_at_date_cache = dict_get_or_set(
+                cache, "growing_period_at_date", lambda: {}
+            )
             current_growing_period = get_current_growing_period(
-                reference_date, cache.get("growing_period_at_date", None)
+                reference_date, growing_period_at_date_cache
             )
         else:
             current_growing_period = get_current_growing_period(reference_date)
 
         if cache is not None:
-            if "products_by_product_type" not in cache.keys():
-                cache["products_by_product_type"] = {}
-            if product_type not in cache["products_by_product_type"].keys():
-                cache["products_by_product_type"][product_type] = (
-                    Product.objects.filter(type=product_type)
-                )
-            products = cache["products_by_product_type"][product_type]
+            products_by_product_type_cache = dict_get_or_set(
+                cache, "products_by_product_type", lambda: {}
+            )
+            products = dict_get_or_set(
+                products_by_product_type_cache,
+                product_type,
+                lambda: Product.objects.filter(type=product_type),
+            )
         else:
             products = Product.objects.filter(type=product_type)
 
@@ -191,7 +195,7 @@ class PickupLocationCapacityModeShareChecker:
             subscriptions_that_will_get_renewed = (
                 get_active_subscriptions(
                     current_growing_period.start_date - datetime.timedelta(days=1),
-                    cache["parameter_cache"],
+                    get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
                 )
                 .filter(
                     member__in=members_at_pickup_location,
@@ -294,12 +298,19 @@ class PickupLocationCapacityModeShareChecker:
 
     @staticmethod
     def get_date_of_last_possible_capacity_change(pickup_location: PickupLocation):
-        return max(
+        last_pickup_location_change = (
             MemberPickupLocation.objects.filter(pickup_location=pickup_location)
             .order_by("valid_from")
             .last()
-            .valid_from,
-            Subscription.objects.order_by("end_date").last().end_date,
+        )
+        last_subscription = Subscription.objects.order_by("end_date").last()
+        if not last_pickup_location_change:
+            return last_subscription.end_date
+        if not last_subscription:
+            return last_pickup_location_change.valid_from
+        return max(
+            last_pickup_location_change.valid_from,
+            last_subscription.end_date,
         )
 
     @classmethod
