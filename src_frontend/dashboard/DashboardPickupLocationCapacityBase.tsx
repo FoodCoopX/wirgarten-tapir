@@ -12,11 +12,7 @@ import "dayjs/locale/de";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import { formatDateText } from "../utils/formatDateText.ts";
 
-interface GrowingPeriodBaseProps {}
-
-const DashboardPickupLocationCapacityBase: React.FC<
-  GrowingPeriodBaseProps
-> = ({}) => {
+const DashboardPickupLocationCapacityBase: React.FC = () => {
   const api = useApi(PickupLocationsApi, "no_token");
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [baseLoading, setBaseLoading] = useState(true);
