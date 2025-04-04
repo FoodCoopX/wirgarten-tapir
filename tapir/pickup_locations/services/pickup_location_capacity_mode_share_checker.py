@@ -255,19 +255,17 @@ class PickupLocationCapacityModeShareChecker:
     ):
         current_date = reference_date
         max_usage = 0
-        if "date_of_last_possible_capacity_change" not in cache.keys():
-            cache["date_of_last_possible_capacity_change"] = (
-                cls.get_date_of_last_possible_capacity_change(pickup_location)
-            )
 
-        if "usage_at_date_cache" not in cache.keys():
-            cache["usage_at_date_cache"] = {}
-
-        if "parameter_cache" not in cache.keys():
-            cache["parameter_cache"] = {}
-
-        while current_date < cache["date_of_last_possible_capacity_change"]:
-            if current_date not in cache["usage_at_date_cache"].keys():
+        usage_at_date_cache = get_from_cache_or_compute(
+            cache, "usage_at_date_cache", lambda: {}
+        )
+        date_of_last_possible_capacity_change = get_from_cache_or_compute(
+            cache,
+            "date_of_last_possible_capacity_change",
+            lambda: cls.get_date_of_last_possible_capacity_change(pickup_location),
+        )
+        while current_date < date_of_last_possible_capacity_change:
+            if current_date not in usage_at_date_cache.keys():
                 usage_at_date = (
                     PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
                         pickup_location=pickup_location,
@@ -276,9 +274,9 @@ class PickupLocationCapacityModeShareChecker:
                         cache=cache,
                     )
                 )
-                cache["usage_at_date_cache"][current_date] = usage_at_date
+                usage_at_date_cache[current_date] = usage_at_date
 
-            usage_at_date = cache["usage_at_date_cache"][current_date]
+            usage_at_date = usage_at_date_cache[current_date]
             max_usage = max(
                 max_usage,
                 usage_at_date,
