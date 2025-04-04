@@ -323,8 +323,12 @@ class PickupLocationCapacityModeShareChecker:
         )
 
         available_capacity = product_type_to_available_capacity_map.get(product_type, 0)
+
         usage = cls.get_highest_usage_after_date(
-            pickup_location, product_type, reference_date, cache
+            pickup_location=pickup_location,
+            product_type=product_type,
+            reference_date=reference_date,
+            cache=cache,
         )
         free_capacity = available_capacity - usage
 
