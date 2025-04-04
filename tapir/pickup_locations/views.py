@@ -270,7 +270,7 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 basket_size=basket_size,
                                 reference_date=current_date,
                                 cache=dict_get_or_set(
-                                    cache_by_basket_size, basket_size, {}
+                                    cache_by_basket_size, basket_size, lambda: {}
                                 ),
                             ),
                         )
