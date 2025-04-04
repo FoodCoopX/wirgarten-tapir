@@ -1,6 +1,7 @@
 import datetime
 from typing import Dict
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -8,14 +9,20 @@ from tapir.pickup_locations.services.basket_size_capacities_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
+    PickupLocationCapacityModeShareChecker,
+)
+from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
     Product,
+    Subscription,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_active_and_future_subscriptions,
+    get_current_growing_period,
 )
 
 
@@ -44,7 +51,6 @@ class PickupLocationCapacityModeBasketChecker:
 
             if not cls.check_capacity_for_basket_size(
                 basket_size=basket_size,
-                available_capacity=available_capacity,
                 member=already_registered_member,
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
@@ -58,16 +64,16 @@ class PickupLocationCapacityModeBasketChecker:
     def check_capacity_for_basket_size(
         cls,
         basket_size: str,
-        available_capacity: int,
         member: Member | None,
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
     ):
-        current_usage = cls.get_current_capacity_usage(
+        free_capacity = cls.get_free_capacity_at_date(
             pickup_location=pickup_location,
             basket_size=basket_size,
-            subscription_start=subscription_start,
+            reference_date=subscription_start,
+            cache={},
         )
         amount_used_by_member_before_changes = (
             cls.get_capacity_used_by_member_before_changes(
@@ -82,59 +88,95 @@ class PickupLocationCapacityModeBasketChecker:
                 basket_size=basket_size,
             )
         )
-        capacity_usage_after_changes = (
-            current_usage
-            - amount_used_by_member_before_changes
-            + capacity_used_by_the_order
+        return (
+            free_capacity
+            + amount_used_by_member_before_changes
+            - capacity_used_by_the_order
+            >= 0
         )
-        return capacity_usage_after_changes <= available_capacity
 
     @classmethod
-    def get_current_capacity_usage(
+    def get_capacity_usage_at_date(
         cls,
         pickup_location: PickupLocation,
         basket_size: str,
-        subscription_start: datetime.date,
+        reference_date: datetime.date,
+        cache: Dict,
     ):
-        product_id_to_basket_size_usage_map = (
-            cls.get_product_id_to_basket_size_usage_map(basket_size)
+        product_id_to_basket_size_usage_map = get_from_cache_or_compute(
+            cache,
+            "product_id_to_basket_size_usage_map",
+            lambda: cls.get_product_id_to_basket_size_usage_map(basket_size),
         )
 
         members_at_pickup_location = (
             MemberPickupLocationService.get_members_at_pickup_location(
-                pickup_location, subscription_start
+                pickup_location, reference_date
             )
         )
 
-        usage_by_member_and_product = {}
-        for subscription in get_active_and_future_subscriptions(
-            subscription_start
-        ).filter(member__in=members_at_pickup_location):
-            if subscription.member not in usage_by_member_and_product.keys():
-                usage_by_member_and_product[subscription.member] = {}
-            if (
-                subscription.product
-                not in usage_by_member_and_product[subscription.member].keys()
-            ):
-                usage_by_member_and_product[subscription.member][
-                    subscription.product
-                ] = 0
-            usage_by_member_and_product[subscription.member][subscription.product] = (
-                max(
-                    usage_by_member_and_product[subscription.member][
-                        subscription.product
-                    ],
-                    product_id_to_basket_size_usage_map[subscription.product_id]
-                    * subscription.quantity,
-                )
+        subscriptions_active_at_reference_date = get_active_subscriptions(
+            reference_date,
+            get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
+        ).filter(member__in=members_at_pickup_location)
+
+        relevant_subscriptions = subscriptions_active_at_reference_date
+        if get_parameter_value(
+            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL,
+            get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
+        ):
+            relevant_subscriptions = cls.extend_subscriptions_with_those_that_will_be_renewed(
+                subscriptions_active_at_reference_date=subscriptions_active_at_reference_date,
+                reference_date=reference_date,
+                members_at_pickup_location=members_at_pickup_location,
+                cache=cache,
             )
 
         total_usage = 0
-        for usage_by_product in usage_by_member_and_product.values():
-            for usage in usage_by_product.values():
-                total_usage += usage
+        for subscription in relevant_subscriptions:
+            total_usage += (
+                product_id_to_basket_size_usage_map[subscription.product.id]
+                * subscription.quantity
+            )
 
         return total_usage
+
+    @classmethod
+    def extend_subscriptions_with_those_that_will_be_renewed(
+        cls,
+        subscriptions_active_at_reference_date,
+        reference_date: datetime.date,
+        members_at_pickup_location,
+        cache: Dict | None = None,
+    ):
+        relevant_subscriptions = set(subscriptions_active_at_reference_date)
+
+        current_growing_period = get_current_growing_period(
+            reference_date,
+            get_from_cache_or_compute(cache, "growing_period_at_date", lambda: {}),
+        )
+
+        members_that_have_a_subscription_of_product_at_reference_date = (
+            subscriptions_active_at_reference_date.values_list("member", flat=True)
+        )
+        subscriptions_that_will_get_renewed = (
+            get_active_subscriptions(
+                current_growing_period.start_date - datetime.timedelta(days=1),
+                get_from_cache_or_compute(cache, "parameter_cache", lambda: None),
+            )
+            .filter(
+                member__in=members_at_pickup_location,
+                cancellation_ts__isnull=True,
+            )
+            .exclude(
+                member__in=members_that_have_a_subscription_of_product_at_reference_date
+            )
+        )
+        relevant_subscriptions.update(subscriptions_that_will_get_renewed)
+
+        return Subscription.objects.filter(
+            id__in=[subscription.id for subscription in relevant_subscriptions]
+        ).distinct()
 
     @classmethod
     def get_capacity_used_by_member_before_changes(
@@ -187,3 +229,74 @@ class PickupLocationCapacityModeBasketChecker:
         for ordered_product, quantity in ordered_product_to_quantity_map.items():
             total += product_id_to_basket_size_usage_map[ordered_product.id] * quantity
         return total
+
+    @classmethod
+    def get_highest_usage_after_date(
+        cls,
+        pickup_location: PickupLocation,
+        basket_size: str,
+        reference_date: datetime.date,
+        cache: Dict,
+    ):
+        current_date = reference_date
+        max_usage = 0
+
+        usage_at_date_cache = get_from_cache_or_compute(
+            cache, "usage_at_date_cache", lambda: {}
+        )
+        date_of_last_possible_capacity_change = get_from_cache_or_compute(
+            cache,
+            "date_of_last_possible_capacity_change",
+            lambda: PickupLocationCapacityModeShareChecker.get_date_of_last_possible_capacity_change(
+                pickup_location
+            ),
+        )
+
+        while current_date < date_of_last_possible_capacity_change:
+            usage_at_date = get_from_cache_or_compute(
+                usage_at_date_cache,
+                current_date,
+                lambda: (
+                    PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+                        pickup_location=pickup_location,
+                        basket_size=basket_size,
+                        reference_date=current_date,
+                        cache=cache,
+                    )
+                ),
+            )
+
+            max_usage = max(
+                max_usage,
+                usage_at_date,
+            )
+
+            current_date = get_monday(current_date + datetime.timedelta(days=7))
+
+        return max_usage
+
+    @classmethod
+    def get_free_capacity_at_date(
+        cls,
+        pickup_location: PickupLocation,
+        basket_size: str,
+        reference_date: datetime.date,
+        cache: Dict | None = None,
+    ):
+        basket_size_to_available_capacity_map = get_from_cache_or_compute(
+            cache,
+            "basket_size_to_available_capacity_map",
+            lambda: BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
+                pickup_location
+            ),
+        )
+        capacity = basket_size_to_available_capacity_map[basket_size]
+
+        usage = cls.get_highest_usage_after_date(
+            pickup_location=pickup_location,
+            basket_size=basket_size,
+            reference_date=reference_date,
+            cache=cache,
+        )
+
+        return capacity - usage
