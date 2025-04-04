@@ -50,7 +50,6 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         mock_check_capacity_for_product_type.assert_called_once_with(
             product_type=product_type_1,
-            available_capacity=10,
             member=already_registered_member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
@@ -95,7 +94,6 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
             [
                 call(
                     product_type=product_type_1,
-                    available_capacity=10,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
@@ -103,7 +101,6 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                 ),
                 call(
                     product_type=product_type_2,
-                    available_capacity=15,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,

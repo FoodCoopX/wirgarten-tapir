@@ -23,6 +23,7 @@ from tapir.wirgarten.models import (
     Product,
     Subscription,
     Member,
+    ProductType,
 )
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
@@ -62,7 +63,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 pickup_location=PickupLocation.objects.get(
                     id=capa["pickup_location_id"]
                 ),
-                product_type=capa["product_type_id"],
+                product_type=ProductType.objects.get(id=capa["product_type_id"]),
                 reference_date=next_month,
             )
             / float(
@@ -79,7 +80,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 pickup_location=PickupLocation.objects.get(
                     id=capa["pickup_location_id"]
                 ),
-                product_type=capa["product_type_id"],
+                product_type=ProductType.objects.get(id=capa["product_type_id"]),
                 reference_date=next_month,
             )
             / float(

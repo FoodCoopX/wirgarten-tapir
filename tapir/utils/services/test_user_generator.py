@@ -180,7 +180,7 @@ class TestUserGenerator:
             if not additional_products:
                 min_shares += quantity * product.min_coop_shares
 
-            Subscription.objects.create(
+            subscription = Subscription.objects.create(
                 member=member,
                 product=product,
                 period=growing_period,
@@ -191,18 +191,22 @@ class TestUserGenerator:
                 solidarity_price_absolute=solidarity_price_absolute,
                 mandate_ref=mandate_ref,
             )
-            if growing_period == previous_growing_period and random.random() < 0.75:
-                Subscription.objects.create(
-                    member=member,
-                    product=product,
-                    period=current_growing_period,
-                    quantity=quantity,
-                    start_date=current_growing_period.start_date,
-                    end_date=current_growing_period.end_date,
-                    solidarity_price=solidarity_price,
-                    solidarity_price_absolute=solidarity_price_absolute,
-                    mandate_ref=mandate_ref,
-                )
+            if growing_period == previous_growing_period:
+                if random.random() < 0.25:
+                    subscription.cancellation_ts = previous_growing_period.start_date
+                    subscription.save()
+                else:
+                    Subscription.objects.create(
+                        member=member,
+                        product=product,
+                        period=current_growing_period,
+                        quantity=quantity,
+                        start_date=current_growing_period.start_date,
+                        end_date=current_growing_period.end_date,
+                        solidarity_price=solidarity_price,
+                        solidarity_price_absolute=solidarity_price_absolute,
+                        mandate_ref=mandate_ref,
+                    )
 
         return min_shares
 

@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -7,6 +8,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 
 
 def validate_format_string(value: str, allowed_vars: [str]):
@@ -70,12 +72,14 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str):
-    try:
-        param = TapirParameter.objects.get(key=key)
-        return param.get_value()
-    except ObjectDoesNotExist:
-        raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+def get_parameter_value(key: str, cache: Dict | None = None):
+    def compute():
+        tapir_parameter = TapirParameter.objects.filter(key=key).first()
+        if tapir_parameter is None:
+            raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+        return tapir_parameter.get_value()
+
+    return get_from_cache_or_compute(cache, key, compute)
 
 
 def parameter_definition(

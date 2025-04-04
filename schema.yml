@@ -671,6 +671,62 @@ paths:
               schema:
                 type: string
           description: ''
+  /pickup_locations/api/pickup_location_capacity_evolution:
+    get:
+      operationId: pickup_locations_api_pickup_location_capacity_evolution_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacityEvolution'
+          description: ''
+  /pickup_locations/pickup_locations/:
+    get:
+      operationId: pickup_locations_pickup_locations_list
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PickupLocation'
+          description: ''
+  /pickup_locations/pickup_locations/{id}/:
+    get:
+      operationId: pickup_locations_pickup_locations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pickup location.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
   /subscriptions/api/extended_product:
     get:
       operationId: subscriptions_api_extended_product_retrieve
@@ -4264,7 +4320,7 @@ components:
       type: string
       description: |-
         * `picking_mode_basket` - Nach Kisten
-        * `picking_mode_share` - Nach Anteile
+        * `picking_mode_share` - Nach Ernteanteile
     PickupLocation:
       type: object
       properties:
@@ -4388,6 +4444,33 @@ components:
       required:
       - product_type_id
       - product_type_name
+    PickupLocationCapacityChangePoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        values:
+          type: array
+          items:
+            type: integer
+      required:
+      - date
+      - values
+    PickupLocationCapacityEvolution:
+      type: object
+      properties:
+        table_headers:
+          type: array
+          items:
+            type: string
+        data_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityChangePoint'
+      required:
+      - data_points
+      - table_headers
     PickupLocationOpeningTime:
       type: object
       properties:

@@ -2,7 +2,7 @@ import datetime
 
 from django.db.models import QuerySet, OuterRef, Subquery
 
-from tapir.wirgarten.models import Member, MemberPickupLocation
+from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
 
 
 class MemberPickupLocationService:
@@ -38,3 +38,15 @@ class MemberPickupLocationService:
             ).get()
 
         return getattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID)
+
+    @classmethod
+    def get_members_at_pickup_location(
+        cls, pickup_location: PickupLocation, reference_date: datetime.date
+    ) -> QuerySet[Member]:
+        return cls.annotate_member_queryset_with_pickup_location_at_date(
+            Member.objects.all(), reference_date
+        ).filter(
+            **{
+                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
+            }
+        )

@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PickupLocationsApi.ts
@@ -72,6 +73,8 @@ models/PickupLocationCapacityByBasketSize.ts
 models/PickupLocationCapacityByBasketSizeRequest.ts
 models/PickupLocationCapacityByShare.ts
 models/PickupLocationCapacityByShareRequest.ts
+models/PickupLocationCapacityChangePoint.ts
+models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts

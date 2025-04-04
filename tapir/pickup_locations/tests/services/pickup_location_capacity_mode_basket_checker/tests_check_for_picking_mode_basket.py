@@ -48,7 +48,6 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
 
         mock_check_capacity_for_basket_size.assert_called_once_with(
             basket_size="small",
-            available_capacity=10,
             member=already_registered_member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
@@ -88,7 +87,6 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
             [
                 call(
                     basket_size="small",
-                    available_capacity=10,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
@@ -96,7 +94,6 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
                 ),
                 call(
                     basket_size="medium",
-                    available_capacity=20,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,

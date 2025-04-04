@@ -189,7 +189,7 @@ class ProductType(TapirModel):
         ]
 
     def __str__(self):
-        return f"<ProductType: {self.name}>"
+        return f"{self.name} ({self.delivery_cycle})"
 
 
 class PickupLocationCapability(TapirModel):

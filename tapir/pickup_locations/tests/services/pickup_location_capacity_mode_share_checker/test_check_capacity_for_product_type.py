@@ -16,14 +16,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         PickupLocationCapacityModeShareChecker,
         "get_capacity_used_by_member_before_changes",
     )
-    @patch.object(PickupLocationCapacityModeShareChecker, "get_capacity_usage_at_date")
+    @patch.object(PickupLocationCapacityModeShareChecker, "get_free_capacity_at_date")
     def test_checkCapacityForProductType_newUsageIsOverCapacity_returnsFalse(
         self,
-        mock_get_capacity_usage_at_date: Mock,
+        mock_get_free_capacity_at_date: Mock,
         mock_get_capacity_used_by_member_before_changes: Mock,
         mock_calculate_capacity_used_by_the_ordered_products: Mock,
     ):
-        mock_get_capacity_usage_at_date.return_value = 10
+        mock_get_free_capacity_at_date.return_value = 1
         mock_get_capacity_used_by_member_before_changes.return_value = 2
         mock_calculate_capacity_used_by_the_ordered_products.return_value = 4
         member = Mock()
@@ -31,19 +31,20 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         subscription_start = Mock()
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
+        parameter_cache = Mock()
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
-            available_capacity=11,
             member=member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            parameter_cache=parameter_cache,
         )
 
         self.assertFalse(result)
 
-        mock_get_capacity_usage_at_date.assert_called_once_with(
+        mock_get_free_capacity_at_date.assert_called_once_with(
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
@@ -52,6 +53,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
+            parameter_cache=parameter_cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
@@ -67,14 +69,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         PickupLocationCapacityModeShareChecker,
         "get_capacity_used_by_member_before_changes",
     )
-    @patch.object(PickupLocationCapacityModeShareChecker, "get_capacity_usage_at_date")
+    @patch.object(PickupLocationCapacityModeShareChecker, "get_free_capacity_at_date")
     def test_checkCapacityForProductType_newUsageIsEqualToCapacity_returnsTrue(
         self,
-        mock_get_capacity_usage_at_date: Mock,
+        mock_get_free_capacity_at_date: Mock,
         mock_get_capacity_used_by_member_before_changes: Mock,
         mock_calculate_capacity_used_by_the_ordered_products: Mock,
     ):
-        mock_get_capacity_usage_at_date.return_value = 10
+        mock_get_free_capacity_at_date.return_value = 1
         mock_get_capacity_used_by_member_before_changes.return_value = 2
         mock_calculate_capacity_used_by_the_ordered_products.return_value = 3
         member = Mock()
@@ -85,7 +87,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
-            available_capacity=11,
             member=member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
@@ -94,7 +95,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
 
         self.assertTrue(result)
 
-        mock_get_capacity_usage_at_date.assert_called_once_with(
+        mock_get_free_capacity_at_date.assert_called_once_with(
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
@@ -103,6 +104,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
+            parameter_cache=None,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
@@ -118,14 +120,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         PickupLocationCapacityModeShareChecker,
         "get_capacity_used_by_member_before_changes",
     )
-    @patch.object(PickupLocationCapacityModeShareChecker, "get_capacity_usage_at_date")
+    @patch.object(PickupLocationCapacityModeShareChecker, "get_free_capacity_at_date")
     def test_checkCapacityForProductType_newUsageIsBelowCapacity_returnsTrue(
         self,
-        mock_get_capacity_usage_at_date: Mock,
+        mock_get_free_capacity_at_date: Mock,
         mock_get_capacity_used_by_member_before_changes: Mock,
         mock_calculate_capacity_used_by_the_ordered_products: Mock,
     ):
-        mock_get_capacity_usage_at_date.return_value = 10
+        mock_get_free_capacity_at_date.return_value = 2
         mock_get_capacity_used_by_member_before_changes.return_value = 0
         mock_calculate_capacity_used_by_the_ordered_products.return_value = 1
         member = Mock()
@@ -136,7 +138,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
-            available_capacity=11,
             member=member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
@@ -145,7 +146,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
 
         self.assertTrue(result)
 
-        mock_get_capacity_usage_at_date.assert_called_once_with(
+        mock_get_free_capacity_at_date.assert_called_once_with(
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
@@ -154,6 +155,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
+            parameter_cache=None,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
