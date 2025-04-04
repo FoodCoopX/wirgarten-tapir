@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.utils.shortcuts import get_monday, dict_get_or_set, get_from_cache_or_compute
+from tapir.utils.shortcuts import get_monday, get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -164,27 +164,19 @@ class PickupLocationCapacityModeShareChecker:
     ):
         relevant_subscriptions = set(subscriptions_active_at_reference_date)
 
-        if cache is not None:
-            growing_period_at_date_cache = dict_get_or_set(
-                cache, "growing_period_at_date", lambda: {}
-            )
-            current_growing_period = get_current_growing_period(
-                reference_date, growing_period_at_date_cache
-            )
-        else:
-            current_growing_period = get_current_growing_period(reference_date)
+        current_growing_period = get_current_growing_period(
+            reference_date,
+            get_from_cache_or_compute(cache, "growing_period_at_date", lambda: {}),
+        )
 
-        if cache is not None:
-            products_by_product_type_cache = dict_get_or_set(
-                cache, "products_by_product_type", lambda: {}
-            )
-            products = dict_get_or_set(
-                products_by_product_type_cache,
-                product_type,
-                lambda: Product.objects.filter(type=product_type),
-            )
-        else:
-            products = Product.objects.filter(type=product_type)
+        products_by_product_type_cache = get_from_cache_or_compute(
+            cache, "products_by_product_type", lambda: {}
+        )
+        products = get_from_cache_or_compute(
+            products_by_product_type_cache,
+            product_type,
+            lambda: Product.objects.filter(type=product_type),
+        )
 
         for product in products:
             members_that_have_a_subscription_of_product_at_reference_date = (
