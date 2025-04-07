@@ -129,7 +129,6 @@ WSGI_APPLICATION = "tapir.wsgi.application"
 LANGUAGE_CODE = "de"
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 
@@ -158,6 +157,9 @@ WEASYPRINT_BASEURL = "/"
 AUTH_USER_MODEL = "accounts.TapirUser"
 # LOGIN_REDIRECT_URL = "index"
 LOGIN_URL = "login"
+
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
+CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
 PHONENUMBER_DEFAULT_REGION = "DE"
 

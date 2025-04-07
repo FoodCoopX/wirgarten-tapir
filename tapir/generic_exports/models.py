@@ -32,7 +32,7 @@ class CsvExport(TapirModel):
         base_field=models.EmailField(), default=list, blank=True
     )
     automated_export_cycle = models.CharField(
-        max_length=512, choices=AutomatedExportCycle.choices
+        max_length=512, choices=AutomatedExportCycle
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
@@ -62,7 +62,7 @@ class PdfExport(TapirModel):
         base_field=models.EmailField(), default=list, blank=True
     )
     automated_export_cycle = models.CharField(
-        max_length=512, choices=AutomatedExportCycle.choices
+        max_length=512, choices=AutomatedExportCycle
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
