@@ -34,7 +34,7 @@ from tapir.wirgarten.tasks import generate_member_numbers
 from tapir.wirgarten.utils import get_today
 
 
-class TestUserGenerator:
+class UserGenerator:
     USER_COUNT = 200
     past_growing_period = None
     current_growing_period = None

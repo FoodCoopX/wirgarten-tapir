@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.factories import (
 )
 
 
-class TestPickupLocationGenerator:
+class PickupLocationGenerator:
     @classmethod
     def generate_pickup_locations(cls, organization: Organization):
         match organization:

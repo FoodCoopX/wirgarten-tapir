@@ -4,7 +4,7 @@ from tapir.utils.config import Organization
 from tapir.wirgarten.parameters import Parameter
 
 
-class TestConfigurationGenerator:
+class ConfigurationGenerator:
     @classmethod
     def update_settings_for_organization(cls, organization):
         TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(

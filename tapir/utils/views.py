@@ -6,7 +6,7 @@ from django.views.generic import FormView
 
 from tapir.utils.config import Organization
 from tapir.utils.forms import ResetTestDataForm
-from tapir.utils.services.test_data_generator import TestDataGenerator
+from tapir.utils.services.data_generator import DataGenerator
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.utils import is_debug_instance
 
@@ -24,8 +24,8 @@ class ResetTestData(LoginRequiredMixin, PermissionRequiredMixin, FormView):
             raise ImproperlyConfigured("Don't reset data on non-debug instances.")
 
         with transaction.atomic():
-            TestDataGenerator.clear()
-            TestDataGenerator.generate_all(
+            DataGenerator.clear()
+            DataGenerator.generate_all(
                 Organization[form.cleaned_data["generate_test_data_for"]]
             )
 

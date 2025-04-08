@@ -9,7 +9,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import get_today
 
 
-class TestJokerGenerator:
+class JokerGenerator:
     @classmethod
     def generate_jokers(cls):
         if not get_parameter_value(Parameter.JOKERS_ENABLED):

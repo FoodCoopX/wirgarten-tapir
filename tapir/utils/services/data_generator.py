@@ -6,13 +6,13 @@ from django.core.exceptions import ImproperlyConfigured
 from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.log.models import LogEntry
 from tapir.utils.config import Organization
-from tapir.utils.services.test_configuration_generator import TestConfigurationGenerator
-from tapir.utils.services.test_joker_generator import TestJokerGenerator
-from tapir.utils.services.test_pickup_location_generator import (
-    TestPickupLocationGenerator,
+from tapir.utils.services.configuration_generator import ConfigurationGenerator
+from tapir.utils.services.joker_generator import JokerGenerator
+from tapir.utils.services.pickup_location_generator import (
+    PickupLocationGenerator,
 )
-from tapir.utils.services.test_product_generator import TestProductGenerator
-from tapir.utils.services.test_user_generator import TestUserGenerator
+from tapir.utils.services.product_generator import ProductGenerator
+from tapir.utils.services.user_generator import UserGenerator
 from tapir.wirgarten.models import (
     Subscription,
     CoopShareTransaction,
@@ -32,7 +32,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
-class TestDataGenerator:
+class DataGenerator:
     GENERATE_TEST_DATA_FOR = Organization.BIOTOP
 
     @staticmethod
@@ -72,13 +72,11 @@ class TestDataGenerator:
             generate_test_data_for = override_generate_test_data_for
 
         cls.generate_growing_periods(generate_test_data_for)
-        TestProductGenerator.generate_product_data(generate_test_data_for)
-        TestPickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
-        TestUserGenerator.generate_users_and_subscriptions()
-        TestConfigurationGenerator.update_settings_for_organization(
-            generate_test_data_for
-        )
-        TestJokerGenerator.generate_jokers()
+        ProductGenerator.generate_product_data(generate_test_data_for)
+        PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
+        UserGenerator.generate_users_and_subscriptions()
+        ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
+        JokerGenerator.generate_jokers()
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):

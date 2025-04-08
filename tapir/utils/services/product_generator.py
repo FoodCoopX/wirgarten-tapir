@@ -16,7 +16,7 @@ from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import get_today
 
 
-class TestProductGenerator:
+class ProductGenerator:
     @classmethod
     def generate_product(
         cls,
