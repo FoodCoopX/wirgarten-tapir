@@ -90,6 +90,7 @@ def parameter_definition(
     datatype: TapirParameterDatatype,
     initial_value: str | int | float | bool,
     order_priority: int = -1,
+    enabled: bool = True,
     meta: ParameterMeta = ParameterMeta(
         options=None, validators=[], vars_hint=None, textarea=False
     ),
@@ -104,6 +105,7 @@ def parameter_definition(
         key,
         label,
         order_priority,
+        enabled,
     )
 
     meta_info.parameters[param.key] = meta
@@ -117,6 +119,7 @@ def __create_or_update_parameter(
     key,
     label,
     order_priority,
+    enabled: bool,
 ):
     try:
         param = TapirParameter.objects.get(pk=key)
@@ -128,6 +131,7 @@ def __create_or_update_parameter(
             param.value = initial_value  # only update value with initial value if the datatype changed!
 
         param.order_priority = order_priority
+        param.enabled = enabled
 
         # print("\t[update] ", key)
 
@@ -143,6 +147,7 @@ def __create_or_update_parameter(
             order_priority=order_priority,
             datatype=datatype.value,
             value=str(initial_value),
+            enabled=enabled,
         )
 
     return param

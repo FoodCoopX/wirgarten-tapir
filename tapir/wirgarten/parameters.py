@@ -57,7 +57,6 @@ class Parameter:
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
-    CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
@@ -385,6 +384,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     MaxValueValidator(limit_value=31),
                 ]
             ),
+            enabled=False,
         )
 
         parameter_definition(
@@ -778,6 +778,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             initial_value=False,
             description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
+            enabled=False,
         )
 
         parameter_definition(
