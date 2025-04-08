@@ -27,10 +27,10 @@ export interface PickupLocationCapacityChangePoint {
     date: Date;
     /**
      * 
-     * @type {Array<number>}
+     * @type {Array<string>}
      * @memberof PickupLocationCapacityChangePoint
      */
-    values: Array<number>;
+    values: Array<string>;
 }
 
 /**

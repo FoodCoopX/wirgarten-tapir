@@ -14,6 +14,11 @@ class AutomatedExportCycle(models.TextChoices):
     NEVER = "never", "Nie"
 
 
+class LocaleChoices(models.TextChoices):
+    DE = "de_DE.utf-8", "Deutsch (DE)"
+    EN = "en_US.utf-8", "English (US)"
+
+
 class CsvExport(TapirModel):
     export_segment_id = models.CharField(max_length=512)
     name = models.CharField(max_length=512, unique=True)
@@ -36,6 +41,9 @@ class CsvExport(TapirModel):
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
+    locale = models.CharField(
+        max_length=512, choices=LocaleChoices, default=LocaleChoices.DE
+    )
 
     def __str__(self):
         return self.name

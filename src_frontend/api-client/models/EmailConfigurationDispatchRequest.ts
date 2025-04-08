@@ -47,10 +47,10 @@ export interface EmailConfigurationDispatchRequest {
     scheduledTime: Date;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailConfigurationDispatchRequest
      */
-    overrideRecipients: { [key: string]: any; };
+    overrideRecipients: any | null;
 }
 
 /**

@@ -2958,6 +2958,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -3018,6 +3020,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -3173,9 +3177,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
         sent_count:
           type: integer
           readOnly: true
@@ -3204,9 +3206,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
       required:
       - email_configuration_version
       - id
@@ -3319,12 +3319,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3368,12 +3364,8 @@ components:
           minLength: 1
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3427,12 +3419,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3694,6 +3682,14 @@ components:
       - cancellation_limit
       - delivery_date
       - joker
+    LocaleEnum:
+      enum:
+      - de_DE.utf-8
+      - en_US.utf-8
+      type: string
+      description: |-
+        * `de_DE.utf-8` - Deutsch (DE)
+        * `en_US.utf-8` - English (US)
     MemberJokerInformation:
       type: object
       properties:
@@ -3962,6 +3958,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
@@ -3973,9 +3971,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
     PatchedEmailConfigurationRequest:
       type: object
       properties:
@@ -4153,8 +4149,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4453,7 +4447,7 @@ components:
         values:
           type: array
           items:
-            type: integer
+            type: string
       required:
       - date
       - values
@@ -4713,8 +4707,6 @@ components:
           format: email
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4746,8 +4738,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -5028,9 +5018,7 @@ components:
           type: string
         field_name:
           type: string
-        additional_data:
-          type: object
-          additionalProperties: {}
+        additional_data: {}
       required:
       - field_name
       - label

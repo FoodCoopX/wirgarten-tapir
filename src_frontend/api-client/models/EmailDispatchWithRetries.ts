@@ -92,16 +92,16 @@ export interface EmailDispatchWithRetries {
     recipient: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatchWithRetries
      */
-    recipientTokens?: { [key: string]: any; } | null;
+    recipientTokens?: any | null;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatchWithRetries
      */
-    additionalTokens?: { [key: string]: any; } | null;
+    additionalTokens?: any | null;
     /**
      * 
      * @type {Date}

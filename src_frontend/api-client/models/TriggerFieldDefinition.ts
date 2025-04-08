@@ -39,10 +39,10 @@ export interface TriggerFieldDefinition {
     fieldName: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof TriggerFieldDefinition
      */
-    additionalData?: { [key: string]: any; };
+    additionalData?: any | null;
 }
 
 /**

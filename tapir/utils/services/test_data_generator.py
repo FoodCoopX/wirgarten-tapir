@@ -27,6 +27,7 @@ from tapir.wirgarten.models import (
     Product,
     ProductCapacity,
     PickupLocation,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -39,6 +40,7 @@ class TestDataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            MemberPickupLocation,
             PickupLocation,
             Subscription,
             ProductCapacity,

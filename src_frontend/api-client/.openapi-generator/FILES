@@ -41,6 +41,7 @@ models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
+models/LocaleEnum.ts
 models/MemberJokerInformation.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts

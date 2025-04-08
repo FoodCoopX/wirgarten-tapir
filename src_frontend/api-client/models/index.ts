@@ -36,6 +36,7 @@ export * from './GrowingPeriodWithDeliveryDayAdjustments';
 export * from './Joker';
 export * from './JokerRestriction';
 export * from './JokerWithCancellationLimit';
+export * from './LocaleEnum';
 export * from './MemberJokerInformation';
 export * from './PaginatedEmailConfigurationDispatchList';
 export * from './PaginatedEmailConfigurationList';

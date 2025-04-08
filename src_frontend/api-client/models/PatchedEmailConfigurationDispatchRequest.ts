@@ -47,10 +47,10 @@ export interface PatchedEmailConfigurationDispatchRequest {
     scheduledTime?: Date;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof PatchedEmailConfigurationDispatchRequest
      */
-    overrideRecipients?: { [key: string]: any; };
+    overrideRecipients?: any | null;
 }
 
 /**
