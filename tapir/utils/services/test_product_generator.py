@@ -81,7 +81,7 @@ class TestProductGenerator:
             product_type=ernteanteile,
             name="M",
             base_price=70.3,
-            size=1,
+            size=1 if organization == Organization.WIRGARTEN else 2,
             base=True,
             min_coop_shares=2,
         )
@@ -89,7 +89,7 @@ class TestProductGenerator:
             product_type=ernteanteile,
             name="S",
             base_price=48.3,
-            size=0.66,
+            size=0.66 if organization == Organization.WIRGARTEN else 1.5,
             base=False,
             min_coop_shares=1,
         )
@@ -97,7 +97,7 @@ class TestProductGenerator:
             product_type=ernteanteile,
             name="L",
             base_price=109.8,
-            size=1.33,
+            size=1.33 if organization == Organization.WIRGARTEN else 3.5,
             base=False,
             min_coop_shares=3,
         )
@@ -146,13 +146,17 @@ class TestProductGenerator:
 
     @classmethod
     def generate_product_capacities(cls):
+        capacities = []
         for growing_period in GrowingPeriod.objects.all():
             for product_type in ProductType.objects.all():
-                ProductCapacity.objects.create(
-                    product_type=product_type,
-                    period=growing_period,
-                    capacity=1000,
+                capacities.append(
+                    ProductCapacity(
+                        product_type=product_type,
+                        period=growing_period,
+                        capacity=1000,
+                    )
                 )
+        ProductCapacity.objects.bulk_create(capacities)
 
     @classmethod
     def generate_product_data(cls, organization: Organization):

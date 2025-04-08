@@ -35,6 +35,7 @@ class ParameterCategory:
     EMAIL = "Email"
     JOKERS = "Joker"
     SUBSCRIPTIONS = "Verträge"
+    TEST = "Tests"
 
 
 class Parameter:
@@ -126,6 +127,7 @@ class Parameter:
     JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
+    TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
 
 
 from tapir.configuration.models import (
@@ -138,7 +140,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
-        from tapir.wirgarten.validators import validate_html
+        from tapir.wirgarten.validators import (
+            validate_html,
+            validate_iso_datetime_or_disabled,
+        )
         from tapir.deliveries.services.joker_management_service import (
             JokerManagementService,
         )
@@ -884,3 +889,18 @@ Dein WirGarten-Team""",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
         )
+
+        if getattr(settings, "DEBUG", False):
+            parameter_definition(
+                key=Parameter.TESTS_OVERRIDE_DATE,
+                label="Datum setzen",
+                datatype=TapirParameterDatatype.STRING,
+                initial_value="2025-04-01 09:30",
+                description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird. Format ist YYYY-MM-DD HH:MM. "
+                "Es kann auch 'disabled' eingetragen werden, dann werden die echte Datum und Uhrzeit verwendet."
+                "Dieses Parameter ist nur bei Test-Instanzen verfügbar.",
+                category=ParameterCategory.TEST,
+                order_priority=1,
+                debug=True,
+                meta=ParameterMeta(validators=[validate_iso_datetime_or_disabled]),
+            )

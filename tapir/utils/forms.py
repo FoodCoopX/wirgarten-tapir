@@ -1,10 +1,13 @@
 from datetime import date
 
 from django import forms
+from django.forms import Form
 from django.utils import formats
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberInternationalFallbackWidget
+
+from tapir.utils.config import Organization
 
 
 class DateInput(forms.DateInput):
@@ -25,3 +28,16 @@ class TapirPhoneNumberField(PhoneNumberField):
         super(TapirPhoneNumberField, self).__init__(
             *args, help_text=help_text, **kwargs
         )
+
+
+class ResetTestDataForm(Form):
+    generate_test_data_for = forms.ChoiceField(
+        choices=[(org.name, org.value) for org in Organization]
+    )
+    confirmation = forms.BooleanField(
+        required=True,
+        label=_("I understand what I am doing"),
+        help_text=_(
+            "This will delete all existing data, including members, users, subscriptions... and recreate them from scratch."
+        ),
+    )

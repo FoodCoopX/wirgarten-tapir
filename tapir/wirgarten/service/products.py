@@ -226,7 +226,7 @@ def get_active_and_future_subscriptions(
     :return: queryset of active and future subscriptions
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(parameter_cache)
 
     return Subscription.objects.filter(end_date__gte=reference_date).order_by(
         *product_type_order_by(
@@ -245,7 +245,7 @@ def get_active_subscriptions(
     :return: queryset of active subscription
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(parameter_cache)
 
     return get_active_and_future_subscriptions(reference_date, parameter_cache).filter(
         start_date__lte=reference_date

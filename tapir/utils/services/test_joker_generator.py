@@ -4,7 +4,7 @@ import random
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.models import GrowingPeriod, Member, Subscription
+from tapir.wirgarten.models import GrowingPeriod, Member
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.utils import get_today
 
@@ -16,15 +16,17 @@ class TestJokerGenerator:
             return
 
         for growing_period in GrowingPeriod.objects.filter(start_date__lte=get_today()):
-            for member in Member.objects.all():
-                subscriptions = Subscription.objects.filter(
-                    member=member, period=growing_period
-                )
-                if not subscriptions.exists():
+            for member in Member.objects.all().prefetch_related("subscription_set"):
+                subscriptions = [
+                    subscription
+                    for subscription in member.subscription_set.all()
+                    if subscription.period_id == growing_period.id
+                ]
+                if not subscriptions:
                     continue
-
-                start_date = subscriptions.order_by("start_date").first().start_date
-                end_date = subscriptions.order_by("end_date").last().end_date
+                subscriptions.sort(key=lambda subscription: subscription.start_date)
+                start_date = subscriptions[0].start_date
+                end_date = subscriptions[-1].end_date
                 nb_jokers = random.randint(
                     0, get_parameter_value(Parameter.JOKERS_AMOUNT_PER_CONTRACT)
                 )

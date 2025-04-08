@@ -327,15 +327,19 @@ class Member(TapirUser):
             )
 
     @classmethod
-    def generate_member_no(cls):
-        max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
-        return (max_member_no or 0) + 1
+    def generate_member_no(cls, max_member_number: int | None = None):
+        if max_member_number is None:
+            max_member_number = cls.objects.aggregate(models.Max("member_no"))[
+                "member_no__max"
+            ]
+        return (max_member_number or 0) + 1
 
     @transaction.atomic
     def save(self, *args, **kwargs):
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
-                Parameter.MEMBER_BYPASS_KEYCLOAK
+                Parameter.MEMBER_BYPASS_KEYCLOAK,
+                cache=kwargs.pop("parameter_cache", None),
             )
 
         super().save(*args, **kwargs)

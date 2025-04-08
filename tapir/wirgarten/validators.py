@@ -1,12 +1,13 @@
+import datetime
 import io
 import re
 from datetime import date
-from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from lxml import etree
 
 from tapir.wirgarten.models import GrowingPeriod
-from lxml import etree
 
 
 def validate_growing_period_overlap(start_date: date, end_date: date):
@@ -84,3 +85,13 @@ def validate_html(html: str):
     if position:
         tag = html[position[0] : position[1]]
         raise ValidationError(f"Unclosed HTML tag {tag} at {position}!")
+
+
+def validate_iso_datetime_or_disabled(date_as_string: str):
+    if date_as_string == "disabled":
+        return
+
+    try:
+        datetime.datetime.fromisoformat(date_as_string)
+    except ValueError as e:
+        raise ValidationError(f"Invalid date: {date_as_string}, error: {e}")

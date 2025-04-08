@@ -53,6 +53,7 @@ urlpatterns = [
     path("generic_exports/", include("tapir.generic_exports.urls")),
     path("subscriptions/", include("tapir.subscriptions.urls")),
     path("pickup_locations/", include("tapir.pickup_locations.urls")),
+    path("utils/", include("tapir.utils.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

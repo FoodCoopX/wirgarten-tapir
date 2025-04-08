@@ -6,6 +6,7 @@ from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import (
     get_parameter_meta,
 )
+from tapir.wirgarten.utils import is_debug_instance
 
 
 def create_field(param: TapirParameter):
@@ -82,6 +83,9 @@ class ParameterForm(forms.Form):
         super(ParameterForm, self).__init__(*args, **kwargs)
 
         params = TapirParameter.objects.order_by("category", "-order_priority", "key")
+
+        if not is_debug_instance():
+            params = params.filter(debug=False)
 
         categories = list(set(map(lambda p: p.category, params)))
         categories.sort()

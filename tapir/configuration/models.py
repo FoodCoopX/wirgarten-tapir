@@ -19,6 +19,7 @@ class TapirParameter(models.Model):
     order_priority = models.IntegerField(null=False, default=-1)
     value = models.CharField(max_length=4096, null=True)
     enabled = models.BooleanField(default=True)
+    debug = models.BooleanField(default=False)
     options: [tuple] = None
     validators: [callable] = []
 
