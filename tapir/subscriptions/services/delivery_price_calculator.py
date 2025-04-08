@@ -46,13 +46,7 @@ class DeliveryPriceCalculator:
         cls, subscription: Subscription, at_date: datetime.date
     ) -> Decimal:
         product_price = get_product_price(subscription.product, at_date).price
-        return (
-            product_price
-            * cls.get_number_of_months_in_growing_period(subscription.period)
-            / cls.get_number_of_deliveries_in_growing_period(
-                subscription.period, subscription.product.type.delivery_cycle
-            )
-        )
+        return product_price * 12 / 52
 
     @classmethod
     def get_number_of_deliveries_in_growing_period(

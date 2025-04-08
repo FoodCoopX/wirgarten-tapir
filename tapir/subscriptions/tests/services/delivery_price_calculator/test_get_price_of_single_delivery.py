@@ -19,10 +19,8 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
         mock_get_number_of_deliveries_in_growing_period: Mock,
     ):
         price_object = Mock()
-        price_object.price = 12
+        price_object.price = 10
         mock_get_product_price.return_value = price_object
-        mock_get_number_of_months_in_growing_period.return_value = 10
-        mock_get_number_of_deliveries_in_growing_period.return_value = 40
 
         subscription = Mock()
         product = Mock()
@@ -38,12 +36,8 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
             )
         )
 
-        self.assertEqual(3, result)  # 12 * 10 / 40 = 3
+        self.assertEqual(10 * 12 / 52, result)
 
         mock_get_product_price.assert_called_once_with(product, date)
-        mock_get_number_of_months_in_growing_period.assert_called_once_with(
-            growing_period
-        )
-        mock_get_number_of_deliveries_in_growing_period.assert_called_once_with(
-            growing_period, "weekly"
-        )
+        mock_get_number_of_months_in_growing_period.assert_not_called()
+        mock_get_number_of_deliveries_in_growing_period.assert_not_called()
