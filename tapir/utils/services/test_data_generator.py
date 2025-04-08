@@ -1,5 +1,6 @@
 import datetime
 
+import factory.random
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.accounts.models import EmailChangeRequest, TapirUser
@@ -63,6 +64,7 @@ class TestDataGenerator:
 
     @classmethod
     def generate_all(cls, override_generate_test_data_for: Organization | None = None):
+        factory.random.reseed_random("tapir")
         generate_test_data_for = cls.GENERATE_TEST_DATA_FOR
         if override_generate_test_data_for:
             generate_test_data_for = override_generate_test_data_for

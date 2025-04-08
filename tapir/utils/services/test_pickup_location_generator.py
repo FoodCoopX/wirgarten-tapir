@@ -1,7 +1,9 @@
 import datetime
+import random
 
 from environ import ImproperlyConfigured
 
+from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.utils.config import Organization
 from tapir.wirgarten.models import ProductType, PickupLocationOpeningTime
 from tapir.wirgarten.tests.factories import (
@@ -247,4 +249,346 @@ class TestPickupLocationGenerator:
 
     @classmethod
     def generate_pickup_locations_for_biotop(cls):
-        pass
+        biodelikat = PickupLocationFactory.create(
+            name="Biodelikat",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=biodelikat,
+            day_of_week=5,
+            open_time=datetime.time(hour=7),
+            close_time=datetime.time(hour=18),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=biodelikat,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=biodelikat,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=biodelikat,
+            day_of_week=4,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=19),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=biodelikat,
+            day_of_week=5,
+            open_time=datetime.time(hour=8),
+            close_time=datetime.time(hour=15),
+        )
+
+        zentrum = PickupLocationFactory.create(
+            name="Tölzer Zentrum",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=zentrum,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=zentrum,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=zentrum,
+            day_of_week=4,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=21),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=zentrum,
+            day_of_week=5,
+            open_time=datetime.time(hour=7),
+            close_time=datetime.time(hour=18),
+        )
+
+        badeteil = PickupLocationFactory.create(
+            name="Badeteil",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=badeteil,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=badeteil,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=badeteil,
+            day_of_week=4,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=21),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=badeteil,
+            day_of_week=5,
+            open_time=datetime.time(hour=6),
+            close_time=datetime.time(hour=18),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=badeteil,
+            day_of_week=6,
+            open_time=datetime.time(hour=6),
+            close_time=datetime.time(hour=18),
+        )
+
+        norden = PickupLocationFactory.create(
+            name="Tölzer Norden",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=norden,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=norden,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=norden,
+            day_of_week=4,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=21),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=norden,
+            day_of_week=5,
+            open_time=datetime.time(hour=7),
+            close_time=datetime.time(hour=18),
+        )
+
+        hofpunkt = PickupLocationFactory.create(
+            name="Biotop-Hofpunkt",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=hofpunkt,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=hofpunkt,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hofpunkt,
+            day_of_week=4,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hofpunkt,
+            day_of_week=5,
+            open_time=datetime.time(hour=0),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hofpunkt,
+            day_of_week=6,
+            open_time=datetime.time(hour=0),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hofpunkt,
+            day_of_week=1,
+            open_time=datetime.time(hour=0),
+            close_time=datetime.time(hour=8, minute=0),
+        )
+
+        warenhaus = PickupLocationFactory.create(
+            name="Grünes Warenhaus",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=warenhaus,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=warenhaus,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=warenhaus,
+            day_of_week=4,
+            open_time=datetime.time(hour=10),
+            close_time=datetime.time(hour=13, minute=0),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=warenhaus,
+            day_of_week=4,
+            open_time=datetime.time(hour=14, minute=30),
+            close_time=datetime.time(hour=18, minute=30),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=warenhaus,
+            day_of_week=5,
+            open_time=datetime.time(hour=8, minute=0),
+            close_time=datetime.time(hour=13, minute=0),
+        )
+
+        hochalmstrasse = PickupLocationFactory.create(
+            name="Hochalmstraße Lenggries",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=hochalmstrasse,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=hochalmstrasse,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hochalmstrasse,
+            day_of_week=4,
+            open_time=datetime.time(hour=12),
+            close_time=datetime.time(hour=21, minute=0),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hochalmstrasse,
+            day_of_week=5,
+            open_time=datetime.time(hour=7),
+            close_time=datetime.time(hour=18, minute=0),
+        )
+
+        schlossweg = PickupLocationFactory.create(
+            name="Schloßweg",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=schlossweg,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=schlossweg,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=schlossweg,
+            day_of_week=4,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=schlossweg,
+            day_of_week=5,
+            open_time=datetime.time(hour=0),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=schlossweg,
+            day_of_week=6,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=20, minute=0),
+        )
+
+        hotel = PickupLocationFactory.create(
+            name="Zauberkabinett",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=hotel,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=hotel,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hotel,
+            day_of_week=4,
+            open_time=datetime.time(hour=16),
+            close_time=datetime.time(hour=20, minute=0),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hotel,
+            day_of_week=5,
+            open_time=datetime.time(hour=7),
+            close_time=datetime.time(hour=16, minute=0),
+        )
+
+        penzberg = PickupLocationFactory.create(
+            name="Penzberg",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=penzberg,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=penzberg,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=penzberg,
+            day_of_week=4,
+            open_time=datetime.time(hour=16),
+            close_time=datetime.time(hour=18, minute=30),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=penzberg,
+            day_of_week=5,
+            open_time=datetime.time(hour=8, minute=30),
+            close_time=datetime.time(hour=14, minute=0),
+        )
+
+        tutzing = PickupLocationFactory.create(
+            name="Tutzing",
+            coords_lon=47 + random.random(),
+            coords_lat=11 + random.random(),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="kleinen Kiste",
+            pickup_location=tutzing,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationBasketCapacity.objects.create(
+            basket_size_name="normalen Kiste",
+            pickup_location=tutzing,
+            capacity=random.randint(10, 100),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=tutzing,
+            day_of_week=4,
+            open_time=datetime.time(hour=16, minute=30),
+            close_time=datetime.time(hour=19, minute=0),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=tutzing,
+            day_of_week=5,
+            open_time=datetime.time(hour=7, minute=0),
+            close_time=datetime.time(hour=17, minute=30),
+        )
