@@ -7,6 +7,9 @@ from tapir.log.models import LogEntry
 from tapir.utils.config import Organization
 from tapir.utils.services.test_configuration_generator import TestConfigurationGenerator
 from tapir.utils.services.test_joker_generator import TestJokerGenerator
+from tapir.utils.services.test_pickup_location_generator import (
+    TestPickupLocationGenerator,
+)
 from tapir.utils.services.test_product_generator import TestProductGenerator
 from tapir.utils.services.test_user_generator import TestUserGenerator
 from tapir.wirgarten.models import (
@@ -22,6 +25,7 @@ from tapir.wirgarten.models import (
     ProductPrice,
     Product,
     ProductCapacity,
+    PickupLocation,
 )
 from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
@@ -34,6 +38,7 @@ class TestDataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            PickupLocation,
             Subscription,
             ProductCapacity,
             GrowingPeriod,
@@ -64,6 +69,7 @@ class TestDataGenerator:
 
         cls.generate_growing_periods(generate_test_data_for)
         TestProductGenerator.generate_product_data(generate_test_data_for)
+        TestPickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
         TestUserGenerator.generate_users_and_subscriptions()
         TestConfigurationGenerator.update_settings_for_organization(
             generate_test_data_for
