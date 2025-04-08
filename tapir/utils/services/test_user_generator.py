@@ -30,6 +30,7 @@ from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
 )
 from tapir.wirgarten.service.products import get_current_growing_period
+from tapir.wirgarten.tasks import generate_member_numbers
 from tapir.wirgarten.utils import get_today
 
 
@@ -157,7 +158,7 @@ class TestUserGenerator:
                 members_that_need_a_pickup_location.add(member)
 
         cls.link_members_to_pickup_location(members_that_need_a_pickup_location)
-        # generate_member_numbers(print_results=False)
+        generate_member_numbers(print_results=False)
 
     @classmethod
     def get_random_date_in_range_biased_towards_lower_end(
