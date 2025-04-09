@@ -3,7 +3,7 @@ from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -66,7 +66,10 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_available_solidarity(reference_date: date = get_today()) -> float:
+def get_available_solidarity(reference_date: date | None = None) -> float:
+    if reference_date is None:
+        reference_date = get_today()
+
     val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
     if val == 0:  # disabled
         return 0.0
@@ -74,6 +77,10 @@ def get_available_solidarity(reference_date: date = get_today()) -> float:
         return 1000.0
     elif val == 2:  # automatic calculation
         return get_automatically_calculated_solidarity_excess(reference_date) or 0.0
+    else:
+        raise ImproperlyConfigured(
+            f"Unknown value for parameter HARVEST_NEGATIVE_SOLIPRICE_ENABLED: {val}"
+        )
 
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
