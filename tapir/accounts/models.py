@@ -21,7 +21,6 @@ from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.settings import DEBUG
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
-from tapir.wirgarten.utils import is_debug_instance
 
 log = logging.getLogger(__name__)
 
@@ -152,10 +151,10 @@ class KeycloakUser(AbstractUser):
 
                 self.keycloak_id = kc.create_user(data)
 
-                try:
-                    self.send_verify_email()
-                except Exception as e:
-                    if not is_debug_instance():
+                if not self.email.endswith("@example.com"):
+                    try:
+                        self.send_verify_email()
+                    except Exception as e:
                         print(
                             f"Failed to send verify email to new user: ",
                             e,

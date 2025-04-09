@@ -60,7 +60,10 @@ class DataGenerator:
         ]
 
         for model_class in model_classes:
-            model_class.objects.all().delete()
+            models = model_class.objects.all()
+            if model_class in [Member, TapirUser]:
+                models = models.exclude(email="techadmin@foodcoopx.de")
+            models.delete()
 
         print("Done")
 
