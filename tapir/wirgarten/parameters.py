@@ -897,7 +897,7 @@ Dein WirGarten-Team""",
                 datatype=TapirParameterDatatype.STRING,
                 initial_value="2025-04-01 09:30",
                 description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird. Format ist YYYY-MM-DD HH:MM. "
-                "Es kann auch 'disabled' eingetragen werden, dann werden die echte Datum und Uhrzeit verwendet."
+                "Es kann auch 'disabled' eingetragen werden, dann werden die echte Datum und Uhrzeit verwendet. "
                 "Dieses Parameter ist nur bei Test-Instanzen verfügbar.",
                 category=ParameterCategory.TEST,
                 order_priority=1,

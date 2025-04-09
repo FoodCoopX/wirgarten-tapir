@@ -10,7 +10,7 @@ from faker import Faker
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
-from tapir.utils.shortcuts import get_timezone_aware_datetime
+from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.subscription import SOLIDARITY_PRICES
 from tapir.wirgarten.models import (
@@ -41,26 +41,20 @@ class UserGenerator:
     future_growing_period = None
 
     @classmethod
-    def get_past_growing_period(cls):
-        if cls.past_growing_period is None:
-            cls.past_growing_period = GrowingPeriod.objects.order_by(
-                "start_date"
-            ).first()
-        return cls.past_growing_period
+    def get_past_growing_period(cls, cache: Dict):
+        return get_from_cache_or_compute(
+            cache,
+            "past_growing_period",
+            lambda: GrowingPeriod.objects.order_by("start_date").first(),
+        )
 
     @classmethod
-    def get_current_growing_period(cls):
-        if cls.current_growing_period is None:
-            cls.current_growing_period = get_current_growing_period()
-        return cls.current_growing_period
-
-    @classmethod
-    def get_future_growing_period(cls):
-        if cls.future_growing_period is None:
-            cls.future_growing_period = GrowingPeriod.objects.order_by(
-                "start_date"
-            ).last()
-        return cls.future_growing_period
+    def get_future_growing_period(cls, cache):
+        return get_from_cache_or_compute(
+            cache,
+            "future_growing_period",
+            lambda: GrowingPeriod.objects.order_by("start_date").last(),
+        )
 
     @staticmethod
     def get_test_users():
@@ -106,7 +100,7 @@ class UserGenerator:
             json_user = JsonUser.from_parsed_user(parsed_user)
             json_user.date_joined = get_timezone_aware_datetime(
                 cls.get_random_date_in_range_biased_towards_lower_end(
-                    cls.get_past_growing_period().start_date, get_today(cache)
+                    cls.get_past_growing_period(cache).start_date, get_today(cache)
                 ),
                 datetime.time(hour=random.randint(0, 23), minute=random.randint(0, 59)),
             )
@@ -170,7 +164,7 @@ class UserGenerator:
         additional_products: List[Product],
     ):
         mandate_ref = get_or_create_mandate_ref(member, cache)
-        future_growing_period = cls.get_future_growing_period()
+        future_growing_period = cls.get_future_growing_period(cache)
         start_date = get_next_contract_start_date(
             cls.get_random_date_in_range_biased_towards_lower_end(
                 member.date_joined.date(), future_growing_period.end_date
@@ -184,8 +178,8 @@ class UserGenerator:
         )[0]
         already_subscribed_products_ids = set()
 
-        previous_growing_period = cls.get_past_growing_period()
-        current_growing_period = cls.get_current_growing_period()
+        previous_growing_period = cls.get_past_growing_period(cache)
+        current_growing_period = get_current_growing_period(cache=cache)
 
         min_shares = 0
         for _ in range(number_product_subscriptions):
