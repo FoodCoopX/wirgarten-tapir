@@ -31,29 +31,32 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
     def test_extendSubscriptionsWithThoseThatWillBeRenewed_renewalWillHappen_returnsExtendedQuerySet(
         self,
     ):
+        reference_date = datetime.date(year=2024, month=1, day=1)
+
         result = PickupLocationCapacityModeBasketChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.none(),
-            reference_date=datetime.date(year=2024, month=1, day=1),
+            subscriptions=set(),
+            reference_date=reference_date,
             members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            cache={},
         )
 
-        self.assertEqual(1, result.count())
+        self.assertEqual(1, len(result))
 
     def test_extendSubscriptionsWithThoseThatWillBeRenewed_subscriptionCancelled_dontExtendQuerySet(
         self,
     ):
-        Subscription.objects.update(
-            cancellation_ts=datetime.datetime(year=2024, month=1, day=1)
-        )
+        reference_date = datetime.date(year=2024, month=1, day=1)
+
+        Subscription.objects.update(cancellation_ts=reference_date)
+
         result = PickupLocationCapacityModeBasketChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.none(),
-            reference_date=datetime.date(year=2024, month=1, day=1),
+            subscriptions=set(),
+            reference_date=reference_date,
             members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            cache={},
         )
 
-        self.assertEqual(0, result.count())
+        self.assertEqual(0, len(result))
 
     def test_extendSubscriptionsWithThoseThatWillBeRenewed_subscriptionIsAlreadyRenewed_dontExtendQuerySet(
         self,
@@ -63,15 +66,18 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
             member=Member.objects.get(),
             product=Product.objects.get(),
         )
+
+        reference_date = datetime.date(year=2024, month=1, day=1)
+
         result = PickupLocationCapacityModeBasketChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.filter(
-                period=self.current_growing_period
+            subscriptions=set(
+                Subscription.objects.filter(period=self.current_growing_period)
             ),
-            reference_date=datetime.date(year=2024, month=1, day=1),
+            reference_date=reference_date,
             members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            cache={},
         )
 
-        self.assertEqual(1, result.count())
+        self.assertEqual(1, len(result))
         self.assertNotIn(self.past_subscription, result)
         self.assertIn(current_subscription, result)

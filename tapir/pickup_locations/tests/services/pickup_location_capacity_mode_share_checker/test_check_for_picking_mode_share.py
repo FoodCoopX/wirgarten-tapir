@@ -39,11 +39,16 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         mock_check_capacity_for_product_type.return_value = True
 
+        cache = {}
+        pickup_location_cache = {}
+
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertTrue(result)
@@ -54,6 +59,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
     @patch.object(
@@ -81,11 +88,16 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         mock_check_capacity_for_product_type.side_effect = [True, False]
 
+        cache = {}
+        pickup_location_cache = {}
+
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertFalse(result)
@@ -98,6 +110,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    global_cache=cache,
+                    pickup_location_cache=pickup_location_cache,
                 ),
                 call(
                     product_type=product_type_2,
@@ -105,6 +119,8 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    global_cache=cache,
+                    pickup_location_cache=pickup_location_cache,
                 ),
             ],
             any_order=True,

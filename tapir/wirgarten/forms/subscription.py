@@ -69,15 +69,12 @@ SOLIDARITY_PRICES = [
 
 def get_available_solidarity(
     reference_date: date | None = None,
-    parameter_cache: Dict | None = None,
-    product_price_cache: Dict | None = None,
+    cache: Dict | None = None,
 ) -> float:
     if reference_date is None:
         reference_date = get_today()
 
-    val = get_parameter_value(
-        Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, parameter_cache
-    )
+    val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache)
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
@@ -86,8 +83,7 @@ def get_available_solidarity(
         return (
             get_automatically_calculated_solidarity_excess(
                 reference_date,
-                parameter_cache=parameter_cache,
-                product_price_cache=product_price_cache,
+                cache=cache,
             )
             or 0.0
         )
@@ -175,8 +171,7 @@ class BaseProductForm(forms.Form):
         for prod_field in self.products.keys():
             self.colspans[prod_field] = self.n_columns // len(self.products)
 
-        parameter_cache = {}
-        product_price_cache = {}
+        cache = {}
         if self.choose_growing_period:
             available_growing_periods = GrowingPeriod.objects.filter(
                 end_date__gte=self.start_date,
@@ -186,12 +181,14 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{get_available_solidarity(start_date, parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
-                    ",", "."
+                solidarity_total = (
+                    f"{get_available_solidarity(start_date,cache=cache)}".replace(
+                        ",", "."
+                    )
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date, parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
+                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date, cache=cache)}".replace(
                     ",", "."
                 )
                 self.free_capacity.append(free_capacity)
@@ -217,13 +214,13 @@ class BaseProductForm(forms.Form):
         else:
             self.growing_period = get_current_growing_period(self.start_date)
             self.solidarity_total = [
-                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date), parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
+                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date), cache=cache)}".replace(
                     ",", "."
                 )
             ]
 
             self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date), parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date), cache=cache)}".replace(
                     ",", "."
                 )
             ]
@@ -640,6 +637,7 @@ def validate_pickup_location_capacity(
         ordered_products_to_quantity_map=ordered_products_to_quantity_map,
         already_registered_member=member,
         subscription_start=start_date,
+        cache={},
     ):
         form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
         form.add_error(

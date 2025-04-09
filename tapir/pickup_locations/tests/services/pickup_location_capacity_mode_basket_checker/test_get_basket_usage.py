@@ -8,7 +8,7 @@ from tapir.wirgarten.tests.factories import ProductFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestGetProductIdToBasketSizeUsageMap(TapirIntegrationTest):
+class TestGetBasketUsage(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
@@ -38,32 +38,50 @@ class TestGetProductIdToBasketSizeUsageMap(TapirIntegrationTest):
             ]
         )
 
-    def test_getProductIdToBasketSizeUsageMap_default_returnsCorrectMap(self):
-        result = PickupLocationCapacityModeBasketChecker.get_product_id_to_basket_size_usage_map(
-            "small"
+    def test_getBasketUsage_default_returnsCorrectValues(self):
+        self.assertEqual(
+            1,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_s, "small"
+            ),
         )
         self.assertEqual(
-            {self.product_s.id: 1, self.product_m.id: 0, self.product_l.id: 1}, result
-        )
-
-    def test_getProductIdToBasketSizeUsageMap_theIsAnEquivalenceForANonExistingBasketSize_resultNotAffected(
-        self,
-    ):
-        ProductBasketSizeEquivalence.objects.create(
-            basket_size_name="big", product=self.product_l, quantity=1
-        )
-
-        result = PickupLocationCapacityModeBasketChecker.get_product_id_to_basket_size_usage_map(
-            "small"
+            0,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_s, "medium"
+            ),
         )
         self.assertEqual(
-            {self.product_s.id: 1, self.product_m.id: 0, self.product_l.id: 1}, result
+            0,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_m, "small"
+            ),
+        )
+        self.assertEqual(
+            1,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_m, "medium"
+            ),
+        )
+        self.assertEqual(
+            1,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_l, "small"
+            ),
+        )
+        self.assertEqual(
+            1,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_l, "medium"
+            ),
         )
 
-    def test_getProductIdToBasketSizeUsageMap_someProductsAreMissingTheEquivalenceObject_defaultsToZero(
+    def test_getBasketUsage_someProductsAreMissingTheEquivalenceObject_defaultsToZero(
         self,
     ):
-        result = PickupLocationCapacityModeBasketChecker.get_product_id_to_basket_size_usage_map(
-            "small"
+        self.assertEqual(
+            0,
+            PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
+                {}, self.product_m, "small"
+            ),
         )
-        self.assertEqual(0, result[self.product_m.id])

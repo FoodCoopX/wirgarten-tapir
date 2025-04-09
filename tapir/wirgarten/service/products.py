@@ -43,7 +43,7 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
 
 
 def product_type_order_by(
-    id_field: str = "id", name_field: str = "name", parameter_cache: Dict | None = None
+    id_field: str = "id", name_field: str = "name", cache: Dict | None = None
 ):
     """
     The result of the function is meant to be passed to the order_by clause of QuerySets referencing
@@ -65,7 +65,7 @@ def product_type_order_by(
                 When(
                     **{
                         id_field: get_parameter_value(
-                            Parameter.COOP_BASE_PRODUCT_TYPE, parameter_cache
+                            Parameter.COOP_BASE_PRODUCT_TYPE, cache
                         )
                     },
                     then=Value(0),
@@ -127,15 +127,20 @@ def get_current_growing_period(
     def compute():
         growing_periods = get_from_cache_or_compute(
             cache,
-            "growing_periods",
-            lambda: list(GrowingPeriod.objects.order_by("start_date")),
+            "all_growing_periods",
+            lambda: set(GrowingPeriod.objects.order_by("start_date")),
         )
         for growing_period in growing_periods:
             if growing_period.start_date <= reference_date <= growing_period.end_date:
                 return growing_period
         return None
 
-    return get_from_cache_or_compute(cache, reference_date, compute)
+    growing_periods_by_date_cache = get_from_cache_or_compute(
+        cache, "growing_periods_by_date", lambda: {}
+    )
+    return get_from_cache_or_compute(
+        growing_periods_by_date_cache, reference_date, compute
+    )
 
 
 @transaction.atomic
@@ -219,7 +224,7 @@ def get_active_product_capacities(reference_date: date = None):
 
 
 def get_active_and_future_subscriptions(
-    reference_date: date = None, parameter_cache: Dict | None = None
+    reference_date: date = None, cache: Dict | None = None
 ):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
@@ -228,18 +233,14 @@ def get_active_and_future_subscriptions(
     :return: queryset of active and future subscriptions
     """
     if reference_date is None:
-        reference_date = get_today(parameter_cache)
+        reference_date = get_today(cache)
 
     return Subscription.objects.filter(end_date__gte=reference_date).order_by(
-        *product_type_order_by(
-            "product__type_id", "product__type__name", parameter_cache
-        )
+        *product_type_order_by("product__type_id", "product__type__name", cache)
     )
 
 
-def get_active_subscriptions(
-    reference_date: date = None, parameter_cache: Dict | None = None
-):
+def get_active_subscriptions(reference_date: date = None, cache: Dict | None = None):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
@@ -247,9 +248,9 @@ def get_active_subscriptions(
     :return: queryset of active subscription
     """
     if reference_date is None:
-        reference_date = get_today(parameter_cache)
+        reference_date = get_today(cache)
 
-    return get_active_and_future_subscriptions(reference_date, parameter_cache).filter(
+    return get_active_and_future_subscriptions(reference_date, cache).filter(
         start_date__lte=reference_date
     )
 
@@ -284,8 +285,7 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
 def get_product_price(
     product: str | Product,
     reference_date: date = None,
-    parameter_cache: Dict | None = None,
-    product_price_cache: Dict | None = None,
+    cache: Dict | None = None,
 ):
     """
     Returns the currently active product price.
@@ -295,12 +295,13 @@ def get_product_price(
     :return: the ProductPrice instance
     """
     if reference_date is None:
-        reference_date = get_today(parameter_cache)
+        reference_date = get_today(cache)
     if isinstance(product, Product):
         product = product.id
 
-    cache_for_this_product = get_from_cache_or_compute(
-        product_price_cache, product, lambda: {}
+    cache_for_this_product = get_from_cache_or_compute(cache, product, lambda: {})
+    price_by_date_cache = get_from_cache_or_compute(
+        cache_for_this_product, "price_by_date", lambda: {}
     )
 
     def get_price():
@@ -316,7 +317,7 @@ def get_product_price(
         # Otherwise, return the price valid up to the reference date
         return prices.filter(valid_from__lte=reference_date).first()
 
-    return get_from_cache_or_compute(cache_for_this_product, reference_date, get_price)
+    return get_from_cache_or_compute(price_by_date_cache, reference_date, get_price)
 
 
 @transaction.atomic
@@ -593,8 +594,7 @@ def create_or_update_default_tax_rate(
 def get_free_product_capacity(
     product_type_id: str,
     reference_date: date = None,
-    parameter_cache: Dict | None = None,
-    product_price_cache: Dict | None = None,
+    cache: Dict | None = None,
 ):
     if reference_date is None:
         reference_date = get_today()
@@ -610,12 +610,7 @@ def get_free_product_capacity(
     used_capacity = sum(
         map(
             lambda sub: float(
-                get_product_price(
-                    sub.product_id,
-                    reference_date,
-                    parameter_cache=parameter_cache,
-                    product_price_cache=product_price_cache,
-                ).size
+                get_product_price(sub.product_id, reference_date, cache=cache).size
             )
             * sub.quantity,
             get_active_subscriptions(reference_date).filter(
@@ -636,7 +631,7 @@ def get_smallest_product_size(
         product_type = product_type.id
 
     products = Product.objects.filter(type__id=product_type)
-    if products.count() == 0:
+    if not products.exists():
         raise ObjectDoesNotExist("No products found")
 
     all_prices = ProductPrice.objects.filter(product__type__id=product_type)
@@ -644,12 +639,13 @@ def get_smallest_product_size(
         return all_prices[0].size
 
     smallest_size = float("inf")
-    prices = ProductPrice.objects.filter(
-        product__in=products, valid_from__lte=reference_date
-    ).order_by("size")
-    smallest_size_object = prices.first()
-    if smallest_size_object is not None:
-        smallest_size = prices.first().size
+    for product in products:
+        prices = ProductPrice.objects.filter(
+            product=product, valid_from__lte=reference_date
+        ).order_by("valid_from")
+        if prices.count() == 0:
+            continue
+        smallest_size = min(smallest_size, prices.last().size)
 
     if smallest_size == float("inf"):
         raise ObjectDoesNotExist("No price found")
@@ -660,8 +656,7 @@ def get_smallest_product_size(
 def is_product_type_available(
     product_type: ProductType | str,
     reference_date: date = None,
-    parameter_cache: Dict | None = None,
-    product_price_cache: Dict | None = None,
+    cache: Dict | None = None,
 ) -> bool:
     if reference_date is None:
         reference_date = get_today()
@@ -675,6 +670,5 @@ def is_product_type_available(
     return get_free_product_capacity(
         product_type_id=product_type,
         reference_date=reference_date,
-        parameter_cache=parameter_cache,
-        product_price_cache=product_price_cache,
+        cache=cache,
     ) >= get_smallest_product_size(product_type, reference_date)

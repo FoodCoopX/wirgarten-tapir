@@ -31,7 +31,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         subscription_start = Mock()
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
-        parameter_cache = Mock()
+        cache = {}
+        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -39,7 +40,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-            parameter_cache=parameter_cache,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertFalse(result)
@@ -48,12 +50,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
-            parameter_cache=parameter_cache,
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
@@ -84,6 +88,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         subscription_start = Mock()
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
+        cache = {}
+        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -91,6 +97,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertTrue(result)
@@ -99,12 +107,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
-            parameter_cache=None,
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
@@ -135,6 +145,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         subscription_start = Mock()
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
+        cache = {}
+        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -142,6 +154,8 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertTrue(result)
@@ -150,12 +164,14 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
+            global_cache=cache,
+            pickup_location_cache=pickup_location_cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
             subscription_start=subscription_start,
             product_type=product_type,
-            parameter_cache=None,
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,

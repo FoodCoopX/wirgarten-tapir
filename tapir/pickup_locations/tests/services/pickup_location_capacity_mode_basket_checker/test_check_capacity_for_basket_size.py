@@ -38,6 +38,7 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
         )
 
         self.assertFalse(result)
@@ -52,10 +53,12 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             basket_size="test_size",
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             basket_size="test_size",
+            cache=cache,
         )
 
     @patch.object(
@@ -88,6 +91,7 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
         )
 
         self.assertTrue(result)
@@ -102,10 +106,12 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             basket_size="test_size",
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             basket_size="test_size",
+            cache=cache,
         )
 
     @patch.object(
@@ -138,6 +144,7 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
         )
 
         self.assertTrue(result)
@@ -152,8 +159,10 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             member=member,
             subscription_start=subscription_start,
             basket_size="test_size",
+            cache=cache,
         )
         mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             basket_size="test_size",
+            cache=cache,
         )

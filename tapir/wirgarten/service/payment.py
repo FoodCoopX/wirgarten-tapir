@@ -171,8 +171,7 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
 
 def get_automatically_calculated_solidarity_excess(
     reference_date: date = None,
-    parameter_cache: Dict | None = None,
-    product_price_cache: Dict | None = None,
+    cache: Dict | None = None,
 ) -> float:
     """
     Returns the total solidarity price sum for the active subscriptions during the reference date.
@@ -191,11 +190,10 @@ def get_automatically_calculated_solidarity_excess(
             * float(
                 get_product_price(
                     sub["product"],
-                    parameter_cache=parameter_cache,
-                    product_price_cache=product_price_cache,
+                    cache=cache,
                 ).price
             ),
-            get_active_and_future_subscriptions(reference_date, parameter_cache).values(
+            get_active_and_future_subscriptions(reference_date, cache).values(
                 "quantity", "product", "solidarity_price"
             ),
         )

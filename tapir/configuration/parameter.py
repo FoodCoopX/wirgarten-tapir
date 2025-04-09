@@ -76,10 +76,11 @@ def get_parameter_value(key: str, cache: Dict | None = None):
     def compute():
         tapir_parameter = TapirParameter.objects.filter(key=key).first()
         if tapir_parameter is None:
-            raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+            raise KeyError(f"Parameter with key '{key}' does not exist.")
         return tapir_parameter.get_value()
 
-    return get_from_cache_or_compute(cache, key, compute)
+    parameter_cache = get_from_cache_or_compute(cache, "parameter_cache", lambda: {})
+    return get_from_cache_or_compute(parameter_cache, key, compute)
 
 
 def parameter_definition(

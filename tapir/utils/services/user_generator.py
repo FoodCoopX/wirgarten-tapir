@@ -83,11 +83,9 @@ class UserGenerator:
 
         parsed_users = cls.get_test_users()
 
-        parameter_cache = {}
-        growing_period_cache = {}
-        mandate_ref_cache = {}
+        cache = {}
         base_product_type = ProductType.objects.get(
-            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE, parameter_cache)
+            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE, cache)
         )
 
         products_from_base_type = HarvestShareProduct.objects.filter(
@@ -108,7 +106,7 @@ class UserGenerator:
             json_user = JsonUser.from_parsed_user(parsed_user)
             json_user.date_joined = get_timezone_aware_datetime(
                 cls.get_random_date_in_range_biased_towards_lower_end(
-                    cls.get_past_growing_period().start_date, get_today(parameter_cache)
+                    cls.get_past_growing_period().start_date, get_today(cache)
                 ),
                 datetime.time(hour=random.randint(0, 23), minute=random.randint(0, 59)),
             )
@@ -128,32 +126,26 @@ class UserGenerator:
             copy_user_info(json_user, member)
             member.save(
                 initial_password=member.email.split("@")[0],
-                parameter_cache=parameter_cache,
+                cache=cache,
             )
             member.created_at = json_user.date_joined
-            member.save(parameter_cache=parameter_cache)
+            member.save(cache=cache)
 
             min_coop_shares = cls.create_subscriptions_for_user(
                 member,
                 create_subs_for_additional_products=False,
-                parameter_cache=parameter_cache,
-                growing_period_cache=growing_period_cache,
+                cache=cache,
                 products_from_base_type=products_from_base_type,
                 additional_products=additional_products,
-                mandate_ref_cache=mandate_ref_cache,
             )
-            cls.create_coop_shares_for_user(
-                member, min_coop_shares, parameter_cache, mandate_ref_cache
-            )
+            cls.create_coop_shares_for_user(member, min_coop_shares, cache)
             if min_coop_shares > 0:
                 cls.create_subscriptions_for_user(
                     member,
                     create_subs_for_additional_products=True,
-                    parameter_cache=parameter_cache,
-                    growing_period_cache=growing_period_cache,
+                    cache=cache,
                     products_from_base_type=products_from_base_type,
                     additional_products=additional_products,
-                    mandate_ref_cache=mandate_ref_cache,
                 )
                 members_that_need_a_pickup_location.add(member)
 
@@ -173,22 +165,18 @@ class UserGenerator:
         cls,
         member: Member,
         create_subs_for_additional_products: bool,
-        parameter_cache: Dict,
-        growing_period_cache: Dict,
+        cache: Dict,
         products_from_base_type: List[HarvestShareProduct],
         additional_products: List[Product],
-        mandate_ref_cache: Dict,
     ):
-        mandate_ref = get_or_create_mandate_ref(
-            member, parameter_cache, mandate_ref_cache
-        )
+        mandate_ref = get_or_create_mandate_ref(member, cache)
         future_growing_period = cls.get_future_growing_period()
         start_date = get_next_contract_start_date(
             cls.get_random_date_in_range_biased_towards_lower_end(
                 member.date_joined.date(), future_growing_period.end_date
             )
         )
-        growing_period = get_current_growing_period(start_date, growing_period_cache)
+        growing_period = get_current_growing_period(start_date, cache)
         end_date = growing_period.end_date
 
         number_product_subscriptions = random.choices(
@@ -260,13 +248,7 @@ class UserGenerator:
         return min_shares
 
     @classmethod
-    def create_coop_shares_for_user(
-        cls,
-        member: Member,
-        min_shares: int,
-        parameter_cache: Dict,
-        mandate_ref_cache: Dict,
-    ):
+    def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: Dict):
         shares = min_shares
         if random.random() < 0.5:
             shares += random.randint(0, 10)
@@ -277,8 +259,7 @@ class UserGenerator:
             quantity=shares,
             member=member,
             start_date=member.date_joined.date(),
-            parameter_cache=parameter_cache,
-            mandate_ref_cache=mandate_ref_cache,
+            cache=cache,
         )
 
     @classmethod

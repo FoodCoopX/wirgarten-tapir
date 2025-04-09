@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Set
+from typing import Dict, Set, List
 
 from django.db.models import QuerySet, OuterRef, Subquery
 
@@ -46,27 +46,56 @@ class MemberPickupLocationService:
         cls,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
-        cache_member_pickup_location_at_date: Dict,
+        cache: Dict,
     ) -> Set[Member]:
-        def compute():
-            return list(
-                cls.annotate_member_queryset_with_pickup_location_at_date(
-                    Member.objects.all(), reference_date
+        def build_if_cache_miss():
+            members_at_pickup_location = set()
+            for (
+                member,
+                member_pickup_locations,
+            ) in cls.get_member_pickup_locations_objects_by_member(cache).items():
+                member_pickup_locations = [
+                    member_pickup_location
+                    for member_pickup_location in member_pickup_locations
+                    if member_pickup_location.valid_from <= reference_date
+                ]
+                if len(member_pickup_locations) == 0:
+                    continue
+                member_pickup_locations.sort(
+                    key=lambda member_pickup_location: member_pickup_location.valid_from
                 )
-            )
+                if member_pickup_locations[0].pickup_location_id == pickup_location.id:
+                    members_at_pickup_location.add(member)
+            return members_at_pickup_location
 
-        annotated_members = get_from_cache_or_compute(
-            cache_member_pickup_location_at_date,
-            reference_date,
-            compute,
+        cache_for_pickup_location = get_from_cache_or_compute(
+            cache, pickup_location, lambda: {}
         )
 
-        return {
-            member
-            for member in annotated_members
-            if getattr(
-                member,
-                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
-            )
-            == pickup_location.id
-        }
+        members_at_date = get_from_cache_or_compute(
+            cache_for_pickup_location, "members_at_date", lambda: {}
+        )
+
+        return get_from_cache_or_compute(
+            members_at_date, reference_date, build_if_cache_miss
+        )
+
+    @classmethod
+    def get_member_pickup_locations_objects_by_member(
+        cls, cache: Dict
+    ) -> Dict[str, List[MemberPickupLocation]]:
+        def build_if_cache_miss():
+            member_pickup_locations = {}
+            for member_pickup_location in MemberPickupLocation.objects.order_by(
+                "valid_from"
+            ):
+                if member_pickup_location.member_id not in member_pickup_locations:
+                    member_pickup_locations[member_pickup_location.member_id] = []
+                member_pickup_locations[member_pickup_location.member_id].append(
+                    member_pickup_location
+                )
+            return member_pickup_locations
+
+        return get_from_cache_or_compute(
+            cache, "member_pickup_locations_objects_by_member", build_if_cache_miss
+        )

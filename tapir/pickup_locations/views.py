@@ -30,7 +30,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.utils.shortcuts import get_monday, dict_get_or_set
+from tapir.utils.shortcuts import get_monday, dict_get_or_set, get_from_cache_or_compute
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
@@ -209,13 +209,11 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
         current_date = get_today()
-        cache_by_product_type = {}
+        cache = {}
         while current_date < max_date:
             values = []
             for product_type in product_types:
                 capacity = capacities_by_product_type.get(product_type, 0)
-                if product_type not in cache_by_product_type.keys():
-                    cache_by_product_type[product_type] = {}
                 if capacity is None:
                     values.append("Unbegrenzt")
                 else:
@@ -226,7 +224,10 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 pickup_location=pickup_location,
                                 product_type=product_type,
                                 reference_date=current_date,
-                                cache=cache_by_product_type[product_type],
+                                global_cache=cache,
+                                pickup_location_cache=get_from_cache_or_compute(
+                                    cache, pickup_location, lambda: {}
+                                ),
                             ),
                         )
                     )

@@ -13,7 +13,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_ke
 
 
 class TestGetFreeProductCapacity(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         set_bypass_keycloak()
 
     def test_getSmallestProductSize_onlyOneProductPrice_ignoreStartDate(self):

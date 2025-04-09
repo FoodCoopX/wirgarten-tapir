@@ -47,20 +47,20 @@ def is_debug_instance():
     return getattr(settings, "DEBUG", False)
 
 
-def get_today(parameter_cache: Dict | None = None) -> datetime.date:
+def get_today(cache: Dict | None = None) -> datetime.date:
     if is_debug_instance():
-        return get_debug_now(parameter_cache).date()
+        return get_debug_now(cache).date()
     return timezone.localdate()
 
 
-def get_now(parameter_cache: Dict | None = None) -> datetime.datetime:
+def get_now(cache: Dict | None = None) -> datetime.datetime:
     if is_debug_instance():
-        return get_debug_now(parameter_cache)
+        return get_debug_now(cache)
     return timezone.now()
 
 
-def get_debug_now(parameter_cache: Dict | None = None) -> datetime.datetime:
-    date_as_string = get_parameter_value(Parameter.TESTS_OVERRIDE_DATE, parameter_cache)
+def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
+    date_as_string = get_parameter_value(Parameter.TESTS_OVERRIDE_DATE, cache)
     if date_as_string == "disabled":
         return timezone.now()
 

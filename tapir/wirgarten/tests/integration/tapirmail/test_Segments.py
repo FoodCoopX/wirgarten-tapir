@@ -1,9 +1,10 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
+from icecream import ic
 from tapir_mail.service.segment import resolve_segments
 
-from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.models import Subscription, CoopShareTransaction
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.tapirmail import Segments, _register_segments
 from tapir.wirgarten.tests.factories import (
@@ -53,7 +54,9 @@ class SegmentTest(TapirIntegrationTest):
     def test_resolveSegment_nonCoopMembers_correctResult(self):
         expected_member_ids = [self.member_without_shares.id]
         segment_members = resolve_segments(add_segments=[Segments.NON_COOP_MEMBERS])
-
+        ic(expected_member_ids, self.ids(segment_members))
+        ic(self.member_without_shares, segment_members)
+        ic(CoopShareTransaction.objects.all())
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withActiveSubscription_correctResult(self):

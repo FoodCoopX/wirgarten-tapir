@@ -46,6 +46,7 @@ class TestCalculateCapacityUsedByTheOrderedProducts(TapirIntegrationTest):
             PickupLocationCapacityModeBasketChecker.calculate_capacity_used_by_the_ordered_products(
                 ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                 basket_size="small",
+                cache={},
             ),
         )
         self.assertEqual(
@@ -53,5 +54,6 @@ class TestCalculateCapacityUsedByTheOrderedProducts(TapirIntegrationTest):
             PickupLocationCapacityModeBasketChecker.calculate_capacity_used_by_the_ordered_products(
                 ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                 basket_size="medium",
+                cache={},
             ),
         )
