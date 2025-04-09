@@ -1,7 +1,9 @@
 import datetime
+from typing import Dict, Set
 
 from django.db.models import QuerySet, OuterRef, Subquery
 
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
 
 
@@ -41,12 +43,30 @@ class MemberPickupLocationService:
 
     @classmethod
     def get_members_at_pickup_location(
-        cls, pickup_location: PickupLocation, reference_date: datetime.date
-    ) -> QuerySet[Member]:
-        return cls.annotate_member_queryset_with_pickup_location_at_date(
-            Member.objects.all(), reference_date
-        ).filter(
-            **{
-                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
-            }
+        cls,
+        pickup_location: PickupLocation,
+        reference_date: datetime.date,
+        cache_member_pickup_location_at_date: Dict,
+    ) -> Set[Member]:
+        def compute():
+            return list(
+                cls.annotate_member_queryset_with_pickup_location_at_date(
+                    Member.objects.all(), reference_date
+                )
+            )
+
+        annotated_members = get_from_cache_or_compute(
+            cache_member_pickup_location_at_date,
+            reference_date,
+            compute,
         )
+
+        return {
+            member
+            for member in annotated_members
+            if getattr(
+                member,
+                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
+            )
+            == pickup_location.id
+        }

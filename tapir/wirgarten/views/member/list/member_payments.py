@@ -1,5 +1,4 @@
 from collections import defaultdict
-from collections import defaultdict
 from copy import copy
 from datetime import datetime
 from urllib.parse import unquote

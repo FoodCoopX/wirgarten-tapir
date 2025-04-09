@@ -15,6 +15,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
@@ -32,6 +33,7 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -66,12 +68,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 product_type=ProductType.objects.get(id=capa["product_type_id"]),
                 reference_date=next_month,
             )
-            / float(
-                get_product_price(
-                    base_product,
-                    next_delivery_date,
-                ).size
-            ),
+            / float(get_product_price(base_product, next_delivery_date).size),
             2,
         )
 
@@ -83,12 +80,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 product_type=ProductType.objects.get(id=capa["product_type_id"]),
                 reference_date=next_month,
             )
-            / float(
-                get_product_price(
-                    base_product,
-                    next_month,
-                ).size
-            ),
+            / float(get_product_price(base_product, next_month).size),
             2,
         )
 
@@ -178,12 +170,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             "pickup_location_id",
             "product_type__icon_link",
         )
-
+        parameter_cache = {}
         selected_product_types = {
             product_type_name: sum(
                 map(
                     lambda subscription: float(
-                        get_product_price(subscription.product).size
+                        get_product_price(
+                            subscription.product,
+                            parameter_cache=parameter_cache,
+                        ).size
                     )
                     * (subscription.quantity or 0),
                     subscriptions,
@@ -225,7 +220,26 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         member: Member | None,
     ):
         possible_location_ids = []
+        global_cache = {}
+        global_cache["active_and_future_subscriptions"] = list(
+            get_active_and_future_subscriptions(
+                reference_date,
+                get_from_cache_or_compute(global_cache, "parameter_cache", lambda: {}),
+            ).select_related("member")
+        )
+        member_pickup_locations = {}
+        for member_pickup_location in MemberPickupLocation.objects.order_by(
+            "valid_from"
+        ):
+            if member_pickup_location.member_id not in member_pickup_locations:
+                member_pickup_locations[member_pickup_location.member_id] = []
+            member_pickup_locations[member_pickup_location.member_id].append(
+                member_pickup_location
+            )
+        global_cache["member_pickup_locations"] = member_pickup_locations
+
         for pickup_location in PickupLocation.objects.all():
+            pickup_location_cache = {}
             ordered_products_to_quantity_map = {
                 subscription.product: subscription.quantity
                 for subscription in subscriptions
@@ -235,6 +249,8 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 ordered_products_to_quantity_map=ordered_products_to_quantity_map,
                 already_registered_member=member,
                 subscription_start=reference_date,
+                global_cache=global_cache,
+                pickup_location_cache=pickup_location_cache,
             ):
                 possible_location_ids.append(pickup_location.id)
         return PickupLocation.objects.filter(id__in=possible_location_ids)

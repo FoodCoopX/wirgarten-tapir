@@ -11,7 +11,6 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
-
 # FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
@@ -258,13 +257,25 @@ def get_add_subscription_form(request, **kwargs):
         get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE) == product_type.id
     )
 
+    parameter_cache = {}
+    product_price_cache = {}
     if is_base_product_type:
         form_type = BaseProductForm
         next_start_date = get_next_contract_start_date()
         next_period = get_next_growing_period()
-        if not is_product_type_available(product_type.id, next_start_date) and (
+        if not is_product_type_available(
+            product_type.id,
+            next_start_date,
+            parameter_cache=parameter_cache,
+            product_price_cache=product_price_cache,
+        ) and (
             next_period
-            and not is_product_type_available(product_type.id, next_period.start_date)
+            and not is_product_type_available(
+                product_type.id,
+                next_period.start_date,
+                parameter_cache=parameter_cache,
+                product_price_cache=product_price_cache,
+            )
         ):
             member = Member.objects.get(id=member_id)
             # FIXME: better don't even show the form to a member, just one button to be added to the waitlist

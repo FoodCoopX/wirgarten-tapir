@@ -251,16 +251,17 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         reference_date: datetime.date,
         lambda_get_usage_at_date: Callable,
-        cache: Dict,
+        global_cache: Dict,
+        pickup_location_cache: Dict,
     ):
         current_date = reference_date
         max_usage = 0
 
         usage_at_date_cache = get_from_cache_or_compute(
-            cache, "usage_at_date_cache", lambda: {}
+            pickup_location_cache, "usage_at_date_cache", lambda: {}
         )
         date_of_last_possible_capacity_change = get_from_cache_or_compute(
-            cache,
+            global_cache,
             "date_of_last_possible_capacity_change",
             lambda: cls.get_date_of_last_possible_capacity_change(pickup_location),
         )

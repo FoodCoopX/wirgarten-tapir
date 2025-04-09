@@ -14,6 +14,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checke
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -30,6 +31,8 @@ class PickupLocationCapacityGeneralChecker:
         ordered_products_to_quantity_map: Dict[Product, int],
         already_registered_member: Member | None,
         subscription_start: datetime.date,
+        global_cache: Dict,
+        pickup_location_cache: Dict,
     ) -> bool:
 
         if (
@@ -41,7 +44,10 @@ class PickupLocationCapacityGeneralChecker:
         ):
             already_registered_member = None
 
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+        picking_mode = get_parameter_value(
+            Parameter.PICKING_MODE,
+            get_from_cache_or_compute(global_cache, "parameter_cache", lambda: {}),
+        )
 
         if picking_mode == PICKING_MODE_SHARE:
             return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
@@ -57,6 +63,8 @@ class PickupLocationCapacityGeneralChecker:
                     ordered_products_to_quantity_map,
                     already_registered_member,
                     subscription_start,
+                    global_cache,
+                    pickup_location_cache,
                 )
             )
         else:

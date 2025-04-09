@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from datetime import date
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -66,17 +67,30 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_available_solidarity(reference_date: date | None = None) -> float:
+def get_available_solidarity(
+    reference_date: date | None = None,
+    parameter_cache: Dict | None = None,
+    product_price_cache: Dict | None = None,
+) -> float:
     if reference_date is None:
         reference_date = get_today()
 
-    val = get_parameter_value(Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
+    val = get_parameter_value(
+        Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, parameter_cache
+    )
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
         return 1000.0
     elif val == 2:  # automatic calculation
-        return get_automatically_calculated_solidarity_excess(reference_date) or 0.0
+        return (
+            get_automatically_calculated_solidarity_excess(
+                reference_date,
+                parameter_cache=parameter_cache,
+                product_price_cache=product_price_cache,
+            )
+            or 0.0
+        )
     else:
         raise ImproperlyConfigured(
             f"Unknown value for parameter HARVEST_NEGATIVE_SOLIPRICE_ENABLED: {val}"
@@ -161,6 +175,8 @@ class BaseProductForm(forms.Form):
         for prod_field in self.products.keys():
             self.colspans[prod_field] = self.n_columns // len(self.products)
 
+        parameter_cache = {}
+        product_price_cache = {}
         if self.choose_growing_period:
             available_growing_periods = GrowingPeriod.objects.filter(
                 end_date__gte=self.start_date,
@@ -170,12 +186,12 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{get_available_solidarity(start_date)}".replace(
+                solidarity_total = f"{get_available_solidarity(start_date, parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
                     ",", "."
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date)}".replace(
+                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date, parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
                     ",", "."
                 )
                 self.free_capacity.append(free_capacity)
@@ -201,13 +217,13 @@ class BaseProductForm(forms.Form):
         else:
             self.growing_period = get_current_growing_period(self.start_date)
             self.solidarity_total = [
-                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date), parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
                     ",", "."
                 )
             ]
 
             self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date), parameter_cache=parameter_cache, product_price_cache=product_price_cache)}".replace(
                     ",", "."
                 )
             ]

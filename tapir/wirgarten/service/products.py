@@ -125,13 +125,15 @@ def get_current_growing_period(
         reference_date = get_today()
 
     def compute():
-        return (
-            GrowingPeriod.objects.filter(
-                start_date__lte=reference_date, end_date__gte=reference_date
-            )
-            .order_by("start_date")
-            .first()
+        growing_periods = get_from_cache_or_compute(
+            cache,
+            "growing_periods",
+            lambda: list(GrowingPeriod.objects.order_by("start_date")),
         )
+        for growing_period in growing_periods:
+            if growing_period.start_date <= reference_date <= growing_period.end_date:
+                return growing_period
+        return None
 
     return get_from_cache_or_compute(cache, reference_date, compute)
 
@@ -279,7 +281,12 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     return product
 
 
-def get_product_price(product: str | Product, reference_date: date = None):
+def get_product_price(
+    product: str | Product,
+    reference_date: date = None,
+    parameter_cache: Dict | None = None,
+    product_price_cache: Dict | None = None,
+):
     """
     Returns the currently active product price.
 
@@ -288,17 +295,28 @@ def get_product_price(product: str | Product, reference_date: date = None):
     :return: the ProductPrice instance
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(parameter_cache)
     if isinstance(product, Product):
         product = product.id
 
-    prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
+    cache_for_this_product = get_from_cache_or_compute(
+        product_price_cache, product, lambda: {}
+    )
 
-    # If there's only one price, return it
-    if prices.count() == 1:
-        return prices.first()
-    # Otherwise, return the price valid up to the reference date
-    return prices.filter(valid_from__lte=reference_date).first()
+    def get_price():
+        prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
+        # If there's only one price, return it
+        if (
+            get_from_cache_or_compute(
+                cache_for_this_product, "prices_count", lambda: prices.count()
+            )
+            == 1
+        ):
+            return prices.first()
+        # Otherwise, return the price valid up to the reference date
+        return prices.filter(valid_from__lte=reference_date).first()
+
+    return get_from_cache_or_compute(cache_for_this_product, reference_date, get_price)
 
 
 @transaction.atomic
@@ -572,7 +590,12 @@ def create_or_update_default_tax_rate(
         )
 
 
-def get_free_product_capacity(product_type_id: str, reference_date: date = None):
+def get_free_product_capacity(
+    product_type_id: str,
+    reference_date: date = None,
+    parameter_cache: Dict | None = None,
+    product_price_cache: Dict | None = None,
+):
     if reference_date is None:
         reference_date = get_today()
 
@@ -586,7 +609,14 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
     total_capacity = float(active_product_capacities.first().capacity)
     used_capacity = sum(
         map(
-            lambda sub: float(get_product_price(sub.product, reference_date).size)
+            lambda sub: float(
+                get_product_price(
+                    sub.product_id,
+                    reference_date,
+                    parameter_cache=parameter_cache,
+                    product_price_cache=product_price_cache,
+                ).size
+            )
             * sub.quantity,
             get_active_subscriptions(reference_date).filter(
                 product__type_id=product_type_id
@@ -614,13 +644,12 @@ def get_smallest_product_size(
         return all_prices[0].size
 
     smallest_size = float("inf")
-    for product in products:
-        prices = ProductPrice.objects.filter(
-            product=product, valid_from__lte=reference_date
-        ).order_by("valid_from")
-        if prices.count() == 0:
-            continue
-        smallest_size = min(smallest_size, prices.last().size)
+    prices = ProductPrice.objects.filter(
+        product__in=products, valid_from__lte=reference_date
+    ).order_by("size")
+    smallest_size_object = prices.first()
+    if smallest_size_object is not None:
+        smallest_size = prices.first().size
 
     if smallest_size == float("inf"):
         raise ObjectDoesNotExist("No price found")
@@ -629,7 +658,10 @@ def get_smallest_product_size(
 
 
 def is_product_type_available(
-    product_type: ProductType | str, reference_date: date = None
+    product_type: ProductType | str,
+    reference_date: date = None,
+    parameter_cache: Dict | None = None,
+    product_price_cache: Dict | None = None,
 ) -> bool:
     if reference_date is None:
         reference_date = get_today()
@@ -641,5 +673,8 @@ def is_product_type_available(
         return False
 
     return get_free_product_capacity(
-        product_type_id=product_type, reference_date=reference_date
+        product_type_id=product_type,
+        reference_date=reference_date,
+        parameter_cache=parameter_cache,
+        product_price_cache=product_price_cache,
     ) >= get_smallest_product_size(product_type, reference_date)
