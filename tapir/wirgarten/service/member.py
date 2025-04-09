@@ -189,7 +189,8 @@ def get_or_create_mandate_ref(
         return mandate_ref
 
     mandate_ref = create_mandate_ref(member_id, parameter_cache)
-    mandate_ref_cache[member_id] = mandate_ref
+    if mandate_ref_cache:
+        mandate_ref_cache[member_id] = mandate_ref
     return mandate_ref
 
 
