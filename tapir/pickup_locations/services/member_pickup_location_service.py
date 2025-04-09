@@ -42,18 +42,18 @@ class MemberPickupLocationService:
         return getattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID)
 
     @classmethod
-    def get_members_at_pickup_location(
+    def get_members_ids_at_pickup_location(
         cls,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
         cache: Dict,
-    ) -> Set[Member]:
+    ) -> Set[str]:
         def build_if_cache_miss():
             members_at_pickup_location = set()
             for (
-                member,
+                member_id,
                 member_pickup_locations,
-            ) in cls.get_member_pickup_locations_objects_by_member(cache).items():
+            ) in cls.get_member_pickup_locations_objects_by_member_id(cache).items():
                 member_pickup_locations = [
                     member_pickup_location
                     for member_pickup_location in member_pickup_locations
@@ -65,7 +65,7 @@ class MemberPickupLocationService:
                     key=lambda member_pickup_location: member_pickup_location.valid_from
                 )
                 if member_pickup_locations[0].pickup_location_id == pickup_location.id:
-                    members_at_pickup_location.add(member)
+                    members_at_pickup_location.add(member_id)
             return members_at_pickup_location
 
         cache_for_pickup_location = get_from_cache_or_compute(
@@ -81,7 +81,7 @@ class MemberPickupLocationService:
         )
 
     @classmethod
-    def get_member_pickup_locations_objects_by_member(
+    def get_member_pickup_locations_objects_by_member_id(
         cls, cache: Dict
     ) -> Dict[str, List[MemberPickupLocation]]:
         def build_if_cache_miss():
@@ -97,5 +97,5 @@ class MemberPickupLocationService:
             return member_pickup_locations
 
         return get_from_cache_or_compute(
-            cache, "member_pickup_locations_objects_by_member", build_if_cache_miss
+            cache, "member_pickup_locations_objects_by_member_id", build_if_cache_miss
         )

@@ -38,7 +38,7 @@ class TestGetFreeCapacityAtDate(SimpleTestCase):
             product_type=product_type,
             pickup_location=pickup_location,
             reference_date=reference_date,
-            global_cache=global_cache,
+            cache=global_cache,
             pickup_location_cache=pickup_location_cache,
         )
 

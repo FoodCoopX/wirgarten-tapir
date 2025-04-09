@@ -40,7 +40,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-            global_cache=cache,
+            cache=cache,
             pickup_location_cache=pickup_location_cache,
         )
 
@@ -97,7 +97,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-            global_cache=cache,
+            cache=cache,
             pickup_location_cache=pickup_location_cache,
         )
 
@@ -154,7 +154,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-            global_cache=cache,
+            cache=cache,
             pickup_location_cache=pickup_location_cache,
         )
 

@@ -108,8 +108,8 @@ class PickupLocationCapacityModeBasketChecker:
         reference_date: datetime.date,
         cache: Dict,
     ):
-        members_at_pickup_location = (
-            MemberPickupLocationService.get_members_at_pickup_location(
+        member_ids_at_pickup_location = (
+            MemberPickupLocationService.get_members_ids_at_pickup_location(
                 pickup_location, reference_date, cache
             )
         )
@@ -119,7 +119,7 @@ class PickupLocationCapacityModeBasketChecker:
             for subscription in TapirCache.get_all_subscriptions(cache)
             if (
                 subscription.start_date <= reference_date <= subscription.end_date
-                and subscription.member_id in members_at_pickup_location
+                and subscription.member_id in member_ids_at_pickup_location
             )
         }
 
@@ -128,7 +128,7 @@ class PickupLocationCapacityModeBasketChecker:
                 cls.extend_subscriptions_with_those_that_will_be_renewed(
                     subscriptions=relevant_subscriptions,
                     reference_date=reference_date,
-                    members_at_pickup_location=members_at_pickup_location,
+                    member_ids_at_pickup_location=member_ids_at_pickup_location,
                     cache=cache,
                 )
             )
@@ -136,7 +136,7 @@ class PickupLocationCapacityModeBasketChecker:
         total_usage = 0
         for subscription in relevant_subscriptions:
             total_usage += (
-                cls.get_basket_size_usage(cache, subscription.product, basket_size)
+                cls.get_basket_size_usage(cache, subscription.product_id, basket_size)
                 * subscription.quantity
             )
 
@@ -175,15 +175,15 @@ class PickupLocationCapacityModeBasketChecker:
         cls,
         subscriptions: Set[Subscription],
         reference_date: datetime.date,
-        members_at_pickup_location,
+        member_ids_at_pickup_location: Set[str],
         cache: Dict,
     ):
         relevant_subscriptions = set(subscriptions)
 
         current_growing_period = get_current_growing_period(reference_date, cache)
 
-        members_that_have_a_subscription_at_reference_date = {
-            subscription.member for subscription in relevant_subscriptions
+        member_ids_that_have_a_subscription_at_reference_date = {
+            subscription.member_id for subscription in relevant_subscriptions
         }
 
         end_of_previous_growing_period = (
@@ -196,10 +196,10 @@ class PickupLocationCapacityModeBasketChecker:
                 subscription.start_date
                 <= end_of_previous_growing_period
                 <= subscription.end_date
-                and subscription.member in members_at_pickup_location
+                and subscription.member_id in member_ids_at_pickup_location
                 and subscription.cancellation_ts is None
-                and subscription.member
-                not in members_that_have_a_subscription_at_reference_date
+                and subscription.member_id
+                not in member_ids_that_have_a_subscription_at_reference_date
             )
         }
 
@@ -223,7 +223,7 @@ class PickupLocationCapacityModeBasketChecker:
             member=member
         ):
             usage += (
-                cls.get_basket_size_usage(cache, subscription.product, basket_size)
+                cls.get_basket_size_usage(cache, subscription.product_id, basket_size)
                 * subscription.quantity
             )
 
@@ -239,7 +239,7 @@ class PickupLocationCapacityModeBasketChecker:
         total = 0.0
         for ordered_product, quantity in ordered_product_to_quantity_map.items():
             total += (
-                cls.get_basket_size_usage(cache, ordered_product, basket_size)
+                cls.get_basket_size_usage(cache, ordered_product.id, basket_size)
                 * quantity
             )
         return total
@@ -341,10 +341,10 @@ class PickupLocationCapacityModeBasketChecker:
         return product_id_to_basket_size_to_usage_map
 
     @classmethod
-    def get_basket_size_usage(cls, cache: Dict, product: Product, basket_size: str):
+    def get_basket_size_usage(cls, cache: Dict, product_id: str, basket_size: str):
         product_to_basket_size_to_usage_map = get_from_cache_or_compute(
             cache,
             "product_to_basket_size_to_usage_map",
             cls.build_product_to_basket_size_to_usage_map,
         )
-        return product_to_basket_size_to_usage_map[product.id][basket_size]
+        return product_to_basket_size_to_usage_map[product_id][basket_size]

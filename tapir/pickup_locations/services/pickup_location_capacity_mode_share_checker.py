@@ -38,11 +38,10 @@ class PickupLocationCapacityModeShareChecker:
         ordered_products_to_quantity_map: Dict[Product, int],
         already_registered_member: Member | None,
         subscription_start: datetime.date,
-        global_cache: Dict,
-        pickup_location_cache: Dict,
+        cache: Dict,
     ) -> bool:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
+            pickup_location=pickup_location, cache=cache
         )
 
         for (
@@ -59,8 +58,7 @@ class PickupLocationCapacityModeShareChecker:
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
                 ordered_product_to_quantity_map=ordered_products_to_quantity_map,
-                global_cache=global_cache,
-                pickup_location_cache=pickup_location_cache,
+                cache=cache,
             ):
                 return False
 
@@ -74,15 +72,13 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
-        global_cache: Dict,
-        pickup_location_cache: Dict,
+        cache: Dict,
     ):
         free_capacity = cls.get_free_capacity_at_date(
             product_type=product_type,
             pickup_location=pickup_location,
             reference_date=subscription_start,
-            global_cache=global_cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
 
         amount_used_by_member_before_changes = (
@@ -90,7 +86,7 @@ class PickupLocationCapacityModeShareChecker:
                 member=member,
                 subscription_start=subscription_start,
                 product_type=product_type,
-                cache=global_cache,
+                cache=cache,
             )
         )
         capacity_used_by_the_order = (
@@ -117,7 +113,7 @@ class PickupLocationCapacityModeShareChecker:
         cache: Dict | None = None,
     ):
         members_at_pickup_location = (
-            MemberPickupLocationService.get_members_at_pickup_location(
+            MemberPickupLocationService.get_members_ids_at_pickup_location(
                 pickup_location,
                 reference_date,
                 cache,
@@ -256,7 +252,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
-        global_cache: Dict,
+        cache: Dict,
     ):
         return HighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
@@ -266,10 +262,10 @@ class PickupLocationCapacityModeShareChecker:
                     pickup_location=pickup_location,
                     product_type=product_type,
                     reference_date=data,
-                    cache=global_cache,
+                    cache=cache,
                 )
             ),
-            cache=global_cache,
+            cache=cache,
         )
 
     @classmethod
@@ -278,15 +274,10 @@ class PickupLocationCapacityModeShareChecker:
         product_type: ProductType,
         pickup_location: PickupLocation,
         reference_date: datetime.date,
-        global_cache: Dict,
-        pickup_location_cache: Dict,
+        cache: Dict,
     ):
-        product_type_to_available_capacity_map = get_from_cache_or_compute(
-            pickup_location_cache,
-            "product_type_to_available_capacity_map",
-            lambda: SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-                pickup_location
-            ),
+        product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
+            pickup_location=pickup_location, cache=cache
         )
 
         available_capacity = product_type_to_available_capacity_map.get(product_type, 0)
@@ -295,7 +286,7 @@ class PickupLocationCapacityModeShareChecker:
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=reference_date,
-            global_cache=global_cache,
+            cache=cache,
         )
         free_capacity = available_capacity - usage
 

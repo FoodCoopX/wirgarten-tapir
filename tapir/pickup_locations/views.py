@@ -224,7 +224,7 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 pickup_location=pickup_location,
                                 product_type=product_type,
                                 reference_date=current_date,
-                                global_cache=cache,
+                                cache=cache,
                                 pickup_location_cache=get_from_cache_or_compute(
                                     cache, pickup_location, lambda: {}
                                 ),
