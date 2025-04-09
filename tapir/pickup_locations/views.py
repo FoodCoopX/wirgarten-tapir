@@ -30,7 +30,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.utils.shortcuts import get_monday, dict_get_or_set, get_from_cache_or_compute
+from tapir.utils.shortcuts import get_monday, dict_get_or_set
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
@@ -225,9 +225,6 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 product_type=product_type,
                                 reference_date=current_date,
                                 cache=cache,
-                                pickup_location_cache=get_from_cache_or_compute(
-                                    cache, pickup_location, lambda: {}
-                                ),
                             ),
                         )
                     )

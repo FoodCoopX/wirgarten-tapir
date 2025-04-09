@@ -70,8 +70,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
-            global_cache=cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
         mock_check_for_picking_mode_basket.assert_not_called()
 

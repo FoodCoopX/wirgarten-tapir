@@ -42,37 +42,37 @@ class TestGetBasketUsage(TapirIntegrationTest):
         self.assertEqual(
             1,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_s, "small"
+                {}, self.product_s.id, "small"
             ),
         )
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_s, "medium"
+                {}, self.product_s.id, "medium"
             ),
         )
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_m, "small"
+                {}, self.product_m.id, "small"
             ),
         )
         self.assertEqual(
             1,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_m, "medium"
+                {}, self.product_m.id, "medium"
             ),
         )
         self.assertEqual(
             1,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_l, "small"
+                {}, self.product_l.id, "small"
             ),
         )
         self.assertEqual(
             1,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_l, "medium"
+                {}, self.product_l.id, "medium"
             ),
         )
 
@@ -82,6 +82,6 @@ class TestGetBasketUsage(TapirIntegrationTest):
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_basket_size_usage(
-                {}, self.product_m, "small"
+                {}, self.product_m.id, "small"
             ),
         )

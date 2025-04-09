@@ -31,25 +31,24 @@ class TestGetFreeCapacityAtDate(SimpleTestCase):
             product_type: 10
         }
         mock_get_highest_usage_after_date.return_value = 7
-        global_cache = {}
-        pickup_location_cache = {}
+        cache = {}
 
         result = PickupLocationCapacityModeShareChecker.get_free_capacity_at_date(
             product_type=product_type,
             pickup_location=pickup_location,
             reference_date=reference_date,
-            cache=global_cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
 
         self.assertEqual(3, result)
 
         mock_get_available_share_capacities_for_pickup_location_by_product_type.assert_called_once_with(
-            pickup_location
+            pickup_location=pickup_location,
+            cache=cache,
         )
         mock_get_highest_usage_after_date.assert_called_once_with(
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=reference_date,
-            global_cache=global_cache,
+            cache=cache,
         )

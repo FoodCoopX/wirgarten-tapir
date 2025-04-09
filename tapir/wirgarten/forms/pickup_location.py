@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
@@ -15,6 +15,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
@@ -23,7 +24,6 @@ from tapir.wirgarten.models import (
     Product,
     Subscription,
     Member,
-    ProductType,
 )
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
@@ -36,18 +36,24 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import get_today
 
 
-def get_pickup_locations_map_data(pickup_locations, location_capabilities):
+def get_pickup_locations_map_data(
+    pickup_locations, location_capabilities, cache: Dict = None
+):
     return json.dumps(
         {
-            f"{pl.id}": pickup_location_to_dict(location_capabilities, pl)
-            for pl in list(pickup_locations)
+            f"{pickup_location.id}": pickup_location_to_dict(
+                location_capabilities, pickup_location, cache
+            )
+            for pickup_location in list(pickup_locations)
         }
     )
 
 
-def pickup_location_to_dict(location_capabilities, pickup_location):
+def pickup_location_to_dict(location_capabilities, pickup_location, cache: Dict = None):
     next_delivery_date = get_next_delivery_date()
     next_month = next_delivery_date + relativedelta(day=1, months=1)
+    if cache is None:
+        cache = {}
 
     def map_capa(capa):
         max_capa = capa["max_capacity"]
@@ -63,10 +69,13 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 pickup_location=PickupLocation.objects.get(
                     id=capa["pickup_location_id"]
                 ),
-                product_type=ProductType.objects.get(id=capa["product_type_id"]),
+                product_type=TapirCache.get_product_type_by_id(
+                    cache, capa["product_type_id"]
+                ),
                 reference_date=next_month,
+                cache=cache,
             )
-            / float(get_product_price(base_product, next_delivery_date).size),
+            / float(get_product_price(base_product, next_delivery_date, cache).size),
             2,
         )
 
@@ -75,10 +84,13 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 pickup_location=PickupLocation.objects.get(
                     id=capa["pickup_location_id"]
                 ),
-                product_type=ProductType.objects.get(id=capa["product_type_id"]),
+                product_type=TapirCache.get_product_type_by_id(
+                    cache, capa["product_type_id"]
+                ),
                 reference_date=next_month,
+                cache=cache,
             )
-            / float(get_product_price(base_product, next_month).size),
+            / float(get_product_price(base_product, next_month, cache).size),
             2,
         )
 
@@ -111,7 +123,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
                 if x is not None
             ]
         ),
-        "members": get_active_subscriptions(next_delivery_date)
+        "members": get_active_subscriptions(next_delivery_date, cache)
         .annotate(
             latest_pickup_location_id=Subquery(
                 MemberPickupLocation.objects.filter(
@@ -140,6 +152,7 @@ class PickupLocationWidget(forms.Select):
         location_capabilities,
         selected_product_types,
         initial,
+        cache: Dict,
         *args,
         **kwargs,
     ):
@@ -147,7 +160,7 @@ class PickupLocationWidget(forms.Select):
 
         self.attrs["selected_product_types"] = selected_product_types
         self.attrs["data"] = get_pickup_locations_map_data(
-            pickup_locations, location_capabilities
+            pickup_locations, location_capabilities, cache
         )
         self.attrs["initial"] = initial
 
@@ -207,6 +220,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
                 initial=initial.get("initial", None),
+                cache=cache,
             ),
             **kwargs,
         )

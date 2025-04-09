@@ -36,7 +36,7 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
         result = PickupLocationCapacityModeBasketChecker.extend_subscriptions_with_those_that_will_be_renewed(
             subscriptions=set(),
             reference_date=reference_date,
-            members_at_pickup_location=Member.objects.all(),
+            member_ids_at_pickup_location=Member.objects.values_list("id", flat=True),
             cache={},
         )
 
@@ -52,7 +52,7 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
         result = PickupLocationCapacityModeBasketChecker.extend_subscriptions_with_those_that_will_be_renewed(
             subscriptions=set(),
             reference_date=reference_date,
-            members_at_pickup_location=Member.objects.all(),
+            member_ids_at_pickup_location=Member.objects.values_list("id", flat=True),
             cache={},
         )
 
@@ -74,7 +74,7 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
                 Subscription.objects.filter(period=self.current_growing_period)
             ),
             reference_date=reference_date,
-            members_at_pickup_location=Member.objects.all(),
+            member_ids_at_pickup_location=Member.objects.values_list("id", flat=True),
             cache={},
         )
 

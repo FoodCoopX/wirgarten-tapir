@@ -32,7 +32,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
         cache = {}
-        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -41,7 +40,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             cache=cache,
-            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertFalse(result)
@@ -50,8 +48,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
-            global_cache=cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
@@ -63,6 +60,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             product_type=product_type,
             reference_date=subscription_start,
+            cache=cache,
         )
 
     @patch.object(
@@ -89,7 +87,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
         cache = {}
-        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -98,7 +95,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             cache=cache,
-            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertTrue(result)
@@ -107,8 +103,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
-            global_cache=cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
@@ -120,6 +115,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             product_type=product_type,
             reference_date=subscription_start,
+            cache=cache,
         )
 
     @patch.object(
@@ -146,7 +142,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
         ordered_product_to_quantity_map = Mock()
         product_type = Mock()
         cache = {}
-        pickup_location_cache = {}
 
         result = PickupLocationCapacityModeShareChecker.check_capacity_for_product_type(
             product_type=product_type,
@@ -155,7 +150,6 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             cache=cache,
-            pickup_location_cache=pickup_location_cache,
         )
 
         self.assertTrue(result)
@@ -164,8 +158,7 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             pickup_location=pickup_location,
             product_type=product_type,
             reference_date=subscription_start,
-            global_cache=cache,
-            pickup_location_cache=pickup_location_cache,
+            cache=cache,
         )
         mock_get_capacity_used_by_member_before_changes.assert_called_once_with(
             member=member,
@@ -177,4 +170,5 @@ class TestCheckCapacityForProductType(SimpleTestCase):
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
             product_type=product_type,
             reference_date=subscription_start,
+            cache=cache,
         )

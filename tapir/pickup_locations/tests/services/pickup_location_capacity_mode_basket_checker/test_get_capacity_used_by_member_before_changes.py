@@ -23,7 +23,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                None, Mock(), Mock(), {}
+                member=None, subscription_start=Mock(), basket_size=Mock(), cache={}
             ),
         )
 

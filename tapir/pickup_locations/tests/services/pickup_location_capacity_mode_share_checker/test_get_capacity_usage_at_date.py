@@ -59,7 +59,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         )
 
         result = PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-            self.pickup_location, self.product_type, self.reference_date
+            self.pickup_location, self.product_type, self.reference_date, {}
         )
 
         self.assertEqual(0, result)
@@ -72,7 +72,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         )
 
         result = PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-            self.pickup_location, self.product_type, self.reference_date
+            self.pickup_location, self.product_type, self.reference_date, {}
         )
 
         self.assertEqual(0, result)
@@ -81,7 +81,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         self,
     ):
         result = PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-            self.pickup_location, self.product_type, self.reference_date
+            self.pickup_location, self.product_type, self.reference_date, {}
         )
 
         self.assertEqual(6, result)
@@ -103,7 +103,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
             end_date=past_growing_period.end_date,
         )
         result = PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-            self.pickup_location, self.product_type, self.reference_date
+            self.pickup_location, self.product_type, self.reference_date, {}
         )
 
         self.assertEqual(6, result)
@@ -129,7 +129,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
             end_date=past_growing_period.end_date,
         )
         result = PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-            self.pickup_location, self.product_type, self.reference_date
+            self.pickup_location, self.product_type, self.reference_date, {}
         )
 
         self.assertEqual(0, result)

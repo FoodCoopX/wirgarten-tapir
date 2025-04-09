@@ -33,14 +33,14 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
         self,
     ):
         result = PickupLocationCapacityModeShareChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.none(),
+            relevant_subscriptions=set(),
             reference_date=datetime.date(year=2024, month=1, day=1),
             product_type=ProductType.objects.get(),
-            members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            member_ids_at_pickup_location=Member.objects.values_list("id", flat=True),
+            cache={},
         )
 
-        self.assertEqual(1, result.count())
+        self.assertEqual(1, len(result))
 
     def test_extendSubscriptionsWithThoseThatWillBeRenewed_subscriptionCancelled_dontExtendQuerySet(
         self,
@@ -49,14 +49,14 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
             cancellation_ts=datetime.datetime(year=2024, month=1, day=1)
         )
         result = PickupLocationCapacityModeShareChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.none(),
+            relevant_subscriptions=set(),
             reference_date=datetime.date(year=2024, month=1, day=1),
             product_type=ProductType.objects.get(),
-            members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            member_ids_at_pickup_location=Member.objects.all(),
+            cache={},
         )
 
-        self.assertEqual(0, result.count())
+        self.assertEqual(0, len(result))
 
     def test_extendSubscriptionsWithThoseThatWillBeRenewed_subscriptionIsAlreadyRenewed_dontExtendQuerySet(
         self,
@@ -67,16 +67,16 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
             product=Product.objects.get(),
         )
         result = PickupLocationCapacityModeShareChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.filter(
-                period=self.current_growing_period
+            relevant_subscriptions=set(
+                Subscription.objects.filter(period=self.current_growing_period)
             ),
             reference_date=datetime.date(year=2024, month=1, day=1),
             product_type=ProductType.objects.get(),
-            members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            member_ids_at_pickup_location=Member.objects.all(),
+            cache={},
         )
 
-        self.assertEqual(1, result.count())
+        self.assertEqual(1, len(result))
         self.assertNotIn(self.past_subscription, result)
         self.assertIn(current_subscription, result)
 
@@ -84,11 +84,11 @@ class TestExtendSubscriptionsWithThoseThatWillBeRenewed(TapirIntegrationTest):
         self,
     ):
         result = PickupLocationCapacityModeShareChecker.extend_subscriptions_with_those_that_will_be_renewed(
-            subscriptions_active_at_reference_date=Subscription.objects.none(),
+            relevant_subscriptions=set(),
             reference_date=datetime.date(year=2024, month=1, day=1),
             product_type=ProductTypeFactory.create(),
-            members_at_pickup_location=Member.objects.all(),
-            cache=None,
+            member_ids_at_pickup_location=Member.objects.all(),
+            cache={},
         )
 
-        self.assertEqual(0, result.count())
+        self.assertEqual(0, len(result))

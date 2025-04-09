@@ -19,7 +19,7 @@ class SharesCapacityService:
             }
             for capability in PickupLocationCapability.objects.filter(
                 pickup_location=pickup_location
-            ):
+            ).select_related("product_type"):
                 if capability.product_type not in capacities.keys():
                     continue
 

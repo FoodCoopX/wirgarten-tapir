@@ -10,6 +10,7 @@ from django.db.models import Case, IntegerField, Value, When
 from tapir.configuration.models import TapirParameter
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -305,17 +306,14 @@ def get_product_price(
     )
 
     def get_price():
-        prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
-        # If there's only one price, return it
-        if (
-            get_from_cache_or_compute(
-                cache_for_this_product, "prices_count", lambda: prices.count()
-            )
-            == 1
-        ):
-            return prices.first()
-        # Otherwise, return the price valid up to the reference date
-        return prices.filter(valid_from__lte=reference_date).first()
+        prices = list(TapirCache.get_product_prices_by_product_id(cache, product))
+        if len(prices) == 1:
+            return prices[0]
+        prices.sort(key=lambda p: p.valid_from, reverse=True)
+        for price in prices:
+            if price.valid_from <= reference_date:
+                return price
+        return None
 
     return get_from_cache_or_compute(price_by_date_cache, reference_date, get_price)
 
