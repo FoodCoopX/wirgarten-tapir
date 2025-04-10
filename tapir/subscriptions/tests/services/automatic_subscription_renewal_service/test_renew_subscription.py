@@ -75,5 +75,5 @@ class TestRenewSubscription(SimpleTestCase):
             mandate_ref=mandate_ref,
             trial_disabled=trial_disabled,
             trial_end_date_override=trial_end_date_override,
-            notice_period_duration_in_months=4,
+            notice_period_duration=4,
         )
