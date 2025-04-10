@@ -148,7 +148,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         <thead>
           <tr>
             <th>KW</th>
-            <th>Lieferungsdatum</th>
+            <th>Lieferdatum</th>
             <th></th>
           </tr>
         </thead>
@@ -314,7 +314,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
               <thead>
                 <tr>
                   <th>KW</th>
-                  <th>Datum der Lieferung</th>
+                  <th>Lieferdatum</th>
                   <th>Joker Status</th>
                 </tr>
               </thead>
