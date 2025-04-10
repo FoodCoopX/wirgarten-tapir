@@ -8,7 +8,10 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
-from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
+from tapir.subscriptions.config import (
+    NOTICE_PERIOD_UNIT_MONTHS,
+    NOTICE_PERIOD_UNIT_OPTIONS,
+)
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -902,6 +905,7 @@ Dein WirGarten-Team""",
             description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
+            meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
         )
 
         if getattr(settings, "DEBUG", False):
