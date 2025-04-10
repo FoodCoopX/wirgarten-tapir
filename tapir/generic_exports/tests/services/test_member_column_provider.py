@@ -109,7 +109,15 @@ class TestMemberColumnProvider(TapirIntegrationTest):
             2, mock_get_price_of_subscriptions_delivered_in_week.call_count
         )
         mock_get_price_of_subscriptions_delivered_in_week.assert_has_calls(
-            [call(member, joker.date) for joker in jokers_before_date], any_order=True
+            [
+                call(
+                    member=member,
+                    reference_date=joker.date,
+                    only_subscriptions_affected_by_jokers=True,
+                )
+                for joker in jokers_before_date
+            ],
+            any_order=True,
         )
 
     def test_getValueMemberJokerCreditDetails_default_returnsCorrectDetails(self):

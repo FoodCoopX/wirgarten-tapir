@@ -124,7 +124,9 @@ class MemberColumnProvider:
         credit_value = sum(
             [
                 DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
-                    member, joker.date
+                    member=member,
+                    reference_date=joker.date,
+                    only_subscriptions_affected_by_jokers=True,
                 )
                 for joker in jokers
             ]
