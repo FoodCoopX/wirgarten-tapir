@@ -12,6 +12,7 @@ from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
     NOTICE_PERIOD_UNIT_OPTIONS,
 )
+from tapir.wirgarten.utils import is_debug_instance
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -368,6 +369,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.PICKING,
             order_priority=3,
             meta=ParameterMeta(options=OPTIONS_PICKING_MODE),
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -585,6 +587,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 options=list(map(lambda x: (x.id, x.name), ProductType.objects.all()))
             ),
+            enabled=is_debug_instance(),
         )
 
         DEFAULT_EMAIL_VARS = [
@@ -885,6 +888,7 @@ Dein WirGarten-Team""",
             description="",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=3,
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -895,6 +899,7 @@ Dein WirGarten-Team""",
             description="Bei automatischer Verlängerung der Verträge",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=2,
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -906,6 +911,7 @@ Dein WirGarten-Team""",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
             meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
+            enabled=is_debug_instance(),
         )
 
         if getattr(settings, "DEBUG", False):
