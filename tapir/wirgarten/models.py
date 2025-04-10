@@ -487,15 +487,18 @@ class Member(TapirUser):
 
 
 class MemberPickupLocation(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
-    valid_from = models.DateField()
-
     class Meta:
         unique_together = (
             "member",
             "valid_from",
         )
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    valid_from = models.DateField()
+
+    def __str__(self):
+        return f"{self.member} - {self.pickup_location} ({self.valid_from})"
 
 
 class Product(TapirModel):

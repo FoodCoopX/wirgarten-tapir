@@ -1,7 +1,7 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 from django.core.exceptions import ValidationError
 
@@ -13,7 +13,8 @@ from tapir.deliveries.services.date_limit_for_delivery_change_calculator import 
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
-from tapir.wirgarten.models import Member
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Member, Subscription
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
@@ -182,3 +183,9 @@ class JokerManagementService:
         return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
             reference_date
         )
+
+    @classmethod
+    def is_subscription_affected_by_joker(
+        cls, subscription: Subscription, cache: Dict
+    ) -> bool:
+        return subscription in TapirCache.get_subscriptions_affected_by_jokers(cache)

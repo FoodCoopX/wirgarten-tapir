@@ -41,11 +41,13 @@ class GetMemberDeliveriesView(APIView):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
         member = get_object_or_404(Member, id=member_id)
+        cache = {}
 
         deliveries = GetDeliveriesService.get_deliveries(
             member=member,
             date_from=get_today(),
             date_to=get_today() + datetime.timedelta(days=365),
+            cache=cache,
         )
 
         return Response(

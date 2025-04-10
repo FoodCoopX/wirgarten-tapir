@@ -1,5 +1,6 @@
 import datetime
 import locale
+from typing import Dict
 
 from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
@@ -30,7 +31,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.utils.shortcuts import get_monday, dict_get_or_set
+from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
@@ -190,17 +191,20 @@ class PickupLocationCapacityEvolutionView(APIView):
         pickup_location = get_object_or_404(
             PickupLocation, id=request.query_params.get("pickup_location_id")
         )
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE)
+        cache = {}
+        picking_mode = get_parameter_value(Parameter.PICKING_MODE, cache=cache)
         if picking_mode == PICKING_MODE_BASKET:
-            data = self.build_data_for_picking_mode_basket(pickup_location)
+            data = self.build_data_for_picking_mode_basket(pickup_location, cache)
         elif picking_mode == PICKING_MODE_SHARE:
-            data = self.build_data_for_picking_mode_shares(pickup_location)
+            data = self.build_data_for_picking_mode_shares(pickup_location, cache)
         else:
             raise ImproperlyConfigured(f"Unknown picking mode: {picking_mode}")
 
         return Response(PickupLocationCapacityEvolutionSerializer(data).data)
 
-    def build_data_for_picking_mode_shares(self, pickup_location: PickupLocation):
+    def build_data_for_picking_mode_shares(
+        self, pickup_location: PickupLocation, cache: Dict
+    ):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())
         capacities_by_product_type = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
@@ -209,7 +213,6 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
         current_date = get_today()
-        cache = {}
         while current_date < max_date:
             values = []
             for product_type in product_types:
@@ -243,17 +246,17 @@ class PickupLocationCapacityEvolutionView(APIView):
             "data_points": data_points,
         }
 
-    def build_data_for_picking_mode_basket(self, pickup_location: PickupLocation):
+    def build_data_for_picking_mode_basket(
+        self, pickup_location: PickupLocation, cache: Dict
+    ):
         data_points = []
         capacities_by_basket_size = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
                 pickup_location=pickup_location
             )
         )
-
         max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
         current_date = get_today()
-        cache_by_basket_size = {}
         while current_date < max_date:
             values = []
             for basket_size, capacity in capacities_by_basket_size.items():
@@ -267,9 +270,7 @@ class PickupLocationCapacityEvolutionView(APIView):
                                 pickup_location=pickup_location,
                                 basket_size=basket_size,
                                 reference_date=current_date,
-                                cache=dict_get_or_set(
-                                    cache_by_basket_size, basket_size, lambda: {}
-                                ),
+                                cache=cache,
                             ),
                         )
                     )
