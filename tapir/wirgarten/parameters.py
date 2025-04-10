@@ -882,10 +882,10 @@ Dein WirGarten-Team""",
 
         parameter_definition(
             key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
-            label="Kündigungsfrist",
+            label="Kündigungsfrist (Monate)",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
-            description="Bei automatische Verlängerung der Verträge, in anzahl an Monaten.",
+            description="Bei automatischer Verlängerung der Verträge",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
         )
