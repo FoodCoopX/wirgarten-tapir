@@ -212,7 +212,11 @@ class PickupLocationCapacityEvolutionView(APIView):
             pickup_location
         )
 
-        max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
+        max_date = (
+            HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+                pickup_location, cache
+            )
+        )
         current_date = get_today()
         while current_date < max_date:
             values = []

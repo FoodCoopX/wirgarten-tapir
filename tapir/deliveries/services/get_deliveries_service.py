@@ -77,7 +77,7 @@ class GetDeliveriesService:
         if joker_used:
             relevant_subscriptions = set(
                 filter(
-                    lambda subscription: JokerManagementService.is_subscription_affected_by_joker(
+                    lambda subscription: not JokerManagementService.is_subscription_affected_by_joker(
                         subscription, cache
                     ),
                     relevant_subscriptions,

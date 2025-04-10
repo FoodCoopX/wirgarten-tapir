@@ -26,7 +26,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         SubscriptionFactory.create(end_date=datetime.date(year=2023, month=7, day=6))
 
         result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-            {}, pickup_location=PickupLocationFactory.create()
+            pickup_location=PickupLocationFactory.create(), cache={}
         )
 
         self.assertEqual(datetime.date(year=2023, month=12, day=8), result)
@@ -49,7 +49,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         )
 
         result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-            {}, pickup_location=pickup_location
+            pickup_location=pickup_location, cache={}
         )
 
         self.assertEqual(datetime.date(year=2023, month=6, day=7), result)
@@ -69,7 +69,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         )
 
         result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-            {}, pickup_location=pickup_location
+            pickup_location=pickup_location, cache={}
         )
 
         self.assertEqual(datetime.date(year=2023, month=5, day=13), result)
@@ -89,7 +89,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         )
 
         result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-            {}, pickup_location=PickupLocationFactory.create()
+            pickup_location=pickup_location, cache={}
         )
 
         self.assertEqual(datetime.date(year=2023, month=5, day=14), result)

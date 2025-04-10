@@ -42,7 +42,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         self.assertIsNone(
             GetDeliveriesService.build_delivery_object(
-                member, datetime.date(year=2023, month=6, day=5)
+                member=member,
+                delivery_date=datetime.date(year=2023, month=6, day=5),
+                cache={},
             )
         )
 
@@ -60,7 +62,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNotNone(delivery_object)
@@ -95,7 +99,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNotNone(delivery_object)
@@ -117,7 +123,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNotNone(delivery_object)
@@ -142,7 +150,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertEqual(
@@ -172,7 +182,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
         self.assertEqual([subscription_2], list(delivery_object["subscriptions"]))
 
@@ -190,7 +202,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertEqual(
@@ -221,7 +235,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNotNone(delivery_object)
@@ -253,7 +269,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNone(delivery_object)
@@ -279,7 +297,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
         given_delivery_date = datetime.date(year=2023, month=6, day=5)
         delivery_object = GetDeliveriesService.build_delivery_object(
-            member, given_delivery_date
+            member=member,
+            delivery_date=given_delivery_date,
+            cache={},
         )
 
         self.assertIsNone(delivery_object)
