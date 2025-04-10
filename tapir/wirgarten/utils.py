@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import Dict
 from zoneinfo import ZoneInfo
 
-from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -11,6 +10,7 @@ from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameters import Parameter
 
 
@@ -41,10 +41,6 @@ def member_detail_url(member_id):
 def check_permission_or_self(pk, request):
     if not (request.user.pk == pk or request.user.has_perm(Permission.Accounts.MANAGE)):
         raise PermissionDenied
-
-
-def is_debug_instance():
-    return getattr(settings, "DEBUG", False)
 
 
 def get_today(cache: Dict | None = None) -> datetime.date:

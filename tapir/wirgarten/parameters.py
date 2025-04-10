@@ -12,7 +12,7 @@ from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
     NOTICE_PERIOD_UNIT_OPTIONS,
 )
-from tapir.wirgarten.utils import is_debug_instance
+from tapir.wirgarten.is_debug_instance import is_debug_instance
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
