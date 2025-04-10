@@ -4,13 +4,21 @@ from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.config import PICKING_MODE_SHARE, PICKING_MODE_BASKET
+from tapir.pickup_locations.services.basket_size_capacities_service import (
+    BasketSizeCapacitiesService,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
+)
+from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
+    PickupLocationCapacityModeBasketChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -25,6 +33,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
+from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -49,62 +58,119 @@ def get_pickup_locations_map_data(
     )
 
 
-def pickup_location_to_dict(location_capabilities, pickup_location, cache: Dict = None):
+def build_capacity_dictionary_for_picking_mode_share(
+    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: Dict
+):
+    max_capa = capa["max_capacity"]
+    try:
+        base_product = Product.objects.get(type_id=capa["product_type_id"], base=True)
+    except Product.DoesNotExist:
+        return None
+
+    current_capa = round(
+        PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+            pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
+            product_type=TapirCache.get_product_type_by_id(
+                cache, capa["product_type_id"]
+            ),
+            reference_date=next_month,
+            cache=cache,
+        )
+        / float(get_product_price(base_product, next_delivery_date, cache).size),
+        2,
+    )
+
+    next_month_capa = round(
+        PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+            pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
+            product_type=TapirCache.get_product_type_by_id(
+                cache, capa["product_type_id"]
+            ),
+            reference_date=next_month,
+            cache=cache,
+        )
+        / float(get_product_price(base_product, next_month, cache).size),
+        2,
+    )
+
+    capa_diff = round(next_month_capa - current_capa, 2)
+    return {
+        "name": capa["product_type__name"],
+        "icon": capa["product_type__icon_link"],
+        "max_capacity": max_capa,
+        "current_capacity": current_capa,
+        "next_capacity_diff": (
+            f"{'+' if capa_diff > 0 else ''} {capa_diff}" if capa_diff != 0 else ""
+        ),
+        "capacity_percent": (current_capa / max_capa) if max_capa else None,
+    }
+
+
+def build_capabilities_for_picking_mode_basket(
+    pickup_location: PickupLocation, cache: Dict = None
+):
+    capacities_by_basket_size = (
+        BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
+            pickup_location=pickup_location, cache=cache
+        )
+    )
+    usage_by_basket_size = {
+        size_name: PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+            pickup_location=pickup_location,
+            basket_size=size_name,
+            reference_date=get_today(cache),
+            cache=cache,
+        )
+        for size_name in capacities_by_basket_size.keys()
+    }
+
+    return {
+        size_name: {
+            "capacity": capacities_by_basket_size[size_name],
+            "usage": usage_by_basket_size[size_name],
+            "free": PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
+                pickup_location=pickup_location,
+                basket_size=size_name,
+                reference_date=get_today(cache),
+                cache=cache,
+            ),
+        }
+        for size_name in usage_by_basket_size.keys()
+    }
+
+
+def pickup_location_to_dict(
+    location_capabilities, pickup_location: PickupLocation, cache: Dict = None
+):
     next_delivery_date = get_next_delivery_date()
     next_month = next_delivery_date + relativedelta(day=1, months=1)
     if cache is None:
         cache = {}
 
-    def map_capa(capa):
-        max_capa = capa["max_capacity"]
-        try:
-            base_product = Product.objects.get(
-                type_id=capa["product_type_id"], base=True
-            )
-        except Product.DoesNotExist:
-            return None
-
-        current_capa = round(
-            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-                pickup_location=PickupLocation.objects.get(
-                    id=capa["pickup_location_id"]
-                ),
-                product_type=TapirCache.get_product_type_by_id(
-                    cache, capa["product_type_id"]
-                ),
-                reference_date=next_month,
+    picking_mode = get_parameter_value(Parameter.PICKING_MODE, cache)
+    if picking_mode == PICKING_MODE_BASKET:
+        capabilities_for_pickup_location = build_capabilities_for_picking_mode_basket(
+            pickup_location, cache
+        )
+    elif picking_mode == PICKING_MODE_SHARE:
+        capabilities_for_pickup_location = [
+            build_capacity_dictionary_for_picking_mode_share(
+                capa=capa,
+                next_delivery_date=next_delivery_date,
+                next_month=next_month,
                 cache=cache,
             )
-            / float(get_product_price(base_product, next_delivery_date, cache).size),
-            2,
-        )
-
-        next_month_capa = round(
-            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-                pickup_location=PickupLocation.objects.get(
-                    id=capa["pickup_location_id"]
-                ),
-                product_type=TapirCache.get_product_type_by_id(
-                    cache, capa["product_type_id"]
-                ),
-                reference_date=next_month,
-                cache=cache,
+            for capa in location_capabilities
+            if capa["pickup_location_id"] == pickup_location.id
+        ]
+        capabilities_for_pickup_location = list(
+            filter(
+                lambda capability: capability is not None,
+                capabilities_for_pickup_location,
             )
-            / float(get_product_price(base_product, next_month, cache).size),
-            2,
         )
-
-        capa_diff = round(next_month_capa - current_capa, 2)
-        return {
-            "name": capa["product_type__name"],
-            "icon": capa["product_type__icon_link"],
-            "max_capacity": max_capa,
-            "current_capacity": current_capa,
-            "next_capacity_diff": (
-                f"{'+' if capa_diff > 0 else ''} {capa_diff}" if capa_diff != 0 else ""
-            ),
-            "capacity_percent": (current_capa / max_capa) if max_capa else None,
-        }
+    else:
+        raise ImproperlyConfigured(f"Unknown picking mode: {picking_mode}")
 
     return {
         "id": pickup_location.id,
@@ -112,17 +178,7 @@ def pickup_location_to_dict(location_capabilities, pickup_location, cache: Dict 
         "opening_times": pickup_location.opening_times_html,
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
-        "capabilities": list(
-            [
-                x
-                for x in [
-                    map_capa(capa)
-                    for capa in location_capabilities
-                    if capa["pickup_location_id"] == pickup_location.id
-                ]
-                if x is not None
-            ]
-        ),
+        "capabilities": capabilities_for_pickup_location,
         "members": get_active_subscriptions(next_delivery_date, cache)
         .annotate(
             latest_pickup_location_id=Subquery(

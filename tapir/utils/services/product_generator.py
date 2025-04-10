@@ -1,6 +1,7 @@
 import datetime
 
 from tapir.configuration.models import TapirParameter
+from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -143,6 +144,28 @@ class ProductGenerator:
             size=1,
             base=True,
         )
+
+        if organization == Organization.BIOTOP:
+            ProductBasketSizeEquivalence.objects.create(
+                product=Product.objects.get(name="S"),
+                basket_size_name="kleinen Kiste",
+                quantity=1,
+            )
+            ProductBasketSizeEquivalence.objects.create(
+                product=Product.objects.get(name="M"),
+                basket_size_name="normalen Kiste",
+                quantity=1,
+            )
+            ProductBasketSizeEquivalence.objects.create(
+                product=Product.objects.get(name="L"),
+                basket_size_name="kleinen Kiste",
+                quantity=1,
+            )
+            ProductBasketSizeEquivalence.objects.create(
+                product=Product.objects.get(name="L"),
+                basket_size_name="normalen Kiste",
+                quantity=1,
+            )
 
     @classmethod
     def generate_product_capacities(cls):
