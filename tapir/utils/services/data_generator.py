@@ -3,7 +3,7 @@ import datetime
 import factory.random
 from django.core.exceptions import ImproperlyConfigured
 
-from tapir.accounts.models import EmailChangeRequest, TapirUser
+from tapir.accounts.models import EmailChangeRequest
 from tapir.log.models import LogEntry
 from tapir.utils.config import Organization
 from tapir.utils.services.configuration_generator import ConfigurationGenerator
@@ -55,15 +55,13 @@ class DataGenerator:
             Payment,
             MandateReference,
             EmailChangeRequest,
-            Member,
-            TapirUser,
         ]
 
         for model_class in model_classes:
             models = model_class.objects.all()
-            if model_class in [Member, TapirUser]:
-                models = models.exclude(email="techadmin@foodcoopx.de")
             models.delete()
+
+        Member.objects.filter(email__endswith="@example.com").delete()
 
         print("Done")
 
