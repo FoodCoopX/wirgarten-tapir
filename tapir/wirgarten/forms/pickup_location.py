@@ -478,29 +478,27 @@ class PickupLocationEditForm(forms.Form):
 
         def validate_times(field):
             times = cleaned_data.get(field)
-            if times:
-                times = [time.strip() for time in times.split(",")]
-                for time in times:
-                    try:
-                        start, end = time.split("-")
-                        start_time = datetime.strptime(start, "%H:%M")
-                        end_time = datetime.strptime(end, "%H:%M")
-
-                        if start_time >= end_time:
-                            self.add_error(
-                                field,
-                                ValidationError(
-                                    "End time must be later than start time"
-                                ),
-                            )
-
-                    except Exception:
+            if not times:
+                return False
+            times = [time.strip() for time in times.split(",")]
+            for time in times:
+                try:
+                    start, end = time.split("-")
+                    start_time = datetime.strptime(start, "%H:%M")
+                    end_time = datetime.strptime(end, "%H:%M")
+                    if start_time >= end_time:
                         self.add_error(
                             field,
-                            ValidationError(
-                                "Bitte geben Sie die Öffnungszeiten im Format 'HH:MM-HH:MM' an."
-                            ),
+                            ValidationError("End time must be later than start time"),
                         )
+                except Exception:
+                    self.add_error(
+                        field,
+                        ValidationError(
+                            "Bitte geben Sie die Öffnungszeiten im Format 'HH:MM-HH:MM' an."
+                        ),
+                    )
+            return True
 
         coords = cleaned_data.get("coords")
         if coords:
@@ -523,13 +521,20 @@ class PickupLocationEditForm(forms.Form):
                     ),
                 )
 
-        validate_times("monday_times")
-        validate_times("tuesday_times")
-        validate_times("wednesday_times")
-        validate_times("thursday_times")
-        validate_times("friday_times")
-        validate_times("saturday_times")
-        validate_times("sunday_times")
+        time_fields = [
+            "monday_times",
+            "tuesday_times",
+            "wednesday_times",
+            "thursday_times",
+            "friday_times",
+            "saturday_times",
+            "sunday_times",
+        ]
+        at_least_one_time_filled = False
+        for field in time_fields:
+            at_least_one_time_filled = at_least_one_time_filled or validate_times(field)
+        if not at_least_one_time_filled:
+            raise ValidationError("Mindestens ein Abholtag muss eingetragen werden.")
 
         return cleaned_data
 
