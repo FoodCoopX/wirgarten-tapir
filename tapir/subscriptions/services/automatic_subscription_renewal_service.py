@@ -66,7 +66,7 @@ class AutomaticSubscriptionRenewalService:
             mandate_ref=subscription.mandate_ref,
             trial_disabled=trial_disabled,
             trial_end_date_override=trial_end_date_override,
-            notice_period_duration_in_months=NoticePeriodManager.get_notice_period_duration(
+            notice_period_duration=NoticePeriodManager.get_notice_period_duration(
                 subscription.product.type, next_growing_period
             ),
         )

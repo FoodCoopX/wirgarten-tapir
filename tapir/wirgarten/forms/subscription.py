@@ -375,12 +375,10 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
-            notice_period_duration_in_months = None
+            notice_period_duration = None
             if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
-                notice_period_duration_in_months = (
-                    NoticePeriodManager.get_notice_period_duration(
-                        self.product_type, self.growing_period
-                    )
+                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                    self.product_type, self.growing_period
                 )
 
             sub = Subscription.objects.create(
@@ -400,7 +398,7 @@ class BaseProductForm(forms.Form):
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
-                notice_period_duration_in_months=notice_period_duration_in_months,
+                notice_period_duration=notice_period_duration,
             )
 
             self.subs.append(sub)
@@ -847,9 +845,9 @@ class AdditionalProductForm(forms.Form):
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
-                notice_period_duration_in_months = None
+                notice_period_duration = None
                 if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL):
-                    notice_period_duration_in_months = (
+                    notice_period_duration = (
                         NoticePeriodManager.get_notice_period_duration(
                             self.product_type, self.growing_period
                         )
@@ -866,7 +864,7 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
-                        notice_period_duration_in_months=notice_period_duration_in_months,
+                        notice_period_duration=notice_period_duration,
                     )
                 )
 

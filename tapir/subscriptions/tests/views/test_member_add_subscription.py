@@ -109,7 +109,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
 
         self.assertEqual(1, Subscription.objects.count())
         subscription = Subscription.objects.get()
-        self.assertIsNone(subscription.notice_period_duration_in_months)
+        self.assertIsNone(subscription.notice_period_duration)
 
     def test_memberAddSubscription_baseProductAndAutoRenewOn_subscriptionNoticePeriodSetToCorrectValue(
         self,
@@ -127,7 +127,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
 
         self.assertEqual(1, Subscription.objects.count())
         subscription = Subscription.objects.get()
-        self.assertEqual(2, subscription.notice_period_duration_in_months)
+        self.assertEqual(2, subscription.notice_period_duration)
 
     def test_memberAddSubscription_additionalProductAndAutoRenewOff_subscriptionNoticePeriodSetToNone(
         self,
@@ -152,7 +152,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         subscription = Subscription.objects.exclude(
             id=base_product_subscription.id
         ).get()
-        self.assertIsNone(subscription.notice_period_duration_in_months)
+        self.assertIsNone(subscription.notice_period_duration)
 
     def test_memberAddSubscription_additionalProductAndAutoRenewOn_subscriptionNoticePeriodSetToCorrectValue(
         self,
@@ -180,4 +180,4 @@ class TestMemberAddSubscription(TapirIntegrationTest):
         subscription = Subscription.objects.exclude(
             id=base_product_subscription.id
         ).get()
-        self.assertEqual(2, subscription.notice_period_duration_in_months)
+        self.assertEqual(2, subscription.notice_period_duration)

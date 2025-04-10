@@ -8,6 +8,7 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
+from tapir.subscriptions.config import NOTICE_PERIOD_UNIT_MONTHS
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -127,6 +128,9 @@ class Parameter:
     JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
+    SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (
+        f"{PREFIX}.subscriptions.default_notice_period_unit"
+    )
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
 
 
@@ -877,15 +881,25 @@ Dein WirGarten-Team""",
             initial_value=False,
             description="",
             category=ParameterCategory.SUBSCRIPTIONS,
-            order_priority=2,
+            order_priority=3,
         )
 
         parameter_definition(
             key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
-            label="Kündigungsfrist (Monate)",
+            label="Kündigungsfrist",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
             description="Bei automatischer Verlängerung der Verträge",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=2,
+        )
+
+        parameter_definition(
+            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+            label="Einheit der Kündigungsfrist",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
         )
