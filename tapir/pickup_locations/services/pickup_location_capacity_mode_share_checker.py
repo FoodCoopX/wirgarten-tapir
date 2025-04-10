@@ -1,7 +1,6 @@
 import datetime
 from typing import Dict, Set
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.highest_usage_after_date_service import (
     HighestUsageAfterDateService,
 )
@@ -10,6 +9,9 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 )
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
+)
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -20,7 +22,6 @@ from tapir.wirgarten.models import (
     ProductType,
     Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
@@ -104,25 +105,6 @@ class PickupLocationCapacityModeShareChecker:
         )
 
     @classmethod
-    def get_subscriptions_with_product_type(
-        cls, product_type: ProductType, cache: Dict
-    ):
-        def compute():
-            subscriptions_by_product_type = {
-                product_type: set() for product_type in ProductType.objects.all()
-            }
-            subscriptions = Subscription.objects.select_related("product__type")
-            for subscription in subscriptions:
-                subscriptions_by_product_type[subscription.product.type].add(
-                    subscription
-                )
-            return subscriptions_by_product_type
-
-        return get_from_cache_or_compute(
-            cache, "subscriptions_by_product_type", compute
-        )[product_type]
-
-    @classmethod
     def get_capacity_usage_at_date(
         cls,
         pickup_location: PickupLocation,
@@ -138,26 +120,23 @@ class PickupLocationCapacityModeShareChecker:
             )
         )
 
-        relevant_subscriptions = cls.get_subscriptions_with_product_type(
-            product_type=product_type, cache=cache
-        )
-        relevant_subscriptions = {
-            subscription
-            for subscription in relevant_subscriptions
-            if subscription.start_date <= reference_date <= subscription.end_date
-            and subscription.member_id in member_ids_at_pickup_location
-        }
+        subscriptions_with_product_type = TapirCache.get_subscriptions_by_product_type(
+            cache
+        )[product_type]
 
-        if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
-            relevant_subscriptions = (
-                cls.extend_subscriptions_with_those_that_will_be_renewed(
-                    relevant_subscriptions=relevant_subscriptions,
-                    reference_date=reference_date,
-                    product_type=product_type,
-                    member_ids_at_pickup_location=member_ids_at_pickup_location,
-                    cache=cache,
-                )
+        def subscription_filter(subscription: Subscription):
+            return (
+                subscription in subscriptions_with_product_type
+                and subscription.member_id in member_ids_at_pickup_location
             )
+
+        relevant_subscriptions = (
+            AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+                reference_date=reference_date,
+                subscription_filter=subscription_filter,
+                cache=cache,
+            )
+        )
 
         total_size = 0
         for subscription in relevant_subscriptions:

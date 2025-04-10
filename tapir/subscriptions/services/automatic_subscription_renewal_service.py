@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, Callable
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -122,3 +122,28 @@ class AutomaticSubscriptionRenewalService:
             and subscription.member_id
             not in members_ids_currently_subbed_to_product_id[subscription.product_id]
         }
+
+    @classmethod
+    def get_subscriptions_and_renewals(
+        cls,
+        reference_date: datetime.date,
+        subscription_filter: Callable[[Subscription], bool],
+        cache: Dict,
+    ):
+        subscriptions = TapirCache.get_subscriptions_active_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        relevant_subscriptions = set(filter(subscription_filter, subscriptions))
+
+        all_renewed_subscriptions = (
+            AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=reference_date, cache=cache
+            )
+        )
+        relevant_renewed_subscriptions = set(
+            filter(subscription_filter, all_renewed_subscriptions)
+        )
+
+        relevant_subscriptions.update(relevant_renewed_subscriptions)
+
+        return relevant_subscriptions

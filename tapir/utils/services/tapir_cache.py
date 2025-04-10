@@ -103,3 +103,20 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache, "all_products", lambda: set(Product.objects.order_by("id"))
         )
+
+    @classmethod
+    def get_subscriptions_by_product_type(cls, cache: Dict):
+        def compute():
+            subscriptions_by_product_type = {
+                product_type: set() for product_type in ProductType.objects.all()
+            }
+            subscriptions = Subscription.objects.select_related("product__type")
+            for subscription in subscriptions:
+                subscriptions_by_product_type[subscription.product.type].add(
+                    subscription
+                )
+            return subscriptions_by_product_type
+
+        return get_from_cache_or_compute(
+            cache, "subscriptions_by_product_type", compute
+        )

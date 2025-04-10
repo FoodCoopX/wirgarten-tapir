@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, Set
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
@@ -16,6 +16,7 @@ from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Member,
+    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.delivery import get_next_delivery_date
@@ -103,9 +104,7 @@ class GetDeliveriesService:
     @classmethod
     def get_relevant_subscriptions(
         cls, member: Member, reference_date: datetime.date, even_week: bool, cache: Dict
-    ):
-        do_print = reference_date == datetime.date(year=2025, month=4, day=5)
-
+    ) -> Set[Subscription]:
         accepted_delivery_cycles = [
             WEEKLY[0],
             EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
@@ -118,30 +117,17 @@ class GetDeliveriesService:
                 )
             )
 
-        subscriptions = TapirCache.get_subscriptions_active_at_date(
-            reference_date=reference_date, cache=cache
-        )
-        relevant_subscriptions = {
-            subscription
-            for subscription in subscriptions
-            if subscription.member_id == member.id
-            and subscription in subscriptions_with_accepted_delivery_cycles
-        }
-
-        all_renewed_subscriptions = (
-            AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=reference_date, cache=cache
+        def subscription_filter(subscription: Subscription):
+            return (
+                subscription.member_id == member.id
+                and subscription in subscriptions_with_accepted_delivery_cycles
             )
-        )
-        relevant_renewed_subscriptions = {
-            subscription
-            for subscription in all_renewed_subscriptions
-            if subscription.member_id == member.id
-            and subscription in subscriptions_with_accepted_delivery_cycles
-        }
 
-        relevant_subscriptions.update(relevant_renewed_subscriptions)
-        return relevant_subscriptions
+        return AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+            reference_date=reference_date,
+            cache=cache,
+            subscription_filter=subscription_filter,
+        )
 
     @classmethod
     def update_delivery_date_to_opening_times(

@@ -22,6 +22,9 @@ from tapir.pickup_locations.serializers import (
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.pickup_locations.services.highest_usage_after_date_service import (
+    HighestUsageAfterDateService,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
     PickupLocationCapacityModeBasketChecker,
 )
@@ -37,8 +40,6 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
     ProductType,
-    MemberPickupLocation,
-    Subscription,
 )
 from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import product_type_order_by
@@ -255,7 +256,11 @@ class PickupLocationCapacityEvolutionView(APIView):
                 pickup_location=pickup_location
             )
         )
-        max_date = self.get_date_of_last_possible_capacity_change(pickup_location)
+        max_date = (
+            HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+                pickup_location=pickup_location, cache=cache
+            )
+        )
         current_date = get_today()
         while current_date < max_date:
             values = []
@@ -288,13 +293,3 @@ class PickupLocationCapacityEvolutionView(APIView):
             "table_headers": capacities_by_basket_size.keys(),
             "data_points": data_points,
         }
-
-    @staticmethod
-    def get_date_of_last_possible_capacity_change(pickup_location: PickupLocation):
-        return max(
-            MemberPickupLocation.objects.filter(pickup_location=pickup_location)
-            .order_by("valid_from")
-            .last()
-            .valid_from,
-            Subscription.objects.order_by("end_date").last().end_date,
-        )

@@ -1,7 +1,6 @@
 import datetime
 from typing import Dict, Set
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -12,6 +11,9 @@ from tapir.pickup_locations.services.highest_usage_after_date_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
@@ -21,7 +23,6 @@ from tapir.wirgarten.models import (
     Subscription,
     MemberPickupLocation,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_current_growing_period,
@@ -114,24 +115,16 @@ class PickupLocationCapacityModeBasketChecker:
             )
         )
 
-        relevant_subscriptions = {
-            subscription
-            for subscription in TapirCache.get_all_subscriptions(cache)
-            if (
-                subscription.start_date <= reference_date <= subscription.end_date
-                and subscription.member_id in member_ids_at_pickup_location
-            )
-        }
+        def subscription_filter(subscription: Subscription):
+            return subscription.member_id in member_ids_at_pickup_location
 
-        if get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
-            relevant_subscriptions = (
-                cls.extend_subscriptions_with_those_that_will_be_renewed(
-                    subscriptions=relevant_subscriptions,
-                    reference_date=reference_date,
-                    member_ids_at_pickup_location=member_ids_at_pickup_location,
-                    cache=cache,
-                )
+        relevant_subscriptions = (
+            AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+                reference_date=reference_date,
+                subscription_filter=subscription_filter,
+                cache=cache,
             )
+        )
 
         total_usage = 0
         for subscription in relevant_subscriptions:

@@ -29,19 +29,15 @@ class HighestUsageAfterDateService:
 
         while current_date < date_of_last_possible_capacity_change:
             usage_at_date = lambda_get_usage_at_date(current_date)
-
-            max_usage = max(
-                max_usage,
-                usage_at_date,
-            )
-
+            max_usage = max(max_usage, usage_at_date)
             current_date = get_monday(current_date + datetime.timedelta(days=7))
 
         return max_usage
 
     @staticmethod
     def get_date_of_last_possible_capacity_change(
-        cache: Dict, pickup_location: PickupLocation
+        pickup_location: PickupLocation,
+        cache: Dict,
     ):
         def compute():
             last_pickup_location_change = (
