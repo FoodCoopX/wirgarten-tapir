@@ -27,6 +27,7 @@ import { formatDateText } from "../../utils/formatDateText.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 import "../../fixed_header.css";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface ManageJokersModalProps {
   onHide: () => void;
@@ -84,7 +85,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         setRestrictions(info.jokerRestrictions);
         setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
       })
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => setInfoLoading(false));
 
     loadDeliveries();
@@ -204,7 +205,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     api
       .deliveriesApiCancelJokerCreate({ jokerId: joker.id })
       .then(() => loadData())
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => {
         setRequestLoading(false);
         setSelectedJokerForCancellation(undefined);
@@ -221,7 +222,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         date: delivery.deliveryDate,
       })
       .then(() => loadData())
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => {
         setRequestLoading(false);
         setSelectedDeliveryForJokerUse(undefined);

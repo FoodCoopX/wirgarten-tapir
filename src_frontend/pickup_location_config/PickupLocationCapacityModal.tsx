@@ -9,6 +9,7 @@ import {
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface ProductModalProps {
   show: boolean;
@@ -62,7 +63,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
             break;
         }
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -93,7 +94,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSaving(false));
   }
 

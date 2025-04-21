@@ -15,6 +15,7 @@ import "dayjs/locale/de";
 import PickupLocationModal from "./PickupLocationModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 declare let FormModal: { load: (url: string, title: string) => void };
 
@@ -54,7 +55,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     api
       .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => setDeliveriesLoading(false));
   }
 

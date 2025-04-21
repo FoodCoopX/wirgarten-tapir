@@ -10,6 +10,7 @@ import {
 import EmailInput from "../components/EmailInput";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportModalProps {
   show: boolean;
@@ -138,7 +139,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setLoading(false));
   }
 

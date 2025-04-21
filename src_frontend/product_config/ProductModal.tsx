@@ -19,6 +19,7 @@ import {
   getPeriodIdFromUrl,
   getProductIdFromUrl,
 } from "./get_parameter_from_url.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface ProductModalProps {
   show: boolean;
@@ -66,7 +67,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setEquivalences(extendedProduct.basketSizeEquivalences);
         setPickingMode(extendedProduct.pickingMode);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -90,7 +91,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSaving(false));
     return;
   }

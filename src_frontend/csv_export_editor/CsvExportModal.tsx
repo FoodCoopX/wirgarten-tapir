@@ -11,6 +11,7 @@ import EmailInput from "../components/EmailInput";
 import ColumnInput from "./ColumnInput.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportModalProps {
   show: boolean;
@@ -171,7 +172,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setLoading(false));
   }
 

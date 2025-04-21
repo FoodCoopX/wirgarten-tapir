@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/de";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import { formatDateText } from "../utils/formatDateText.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 const DashboardPickupLocationCapacityBase: React.FC = () => {
   const api = useApi(PickupLocationsApi, "no_token");
@@ -37,7 +38,7 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
           setSelectedPickupLocation(data[0]);
         }
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setBaseLoading(false));
   }, []);
 
@@ -63,7 +64,7 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
         setTableHeaders(data.tableHeaders);
         setDataPoints(data.dataPoints);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setDataLoading(false));
   }, [selectedPickupLocation]);
 
