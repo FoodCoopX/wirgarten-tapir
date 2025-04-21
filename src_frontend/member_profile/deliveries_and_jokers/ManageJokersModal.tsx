@@ -26,6 +26,8 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
+import "../../fixed_header.css";
+
 interface ManageJokersModalProps {
   onHide: () => void;
   show: boolean;
@@ -144,7 +146,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
 
   function usedJokersTable() {
     return (
-      <Table striped hover responsive>
+      <Table striped hover responsive className={"fixed_header"}>
         <thead>
           <tr>
             <th>KW</th>
@@ -310,7 +312,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
           </ListGroup.Item>
           <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
             <h5>Kommende Lieferungen</h5>
-            <Table striped hover responsive>
+            <Table striped hover responsive className={"fixed_header"}>
               <thead>
                 <tr>
                   <th>KW</th>
