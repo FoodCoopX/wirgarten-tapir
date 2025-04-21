@@ -128,11 +128,15 @@ def build_capabilities_for_picking_mode_basket(
         size_name: {
             "capacity": capacities_by_basket_size[size_name],
             "usage": usage_by_basket_size[size_name],
-            "free": PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
-                pickup_location=pickup_location,
-                basket_size=size_name,
-                reference_date=get_today(cache),
-                cache=cache,
+            "free": (
+                PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
+                    pickup_location=pickup_location,
+                    basket_size=size_name,
+                    reference_date=get_today(cache),
+                    cache=cache,
+                )
+                if capacities_by_basket_size[size_name] is not None
+                else "∞"
             ),
         }
         for size_name in usage_by_basket_size.keys()
