@@ -33,12 +33,10 @@ const messageEvent = eventMethod === "attachEvent"
             const modalInfo = document.getElementById("modalInfo")
             const modalInfoContent = document.getElementById("modalInfoContent")
 
-            if(info === undefined || info.length < 1){
-                modalInfo.style.display="none";
-                if(modalInfoContent){
-                    modalInfoContent.innerText= "";
-                }
-            } else {
+            modalInfo.style.display="none";
+            modalInfoContent.innerText="";
+
+            if (info !== undefined && info.length > 0) {
                 modalInfo.style.display="block";
 
                 if(modalInfoContent){
