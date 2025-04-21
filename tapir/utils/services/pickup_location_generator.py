@@ -261,12 +261,12 @@ class PickupLocationGenerator:
             close_time=datetime.time(hour=18),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=biodelikat,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=biodelikat,
             capacity=random.randint(10, 100),
         )
@@ -289,12 +289,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=zentrum,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=zentrum,
             capacity=random.randint(10, 100),
         )
@@ -317,12 +317,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=badeteil,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=badeteil,
             capacity=random.randint(10, 100),
         )
@@ -351,12 +351,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=norden,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=norden,
             capacity=random.randint(10, 100),
         )
@@ -379,12 +379,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=hofpunkt,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=hofpunkt,
             capacity=random.randint(10, 100),
         )
@@ -419,12 +419,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=warenhaus,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=warenhaus,
             capacity=random.randint(10, 100),
         )
@@ -453,12 +453,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=hochalmstrasse,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=hochalmstrasse,
             capacity=random.randint(10, 100),
         )
@@ -481,12 +481,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=schlossweg,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=schlossweg,
             capacity=random.randint(10, 100),
         )
@@ -515,12 +515,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=hotel,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=hotel,
             capacity=random.randint(10, 100),
         )
@@ -543,12 +543,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=penzberg,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=penzberg,
             capacity=random.randint(10, 100),
         )
@@ -571,12 +571,12 @@ class PickupLocationGenerator:
             coords_lat=11 + random.random(),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="kleinen Kiste",
+            basket_size_name="kleine Kiste",
             pickup_location=tutzing,
             capacity=random.randint(10, 100),
         )
         PickupLocationBasketCapacity.objects.create(
-            basket_size_name="normalen Kiste",
+            basket_size_name="normale Kiste",
             pickup_location=tutzing,
             capacity=random.randint(10, 100),
         )

@@ -376,8 +376,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=Parameter.PICKING_BASKET_SIZES,
             label="Kistengrößen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="kleinen Kiste;normalen Kiste;",
-            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleinen Kiste;normalen Kiste;'",
+            initial_value="kleine Kiste;normale Kiste;",
+            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleine Kiste;normale Kiste;'",
             category=ParameterCategory.PICKING,
             order_priority=2,
             meta=ParameterMeta(

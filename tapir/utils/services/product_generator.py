@@ -148,22 +148,22 @@ class ProductGenerator:
         if organization == Organization.BIOTOP:
             ProductBasketSizeEquivalence.objects.create(
                 product=Product.objects.get(name="S"),
-                basket_size_name="kleinen Kiste",
+                basket_size_name="kleine Kiste",
                 quantity=1,
             )
             ProductBasketSizeEquivalence.objects.create(
                 product=Product.objects.get(name="M"),
-                basket_size_name="normalen Kiste",
+                basket_size_name="normale Kiste",
                 quantity=1,
             )
             ProductBasketSizeEquivalence.objects.create(
                 product=Product.objects.get(name="L"),
-                basket_size_name="kleinen Kiste",
+                basket_size_name="kleine Kiste",
                 quantity=1,
             )
             ProductBasketSizeEquivalence.objects.create(
                 product=Product.objects.get(name="L"),
-                basket_size_name="normalen Kiste",
+                basket_size_name="normale Kiste",
                 quantity=1,
             )
 
