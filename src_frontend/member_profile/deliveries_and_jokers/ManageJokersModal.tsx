@@ -260,32 +260,30 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
-            <p>
-              Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
-              eingesetzt werden.
-            </p>
+            <p>Überischt deiner Joker:</p>
             <ul>
               {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
                 return (
                   <li>
-                    Im Vertragsjahr vom{" "}
+                    Vertragsjahr{" "}
                     {formatDateNumeric(
                       usedJokerInGrowingPeriod.growingPeriodStart,
                     )}{" "}
-                    zu{" "}
+                    bis{" "}
                     {formatDateNumeric(
                       usedJokerInGrowingPeriod.growingPeriodEnd,
-                    )}{" "}
-                    sind {usedJokerInGrowingPeriod.numberOfUsedJokers} Joker aus{" "}
-                    maximal {maxJokersPerGrowingPeriod} eingesetzt.
+                    )}
+                    {": "}
+                    {usedJokerInGrowingPeriod.numberOfUsedJokers} von{" "}
+                    {maxJokersPerGrowingPeriod} Joker eingesetzt.
                   </li>
                 );
               })}
             </ul>
           </ListGroup.Item>
           <ListGroup.Item>
-            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor der
-            Lieferungstag eingesetzt oder abgesagt werden. <br />
+            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor Liefertag
+            eingesetzt oder abgesagt werden. <br />
             {restrictions.length > 0 && (
               <>
                 Zusätzliche Einschränkungen:
@@ -294,10 +292,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                     <li
                       key={restriction.startDay + "-" + restriction.startMonth}
                     >
-                      Zwischen dem {restriction.startDay}.
-                      {restriction.startMonth}. und dem {restriction.endDay}.
-                      {restriction.endMonth}. dürfen maximal{" "}
-                      {restriction.maxJokers} Joker eingesetzt werden.
+                      {restriction.startDay}.{restriction.startMonth}. bis{" "}
+                      {restriction.endDay}.{restriction.endMonth}.: maximal{" "}
+                      {restriction.maxJokers} Joker.
                     </li>
                   ))}
                 </ul>

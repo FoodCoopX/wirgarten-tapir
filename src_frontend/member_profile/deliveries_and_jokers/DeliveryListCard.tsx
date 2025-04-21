@@ -144,7 +144,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             <span className={"d-flex gap-2"}>
               {areJokersEnabled && (
                 <TapirButton
-                  text={"Joker"}
+                  text={"Joker verwalten"}
                   icon={"free_cancellation"}
                   variant={"outline-primary"}
                   onClick={() => {
