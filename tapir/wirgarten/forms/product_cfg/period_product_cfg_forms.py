@@ -112,7 +112,7 @@ class ProductTypeForm(forms.Form):
                 initial=initial_notice_period,
                 required=True,
                 label=_("Kündigungsfrist"),
-                help_text=_("Anzahl an Monaten"),
+                help_text=_("Anzahl an Monate"),
             )
 
         self.fields["tax_rate"] = forms.FloatField(
