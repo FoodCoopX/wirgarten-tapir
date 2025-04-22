@@ -94,4 +94,7 @@ class ParameterKeys:
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (
         f"{PREFIX}.subscriptions.default_notice_period_unit"
     )
+    SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT = (
+        f"{PREFIX}.subscriptions.additional_product_allowed_without_base_product"
+    )
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"

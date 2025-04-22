@@ -23,6 +23,7 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     MemberPickupLocationFactory,
     PickupLocationCapabilityFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -33,6 +34,10 @@ class TestStudentStatus(TapirIntegrationTest):
         TapirParameter.objects.filter(
             key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")
+        product_type = ProductTypeFactory.create()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_type.id
+        )
         configure_mail_module()
 
     def test_cooperativeShareForm_fromTheMemberProfile_doesntShowStudentStatusField(

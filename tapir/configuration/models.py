@@ -23,7 +23,7 @@ class TapirParameter(models.Model):
     options: [tuple] = None
     validators: [callable] = []
 
-    def full_clean(self):
+    def full_clean(self, *_, **__):
         for validator in self.validators:
             validator(self.value)
 
@@ -51,6 +51,6 @@ class TapirParameter(models.Model):
 
 
 class TapirParameterDefinitionImporter:
-    def import_definitions(self, skip_validation: bool = False):
+    def import_definitions(self):
         """Import the parameter definitions for the module."""
         pass

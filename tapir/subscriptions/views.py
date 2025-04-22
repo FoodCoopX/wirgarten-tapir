@@ -138,7 +138,10 @@ class CancelSubscriptionsView(APIView):
             )
 
         if (
-            BaseProductTypeService.is_base_product_type_logic_enabled(cache=cache)
+            not get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+                cache=cache,
+            )
             and self.is_at_least_one_additional_product_not_selected(
                 subscribed_products, products_selected_for_cancellation, cache=cache
             )

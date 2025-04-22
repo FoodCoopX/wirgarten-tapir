@@ -114,6 +114,24 @@ class TestAdditionalProductForm(TapirIntegrationTest):
         ).first()
         self.assertIsNone(new_subscription)
 
+    def test_additionalProductForm_memberDoesntHaveBaseProductSubscriptionButSettingAllowIt_subscriptionNotCreated(
+        self,
+    ):
+        member = self.create_member_and_login()
+        [_, additional_product] = self.create_additional_product()
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+        ).update(value=True)
+
+        response = self.try_to_order_additional_product(member, additional_product)
+
+        self.assertStatusCode(response, 200)
+        new_subscription = Subscription.objects.filter(
+            product=additional_product.id
+        ).first()
+        self.assertIsNotNone(new_subscription)
+        self.assertEqual(new_subscription.quantity, 3)
+
     @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")

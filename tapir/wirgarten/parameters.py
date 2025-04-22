@@ -16,9 +16,6 @@ from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
     NOTICE_PERIOD_UNIT_OPTIONS,
 )
-from tapir.subscriptions.services.base_product_type_service import (
-    BaseProductTypeService,
-)
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -486,11 +483,14 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
-            initial_value=BaseProductTypeService.VALUE_NO_BASE_PRODUCT_TYPE,
+            initial_value=get_default_product_type(),
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.COOP,
             meta=ParameterMeta(
-                options=BaseProductTypeService.get_options_for_base_product_type_parameter()
+                options=[
+                    (product_type.id, product_type.name)
+                    for product_type in ProductType.objects.all()
+                ]
             ),
             enabled=is_debug_instance(),
         )
@@ -817,6 +817,29 @@ Dein WirGarten-Team""",
             order_priority=1,
             meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
             enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+            label="Einheit der Kündigungsfrist",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
+            meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+            label="Zusatzproduktverträge erlauben ohne Basisproduktvertrag",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn dieses Feld aus ist, können Zusatzproduktverträge nur gezeichnet werden "
+            "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=0,
         )
 
         if getattr(settings, "DEBUG", False):
