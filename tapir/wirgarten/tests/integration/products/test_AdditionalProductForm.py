@@ -1,8 +1,12 @@
 import datetime
+from unittest.mock import patch
 
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
 from tapir.wirgarten.models import (
     ProductType,
     GrowingPeriod,
@@ -109,3 +113,19 @@ class TestAdditionalProductForm(TapirIntegrationTest):
             product=additional_product.id
         ).first()
         self.assertIsNone(new_subscription)
+
+    @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
+    def test_additionalProductForm_default_validationCalled(self, *validation_mocks):
+        member = self.create_member_and_login()
+        [base_product, additional_product] = self.create_additional_product()
+        SubscriptionFactory.create(
+            member=member, period=GrowingPeriod.objects.get(), product=base_product
+        )
+
+        response = self.try_to_order_additional_product(member, additional_product)
+
+        self.assertStatusCode(response, 200)
+        for mock in validation_mocks:
+            mock.assert_called_once()
