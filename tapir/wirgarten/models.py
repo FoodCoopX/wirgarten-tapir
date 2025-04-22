@@ -727,13 +727,13 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
         return self._total_price_without_soli
 
-    def get_used_capacity(self):
-        today = get_today()
+    def get_used_capacity(self, cache: Dict):
+        today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
             from tapir.wirgarten.service.products import get_product_price
 
             current_product_price = get_product_price(
-                product=self.product, reference_date=today
+                product=self.product, reference_date=today, cache=cache
             )
 
             self._used_capacity = current_product_price.size * self.quantity

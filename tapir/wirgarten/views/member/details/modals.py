@@ -251,6 +251,9 @@ def get_renew_contracts_form(request, **kwargs):
 def get_add_subscription_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
+    cache = {}
+    kwargs["cache"] = cache
+
     check_permission_or_self(member_id, request)
 
     product_type_name = request.GET.get("productType")
@@ -258,7 +261,7 @@ def get_add_subscription_form(request, **kwargs):
         raise Exception("productType not specified")
 
     product_type = get_object_or_404(ProductType, name=product_type_name)
-    cache = {}
+
     is_base_product_type = (
         BaseProductTypeService.get_base_product_type(cache=cache) == product_type
     )

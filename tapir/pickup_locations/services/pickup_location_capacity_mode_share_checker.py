@@ -205,8 +205,10 @@ class PickupLocationCapacityModeShareChecker:
         return float(
             sum(
                 [
-                    s.get_used_capacity()
-                    for s in get_active_subscriptions(subscription_start, cache).filter(
+                    s.get_used_capacity(cache=cache)
+                    for s in get_active_subscriptions(
+                        subscription_start, cache=cache
+                    ).filter(
                         member_id=member.id,
                         product__type_id=product_type.id,
                     )

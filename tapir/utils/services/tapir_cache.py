@@ -120,3 +120,20 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache, "subscriptions_by_product_type", compute
         )
+
+    @classmethod
+    def get_product_by_name_iexact(cls, cache: Dict, product_name: str):
+        products = cls.get_all_products(cache)
+
+        products_by_name_iexact = get_from_cache_or_compute(
+            cache, "products_by_name_iexact", lambda: {}
+        )
+
+        def name_matches(product: Product):
+            return product.name.casefold() == product_name.casefold()
+
+        return get_from_cache_or_compute(
+            products_by_name_iexact,
+            product_name,
+            lambda: next(filter(name_matches, products), None),
+        )
