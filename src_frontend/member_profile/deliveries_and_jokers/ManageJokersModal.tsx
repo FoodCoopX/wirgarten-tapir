@@ -26,6 +26,9 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
+import "../../fixed_header.css";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+
 interface ManageJokersModalProps {
   onHide: () => void;
   show: boolean;
@@ -82,7 +85,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         setRestrictions(info.jokerRestrictions);
         setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
       })
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => setInfoLoading(false));
 
     loadDeliveries();
@@ -144,11 +147,11 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
 
   function usedJokersTable() {
     return (
-      <Table striped hover responsive>
+      <Table striped hover responsive className={"fixed_header"}>
         <thead>
           <tr>
             <th>KW</th>
-            <th>Lieferungsdatum</th>
+            <th>Lieferdatum</th>
             <th></th>
           </tr>
         </thead>
@@ -202,7 +205,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     api
       .deliveriesApiCancelJokerCreate({ jokerId: joker.id })
       .then(() => loadData())
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => {
         setRequestLoading(false);
         setSelectedJokerForCancellation(undefined);
@@ -219,7 +222,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         date: delivery.deliveryDate,
       })
       .then(() => loadData())
-      .catch((error) => alert(error))
+      .catch(handleRequestError)
       .finally(() => {
         setRequestLoading(false);
         setSelectedDeliveryForJokerUse(undefined);
@@ -257,32 +260,30 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       ) : (
         <ListGroup variant="flush">
           <ListGroup.Item>
-            <p>
-              Es dürfen pro Vertragsjahr {maxJokersPerGrowingPeriod} Joker
-              eingesetzt werden.
-            </p>
+            <p>Überischt deiner Joker:</p>
             <ul>
               {usedJokerInGrowingPeriods.map((usedJokerInGrowingPeriod) => {
                 return (
                   <li>
-                    Im Vertragsjahr vom{" "}
+                    Vertragsjahr{" "}
                     {formatDateNumeric(
                       usedJokerInGrowingPeriod.growingPeriodStart,
                     )}{" "}
-                    zu{" "}
+                    bis{" "}
                     {formatDateNumeric(
                       usedJokerInGrowingPeriod.growingPeriodEnd,
-                    )}{" "}
-                    sind {usedJokerInGrowingPeriod.numberOfUsedJokers} Joker aus{" "}
-                    maximal {maxJokersPerGrowingPeriod} eingesetzt.
+                    )}
+                    {": "}
+                    {usedJokerInGrowingPeriod.numberOfUsedJokers} von{" "}
+                    {maxJokersPerGrowingPeriod} Joker eingesetzt.
                   </li>
                 );
               })}
             </ul>
           </ListGroup.Item>
           <ListGroup.Item>
-            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor der
-            Lieferungstag eingesetzt oder abgesagt werden. <br />
+            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor Liefertag
+            eingesetzt oder abgesagt werden. <br />
             {restrictions.length > 0 && (
               <>
                 Zusätzliche Einschränkungen:
@@ -291,10 +292,9 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                     <li
                       key={restriction.startDay + "-" + restriction.startMonth}
                     >
-                      Zwischen dem {restriction.startDay}.
-                      {restriction.startMonth}. und dem {restriction.endDay}.
-                      {restriction.endMonth}. dürfen maximal{" "}
-                      {restriction.maxJokers} Joker eingesetzt werden.
+                      {restriction.startDay}.{restriction.startMonth}. bis{" "}
+                      {restriction.endDay}.{restriction.endMonth}.: maximal{" "}
+                      {restriction.maxJokers} Joker.
                     </li>
                   ))}
                 </ul>
@@ -310,11 +310,11 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
           </ListGroup.Item>
           <ListGroup.Item style={{ overflowY: "scroll", maxHeight: "20em" }}>
             <h5>Kommende Lieferungen</h5>
-            <Table striped hover responsive>
+            <Table striped hover responsive className={"fixed_header"}>
               <thead>
                 <tr>
                   <th>KW</th>
-                  <th>Datum der Lieferung</th>
+                  <th>Lieferdatum</th>
                   <th>Joker Status</th>
                 </tr>
               </thead>

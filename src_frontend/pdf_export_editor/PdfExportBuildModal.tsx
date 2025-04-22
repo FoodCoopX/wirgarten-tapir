@@ -4,6 +4,7 @@ import { GenericExportsApi, PdfExportModel } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportBuildModalProps {
   show: boolean;
@@ -31,7 +32,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => {
         setLoading(false);
         onHide();

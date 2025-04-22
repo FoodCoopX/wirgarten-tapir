@@ -1,6 +1,7 @@
 import csv
 import datetime
 import io
+import locale
 
 from tapir.generic_exports.models import CsvExport
 from tapir.generic_exports.services.export_segment_manager import (
@@ -44,10 +45,13 @@ class CsvExportBuilder:
         # Header row
         writer.writerow([name for name in csv_export.custom_column_names])
 
+        previous_locale = locale.getlocale()
+        locale.setlocale(locale.LC_NUMERIC, csv_export.locale)
         for db_object in queryset:
             writer.writerow(
                 [column.get_value(db_object, reference_datetime) for column in columns]
             )
+        locale.setlocale(locale.LC_NUMERIC, previous_locale)
 
         return result.getvalue()
 

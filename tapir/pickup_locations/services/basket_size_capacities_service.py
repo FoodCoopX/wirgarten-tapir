@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.core.exceptions import ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
@@ -18,10 +20,12 @@ class BasketSizeCapacitiesService:
             raise ValidationError(f"Invalid basket sizes value: {e}")
 
     @classmethod
-    def get_basket_sizes(cls, basket_sizes_as_string: str | None = None):
+    def get_basket_sizes(
+        cls, basket_sizes_as_string: str | None = None, cache: Dict = None
+    ):
         if basket_sizes_as_string is None:
             basket_sizes_as_string = get_parameter_value(
-                ParameterKeys.PICKING_BASKET_SIZES
+                ParameterKeys.PICKING_BASKET_SIZES, cache
             )
 
         basket_sizes = basket_sizes_as_string.split(";")
@@ -40,9 +44,11 @@ class BasketSizeCapacitiesService:
 
     @classmethod
     def get_basket_size_capacities_for_pickup_location(
-        cls, pickup_location: PickupLocation
+        cls, pickup_location: PickupLocation, cache: Dict = None
     ):
-        capacities = {size_name: None for size_name in cls.get_basket_sizes()}
+        capacities = {
+            size_name: None for size_name in cls.get_basket_sizes(cache=cache)
+        }
         for equivalence in PickupLocationBasketCapacity.objects.filter(
             pickup_location=pickup_location
         ):

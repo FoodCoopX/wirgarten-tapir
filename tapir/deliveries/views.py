@@ -29,7 +29,7 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
-from tapir.wirgarten.utils import check_permission_or_self, get_today
+from tapir.wirgarten.utils import check_permission_or_self, get_today, format_date
 
 
 class GetMemberDeliveriesView(APIView):
@@ -41,11 +41,13 @@ class GetMemberDeliveriesView(APIView):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(member_id, request)
         member = get_object_or_404(Member, id=member_id)
+        cache = {}
 
         deliveries = GetDeliveriesService.get_deliveries(
             member=member,
             date_from=get_today(),
             date_to=get_today() + datetime.timedelta(days=365),
+            cache=cache,
         )
 
         return Response(
@@ -151,7 +153,7 @@ class CancelJokerView(APIView):
 
         if not JokerManagementService.can_joker_be_cancelled(joker):
             return Response(
-                "Es ist zu spät um dieses Joker abzusagen",
+                f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today())}, Joker: {format_date(joker.date)}",
                 status=status.HTTP_403_FORBIDDEN,
             )
 

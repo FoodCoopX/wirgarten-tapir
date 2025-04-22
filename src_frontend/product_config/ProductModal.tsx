@@ -19,6 +19,7 @@ import {
   getPeriodIdFromUrl,
   getProductIdFromUrl,
 } from "./get_parameter_from_url.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface ProductModalProps {
   show: boolean;
@@ -66,7 +67,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setEquivalences(extendedProduct.basketSizeEquivalences);
         setPickingMode(extendedProduct.pickingMode);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -90,7 +91,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSaving(false));
     return;
   }
@@ -150,19 +151,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   />
                 </Form.Group>
               </Col>
-              {pickingMode === PickingModeEnum.Share && (
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
-                    <Form.Control
-                      value={size}
-                      type={"number"}
-                      min={0}
-                      onChange={(e) => setSize(parseFloat(e.target.value))}
-                    />
-                  </Form.Group>
-                </Col>
-              )}
+              <Col>
+                <Form.Group>
+                  <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
+                  <Form.Control
+                    value={size}
+                    type={"number"}
+                    min={0}
+                    onChange={(e) => setSize(parseFloat(e.target.value))}
+                  />
+                </Form.Group>
+              </Col>
             </Row>
           </ListGroup.Item>
           {pickingMode === PickingModeEnum.Basket && (
@@ -208,7 +207,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Product verwalten</h5>
+        <h5 className={"mb-0"}>Produkt verwalten</h5>
       </Modal.Header>
       {getModalBody()}
       <Modal.Footer>

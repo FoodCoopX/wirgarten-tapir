@@ -12,35 +12,14 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { EmailConfigurationDispatch } from './EmailConfigurationDispatch';
-import {
-    EmailConfigurationDispatchFromJSON,
-    EmailConfigurationDispatchFromJSONTyped,
-    EmailConfigurationDispatchToJSON,
-    EmailConfigurationDispatchToJSONTyped,
-} from './EmailConfigurationDispatch';
-import type { DispatchStatusEnum } from './DispatchStatusEnum';
-import {
-    DispatchStatusEnumFromJSON,
-    DispatchStatusEnumFromJSONTyped,
-    DispatchStatusEnumToJSON,
-    DispatchStatusEnumToJSONTyped,
-} from './DispatchStatusEnum';
-import type { EmailDispatch } from './EmailDispatch';
-import {
-    EmailDispatchFromJSON,
-    EmailDispatchFromJSONTyped,
-    EmailDispatchToJSON,
-    EmailDispatchToJSONTyped,
-} from './EmailDispatch';
-import type { BounceTypeEnum } from './BounceTypeEnum';
-import {
-    BounceTypeEnumFromJSON,
-    BounceTypeEnumFromJSONTyped,
-    BounceTypeEnumToJSON,
-    BounceTypeEnumToJSONTyped,
-} from './BounceTypeEnum';
+import type {EmailConfigurationDispatch} from './EmailConfigurationDispatch';
+import {EmailConfigurationDispatchFromJSON, EmailConfigurationDispatchToJSON,} from './EmailConfigurationDispatch';
+import type {DispatchStatusEnum} from './DispatchStatusEnum';
+import {DispatchStatusEnumFromJSON, DispatchStatusEnumToJSON,} from './DispatchStatusEnum';
+import type {EmailDispatch} from './EmailDispatch';
+import {EmailDispatchFromJSON,} from './EmailDispatch';
+import type {BounceTypeEnum} from './BounceTypeEnum';
+import {BounceTypeEnumFromJSON, BounceTypeEnumToJSON,} from './BounceTypeEnum';
 
 /**
  * 
@@ -92,16 +71,16 @@ export interface EmailDispatchWithRetries {
     recipient: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatchWithRetries
      */
-    recipientTokens?: { [key: string]: any; } | null;
+    recipientTokens?: any | null;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatchWithRetries
      */
-    additionalTokens?: { [key: string]: any; } | null;
+    additionalTokens?: any | null;
     /**
      * 
      * @type {Date}

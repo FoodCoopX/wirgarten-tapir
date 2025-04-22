@@ -62,8 +62,8 @@ class TestGetCurrentCapacityUsage(TapirIntegrationTest):
         )
         SubscriptionFactory.create(member=member, product=self.product_s)
 
-        result = PickupLocationCapacityModeBasketChecker.get_current_capacity_usage(
-            self.pickup_location_b, "small", self.NOW.date()
+        result = PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+            self.pickup_location_b, "small", self.NOW.date(), {}
         )
 
         self.assertEqual(0, result)
@@ -77,10 +77,11 @@ class TestGetCurrentCapacityUsage(TapirIntegrationTest):
         )
         SubscriptionFactory.create(member=member, product=self.product_s)
 
-        result = PickupLocationCapacityModeBasketChecker.get_current_capacity_usage(
+        result = PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
             self.pickup_location_a,
             "small",
             self.NOW.date() + datetime.timedelta(days=365),
+            {},
         )
 
         self.assertEqual(0, result)
@@ -101,17 +102,13 @@ class TestGetCurrentCapacityUsage(TapirIntegrationTest):
 
         self.assertEqual(
             4,
-            PickupLocationCapacityModeBasketChecker.get_current_capacity_usage(
-                self.pickup_location_a,
-                "small",
-                self.NOW.date(),
+            PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+                self.pickup_location_a, "small", self.NOW.date(), {}
             ),
         )
         self.assertEqual(
             3,
-            PickupLocationCapacityModeBasketChecker.get_current_capacity_usage(
-                self.pickup_location_a,
-                "medium",
-                self.NOW.date(),
+            PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+                self.pickup_location_a, "medium", self.NOW.date(), {}
             ),
         )

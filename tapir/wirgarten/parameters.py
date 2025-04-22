@@ -12,9 +12,14 @@ from tapir.configuration.models import (
     TapirParameterDefinitionImporter,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
+from tapir.subscriptions.config import (
+    NOTICE_PERIOD_UNIT_MONTHS,
+    NOTICE_PERIOD_UNIT_OPTIONS,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 OPTIONS_WEEKDAYS = [
@@ -41,13 +46,17 @@ class ParameterCategory:
     EMAIL = "Email"
     JOKERS = "Joker"
     SUBSCRIPTIONS = "Verträge"
+    TEST = "Tests"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
         from tapir.configuration.parameter import ParameterMeta, parameter_definition
         from tapir.wirgarten.models import ProductType
-        from tapir.wirgarten.validators import validate_html
+        from tapir.wirgarten.validators import (
+            validate_html,
+            validate_iso_datetime_or_disabled,
+        )
         from tapir.deliveries.services.joker_management_service import (
             JokerManagementService,
         )
@@ -265,14 +274,15 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.PICKING,
             order_priority=3,
             meta=ParameterMeta(options=OPTIONS_PICKING_MODE),
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
             key=ParameterKeys.PICKING_BASKET_SIZES,
             label="Kistengrößen",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="kleinen Kiste;normalen Kiste;",
-            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleinen Kiste;normalen Kiste;'",
+            initial_value="kleine Kiste;normale Kiste;",
+            description=f"Nur relevant beim Kommissionierungsmodus nach Kisten. Liste der Kistengrößen, mit ';' getrennt. Beispiel: 'kleine Kiste;normale Kiste;'",
             category=ParameterCategory.PICKING,
             order_priority=2,
             meta=ParameterMeta(
@@ -293,6 +303,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     MaxValueValidator(limit_value=31),
                 ]
             ),
+            enabled=False,
         )
 
         parameter_definition(
@@ -481,6 +492,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 options=BaseProductTypeService.get_options_for_base_product_type_parameter()
             ),
+            enabled=is_debug_instance(),
         )
 
         DEFAULT_EMAIL_VARS = [
@@ -686,6 +698,7 @@ Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
             initial_value=False,
             description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
+            enabled=False,
         )
 
         parameter_definition(
@@ -779,7 +792,8 @@ Dein WirGarten-Team""",
             initial_value=False,
             description="",
             category=ParameterCategory.SUBSCRIPTIONS,
-            order_priority=2,
+            order_priority=3,
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -787,7 +801,35 @@ Dein WirGarten-Team""",
             label="Kündigungsfrist",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
-            description="Bei automatische Verlängerung der Verträge, in anzahl an Monaten.",
+            description="Bei automatischer Verlängerung der Verträge",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=2,
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
+            label="Einheit der Kündigungsfrist",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
+            meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
+            enabled=is_debug_instance(),
         )
+
+        if getattr(settings, "DEBUG", False):
+            parameter_definition(
+                key=ParameterKeys.TESTS_OVERRIDE_DATE,
+                label="Datum setzen",
+                datatype=TapirParameterDatatype.STRING,
+                initial_value="2025-04-01 09:30",
+                description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird. Format ist YYYY-MM-DD HH:MM. "
+                "Es kann auch 'disabled' eingetragen werden, dann werden die echte Datum und Uhrzeit verwendet. "
+                "Dieses Parameter ist nur bei Test-Instanzen verfügbar.",
+                category=ParameterCategory.TEST,
+                order_priority=1,
+                debug=True,
+                meta=ParameterMeta(validators=[validate_iso_datetime_or_disabled]),
+            )

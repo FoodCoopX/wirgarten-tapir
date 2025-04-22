@@ -52,7 +52,8 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
         ).order_by("timestamp")
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         harvest_shares = Subscription.objects.filter(
             admin_confirmed__isnull=True, product__type=base_product_type
         ).order_by("created_at")

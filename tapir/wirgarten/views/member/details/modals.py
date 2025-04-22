@@ -14,8 +14,6 @@ from tapir.log.models import TextLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
-
-# FIXME: Lueneburg references!
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
@@ -257,17 +255,26 @@ def get_add_subscription_form(request, **kwargs):
         raise Exception("productType not specified")
 
     product_type = get_object_or_404(ProductType, name=product_type_name)
+    cache = {}
     is_base_product_type = (
-        BaseProductTypeService.get_base_product_type() == product_type
+        BaseProductTypeService.get_base_product_type(cache=cache) == product_type
     )
 
     if is_base_product_type:
         form_type = BaseProductForm
         next_start_date = get_next_contract_start_date()
         next_period = get_next_growing_period()
-        if not is_product_type_available(product_type.id, next_start_date) and (
+        if not is_product_type_available(
+            product_type.id,
+            next_start_date,
+            cache=cache,
+        ) and (
             next_period
-            and not is_product_type_available(product_type.id, next_period.start_date)
+            and not is_product_type_available(
+                product_type.id,
+                next_period.start_date,
+                cache=cache,
+            )
         ):
             member = Member.objects.get(id=member_id)
             # FIXME: better don't even show the form to a member, just one button to be added to the waitlist

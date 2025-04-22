@@ -193,7 +193,7 @@ class ProductType(TapirModel):
         ]
 
     def __str__(self):
-        return f"<ProductType: {self.name}>"
+        return f"{self.name} ({self.delivery_cycle})"
 
 
 class PickupLocationCapability(TapirModel):
@@ -331,15 +331,19 @@ class Member(TapirUser):
             )
 
     @classmethod
-    def generate_member_no(cls):
-        max_member_no = cls.objects.aggregate(models.Max("member_no"))["member_no__max"]
-        return (max_member_no or 0) + 1
+    def generate_member_no(cls, max_member_number: int | None = None):
+        if max_member_number is None:
+            max_member_number = cls.objects.aggregate(models.Max("member_no"))[
+                "member_no__max"
+            ]
+        return (max_member_number or 0) + 1
 
     @transaction.atomic
     def save(self, *args, **kwargs):
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
-                ParameterKeys.MEMBER_BYPASS_KEYCLOAK
+                ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
+                cache=kwargs.pop("cache", None),
             )
 
         super().save(*args, **kwargs)
@@ -441,7 +445,7 @@ class Member(TapirUser):
             get_active_subscriptions,
         )
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache={})
 
         # Get all active base subscriptions for the member
         subscriptions = get_active_subscriptions().filter(
@@ -487,15 +491,18 @@ class Member(TapirUser):
 
 
 class MemberPickupLocation(TapirModel):
-    member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
-    valid_from = models.DateField()
-
     class Meta:
         unique_together = (
             "member",
             "valid_from",
         )
+
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    valid_from = models.DateField()
+
+    def __str__(self):
+        return f"{self.member} - {self.pickup_location} ({self.valid_from})"
 
 
 class Product(TapirModel):
@@ -643,7 +650,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     price_override = models.DecimalField(
         decimal_places=2, max_digits=8, null=True, blank=True
     )
-    notice_period_duration_in_months = models.IntegerField(null=True)
+    notice_period_duration = models.IntegerField(null=True)
 
     @property
     @deprecated(

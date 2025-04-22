@@ -6,6 +6,7 @@ import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
@@ -40,7 +41,7 @@ const SubscriptionCancellationModal: React.FC<
         setSubscribedProducts(test.subscribedProducts);
         setCanCancelCoopMembership(test.canCancelCoopMembership);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setLoading(false));
   }, []);
 
@@ -118,7 +119,7 @@ const SubscriptionCancellationModal: React.FC<
         }
         setErrors(response.errors);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setConfirmationLoading(false));
   }
 

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from dateutil.relativedelta import relativedelta
 from django.db.models import F, Sum
 from django.views import generic
@@ -51,7 +53,8 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(MemberDetailView, self).get_context_data()
 
-        today = kwargs.get("start_date", get_today())
+        cache = {}
+        today = kwargs.get("start_date", get_today(cache=cache))
         next_month = today + relativedelta(months=1, day=1)
 
         context["object"] = self.object
@@ -85,9 +88,9 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["coop_shares"] = share_ownerships
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         additional_products_available = (
-            get_active_and_future_subscriptions()
+            get_active_and_future_subscriptions(cache=cache)
             .filter(
                 member_id=self.object.id,
                 end_date__gt=get_next_contract_start_date(),
@@ -137,10 +140,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
 
         subscription_automatic_renewal = get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
         if not subscription_automatic_renewal:
-            self.add_renewal_notice_context(context, next_month, today)
+            self.add_renewal_notice_context(context, next_month, today, cache=cache)
 
         subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
         context["subscriptions_in_trial"] = []
@@ -187,7 +190,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         return context
 
-    def add_renewal_notice_context(self, context, next_month, today):
+    def add_renewal_notice_context(self, context, next_month, today, cache: Dict):
         """
         Renewal notice:
         - show_renewal_warning = less than 3 months before next period starts
@@ -197,10 +200,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         if not get_active_subscriptions().filter(member_id=self.object.id).exists():
             return
 
-        next_growing_period = get_next_growing_period(today)
+        next_growing_period = get_next_growing_period(today, cache=cache)
         if not (
             next_growing_period
-            and (today + relativedelta(months=3)) > next_growing_period.start_date
+            and (today + relativedelta(months=3)) >= next_growing_period.start_date
         ):
             return
 
@@ -213,7 +216,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_month >= next_growing_period.start_date
         )  # 1 month before
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         if not base_product_type:
             context["show_renewal_warning"] = False
             return
@@ -239,7 +242,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             )
         )
         future_subs = get_active_and_future_subscriptions(
-            next_growing_period.start_date
+            next_growing_period.start_date, cache=cache
         ).filter(member_id=self.object.id)
         has_future_subs = future_subs.exists()
         if cancelled and not has_future_subs:
@@ -273,11 +276,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
                 "content": self.format_param(
                     ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
             },
             "cancelled": {
@@ -285,11 +290,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
                 "content": self.format_param(
                     ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
             },
             "renewed": {
@@ -297,11 +304,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
                 "content": self.format_param(
                     ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                     contract_list=f"{'<br/>'.join(map(lambda x: '- ' + str(x), future_subs))}<br/>",
                 ),
             },
@@ -310,11 +319,13 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                     ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
                 "content": self.format_param(
                     ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
                     contract_end_date,
                     next_growing_period,
+                    cache=cache,
                 ),
             },
         }
@@ -324,9 +335,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         key: str,
         contract_end_date: str,
         next_growing_period: GrowingPeriod,
+        cache: Dict,
         **kwargs,
     ):
-        return get_parameter_value(key).format(
+        return get_parameter_value(key, cache=cache).format(
             member=self.object,
             contract_end_date=contract_end_date,
             next_period_start_date=format_date(next_growing_period.start_date),

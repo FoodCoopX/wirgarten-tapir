@@ -8,6 +8,7 @@ import {
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportBuildModalProps {
   show: boolean;
@@ -35,7 +36,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => {
         setLoading(false);
         onHide();

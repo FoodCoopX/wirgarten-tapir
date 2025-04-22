@@ -71,19 +71,23 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        current_growing_period = get_current_growing_period()
+        cache = {}
+
+        current_growing_period = get_current_growing_period(cache=cache)
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         if base_product_type is None:
             context["no_base_product_type"] = True
             return context
         self.harvest_share_type = base_product_type
 
-        next_contract_start_date = get_next_contract_start_date()
-        next_growing_period = get_next_growing_period(next_contract_start_date)
+        next_contract_start_date = get_next_contract_start_date(cache=cache)
+        next_growing_period = get_next_growing_period(
+            next_contract_start_date, cache=cache
+        )
 
         context["next_contract_start_date"] = next_contract_start_date
         context["next_period_start_date"] = (
@@ -139,13 +143,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             get_automatically_calculated_solidarity_excess()
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
-            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
         )
         context["status_negative_soli_price_allowed"] = get_parameter_value(
-            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
+            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
         )
 
-        today = get_today()
+        today = get_today(cache=cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],

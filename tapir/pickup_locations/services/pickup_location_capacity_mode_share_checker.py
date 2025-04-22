@@ -1,22 +1,32 @@
 import datetime
-from typing import Dict
+from typing import Dict, Set
 
-from django.db.models import OuterRef, Subquery, DecimalField, F, Sum
-
+from tapir.pickup_locations.services.highest_usage_after_date_service import (
+    HighestUsageAfterDateService,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
     Product,
     ProductType,
-    ProductPrice,
+    Subscription,
 )
-from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
+from tapir.wirgarten.service.products import (
+    get_active_subscriptions,
+    get_product_price,
+    get_current_growing_period,
+)
 
 
 class PickupLocationCapacityModeShareChecker:
@@ -24,12 +34,13 @@ class PickupLocationCapacityModeShareChecker:
     def check_for_picking_mode_share(
         cls,
         pickup_location: PickupLocation,
-        ordered_product_to_quantity_map: Dict[Product, int],
+        ordered_products_to_quantity_map: Dict[Product, int],
         already_registered_member: Member | None,
         subscription_start: datetime.date,
+        cache: Dict,
     ) -> bool:
         product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
+            pickup_location=pickup_location, cache=cache
         )
 
         for (
@@ -42,11 +53,11 @@ class PickupLocationCapacityModeShareChecker:
 
             if not cls.check_capacity_for_product_type(
                 product_type=product_type,
-                available_capacity=available_capacity,
                 member=already_registered_member,
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
-                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                ordered_product_to_quantity_map=ordered_products_to_quantity_map,
+                cache=cache,
             ):
                 return False
 
@@ -56,22 +67,25 @@ class PickupLocationCapacityModeShareChecker:
     def check_capacity_for_product_type(
         cls,
         product_type: ProductType,
-        available_capacity: int,
         member: Member | None,
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
+        cache: Dict,
     ):
-        current_usage = cls.get_capacity_usage_at_date(
-            pickup_location=pickup_location,
+        free_capacity = cls.get_free_capacity_at_date(
             product_type=product_type,
+            pickup_location=pickup_location,
             reference_date=subscription_start,
+            cache=cache,
         )
+
         amount_used_by_member_before_changes = (
             cls.get_capacity_used_by_member_before_changes(
                 member=member,
                 subscription_start=subscription_start,
                 product_type=product_type,
+                cache=cache,
             )
         )
         capacity_used_by_the_order = (
@@ -79,14 +93,16 @@ class PickupLocationCapacityModeShareChecker:
                 ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                 product_type=product_type,
                 reference_date=subscription_start,
+                cache=cache,
             )
         )
-        capacity_usage_after_changes = (
-            current_usage
-            - amount_used_by_member_before_changes
-            + capacity_used_by_the_order
+
+        return (
+            free_capacity
+            + amount_used_by_member_before_changes
+            - capacity_used_by_the_order
+            >= 0
         )
-        return capacity_usage_after_changes <= available_capacity
 
     @classmethod
     def get_capacity_usage_at_date(
@@ -94,39 +110,86 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         product_type: ProductType,
         reference_date: datetime.date,
+        cache: Dict,
     ):
-        members_at_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
-            Member.objects.all(), reference_date
-        ).filter(
-            **{
-                MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID: pickup_location.id
-            }
-        )
-
-        subscriptions = get_active_subscriptions(reference_date).filter(
-            member__in=members_at_pickup_location, product__type=product_type
-        )
-        latest_valid_product_price = (
-            ProductPrice.objects.filter(
-                product=OuterRef("product"), valid_from__lte=reference_date
+        member_ids_at_pickup_location = (
+            MemberPickupLocationService.get_members_ids_at_pickup_location(
+                pickup_location,
+                reference_date,
+                cache,
             )
-            .order_by("-valid_from")
-            .values("size")[:1]
         )
 
-        subscriptions_annotated_with_total_size = subscriptions.annotate(
-            latest_size=Subquery(
-                latest_valid_product_price,
-                output_field=DecimalField(decimal_places=4),
-            ),
-            total_size_per_subscription=F("latest_size") * F("quantity"),
+        subscriptions_with_product_type = TapirCache.get_subscriptions_by_product_type(
+            cache
+        )[product_type]
+
+        def subscription_filter(subscription: Subscription):
+            return (
+                subscription in subscriptions_with_product_type
+                and subscription.member_id in member_ids_at_pickup_location
+            )
+
+        relevant_subscriptions = (
+            AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+                reference_date=reference_date,
+                subscription_filter=subscription_filter,
+                cache=cache,
+            )
         )
 
-        total_size = subscriptions_annotated_with_total_size.aggregate(
-            total_size=Sum("total_size_per_subscription")
-        )["total_size"]
+        total_size = 0
+        for subscription in relevant_subscriptions:
+            size = get_product_price(
+                subscription.product_id, reference_date, cache
+            ).size
+            total_size += size * subscription.quantity
 
-        return float(total_size) if total_size else 0
+        return float(total_size)
+
+    @classmethod
+    def extend_subscriptions_with_those_that_will_be_renewed(
+        cls,
+        relevant_subscriptions: Set[Subscription],
+        reference_date: datetime.date,
+        product_type: ProductType,
+        member_ids_at_pickup_location,
+        cache: Dict,
+    ):
+        current_growing_period = get_current_growing_period(
+            reference_date,
+            get_from_cache_or_compute(cache, "growing_period_at_date", lambda: {}),
+        )
+
+        products = TapirCache.get_products_with_product_type(cache, product_type.id)
+
+        for product in products:
+            members_that_have_a_subscription_of_product_at_reference_date = {
+                subscription.member_id
+                for subscription in relevant_subscriptions
+                if subscription.product_id == product.id
+            }
+
+            end_of_previous_growing_period = (
+                current_growing_period.start_date - datetime.timedelta(days=1)
+            )
+            subscriptions_that_will_get_renewed = {
+                subscription
+                for subscription in TapirCache.get_all_subscriptions(cache)
+                if (
+                    subscription.start_date
+                    <= end_of_previous_growing_period
+                    <= subscription.end_date
+                    and subscription.member_id in member_ids_at_pickup_location
+                    and subscription.cancellation_ts is None
+                    and subscription.member_id
+                    not in members_that_have_a_subscription_of_product_at_reference_date
+                )
+            }
+
+            relevant_subscriptions.update(subscriptions_that_will_get_renewed)
+
+        return relevant_subscriptions
 
     @classmethod
     def get_capacity_used_by_member_before_changes(
@@ -134,6 +197,7 @@ class PickupLocationCapacityModeShareChecker:
         member: Member | None,
         subscription_start: datetime.date,
         product_type: ProductType,
+        cache: Dict,
     ):
         if member is None:
             return 0
@@ -142,7 +206,7 @@ class PickupLocationCapacityModeShareChecker:
             sum(
                 [
                     s.get_used_capacity()
-                    for s in get_active_subscriptions(subscription_start).filter(
+                    for s in get_active_subscriptions(subscription_start, cache).filter(
                         member_id=member.id,
                         product__type_id=product_type.id,
                     )
@@ -155,13 +219,60 @@ class PickupLocationCapacityModeShareChecker:
         ordered_product_to_quantity_map: Dict[Product, int],
         product_type: ProductType,
         reference_date: datetime.date,
+        cache: Dict,
     ):
         total = 0.0
         for ordered_product, quantity in ordered_product_to_quantity_map.items():
             if ordered_product.type != product_type:
                 continue
             total += (
-                float(get_product_price(ordered_product, reference_date).size)
+                float(get_product_price(ordered_product, reference_date, cache).size)
                 * quantity
             )
         return total
+
+    @classmethod
+    def get_highest_usage_after_date(
+        cls,
+        pickup_location: PickupLocation,
+        product_type: ProductType,
+        reference_date: datetime.date,
+        cache: Dict,
+    ):
+        return HighestUsageAfterDateService.get_highest_usage_after_date_generic(
+            pickup_location=pickup_location,
+            reference_date=reference_date,
+            lambda_get_usage_at_date=lambda data: (
+                PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+                    pickup_location=pickup_location,
+                    product_type=product_type,
+                    reference_date=data,
+                    cache=cache,
+                )
+            ),
+            cache=cache,
+        )
+
+    @classmethod
+    def get_free_capacity_at_date(
+        cls,
+        product_type: ProductType,
+        pickup_location: PickupLocation,
+        reference_date: datetime.date,
+        cache: Dict,
+    ):
+        product_type_to_available_capacity_map = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
+            pickup_location=pickup_location, cache=cache
+        )
+
+        available_capacity = product_type_to_available_capacity_map.get(product_type, 0)
+
+        usage = cls.get_highest_usage_after_date(
+            pickup_location=pickup_location,
+            product_type=product_type,
+            reference_date=reference_date,
+            cache=cache,
+        )
+        free_capacity = available_capacity - usage
+
+        return free_capacity

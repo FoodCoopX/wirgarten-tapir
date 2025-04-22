@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
+from django.db import transaction, models
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
@@ -308,15 +308,21 @@ def export_payment_parts_csv(reference_date=None):
 def generate_member_numbers(print_results=True):
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today()
+    members_to_update = []
+    max_member_no = Member.objects.aggregate(models.Max("member_no"))["member_no__max"]
+    if max_member_no is None:
+        max_member_no = 0
     for member in members:
-        with transaction.atomic():
-            if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
-                member.member_no = member.generate_member_no()
-                member.save()
+        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
+            member.member_no = member.generate_member_no(max_member_no)
+            max_member_no = max(max_member_no, member.member_no)
+            members_to_update.append(member)
 
-                TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
-
-                if print_results:
-                    print(
-                        f"[task] generate_member_numbers: generated member_no for {member}"
-                    )
+    with transaction.atomic():
+        Member.objects.bulk_update(members_to_update, ["member_no"])
+        for member in members_to_update:
+            TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
+            if print_results:
+                print(
+                    f"[task] generate_member_numbers: generated member_no for {member}"
+                )

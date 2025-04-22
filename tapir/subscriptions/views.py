@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -107,11 +109,11 @@ class CancelSubscriptionsView(APIView):
         cancel_coop_membership = (
             request.query_params.get("cancel_coop_membership") == "true"
         )
-
+        cache = {}
         if (
             cancel_coop_membership
             and not MembershipCancellationManager.can_member_cancel_coop_membership(
-                member
+                member, cache=cache
             )
         ):
             return self.build_response(
@@ -133,12 +135,12 @@ class CancelSubscriptionsView(APIView):
             )
 
         if (
-            BaseProductTypeService.is_base_product_type_logic_enabled()
+            BaseProductTypeService.is_base_product_type_logic_enabled(cache=cache)
             and self.is_at_least_one_additional_product_not_selected(
-                subscribed_products, products_selected_for_cancellation
+                subscribed_products, products_selected_for_cancellation, cache=cache
             )
             and self.are_all_base_products_selected(
-                subscribed_products, products_selected_for_cancellation
+                subscribed_products, products_selected_for_cancellation, cache=cache
             )
         ):
             return self.build_response(
@@ -163,8 +165,9 @@ class CancelSubscriptionsView(APIView):
     def are_all_base_products_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
                 subscribed_product.type_id == base_product_type.id
@@ -178,8 +181,9 @@ class CancelSubscriptionsView(APIView):
     def is_at_least_one_additional_product_not_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
                 subscribed_product.type_id != base_product_type.id

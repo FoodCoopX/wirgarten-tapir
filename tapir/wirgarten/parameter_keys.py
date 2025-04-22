@@ -91,3 +91,7 @@ class ParameterKeys:
     JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
+    SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (
+        f"{PREFIX}.subscriptions.default_notice_period_unit"
+    )
+    TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"

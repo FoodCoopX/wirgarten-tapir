@@ -5,7 +5,7 @@ from tapir.wirgarten.models import ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
-class TestConfigurationGenerator:
+class ConfigurationGenerator:
     @classmethod
     def update_settings_for_organization(cls, organization):
         TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(

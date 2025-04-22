@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { EmailConfigurationVersion } from './EmailConfigurationVersion';
-import {
-    EmailConfigurationVersionFromJSON,
-    EmailConfigurationVersionFromJSONTyped,
-    EmailConfigurationVersionToJSON,
-    EmailConfigurationVersionToJSONTyped,
-} from './EmailConfigurationVersion';
+import type {EmailConfigurationVersion} from './EmailConfigurationVersion';
+import {EmailConfigurationVersionFromJSON, EmailConfigurationVersionToJSON,} from './EmailConfigurationVersion';
 
 /**
  * 
@@ -47,10 +41,10 @@ export interface EmailConfigurationDispatch {
     scheduledTime: Date;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailConfigurationDispatch
      */
-    overrideRecipients: { [key: string]: any; };
+    overrideRecipients: any | null;
     /**
      * 
      * @type {number}

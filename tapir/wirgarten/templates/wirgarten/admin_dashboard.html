@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 {% load i18n %}
 {% load wirgarten %}
 {% load tapir_static %}
@@ -9,6 +10,7 @@
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/admin_dashboard.css' %}">
     <meta content="width=device-width, initial-scale=1" name="viewport" />
+    {% vite_asset "dashboard/dashboard_entry.tsx" %}
 {% endblock %}
 {% block content %}
     {% if no_growing_period %}
@@ -32,9 +34,6 @@
         </div>
     {% else %}
         <div class="dashboard-container">
-            <!--div class="dashboard-tile card alert-warning alert-tile">
-       <h4>WARNUNG:</h4>
-</div -->
             <div class="dashboard-section-heading">Umsatz- und Vertriebsdaten aktuelle Vertragslaufzeit</div>
             <div title="Kapazitäten/Auslastung in der aktuellen Vertragslaufzeit"
                  class="dashboard-tile card capacity-tile clickable">
@@ -95,6 +94,15 @@
                 </div>
             </div>
         {% endif %}
+        <div class="dashboard-section-heading">
+            <hr />
+            Freiwerdende Kapazitäten pro Verteilort
+        </div>
+        <div id="dashboard_pickup_location_entry"
+             class="dashboard-tile"
+             style="grid-area: span 2 / span 4">
+            <div class="spinner-border"></div>
+        </div>
         {% if next_capacity_labels %}
             <div class="dashboard-section-heading">
                 <hr />

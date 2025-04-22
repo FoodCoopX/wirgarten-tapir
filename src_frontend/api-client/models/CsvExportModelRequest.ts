@@ -12,14 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { AutomatedExportCycleEnum } from './AutomatedExportCycleEnum';
-import {
-    AutomatedExportCycleEnumFromJSON,
-    AutomatedExportCycleEnumFromJSONTyped,
-    AutomatedExportCycleEnumToJSON,
-    AutomatedExportCycleEnumToJSONTyped,
-} from './AutomatedExportCycleEnum';
+import type {AutomatedExportCycleEnum} from './AutomatedExportCycleEnum';
+import {AutomatedExportCycleEnumFromJSON, AutomatedExportCycleEnumToJSON,} from './AutomatedExportCycleEnum';
+import type {LocaleEnum} from './LocaleEnum';
+import {LocaleEnumFromJSON, LocaleEnumToJSON,} from './LocaleEnum';
 
 /**
  * 
@@ -99,6 +95,12 @@ export interface CsvExportModelRequest {
      * @memberof CsvExportModelRequest
      */
     automatedExportHour: string;
+    /**
+     * 
+     * @type {LocaleEnum}
+     * @memberof CsvExportModelRequest
+     */
+    locale?: LocaleEnum;
 }
 
 
@@ -139,6 +141,7 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
         'automatedExportCycle': AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
         'automatedExportDay': json['automated_export_day'],
         'automatedExportHour': json['automated_export_hour'],
+        'locale': json['locale'] == null ? undefined : LocaleEnumFromJSON(json['locale']),
     };
 }
 
@@ -165,6 +168,7 @@ export function CsvExportModelRequestFromJSONTyped(json: any, ignoreDiscriminato
         'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
         'automated_export_day': value['automatedExportDay'],
         'automated_export_hour': value['automatedExportHour'],
+        'locale': LocaleEnumToJSON(value['locale']),
     };
 }
 

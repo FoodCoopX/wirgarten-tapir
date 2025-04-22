@@ -41,6 +41,7 @@ models/GrowingPeriodWithDeliveryDayAdjustments.ts
 models/Joker.ts
 models/JokerRestriction.ts
 models/JokerWithCancellationLimit.ts
+models/LocaleEnum.ts
 models/MemberJokerInformation.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
@@ -72,6 +73,8 @@ models/PickupLocationCapacityByBasketSize.ts
 models/PickupLocationCapacityByBasketSizeRequest.ts
 models/PickupLocationCapacityByShare.ts
 models/PickupLocationCapacityByShareRequest.ts
+models/PickupLocationCapacityChangePoint.ts
+models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
 models/Product.ts
 models/ProductBasketSizeEquivalence.ts

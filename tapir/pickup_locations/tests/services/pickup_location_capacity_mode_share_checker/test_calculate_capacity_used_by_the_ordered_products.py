@@ -46,5 +46,6 @@ class TestCalculateCapacityUsedByTheOrderedProducts(TapirIntegrationTest):
                 ordered_product_to_quantity_map=ordered_product_to_quantity_map,
                 product_type=product_type,
                 reference_date=reference_date,
+                cache={},
             ),
         )

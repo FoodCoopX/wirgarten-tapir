@@ -1,12 +1,12 @@
-from django.utils.translation import gettext_lazy as _
-
 from django import forms
 from django.forms import Textarea
+from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import (
     get_parameter_meta,
 )
+from tapir.wirgarten.utils import is_debug_instance
 
 
 def create_field(param: TapirParameter):
@@ -31,6 +31,7 @@ def create_field(param: TapirParameter):
             required=True,
             initial=param_value,
             validators=param_meta.validators,
+            disabled=not param.enabled,
         )
     elif param.datatype == TapirParameterDatatype.STRING.value:
         return forms.CharField(
@@ -40,6 +41,7 @@ def create_field(param: TapirParameter):
             initial=param_value,
             validators=param_meta.validators,
             widget=Textarea if param_meta.textarea else None,
+            disabled=not param.enabled,
         )
     elif param.datatype == TapirParameterDatatype.INTEGER.value:
         return forms.IntegerField(
@@ -48,6 +50,7 @@ def create_field(param: TapirParameter):
             required=True,
             initial=param_value,
             validators=param_meta.validators,
+            disabled=not param.enabled,
         )
     elif param.datatype == TapirParameterDatatype.DECIMAL.value:
         return forms.DecimalField(
@@ -56,6 +59,7 @@ def create_field(param: TapirParameter):
             required=True,
             initial=param_value,
             validators=param_meta.validators,
+            disabled=not param.enabled,
         )
     elif param.datatype == TapirParameterDatatype.BOOLEAN.value:
         return forms.BooleanField(
@@ -64,6 +68,7 @@ def create_field(param: TapirParameter):
             required=False,
             initial=param_value,
             validators=param_meta.validators,
+            disabled=not param.enabled,
         )
     else:
         raise NotImplementedError(
@@ -78,6 +83,9 @@ class ParameterForm(forms.Form):
         super(ParameterForm, self).__init__(*args, **kwargs)
 
         params = TapirParameter.objects.order_by("category", "-order_priority", "key")
+
+        if not is_debug_instance():
+            params = params.filter(debug=False)
 
         categories = list(set(map(lambda p: p.category, params)))
         categories.sort()

@@ -57,3 +57,15 @@ class PickupLocationCapacitiesSerializer(serializers.Serializer):
             )
 
         return data
+
+
+class PickupLocationCapacityChangePointSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    values = serializers.ListField(
+        child=serializers.CharField(),
+    )
+
+
+class PickupLocationCapacityEvolutionSerializer(serializers.Serializer):
+    table_headers = serializers.ListField(child=serializers.CharField())
+    data_points = PickupLocationCapacityChangePointSerializer(many=True)

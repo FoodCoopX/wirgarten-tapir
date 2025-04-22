@@ -11,11 +11,18 @@ from tapir.wirgarten.service.products import get_active_subscriptions, get_produ
 class DeliveryPriceCalculator:
     @classmethod
     def get_price_of_subscriptions_delivered_in_week(
-        cls, member: Member, reference_date: datetime.date
+        cls,
+        member: Member,
+        reference_date: datetime.date,
+        only_subscriptions_affected_by_jokers: bool,
     ):
         subscriptions = cls.get_subscriptions_that_get_delivered_in_week(
             member, reference_date
         )
+        if only_subscriptions_affected_by_jokers:
+            subscriptions = subscriptions.filter(
+                product__type__is_affected_by_jokers=True
+            )
         return sum(
             [
                 cls.get_price_of_single_delivery_without_solidarity(
@@ -46,13 +53,7 @@ class DeliveryPriceCalculator:
         cls, subscription: Subscription, at_date: datetime.date
     ) -> Decimal:
         product_price = get_product_price(subscription.product, at_date).price
-        return (
-            product_price
-            * cls.get_number_of_months_in_growing_period(subscription.period)
-            / cls.get_number_of_deliveries_in_growing_period(
-                subscription.period, subscription.product.type.delivery_cycle
-            )
-        )
+        return product_price * 12 / 52
 
     @classmethod
     def get_number_of_deliveries_in_growing_period(

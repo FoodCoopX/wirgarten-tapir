@@ -1,11 +1,16 @@
+import datetime
+from typing import Dict, Callable
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_next_growing_period,
+    get_current_growing_period,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -66,7 +71,7 @@ class AutomaticSubscriptionRenewalService:
             mandate_ref=subscription.mandate_ref,
             trial_disabled=trial_disabled,
             trial_end_date_override=trial_end_date_override,
-            notice_period_duration_in_months=NoticePeriodManager.get_notice_period_duration(
+            notice_period_duration=NoticePeriodManager.get_notice_period_duration(
                 subscription.product.type, next_growing_period
             ),
         )
@@ -80,3 +85,65 @@ class AutomaticSubscriptionRenewalService:
             return False, trial_end_date
 
         return True, None
+
+    @classmethod
+    def get_subscriptions_that_will_be_renewed(
+        cls, reference_date: datetime.date, cache: Dict
+    ):
+        if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
+            return set()
+
+        current_growing_period = get_current_growing_period(reference_date, cache)
+        current_subscriptions = TapirCache.get_subscriptions_active_at_date(
+            reference_date, cache
+        )
+
+        members_ids_currently_subbed_to_product_id = {
+            product.id: set() for product in TapirCache.get_all_products(cache)
+        }
+        for subscription in current_subscriptions:
+            members_ids_currently_subbed_to_product_id[subscription.product_id].add(
+                subscription.member_id
+            )
+
+        end_of_previous_growing_period = (
+            current_growing_period.start_date - datetime.timedelta(days=1)
+        )
+        subscriptions_from_previous_growing_period = (
+            TapirCache.get_subscriptions_active_at_date(
+                end_of_previous_growing_period, cache
+            )
+        )
+
+        return {
+            subscription
+            for subscription in subscriptions_from_previous_growing_period
+            if subscription.cancellation_ts is None
+            and subscription.member_id
+            not in members_ids_currently_subbed_to_product_id[subscription.product_id]
+        }
+
+    @classmethod
+    def get_subscriptions_and_renewals(
+        cls,
+        reference_date: datetime.date,
+        subscription_filter: Callable[[Subscription], bool],
+        cache: Dict,
+    ):
+        subscriptions = TapirCache.get_subscriptions_active_at_date(
+            reference_date=reference_date, cache=cache
+        )
+        relevant_subscriptions = set(filter(subscription_filter, subscriptions))
+
+        all_renewed_subscriptions = (
+            AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=reference_date, cache=cache
+            )
+        )
+        relevant_renewed_subscriptions = set(
+            filter(subscription_filter, all_renewed_subscriptions)
+        )
+
+        relevant_subscriptions.update(relevant_renewed_subscriptions)
+
+        return relevant_subscriptions

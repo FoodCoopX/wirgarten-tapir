@@ -5,6 +5,7 @@ import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
 import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;
@@ -44,7 +45,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         setWeeksWithoutDelivery(response.growingPeriodWeeksWithoutDelivery);
         setAdjustments(response.adjustments);
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -67,7 +68,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSaving(false));
   }
 

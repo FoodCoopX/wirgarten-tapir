@@ -64,7 +64,7 @@ const PickupLocationModal: React.FC<PickupLocationModalProps> = ({
           )}
         </p>
         <p>
-          <h5>Öffnungszeiten</h5>
+          <h5>Abholtage</h5>
           <ul>
             {openingTimes.map((openingTime) => {
               return (

@@ -38,6 +38,7 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/pickup_location_config/pickup_location_config_entry.tsx",
           ),
+          dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
         },
       },
     },

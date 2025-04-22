@@ -30,7 +30,8 @@ class SummaryForm(forms.Form):
         self.harvest_shares = dict()
         self.harvest_shares_info = dict()
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
         harvest_share_products = {
             f"{BASE_PRODUCT_FIELD_PREFIX}{p.name}": p
@@ -114,7 +115,9 @@ class SummaryForm(forms.Form):
             "amount": coop_shares_amount,
             "price": "{:.2f}".format(coop_share_price),
             "total": "{:.2f}".format(coop_share_price * coop_shares_amount),
-            "statute_link": get_parameter_value(ParameterKeys.COOP_STATUTE_LINK),
+            "statute_link": get_parameter_value(
+                ParameterKeys.COOP_STATUTE_LINK, cache=cache
+            ),
         }
 
         chicken_shares_type = ProductType.objects.get(name="Hühneranteile")

@@ -36,9 +36,9 @@
                         <thead class="sticky-top" style="background:#fff; margin:0;">
                             <tr>
                                 <th style="text-align:left">Name</th>
-                                <th style="text-align:left">Öffnungszeiten</th>
+                                <th style="text-align:left">Abholtage</th>
                                 <th>Adresse</th>
-                                <th style="text-align:left">Kapaziäten</th>
+                                <th style="text-align:left">Kapazitäten</th>
                                 <th>Mitglieder</th>
                             </tr>
                         </thead>
@@ -59,13 +59,55 @@
                                         <small>{{ pl.postcode }} {{ pl.city }}</small>
                                     </td>
                                     <td style="white-space:nowrap; text-align:left;">
-                                        {% for cap in pl.capabilities %}
-                                            <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}" />
-                                            <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
-                                                {% if cap.capacity_percent %}({{ cap.capacity_percent|format_percent }}){% endif %}
-                                            &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
-                                            <br />
-                                        {% endfor %}
+                                        {% if picking_mode == "picking_mode_share" %}
+                                            {% for cap in pl.capabilities %}
+                                                <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}" />
+                                                <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
+                                                    {% if cap.capacity_percent %}
+                                                        (
+                                                        {{ cap.capacity_percent|format_percent }})
+                                                    {% endif %}
+                                                &nbsp;&nbsp;&nbsp;<span style="color:{% if cap.next_capacity_diff.0 == '+' %}green{% else %}red{% endif %}">{{ cap.next_capacity_diff }}</span></small>
+                                                <br />
+                                            {% endfor %}
+                                        {% elif picking_mode == "picking_mode_basket" %}
+                                            <table class="table table-sm fs-6">
+                                                <thead>
+                                                    <tr>
+                                                        <th>
+                                                            <small>Kistengröße</small>
+                                                        </th>
+                                                        <th>
+                                                            <small>Geliefiert</small>
+                                                        </th>
+                                                        <th>
+                                                            <small>Kapazität</small>
+                                                        </th>
+                                                        <th>
+                                                            <small>Verfügbar</small>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for basket_size, data in pl.capabilities.items %}
+                                                        <tr>
+                                                            <td>
+                                                                <small>{{ basket_size }}</small>
+                                                            </td>
+                                                            <td>
+                                                                <small>{{ data.usage }}</small>
+                                                            </td>
+                                                            <td>
+                                                                <small>{{ data.capacity|default:'∞' }}</small>
+                                                            </td>
+                                                            <td>
+                                                                <small>{{ data.free }}</small>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if pl.members == 0 %}

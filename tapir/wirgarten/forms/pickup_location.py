@@ -1,20 +1,29 @@
 import json
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.pickup_locations.config import PICKING_MODE_SHARE, PICKING_MODE_BASKET
+from tapir.pickup_locations.services.basket_size_capacities_service import (
+    BasketSizeCapacitiesService,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
+)
+from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
+    PickupLocationCapacityModeBasketChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     MemberPickupLocation,
@@ -24,6 +33,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -35,73 +45,136 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import get_today
 
 
-def get_pickup_locations_map_data(pickup_locations, location_capabilities):
+def get_pickup_locations_map_data(
+    pickup_locations, location_capabilities, cache: Dict = None
+):
     return json.dumps(
         {
-            f"{pl.id}": pickup_location_to_dict(location_capabilities, pl)
-            for pl in list(pickup_locations)
+            f"{pickup_location.id}": pickup_location_to_dict(
+                location_capabilities, pickup_location, cache
+            )
+            for pickup_location in list(pickup_locations)
         }
     )
 
 
-def pickup_location_to_dict(location_capabilities, pickup_location):
+def build_capacity_dictionary_for_picking_mode_share(
+    capa, next_delivery_date: datetime.date, next_month: datetime.date, cache: Dict
+):
+    max_capa = capa["max_capacity"]
+    try:
+        base_product = Product.objects.get(type_id=capa["product_type_id"], base=True)
+    except Product.DoesNotExist:
+        return None
+
+    current_capa = round(
+        PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+            pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
+            product_type=TapirCache.get_product_type_by_id(
+                cache, capa["product_type_id"]
+            ),
+            reference_date=next_month,
+            cache=cache,
+        )
+        / float(get_product_price(base_product, next_delivery_date, cache).size),
+        2,
+    )
+
+    next_month_capa = round(
+        PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
+            pickup_location=PickupLocation.objects.get(id=capa["pickup_location_id"]),
+            product_type=TapirCache.get_product_type_by_id(
+                cache, capa["product_type_id"]
+            ),
+            reference_date=next_month,
+            cache=cache,
+        )
+        / float(get_product_price(base_product, next_month, cache).size),
+        2,
+    )
+
+    capa_diff = round(next_month_capa - current_capa, 2)
+    return {
+        "name": capa["product_type__name"],
+        "icon": capa["product_type__icon_link"],
+        "max_capacity": max_capa,
+        "current_capacity": current_capa,
+        "next_capacity_diff": (
+            f"{'+' if capa_diff > 0 else ''} {capa_diff}" if capa_diff != 0 else ""
+        ),
+        "capacity_percent": (current_capa / max_capa) if max_capa else None,
+    }
+
+
+def build_capabilities_for_picking_mode_basket(
+    pickup_location: PickupLocation, cache: Dict = None
+):
+    capacities_by_basket_size = (
+        BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
+            pickup_location=pickup_location, cache=cache
+        )
+    )
+    usage_by_basket_size = {
+        size_name: PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
+            pickup_location=pickup_location,
+            basket_size=size_name,
+            reference_date=get_today(cache),
+            cache=cache,
+        )
+        for size_name in capacities_by_basket_size.keys()
+    }
+
+    return {
+        size_name: {
+            "capacity": capacities_by_basket_size[size_name],
+            "usage": usage_by_basket_size[size_name],
+            "free": (
+                PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
+                    pickup_location=pickup_location,
+                    basket_size=size_name,
+                    reference_date=get_today(cache),
+                    cache=cache,
+                )
+                if capacities_by_basket_size[size_name] is not None
+                else "∞"
+            ),
+        }
+        for size_name in usage_by_basket_size.keys()
+    }
+
+
+def pickup_location_to_dict(
+    location_capabilities, pickup_location: PickupLocation, cache: Dict = None
+):
     next_delivery_date = get_next_delivery_date()
     next_month = next_delivery_date + relativedelta(day=1, months=1)
+    if cache is None:
+        cache = {}
 
-    def map_capa(capa):
-        max_capa = capa["max_capacity"]
-        try:
-            base_product = Product.objects.get(
-                type_id=capa["product_type_id"], base=True
-            )
-        except Product.DoesNotExist:
-            return None
-
-        current_capa = round(
-            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-                pickup_location=PickupLocation.objects.get(
-                    id=capa["pickup_location_id"]
-                ),
-                product_type=capa["product_type_id"],
-                reference_date=next_month,
-            )
-            / float(
-                get_product_price(
-                    base_product,
-                    next_delivery_date,
-                ).size
-            ),
-            2,
+    picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache)
+    if picking_mode == PICKING_MODE_BASKET:
+        capabilities_for_pickup_location = build_capabilities_for_picking_mode_basket(
+            pickup_location, cache
         )
-
-        next_month_capa = round(
-            PickupLocationCapacityModeShareChecker.get_capacity_usage_at_date(
-                pickup_location=PickupLocation.objects.get(
-                    id=capa["pickup_location_id"]
-                ),
-                product_type=capa["product_type_id"],
-                reference_date=next_month,
+    elif picking_mode == PICKING_MODE_SHARE:
+        capabilities_for_pickup_location = [
+            build_capacity_dictionary_for_picking_mode_share(
+                capa=capa,
+                next_delivery_date=next_delivery_date,
+                next_month=next_month,
+                cache=cache,
             )
-            / float(
-                get_product_price(
-                    base_product,
-                    next_month,
-                ).size
-            ),
-            2,
+            for capa in location_capabilities
+            if capa["pickup_location_id"] == pickup_location.id
+        ]
+        capabilities_for_pickup_location = list(
+            filter(
+                lambda capability: capability is not None,
+                capabilities_for_pickup_location,
+            )
         )
-
-        capa_diff = round(next_month_capa - current_capa, 2)
-        return {
-            "name": capa["product_type__name"],
-            "icon": capa["product_type__icon_link"],
-            "max_capacity": max_capa,
-            "current_capacity": current_capa,
-            "next_capacity_diff": (
-                f"{'+' if capa_diff > 0 else ''} {capa_diff}" if capa_diff != 0 else ""
-            ),
-            "capacity_percent": (current_capa / max_capa) if max_capa else None,
-        }
+    else:
+        raise ImproperlyConfigured(f"Unknown picking mode: {picking_mode}")
 
     return {
         "id": pickup_location.id,
@@ -109,18 +182,8 @@ def pickup_location_to_dict(location_capabilities, pickup_location):
         "opening_times": pickup_location.opening_times_html,
         "street": pickup_location.street,
         "city": f"{pickup_location.postcode} {pickup_location.city}",
-        "capabilities": list(
-            [
-                x
-                for x in [
-                    map_capa(capa)
-                    for capa in location_capabilities
-                    if capa["pickup_location_id"] == pickup_location.id
-                ]
-                if x is not None
-            ]
-        ),
-        "members": get_active_subscriptions(next_delivery_date)
+        "capabilities": capabilities_for_pickup_location,
+        "members": get_active_subscriptions(next_delivery_date, cache)
         .annotate(
             latest_pickup_location_id=Subquery(
                 MemberPickupLocation.objects.filter(
@@ -149,6 +212,7 @@ class PickupLocationWidget(forms.Select):
         location_capabilities,
         selected_product_types,
         initial,
+        cache: Dict,
         *args,
         **kwargs,
     ):
@@ -156,7 +220,7 @@ class PickupLocationWidget(forms.Select):
 
         self.attrs["selected_product_types"] = selected_product_types
         self.attrs["data"] = get_pickup_locations_map_data(
-            pickup_locations, location_capabilities
+            pickup_locations, location_capabilities, cache
         )
         self.attrs["initial"] = initial
 
@@ -177,12 +241,15 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             "pickup_location_id",
             "product_type__icon_link",
         )
-
+        cache = {}
         selected_product_types = {
             product_type_name: sum(
                 map(
                     lambda subscription: float(
-                        get_product_price(subscription.product).size
+                        get_product_price(
+                            subscription.product,
+                            cache=cache,
+                        ).size
                     )
                     * (subscription.quantity or 0),
                     subscriptions,
@@ -213,6 +280,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
                 initial=initial.get("initial", None),
+                cache=cache,
             ),
             **kwargs,
         )
@@ -224,6 +292,8 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         member: Member | None,
     ):
         possible_location_ids = []
+        cache = {}
+
         for pickup_location in PickupLocation.objects.all():
             ordered_products_to_quantity_map = {
                 subscription.product: subscription.quantity
@@ -234,6 +304,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 ordered_products_to_quantity_map=ordered_products_to_quantity_map,
                 already_registered_member=member,
                 subscription_start=reference_date,
+                cache=cache,
             ):
                 possible_location_ids.append(pickup_location.id)
         return PickupLocation.objects.filter(id__in=possible_location_ids)
@@ -411,29 +482,27 @@ class PickupLocationEditForm(forms.Form):
 
         def validate_times(field):
             times = cleaned_data.get(field)
-            if times:
-                times = [time.strip() for time in times.split(",")]
-                for time in times:
-                    try:
-                        start, end = time.split("-")
-                        start_time = datetime.strptime(start, "%H:%M")
-                        end_time = datetime.strptime(end, "%H:%M")
-
-                        if start_time >= end_time:
-                            self.add_error(
-                                field,
-                                ValidationError(
-                                    "End time must be later than start time"
-                                ),
-                            )
-
-                    except Exception:
+            if not times:
+                return False
+            times = [time.strip() for time in times.split(",")]
+            for time in times:
+                try:
+                    start, end = time.split("-")
+                    start_time = datetime.strptime(start, "%H:%M")
+                    end_time = datetime.strptime(end, "%H:%M")
+                    if start_time >= end_time:
                         self.add_error(
                             field,
-                            ValidationError(
-                                "Bitte geben Sie die Öffnungszeiten im Format 'HH:MM-HH:MM' an."
-                            ),
+                            ValidationError("End time must be later than start time"),
                         )
+                except Exception:
+                    self.add_error(
+                        field,
+                        ValidationError(
+                            "Bitte geben Sie die Öffnungszeiten im Format 'HH:MM-HH:MM' an."
+                        ),
+                    )
+            return True
 
         coords = cleaned_data.get("coords")
         if coords:
@@ -456,13 +525,20 @@ class PickupLocationEditForm(forms.Form):
                     ),
                 )
 
-        validate_times("monday_times")
-        validate_times("tuesday_times")
-        validate_times("wednesday_times")
-        validate_times("thursday_times")
-        validate_times("friday_times")
-        validate_times("saturday_times")
-        validate_times("sunday_times")
+        time_fields = [
+            "monday_times",
+            "tuesday_times",
+            "wednesday_times",
+            "thursday_times",
+            "friday_times",
+            "saturday_times",
+            "sunday_times",
+        ]
+        at_least_one_time_filled = False
+        for field in time_fields:
+            at_least_one_time_filled = at_least_one_time_filled or validate_times(field)
+        if not at_least_one_time_filled:
+            raise ValidationError("Mindestens ein Abholtag muss eingetragen werden.")
 
         return cleaned_data
 

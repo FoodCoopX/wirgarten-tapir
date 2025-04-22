@@ -151,14 +151,15 @@ class KeycloakUser(AbstractUser):
 
                 self.keycloak_id = kc.create_user(data)
 
-                try:
-                    self.send_verify_email()
-                except Exception as e:
-                    print(
-                        f"Failed to send verify email to new user: ",
-                        e,
-                        f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
-                    )
+                if not self.email.endswith("@example.com"):
+                    try:
+                        self.send_verify_email()
+                    except Exception as e:
+                        print(
+                            f"Failed to send verify email to new user: ",
+                            e,
+                            f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
+                        )
 
         else:  # Update --> change of keycloak data if necessary
             original = type(self).objects.get(id=self.id)

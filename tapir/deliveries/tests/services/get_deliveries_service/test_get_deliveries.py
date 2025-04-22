@@ -19,11 +19,12 @@ class TestGetDeliveriesServiceGetDeliveries(TapirIntegrationTest):
     ):
         member = MemberFactory.create()
         mock_build_delivery_object.return_value = Mock()
-
+        cache = {}
         deliveries = GetDeliveriesService.get_deliveries(
-            member,
+            member=member,
             date_from=datetime.date(year=2024, month=4, day=1),
             date_to=datetime.date(year=2024, month=4, day=30),
+            cache=cache,
         )
 
         self.assertEqual(4, len(deliveries))
@@ -33,23 +34,26 @@ class TestGetDeliveriesServiceGetDeliveries(TapirIntegrationTest):
         ]
         for index, date in enumerate(delivery_dates_in_april_2024):
             actual_call = mock_build_delivery_object.mock_calls[index]
-            _, (actual_member, actual_date), _ = actual_call
-            self.assertEqual(member, actual_member)
-            self.assertEqual(date, actual_date)
+            _, args, kwargs = actual_call
+            self.assertEqual((), args)
+            self.assertEqual(
+                {"member": member, "delivery_date": date, "cache": cache}, kwargs
+            )
 
     @patch.object(GetDeliveriesService, "build_delivery_object")
     def test_getDeliveries_noDeliveryOnSomeDays_returnedListContainsOnlyDeliveredDays(
         self, mock_build_delivery_object: Mock
     ):
         member = MemberFactory.create()
-        mock_build_delivery_object.side_effect = lambda member, date: (
-            Mock() if date.day in [3, 17] else None
+        mock_build_delivery_object.side_effect = lambda member, delivery_date, cache: (
+            Mock() if delivery_date.day in [3, 17] else None
         )
 
         deliveries = GetDeliveriesService.get_deliveries(
-            member,
+            member=member,
             date_from=datetime.date(year=2024, month=4, day=1),
             date_to=datetime.date(year=2024, month=4, day=30),
+            cache={},
         )
 
         self.assertEqual(2, len(deliveries))

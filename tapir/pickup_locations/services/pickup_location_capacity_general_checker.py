@@ -30,6 +30,7 @@ class PickupLocationCapacityGeneralChecker:
         ordered_products_to_quantity_map: Dict[Product, int],
         already_registered_member: Member | None,
         subscription_start: datetime.date,
+        cache: Dict,
     ) -> bool:
 
         if (
@@ -41,22 +42,24 @@ class PickupLocationCapacityGeneralChecker:
         ):
             already_registered_member = None
 
-        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE)
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache)
 
         if picking_mode == PICKING_MODE_SHARE:
             return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
-                pickup_location,
-                ordered_products_to_quantity_map,
-                already_registered_member,
-                subscription_start,
+                pickup_location=pickup_location,
+                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                already_registered_member=already_registered_member,
+                subscription_start=subscription_start,
+                cache=cache,
             )
         elif picking_mode == PICKING_MODE_BASKET:
             return (
                 PickupLocationCapacityModeBasketChecker.check_for_picking_mode_basket(
-                    pickup_location,
-                    ordered_products_to_quantity_map,
-                    already_registered_member,
-                    subscription_start,
+                    pickup_location=pickup_location,
+                    ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                    already_registered_member=already_registered_member,
+                    subscription_start=subscription_start,
+                    cache=cache,
                 )
             )
         else:

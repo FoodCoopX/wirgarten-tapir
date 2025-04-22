@@ -2,7 +2,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from tapir.utils.services.test_data_generator import TestDataGenerator
+from tapir.utils.services.data_generator import DataGenerator
 
 
 class Command(BaseCommand):
@@ -22,10 +22,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options["clear"]:
-            TestDataGenerator.clear()
+            DataGenerator.clear()
         elif options["reset_all"]:
-            TestDataGenerator.clear()
-            TestDataGenerator.generate_all()
+            DataGenerator.clear()
+            DataGenerator.generate_all()
         else:
             self.print_help("manage.py", "populate")
             sys.exit(1)

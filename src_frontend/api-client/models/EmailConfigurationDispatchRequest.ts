@@ -12,13 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { EmailConfigurationVersionRequest } from './EmailConfigurationVersionRequest';
+import type {EmailConfigurationVersionRequest} from './EmailConfigurationVersionRequest';
 import {
     EmailConfigurationVersionRequestFromJSON,
-    EmailConfigurationVersionRequestFromJSONTyped,
     EmailConfigurationVersionRequestToJSON,
-    EmailConfigurationVersionRequestToJSONTyped,
 } from './EmailConfigurationVersionRequest';
 
 /**
@@ -47,10 +44,10 @@ export interface EmailConfigurationDispatchRequest {
     scheduledTime: Date;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailConfigurationDispatchRequest
      */
-    overrideRecipients: { [key: string]: any; };
+    overrideRecipients: any | null;
 }
 
 /**

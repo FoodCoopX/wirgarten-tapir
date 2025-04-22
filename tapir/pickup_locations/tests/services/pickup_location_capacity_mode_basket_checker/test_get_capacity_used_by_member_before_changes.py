@@ -24,7 +24,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                None, Mock(), Mock()
+                member=None, subscription_start=Mock(), basket_size=Mock(), cache={}
             ),
         )
 
@@ -66,13 +66,13 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         self.assertEqual(
             3,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                member_1, factories.NOW, "small"
+                member_1, factories.NOW, "small", {}
             ),
         )
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                member_1, factories.NOW, "medium"
+                member_1, factories.NOW, "medium", {}
             ),
         )
 
@@ -120,12 +120,12 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         self.assertEqual(
             3,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                member_1, factories.NOW, "small"
+                member_1, factories.NOW, "small", {}
             ),
         )
         self.assertEqual(
             0,
             PickupLocationCapacityModeBasketChecker.get_capacity_used_by_member_before_changes(
-                member_1, factories.NOW, "medium"
+                member_1, factories.NOW, "medium", {}
             ),
         )

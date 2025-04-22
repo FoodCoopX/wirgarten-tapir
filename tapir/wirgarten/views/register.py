@@ -122,7 +122,8 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         form_list = [
             (STEP_BASE_PRODUCT, BaseProductForm),
             (STEP_BASE_PRODUCT_NOT_AVAILABLE, EmptyForm),
@@ -198,14 +199,15 @@ class RegistrationWizardViewBase(CookieWizardView):
                 STEP_SUMMARY: False,
                 **{f: False for f in self.dynamic_steps},
             }
-
+        cache = {}
         _coop_shares_without_harvest_shares_possible = get_parameter_value(
-            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
         )
 
         _show_harvest_shares = is_product_type_available(
-            BaseProductTypeService.get_base_product_type(),
+            BaseProductTypeService.get_base_product_type(cache=cache),
             reference_date=self.start_date,
+            cache=cache,
         )
 
         return {
@@ -243,6 +245,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     # gather data from dependent forms
     def get_form_initial(self, step=None):
+        cache = {}
         initial = self.initial_dict
         if step in [STEP_BASE_PRODUCT, *self.dynamic_steps]:
             initial["start_date"] = self.start_date
@@ -261,7 +264,9 @@ class RegistrationWizardViewBase(CookieWizardView):
             if self.has_step(STEP_BASE_PRODUCT) and is_base_product_selected(
                 self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
             ):
-                base_product_type_id = BaseProductTypeService.get_base_product_type().id
+                base_product_type_id = BaseProductTypeService.get_base_product_type(
+                    cache=cache
+                ).id
                 product_type = ProductType.objects.get(id=base_product_type_id)
                 initial["subs"][product_type.name] = []
                 data = self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)

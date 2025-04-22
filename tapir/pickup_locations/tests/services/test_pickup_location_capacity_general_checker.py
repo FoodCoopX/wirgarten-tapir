@@ -54,20 +54,24 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
+        pickup_location_cache = {}
+        cache = {pickup_location: pickup_location_cache}
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertEqual(expected, result)
         mock_check_for_picking_mode_share.assert_called_once_with(
-            pickup_location,
-            ordered_products_to_quantity_map,
-            already_registered_member,
-            subscription_start,
+            pickup_location=pickup_location,
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            already_registered_member=already_registered_member,
+            subscription_start=subscription_start,
+            cache=cache,
         )
         mock_check_for_picking_mode_basket.assert_not_called()
 
@@ -96,21 +100,25 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
+        pickup_location_cache = {}
+        cache = {pickup_location: pickup_location_cache}
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertEqual(expected, result)
         mock_check_for_picking_mode_share.assert_not_called()
         mock_check_for_picking_mode_basket.assert_called_once_with(
-            pickup_location,
-            ordered_products_to_quantity_map,
-            already_registered_member,
-            subscription_start,
+            pickup_location=pickup_location,
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            already_registered_member=already_registered_member,
+            subscription_start=subscription_start,
+            cache=cache,
         )
 
     @patch.object(
@@ -138,21 +146,24 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
+        cache = {}
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertEqual(expected, result)
         mock_check_for_picking_mode_share.assert_not_called()
         mock_check_for_picking_mode_basket.assert_called_once_with(
-            pickup_location,
-            ordered_products_to_quantity_map,
-            None,
-            subscription_start,
+            pickup_location=pickup_location,
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            already_registered_member=None,
+            subscription_start=subscription_start,
+            cache=cache,
         )
 
     def test_doesPickupLocationHaveEnoughCapacity_invalidPickingMode_raisesException(
@@ -164,6 +175,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value="invalid"
         )
+        cache = {}
 
         with self.assertRaises(ImproperlyConfigured):
             PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
@@ -171,4 +183,5 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
                 ordered_products_to_quantity_map=ordered_products_to_quantity_map,
                 already_registered_member=None,
                 subscription_start=subscription_start,
+                cache=cache,
             )

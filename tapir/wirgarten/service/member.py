@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -18,6 +18,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
@@ -135,7 +136,7 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member):
+def create_mandate_ref(member: str | Member, cache: Dict | None = None):
     """
     Generates and persists a new mandate reference for a member.
 
@@ -145,7 +146,7 @@ def create_mandate_ref(member: str | Member):
     member_id = resolve_member_id(member)
     ref = generate_mandate_ref(member_id)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=get_now()
+        ref=ref, member_id=member_id, start_ts=get_now(cache)
     )
 
 
@@ -153,29 +154,47 @@ def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
 
 
-def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
+le_sum = 0
+
+
+def get_or_create_mandate_ref(
+    member: str | Member,
+    cache: Dict | None = None,
+) -> MandateReference:
     """
     Returns the existing mandate ref for a member of creates a new one if none exists.
     """
 
     member_id = resolve_member_id(member)
-    mandate_ref = False
-    for row in (
-        get_active_and_future_subscriptions()
-        .filter(member_id=member_id)
-        .order_by("-start_date")
-        .values("mandate_ref")[:1]
-    ):
-        mandate_ref = MandateReference.objects.get(ref=row["mandate_ref"])
-        break
 
-    if not mandate_ref:
-        mandate_ref = create_mandate_ref(member_id)
+    def get_from_subscriptions():
+        newest_subscription = (
+            get_active_and_future_subscriptions(reference_date=None, cache=cache)
+            .filter(member_id=member_id)
+            .order_by("-start_date")
+            .select_related("mandate_ref")
+            .first()
+        )
+        if newest_subscription:
+            return newest_subscription.mandate_ref
+        return None
 
+    mandate_ref_cache = get_from_cache_or_compute(
+        cache, "mandate_ref_cache", lambda: {}
+    )
+    mandate_ref = get_from_cache_or_compute(
+        mandate_ref_cache, member_id, get_from_subscriptions
+    )
+    if mandate_ref:
+        return mandate_ref
+
+    mandate_ref = create_mandate_ref(member_id, cache)
+    if mandate_ref_cache:
+        mandate_ref_cache[member_id] = mandate_ref
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date: date = None):
+def get_next_contract_start_date(ref_date: date = None, cache: Dict = None):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
@@ -183,7 +202,7 @@ def get_next_contract_start_date(ref_date: date = None):
     :return: the next contract start date
     """
     if ref_date is None:
-        ref_date = get_today()
+        ref_date = get_today(cache=cache)
 
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
@@ -196,6 +215,7 @@ def buy_cooperative_shares(
     member: int | str | Member,
     start_date: date = None,
     mandate_ref: MandateReference = None,
+    cache: Dict | None = None,
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -210,11 +230,11 @@ def buy_cooperative_shares(
         start_date = get_next_contract_start_date()
 
     if mandate_ref is None:
-        mandate_ref = get_or_create_mandate_ref(member_id)
+        mandate_ref = get_or_create_mandate_ref(member_id, cache)
 
     share_price = settings.COOP_SHARE_PRICE
     due_date = start_date + relativedelta(
-        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY)
+        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache)
     )
     if due_date < start_date:
         due_date = due_date + relativedelta(months=1)
@@ -250,8 +270,10 @@ def buy_cooperative_shares(
     )
 
     member = Member.objects.get(id=member_id)
-    member.sepa_consent = get_now()
-    member.save()
+    now = get_now(cache)
+    if member.sepa_consent != now:
+        member.sepa_consent = get_now(cache)
+        member.save(cache=cache)
 
     return coop_share_tx
 

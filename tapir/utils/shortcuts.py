@@ -1,4 +1,5 @@
 import datetime
+from typing import Dict, Callable
 
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -28,3 +29,17 @@ def get_timezone_aware_datetime(
 ) -> datetime.datetime:
     result = datetime.datetime.combine(date, time)
     return timezone.make_aware(result) if timezone.is_naive(result) else result
+
+
+def get_from_cache_or_compute[T](
+    cache: Dict | None, key, compute_function: Callable[[], T]
+) -> T:
+    if cache is None:
+        return compute_function()
+    return dict_get_or_set(cache, key, compute_function)
+
+
+def dict_get_or_set(dictionary: Dict, key, call_if_not_set: callable):
+    if key not in dictionary:
+        dictionary[key] = call_if_not_set()
+    return dictionary[key]

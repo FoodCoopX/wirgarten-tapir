@@ -402,11 +402,11 @@ class NonTrialCancellationForm(Form):
     def __init__(self, *args, **kwargs):
         self.member_id = kwargs.pop("pk")
         super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
-
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         self.subscriptions = get_active_and_future_subscriptions().filter(
             member_id=self.member_id,
-            end_date__gte=get_today() + relativedelta(months=1, day=1),
+            end_date__gte=get_today(cache=cache) + relativedelta(months=1, day=1),
         )
         self.member = Member.objects.get(id=self.member_id)
 
@@ -492,7 +492,8 @@ class TrialCancellationForm(Form):
         )
 
         self.member = Member.objects.get(id=self.member_id)
-        today = get_today()
+        cache = {}
+        today = get_today(cache=cache)
 
         def is_new_member() -> bool:
             return (
@@ -500,7 +501,7 @@ class TrialCancellationForm(Form):
                 and self.member.coop_entry_date > today
             )
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for sub in self.subs:
             key = f"{self.KEY_PREFIX}{sub.id}"
             self.fields[key] = BooleanField(
@@ -635,8 +636,8 @@ class SubscriptionRenewalForm(Form):
             **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
         )
         self.start_date = kwargs["start_date"]
-
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         self.product_forms = [
             BaseProductForm(*args, **kwargs, enable_validation=True),
             *[

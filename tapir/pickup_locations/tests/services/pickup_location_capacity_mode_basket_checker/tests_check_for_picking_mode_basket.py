@@ -35,25 +35,27 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
         ordered_product_to_quantity_map = Mock()
         already_registered_member = Mock()
         subscription_start = Mock()
+        cache = {}
 
         mock_check_capacity_for_basket_size.return_value = True
 
         result = PickupLocationCapacityModeBasketChecker.check_for_picking_mode_basket(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertTrue(result)
 
         mock_check_capacity_for_basket_size.assert_called_once_with(
             basket_size="small",
-            available_capacity=10,
             member=already_registered_member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
         )
 
     @patch.object(
@@ -72,14 +74,16 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
         ordered_product_to_quantity_map = Mock()
         already_registered_member = Mock()
         subscription_start = Mock()
+        cache = {}
 
         mock_check_capacity_for_basket_size.side_effect = [True, False]
 
         result = PickupLocationCapacityModeBasketChecker.check_for_picking_mode_basket(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertFalse(result)
@@ -89,19 +93,19 @@ class TestCheckForPickingModeBasket(TapirIntegrationTest):
             [
                 call(
                     basket_size="small",
-                    available_capacity=10,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    cache=cache,
                 ),
                 call(
                     basket_size="medium",
-                    available_capacity=20,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    cache=cache,
                 ),
             ],
             any_order=True,

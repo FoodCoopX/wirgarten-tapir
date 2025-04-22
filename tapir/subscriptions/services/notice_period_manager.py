@@ -1,7 +1,10 @@
 import calendar
 import datetime
 
+from django.core.exceptions import ImproperlyConfigured
+
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions import config as subscription_config
 from tapir.subscriptions.models import NoticePeriod
 from tapir.wirgarten.models import ProductType, GrowingPeriod, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -20,13 +23,13 @@ class NoticePeriodManager:
             growing_period=growing_period,
         ).first()
         if notice_period:
-            notice_period.duration_in_months = notice_period_duration
+            notice_period.duration = notice_period_duration
             notice_period.save()
         else:
             NoticePeriod.objects.create(
                 product_type=product_type,
                 growing_period=growing_period,
-                duration_in_months=notice_period_duration,
+                duration=notice_period_duration,
             )
 
     @classmethod
@@ -40,20 +43,51 @@ class NoticePeriodManager:
             growing_period=growing_period,
         ).first()
         if notice_period:
-            return notice_period.duration_in_months
+            return notice_period.duration
 
         return get_parameter_value(ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD)
 
     @classmethod
     def get_max_cancellation_date(cls, subscription: Subscription):
-        notice_period = subscription.notice_period_duration_in_months
-        if notice_period is None:
-            notice_period = cls.get_notice_period_duration(
+        notice_period_duration = subscription.notice_period_duration
+        if notice_period_duration is None:
+            notice_period_duration = cls.get_notice_period_duration(
                 product_type=subscription.product.type,
                 growing_period=subscription.period,
             )
+
+        match get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
+        ):
+            case subscription_config.NOTICE_PERIOD_UNIT_MONTHS:
+                return cls.get_max_cancellation_date_unit_months(
+                    subscription=subscription,
+                    notice_period_duration=notice_period_duration,
+                )
+            case subscription_config.NOTICE_PERIOD_UNIT_WEEKS:
+                return cls.get_max_cancellation_date_unit_weeks(
+                    subscription=subscription,
+                    notice_period_duration=notice_period_duration,
+                )
+            case _:
+                raise ImproperlyConfigured(
+                    f"Unknown notice period unit: {subscription_config.NOTICE_PERIOD_UNIT_MONTHS}"
+                )
+
+    @classmethod
+    def get_max_cancellation_date_unit_weeks(
+        cls, subscription: Subscription, notice_period_duration: int
+    ):
+        return subscription.end_date - datetime.timedelta(
+            days=notice_period_duration * 7
+        )
+
+    @classmethod
+    def get_max_cancellation_date_unit_months(
+        cls, subscription: Subscription, notice_period_duration: int
+    ):
         max_date = subscription.end_date
-        for _ in range(notice_period):
+        for _ in range(notice_period_duration):
             max_date = max_date.replace(day=1) - datetime.timedelta(days=1)
 
         _, nb_days_in_month_subscription_end_date = calendar.monthrange(

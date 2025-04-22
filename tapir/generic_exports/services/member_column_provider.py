@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import locale
 from typing import TYPE_CHECKING
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
@@ -120,16 +121,17 @@ class MemberColumnProvider:
             date__lte=reference_datetime,
             member=member,
         )
-        return "{:.2f}".format(
-            sum(
-                [
-                    DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
-                        member, joker.date
-                    )
-                    for joker in jokers
-                ]
-            )
+        credit_value = sum(
+            [
+                DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
+                    member=member,
+                    reference_date=joker.date,
+                    only_subscriptions_affected_by_jokers=True,
+                )
+                for joker in jokers
+            ]
         )
+        return locale.format_string("%.2f", credit_value)
 
     @classmethod
     def get_value_member_joker_credit_intended_use(cls, _, __):

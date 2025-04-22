@@ -39,22 +39,25 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         mock_check_capacity_for_product_type.return_value = True
 
+        cache = {}
+
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertTrue(result)
 
         mock_check_capacity_for_product_type.assert_called_once_with(
             product_type=product_type_1,
-            available_capacity=10,
             member=already_registered_member,
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
         )
 
     @patch.object(
@@ -82,11 +85,14 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         mock_check_capacity_for_product_type.side_effect = [True, False]
 
+        cache = {}
+
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
+            cache=cache,
         )
 
         self.assertFalse(result)
@@ -95,19 +101,19 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
             [
                 call(
                     product_type=product_type_1,
-                    available_capacity=10,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    cache=cache,
                 ),
                 call(
                     product_type=product_type_2,
-                    available_capacity=15,
                     member=already_registered_member,
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    cache=cache,
                 ),
             ],
             any_order=True,

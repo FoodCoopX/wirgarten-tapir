@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.core.models import SidebarLinkGroup
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
 from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
+from tapir.wirgarten.utils import is_debug_instance
 
 register = template.Library()
 
@@ -49,6 +50,12 @@ def add_admin_links(groups, request):
         material_icon="event_repeat",
         url=reverse_lazy("wirgarten:jobs"),
     )
+    if is_debug_instance():
+        debug_group.add_link(
+            display_name=_("Test data"),
+            material_icon="reset_wrench",
+            url=reverse_lazy("utils:reset_test_data"),
+        )
 
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(

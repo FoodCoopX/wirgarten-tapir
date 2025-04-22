@@ -671,6 +671,62 @@ paths:
               schema:
                 type: string
           description: ''
+  /pickup_locations/api/pickup_location_capacity_evolution:
+    get:
+      operationId: pickup_locations_api_pickup_location_capacity_evolution_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacityEvolution'
+          description: ''
+  /pickup_locations/pickup_locations/:
+    get:
+      operationId: pickup_locations_pickup_locations_list
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PickupLocation'
+          description: ''
+  /pickup_locations/pickup_locations/{id}/:
+    get:
+      operationId: pickup_locations_pickup_locations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pickup location.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
   /subscriptions/api/extended_product:
     get:
       operationId: subscriptions_api_extended_product_retrieve
@@ -2902,6 +2958,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -2962,6 +3020,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -3117,9 +3177,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
         sent_count:
           type: integer
           readOnly: true
@@ -3148,9 +3206,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
       required:
       - email_configuration_version
       - id
@@ -3263,12 +3319,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3312,12 +3364,8 @@ components:
           minLength: 1
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3371,12 +3419,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3638,6 +3682,14 @@ components:
       - cancellation_limit
       - delivery_date
       - joker
+    LocaleEnum:
+      enum:
+      - de_DE.utf-8
+      - en_US.utf-8
+      type: string
+      description: |-
+        * `de_DE.utf-8` - Deutsch (DE)
+        * `en_US.utf-8` - English (US)
     MemberJokerInformation:
       type: object
       properties:
@@ -3906,6 +3958,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
@@ -3917,9 +3971,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
     PatchedEmailConfigurationRequest:
       type: object
       properties:
@@ -4097,8 +4149,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4264,7 +4314,7 @@ components:
       type: string
       description: |-
         * `picking_mode_basket` - Nach Kisten
-        * `picking_mode_share` - Nach Anteile
+        * `picking_mode_share` - Nach Ernteanteile
     PickupLocation:
       type: object
       properties:
@@ -4388,6 +4438,33 @@ components:
       required:
       - product_type_id
       - product_type_name
+    PickupLocationCapacityChangePoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        values:
+          type: array
+          items:
+            type: string
+      required:
+      - date
+      - values
+    PickupLocationCapacityEvolution:
+      type: object
+      properties:
+        table_headers:
+          type: array
+          items:
+            type: string
+        data_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityChangePoint'
+      required:
+      - data_points
+      - table_headers
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -4630,8 +4707,6 @@ components:
           format: email
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4663,8 +4738,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4945,9 +5018,7 @@ components:
           type: string
         field_name:
           type: string
-        additional_data:
-          type: object
-          additionalProperties: {}
+        additional_data: {}
       required:
       - field_name
       - label

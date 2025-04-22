@@ -13,24 +13,34 @@
  */
 
 
-import * as runtime from '../runtime';
+import * as runtime from "../runtime";
 import type {
   PatchedPickupLocationCapacitiesRequest,
+  PickupLocation,
   PickupLocationCapacities,
-} from '../models/index';
+  PickupLocationCapacityEvolution,
+} from "../models/index";
 import {
-    PatchedPickupLocationCapacitiesRequestFromJSON,
-    PatchedPickupLocationCapacitiesRequestToJSON,
-    PickupLocationCapacitiesFromJSON,
-    PickupLocationCapacitiesToJSON,
-} from '../models/index';
+  PatchedPickupLocationCapacitiesRequestToJSON,
+  PickupLocationCapacitiesFromJSON,
+  PickupLocationCapacityEvolutionFromJSON,
+  PickupLocationFromJSON,
+} from "../models/index";
 
 export interface PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest {
-    patchedPickupLocationCapacitiesRequest?: PatchedPickupLocationCapacitiesRequest;
+  patchedPickupLocationCapacitiesRequest?: PatchedPickupLocationCapacitiesRequest;
 }
 
 export interface PickupLocationsApiPickupLocationCapacitiesRetrieveRequest {
     pickupLocationId?: string;
+}
+
+export interface PickupLocationsApiPickupLocationCapacityEvolutionRetrieveRequest {
+    pickupLocationId?: string;
+}
+
+export interface PickupLocationsPickupLocationsRetrieveRequest {
+    id: string;
 }
 
 /**
@@ -94,6 +104,89 @@ export class PickupLocationsApi extends runtime.BaseAPI {
      */
     async pickupLocationsApiPickupLocationCapacitiesRetrieve(requestParameters: PickupLocationsApiPickupLocationCapacitiesRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocationCapacities> {
         const response = await this.pickupLocationsApiPickupLocationCapacitiesRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacityEvolutionRetrieveRaw(requestParameters: PickupLocationsApiPickupLocationCapacityEvolutionRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PickupLocationCapacityEvolution>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['pickupLocationId'] != null) {
+            queryParameters['pickup_location_id'] = requestParameters['pickupLocationId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/pickup_locations/api/pickup_location_capacity_evolution`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PickupLocationCapacityEvolutionFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacityEvolutionRetrieve(requestParameters: PickupLocationsApiPickupLocationCapacityEvolutionRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocationCapacityEvolution> {
+        const response = await this.pickupLocationsApiPickupLocationCapacityEvolutionRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async pickupLocationsPickupLocationsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PickupLocation>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/pickup_locations/pickup_locations/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PickupLocationFromJSON));
+    }
+
+    /**
+     */
+    async pickupLocationsPickupLocationsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PickupLocation>> {
+        const response = await this.pickupLocationsPickupLocationsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async pickupLocationsPickupLocationsRetrieveRaw(requestParameters: PickupLocationsPickupLocationsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PickupLocation>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling pickupLocationsPickupLocationsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/pickup_locations/pickup_locations/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PickupLocationFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async pickupLocationsPickupLocationsRetrieve(requestParameters: PickupLocationsPickupLocationsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocation> {
+        const response = await this.pickupLocationsPickupLocationsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

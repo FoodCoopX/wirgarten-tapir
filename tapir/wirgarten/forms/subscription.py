@@ -1,9 +1,10 @@
 from collections import OrderedDict
 from datetime import date
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -69,14 +70,30 @@ SOLIDARITY_PRICES = [
 ]
 
 
-def get_available_solidarity(reference_date: date = get_today()) -> float:
-    val = get_parameter_value(ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED)
+def get_available_solidarity(
+    reference_date: date | None = None,
+    cache: Dict | None = None,
+) -> float:
+    if reference_date is None:
+        reference_date = get_today()
+
+    val = get_parameter_value(ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache)
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
         return 1000.0
     elif val == 2:  # automatic calculation
-        return get_automatically_calculated_solidarity_excess(reference_date) or 0.0
+        return (
+            get_automatically_calculated_solidarity_excess(
+                reference_date,
+                cache=cache,
+            )
+            or 0.0
+        )
+    else:
+        raise ImproperlyConfigured(
+            f"Unknown value for parameter HARVEST_NEGATIVE_SOLIPRICE_ENABLED: {val}"
+        )
 
 
 BASE_PRODUCT_FIELD_PREFIX = "base_product_"
@@ -109,7 +126,9 @@ class BaseProductForm(forms.Form):
 
         super().__init__(*args, **kwargs)
 
-        base_product_type = BaseProductTypeService.get_base_product_type()
+        cache = {}
+
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         harvest_share_products = Product.objects.filter(
             deleted=False, type=base_product_type
         )
@@ -166,12 +185,14 @@ class BaseProductForm(forms.Form):
             self.free_capacity = []
             for period in available_growing_periods:
                 start_date = max(period.start_date, self.start_date)
-                solidarity_total = f"{get_available_solidarity(start_date)}".replace(
-                    ",", "."
+                solidarity_total = (
+                    f"{get_available_solidarity(start_date,cache=cache)}".replace(
+                        ",", "."
+                    )
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date)}".replace(
+                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date, cache=cache)}".replace(
                     ",", "."
                 )
                 self.free_capacity.append(free_capacity)
@@ -197,13 +218,13 @@ class BaseProductForm(forms.Form):
         else:
             self.growing_period = get_current_growing_period(self.start_date)
             self.solidarity_total = [
-                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date), cache=cache)}".replace(
                     ",", "."
                 )
             ]
 
             self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date), cache=cache)}".replace(
                     ",", "."
                 )
             ]
@@ -358,12 +379,10 @@ class BaseProductForm(forms.Form):
                 name=key.replace(BASE_PRODUCT_FIELD_PREFIX, ""),
             )
 
-            notice_period_duration_in_months = None
+            notice_period_duration = None
             if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
-                notice_period_duration_in_months = (
-                    NoticePeriodManager.get_notice_period_duration(
-                        self.product_type, self.growing_period
-                    )
+                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                    self.product_type, self.growing_period
                 )
 
             sub = Subscription.objects.create(
@@ -383,7 +402,7 @@ class BaseProductForm(forms.Form):
                 withdrawal_consent_ts=now,
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
-                notice_period_duration_in_months=notice_period_duration_in_months,
+                notice_period_duration=notice_period_duration,
             )
 
             self.subscriptions.append(sub)
@@ -479,7 +498,7 @@ class BaseProductForm(forms.Form):
             [subscription.get_used_capacity() for subscription in current_subscriptions]
         )
 
-    def validate_pickup_location_capacity(self):
+    def validate_pickup_location_capacity(self, cache: Dict):
         ordered_products_to_quantity_map = {}
         for key, quantity in self.cleaned_data.items():
             if not key.startswith(BASE_PRODUCT_FIELD_PREFIX):
@@ -495,13 +514,17 @@ class BaseProductForm(forms.Form):
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             start_date=self.start_date,
             member_id=self.member_id,
+            cache=cache,
         )
 
-    def validate_total_capacity(self):
-        base_product_type_id = BaseProductTypeService.get_base_product_type().id
+    def validate_total_capacity(self, cache: Dict):
+        base_product_type_id = BaseProductTypeService.get_base_product_type(
+            cache=cache
+        ).id
         free_capacity = get_free_product_capacity(
             product_type_id=base_product_type_id,
             reference_date=self.start_date,
+            cache=cache,
         )
         ordered_capacity = self.calculate_capacity_used_by_the_ordered_products()
         currently_used_capacity = float(
@@ -516,7 +539,7 @@ class BaseProductForm(forms.Form):
                 f"Die ausgewählte Ernteanteile sind größer als die verfügbare Kapazität! Verfügbar: {round(free_capacity, 2)}",
             )
 
-    def validate_solidarity_price(self):
+    def validate_solidarity_price(self, cache: Dict):
         solidarity_fields = self.build_solidarity_fields()
         ordered_solidarity_factor = float(
             solidarity_fields["solidarity_price_absolute"]
@@ -526,7 +549,7 @@ class BaseProductForm(forms.Form):
         if ordered_solidarity_factor >= 0:
             return
 
-        excess_solidarity = get_available_solidarity(self.start_date)
+        excess_solidarity = get_available_solidarity(self.start_date, cache=cache)
 
         ordered_capacity = self.calculate_capacity_used_by_the_ordered_products(True)
         solidarity_part_of_the_ordered_capacity = (
@@ -542,9 +565,11 @@ class BaseProductForm(forms.Form):
     def is_valid(self):
         super().is_valid()
 
+        cache = {}
+
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period()
+                "growing_period", get_current_growing_period(cache=cache)
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
@@ -559,9 +584,9 @@ class BaseProductForm(forms.Form):
             self.validate_harvest_shares_consent()
             if self.member_id:
                 self.validate_pickup_location()
-                self.validate_pickup_location_capacity()
-            self.validate_total_capacity()
-            self.validate_solidarity_price()
+                self.validate_pickup_location_capacity(cache=cache)
+            self.validate_total_capacity(cache=cache)
+            self.validate_solidarity_price(cache=cache)
 
         self.validate_cannot_reduce_size()
 
@@ -589,6 +614,9 @@ class BaseProductForm(forms.Form):
             )
 
     def should_validate_cannot_reduce_size(self):
+        if self.is_admin:
+            return False
+
         # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
         growing_period = get_current_growing_period(self.start_date)
         if not growing_period:
@@ -603,7 +631,12 @@ class BaseProductForm(forms.Form):
 
 
 def validate_pickup_location_capacity(
-    form, pickup_location, ordered_products_to_quantity_map, start_date, member_id
+    form,
+    pickup_location,
+    ordered_products_to_quantity_map,
+    start_date,
+    member_id,
+    cache: Dict,
 ):
     member = None
     if member_id:
@@ -614,6 +647,7 @@ def validate_pickup_location_capacity(
         ordered_products_to_quantity_map=ordered_products_to_quantity_map,
         already_registered_member=member,
         subscription_start=start_date,
+        cache=cache,
     ):
         form.add_error("pickup_location", "Abholort ist voll")  # this is not displayed
         form.add_error(
@@ -820,9 +854,9 @@ class AdditionalProductForm(forms.Form):
                     type=self.product_type,
                     name=key.replace(self.field_prefix, ""),
                 )
-                notice_period_duration_in_months = None
+                notice_period_duration = None
                 if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
-                    notice_period_duration_in_months = (
+                    notice_period_duration = (
                         NoticePeriodManager.get_notice_period_duration(
                             self.product_type, self.growing_period
                         )
@@ -839,7 +873,7 @@ class AdditionalProductForm(forms.Form):
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
                         trial_end_date_override=existing_trial_end_date,
-                        notice_period_duration_in_months=notice_period_duration_in_months,
+                        notice_period_duration=notice_period_duration,
                     )
                 )
 
@@ -883,13 +917,13 @@ class AdditionalProductForm(forms.Form):
                 f"Du musst den Vertragsgrundsätzen zustimmen um {self.product_type.name} zu zeichnen.",
             )
 
-    def validate_pickup_location(self) -> bool:
+    def validate_pickup_location(self, cache: Dict) -> bool:
         new_pickup_location = self.cleaned_data.get("pickup_location")
         has_shares_selected = self.has_shares_selected()
         if new_pickup_location or not has_shares_selected or not self.member_id:
             return True
 
-        next_month = get_today() + relativedelta(months=1, day=1)
+        next_month = get_today(cache=cache) + relativedelta(months=1, day=1)
         latest_member_pickup_location = (
             MemberPickupLocation.objects.filter(
                 member_id=self.member_id, valid_from__lte=next_month
@@ -917,23 +951,28 @@ class AdditionalProductForm(forms.Form):
             ordered_products_to_quantity_map=ordered_products_to_quantity_map,
             start_date=self.start_date,
             member_id=self.member_id,
+            cache=cache,
         )
 
         return True
 
-    def validate_has_base_product_subscription_at_same_growing_period(self):
+    def validate_has_base_product_subscription_at_same_growing_period(
+        self, cache: Dict
+    ):
         if not self.member_id or not self.has_shares_selected():
             return
 
         growing_period = getattr(
             self,
             "growing_period",
-            self.cleaned_data.pop("growing_period", get_current_growing_period()),
+            self.cleaned_data.pop(
+                "growing_period", get_current_growing_period(cache=cache)
+            ),
         )
         if not Subscription.objects.filter(
             member__id=self.member_id,
             period=growing_period,
-            product__type=BaseProductTypeService.get_base_product_type(),
+            product__type=BaseProductTypeService.get_base_product_type(cache=cache),
         ).exists():
             self.add_error(
                 None,
@@ -943,11 +982,13 @@ class AdditionalProductForm(forms.Form):
 
     def is_valid(self):
         result = super().is_valid()
-
+        cache = {}
         self.validate_contract_signed()
-        if BaseProductTypeService.is_base_product_type_logic_enabled():
-            self.validate_has_base_product_subscription_at_same_growing_period()
-        if not self.validate_pickup_location():
+        if BaseProductTypeService.is_base_product_type_logic_enabled(cache=cache):
+            self.validate_has_base_product_subscription_at_same_growing_period(
+                cache=cache
+            )
+        if not self.validate_pickup_location(cache=cache):
             return False
 
         return result and len(self.errors) == 0

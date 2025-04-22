@@ -11,6 +11,7 @@ import CsvExportModal from "./CsvExportModal.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportEditorProps {
   csrfToken: string;
@@ -35,7 +36,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsExportSegmentsList()
       .then(setSegments)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSegmentsLoading(false));
 
     loadExports();
@@ -46,7 +47,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsCsvExportsList()
       .then(setExports)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setExportsLoading(false));
   }
 
@@ -54,7 +55,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsCsvExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
