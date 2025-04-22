@@ -146,7 +146,7 @@ def build_capabilities_for_picking_mode_basket(
 def pickup_location_to_dict(
     location_capabilities, pickup_location: PickupLocation, cache: Dict = None
 ):
-    next_delivery_date = get_next_delivery_date()
+    next_delivery_date = get_next_delivery_date(cache=cache)
     next_month = next_delivery_date + relativedelta(day=1, months=1)
     if cache is None:
         cache = {}

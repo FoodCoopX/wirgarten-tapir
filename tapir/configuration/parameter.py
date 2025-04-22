@@ -73,14 +73,21 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
 
 
 def get_parameter_value(key: str, cache: Dict | None = None):
-    def compute():
-        tapir_parameter = TapirParameter.objects.filter(key=key).first()
-        if tapir_parameter is None:
+    parameters_by_key = get_from_cache_or_compute(
+        cache,
+        "parameters_by_key",
+        lambda: {
+            parameter.key: parameter for parameter in TapirParameter.objects.all()
+        },
+    )
+
+    def compute_parameter_value():
+        if key not in parameters_by_key.keys():
             raise KeyError(f"Parameter with key '{key}' does not exist.")
-        return tapir_parameter.get_value()
+        return parameters_by_key[key].get_value()
 
     parameter_cache = get_from_cache_or_compute(cache, "parameter_cache", lambda: {})
-    return get_from_cache_or_compute(parameter_cache, key, compute)
+    return get_from_cache_or_compute(parameter_cache, key, compute_parameter_value)
 
 
 def parameter_definition(

@@ -86,7 +86,8 @@ def change_email(request, **kwargs):
 def renew_contract_same_conditions(request, **kwargs):
     member_id = kwargs["pk"]
     new_subs = []
-    next_period = get_next_growing_period()
+    cache = {}
+    next_period = get_next_growing_period(cache=cache)
 
     available_product_types = [
         p.id for p in get_available_product_types(reference_date=next_period.start_date)
@@ -127,7 +128,7 @@ def renew_contract_same_conditions(request, **kwargs):
         subscriptions=new_subs,
     ).save()
 
-    send_order_confirmation(member, new_subs)
+    send_order_confirmation(member, new_subs, cache=cache)
 
     return HttpResponseRedirect(member_detail_url(member_id))
 
@@ -138,10 +139,10 @@ def renew_contract_same_conditions(request, **kwargs):
 @transaction.atomic
 def cancel_contract_at_period_end(request, **kwargs):
     member_id = kwargs["pk"]
-
-    now = get_now()
+    cache = {}
+    now = get_now(cache=cache)
     subs = list(
-        get_active_and_future_subscriptions().filter(
+        get_active_and_future_subscriptions(cache=cache).filter(
             member_id=member_id,
             period=GrowingPeriod.objects.get(start_date__lte=now, end_date__gte=now),
         )
@@ -167,11 +168,12 @@ def cancel_contract_at_period_end(request, **kwargs):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
-            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT
+            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT, cache=cache
         ),
         content=get_parameter_value(
-            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT
+            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT, cache=cache
         ),
+        cache=cache,
     )
 
     return HttpResponseRedirect(

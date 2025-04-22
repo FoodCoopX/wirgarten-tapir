@@ -101,7 +101,9 @@ class SummaryForm(forms.Form):
             delivery_date_offset = pl.delivery_date_offset
 
         self.harvest_shares_info["first_delivery_date"] = (
-            get_next_delivery_date_for_product_type(base_product_type, start_date)
+            get_next_delivery_date_for_product_type(
+                base_product_type, start_date, cache=cache
+            )
             + relativedelta(days=delivery_date_offset)
         )
 
@@ -129,7 +131,7 @@ class SummaryForm(forms.Form):
                     chicken_shares_type.delivery_cycle
                 ],
                 "first_delivery_date": get_next_delivery_date_for_product_type(
-                    chicken_shares_type, start_date
+                    chicken_shares_type, start_date, cache=cache
                 )
                 + relativedelta(days=delivery_date_offset),
             }

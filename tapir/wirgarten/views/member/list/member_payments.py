@@ -1,6 +1,7 @@
 from collections import defaultdict
 from copy import copy
 from datetime import datetime
+from typing import Dict
 from urllib.parse import unquote
 
 from dateutil.relativedelta import relativedelta
@@ -43,14 +44,15 @@ class MemberPaymentsView(
         context = super().get_context_data(**kwargs)
         member_id = kwargs["pk"]
 
-        context["payments"] = self.get_payments_row(member_id)
+        cache = {}
+        context["payments"] = self.get_payments_row(member_id, cache=cache)
         context["member"] = Member.objects.get(pk=member_id)
 
         return context
 
-    def get_payments_row(self, member_id):
+    def get_payments_row(self, member_id, cache: Dict):
         prev_payments = get_previous_payments(member_id)
-        future_payments = generate_future_payments(member_id)
+        future_payments = generate_future_payments(member_id, cache=cache)
 
         for due_date, payments in future_payments.items():
             if due_date in prev_payments:
@@ -149,15 +151,15 @@ def get_previous_payments(member_id) -> dict:
     return dict(payments_dict)
 
 
-def generate_future_payments(member_id, limit: int = None):
-    subs = get_active_and_future_subscriptions().filter(member_id=member_id)
+def generate_future_payments(member_id, limit: int = None, cache: Dict = None):
+    subs = get_active_and_future_subscriptions(cache=cache).filter(member_id=member_id)
     max_end_date = subs.aggregate(Max("end_date"))["end_date__max"]
 
     payments_per_due_date = {}
     if not max_end_date:
         return payments_per_due_date
 
-    next_payment_date = get_next_payment_date()
+    next_payment_date = get_next_payment_date(cache=cache)
     while next_payment_date <= max_end_date and (
         limit is None or len(payments_per_due_date) < limit
     ):

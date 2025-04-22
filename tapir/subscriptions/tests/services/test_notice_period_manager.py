@@ -67,8 +67,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         ).update(value=5)
 
         result = NoticePeriodManager.get_notice_period_duration(
-            product_type=product_type,
-            growing_period=growing_period,
+            product_type=product_type, growing_period=growing_period, cache={}
         )
 
         self.assertEqual(5, result)
@@ -88,8 +87,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         )
 
         result = NoticePeriodManager.get_notice_period_duration(
-            product_type=product_type,
-            growing_period=growing_period,
+            product_type=product_type, growing_period=growing_period, cache={}
         )
 
         self.assertEqual(2, result)
@@ -110,7 +108,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=5, day=31)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=5, day=17), result)
 
@@ -130,7 +128,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=5, day=31)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=3, day=31), result)
 
@@ -149,7 +147,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=5, day=31)
         subscription.notice_period_duration = 3
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=2, day=28), result)
 
@@ -168,7 +166,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=1, day=31)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2024, month=12, day=31), result)
 
@@ -187,7 +185,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=4, day=29)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=2, day=28), result)
 
@@ -206,7 +204,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=11, day=30)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=10, day=31), result)
 
@@ -225,6 +223,6 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         subscription.end_date = datetime.date(year=2025, month=11, day=17)
         subscription.notice_period_duration = None
 
-        result = NoticePeriodManager.get_max_cancellation_date(subscription)
+        result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=10, day=17), result)

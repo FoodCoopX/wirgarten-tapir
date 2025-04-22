@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.db import models, transaction
@@ -58,6 +59,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 version=email_configuration_version,
                 recipient=recipient,
                 trigger_data=trigger_data,
+                cache={},
             )
 
     @classmethod
@@ -88,6 +90,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
                 version=version,
                 recipient=subscription.member,
                 trigger_data=trigger_data,
+                cache={},
             )
 
     @classmethod
@@ -106,12 +109,15 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         version: EmailConfigurationVersion,
         recipient: Member,
         trigger_data: OnboardingTriggerData,
+        cache: Dict,
     ):
         first_subscription = recipient.subscription_set.order_by("start_date").first()
         if not first_subscription:
             return
 
-        first_delivery_date = get_next_delivery_date(first_subscription.start_date)
+        first_delivery_date = get_next_delivery_date(
+            first_subscription.start_date, cache=cache
+        )
         weeks_offset = int(trigger_data["delivery"])
         days_offset = int(trigger_data["days_offset"])
         target_delivery_date = first_delivery_date + relativedelta(weeks=weeks_offset)
@@ -121,7 +127,7 @@ class OnboardingTrigger(Trigger[OnboardingTriggerData]):
         )
 
         # don't dispatch if scheduled time is in the past
-        if scheduled_time < get_now():
+        if scheduled_time < get_now(cache=cache):
             return
 
         EmailConfigurationDispatch.objects.create(

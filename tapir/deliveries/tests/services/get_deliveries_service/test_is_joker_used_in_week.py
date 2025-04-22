@@ -31,7 +31,9 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertFalse(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )
 
@@ -45,7 +47,9 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertTrue(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )
 
@@ -62,6 +66,8 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertFalse(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )

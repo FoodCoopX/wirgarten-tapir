@@ -20,8 +20,13 @@ class TestJokerManagementServiceCanJokerBeCancelled(SimpleTestCase):
         joker.date = Mock()
         mock_get_date_limit_for_joker_changes.return_value = factories.TODAY
 
-        self.assertTrue(JokerManagementService.can_joker_be_cancelled(joker))
-        mock_get_date_limit_for_joker_changes.assert_called_once_with(joker.date)
+        cache = {}
+        self.assertTrue(
+            JokerManagementService.can_joker_be_cancelled(joker, cache=cache)
+        )
+        mock_get_date_limit_for_joker_changes.assert_called_once_with(
+            joker.date, cache=cache
+        )
 
     @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
     def test_canJokerBeCancelled_dateLimitIsNotInTheFuture_returnsFalse(
@@ -33,5 +38,10 @@ class TestJokerManagementServiceCanJokerBeCancelled(SimpleTestCase):
             factories.TODAY - datetime.timedelta(days=1)
         )
 
-        self.assertFalse(JokerManagementService.can_joker_be_cancelled(joker))
-        mock_get_date_limit_for_joker_changes.assert_called_once_with(joker.date)
+        cache = {}
+        self.assertFalse(
+            JokerManagementService.can_joker_be_cancelled(joker, cache=cache)
+        )
+        mock_get_date_limit_for_joker_changes.assert_called_once_with(
+            joker.date, cache=cache
+        )

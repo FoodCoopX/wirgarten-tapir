@@ -227,14 +227,14 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     if start_date == None:
-        start_date = get_next_contract_start_date()
+        start_date = get_next_contract_start_date(cache=cache)
 
     if mandate_ref is None:
-        mandate_ref = get_or_create_mandate_ref(member_id, cache)
+        mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
 
     share_price = settings.COOP_SHARE_PRICE
     due_date = start_date + relativedelta(
-        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache)
+        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
     )
     if due_date < start_date:
         due_date = due_date + relativedelta(months=1)
@@ -270,9 +270,9 @@ def buy_cooperative_shares(
     )
 
     member = Member.objects.get(id=member_id)
-    now = get_now(cache)
+    now = get_now(cache=cache)
     if member.sepa_consent != now:
-        member.sepa_consent = get_now(cache)
+        member.sepa_consent = get_now(cache=cache)
         member.save(cache=cache)
 
     return coop_share_tx
@@ -360,6 +360,7 @@ def send_cancellation_confirmation_email(
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
     skip_email: bool = False,
+    cache: Dict = None,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
@@ -369,7 +370,7 @@ def send_cancellation_confirmation_email(
         contract_list += "\n- Beitrittserklärung zur Genossenschaft"
 
     future_subs = get_active_and_future_subscriptions(
-        contract_end_date + relativedelta(days=1)
+        contract_end_date + relativedelta(days=1), cache=cache
     ).filter(member_id=member_id)
     if (
         not future_subs.exists()
@@ -403,19 +404,22 @@ def send_cancellation_confirmation_email(
         send_email(
             to_email=[member.email],
             subject=get_parameter_value(
-                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT
+                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT, cache=cache
             ),
             content=get_parameter_value(
-                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
+                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT, cache=cache
             ),
             variables={
                 "contract_end_date": format_date(contract_end_date),
                 "contract_list": contract_list,
             },
+            cache=cache,
         )
 
 
-def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
+def send_contract_change_confirmation(
+    member: Member, subs: List[Subscription], cache: Dict
+):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
@@ -429,19 +433,20 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
+            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT, cache=cache
         ),
         content=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
+            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT, cache=cache
         ),
         variables={
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
             "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date)
+                get_next_delivery_date(contract_start_date, cache=cache)
             ),
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
+        cache=cache,
     )
 
     TransactionalTrigger.fire_action(
@@ -451,7 +456,7 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
             "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date)
+                get_next_delivery_date(contract_start_date, cache=cache)
             ),
             "contract_list": format_subscription_list_html(subs),
         },
@@ -468,7 +473,7 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
     )
 
 
-def send_order_confirmation(member: Member, subs: List[Subscription]):
+def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dict):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending order confirmation for member: ",
@@ -481,10 +486,10 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
+            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT, cache=cache
         ),
         content=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
+            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT, cache=cache
         ),
         variables={
             "contract_start_date": format_date(contract_start_date),
@@ -492,6 +497,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
             "first_pickup_date": future_deliveries[0]["delivery_date"],
             "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
         },
+        cache=cache,
     )
 
     TransactionalTrigger.fire_action(

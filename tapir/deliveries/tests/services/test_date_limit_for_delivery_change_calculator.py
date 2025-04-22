@@ -26,7 +26,7 @@ class TestDateLimitForDeliveryChanceCalculator(TapirIntegrationTest):
         self.assertEqual(
             datetime.date(year=2025, month=3, day=3),
             DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
-                datetime.date(year=2025, month=3, day=7)
+                datetime.date(year=2025, month=3, day=7), cache={}
             ),
         )
 
@@ -45,6 +45,6 @@ class TestDateLimitForDeliveryChanceCalculator(TapirIntegrationTest):
         self.assertEqual(
             datetime.date(year=2025, month=3, day=1),
             DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
-                datetime.date(year=2025, month=3, day=7)
+                datetime.date(year=2025, month=3, day=7), cache={}
             ),
         )

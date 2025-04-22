@@ -578,7 +578,7 @@ class TrialCancellationForm(Form):
         subs_to_cancel = self.get_subs_to_cancel()
         for sub in subs_to_cancel:
             self.cancel_subscription(sub)
-
+        cache = {}
         for cancelled_subscription in subs_to_cancel:
             # If the member first renewed during their trial period, but then cancels,
             # we also cancel the renewed contracts.
@@ -593,7 +593,9 @@ class TrialCancellationForm(Form):
                 .exists()
             )
             if not is_any_subscription_of_same_type_still_active:
-                for future_subscription in get_active_and_future_subscriptions().filter(
+                for future_subscription in get_active_and_future_subscriptions(
+                    cache=cache
+                ).filter(
                     member__id=self.member_id,
                     product__type=cancelled_subscription.product.type,
                     cancellation_ts=None,
@@ -611,6 +613,7 @@ class TrialCancellationForm(Form):
             subs_to_cancel,
             cancel_coop,
             skip_emails,
+            cache=cache,
         )
 
         return (
@@ -669,13 +672,14 @@ class SubscriptionRenewalForm(Form):
         for form in self.product_forms:
             form.save(*args, **kwargs)
 
+        cache = {}
         member_id = kwargs["member_id"]
-        self.subs = get_active_and_future_subscriptions(self.start_date).filter(
-            member_id=member_id, cancellation_ts__isnull=True
-        )
+        self.subs = get_active_and_future_subscriptions(
+            self.start_date, cache=cache
+        ).filter(member_id=member_id, cancellation_ts__isnull=True)
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(member, self.subs)
+        send_order_confirmation(member, self.subs, cache=cache)
 
 
 class CancellationReasonForm(Form):

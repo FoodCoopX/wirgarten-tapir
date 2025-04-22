@@ -37,7 +37,7 @@ class JokerGenerator:
                     if JokerManagementService.does_member_have_a_joker_in_week(
                         member, random_date
                     ) or not JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                        member, random_date
+                        member, random_date, cache={}
                     ):
                         continue
                     Joker.objects.create(member=member, date=random_date)

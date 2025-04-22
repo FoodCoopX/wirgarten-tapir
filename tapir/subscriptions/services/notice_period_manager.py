@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from typing import Dict
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -37,6 +38,7 @@ class NoticePeriodManager:
         cls,
         product_type: ProductType,
         growing_period: GrowingPeriod,
+        cache: Dict,
     ):
         notice_period = NoticePeriod.objects.filter(
             product_type=product_type,
@@ -45,19 +47,22 @@ class NoticePeriodManager:
         if notice_period:
             return notice_period.duration
 
-        return get_parameter_value(ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD)
+        return get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
+        )
 
     @classmethod
-    def get_max_cancellation_date(cls, subscription: Subscription):
+    def get_max_cancellation_date(cls, subscription: Subscription, cache: Dict):
         notice_period_duration = subscription.notice_period_duration
         if notice_period_duration is None:
             notice_period_duration = cls.get_notice_period_duration(
                 product_type=subscription.product.type,
                 growing_period=subscription.period,
+                cache=cache,
             )
 
         match get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
         ):
             case subscription_config.NOTICE_PERIOD_UNIT_MONTHS:
                 return cls.get_max_cancellation_date_unit_months(

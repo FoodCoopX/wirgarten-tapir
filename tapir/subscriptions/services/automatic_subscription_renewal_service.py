@@ -18,22 +18,29 @@ from tapir.wirgarten.utils import get_today
 class AutomaticSubscriptionRenewalService:
     @classmethod
     def renew_subscriptions_if_necessary(cls):
-        if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        cache = {}
+        if not get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        ):
             return
 
         for subscription in get_active_subscriptions():
-            if cls.must_subscription_be_renewed(subscription):
-                cls.renew_subscription(subscription)
+            if cls.must_subscription_be_renewed(subscription, cache=cache):
+                cls.renew_subscription(subscription, cache=cache)
 
     @classmethod
-    def must_subscription_be_renewed(cls, subscription: Subscription) -> bool:
-        if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+    def must_subscription_be_renewed(
+        cls, subscription: Subscription, cache: Dict
+    ) -> bool:
+        if not get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        ):
             return False
 
         if subscription.cancellation_ts is not None:
             return False
 
-        next_growing_period = get_next_growing_period()
+        next_growing_period = get_next_growing_period(cache=cache)
         if not next_growing_period:
             return False
 
@@ -45,7 +52,7 @@ class AutomaticSubscriptionRenewalService:
             return False
 
         max_cancellation_date = NoticePeriodManager.get_max_cancellation_date(
-            subscription
+            subscription, cache=cache
         )
         if max_cancellation_date >= get_today():
             return False
@@ -53,8 +60,8 @@ class AutomaticSubscriptionRenewalService:
         return True
 
     @classmethod
-    def renew_subscription(cls, subscription: Subscription):
-        next_growing_period = get_next_growing_period()
+    def renew_subscription(cls, subscription: Subscription, cache: Dict):
+        next_growing_period = get_next_growing_period(cache=cache)
 
         trial_disabled, trial_end_date_override = (
             cls.get_renewed_subscription_trial_data(subscription)
@@ -72,7 +79,7 @@ class AutomaticSubscriptionRenewalService:
             trial_disabled=trial_disabled,
             trial_end_date_override=trial_end_date_override,
             notice_period_duration=NoticePeriodManager.get_notice_period_duration(
-                subscription.product.type, next_growing_period
+                subscription.product.type, next_growing_period, cache=cache
             ),
         )
 

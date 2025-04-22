@@ -75,9 +75,11 @@ def get_available_solidarity(
     cache: Dict | None = None,
 ) -> float:
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    val = get_parameter_value(ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache)
+    val = get_parameter_value(
+        ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
+    )
     if val == 0:  # disabled
         return 0.0
     elif val == 1:  # enabled
@@ -324,7 +326,7 @@ class BaseProductForm(forms.Form):
 
             today = get_today()
             next_delivery_date = get_next_delivery_date(
-                today + relativedelta(days=2)
+                today + relativedelta(days=2), cache=cache
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
             if next_month < next_delivery_date:
@@ -356,10 +358,10 @@ class BaseProductForm(forms.Form):
     ):
         member_id = member_id or self.member_id
 
+        cache = {}
         if not mandate_ref:
-            mandate_ref = get_or_create_mandate_ref(member_id)
-
-        now = get_now()
+            mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
+        now = get_now(cache=cache)
 
         self.subscriptions = []
         existing_trial_end_date = cancel_subs_for_edit(
@@ -380,9 +382,11 @@ class BaseProductForm(forms.Form):
             )
 
             notice_period_duration = None
-            if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+            if get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+            ):
                 notice_period_duration = NoticePeriodManager.get_notice_period_duration(
-                    self.product_type, self.growing_period
+                    self.product_type, self.growing_period, cache=cache
                 )
 
             sub = Subscription.objects.create(
@@ -674,8 +678,10 @@ class AdditionalProductForm(forms.Form):
 
         self.field_prefix = self.product_type.id + "_"
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
+        cache = {}
         self.start_date = kwargs.pop(
-            "start_date", initial.get("start_date", get_next_contract_start_date())
+            "start_date",
+            initial.get("start_date", get_next_contract_start_date(cache=cache)),
         )
         super(AdditionalProductForm, self).__init__(*args, **kwargs)
 
@@ -686,7 +692,7 @@ class AdditionalProductForm(forms.Form):
 
         # Calculate prices for each product
         prices = {
-            prod.id: get_product_price(prod, self.start_date).price
+            prod.id: get_product_price(prod, self.start_date, cache=cache).price
             for prod in products_queryset
         }
 
@@ -729,7 +735,7 @@ class AdditionalProductForm(forms.Form):
         else:
             self.growing_period = get_current_growing_period(self.start_date)
             self.free_capacity = [
-                f"{get_free_product_capacity(self.product_type.id, max(self.growing_period.start_date, self.start_date))}".replace(
+                f"{get_free_product_capacity(self.product_type.id, max(self.growing_period.start_date, self.start_date), cache=cache)}".replace(
                     ",", "."
                 )
             ]
@@ -768,8 +774,10 @@ class AdditionalProductForm(forms.Form):
             member = Member.objects.get(id=self.member_id)
             subs = get_active_subscriptions_grouped_by_product_type(member)
 
-            today = get_today()
-            next_delivery_date = get_next_delivery_date(today + relativedelta(days=2))
+            today = get_today(cache=cache)
+            next_delivery_date = get_next_delivery_date(
+                today + relativedelta(days=2), cache=cache
+            )
             # FIXME: the +2 days should be a configurable threshold.
             # FIXME: It takes some time to prepare the deliveries in which no changes are allowed
             next_month = today + relativedelta(months=1, day=1)
@@ -833,12 +841,12 @@ class AdditionalProductForm(forms.Form):
             member_id = self.member_id
         if not mandate_ref:
             mandate_ref = get_or_create_mandate_ref(member_id)
-
-        now = get_now()
+        cache = {}
+        now = get_now(cache=cache)
 
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.pop(
-                "growing_period", get_current_growing_period()
+                "growing_period", get_current_growing_period(cache=cache)
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
@@ -855,10 +863,12 @@ class AdditionalProductForm(forms.Form):
                     name=key.replace(self.field_prefix, ""),
                 )
                 notice_period_duration = None
-                if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+                if get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ):
                     notice_period_duration = (
                         NoticePeriodManager.get_notice_period_duration(
-                            self.product_type, self.growing_period
+                            self.product_type, self.growing_period, cache=cache
                         )
                     )
                 self.subscriptions.append(
@@ -887,7 +897,7 @@ class AdditionalProductForm(forms.Form):
 
         if send_mail:
             member = Member.objects.get(id=member_id)
-            send_order_confirmation(member, self.subscriptions)
+            send_order_confirmation(member, self.subscriptions, cache=cache)
 
     def has_shares_selected(self):
         return self.get_total_ordered_quantity() > 0

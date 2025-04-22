@@ -19,7 +19,7 @@ class TestDeliveryDayAdjustmentService(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(value=5)
 
         result = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
-            datetime.date.today()
+            datetime.date.today(), cache={}
         )
 
         self.assertEqual(5, result)
@@ -35,7 +35,7 @@ class TestDeliveryDayAdjustmentService(TapirIntegrationTest):
         )
 
         result = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
-            datetime.date(year=2023, month=6, day=4)
+            datetime.date(year=2023, month=6, day=4), cache={}
         )
 
         self.assertEqual(5, result)
@@ -53,7 +53,7 @@ class TestDeliveryDayAdjustmentService(TapirIntegrationTest):
         )
 
         result = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
-            datetime.date(year=2023, month=1, day=12)
+            datetime.date(year=2023, month=1, day=12), cache={}
         )
 
         self.assertEqual(3, result)

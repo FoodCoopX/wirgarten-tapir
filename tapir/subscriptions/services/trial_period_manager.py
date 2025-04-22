@@ -1,4 +1,5 @@
 import datetime
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 
@@ -35,14 +36,14 @@ class TrialPeriodManager:
 
     @classmethod
     def get_earliest_trial_cancellation_date(
-        cls, reference_date: datetime.date | None = None
+        cls, reference_date: datetime.date | None = None, cache: Dict = None
     ) -> datetime.date:
         if reference_date is None:
             reference_date = get_today()
 
-        next_delivery_date = get_next_delivery_date(reference_date)
+        next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
         date_limit = DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
-            next_delivery_date
+            next_delivery_date, cache=cache
         )
         if date_limit >= reference_date:
             return reference_date

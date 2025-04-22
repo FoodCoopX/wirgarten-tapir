@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import ArrayField
@@ -678,17 +679,17 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None):
+    def total_price(self, reference_date=None, cache: Dict = None):
         if self.price_override is not None:
             return float(self.price_override)
 
         if reference_date is None:
-            reference_date = max(self.start_date, get_today())
+            reference_date = max(self.start_date, get_today(cache=cache))
 
         if not hasattr(self, "_total_price"):
             from tapir.wirgarten.service.products import get_product_price
 
-            price = get_product_price(self.product, reference_date).price
+            price = get_product_price(self.product, reference_date, cache=cache).price
 
             if self.solidarity_price_absolute is not None:
                 self._total_price = round(

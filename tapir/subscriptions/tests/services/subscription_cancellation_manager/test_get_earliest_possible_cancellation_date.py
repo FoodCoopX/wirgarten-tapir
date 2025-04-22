@@ -42,10 +42,10 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
         mock_is_subscription_in_trial.side_effect = [False, True, False]
         trial_cancellation_date = Mock()
         mock_get_earliest_trial_cancellation_date.return_value = trial_cancellation_date
-
+        cache = {}
         result = (
             SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                product, member
+                product, member, cache=cache
             )
         )
 
@@ -54,7 +54,7 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
         mock_is_subscription_in_trial.assert_has_calls(
             [call(subscription) for subscription in subscriptions[:2]], any_order=True
         )
-        mock_get_earliest_trial_cancellation_date.assert_called_once_with()
+        mock_get_earliest_trial_cancellation_date.assert_called_once_with(cache=cache)
 
     @patch.object(TrialPeriodManager, "get_earliest_trial_cancellation_date")
     @patch.object(TrialPeriodManager, "is_subscription_in_trial")
@@ -82,7 +82,7 @@ class TestGetEarliestPossibleCancellationDate(TapirIntegrationTest):
 
         result = (
             SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                product, member
+                product, member, cache={}
             )
         )
 

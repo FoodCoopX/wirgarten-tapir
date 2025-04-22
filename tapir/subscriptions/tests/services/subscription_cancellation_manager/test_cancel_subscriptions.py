@@ -54,7 +54,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2024, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         for subscription in subscriptions:
             subscription.refresh_from_db()
@@ -90,7 +90,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2022, month=12, day=31)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         self.assertEqual(1, Subscription.objects.count())
         self.assertIn(active_subscription, Subscription.objects.all())
@@ -115,7 +115,9 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         mock_is_subscription_in_trial.return_value = False
 
         with self.assertRaises(ImproperlyConfigured):
-            SubscriptionCancellationManager.cancel_subscriptions(product, member)
+            SubscriptionCancellationManager.cancel_subscriptions(
+                product, member, cache={}
+            )
 
         active_subscription.refresh_from_db()
         self.assertIsNone(active_subscription.cancellation_ts)
@@ -143,7 +145,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2024, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         subscription.refresh_from_db()
         self.assertEqual(cancellation_date, subscription.end_date)

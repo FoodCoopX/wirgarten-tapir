@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
@@ -110,7 +110,7 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
-        mock_can_joker_be_cancelled.assert_called_once_with(joker)
+        mock_can_joker_be_cancelled.assert_called_once_with(joker, cache=ANY)
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")

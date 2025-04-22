@@ -228,6 +228,7 @@ class KeycloakUser(AbstractUser):
             {"verify_link": verify_link},
         )
 
+        cache = {}
         send_email(
             to_email=[orig_email],
             subject=_("Änderung deiner Email-Adresse"),
@@ -237,6 +238,7 @@ class KeycloakUser(AbstractUser):
             f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
             f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
             f"<br/><br/>Grüße, dein WirGarten Team",
+            cache=cache,
         )
 
     class Meta:

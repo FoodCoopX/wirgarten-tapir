@@ -118,11 +118,14 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     @transaction.atomic
     def update_pickup_location(form):
+        cache = {}
         pickup_location_id = form.cleaned_data["pickup_location"].id
         change_date = (
-            calculate_pickup_location_change_date()
-            if member.pickup_location is not None
-            else get_today()
+            (
+                calculate_pickup_location_change_date(cache=cache)
+                if member.pickup_location is not None
+                else get_today(cache=cache)
+            ),
         )
         old_pickup_location = member.pickup_location
 
@@ -314,11 +317,17 @@ def get_add_subscription_form(request, **kwargs):
                 .exists()
             ):
                 form.save(member_id=member_id)
-                send_contract_change_confirmation(member, form.subscriptions)
+                send_contract_change_confirmation(
+                    member, form.subscriptions, cache=cache
+                )
             else:
                 form.save(member_id=member_id)
                 send_order_confirmation(
-                    member, get_active_and_future_subscriptions().filter(member=member)
+                    member,
+                    get_active_and_future_subscriptions(cache=cache).filter(
+                        member=member
+                    ),
+                    cache=cache,
                 )
         else:
             form.save(member_id=member_id)
@@ -347,9 +356,9 @@ def get_add_coop_shares_form(request, **kwargs):
 
     check_permission_or_self(member_id, request)
     member = Member.objects.get(pk=member_id)
-
+    cache = {}
     if not get_parameter_value(
-        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
     ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
 

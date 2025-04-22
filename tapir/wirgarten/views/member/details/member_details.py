@@ -117,12 +117,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["deliveries"] = generate_future_deliveries(self.object)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
-        next_due_date = get_next_payment_date()
+        next_due_date = get_next_payment_date(cache=cache)
 
         persisted_payments = get_previous_payments(self.object.pk)
         next_payments = persisted_payments.get(next_due_date, [])
 
-        projected = generate_future_payments(self.object.id, 2)
+        projected = generate_future_payments(self.object.id, 2, cache=cache)
         if len(projected) > 0:
             projected = projected.get(next_due_date, [])
             for p in projected:
@@ -182,10 +182,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             }
 
         context["jokersEnabled"] = (
-            "true" if get_parameter_value(ParameterKeys.JOKERS_ENABLED) else "false"
+            "true"
+            if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache)
+            else "false"
         )
         context["subscriptionAutomaticRenewal"] = get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
         return context

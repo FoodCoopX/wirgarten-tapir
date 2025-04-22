@@ -30,7 +30,10 @@ class CooperativeShareForm(forms.Form):
             )
         )
 
-        default_min_shares = get_parameter_value(ParameterKeys.COOP_MIN_SHARES)
+        cache = {}
+        default_min_shares = get_parameter_value(
+            ParameterKeys.COOP_MIN_SHARES, cache=cache
+        )
         for prod in self.harvest_shares_products:
             key = BASE_PRODUCT_FIELD_PREFIX + prod.name
             if key in initial and initial.get(key, 0) is not None:
@@ -61,7 +64,7 @@ class CooperativeShareForm(forms.Form):
             label=_(
                 "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             ),
-            help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK)}" target="_blank">Satzung der Genossenschaft</a>',
+            help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK, cache=cache)}" target="_blank">Satzung der Genossenschaft</a>',
             required=False,
         )
 

@@ -25,7 +25,7 @@ class BasketSizeCapacitiesService:
     ):
         if basket_sizes_as_string is None:
             basket_sizes_as_string = get_parameter_value(
-                ParameterKeys.PICKING_BASKET_SIZES, cache
+                ParameterKeys.PICKING_BASKET_SIZES, cache=cache
             )
 
         basket_sizes = basket_sizes_as_string.split(";")

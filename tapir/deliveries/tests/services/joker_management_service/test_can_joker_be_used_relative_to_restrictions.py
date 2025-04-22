@@ -22,7 +22,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
         )
         self.assertTrue(
             JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                Mock(), Mock()
+                Mock(), Mock(), cache={}
             )
         )
 
@@ -43,7 +43,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
 
         self.assertTrue(
             JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                member, datetime.date(year=2025, month=8, day=5)
+                member, datetime.date(year=2025, month=8, day=5), cache={}
             )
         )
 
@@ -63,6 +63,6 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
 
         self.assertFalse(
             JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                member, datetime.date(year=2025, month=8, day=15)
+                member, datetime.date(year=2025, month=8, day=15), cache={}
             )
         )

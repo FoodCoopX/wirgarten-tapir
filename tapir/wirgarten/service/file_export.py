@@ -1,4 +1,5 @@
 import csv
+from typing import Dict
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -17,9 +18,9 @@ class CsvTextBuilder(object):
         self.csv_string.append(row)
 
 
-def __send_email(file: ExportedFile, recipient: str = None):
+def __send_email(file: ExportedFile, recipient: str = None, cache: Dict = None):
     if recipient is None:
-        recipient = [get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL)]
+        recipient = [get_parameter_value(ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)]
     else:
         recipient = recipient.split(",")
 
@@ -71,6 +72,7 @@ def export_file(
     content: bytes,
     send_email: bool,
     to_email_custom: str | None = None,
+    cache: Dict = None,
 ) -> ExportedFile:
     """
     Exports binary data as a virtual file to the database. It can be automatically sent per email to the admin (or a custom email address) and it can be downloaded via UI later on.
@@ -85,6 +87,6 @@ def export_file(
     file = ExportedFile.objects.create(name=filename, type=filetype, file=content)
 
     if send_email:
-        __send_email(file, to_email_custom)
+        __send_email(file, to_email_custom, cache=cache)
 
     return file

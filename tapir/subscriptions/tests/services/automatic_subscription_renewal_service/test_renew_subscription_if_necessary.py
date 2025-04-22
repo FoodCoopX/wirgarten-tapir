@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.test import SimpleTestCase
 
@@ -25,7 +25,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=ANY
         )
         mock_must_subscription_be_renewed.assert_not_called()
 
@@ -54,9 +54,11 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=ANY
         )
-        mock_must_subscription_be_renewed.assert_called_once_with(subscription)
+        mock_must_subscription_be_renewed.assert_called_once_with(
+            subscription, cache=ANY
+        )
         mock_renew_subscription.assert_not_called()
 
     @patch.object(AutomaticSubscriptionRenewalService, "renew_subscription")
@@ -82,7 +84,9 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         AutomaticSubscriptionRenewalService.renew_subscriptions_if_necessary()
 
         mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=ANY
         )
-        mock_must_subscription_be_renewed.assert_called_once_with(subscription)
-        mock_renew_subscription.assert_called_once_with(subscription)
+        mock_must_subscription_be_renewed.assert_called_once_with(
+            subscription, cache=ANY
+        )
+        mock_renew_subscription.assert_called_once_with(subscription, cache=ANY)

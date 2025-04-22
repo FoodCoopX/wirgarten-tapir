@@ -39,10 +39,10 @@ class MembershipCancellationManager:
 
     @staticmethod
     def cancel_coop_membership(
-        member: Member, reference_date: datetime.date | None = None
+        member: Member, reference_date: datetime.date | None = None, cache: Dict = None
     ):
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache=cache)
 
         member.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,

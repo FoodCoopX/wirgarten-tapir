@@ -20,7 +20,7 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
     ):
         self.assertFalse(
             JokerManagementService.can_joker_be_used_relative_to_max_amount_per_growing_period(
-                MemberFactory.create(), datetime.date.today()
+                MemberFactory.create(), datetime.date.today(), cache={}
             )
         )
 
@@ -44,7 +44,7 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
 
         self.assertTrue(
             JokerManagementService.can_joker_be_used_relative_to_max_amount_per_growing_period(
-                member, growing_period.start_date + datetime.timedelta(days=1)
+                member, growing_period.start_date + datetime.timedelta(days=1), cache={}
             )
         )
 
@@ -65,6 +65,6 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
 
         self.assertFalse(
             JokerManagementService.can_joker_be_used_relative_to_max_amount_per_growing_period(
-                member, growing_period.start_date + datetime.timedelta(days=1)
+                member, growing_period.start_date + datetime.timedelta(days=1), cache={}
             )
         )

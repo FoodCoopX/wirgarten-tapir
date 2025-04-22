@@ -49,11 +49,14 @@ class GetCancellationDataView(APIView):
         member = get_object_or_404(Member, id=request.query_params.get("member_id"))
         check_permission_or_self(member.id, request)
 
+        cache = {}
         data = {
             "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
-                member
+                member, cache=cache
             ),
-            "subscribed_products": self.build_subscribed_products_data(member),
+            "subscribed_products": self.build_subscribed_products_data(
+                member, cache=cache
+            ),
         }
 
         return Response(
@@ -62,7 +65,7 @@ class GetCancellationDataView(APIView):
         )
 
     @classmethod
-    def build_subscribed_products_data(cls, member):
+    def build_subscribed_products_data(cls, member, cache: Dict):
         return [
             {
                 "product": subscribed_product,
@@ -70,7 +73,7 @@ class GetCancellationDataView(APIView):
                     subscribed_product, member
                 ),
                 "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                    product=subscribed_product, member=member
+                    product=subscribed_product, member=member, cache=cache
                 ),
             }
             for subscribed_product in cls.get_subscribed_products(member)
@@ -154,10 +157,14 @@ class CancelSubscriptionsView(APIView):
 
         with transaction.atomic():
             for product in products_selected_for_cancellation:
-                SubscriptionCancellationManager.cancel_subscriptions(product, member)
+                SubscriptionCancellationManager.cancel_subscriptions(
+                    product, member, cache=cache
+                )
 
             if cancel_coop_membership:
-                MembershipCancellationManager.cancel_coop_membership(member)
+                MembershipCancellationManager.cancel_coop_membership(
+                    member, cache=cache
+                )
 
         return Response("OK", status=status.HTTP_200_OK)
 
@@ -219,7 +226,8 @@ class ExtendedProductView(APIView):
             for attribute in ["id", "name", "deleted", "base"]
         }
 
-        product_price_object = get_product_price(product)
+        cache = {}
+        product_price_object = get_product_price(product, cache=cache)
         if product_price_object:
             data.update(
                 {"price": product_price_object.price, "size": product_price_object.size}
@@ -234,7 +242,9 @@ class ExtendedProductView(APIView):
             ).items()
         ]
 
-        data["picking_mode"] = get_parameter_value(ParameterKeys.PICKING_MODE)
+        data["picking_mode"] = get_parameter_value(
+            ParameterKeys.PICKING_MODE, cache=cache
+        )
 
         return Response(
             ExtendedProductSerializer(data).data,

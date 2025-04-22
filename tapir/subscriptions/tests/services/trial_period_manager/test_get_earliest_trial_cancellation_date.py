@@ -30,13 +30,13 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         mock_get_next_delivery_date.return_value = next_delivery_date
         date_limit = datetime.date(year=2027, month=6, day=5)
         mock_calculate_date_limit_for_delivery_changes_in_week.return_value = date_limit
-
-        result = TrialPeriodManager.get_earliest_trial_cancellation_date()
+        cache = {}
+        result = TrialPeriodManager.get_earliest_trial_cancellation_date(cache=cache)
 
         self.assertEqual(self.today, result)
-        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
-            next_delivery_date
+            next_delivery_date, cache=cache
         )
 
     @patch.object(
@@ -54,12 +54,13 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         date_limit = datetime.date(year=2027, month=6, day=4)
         mock_calculate_date_limit_for_delivery_changes_in_week.return_value = date_limit
 
-        result = TrialPeriodManager.get_earliest_trial_cancellation_date()
+        cache = {}
+        result = TrialPeriodManager.get_earliest_trial_cancellation_date(cache=cache)
 
         self.assertEqual(self.today, result)
-        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
-            next_delivery_date
+            next_delivery_date, cache=cache
         )
 
     @patch.object(
@@ -77,10 +78,11 @@ class TestGetEarliestTrialCancellationDate(SimpleTestCase):
         date_limit = datetime.date(year=2027, month=6, day=3)
         mock_calculate_date_limit_for_delivery_changes_in_week.return_value = date_limit
 
-        result = TrialPeriodManager.get_earliest_trial_cancellation_date()
+        cache = {}
+        result = TrialPeriodManager.get_earliest_trial_cancellation_date(cache=cache)
 
         self.assertEqual(datetime.date(year=2027, month=6, day=11), result)
-        mock_get_next_delivery_date.assert_called_once_with(self.today)
+        mock_get_next_delivery_date.assert_called_once_with(self.today, cache=cache)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
-            next_delivery_date
+            next_delivery_date, cache=cache
         )

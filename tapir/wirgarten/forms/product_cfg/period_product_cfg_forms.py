@@ -38,8 +38,9 @@ class ProductTypeForm(forms.Form):
         initial_tax_rate = 0
         initial_capacity = 0.0
         product_type = None
+        cache = {}
         initial_notice_period = get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
         )
 
         if KW_PERIOD_ID in kwargs:
@@ -61,7 +62,9 @@ class ProductTypeForm(forms.Form):
                 initial_name = product_type.name
                 initial_delivery_cycle = product_type.delivery_cycle
                 initial_notice_period = NoticePeriodManager.get_notice_period_duration(
-                    product_type=product_type, growing_period=self.capacity.period
+                    product_type=product_type,
+                    growing_period=self.capacity.period,
+                    cache=cache,
                 )
 
             else:  # create NEW -> lets choose from existing product types
@@ -107,7 +110,9 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
-        if get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL):
+        if get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        ):
             self.fields["notice_period"] = forms.IntegerField(
                 initial=initial_notice_period,
                 required=True,
@@ -122,7 +127,7 @@ class ProductTypeForm(forms.Form):
         )
 
         if product_type is not None:
-            next_month = get_today() + relativedelta(day=1, months=1)
+            next_month = get_today(cache=cache) + relativedelta(day=1, months=1)
             self.fields["tax_rate_change_date"] = forms.DateField(
                 required=True,
                 label=_("Neuer Mehrwertsteuersatz gültig ab"),

@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from typing_extensions import deprecated
@@ -52,17 +52,19 @@ def get_active_pickup_locations(
     )
 
 
-def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = None):
+def get_next_delivery_date(
+    reference_date: date = None, delivery_weekday: int = None, cache: Dict = None
+):
     """
     Calculates the next delivery date based on the reference date and the delivery weekday.
     """
 
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     if delivery_weekday is None:
         delivery_weekday = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
-            reference_date
+            reference_date, cache=cache
         )
 
     if reference_date.weekday() > delivery_weekday:
@@ -77,19 +79,19 @@ def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = 
 
 
 def get_next_delivery_date_for_product_type(
-    product_type: ProductType, reference_date: date = None
+    product_type: ProductType, reference_date: date = None, cache: Dict = None
 ):
     """
     Calculates the next delivery date for a given product type based on the reference date.
     """
 
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     if product_type.delivery_cycle == NO_DELIVERY[0]:
         return reference_date
 
-    next_delivery_date = get_next_delivery_date(reference_date)
+    next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
     _, week_num, _ = next_delivery_date.isocalendar()
     even_week = week_num % 2 == 0
 
@@ -101,7 +103,7 @@ def get_next_delivery_date_for_product_type(
         return next_delivery_date
     else:
         return get_next_delivery_date_for_product_type(
-            product_type, next_delivery_date + relativedelta(days=1)
+            product_type, next_delivery_date + relativedelta(days=1), cache=cache
         )
 
 
@@ -179,17 +181,20 @@ def calculate_pickup_location_change_date(
     reference_date=None,
     next_delivery_date=None,
     change_until_weekday=None,
+    cache: Dict = None,
 ):
     """
     Calculates the date at which a member pickup location changes becomes effective.
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
     if next_delivery_date is None:
-        next_delivery_date = get_next_delivery_date(reference_date=reference_date)
+        next_delivery_date = get_next_delivery_date(
+            reference_date=reference_date, cache=cache
+        )
     if change_until_weekday is None:
         change_until_weekday = get_parameter_value(
-            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
         )
 
     days_ahead = next_delivery_date.weekday() - change_until_weekday

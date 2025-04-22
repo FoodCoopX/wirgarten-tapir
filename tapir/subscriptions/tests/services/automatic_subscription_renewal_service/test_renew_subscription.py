@@ -56,11 +56,14 @@ class TestRenewSubscription(SimpleTestCase):
             trial_end_date_override,
         )
 
-        AutomaticSubscriptionRenewalService.renew_subscription(subscription)
+        cache = {}
+        AutomaticSubscriptionRenewalService.renew_subscription(
+            subscription, cache=cache
+        )
 
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_get_notice_period_duration.assert_called_once_with(
-            product_type, next_growing_period
+            product_type, next_growing_period, cache=cache
         )
 
         mock_subscription_objects.create.assert_called_once_with(

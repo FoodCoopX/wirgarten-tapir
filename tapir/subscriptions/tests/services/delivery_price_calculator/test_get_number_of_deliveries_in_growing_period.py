@@ -19,7 +19,7 @@ class TestGetNumberOfDeliveriesInGrowingPeriod(TapirIntegrationTest):
         self,
     ):
         result = DeliveryPriceCalculator.get_number_of_deliveries_in_growing_period(
-            Mock(), NO_DELIVERY[0]
+            Mock(), NO_DELIVERY[0], cache={}
         )
 
         self.assertEqual(0, result)
@@ -32,7 +32,7 @@ class TestGetNumberOfDeliveriesInGrowingPeriod(TapirIntegrationTest):
             end_date=datetime.date(year=2025, month=2, day=28),
         )
         result = DeliveryPriceCalculator.get_number_of_deliveries_in_growing_period(
-            growing_period, WEEKLY[0]
+            growing_period, WEEKLY[0], cache={}
         )
 
         self.assertEqual(9, result)
@@ -45,7 +45,7 @@ class TestGetNumberOfDeliveriesInGrowingPeriod(TapirIntegrationTest):
             end_date=datetime.date(year=2025, month=2, day=28),
         )
         result = DeliveryPriceCalculator.get_number_of_deliveries_in_growing_period(
-            growing_period, EVEN_WEEKS[0]
+            growing_period, EVEN_WEEKS[0], cache={}
         )
 
         self.assertEqual(4, result)
@@ -58,7 +58,7 @@ class TestGetNumberOfDeliveriesInGrowingPeriod(TapirIntegrationTest):
             end_date=datetime.date(year=2025, month=2, day=28),
         )
         result = DeliveryPriceCalculator.get_number_of_deliveries_in_growing_period(
-            growing_period, ODD_WEEKS[0]
+            growing_period, ODD_WEEKS[0], cache={}
         )
 
         self.assertEqual(5, result)

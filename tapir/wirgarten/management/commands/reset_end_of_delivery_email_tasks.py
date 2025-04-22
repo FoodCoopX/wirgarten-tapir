@@ -1,8 +1,8 @@
 from celery import Celery
+from django.conf import settings
 from django.core.management import BaseCommand
 from django.db.models import Max
 
-from django.conf import settings
 from tapir.wirgarten.models import ScheduledTask
 from tapir.wirgarten.service.tasks import schedule_task_unique
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder

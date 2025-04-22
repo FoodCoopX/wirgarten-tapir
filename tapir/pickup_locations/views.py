@@ -58,8 +58,8 @@ class PickupLocationCapacitiesView(APIView):
         pickup_location = get_object_or_404(
             PickupLocation, id=request.query_params.get("pickup_location_id")
         )
-
-        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE)
+        cache = {}
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
 
         data = {
             "pickup_location_id": pickup_location.id,
@@ -69,12 +69,16 @@ class PickupLocationCapacitiesView(APIView):
 
         if picking_mode == PICKING_MODE_BASKET:
             data["capacities_by_basket_size"] = (
-                self.build_serializer_data_picking_mode_basket(pickup_location)
+                self.build_serializer_data_picking_mode_basket(
+                    pickup_location, cache=cache
+                )
             )
 
         if picking_mode == PICKING_MODE_SHARE:
             data["capacities_by_shares"] = (
-                self.build_serializer_data_picking_mode_shares(pickup_location)
+                self.build_serializer_data_picking_mode_shares(
+                    pickup_location, cache=cache
+                )
             )
 
         return Response(
@@ -83,18 +87,22 @@ class PickupLocationCapacitiesView(APIView):
         )
 
     @classmethod
-    def build_serializer_data_picking_mode_basket(cls, pickup_location: PickupLocation):
+    def build_serializer_data_picking_mode_basket(
+        cls, pickup_location: PickupLocation, cache: Dict
+    ):
         return [
             {"basket_size_name": basket_size_name, "capacity": capacity}
             for basket_size_name, capacity in BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location
+                pickup_location, cache=cache
             ).items()
         ]
 
     @classmethod
-    def build_serializer_data_picking_mode_shares(cls, pickup_location: PickupLocation):
+    def build_serializer_data_picking_mode_shares(
+        cls, pickup_location: PickupLocation, cache: Dict
+    ):
         capacities = SharesCapacityService.get_available_share_capacities_for_pickup_location_by_product_type(
-            pickup_location
+            pickup_location, cache=cache
         )
 
         return [
@@ -121,7 +129,8 @@ class PickupLocationCapacitiesView(APIView):
             PickupLocation, id=request_serializer.validated_data["pickup_location_id"]
         )
 
-        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE)
+        cache = {}
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
         if request_serializer.validated_data["picking_mode"] != picking_mode:
             raise ValidationError("Invalid picking mode")
 
