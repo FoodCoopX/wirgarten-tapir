@@ -193,7 +193,7 @@ class PickupLocationCapacityEvolutionView(APIView):
             PickupLocation, id=request.query_params.get("pickup_location_id")
         )
         cache = {}
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE, cache=cache)
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
         if picking_mode == PICKING_MODE_BASKET:
             data = self.build_data_for_picking_mode_basket(pickup_location, cache)
         elif picking_mode == PICKING_MODE_SHARE:

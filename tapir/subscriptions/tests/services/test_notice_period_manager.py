@@ -118,7 +118,7 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         product_type = ProductTypeFactory.create()
         growing_period = GrowingPeriodFactory.create()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
+            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD
         ).update(value=2)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT

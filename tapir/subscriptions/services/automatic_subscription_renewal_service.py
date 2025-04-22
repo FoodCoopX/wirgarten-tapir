@@ -90,7 +90,7 @@ class AutomaticSubscriptionRenewalService:
     def get_subscriptions_that_will_be_renewed(
         cls, reference_date: datetime.date, cache: Dict
     ):
-        if not get_parameter_value(Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
+        if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
             return set()
 
         current_growing_period = get_current_growing_period(reference_date, cache)

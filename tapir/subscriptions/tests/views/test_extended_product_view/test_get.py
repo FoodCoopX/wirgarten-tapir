@@ -14,6 +14,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestExtendedProductViewGet(TapirIntegrationTest):
+    maxDiff = 2000
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
@@ -51,8 +53,8 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "base": True,
                 "picking_mode": PICKING_MODE_BASKET,
                 "basket_size_equivalences": [
-                    {"basket_size_name": "kleinen Kiste", "quantity": 0},
-                    {"basket_size_name": "normalen Kiste", "quantity": 0},
+                    {"basket_size_name": "kleine Kiste", "quantity": 0},
+                    {"basket_size_name": "normale Kiste", "quantity": 0},
                 ],
                 "price": 0.0,
                 "size": 0.0,
@@ -71,10 +73,10 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
         )
         ProductPriceFactory.create(product=product, price=15.2, size=1.3)
         ProductBasketSizeEquivalence.objects.create(
-            basket_size_name="kleinen Kiste", quantity=2, product=product
+            basket_size_name="kleine Kiste", quantity=2, product=product
         )
         ProductBasketSizeEquivalence.objects.create(
-            basket_size_name="normalen Kiste", quantity=3, product=product
+            basket_size_name="normale Kiste", quantity=3, product=product
         )
 
         url = reverse("subscriptions:extended_product")
@@ -90,8 +92,8 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "base": True,
                 "picking_mode": PICKING_MODE_BASKET,
                 "basket_size_equivalences": [
-                    {"basket_size_name": "kleinen Kiste", "quantity": 2},
-                    {"basket_size_name": "normalen Kiste", "quantity": 3},
+                    {"basket_size_name": "kleine Kiste", "quantity": 2},
+                    {"basket_size_name": "normale Kiste", "quantity": 3},
                 ],
                 "price": 15.2,
                 "size": 1.3,
