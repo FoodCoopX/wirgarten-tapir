@@ -8,7 +8,7 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.models import Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
@@ -21,13 +21,14 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
     ):
         mock_get_parameter_value.return_value = False
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            Mock()
+            Mock(), cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
     @patch(
@@ -40,13 +41,14 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         subscription = Mock()
         subscription.cancellation_ts = datetime.datetime.now()
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
     @patch(
@@ -63,15 +65,16 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         subscription.cancellation_ts = None
         mock_get_next_growing_period.return_value = None
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
 
     @patch.object(Subscription, "objects")
     @patch(
@@ -97,15 +100,16 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         mock_get_next_growing_period.return_value = next_growing_period
         mock_subscription_objects.filter.return_value.exists.return_value = True
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
@@ -141,20 +145,23 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=1))
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(subscription)
+        mock_get_max_cancellation_date.assert_called_once_with(
+            subscription, cache=cache
+        )
 
     @patch.object(NoticePeriodManager, "get_max_cancellation_date")
     @patch.object(Subscription, "objects")
@@ -186,20 +193,23 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=2))
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertFalse(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(subscription)
+        mock_get_max_cancellation_date.assert_called_once_with(
+            subscription, cache=cache
+        )
 
     @patch.object(NoticePeriodManager, "get_max_cancellation_date")
     @patch.object(Subscription, "objects")
@@ -231,17 +241,20 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_timezone(self, datetime.datetime(year=2025, month=3, day=3))
 
+        cache = {}
         result = AutomaticSubscriptionRenewalService.must_subscription_be_renewed(
-            subscription
+            subscription, cache=cache
         )
 
         self.assertTrue(result)
         mock_get_parameter_value.assert_called_once_with(
-            Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
-        mock_get_next_growing_period.assert_called_once_with()
+        mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
             member=member, period=next_growing_period, product=product
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
-        mock_get_max_cancellation_date.assert_called_once_with(subscription)
+        mock_get_max_cancellation_date.assert_called_once_with(
+            subscription, cache=cache
+        )

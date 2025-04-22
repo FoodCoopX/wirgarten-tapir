@@ -11,7 +11,7 @@ from tapir_mail.service.shortcuts import make_timezone_aware
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.is_debug_instance import is_debug_instance
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 def format_date(value: datetime.date | datetime.datetime) -> str:
@@ -56,7 +56,7 @@ def get_now(cache: Dict | None = None) -> datetime.datetime:
 
 
 def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
-    date_as_string = get_parameter_value(Parameter.TESTS_OVERRIDE_DATE, cache)
+    date_as_string = get_parameter_value(ParameterKeys.TESTS_OVERRIDE_DATE, cache)
     if date_as_string == "disabled":
         return timezone.now()
 

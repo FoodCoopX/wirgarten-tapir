@@ -3,15 +3,18 @@ import datetime
 from django.urls import reverse
 from django.utils import timezone
 
+from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import (
     Subscription,
     CoopShareTransaction,
     GrowingPeriod,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberWithSubscriptionFactory,
     SubscriptionFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -23,8 +26,15 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
     NOW = datetime.datetime(year=2023, month=6, day=12, tzinfo=timezone.now().tzinfo)
     END_OF_CURRENT_MONTH = datetime.datetime(year=2023, month=6, day=30)
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+        product_type = ProductTypeFactory.create()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_type.id
+        )
+
+    def setUp(self):
         mock_timezone(self, self.NOW)
 
     def test_trialCancellationForm_cancelMembershipAfterLastDelivery_succeeds(

@@ -5,7 +5,8 @@ from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
     PickupLocationCapacityModeBasketChecker,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
@@ -24,7 +25,7 @@ class TestGetCurrentCapacityUsage(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
-        TapirParameter.objects.filter(key=Parameter.PICKING_BASKET_SIZES).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium"
         )
         cls.product_s = ProductFactory(name="S")

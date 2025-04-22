@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import EmailLogEntry
 from tapir.wirgarten.models import Member
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.utils import format_date, get_today
 
@@ -28,6 +28,7 @@ def send_email(
     content: str,
     variables: dict = None,
     attachments: List[Attachment] = None,
+    cache: Dict = None,
 ):
     """
     Send an email to a list of recipients. The email is sent as HTML using the email/email_base.html template.
@@ -44,7 +45,7 @@ def send_email(
     if attachments is None:
         attachments = []
 
-    variables.update(get_default_vars(to_email))
+    variables.update(get_default_vars(to_email, cache=cache))
     content = content.format(**variables)
 
     email_body = render_to_string(
@@ -68,7 +69,7 @@ def send_email(
         ),
         from_email=settings.EMAIL_HOST_SENDER,
         headers={
-            "From": f"{get_parameter_value(Parameter.SITE_NAME)} <{settings.EMAIL_HOST_SENDER}>"
+            "From": f"{get_parameter_value(ParameterKeys.SITE_NAME, cache=cache)} <{settings.EMAIL_HOST_SENDER}>"
         },
     )
 
@@ -85,23 +86,25 @@ def send_email(
 
 
 # all the vars stuff will be deprecated as soon as the mail module is going in production
-def get_default_vars(to_email):
+def get_default_vars(to_email, cache: Dict):
     variables = add_member_vars(to_email)
-    variables.update(add_general_vars())
+    variables.update(add_general_vars(cache=cache))
     return variables
 
 
-def add_general_vars():
-    today = get_today()
+def add_general_vars(cache: Dict):
+    today = get_today(cache=cache)
     return {
         "year_current": today.year,
         "year_next": (today + relativedelta(years=1)).year,
         "year_overnext": (today + relativedelta(years=2)).year,
-        "admin_name": get_parameter_value(Parameter.SITE_ADMIN_NAME),
-        "site_name": get_parameter_value(Parameter.SITE_NAME),
-        "admin_telephone": get_parameter_value(Parameter.SITE_ADMIN_TELEPHONE),
-        "admin_image": get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
-        "site_email": get_parameter_value(Parameter.SITE_EMAIL),
+        "admin_name": get_parameter_value(ParameterKeys.SITE_ADMIN_NAME, cache=cache),
+        "site_name": get_parameter_value(ParameterKeys.SITE_NAME, cache=cache),
+        "admin_telephone": get_parameter_value(
+            ParameterKeys.SITE_ADMIN_TELEPHONE, cache=cache
+        ),
+        "admin_image": get_parameter_value(ParameterKeys.SITE_ADMIN_IMAGE, cache=cache),
+        "site_email": get_parameter_value(ParameterKeys.SITE_EMAIL, cache=cache),
     }
 
 

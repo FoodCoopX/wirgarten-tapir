@@ -3,7 +3,8 @@ from django.urls import reverse
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.config import PICKING_MODE_BASKET
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     ProductFactory,
@@ -13,6 +14,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestExtendedProductViewGet(TapirIntegrationTest):
+    maxDiff = 2000
+
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
@@ -29,7 +32,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
 
     def test_get_productWithoutPriceObjectOrEquivalences_returnsCorrectData(self):
         member = MemberFactory.create(is_superuser=True)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
         self.client.force_login(member)
@@ -50,8 +53,8 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "base": True,
                 "picking_mode": PICKING_MODE_BASKET,
                 "basket_size_equivalences": [
-                    {"basket_size_name": "kleinen Kiste", "quantity": 0},
-                    {"basket_size_name": "normalen Kiste", "quantity": 0},
+                    {"basket_size_name": "kleine Kiste", "quantity": 0},
+                    {"basket_size_name": "normale Kiste", "quantity": 0},
                 ],
                 "price": 0.0,
                 "size": 0.0,
@@ -61,7 +64,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
 
     def test_get_default_returnsCorrectData(self):
         member = MemberFactory.create(is_superuser=True)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
         self.client.force_login(member)
@@ -70,10 +73,10 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
         )
         ProductPriceFactory.create(product=product, price=15.2, size=1.3)
         ProductBasketSizeEquivalence.objects.create(
-            basket_size_name="kleinen Kiste", quantity=2, product=product
+            basket_size_name="kleine Kiste", quantity=2, product=product
         )
         ProductBasketSizeEquivalence.objects.create(
-            basket_size_name="normalen Kiste", quantity=3, product=product
+            basket_size_name="normale Kiste", quantity=3, product=product
         )
 
         url = reverse("subscriptions:extended_product")
@@ -89,8 +92,8 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "base": True,
                 "picking_mode": PICKING_MODE_BASKET,
                 "basket_size_equivalences": [
-                    {"basket_size_name": "kleinen Kiste", "quantity": 2},
-                    {"basket_size_name": "normalen Kiste", "quantity": 3},
+                    {"basket_size_name": "kleine Kiste", "quantity": 2},
+                    {"basket_size_name": "normale Kiste", "quantity": 3},
                 ],
                 "price": 15.2,
                 "size": 1.3,

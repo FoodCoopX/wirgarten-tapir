@@ -14,7 +14,7 @@ from tapir.wirgarten.forms.pickup_location import (
     PickupLocationEditForm,
 )
 from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_active_pickup_location_capabilities
 from tapir.wirgarten.service.products import get_active_product_types
 from tapir.wirgarten.views.modal import get_form_modal
@@ -50,7 +50,7 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
         )
 
         context["picking_mode"] = get_parameter_value(
-            key=Parameter.PICKING_MODE, cache=cache
+            key=ParameterKeys.PICKING_MODE, cache=cache
         )
         context["all_product_types"] = get_active_product_types().values("name")
         context["pickup_locations"] = list(

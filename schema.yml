@@ -4879,7 +4879,7 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
-        notice_period_duration_in_months:
+        notice_period_duration:
           type: integer
           maximum: 2147483647
           minimum: -2147483648

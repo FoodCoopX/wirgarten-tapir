@@ -9,7 +9,8 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 )
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import ProductType, Member, PickupLocationOpeningTime
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -216,7 +217,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         member = MemberFactory.create()
         past_growing_period = GrowingPeriodFactory.create(
@@ -248,7 +249,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         member = MemberFactory.create()
         past_growing_period = GrowingPeriodFactory.create(
@@ -280,7 +281,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
         member = MemberFactory.create()
         past_growing_period = GrowingPeriodFactory.create(

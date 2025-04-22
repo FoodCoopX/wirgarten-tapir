@@ -9,7 +9,8 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import Subscription
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,
@@ -23,7 +24,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
     def setUp(self) -> None:
         ParameterDefinitions().import_definitions()
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         self.now = mock_timezone(self, datetime.datetime(year=2022, month=6, day=9))
 
@@ -53,7 +54,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2024, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         for subscription in subscriptions:
             subscription.refresh_from_db()
@@ -89,7 +90,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2022, month=12, day=31)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         self.assertEqual(1, Subscription.objects.count())
         self.assertIn(active_subscription, Subscription.objects.all())
@@ -109,12 +110,14 @@ class TestCancelSubscriptions(TapirIntegrationTest):
             member=member, period=growing_period, product=product
         )
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
         mock_is_subscription_in_trial.return_value = False
 
         with self.assertRaises(ImproperlyConfigured):
-            SubscriptionCancellationManager.cancel_subscriptions(product, member)
+            SubscriptionCancellationManager.cancel_subscriptions(
+                product, member, cache={}
+            )
 
         active_subscription.refresh_from_db()
         self.assertIsNone(active_subscription.cancellation_ts)
@@ -142,7 +145,7 @@ class TestCancelSubscriptions(TapirIntegrationTest):
         cancellation_date = datetime.date(year=2024, month=11, day=17)
         mock_get_earliest_possible_cancellation_date.return_value = cancellation_date
 
-        SubscriptionCancellationManager.cancel_subscriptions(product, member)
+        SubscriptionCancellationManager.cancel_subscriptions(product, member, cache={})
 
         subscription.refresh_from_db()
         self.assertEqual(cancellation_date, subscription.end_date)

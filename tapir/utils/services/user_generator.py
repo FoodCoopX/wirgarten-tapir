@@ -7,7 +7,6 @@ from typing import Dict, List, Set
 
 from faker import Faker
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
@@ -15,7 +14,6 @@ from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.subscription import SOLIDARITY_PRICES
 from tapir.wirgarten.models import (
     Member,
-    ProductType,
     GrowingPeriod,
     Subscription,
     PickupLocation,
@@ -23,7 +21,6 @@ from tapir.wirgarten.models import (
     Product,
     HarvestShareProduct,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
     get_next_contract_start_date,

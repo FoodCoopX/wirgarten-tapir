@@ -33,7 +33,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
@@ -146,12 +146,12 @@ def build_capabilities_for_picking_mode_basket(
 def pickup_location_to_dict(
     location_capabilities, pickup_location: PickupLocation, cache: Dict = None
 ):
-    next_delivery_date = get_next_delivery_date()
+    next_delivery_date = get_next_delivery_date(cache=cache)
     next_month = next_delivery_date + relativedelta(day=1, months=1)
     if cache is None:
         cache = {}
 
-    picking_mode = get_parameter_value(Parameter.PICKING_MODE, cache)
+    picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache)
     if picking_mode == PICKING_MODE_BASKET:
         capabilities_for_pickup_location = build_capabilities_for_picking_mode_basket(
             pickup_location, cache

@@ -8,7 +8,9 @@ from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 
 from tapir.configuration.models import TapirParameter
-from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -22,7 +24,7 @@ from tapir.wirgarten.models import (
     Subscription,
     TaxRate,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -65,9 +67,9 @@ def product_type_order_by(
             Case(
                 When(
                     **{
-                        id_field: get_parameter_value(
-                            Parameter.COOP_BASE_PRODUCT_TYPE, cache
-                        )
+                        id_field: BaseProductTypeService.get_base_product_type(
+                            cache=cache
+                        ).id
                     },
                     then=Value(0),
                 ),
@@ -107,15 +109,24 @@ def get_available_product_types(reference_date: date = None) -> list:
 
 
 def get_next_growing_period(
-    reference_date: date = None,
+    reference_date: date = None, cache: Dict = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    return (
-        GrowingPeriod.objects.filter(start_date__gt=reference_date)
-        .order_by("start_date")
-        .first()
+    def compute():
+        return (
+            GrowingPeriod.objects.filter(start_date__gt=reference_date)
+            .order_by("start_date")
+            .first()
+        )
+
+    next_growing_periods_by_date_cache = get_from_cache_or_compute(
+        cache, "next_growing_periods_by_date", lambda: {}
+    )
+
+    return get_from_cache_or_compute(
+        next_growing_periods_by_date_cache, reference_date, compute
     )
 
 
@@ -451,9 +462,9 @@ def create_product_type_capacity(
             is_affected_by_jokers=is_affected_by_jokers,
         )
         if not ProductType.objects.exclude(id=pt.id).exists():
-            TapirParameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
-                value=pt.id
-            )
+            TapirParameter.objects.filter(
+                name=ParameterKeys.COOP_BASE_PRODUCT_TYPE
+            ).update(value=pt.id)
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)

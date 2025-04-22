@@ -12,18 +12,20 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
     Product,
-    ProductType,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -69,20 +71,23 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        current_growing_period = get_current_growing_period()
+        cache = {}
+
+        current_growing_period = get_current_growing_period(cache=cache)
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
 
-        base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        try:
-            self.harvest_share_type = ProductType.objects.get(id=base_product_id)
-        except ProductType.DoesNotExist:
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
+        if base_product_type is None:
             context["no_base_product_type"] = True
             return context
+        self.harvest_share_type = base_product_type
 
-        next_contract_start_date = get_next_contract_start_date()
-        next_growing_period = get_next_growing_period(next_contract_start_date)
+        next_contract_start_date = get_next_contract_start_date(cache=cache)
+        next_growing_period = get_next_growing_period(
+            next_contract_start_date, cache=cache
+        )
 
         context["next_contract_start_date"] = next_contract_start_date
         context["next_period_start_date"] = (
@@ -90,11 +95,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
 
         self.add_capacity_chart_context(
-            context, base_product_id, next_contract_start_date
+            context, base_product_type.id, next_contract_start_date
         )
         if next_growing_period:
             self.add_capacity_chart_context(
-                context, base_product_id, next_growing_period.start_date, "next"
+                context, base_product_type.id, next_growing_period.start_date, "next"
             )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
@@ -138,13 +143,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             get_automatically_calculated_solidarity_excess()
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
         )
         context["status_negative_soli_price_allowed"] = get_parameter_value(
-            Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
+            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
         )
 
-        today = get_today()
+        today = get_today(cache=cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],

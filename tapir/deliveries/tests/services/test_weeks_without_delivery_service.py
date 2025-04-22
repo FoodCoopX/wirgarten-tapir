@@ -19,12 +19,15 @@ class TestWeeksWithoutDeliveryService(SimpleTestCase):
         mock_get_current_growing_period.return_value = None
         delivery_date = datetime.date(year=2024, month=7, day=1)
 
+        cache = {}
         result = WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
-            delivery_date
+            delivery_date, cache=cache
         )
 
         self.assertFalse(result)
-        mock_get_current_growing_period.assert_called_once_with(delivery_date)
+        mock_get_current_growing_period.assert_called_once_with(
+            delivery_date, cache=cache
+        )
 
     @patch(
         "tapir.deliveries.services.weeks_without_delivery_service.get_current_growing_period"
@@ -37,12 +40,15 @@ class TestWeeksWithoutDeliveryService(SimpleTestCase):
         mock_get_current_growing_period.return_value = growing_period
         delivery_date = datetime.date(year=2024, month=7, day=1)  # KW27
 
+        cache = {}
         result = WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
-            delivery_date
+            delivery_date, cache=cache
         )
 
         self.assertFalse(result)
-        mock_get_current_growing_period.assert_called_once_with(delivery_date)
+        mock_get_current_growing_period.assert_called_once_with(
+            delivery_date, cache=cache
+        )
 
     @patch(
         "tapir.deliveries.services.weeks_without_delivery_service.get_current_growing_period"
@@ -55,9 +61,12 @@ class TestWeeksWithoutDeliveryService(SimpleTestCase):
         mock_get_current_growing_period.return_value = growing_period
         delivery_date = datetime.date(year=2024, month=7, day=1)  # KW 27
 
+        cache = {}
         result = WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
-            delivery_date
+            delivery_date, cache=cache
         )
 
         self.assertTrue(result)
-        mock_get_current_growing_period.assert_called_once_with(delivery_date)
+        mock_get_current_growing_period.assert_called_once_with(
+            delivery_date, cache=cache
+        )

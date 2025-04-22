@@ -20,9 +20,12 @@ class TestJokerManagementServiceGetDateLimitForJokerChanges(SimpleTestCase):
         limit_date = Mock()
         mock_calculate_date_limit_for_delivery_changes_in_week.return_value = limit_date
 
-        result = JokerManagementService.get_date_limit_for_joker_changes(input_date)
+        cache = {}
+        result = JokerManagementService.get_date_limit_for_joker_changes(
+            input_date, cache=cache
+        )
 
         self.assertEqual(limit_date, result)
         mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
-            input_date
+            input_date, cache=cache
         )

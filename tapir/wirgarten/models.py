@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import ArrayField
@@ -24,8 +25,12 @@ from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.utils import format_currency, format_date, get_today
 
 
@@ -88,7 +93,7 @@ class PickupLocation(TapirModel):
         opening_times = PickupLocationOpeningTime.objects.filter(
             pickup_location_id=self.id
         ).order_by("day_of_week")
-        delivery_day = get_parameter_value(Parameter.DELIVERY_DAY)
+        delivery_day = get_parameter_value(ParameterKeys.DELIVERY_DAY)
         smallest_offset = None
         for ot in opening_times:
             offset = ot.day_of_week - delivery_day
@@ -338,7 +343,7 @@ class Member(TapirUser):
     def save(self, *args, **kwargs):
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
-                Parameter.MEMBER_BYPASS_KEYCLOAK,
+                ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
                 cache=kwargs.pop("cache", None),
             )
 
@@ -441,11 +446,11 @@ class Member(TapirUser):
             get_active_subscriptions,
         )
 
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type(cache={})
 
         # Get all active base subscriptions for the member
         subscriptions = get_active_subscriptions().filter(
-            member_id=self.id, product__type__id=base_product_type_id
+            member_id=self.id, product__type=base_product_type
         )
 
         if not subscriptions:
@@ -674,17 +679,17 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None):
+    def total_price(self, reference_date=None, cache: Dict = None):
         if self.price_override is not None:
             return float(self.price_override)
 
         if reference_date is None:
-            reference_date = max(self.start_date, get_today())
+            reference_date = max(self.start_date, get_today(cache=cache))
 
         if not hasattr(self, "_total_price"):
             from tapir.wirgarten.service.products import get_product_price
 
-            price = get_product_price(self.product, reference_date).price
+            price = get_product_price(self.product, reference_date, cache=cache).price
 
             if self.solidarity_price_absolute is not None:
                 self._total_price = round(
@@ -722,13 +727,13 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
         return self._total_price_without_soli
 
-    def get_used_capacity(self):
-        today = get_today()
+    def get_used_capacity(self, cache: Dict):
+        today = get_today(cache=cache)
         if not hasattr(self, "_used_capacity"):
             from tapir.wirgarten.service.products import get_product_price
 
             current_product_price = get_product_price(
-                product=self.product, reference_date=today
+                product=self.product, reference_date=today, cache=cache
             )
 
             self._used_capacity = current_product_price.size * self.quantity

@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+from typing import Dict
 
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS, NO_DELIVERY
@@ -57,13 +58,13 @@ class DeliveryPriceCalculator:
 
     @classmethod
     def get_number_of_deliveries_in_growing_period(
-        cls, growing_period: GrowingPeriod, delivery_cycle
+        cls, growing_period: GrowingPeriod, delivery_cycle, cache: Dict
     ) -> int:
         if delivery_cycle == NO_DELIVERY[0]:
             return 0
 
         count = 0
-        current_date = get_next_delivery_date(growing_period.start_date)
+        current_date = get_next_delivery_date(growing_period.start_date, cache=cache)
         while current_date <= growing_period.end_date:
             calendar_week = current_date.isocalendar().week
             even_week = calendar_week % 2 == 0
@@ -78,7 +79,7 @@ class DeliveryPriceCalculator:
                 count += 1
 
             current_date = get_next_delivery_date(
-                get_monday(current_date + datetime.timedelta(days=7))
+                get_monday(current_date + datetime.timedelta(days=7)), cache=cache
             )
 
         return count

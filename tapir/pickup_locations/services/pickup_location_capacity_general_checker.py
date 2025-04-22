@@ -19,7 +19,7 @@ from tapir.wirgarten.models import (
     PickupLocation,
     Product,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class PickupLocationCapacityGeneralChecker:
@@ -42,7 +42,7 @@ class PickupLocationCapacityGeneralChecker:
         ):
             already_registered_member = None
 
-        picking_mode = get_parameter_value(Parameter.PICKING_MODE, cache)
+        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache)
 
         if picking_mode == PICKING_MODE_SHARE:
             return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(

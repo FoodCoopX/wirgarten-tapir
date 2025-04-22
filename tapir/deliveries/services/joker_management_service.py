@@ -15,7 +15,7 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
 
@@ -30,22 +30,26 @@ class JokerManagementService:
         max_jokers: int
 
     @classmethod
-    def get_date_limit_for_joker_changes(cls, reference_date: datetime.date):
+    def get_date_limit_for_joker_changes(
+        cls, reference_date: datetime.date, cache: Dict
+    ):
         return DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
-            reference_date
+            reference_date, cache=cache
         )
 
     @classmethod
     def can_joker_be_used_relative_to_date_limit(
-        cls, reference_date: datetime.date
+        cls, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        return cls.get_date_limit_for_joker_changes(reference_date) > get_today()
+        return cls.get_date_limit_for_joker_changes(
+            reference_date, cache=cache
+        ) > get_today(cache=cache)
 
     @classmethod
     def can_joker_be_used_relative_to_max_amount_per_growing_period(
-        cls, member: Member, reference_date: datetime.date
+        cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        growing_period = get_current_growing_period(reference_date)
+        growing_period = get_current_growing_period(reference_date, cache=cache)
         if not growing_period:
             return False
 
@@ -56,12 +60,14 @@ class JokerManagementService:
         ).count()
 
         return nb_used_jokers_in_growing_period < get_parameter_value(
-            Parameter.JOKERS_AMOUNT_PER_CONTRACT
+            ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT, cache=cache
         )
 
     @classmethod
-    def can_joker_be_cancelled(cls, joker: Joker) -> bool:
-        return get_today() <= cls.get_date_limit_for_joker_changes(joker.date)
+    def can_joker_be_cancelled(cls, joker: Joker, cache: Dict) -> bool:
+        return get_today(cache=cache) <= cls.get_date_limit_for_joker_changes(
+            joker.date, cache=cache
+        )
 
     @classmethod
     def cancel_joker(cls, joker: Joker):
@@ -69,16 +75,22 @@ class JokerManagementService:
 
     @classmethod
     def can_joker_be_used_in_week(
-        cls, member: Member, reference_date: datetime.date
+        cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
         return (
             not cls.does_member_have_a_joker_in_week(member, reference_date)
-            and cls.can_joker_be_used_relative_to_date_limit(reference_date)
-            and cls.can_joker_be_used_relative_to_max_amount_per_growing_period(
-                member, reference_date
+            and cls.can_joker_be_used_relative_to_date_limit(
+                reference_date, cache=cache
             )
-            and cls.can_joker_be_used_relative_to_restrictions(member, reference_date)
-            and cls.can_joker_be_used_relative_to_weeks_without_delivery(reference_date)
+            and cls.can_joker_be_used_relative_to_max_amount_per_growing_period(
+                member, reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_restrictions(
+                member, reference_date, cache=cache
+            )
+            and cls.can_joker_be_used_relative_to_weeks_without_delivery(
+                reference_date, cache=cache
+            )
         )
 
     @classmethod
@@ -93,10 +105,12 @@ class JokerManagementService:
 
     @classmethod
     def get_extra_joker_restrictions(
-        cls, restrictions_as_string: str = None
+        cls, restrictions_as_string: str = None, cache: Dict = None
     ) -> List[JokerRestriction]:
         if restrictions_as_string is None:
-            restrictions_as_string = get_parameter_value(Parameter.JOKERS_RESTRICTIONS)
+            restrictions_as_string = get_parameter_value(
+                ParameterKeys.JOKERS_RESTRICTIONS, cache=cache
+            )
 
         if restrictions_as_string == "disabled":
             return []
@@ -144,9 +158,9 @@ class JokerManagementService:
 
     @classmethod
     def can_joker_be_used_relative_to_restrictions(
-        cls, member: Member, reference_date: datetime.date
+        cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        restrictions = cls.get_extra_joker_restrictions()
+        restrictions = cls.get_extra_joker_restrictions(cache=cache)
         for restriction in restrictions:
             restriction_start_date = datetime.date(
                 year=reference_date.year,
@@ -178,10 +192,10 @@ class JokerManagementService:
 
     @staticmethod
     def can_joker_be_used_relative_to_weeks_without_delivery(
-        reference_date: datetime.date,
+        reference_date: datetime.date, cache: Dict
     ) -> bool:
         return not WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
-            reference_date
+            reference_date, cache=cache
         )
 
     @classmethod

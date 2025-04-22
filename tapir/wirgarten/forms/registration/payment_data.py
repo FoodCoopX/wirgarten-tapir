@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.validators import IBANValidator
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class PaymentDataForm(forms.Form):
@@ -21,7 +21,7 @@ class PaymentDataForm(forms.Form):
                 """Ich ermächtige die {site_name} die gezeichneten Geschäftsanteile sowie die monatlichen Beträge für den 
                 Ernteanteil und ggf. weitere Produkte mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich 
                 weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen. """
-            ).format(site_name=get_parameter_value(Parameter.SITE_NAME)),
+            ).format(site_name=get_parameter_value(ParameterKeys.SITE_NAME)),
             required=True,
         )
 

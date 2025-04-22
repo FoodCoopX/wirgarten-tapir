@@ -8,4 +8,4 @@ class NoticePeriod(models.Model):
     growing_period = models.ForeignKey(GrowingPeriod, on_delete=models.CASCADE)
     duration = (
         models.IntegerField()
-    )  # can be weeks or months depending on Parameter.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT
+    )  # can be weeks or months depending on ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT

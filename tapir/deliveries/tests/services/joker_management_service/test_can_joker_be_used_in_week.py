@@ -51,24 +51,27 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             mock_can_joker_be_used_relative_to_weeks_without_delivery,
         )
 
+        cache = {}
         self.assertTrue(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member, reference_date
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
 
     @patch.object(
@@ -101,18 +104,21 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
         )
         mock_can_joker_be_used_relative_to_restrictions.return_value = False
 
+        cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member, reference_date
@@ -151,17 +157,20 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
             False
         )
 
+        cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_not_called()
         mock_can_joker_be_used_relative_to_restrictions.assert_not_called()
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member, reference_date
@@ -197,15 +206,18 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
         )
         mock_can_joker_be_used_relative_to_date_limit.return_value = False
 
+        cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_not_called()
         mock_can_joker_be_used_relative_to_restrictions.assert_not_called()
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_not_called()
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member, reference_date
@@ -241,8 +253,11 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
         )
         mock_does_member_have_a_joker_in_week.return_value = True
 
+        cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_not_called()
@@ -283,22 +298,25 @@ class TestJokerManagementServiceCanJokerBeUsedInWeek(SimpleTestCase):  #
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.return_value = False
 
+        cache = {}
         self.assertFalse(
-            JokerManagementService.can_joker_be_used_in_week(member, reference_date)
+            JokerManagementService.can_joker_be_used_in_week(
+                member, reference_date, cache=cache
+            )
         )
 
         mock_can_joker_be_used_relative_to_restrictions.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_max_amount_per_growing_period.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_can_joker_be_used_relative_to_date_limit.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )
         mock_does_member_have_a_joker_in_week.assert_called_once_with(
             member, reference_date
         )
         mock_can_joker_be_used_relative_to_weeks_without_delivery.assert_called_once_with(
-            reference_date
+            reference_date, cache=cache
         )

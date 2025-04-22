@@ -11,6 +11,9 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
 from tapir.log.models import TextLogEntry
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
@@ -32,7 +35,7 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
@@ -115,11 +118,14 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     @transaction.atomic
     def update_pickup_location(form):
+        cache = {}
         pickup_location_id = form.cleaned_data["pickup_location"].id
         change_date = (
-            calculate_pickup_location_change_date()
-            if member.pickup_location is not None
-            else get_today()
+            (
+                calculate_pickup_location_change_date(cache=cache)
+                if member.pickup_location is not None
+                else get_today(cache=cache)
+            ),
         )
         old_pickup_location = member.pickup_location
 
@@ -245,6 +251,9 @@ def get_renew_contracts_form(request, **kwargs):
 def get_add_subscription_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
+    cache = {}
+    kwargs["cache"] = cache
+
     check_permission_or_self(member_id, request)
 
     product_type_name = request.GET.get("productType")
@@ -252,11 +261,11 @@ def get_add_subscription_form(request, **kwargs):
         raise Exception("productType not specified")
 
     product_type = get_object_or_404(ProductType, name=product_type_name)
+
     is_base_product_type = (
-        get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE) == product_type.id
+        BaseProductTypeService.get_base_product_type(cache=cache) == product_type
     )
 
-    cache = {}
     if is_base_product_type:
         form_type = BaseProductForm
         next_start_date = get_next_contract_start_date()
@@ -311,11 +320,17 @@ def get_add_subscription_form(request, **kwargs):
                 .exists()
             ):
                 form.save(member_id=member_id)
-                send_contract_change_confirmation(member, form.subs)
+                send_contract_change_confirmation(
+                    member, form.subscriptions, cache=cache
+                )
             else:
                 form.save(member_id=member_id)
                 send_order_confirmation(
-                    member, get_active_and_future_subscriptions().filter(member=member)
+                    member,
+                    get_active_and_future_subscriptions(cache=cache).filter(
+                        member=member
+                    ),
+                    cache=cache,
                 )
         else:
             form.save(member_id=member_id)
@@ -324,7 +339,7 @@ def get_add_subscription_form(request, **kwargs):
             actor=request.user,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=form.subs,
+            subscriptions=form.subscriptions,
         ).save()
 
     return get_form_modal(
@@ -344,8 +359,10 @@ def get_add_coop_shares_form(request, **kwargs):
 
     check_permission_or_self(member_id, request)
     member = Member.objects.get(pk=member_id)
-
-    if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
+    cache = {}
+    if not get_parameter_value(
+        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
+    ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
 
         wl_kwargs = kwargs.copy()

@@ -5,14 +5,14 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.models import GrowingPeriod, Member
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
 
 
 class JokerGenerator:
     @classmethod
     def generate_jokers(cls):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED):
             return
 
         for growing_period in GrowingPeriod.objects.filter(start_date__lte=get_today()):
@@ -28,7 +28,7 @@ class JokerGenerator:
                 start_date = subscriptions[0].start_date
                 end_date = subscriptions[-1].end_date
                 nb_jokers = random.randint(
-                    0, get_parameter_value(Parameter.JOKERS_AMOUNT_PER_CONTRACT)
+                    0, get_parameter_value(ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT)
                 )
                 for _ in range(nb_jokers):
                     random_date = start_date + datetime.timedelta(
@@ -37,7 +37,7 @@ class JokerGenerator:
                     if JokerManagementService.does_member_have_a_joker_in_week(
                         member, random_date
                     ) or not JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                        member, random_date
+                        member, random_date, cache={}
                     ):
                         continue
                     Joker.objects.create(member=member, date=random_date)

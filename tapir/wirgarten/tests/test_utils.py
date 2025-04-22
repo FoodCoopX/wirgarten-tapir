@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 from tapir.configuration.models import TapirParameterDatatype
 from tapir.configuration.parameter import parameter_definition
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tapirmail import configure_mail_module
 
 
@@ -64,7 +64,7 @@ def mock_timezone(test: unittest.TestCase, now: datetime.datetime) -> datetime.d
 
 def set_bypass_keycloak(bypass: bool = True):
     parameter_definition(
-        key=Parameter.MEMBER_BYPASS_KEYCLOAK,
+        key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
         label="Bypass Keycloak",
         datatype=TapirParameterDatatype.BOOLEAN,
         initial_value=True,

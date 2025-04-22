@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
@@ -8,7 +8,8 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -109,7 +110,7 @@ class TestCancelJokerView(TapirIntegrationTest):
 
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         mock_cancel_joker.assert_not_called()
-        mock_can_joker_be_cancelled.assert_called_once_with(joker)
+        mock_can_joker_be_cancelled.assert_called_once_with(joker, cache=ANY)
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -117,7 +118,7 @@ class TestCancelJokerView(TapirIntegrationTest):
     def test_cancelJokerView_jokerFeatureDisabled_returns403(
         self, mock_cancel_joker: Mock, mock_fire_action: Mock
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value="False"
         )
 

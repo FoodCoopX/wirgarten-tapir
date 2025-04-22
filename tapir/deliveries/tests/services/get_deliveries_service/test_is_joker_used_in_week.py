@@ -3,7 +3,8 @@ import datetime
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -30,7 +31,9 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertFalse(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )
 
@@ -44,12 +47,14 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertTrue(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )
 
     def test_isJokerUsedInWeek_hasJokerInWeekButFeatureIsDisabled_returnsFalse(self):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value="False"
         )
         target_member = MemberFactory.create()
@@ -61,6 +66,8 @@ class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
         for weekday in range(7):
             self.assertFalse(
                 GetDeliveriesService.is_joker_used_in_week(
-                    target_member, datetime.date(year=2025, month=3, day=3 + weekday)
+                    target_member,
+                    datetime.date(year=2025, month=3, day=3 + weekday),
+                    cache={},
                 )
             )

@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
@@ -8,7 +8,8 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
@@ -54,7 +55,9 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, Joker.objects.count())
         date = datetime.date(year=2024, month=7, day=23)
-        mock_can_joker_be_used_in_week.assert_called_once_with(other_member, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(
+            other_member, date, cache=ANY
+        )
         mock_fire_action.assert_called_once_with(
             "deliveries.joker_used",
             other_member.email,
@@ -80,7 +83,7 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(user, joker.member)
         date = datetime.date(year=2024, month=7, day=23)
         self.assertEqual(date, joker.date)
-        mock_can_joker_be_used_in_week.assert_called_once_with(user, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(user, date, cache=ANY)
         mock_fire_action.assert_called_once_with(
             "deliveries.joker_used",
             user.email,
@@ -103,7 +106,7 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         self.assertFalse(Joker.objects.exists())
         date = datetime.date(year=2024, month=7, day=23)
-        mock_can_joker_be_used_in_week.assert_called_once_with(user, date)
+        mock_can_joker_be_used_in_week.assert_called_once_with(user, date, cache=ANY)
         mock_fire_action.assert_not_called()
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -111,7 +114,7 @@ class TestUseJokerView(TapirIntegrationTest):
     def test_useJokerView_jokerFeatureDisabled_returns403(
         self, mock_can_joker_be_used_in_week: Mock, mock_fire_action: Mock
     ):
-        TapirParameter.objects.filter(key=Parameter.JOKERS_ENABLED).update(
+        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_ENABLED).update(
             value="False"
         )
 

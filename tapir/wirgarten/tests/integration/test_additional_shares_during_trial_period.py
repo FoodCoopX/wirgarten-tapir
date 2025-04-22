@@ -3,9 +3,11 @@ import datetime
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberWithCoopSharesFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
@@ -16,11 +18,18 @@ from tapir.wirgarten.tests.test_utils import (
 class TestAdditionalSharesDuringTrialPeriod(TapirIntegrationTest):
     NOW = datetime.datetime(year=2023, month=6, day=12)
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
         TapirParameter.objects.filter(
-            key=Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")
+        product_type = ProductTypeFactory.create()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_type.id
+        )
+
+    def setUp(self):
         mock_timezone(self, self.NOW)
 
     def test_getAddCoopSharesForm_memberIsNotInTrialPeriod_canBuyMoreShares(

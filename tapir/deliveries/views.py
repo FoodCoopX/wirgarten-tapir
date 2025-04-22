@@ -27,7 +27,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, GrowingPeriod
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.utils import check_permission_or_self, get_today, format_date
 
@@ -62,7 +62,8 @@ class GetMemberJokerInformationView(APIView):
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def get(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        cache = {}
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
@@ -84,9 +85,11 @@ class GetMemberJokerInformationView(APIView):
             {
                 "joker": joker,
                 "cancellation_limit": JokerManagementService.get_date_limit_for_joker_changes(
-                    joker.date
+                    joker.date, cache=cache
                 ),
-                "delivery_date": get_next_delivery_date(get_monday(joker.date)),
+                "delivery_date": get_next_delivery_date(
+                    get_monday(joker.date), cache=cache
+                ),
             }
             for joker in jokers
         ]
@@ -94,12 +97,14 @@ class GetMemberJokerInformationView(APIView):
         data = {
             "used_jokers": joker_data,
             "max_jokers_per_growing_period": get_parameter_value(
-                Parameter.JOKERS_AMOUNT_PER_CONTRACT
+                ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT, cache=cache
             ),
             "weekday_limit": get_parameter_value(
-                Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+                ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
             ),
-            "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(),
+            "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(
+                cache=cache
+            ),
             "used_joker_in_growing_period": self.build_data_used_joker_in_growing_period(
                 member_id
             ),
@@ -141,7 +146,8 @@ class CancelJokerView(APIView):
         parameters=[OpenApiParameter(name="joker_id", type=str)],
     )
     def post(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        cache = {}
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
@@ -151,9 +157,9 @@ class CancelJokerView(APIView):
         joker = get_object_or_404(Joker, id=joker_id)
         check_permission_or_self(joker.member_id, request)
 
-        if not JokerManagementService.can_joker_be_cancelled(joker):
+        if not JokerManagementService.can_joker_be_cancelled(joker, cache=cache):
             return Response(
-                f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today())}, Joker: {format_date(joker.date)}",
+                f"Es ist zu spät um dieses Joker abzusagen. Heute: {format_date(get_today(cache=cache))}, Joker: {format_date(joker.date)}",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -180,7 +186,8 @@ class UseJokerView(APIView):
         ],
     )
     def post(self, request):
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        cache = {}
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return Response(
                 "The joker feature is disabled",
                 status=status.HTTP_403_FORBIDDEN,
@@ -193,7 +200,9 @@ class UseJokerView(APIView):
 
         member = get_object_or_404(Member, id=member_id)
 
-        if not JokerManagementService.can_joker_be_used_in_week(member, date):
+        if not JokerManagementService.can_joker_be_used_in_week(
+            member, date, cache=cache
+        ):
             return Response(
                 "Du darfst an dem Liefertag kein Joker einsetzen",
                 status=status.HTTP_403_FORBIDDEN,

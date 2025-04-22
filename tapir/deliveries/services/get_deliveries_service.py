@@ -18,7 +18,7 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 
 
@@ -33,7 +33,7 @@ class GetDeliveriesService:
     ):
         deliveries = []
 
-        next_delivery_date = get_next_delivery_date(date_from)
+        next_delivery_date = get_next_delivery_date(date_from, cache=cache)
         while next_delivery_date <= date_to:
             delivery_object = cls.build_delivery_object(
                 member=member, delivery_date=next_delivery_date, cache=cache
@@ -42,7 +42,7 @@ class GetDeliveriesService:
                 deliveries.append(delivery_object)
 
             next_delivery_date = get_next_delivery_date(
-                get_monday(next_delivery_date + datetime.timedelta(days=7))
+                get_monday(next_delivery_date + datetime.timedelta(days=7)), cache=cache
             )
 
         return deliveries
@@ -72,13 +72,14 @@ class GetDeliveriesService:
             opening_times, delivery_date
         )
 
-        joker_used = cls.is_joker_used_in_week(member, delivery_date)
+        joker_used = cls.is_joker_used_in_week(member, delivery_date, cache=cache)
 
         if joker_used:
             relevant_subscriptions = set(
                 filter(
                     lambda subscription: not JokerManagementService.is_subscription_affected_by_joker(
-                        subscription, cache
+                        subscription,
+                        cache=cache,
                     ),
                     relevant_subscriptions,
                 )
@@ -91,13 +92,17 @@ class GetDeliveriesService:
             "subscriptions": relevant_subscriptions,
             "joker_used": joker_used,
             "can_joker_be_used": JokerManagementService.can_joker_be_used_in_week(
-                member, delivery_date
+                member,
+                delivery_date,
+                cache=cache,
             ),
             "can_joker_be_used_relative_to_date_limit": JokerManagementService.can_joker_be_used_relative_to_date_limit(
-                delivery_date
+                delivery_date,
+                cache=cache,
             ),
             "is_delivery_cancelled_this_week": WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
-                delivery_date
+                delivery_date,
+                cache=cache,
             ),
         }
 
@@ -144,9 +149,9 @@ class GetDeliveriesService:
 
     @classmethod
     def is_joker_used_in_week(
-        cls, member: Member, delivery_date: datetime.date
+        cls, member: Member, delivery_date: datetime.date, cache: Dict
     ) -> bool:
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return False
 
         week_start = get_monday(delivery_date)

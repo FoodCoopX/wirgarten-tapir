@@ -31,8 +31,10 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
             datetime.date(year=2023, month=1, day=2),
             datetime.date(year=2023, month=1, day=3),
         ]
-
-        result = GetCancellationDataView.build_subscribed_products_data(member)
+        cache = {}
+        result = GetCancellationDataView.build_subscribed_products_data(
+            member, cache=cache
+        )
 
         self.assertEqual(
             [
@@ -62,5 +64,8 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
         )
         self.assertEqual(3, mock_get_earliest_possible_cancellation_date.call_count)
         mock_get_earliest_possible_cancellation_date.assert_has_calls(
-            [call(product=product, member=member) for product in subscribed_products]
+            [
+                call(product=product, member=member, cache=cache)
+                for product in subscribed_products
+            ]
         )

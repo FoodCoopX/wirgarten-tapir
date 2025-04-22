@@ -10,7 +10,8 @@ from tapir.pickup_locations.models import (
 )
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import Member, PickupLocationCapability, ProductType
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -48,10 +49,10 @@ class TestPickupLocationCapacityEvolutionView(TapirIntegrationTest):
     def test_pickupLocationCapacityEvolutionView_pickingModeBasket_returnsCorrectData(
         self,
     ):
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
-        TapirParameter.objects.filter(key=Parameter.PICKING_BASKET_SIZES).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium;"
         )
 
@@ -145,7 +146,7 @@ class TestPickupLocationCapacityEvolutionView(TapirIntegrationTest):
     def test_pickupLocationCapacityEvolutionView_pickingModeShares_returnsCorrectData(
         self,
     ):
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
 

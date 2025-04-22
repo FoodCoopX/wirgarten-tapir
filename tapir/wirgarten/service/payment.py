@@ -10,7 +10,7 @@ from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, Payment, ProductType, Subscription
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_active_and_future_subscriptions,
@@ -43,7 +43,7 @@ def generate_mandate_ref(member_id: str):
     return f"""{prefix}{generate(MANDATE_REF_ALPHABET, MANDATE_REF_LENGTH - len(prefix))}"""
 
 
-def get_next_payment_date(reference_date: date = None):
+def get_next_payment_date(reference_date: date = None, cache: Dict = None):
     """
     Get the next date on which payments are due.
 
@@ -51,9 +51,9 @@ def get_next_payment_date(reference_date: date = None):
     :return: the next payment due date
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    due_day = get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+    due_day = get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
 
     if reference_date.day < due_day:
         next_payment = reference_date.replace(day=due_day)
@@ -62,7 +62,7 @@ def get_next_payment_date(reference_date: date = None):
     return next_payment
 
 
-def generate_new_payments(due_date: date) -> list[Payment]:
+def generate_new_payments(due_date: date, cache: Dict) -> list[Payment]:
     """
     Generates payments for the given due date. The generated payments are not persisted!
 
@@ -87,7 +87,7 @@ def generate_new_payments(due_date: date) -> list[Payment]:
             mandate_ref=mandate_ref, due_date=due_date, type=product_type.name
         )
         if not existing.exists():
-            amount = sum(sub.total_price() for sub in subs)
+            amount = sum(sub.total_price(cache=cache) for sub in subs)
 
             payments.append(
                 Payment(

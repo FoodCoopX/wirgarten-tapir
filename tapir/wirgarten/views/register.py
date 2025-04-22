@@ -10,6 +10,9 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
     MarketingFeedbackForm,
@@ -29,7 +32,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
@@ -119,7 +122,8 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        base_prod_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         form_list = [
             (STEP_BASE_PRODUCT, BaseProductForm),
             (STEP_BASE_PRODUCT_NOT_AVAILABLE, EmptyForm),
@@ -128,17 +132,18 @@ class RegistrationWizardViewBase(CookieWizardView):
         ]
         steps_kwargs = settings.REGISTRATION_STEPS
         if STEP_BASE_PRODUCT not in steps_kwargs:
-            base_product = ProductType.objects.get(id=base_prod_id)
             steps_kwargs[STEP_BASE_PRODUCT] = {
-                "product_type_id": base_prod_id,
-                "title": base_product.name,
-                "description": base_product.name,
+                "product_type_id": base_product_type.id,
+                "title": base_product_type.name,
+                "description": base_product_type.name,
             }
-        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = base_prod_id
+        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = (
+            base_product_type.id if base_product_type is not None else None
+        )
         for pt in [
             x
             for x in get_available_product_types(get_next_contract_start_date())
-            if x.id != base_prod_id
+            if x.id != base_product_type.id
         ]:
             step = "additional_product_" + pt.name
             if step not in steps_kwargs:
@@ -194,16 +199,15 @@ class RegistrationWizardViewBase(CookieWizardView):
                 STEP_SUMMARY: False,
                 **{f: False for f in self.dynamic_steps},
             }
-
+        cache = {}
         _coop_shares_without_harvest_shares_possible = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
         )
 
         _show_harvest_shares = is_product_type_available(
-            ProductType.objects.get(
-                id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-            ),
+            BaseProductTypeService.get_base_product_type(cache=cache),
             reference_date=self.start_date,
+            cache=cache,
         )
 
         return {
@@ -241,6 +245,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     # gather data from dependent forms
     def get_form_initial(self, step=None):
+        cache = {}
         initial = self.initial_dict
         if step in [STEP_BASE_PRODUCT, *self.dynamic_steps]:
             initial["start_date"] = self.start_date
@@ -259,8 +264,10 @@ class RegistrationWizardViewBase(CookieWizardView):
             if self.has_step(STEP_BASE_PRODUCT) and is_base_product_selected(
                 self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
             ):
-                base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-                product_type = ProductType.objects.get(id=base_product_id)
+                base_product_type_id = BaseProductTypeService.get_base_product_type(
+                    cache=cache
+                ).id
+                product_type = ProductType.objects.get(id=base_product_type_id)
                 initial["subs"][product_type.name] = []
                 data = self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
                 for key, quantity in data.items():
@@ -268,9 +275,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                         product_name = key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                         product = Product.objects.get(
                             name__iexact=product_name,
-                            type_id=get_parameter_value(
-                                Parameter.COOP_BASE_PRODUCT_TYPE
-                            ),
+                            type_id=base_product_type_id,
                         )
                         initial["subs"][product_type.name].append(
                             Subscription(product=product, quantity=quantity)
@@ -346,7 +351,7 @@ class RegistrationWizardViewBase(CookieWizardView):
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = self.save_member(form_dict)
-
+        cache = {}
         try:
             if STEP_PICKUP_LOCATION in form_dict:
                 MemberPickupLocation.objects.create(
@@ -360,17 +365,19 @@ class RegistrationWizardViewBase(CookieWizardView):
             start_date = (
                 self.start_date
                 if hasattr(self, "start_date")
-                else get_next_contract_start_date()
+                else get_next_contract_start_date(cache=cache)
             )
             self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
-                "growing_period", get_current_growing_period()
+                "growing_period", get_current_growing_period(cache=cache)
             )
             if self.growing_period and self.growing_period.start_date > get_today():
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(ref_date=start_date)
+            actual_coop_start = get_next_contract_start_date(
+                ref_date=start_date, cache=cache
+            )
 
-            mandate_ref = create_mandate_ref(member)
+            mandate_ref = create_mandate_ref(member, cache=cache)
             if not member.is_student:
                 buy_cooperative_shares(
                     quantity=form_dict[STEP_COOP_SHARES].cleaned_data[
@@ -398,7 +405,9 @@ class RegistrationWizardViewBase(CookieWizardView):
                         )
 
                 send_order_confirmation(
-                    member, get_active_and_future_subscriptions().filter(member=member)
+                    member,
+                    get_active_and_future_subscriptions().filter(member=member),
+                    cache=cache,
                 )
         except Exception as e:
             member.delete()

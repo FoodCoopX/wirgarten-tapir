@@ -6,7 +6,8 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
     PickupLocationCapacityModeShareChecker,
 )
 from tapir.wirgarten.models import MemberPickupLocation, Subscription, GrowingPeriod
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -90,7 +91,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         self,
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
         current_growing_period = GrowingPeriod.objects.get()
         past_growing_period = GrowingPeriodFactory.create(
@@ -116,7 +117,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         self, mock_extend_subscriptions_with_those_that_will_be_renewed: Mock()
     ):
         TapirParameter.objects.filter(
-            key=Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=False)
         current_growing_period = GrowingPeriod.objects.get()
         past_growing_period = GrowingPeriodFactory.create(

@@ -14,7 +14,9 @@ from django.views.generic import TemplateView, View
 from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFilter
 from django_filters.views import FilterView
 
-from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -26,7 +28,6 @@ from tapir.wirgarten.models import (
     ProductType,
     Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
 )
@@ -51,14 +52,15 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
         ).order_by("timestamp")
 
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         harvest_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True, product__type_id=base_product_type_id
+            admin_confirmed__isnull=True, product__type=base_product_type
         ).order_by("created_at")
 
         additional_shares = (
             Subscription.objects.filter(admin_confirmed__isnull=True)
-            .exclude(product__type_id=base_product_type_id)
+            .exclude(product__type=base_product_type)
             .order_by("created_at")
         )
 

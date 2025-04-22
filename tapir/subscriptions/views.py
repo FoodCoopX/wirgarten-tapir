@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -18,6 +20,9 @@ from tapir.subscriptions.serializers import (
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
 )
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
@@ -25,7 +30,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, Product
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -44,11 +49,14 @@ class GetCancellationDataView(APIView):
         member = get_object_or_404(Member, id=request.query_params.get("member_id"))
         check_permission_or_self(member.id, request)
 
+        cache = {}
         data = {
             "can_cancel_coop_membership": MembershipCancellationManager.can_member_cancel_coop_membership(
-                member
+                member, cache=cache
             ),
-            "subscribed_products": self.build_subscribed_products_data(member),
+            "subscribed_products": self.build_subscribed_products_data(
+                member, cache=cache
+            ),
         }
 
         return Response(
@@ -57,7 +65,7 @@ class GetCancellationDataView(APIView):
         )
 
     @classmethod
-    def build_subscribed_products_data(cls, member):
+    def build_subscribed_products_data(cls, member, cache: Dict):
         return [
             {
                 "product": subscribed_product,
@@ -65,7 +73,7 @@ class GetCancellationDataView(APIView):
                     subscribed_product, member
                 ),
                 "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
-                    product=subscribed_product, member=member
+                    product=subscribed_product, member=member, cache=cache
                 ),
             }
             for subscribed_product in cls.get_subscribed_products(member)
@@ -104,11 +112,11 @@ class CancelSubscriptionsView(APIView):
         cancel_coop_membership = (
             request.query_params.get("cancel_coop_membership") == "true"
         )
-
+        cache = {}
         if (
             cancel_coop_membership
             and not MembershipCancellationManager.can_member_cancel_coop_membership(
-                member
+                member, cache=cache
             )
         ):
             return self.build_response(
@@ -129,10 +137,17 @@ class CancelSubscriptionsView(APIView):
                 ],
             )
 
-        if self.is_at_least_one_additional_product_not_selected(
-            subscribed_products, products_selected_for_cancellation
-        ) and self.are_all_base_products_selected(
-            subscribed_products, products_selected_for_cancellation
+        if (
+            not get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+                cache=cache,
+            )
+            and self.is_at_least_one_additional_product_not_selected(
+                subscribed_products, products_selected_for_cancellation, cache=cache
+            )
+            and self.are_all_base_products_selected(
+                subscribed_products, products_selected_for_cancellation, cache=cache
+            )
         ):
             return self.build_response(
                 False,
@@ -145,10 +160,14 @@ class CancelSubscriptionsView(APIView):
 
         with transaction.atomic():
             for product in products_selected_for_cancellation:
-                SubscriptionCancellationManager.cancel_subscriptions(product, member)
+                SubscriptionCancellationManager.cancel_subscriptions(
+                    product, member, cache=cache
+                )
 
             if cancel_coop_membership:
-                MembershipCancellationManager.cancel_coop_membership(member)
+                MembershipCancellationManager.cancel_coop_membership(
+                    member, cache=cache
+                )
 
         return Response("OK", status=status.HTTP_200_OK)
 
@@ -156,11 +175,12 @@ class CancelSubscriptionsView(APIView):
     def are_all_base_products_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
-                subscribed_product.type_id == base_product_type_id
+                subscribed_product.type_id == base_product_type.id
                 and subscribed_product not in products_selected_for_cancellation
             ):
                 return False
@@ -171,11 +191,12 @@ class CancelSubscriptionsView(APIView):
     def is_at_least_one_additional_product_not_selected(
         subscribed_products: set[Product],
         products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
-        base_product_type_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
-                subscribed_product.type_id != base_product_type_id
+                subscribed_product.type_id != base_product_type.id
                 and subscribed_product not in products_selected_for_cancellation
             ):
                 return True
@@ -208,7 +229,8 @@ class ExtendedProductView(APIView):
             for attribute in ["id", "name", "deleted", "base"]
         }
 
-        product_price_object = get_product_price(product)
+        cache = {}
+        product_price_object = get_product_price(product, cache=cache)
         if product_price_object:
             data.update(
                 {"price": product_price_object.price, "size": product_price_object.size}
@@ -223,7 +245,9 @@ class ExtendedProductView(APIView):
             ).items()
         ]
 
-        data["picking_mode"] = get_parameter_value(Parameter.PICKING_MODE)
+        data["picking_mode"] = get_parameter_value(
+            ParameterKeys.PICKING_MODE, cache=cache
+        )
 
         return Response(
             ExtendedProductSerializer(data).data,

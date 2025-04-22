@@ -10,7 +10,8 @@ from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     PickupLocationFactory,
@@ -34,7 +35,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         cls.product_type_3 = ProductTypeFactory.create(
             name="test product type 3", delivery_cycle=ODD_WEEKS[0]
         )
-        TapirParameter.objects.filter(key=Parameter.PICKING_BASKET_SIZES).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium;large"
         )
         PickupLocationCapabilityFactory.create(
@@ -109,7 +110,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
     def test_patch_sendPickingModeDifferentFromSettings_returnsError(self):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
 
@@ -124,7 +125,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
 
@@ -138,7 +139,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
     ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
 
@@ -153,7 +154,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_BASKET
         )
 
@@ -174,7 +175,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
 
-        TapirParameter.objects.filter(key=Parameter.PICKING_MODE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=PICKING_MODE_SHARE
         )
 

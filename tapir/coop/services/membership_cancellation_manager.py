@@ -1,4 +1,5 @@
 import datetime
+from typing import Dict
 
 from tapir.wirgarten.models import Member, CoopShareTransaction
 from tapir.wirgarten.utils import get_today
@@ -25,20 +26,23 @@ class MembershipCancellationManager:
 
     @classmethod
     def can_member_cancel_coop_membership(
-        cls, member: Member, reference_date: datetime.date | None = None
+        cls,
+        member: Member,
+        reference_date: datetime.date | None = None,
+        cache: Dict = None,
     ):
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache)
 
         entry_date = cls.get_coop_entry_date(member)
         return entry_date is not None and entry_date > reference_date
 
     @staticmethod
     def cancel_coop_membership(
-        member: Member, reference_date: datetime.date | None = None
+        member: Member, reference_date: datetime.date | None = None, cache: Dict = None
     ):
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache=cache)
 
         member.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
