@@ -6,6 +6,7 @@ from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -188,6 +189,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         )
         context["subscriptionAutomaticRenewal"] = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        )
+
+        context["show_coop_shares"] = (
+            get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+            == LEGAL_STATUS_COOPERATIVE
         )
 
         return context
