@@ -34,7 +34,7 @@ OPTIONS_WEEKDAYS = [
 
 class ParameterCategory:
     SITE = "Standort"
-    COOP = "Genossenschaft"
+    BUSINESS = "{{legal_status}}"
     ADDITIONAL_SHARES = "Zusatzabos"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
@@ -47,6 +47,13 @@ class ParameterCategory:
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
     ORGANIZATION = "Organisation"
+
+
+def legal_status_is_cooperative(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache)
+        == LEGAL_STATUS_COOPERATIVE
+    )
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -177,14 +184,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             order_priority=1000,
             meta=ParameterMeta(
                 validators=[MinValueValidator(limit_value=0)],
-                show_only_when=lambda cache: get_parameter_value(
-                    ParameterKeys.ORGANISATION_LEGAL_STATUS, cache
-                )
-                == LEGAL_STATUS_COOPERATIVE,
+                show_only_when=legal_status_is_cooperative,
             ),
         )
 
@@ -193,18 +197,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/satzung",
-            description="Der Link zur Satzung der Genossenschaft.",
-            category=ParameterCategory.COOP,
+            description="Der Link zur Satzung des Betriebs.",
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(
             key=ParameterKeys.COOP_INFO_LINK,
-            label="Link zu weiteren Infos über die Genossenschaft",
+            label="Link zu weiteren Infos über der Betrieb",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
-            description="Der Link zu weiteren Infos über die Genossenschaft/Mitgliedschaft.",
-            category=ParameterCategory.COOP,
+            description="Der Link zu weiteren Infos über der Betrieb.",
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
@@ -328,12 +332,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Genossenschaftsanteile sind vom Mitglied separat von Ernteanteilen zeichenbar.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
                 options=[
                     (True, "separat zeichenbar"),
                     (False, "nicht separat zeichenbar"),
-                ]
+                ],
+                show_only_when=legal_status_is_cooperative,
             ),
             order_priority=800,
         )
@@ -494,7 +499,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value=get_default_product_type(),
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
                 options=[
                     (product_type.id, product_type.name)

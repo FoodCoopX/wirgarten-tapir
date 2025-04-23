@@ -8,6 +8,7 @@ from tapir.configuration.models import TapirParameter, TapirParameterDatatype
 from tapir.configuration.parameter import (
     get_parameter_meta,
 )
+from tapir.configuration.templatetags.configuration import tokenize_parameter
 from tapir.wirgarten.utils import is_debug_instance
 
 
@@ -91,12 +92,12 @@ class ParameterForm(forms.Form):
         if not is_debug_instance():
             params = params.filter(debug=False)
 
+        cache = {}
+
         categories = list(set(map(lambda p: p.category, params)))
-        categories.sort()
+        categories.sort(key=lambda category: tokenize_parameter(category, cache=cache))
 
         self.categories = categories
-
-        cache = {}
 
         for param in params:
             field = create_field(param, cache=cache)
