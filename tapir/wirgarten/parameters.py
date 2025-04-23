@@ -11,6 +11,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_OPTIONS
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
@@ -178,7 +179,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
             category=ParameterCategory.COOP,
             order_priority=1000,
-            meta=ParameterMeta(validators=[MinValueValidator(limit_value=0)]),
+            meta=ParameterMeta(
+                validators=[MinValueValidator(limit_value=0)],
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.ORGANISATION_LEGAL_STATUS, cache
+                )
+                == LEGAL_STATUS_COOPERATIVE,
+            ),
         )
 
         parameter_definition(
