@@ -11,6 +11,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_OPTIONS
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
@@ -44,6 +45,7 @@ class ParameterCategory:
     JOKERS = "Joker"
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
+    ORGANIZATION = "Organisation"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -840,6 +842,18 @@ Dein WirGarten-Team""",
             "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=0,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            label="Rechtsform der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=LEGAL_STATUS_COOPERATIVE,
+            description="",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=10,
+            meta=ParameterMeta(options=LEGAL_STATUS_OPTIONS),
+            enabled=is_debug_instance(),
         )
 
         if getattr(settings, "DEBUG", False):
