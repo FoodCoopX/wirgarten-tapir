@@ -121,11 +121,9 @@ def get_pickup_location_choice_form(request, **kwargs):
         cache = {}
         pickup_location_id = form.cleaned_data["pickup_location"].id
         change_date = (
-            (
-                calculate_pickup_location_change_date(cache=cache)
-                if member.pickup_location is not None
-                else get_today(cache=cache)
-            ),
+            calculate_pickup_location_change_date(cache=cache)
+            if member.pickup_location is not None
+            else get_today(cache=cache)
         )
         old_pickup_location = member.pickup_location
 

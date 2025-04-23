@@ -180,3 +180,6 @@ CACHES = {
 TAPIR_MAIL_PATH = "/tapirmail"
 os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
 os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
