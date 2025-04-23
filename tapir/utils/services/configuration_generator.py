@@ -32,6 +32,6 @@ class ConfigurationGenerator:
             value=delivery_day[organization]
         )
 
-        TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=ProductType.objects.get(name="Ernteanteile").id
         )

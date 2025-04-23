@@ -7,6 +7,9 @@ from typing import Dict, List, Set
 
 from faker import Faker
 
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
@@ -75,9 +78,7 @@ class UserGenerator:
         parsed_users = cls.get_test_users()
 
         cache = {}
-        base_product_type = ProductType.objects.get(
-            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE, cache)
-        )
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
         products_from_base_type = HarvestShareProduct.objects.filter(
             type=base_product_type
