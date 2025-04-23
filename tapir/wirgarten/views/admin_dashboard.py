@@ -12,6 +12,7 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -35,7 +36,6 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
-    get_active_subscriptions,
     get_current_growing_period,
     get_active_and_future_subscriptions,
     get_next_growing_period,
