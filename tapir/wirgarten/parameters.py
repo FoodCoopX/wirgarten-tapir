@@ -12,7 +12,11 @@ from tapir.configuration.models import (
     TapirParameterDefinitionImporter,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_OPTIONS
+from tapir.core.config import (
+    LEGAL_STATUS_COOPERATIVE,
+    LEGAL_STATUS_OPTIONS,
+    LEGAL_STATUS_ASSOCIATION,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
@@ -53,6 +57,13 @@ def legal_status_is_cooperative(cache):
     return (
         get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache)
         == LEGAL_STATUS_COOPERATIVE
+    )
+
+
+def legal_status_is_association(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache)
+        == LEGAL_STATUS_ASSOCIATION
     )
 
 
@@ -210,6 +221,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Link zu weiteren Infos über der Betrieb.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.COOP_CONTRIBUTION_LINK,
+            label="Link zur Beitragsordnung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
+            description="",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(
+                validators=[URLValidator()], show_only_when=legal_status_is_association
+            ),
         )
 
         parameter_definition(

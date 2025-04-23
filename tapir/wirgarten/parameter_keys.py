@@ -19,6 +19,7 @@ class ParameterKeys:
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
+    COOP_CONTRIBUTION_LINK = f"{PREFIX}.coop.contribution_link"
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
