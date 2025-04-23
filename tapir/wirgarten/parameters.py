@@ -11,11 +11,9 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
-from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_OPTIONS,
-    LEGAL_STATUS_ASSOCIATION,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
@@ -24,6 +22,10 @@ from tapir.subscriptions.config import (
 )
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -51,20 +53,6 @@ class ParameterCategory:
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
     ORGANIZATION = "Organisation"
-
-
-def legal_status_is_cooperative(cache):
-    return (
-        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache)
-        == LEGAL_STATUS_COOPERATIVE
-    )
-
-
-def legal_status_is_association(cache):
-    return (
-        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache)
-        == LEGAL_STATUS_ASSOCIATION
-    )
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):

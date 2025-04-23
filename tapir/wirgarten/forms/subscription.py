@@ -898,25 +898,25 @@ class AdditionalProductForm(forms.Form):
                 cache=self.cache
             )
 
-        self.validate_pickup_location(cache=self.cache)
-
-        SubscriptionChangeValidator.validate_pickup_location_capacity(
-            pickup_location=self.get_pickup_location(),
-            form=self,
-            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            subscription_start_date=self.start_date,
-            member=Member.objects.get(id=self.member_id),
-            cache=self.cache,
-        )
-        SubscriptionChangeValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=self.is_admin,
-            subscription_start_date=self.start_date,
-            member_id=self.member_id,
-            form=self,
-            field_prefix=self.field_prefix,
-            product_type_id=self.product_type.id,
-            cache=self.cache,
-        )
+        if self.member_id:
+            self.validate_pickup_location(cache=self.cache)
+            SubscriptionChangeValidator.validate_pickup_location_capacity(
+                pickup_location=self.get_pickup_location(),
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                subscription_start_date=self.start_date,
+                member=Member.objects.get(id=self.member_id),
+                cache=self.cache,
+            )
+            SubscriptionChangeValidator.validate_cannot_reduce_size(
+                logged_in_user_is_admin=self.is_admin,
+                subscription_start_date=self.start_date,
+                member_id=self.member_id,
+                form=self,
+                field_prefix=self.field_prefix,
+                product_type_id=self.product_type.id,
+                cache=self.cache,
+            )
         SubscriptionChangeValidator.validate_total_capacity(
             form=self,
             field_prefix=self.field_prefix,

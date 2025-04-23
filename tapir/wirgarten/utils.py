@@ -9,6 +9,7 @@ from django.utils import timezone
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -69,3 +70,17 @@ def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
 
 def format_subscription_list_html(subs):
     return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
+
+
+def legal_status_is_cooperative(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COOPERATIVE
+    )
+
+
+def legal_status_is_association(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_ASSOCIATION
+    )
