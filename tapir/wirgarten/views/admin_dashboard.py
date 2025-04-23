@@ -68,25 +68,29 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/admin_dashboard.html"
     permission_required = "coop.view"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        cache = {}
-
-        current_growing_period = get_current_growing_period(cache=cache)
+        current_growing_period = get_current_growing_period(cache=self.cache)
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         if base_product_type is None:
             context["no_base_product_type"] = True
             return context
         self.harvest_share_type = base_product_type
 
-        next_contract_start_date = get_next_contract_start_date(cache=cache)
+        next_contract_start_date = get_next_contract_start_date(cache=self.cache)
         next_growing_period = get_next_growing_period(
-            next_contract_start_date, cache=cache
+            next_contract_start_date, cache=self.cache
         )
 
         context["next_contract_start_date"] = next_contract_start_date
@@ -143,13 +147,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             get_automatically_calculated_solidarity_excess()
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
-            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
         )
         context["status_negative_soli_price_allowed"] = get_parameter_value(
-            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
+            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=self.cache
         )
 
-        today = get_today(cache=cache)
+        today = get_today(cache=self.cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
@@ -159,6 +163,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 end_date__gte=today,
                 product__type=self.harvest_share_type,
             )
+        )
+
+        context["show_cooperative_content"] = (
+            get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+            )
+            == LEGAL_STATUS_COOPERATIVE
         )
 
         return context
@@ -257,14 +268,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         prefix="current",
     ):
         if reference_date is None:
-            reference_date = get_next_contract_start_date()
+            reference_date = get_next_contract_start_date(cache=self.cache)
 
         active_product_capacities = {
             c.product_type.id: c for c in get_active_product_capacities(reference_date)
         }
-        active_subscriptions = get_active_subscriptions(reference_date).order_by(
-            "-product__type"
-        )
 
         KEY_CAPACITY_LINKS = prefix + "_capacity_links"
         KEY_CAPACITY_LABELS = prefix + "_capacity_labels"
@@ -289,7 +297,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 float(product_capacity.capacity) or 1
             )  # "or 1" to avoid a division by 0
 
-            free_capacity = get_free_product_capacity(product_type.id, reference_date)
+            free_capacity = get_free_product_capacity(
+                product_type.id, reference_date, cache=self.cache
+            )
             used_capacity = total_capacity - free_capacity
 
             context[KEY_USED_CAPACITY].append(used_capacity / total_capacity * 100)
@@ -302,7 +312,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             ).first()
 
             base_share_size = float(
-                get_product_price(base_product, reference_date).size
+                get_product_price(base_product, reference_date, cache=self.cache).size
             )
 
             free_share_count = round(free_capacity / base_share_size, 2)
@@ -411,7 +421,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         contract_types.update(
             {
                 x["product__type__name"]: x["member_count"]
-                for x in get_active_and_future_subscriptions()
+                for x in get_active_and_future_subscriptions(cache=self.cache)
                 .values("product__type__name")
                 .annotate(member_count=Count("member_id", distinct=True))
                 .order_by("-member_count")
