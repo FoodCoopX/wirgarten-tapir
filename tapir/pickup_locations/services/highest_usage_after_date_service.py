@@ -1,11 +1,11 @@
 import datetime
 from typing import Dict, Callable
 
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute, get_monday
 from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
-    Subscription,
 )
 
 
@@ -45,7 +45,7 @@ class HighestUsageAfterDateService:
                 .order_by("valid_from")
                 .last()
             )
-            last_subscription = Subscription.objects.order_by("end_date").last()
+            last_subscription = TapirCache.get_last_subscription(cache=cache)
             if not last_pickup_location_change:
                 return last_subscription.end_date
             if not last_subscription:

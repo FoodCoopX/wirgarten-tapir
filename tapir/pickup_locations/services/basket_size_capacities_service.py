@@ -7,6 +7,7 @@ from tapir.pickup_locations.models import (
     ProductBasketSizeEquivalence,
     PickupLocationBasketCapacity,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import Product, PickupLocation
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -44,16 +45,24 @@ class BasketSizeCapacitiesService:
 
     @classmethod
     def get_basket_size_capacities_for_pickup_location(
-        cls, pickup_location: PickupLocation, cache: Dict = None
+        cls, pickup_location: PickupLocation, cache: Dict
     ):
-        capacities = {
-            size_name: None for size_name in cls.get_basket_sizes(cache=cache)
-        }
-        for equivalence in PickupLocationBasketCapacity.objects.filter(
-            pickup_location=pickup_location
-        ):
-            if equivalence.basket_size_name not in capacities.keys():
-                continue
+        def compute():
+            capacities = {
+                size_name: None for size_name in cls.get_basket_sizes(cache=cache)
+            }
+            for equivalence in PickupLocationBasketCapacity.objects.filter(
+                pickup_location=pickup_location
+            ):
+                if equivalence.basket_size_name not in capacities.keys():
+                    continue
 
-            capacities[equivalence.basket_size_name] = equivalence.capacity
-        return capacities
+                capacities[equivalence.basket_size_name] = equivalence.capacity
+            return capacities
+
+        basket_size_capacities_by_pickup_location_cache = get_from_cache_or_compute(
+            cache, "basket_size_capacities_by_pickup_location", lambda: {}
+        )
+        return get_from_cache_or_compute(
+            basket_size_capacities_by_pickup_location_cache, pickup_location, compute
+        )

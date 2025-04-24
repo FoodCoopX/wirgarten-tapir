@@ -1,8 +1,9 @@
+from django.views import generic
+
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Deliveries, Member, Subscription
 from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
-from django.views import generic
 
 
 def get_previous_deliveries(member: Member):

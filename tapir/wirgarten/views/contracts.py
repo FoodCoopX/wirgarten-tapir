@@ -31,7 +31,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
 )
-from tapir.wirgarten.service.products import product_type_order_by
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import format_date, get_now, get_today
 from tapir.wirgarten.views.filters import SecondaryOrderingFilter
 

@@ -292,7 +292,7 @@ class PickupLocationCapacityModeBasketChecker:
             pickup_location_cache,
             "basket_size_to_available_capacity_map",
             lambda: BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location
+                pickup_location, cache=cache
             ),
         )
 
@@ -314,30 +314,38 @@ class PickupLocationCapacityModeBasketChecker:
         )
 
     @classmethod
-    def build_product_to_basket_size_to_usage_map(cls) -> Dict[str, Dict[str, int]]:
-        basket_sizes = BasketSizeCapacitiesService.get_basket_sizes()
-        product_id_to_basket_size_to_usage_map = {}
-        for product_id in Product.objects.values_list("id", flat=True):
-            product_id_to_basket_size_to_usage_map[product_id] = {}
-            for basket_size in basket_sizes:
-                basket_size_usage = 0
+    def build_product_to_basket_size_to_usage_map(
+        cls, cache: Dict
+    ) -> Dict[str, Dict[str, int]]:
+        def compute():
+            basket_sizes = BasketSizeCapacitiesService.get_basket_sizes(cache=cache)
+            product_id_to_basket_size_to_usage_map = {}
+            for product_id in Product.objects.values_list("id", flat=True):
+                product_id_to_basket_size_to_usage_map[product_id] = {}
+                for basket_size in basket_sizes:
+                    basket_size_usage = 0
 
-                equivalence = ProductBasketSizeEquivalence.objects.filter(
-                    basket_size_name=basket_size, product_id=product_id
-                ).first()
-                if equivalence:
-                    basket_size_usage = equivalence.quantity
+                    equivalence = ProductBasketSizeEquivalence.objects.filter(
+                        basket_size_name=basket_size, product_id=product_id
+                    ).first()
+                    if equivalence:
+                        basket_size_usage = equivalence.quantity
 
-                product_id_to_basket_size_to_usage_map[product_id][
-                    basket_size
-                ] = basket_size_usage
-        return product_id_to_basket_size_to_usage_map
+                    product_id_to_basket_size_to_usage_map[product_id][
+                        basket_size
+                    ] = basket_size_usage
+            return product_id_to_basket_size_to_usage_map
+
+        return get_from_cache_or_compute(
+            cache, "product_to_basket_size_to_usage_map", compute
+        )
 
     @classmethod
     def get_basket_size_usage(cls, cache: Dict, product_id: str, basket_size: str):
+        def compute():
+            return cls.build_product_to_basket_size_to_usage_map(cache=cache)
+
         product_to_basket_size_to_usage_map = get_from_cache_or_compute(
-            cache,
-            "product_to_basket_size_to_usage_map",
-            cls.build_product_to_basket_size_to_usage_map,
+            cache, "product_to_basket_size_to_usage_map", compute
         )
         return product_to_basket_size_to_usage_map[product_id][basket_size]

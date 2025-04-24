@@ -115,16 +115,18 @@ class BaseProductForm(forms.Form):
         self.cache = kwargs.pop("cache", {})
 
         self.start_date = kwargs.pop(
-            "start_date", initial.get("start_date", get_next_contract_start_date())
+            "start_date",
+            initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
         )
         self.intro_template = initial.pop("intro_template", None)
         self.outro_template = initial.pop("outro_template", None)
 
         if initial and not self.choose_growing_period:
-            next_growing_period = get_next_growing_period()
+            next_growing_period = get_next_growing_period(cache=self.cache)
             self.choose_growing_period = (
                 next_growing_period
-                and (next_growing_period.start_date - get_today()).days <= 61
+                and (next_growing_period.start_date - get_today(cache=self.cache)).days
+                <= 61
             )
 
         super().__init__(*args, **kwargs)
@@ -136,7 +138,7 @@ class BaseProductForm(forms.Form):
             deleted=False, type=base_product_type
         )
         for p in harvest_share_products:
-            price = get_product_price(p)
+            price = get_product_price(p, cache=self.cache)
             if price and price.valid_from > self.start_date:
                 harvest_share_products = harvest_share_products.exclude(id=p.id)
 
@@ -219,7 +221,9 @@ class BaseProductForm(forms.Form):
                 ),
             )
         else:
-            self.growing_period = get_current_growing_period(self.start_date)
+            self.growing_period = get_current_growing_period(
+                self.start_date, cache=self.cache
+            )
             self.solidarity_total = [
                 f"{get_available_solidarity(max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
                     ",", "."
@@ -271,7 +275,7 @@ class BaseProductForm(forms.Form):
         if self.member_id:
             member = Member.objects.get(id=self.member_id)
             subs = get_active_subscriptions_grouped_by_product_type(
-                member, self.start_date
+                member, self.start_date, cache=self.cache
             )
 
             new_sub_dummy = Subscription(
@@ -289,7 +293,7 @@ class BaseProductForm(forms.Form):
                     }
 
                 self.current_used_capacity = get_total_price_for_subs(
-                    subs[self.product_type.name]
+                    subs[self.product_type.name], cache=self.cache
                 )
                 if len(sub_variants) > 0:
                     soli_absolute = list(sub_variants.values())[0][
@@ -323,9 +327,10 @@ class BaseProductForm(forms.Form):
                 required=False,
                 label=_("Neuen Abholort auswählen"),
                 initial={"subs": subs},
+                cache=self.cache,
             )
 
-            today = get_today()
+            today = get_today(self.cache)
             next_delivery_date = get_next_delivery_date(
                 today + relativedelta(days=2), cache=self.cache
             )  # FIXME: the +2 days should be a configurable treshold. It takes some time to prepare the deliveries in which no changes are allowed
@@ -581,7 +586,7 @@ class AdditionalProductForm(forms.Form):
             "start_date",
             initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
         )
-        super(AdditionalProductForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.consent_field_key = f"consent_{self.field_prefix}"
         products_queryset = Product.objects.filter(
@@ -697,6 +702,7 @@ class AdditionalProductForm(forms.Form):
                     required=False,
                     label=_("Neuen Abholort auswählen"),
                     initial={"subs": subs},
+                    cache=self.cache,
                 )
                 self.fields["pickup_location_change_date"] = forms.ChoiceField(
                     required=False,
@@ -711,7 +717,7 @@ class AdditionalProductForm(forms.Form):
                 )
 
             capability = (
-                get_active_pickup_location_capabilities()
+                get_active_pickup_location_capabilities(cache=self.cache)
                 .filter(
                     pickup_location=member.pickup_location,
                     product_type__id=self.product_type.id,

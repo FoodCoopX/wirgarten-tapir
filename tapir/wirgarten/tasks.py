@@ -296,7 +296,7 @@ def export_payment_parts_csv(reference_date=None):
     }
 
     # export for product types
-    for pt in get_active_product_types():
+    for pt in get_active_product_types(cache=cache):
         export_product_or_coop_payment_csv(
             pt, payments_grouped[pt.name] if pt.name in payments_grouped else []
         )

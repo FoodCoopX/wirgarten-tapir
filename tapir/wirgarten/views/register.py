@@ -101,15 +101,16 @@ class RegistrationWizardViewBase(CookieWizardView):
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardViewBase, self).__init__(*args, **kwargs)
 
-        today = get_today()
+        self.cache = {}
+        today = get_today(cache=self.cache)
         self.growing_period = get_current_growing_period(
-            get_next_contract_start_date(today)
+            get_next_contract_start_date(today, cache=self.cache), cache=self.cache
         )
 
         if not self.growing_period:
             self.coop_shares_only = True
         else:
-            self.start_date = get_next_contract_start_date(today)
+            self.start_date = get_next_contract_start_date(today, cache=self.cache)
             self.end_date = self.growing_period.end_date
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
@@ -142,7 +143,9 @@ class RegistrationWizardViewBase(CookieWizardView):
         )
         for pt in [
             x
-            for x in get_available_product_types(get_next_contract_start_date())
+            for x in get_available_product_types(
+                get_next_contract_start_date(cache=cache), cache=cache
+            )
             if x.id != base_product_type.id
         ]:
             step = "additional_product_" + pt.name

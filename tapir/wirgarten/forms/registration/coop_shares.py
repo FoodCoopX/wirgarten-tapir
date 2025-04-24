@@ -17,7 +17,8 @@ class CooperativeShareForm(forms.Form):
     def __init__(self, *args, **kwargs):
         show_student_checkbox = kwargs.pop("show_student_checkbox", True)
         self.member_is_student = kwargs.pop("member_is_student", False)
-        super(CooperativeShareForm, self).__init__(*args, **kwargs)
+        self.cache = kwargs.pop("cache", {})
+        super().__init__(*args, **kwargs)
         initial = kwargs.get("initial", {})
         self.intro_template = initial.pop("intro_template", None)
         self.outro_template = initial.pop("outro_template", None)
@@ -26,13 +27,12 @@ class CooperativeShareForm(forms.Form):
 
         self.harvest_shares_products = list(
             HarvestShareProduct.objects.filter(
-                deleted=False, type_id__in=get_available_product_types()
+                deleted=False, type_id__in=get_available_product_types(cache=self.cache)
             )
         )
 
-        cache = {}
         default_min_shares = get_parameter_value(
-            ParameterKeys.COOP_MIN_SHARES, cache=cache
+            ParameterKeys.COOP_MIN_SHARES, cache=self.cache
         )
         for prod in self.harvest_shares_products:
             key = BASE_PRODUCT_FIELD_PREFIX + prod.name
@@ -64,12 +64,12 @@ class CooperativeShareForm(forms.Form):
             label=_(
                 "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             ),
-            help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK, cache=cache)}" target="_blank">Satzung der Genossenschaft</a>',
+            help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK, cache=self.cache)}" target="_blank">Satzung der Genossenschaft</a>',
             required=False,
         )
 
     def clean(self):
-        cleaned_data = super(CooperativeShareForm, self).clean()
+        cleaned_data = super().clean()
 
         if cleaned_data.get("is_student", False):
             # The person is registering and is a student: they cannot order any shares and cannot become a member

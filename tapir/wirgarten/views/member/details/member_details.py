@@ -59,7 +59,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["object"] = self.object
         context["subscriptions"] = get_active_subscriptions_grouped_by_product_type(
-            self.object, today
+            self.object, today, include_future_subscriptions=True, cache=cache
         )
 
         context["sub_quantities"] = {
@@ -71,7 +71,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             for k, v in context["subscriptions"].items()
         }
 
-        product_types = get_active_product_types(reference_date=next_month)
+        product_types = get_active_product_types(reference_date=next_month, cache=cache)
         types_to_remove = []
         product_type_names = list(map(lambda x: x.name, product_types))
         for key in context["subscriptions"].keys():
@@ -93,7 +93,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             get_active_and_future_subscriptions(cache=cache)
             .filter(
                 member_id=self.object.id,
-                end_date__gt=get_next_contract_start_date(),
+                end_date__gt=get_next_contract_start_date(cache=cache),
                 product__type=base_product_type,
             )
             .exists()
@@ -112,9 +112,11 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 )
                 or not product_type.single_subscription_only
             )
-            for product_type in get_available_product_types(reference_date=next_month)
+            for product_type in get_available_product_types(
+                reference_date=next_month, cache=cache
+            )
         }
-        context["deliveries"] = generate_future_deliveries(self.object)
+        context["deliveries"] = generate_future_deliveries(self.object, cache=cache)
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         next_due_date = get_next_payment_date(cache=cache)
@@ -210,7 +212,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             return
 
         context["next_available_product_types"] = [
-            p.name for p in get_available_product_types(next_growing_period.start_date)
+            p.name
+            for p in get_available_product_types(
+                next_growing_period.start_date, cache=cache
+            )
         ]
 
         context["next_period"] = next_growing_period

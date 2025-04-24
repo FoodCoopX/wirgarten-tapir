@@ -381,7 +381,7 @@ def send_cancellation_confirmation_email(
             kwargs={"member_id": member_id},
         )
 
-    future_deliveries = generate_future_deliveries(member)
+    future_deliveries = generate_future_deliveries(member, cache=cache)
 
     last_pickup_date = "Letzte Abholung schon vergangen"
     if len(future_deliveries) > 0:
@@ -428,7 +428,7 @@ def send_contract_change_confirmation(
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member)
+    future_deliveries = generate_future_deliveries(member, cache=cache)
 
     send_email(
         to_email=[member.email],
@@ -482,7 +482,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member)
+    future_deliveries = generate_future_deliveries(member, cache=cache)
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
