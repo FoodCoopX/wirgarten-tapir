@@ -380,6 +380,22 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=800,
         )
 
+        parameter_definition(
+            key=ParameterKeys.COOP_ASSOCIATION_MEMBERSHIP_INDEPENDENT_FROM_HARVEST_SHARES,
+            label="Vereinsmitgliedschaft separat von Ernteanteilen zeichenbar",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Vereinsmitgliedschaft ist vom Mitglied separat von Ernteanteilen zeichenbar.",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(
+                options=[
+                    (True, "separat zeichenbar"),
+                    (False, "nicht separat zeichenbar"),
+                ],
+                show_only_when=legal_status_is_association,
+            ),
+        )
+
         MEMBER_RENEWAL_ALERT_VARS = [
             "member",
             "contract_end_date",
