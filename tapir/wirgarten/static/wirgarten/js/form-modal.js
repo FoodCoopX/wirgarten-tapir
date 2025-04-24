@@ -69,14 +69,13 @@ const messageEvent = eventMethod === "attachEvent"
                     frame.style.display = "none";
                 } else {
                     frame.style.display = "block";
-                    modalInfo.style.display = "none"
                     setFrameSize(); // If form exists, adjust the size as needed.
                 }
 
                 showLoadingIndicator(false);
             };
 
-            const modal = new bootstrap.Modal(document.getElementById('form-modal'))
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('form-modal'))
             modal.show()
         },
 
