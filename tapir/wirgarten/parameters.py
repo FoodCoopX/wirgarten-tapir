@@ -11,6 +11,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_OPTIONS,
@@ -221,6 +222,31 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 validators=[URLValidator()], show_only_when=legal_status_is_association
             ),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD,
+            label="Kündigungsfrist für die Vereinsmitgliedschaft",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT,
+            label="Einheit der Kündigungsfrist für die Vereinsmitgliedschaft",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob der Feld 'Kündigungsfrist für die Vereinsmitgliedschaft' Monate oder Wochen angibt",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(
+                options=NOTICE_PERIOD_UNIT_OPTIONS,
+                show_only_when=legal_status_is_association,
+            ),
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -830,6 +856,11 @@ Dein WirGarten-Team""",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=2,
             enabled=is_debug_instance(),
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                )
+            ),
         )
 
         parameter_definition(
