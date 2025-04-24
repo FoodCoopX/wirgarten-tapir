@@ -180,7 +180,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             for c in (
                 CoopShareTransaction.objects.filter(
                     transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
-                    valid_at__gte=get_today(),
+                    valid_at__gte=get_today(cache=self.cache),
                 )
                 .annotate(year=ExtractYear("valid_at"))
                 .values("year")
@@ -193,7 +193,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancellation_reasons_chart_context(self, context):
         qs = QuestionaireCancellationReasonResponse.objects.filter(
-            timestamp__gte=get_today() + relativedelta(day=1, years=-1)
+            timestamp__gte=get_today(cache=self.cache) + relativedelta(day=1, years=-1)
         )
         total = qs.count()
         if total == 0:
@@ -220,7 +220,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancellation_chart_context(self, context):
         month_labels = [
-            get_today() + relativedelta(day=1, months=-i + 1) for i in range(13)
+            get_today(cache=self.cache) + relativedelta(day=1, months=-i + 1)
+            for i in range(13)
         ][::-1]
 
         cancellations_data = [
@@ -271,7 +272,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             reference_date = get_next_contract_start_date(cache=self.cache)
 
         active_product_capacities = {
-            c.product_type.id: c for c in get_active_product_capacities(reference_date)
+            c.product_type.id: c
+            for c in get_active_product_capacities(reference_date, cache=self.cache)
         }
 
         KEY_CAPACITY_LINKS = prefix + "_capacity_links"
@@ -332,7 +334,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_traffic_source_questionaire_chart_context(self, context):
         month_labels = [
-            get_today() + relativedelta(day=1, months=-i) for i in range(13)
+            get_today(cache=self.cache) + relativedelta(day=1, months=-i)
+            for i in range(13)
         ][::-1]
 
         # Create an additional queryset for "No Response"
@@ -416,7 +419,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_contract_distribution_chart_data(self, context):
         contract_types = {
-            pt["name"]: 0 for pt in get_active_product_types().values("name")
+            pt["name"]: 0
+            for pt in get_active_product_types(cache=self.cache).values("name")
         }
         contract_types.update(
             {

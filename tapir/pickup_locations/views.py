@@ -42,7 +42,7 @@ from tapir.wirgarten.models import (
     ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import product_type_order_by
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 
 
@@ -266,7 +266,7 @@ class PickupLocationCapacityEvolutionView(APIView):
         data_points = []
         capacities_by_basket_size = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location=pickup_location
+                pickup_location=pickup_location, cache=cache
             )
         )
         max_date = (

@@ -90,10 +90,13 @@ def renew_contract_same_conditions(request, **kwargs):
     next_period = get_next_growing_period(cache=cache)
 
     available_product_types = [
-        p.id for p in get_available_product_types(reference_date=next_period.start_date)
+        p.id
+        for p in get_available_product_types(
+            reference_date=next_period.start_date, cache=cache
+        )
     ]
 
-    for sub in get_active_subscriptions().filter(member_id=member_id):
+    for sub in get_active_subscriptions(cache=cache).filter(member_id=member_id):
         if sub.product.type.id in available_product_types:
             new_subs.append(
                 Subscription(
@@ -118,7 +121,7 @@ def renew_contract_same_conditions(request, **kwargs):
     Subscription.objects.bulk_create(new_subs)
 
     member = Member.objects.get(id=member_id)
-    member.sepa_consent = get_now()
+    member.sepa_consent = get_now(cache=cache)
     member.save()
 
     SubscriptionChangeLogEntry().populate(

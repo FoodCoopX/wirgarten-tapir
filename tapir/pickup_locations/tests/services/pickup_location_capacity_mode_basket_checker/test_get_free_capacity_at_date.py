@@ -42,7 +42,7 @@ class TestGetFreeCapacityAtDate(SimpleTestCase):
         self.assertEqual(3, result)
 
         mock_get_basket_size_capacities_for_pickup_location.assert_called_once_with(
-            pickup_location
+            pickup_location, cache=cache
         )
         mock_get_highest_usage_after_date.assert_called_once_with(
             basket_size="test_size",

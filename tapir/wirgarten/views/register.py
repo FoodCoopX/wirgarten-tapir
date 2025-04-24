@@ -106,7 +106,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         today = get_today(cache=self.cache)
         self.growing_period = get_current_growing_period(
-            get_next_contract_start_date(today, cache=self.cache)
+            get_next_contract_start_date(today, cache=self.cache), cache=self.cache
         )
 
         self.start_date = get_next_contract_start_date(today, cache=self.cache)
@@ -150,7 +150,7 @@ class RegistrationWizardViewBase(CookieWizardView):
         for pt in [
             x
             for x in get_available_product_types(
-                get_next_contract_start_date(cache=cache)
+                get_next_contract_start_date(cache=cache), cache=cache
             )
             if x.id != base_product_type.id
         ]:

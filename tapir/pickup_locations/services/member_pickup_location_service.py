@@ -99,3 +99,19 @@ class MemberPickupLocationService:
         return get_from_cache_or_compute(
             cache, "member_pickup_locations_objects_by_member_id", build_if_cache_miss
         )
+
+    @classmethod
+    def get_member_pickup_location_id_from_cache(
+        cls, member_id: str, reference_date: datetime.date, cache: Dict
+    ):
+        member_pickup_location_objects = (
+            cls.get_member_pickup_locations_objects_by_member_id(cache)[member_id]
+        )
+        if len(member_pickup_location_objects) == 1:
+            return member_pickup_location_objects[0].pickup_location_id
+
+        for member_pickup_location_object in member_pickup_location_objects:
+            if member_pickup_location_object.valid_from <= reference_date:
+                return member_pickup_location_object.pickup_location_id
+
+        return None

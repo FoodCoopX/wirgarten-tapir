@@ -87,7 +87,7 @@ def send_email(
 
 # all the vars stuff will be deprecated as soon as the mail module is going in production
 def get_default_vars(to_email, cache: Dict):
-    variables = add_member_vars(to_email)
+    variables = add_member_vars(to_email, cache=cache)
     variables.update(add_general_vars(cache=cache))
     return variables
 
@@ -108,12 +108,12 @@ def add_general_vars(cache: Dict):
     }
 
 
-def add_member_vars(to_email):
+def add_member_vars(to_email, cache: Dict):
     try:
         from tapir.wirgarten.models import Member
 
         member = Member.objects.get(email=to_email[0])
-        future_deliveries = generate_future_deliveries(member)
+        future_deliveries = generate_future_deliveries(member, cache=cache)
         return {
             "member": member,
             # FIXME: return None is not optimal...

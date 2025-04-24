@@ -605,7 +605,7 @@ class Payable:
     Interface to define how to calculate the total amount.
     """
 
-    def total_price(self):
+    def total_price(self, *_, **__):
         raise NotImplementedError(
             "You need to implement total_price() if you use the PayableMixin!"
         )
@@ -891,7 +891,7 @@ class CoopShareTransaction(TapirModel, Payable, AdminConfirmableMixin):
     )
 
     @property
-    def total_price(self):
+    def total_price(self, *_, **__):
         return self.quantity * self.share_price
 
     def clean(self):
@@ -1085,7 +1085,7 @@ class SubscriptionChangeLogEntry(LogEntry):
         self.subscriptions = ", ".join(
             list(
                 map(
-                    lambda x: f"{x} ({format_date(x.start_date)} - {format_date(x.end_date)})",
+                    lambda x: f"{x.quantity} × {x.product.name} ({format_date(x.start_date)} - {format_date(x.end_date)})",
                     subscriptions,
                 )
             )

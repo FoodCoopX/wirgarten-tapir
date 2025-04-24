@@ -101,13 +101,15 @@ def get_member_personal_data_edit_form(request, **kwargs):
 @login_required
 def get_pickup_location_choice_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+    cache = {}
+    kwargs["cache"] = cache
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
-    next_month = get_today() + relativedelta(months=1, day=1)
+    next_month = get_today(cache=cache) + relativedelta(months=1, day=1)
     kwargs["initial"] = {
         "subs": get_active_subscriptions_grouped_by_product_type(
-            member, reference_date=next_month
+            member, reference_date=next_month, cache=cache
         ),
     }
 
@@ -118,7 +120,6 @@ def get_pickup_location_choice_form(request, **kwargs):
 
     @transaction.atomic
     def update_pickup_location(form):
-        cache = {}
         pickup_location_id = form.cleaned_data["pickup_location"].id
         change_date = (
             calculate_pickup_location_change_date(cache=cache)
@@ -266,8 +267,8 @@ def get_add_subscription_form(request, **kwargs):
 
     if is_base_product_type:
         form_type = BaseProductForm
-        next_start_date = get_next_contract_start_date()
-        next_period = get_next_growing_period()
+        next_start_date = get_next_contract_start_date(cache=cache)
+        next_period = get_next_growing_period(cache=cache)
         if not is_product_type_available(
             product_type.id,
             next_start_date,
@@ -377,10 +378,11 @@ def get_add_coop_shares_form(request, **kwargs):
             "Mitglieder die im Probezeit sind dürfen keine weitere Anteile zeichnen"
         )
 
-    today = get_today()
+    today = get_today(cache=cache)
     kwargs["initial"] = {
         "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
     }
+    kwargs["cache"] = cache
     return get_form_modal(
         request=request,
         form_class=CooperativeShareForm,

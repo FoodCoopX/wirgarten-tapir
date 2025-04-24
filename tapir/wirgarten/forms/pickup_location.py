@@ -6,13 +6,15 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
-from django.db.models import OuterRef, Subquery
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.config import PICKING_MODE_SHARE, PICKING_MODE_BASKET
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
@@ -26,7 +28,6 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
-    MemberPickupLocation,
     PickupLocation,
     PickupLocationOpeningTime,
     Product,
@@ -184,17 +185,12 @@ def pickup_location_to_dict(
         "city": f"{pickup_location.postcode} {pickup_location.city}",
         "capabilities": capabilities_for_pickup_location,
         "members": get_active_subscriptions(next_delivery_date, cache)
-        .annotate(
-            latest_pickup_location_id=Subquery(
-                MemberPickupLocation.objects.filter(
-                    member=OuterRef("member"), valid_from__lte=next_delivery_date
-                )
-                .order_by("-valid_from")
-                .values("pickup_location_id")[:1]
-            )
-        )
         .filter(
-            latest_pickup_location_id=pickup_location.id,
+            member_id__in=MemberPickupLocationService.get_members_ids_at_pickup_location(
+                pickup_location=pickup_location,
+                reference_date=next_delivery_date,
+                cache=cache,
+            ),
         )
         .values("member_id")
         .distinct()
@@ -228,12 +224,13 @@ class PickupLocationWidget(forms.Select):
 class PickupLocationChoiceField(forms.ModelChoiceField):
     def __init__(self, **kwargs):
         initial = kwargs.pop("initial", {"subs": {}})
-        next_month = get_today() + relativedelta(months=1, day=1)
+        self.cache = kwargs.pop("cache", {})
+        next_month = get_today(cache=self.cache) + relativedelta(months=1, day=1)
         reference_date = kwargs.pop("reference_date", next_month)
         member = kwargs.pop("member", None)
 
         location_capabilities = get_active_pickup_location_capabilities(
-            reference_date=reference_date
+            reference_date=reference_date, cache=self.cache
         ).values(
             "product_type__name",
             "max_capacity",
@@ -241,14 +238,14 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             "pickup_location_id",
             "product_type__icon_link",
         )
-        cache = {}
+
         selected_product_types = {
             product_type_name: sum(
                 map(
                     lambda subscription: float(
                         get_product_price(
                             subscription.product,
-                            cache=cache,
+                            cache=self.cache,
                         ).size
                     )
                     * (subscription.quantity or 0),
@@ -272,7 +269,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
             subscriptions, reference_date, member
         )
 
-        super(PickupLocationChoiceField, self).__init__(
+        super().__init__(
             queryset=possible_locations,
             initial=0,
             widget=PickupLocationWidget(
@@ -280,19 +277,18 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 location_capabilities=location_capabilities,
                 selected_product_types=selected_product_types,
                 initial=initial.get("initial", None),
-                cache=cache,
+                cache=self.cache,
             ),
             **kwargs,
         )
 
-    @staticmethod
     def get_possible_locations(
+        self,
         subscriptions: List[Subscription],
         reference_date: datetime.date,
         member: Member | None,
     ):
         possible_location_ids = []
-        cache = {}
 
         for pickup_location in PickupLocation.objects.all():
             ordered_products_to_quantity_map = {
@@ -304,7 +300,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
                 ordered_products_to_quantity_map=ordered_products_to_quantity_map,
                 already_registered_member=member,
                 subscription_start=reference_date,
-                cache=cache,
+                cache=self.cache,
             ):
                 possible_location_ids.append(pickup_location.id)
         return PickupLocation.objects.filter(id__in=possible_location_ids)
@@ -319,12 +315,14 @@ class PickupLocationChoiceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         member = kwargs.pop("member", None)
-        super(PickupLocationChoiceForm, self).__init__(*args, **kwargs)
+        self.cache = kwargs.pop("cache", {})
+        super().__init__(*args, **kwargs)
 
         self.fields["pickup_location"] = PickupLocationChoiceField(
             label=_("Abholort"),
             initial=kwargs["initial"],
             member=member,
+            cache=self.cache,
         )
 
     def is_valid(self):

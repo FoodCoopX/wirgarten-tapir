@@ -130,7 +130,10 @@ class ProductGenerator:
         )
 
         hofpunkt = ProductType.objects.create(
-            name="Hofpunkt", delivery_cycle=NO_DELIVERY[0], is_affected_by_jokers=False
+            name="Hofpunkt",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
         )
         TaxRate.objects.create(
             product_type=hofpunkt,

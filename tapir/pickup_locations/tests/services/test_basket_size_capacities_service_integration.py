@@ -68,7 +68,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
 
         result = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location
+                pickup_location, cache={}
             )
         )
 
@@ -84,7 +84,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
 
         result = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location
+                pickup_location, cache={}
             )
         )
 
@@ -103,7 +103,7 @@ class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
 
         result = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location
+                pickup_location, cache={}
             )
         )
 

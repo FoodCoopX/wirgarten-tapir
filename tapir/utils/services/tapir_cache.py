@@ -2,7 +2,15 @@ import datetime
 from typing import Dict, Set
 
 from tapir.utils.shortcuts import get_from_cache_or_compute
-from tapir.wirgarten.models import Subscription, ProductType, Product, ProductPrice
+from tapir.wirgarten.models import (
+    Subscription,
+    ProductType,
+    Product,
+    ProductPrice,
+    PickupLocation,
+    PickupLocationOpeningTime,
+)
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 
 
 class TapirCache:
@@ -108,7 +116,10 @@ class TapirCache:
     def get_subscriptions_by_product_type(cls, cache: Dict):
         def compute():
             subscriptions_by_product_type = {
-                product_type: set() for product_type in ProductType.objects.all()
+                product_type: set()
+                for product_type in ProductType.objects.order_by(
+                    *product_type_order_by(cache=cache)
+                )
             }
             subscriptions = Subscription.objects.select_related("product__type")
             for subscription in subscriptions:
@@ -136,4 +147,48 @@ class TapirCache:
             products_by_name_iexact,
             product_name,
             lambda: next(filter(name_matches, products), None),
+        )
+
+    @classmethod
+    def get_last_subscription(cls, cache: Dict):
+        return get_from_cache_or_compute(
+            cache,
+            "last_subscription",
+            lambda: Subscription.objects.order_by("end_date").last(),
+        )
+
+    @classmethod
+    def get_product_types_in_standard_order(cls, cache: Dict):
+        return get_from_cache_or_compute(
+            cache,
+            "product_types_in_standard_order",
+            lambda: ProductType.objects.order_by(*product_type_order_by(cache=cache)),
+        )
+
+    @classmethod
+    def get_pickup_location_by_id(cls, cache: Dict, pickup_location_id):
+        def compute():
+            return {
+                pickup_location.id: pickup_location
+                for pickup_location in PickupLocation.objects.all()
+            }
+
+        pickup_location_by_id_cache = get_from_cache_or_compute(
+            cache, "pickup_location_by_id", lambda: compute()
+        )
+        return pickup_location_by_id_cache[pickup_location_id]
+
+    @classmethod
+    def get_opening_times_by_pickup_location_id(cls, cache: Dict, pickup_location_id):
+        opening_times_by_pickup_location_id_cache = get_from_cache_or_compute(
+            cache, "opening_times_by_pickup_location_id", lambda: {}
+        )
+        return get_from_cache_or_compute(
+            opening_times_by_pickup_location_id_cache,
+            pickup_location_id,
+            lambda: list(
+                PickupLocationOpeningTime.objects.filter(
+                    pickup_location_id=pickup_location_id
+                )
+            ),
         )

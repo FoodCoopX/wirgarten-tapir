@@ -639,13 +639,17 @@ class SubscriptionRenewalForm(Form):
             **{k: v for k, v in kwargs.items() if k not in ["start_date", "member_id"]},
         )
         self.start_date = kwargs["start_date"]
-        cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
+        self.cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         self.product_forms = [
-            BaseProductForm(*args, **kwargs, enable_validation=True),
+            BaseProductForm(*args, **kwargs, enable_validation=True, cache=self.cache),
             *[
-                AdditionalProductForm(*args, **kwargs, product_type_id=product_type)
-                for product_type in get_available_product_types()
+                AdditionalProductForm(
+                    *args, **kwargs, product_type_id=product_type, cache=self.cache
+                )
+                for product_type in get_available_product_types(cache=self.cache)
                 if product_type != base_product_type
             ],
         ]
@@ -672,14 +676,13 @@ class SubscriptionRenewalForm(Form):
         for form in self.product_forms:
             form.save(*args, **kwargs)
 
-        cache = {}
         member_id = kwargs["member_id"]
         self.subs = get_active_and_future_subscriptions(
-            self.start_date, cache=cache
+            self.start_date, cache=self.cache
         ).filter(member_id=member_id, cancellation_ts__isnull=True)
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(member, self.subs, cache=cache)
+        send_order_confirmation(member, self.subs, cache=self.cache)
 
 
 class CancellationReasonForm(Form):

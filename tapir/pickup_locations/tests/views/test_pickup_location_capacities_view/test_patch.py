@@ -164,7 +164,7 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         result = (
             BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                self.pickup_location
+                self.pickup_location, cache={}
             )
         )
         self.assertEqual({"small": 100, "medium": 75, "large": None}, result)

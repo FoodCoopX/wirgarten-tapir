@@ -9,13 +9,13 @@ from nanoid import generate
 from unidecode import unidecode
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.models import Member, Payment, ProductType, Subscription
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import Member, Payment, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_active_and_future_subscriptions,
     get_product_price,
-    product_type_order_by,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -105,7 +105,10 @@ def generate_new_payments(due_date: date, cache: Dict) -> list[Payment]:
 
 
 def get_active_subscriptions_grouped_by_product_type(
-    member: Member, reference_date: date = None
+    member: Member,
+    reference_date: date = None,
+    include_future_subscriptions: bool = False,
+    cache: Dict = None,
 ) -> OrderedDict[str, list[Subscription]]:
     """
     Get all active subscriptions for a member grouped by product types.
@@ -114,16 +117,26 @@ def get_active_subscriptions_grouped_by_product_type(
     :return: a dict of product_type.name -> Subscription[]
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    subscriptions = OrderedDict(
-        {p.name: [] for p in ProductType.objects.order_by(*product_type_order_by())}
+    subscriptions_by_product_type = OrderedDict(
+        {
+            p.name: []
+            for p in TapirCache.get_product_types_in_standard_order(cache=cache)
+        }
     )
-    for sub in get_active_subscriptions(reference_date).filter(member=member):
-        product_type = sub.product.type.name
-        subscriptions[product_type].append(sub)
 
-    return subscriptions
+    subscriptions = (
+        get_active_and_future_subscriptions(reference_date, cache=cache)
+        if include_future_subscriptions
+        else get_active_subscriptions(reference_date, cache=cache)
+    )
+
+    for sub in subscriptions.filter(member=member).select_related("product__type"):
+        product_type = sub.product.type.name
+        subscriptions_by_product_type[product_type].append(sub)
+
+    return subscriptions_by_product_type
 
 
 def get_existing_payments(due_date: date) -> list[Payment]:
