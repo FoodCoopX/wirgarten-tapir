@@ -33,7 +33,7 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class DataGenerator:
-    GENERATE_TEST_DATA_FOR = Organization.BIOTOP
+    GENERATE_TEST_DATA_FOR = Organization.VEREIN
 
     @staticmethod
     def clear():
@@ -128,7 +128,7 @@ class DataGenerator:
     def get_starting_month_for_growing_period(
         cls, generate_test_data_for: Organization
     ):
-        if generate_test_data_for == Organization.BIOTOP:
+        if generate_test_data_for in [Organization.BIOTOP, Organization.VEREIN]:
             return 1
         if generate_test_data_for == Organization.WIRGARTEN:
             return 7
