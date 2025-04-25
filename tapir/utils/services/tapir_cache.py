@@ -167,6 +167,9 @@ class TapirCache:
 
     @classmethod
     def get_pickup_location_by_id(cls, cache: Dict, pickup_location_id):
+        if pickup_location_id is None:
+            return None
+
         def compute():
             return {
                 pickup_location.id: pickup_location
