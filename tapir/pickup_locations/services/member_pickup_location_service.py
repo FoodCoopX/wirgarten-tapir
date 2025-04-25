@@ -104,9 +104,11 @@ class MemberPickupLocationService:
     def get_member_pickup_location_id_from_cache(
         cls, member_id: str, reference_date: datetime.date, cache: Dict
     ):
-        member_pickup_location_objects = (
-            cls.get_member_pickup_locations_objects_by_member_id(cache)[member_id]
-        )
+        temp = cls.get_member_pickup_locations_objects_by_member_id(cache)
+        if member_id not in temp:
+            return None
+
+        member_pickup_location_objects = temp[member_id]
         if len(member_pickup_location_objects) == 1:
             return member_pickup_location_objects[0].pickup_location_id
 
