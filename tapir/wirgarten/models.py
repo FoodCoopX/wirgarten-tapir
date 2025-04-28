@@ -1058,7 +1058,7 @@ class SubscriptionChangeLogEntry(LogEntry):
         self.subscriptions = ", ".join(
             list(
                 map(
-                    lambda x: f"{x} ({format_date(x.start_date)} - {format_date(x.end_date)})",
+                    lambda x: f"{x.quantity} × {x.product.name} ({format_date(x.start_date)} - {format_date(x.end_date)})",
                     subscriptions,
                 )
             )

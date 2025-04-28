@@ -1,42 +1,44 @@
 {% load i18n %}
 {% load django_bootstrap5 %}
-
 {% load log %}
-
 <div class="card m-2">
     <div class="card-header">
         <h5>{% translate "Log" %}</h5>
     </div>
-    <div class="card-body">
-        <table class="table table-striped" aria-label="{% translate 'List of log entries for this user' %}">
+    <div class="card-body table-responsive">
+        <table class="table table-striped"
+               aria-label="{% translate 'List of log entries for this user' %}">
             <thead>
-            <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Actor</th>
-                <th scope="col">Message</th>
-            </tr>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Actor</th>
+                    <th scope="col">Message</th>
+                </tr>
             </thead>
             {% for o in log_entries %}
                 <tr>
                     <td>{{ o.created_date|date:"SHORT_DATETIME_FORMAT" }}</td>
                     <td>{{ o.actor.get_display_name|default_if_none:o.actor }}</td>
-                    <td>{{ o.render }}</td>
+                    <td class="text-wrap">{{ o.render }}</td>
                 </tr>
             {% endfor %}
             {% if perms.accounts.manage %}
                 <tr>
-
                     <td colspan="3">
-
                         <form method="POST" action="{{ create_text_log_entry_action_url }}">
                             {% csrf_token %}
                             {% comment %}
                         Ideally we would let the form field render itself here, but it's easier to style as an inline field
                         this way.
-                        {% endcomment %}
+                            {% endcomment %}
                             <div class="d-flex">
-                                <input class="form-control flex-grow-1" name="text" placeholder="{% translate "Notes about this user" %}">
-                                <button class="btn tapir-btn btn-sm btn-info ms-2" type="submit" id="add_note_button" style="min-width: 100px;">
+                                <input class="form-control flex-grow-1"
+                                       name="text"
+                                       placeholder="{% translate "Notes about this user" %}">
+                                <button class="btn tapir-btn btn-sm btn-info ms-2"
+                                        type="submit"
+                                        id="add_note_button"
+                                        style="min-width: 100px">
                                     <span class="material-icons">note_add</span>
                                     {% translate "Add Note" %}
                                 </button>
@@ -46,6 +48,5 @@
                 </tr>
             {% endif %}
         </table>
-
     </div>
 </div>
