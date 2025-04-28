@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
+
 import environ
 
 env = environ.Env()
@@ -48,6 +49,11 @@ INSTALLED_APPS = [
     "tapir.utils",
     "tapir.wirgarten",
     "tapir.configuration",
+    "tapir.deliveries",
+    "tapir.generic_exports",
+    "tapir.subscriptions",
+    "tapir.coop",
+    "tapir.pickup_locations",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
@@ -57,6 +63,9 @@ INSTALLED_APPS = [
     "django_extensions",
     "formtools",
     "tapir.wirgarten_site",
+    "rest_framework",
+    "drf_spectacular",
+    "django_vite",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -137,6 +146,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = "static"
 STATICFILES_DIRS = [
     get_tapir_mail_static_dir(),
+    "dist",
 ]
 
 SELECT2_JS = "core/select2/4.0.13/js/select2.min.js"
@@ -154,8 +164,8 @@ PHONENUMBER_DEFAULT_REGION = "DE"
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
-    SILKY_PYTHON_PROFILER = True
-    SILKY_PYTHON_PROFILER_BINARY = True
+    SILKY_PYTHON_PROFILER = False
+    SILKY_PYTHON_PROFILER_BINARY = False
     SILKY_META = True
 
 # these are keycloak internal roles and will be filtered out automatically when fetching roles
@@ -183,3 +193,26 @@ BOOTSTRAP_DATEPICKER_PLUS = {
         },
     },
 }
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
+SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "manifest_path": "./dist/manifest.json",
+    }
+}
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
+CORS_ALLOW_CREDENTIALS = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

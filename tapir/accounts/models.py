@@ -151,14 +151,15 @@ class KeycloakUser(AbstractUser):
 
                 self.keycloak_id = kc.create_user(data)
 
-                try:
-                    self.send_verify_email()
-                except Exception as e:
-                    print(
-                        f"Failed to send verify email to new user: ",
-                        e,
-                        f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
-                    )
+                if not self.email.endswith("@example.com"):
+                    try:
+                        self.send_verify_email()
+                    except Exception as e:
+                        print(
+                            f"Failed to send verify email to new user: ",
+                            e,
+                            f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
+                        )
 
         else:  # Update --> change of keycloak data if necessary
             original = type(self).objects.get(id=self.id)
@@ -227,6 +228,7 @@ class KeycloakUser(AbstractUser):
             {"verify_link": verify_link},
         )
 
+        cache = {}
         send_email(
             to_email=[orig_email],
             subject=_("Änderung deiner Email-Adresse"),
@@ -236,6 +238,7 @@ class KeycloakUser(AbstractUser):
             f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
             f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
             f"<br/><br/>Grüße, dein WirGarten Team",
+            cache=cache,
         )
 
     class Meta:

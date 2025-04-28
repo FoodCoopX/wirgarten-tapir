@@ -10,9 +10,11 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.log.models import TextLogEntry
-
-# FIXME: Lueneburg references!
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
@@ -34,7 +36,7 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
@@ -49,7 +51,7 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
@@ -100,26 +102,30 @@ def get_member_personal_data_edit_form(request, **kwargs):
 @login_required
 def get_pickup_location_choice_form(request, **kwargs):
     member_id = kwargs.pop("pk")
+    cache = {}
+    kwargs["cache"] = cache
     check_permission_or_self(member_id, request)
 
     member = Member.objects.get(pk=member_id)
-    next_month = get_today() + relativedelta(months=1, day=1)
+    next_month = get_today(cache=cache) + relativedelta(months=1, day=1)
     kwargs["initial"] = {
         "subs": get_active_subscriptions_grouped_by_product_type(
-            member, reference_date=next_month
+            member, reference_date=next_month, cache=cache
         ),
     }
 
     if member.pickup_location:
         kwargs["initial"]["initial"] = member.pickup_location.id
 
+    kwargs["member"] = member
+
     @transaction.atomic
     def update_pickup_location(form):
         pickup_location_id = form.cleaned_data["pickup_location"].id
         change_date = (
-            calculate_pickup_location_change_date()
+            calculate_pickup_location_change_date(cache=cache)
             if member.pickup_location is not None
-            else get_today()
+            else get_today(cache=cache)
         )
         old_pickup_location = member.pickup_location
 
@@ -245,6 +251,9 @@ def get_renew_contracts_form(request, **kwargs):
 def get_add_subscription_form(request, **kwargs):
     member_id = kwargs.pop("pk")
 
+    cache = {}
+    kwargs["cache"] = cache
+
     check_permission_or_self(member_id, request)
 
     product_type_name = request.GET.get("productType")
@@ -252,17 +261,26 @@ def get_add_subscription_form(request, **kwargs):
         raise Exception("productType not specified")
 
     product_type = get_object_or_404(ProductType, name=product_type_name)
+
     is_base_product_type = (
-        get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE) == product_type.id
+        BaseProductTypeService.get_base_product_type(cache=cache) == product_type
     )
 
     if is_base_product_type:
         form_type = BaseProductForm
-        next_start_date = get_next_contract_start_date()
-        next_period = get_next_growing_period()
-        if not is_product_type_available(product_type.id, next_start_date) and (
+        next_start_date = get_next_contract_start_date(cache=cache)
+        next_period = get_next_growing_period(cache=cache)
+        if not is_product_type_available(
+            product_type.id,
+            next_start_date,
+            cache=cache,
+        ) and (
             next_period
-            and not is_product_type_available(product_type.id, next_period.start_date)
+            and not is_product_type_available(
+                product_type.id,
+                next_period.start_date,
+                cache=cache,
+            )
         ):
             member = Member.objects.get(id=member_id)
             # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
@@ -293,7 +311,7 @@ def get_add_subscription_form(request, **kwargs):
                 date_filter = max(next_start_date, next_period.start_date)
 
             if (
-                get_future_subscriptions()
+                get_active_and_future_subscriptions()
                 .filter(
                     cancellation_ts__isnull=True,
                     member_id=member_id,
@@ -302,11 +320,17 @@ def get_add_subscription_form(request, **kwargs):
                 .exists()
             ):
                 form.save(member_id=member_id)
-                send_contract_change_confirmation(member, form.subs)
+                send_contract_change_confirmation(
+                    member, form.subscriptions, cache=cache
+                )
             else:
                 form.save(member_id=member_id)
                 send_order_confirmation(
-                    member, get_future_subscriptions().filter(member=member)
+                    member,
+                    get_active_and_future_subscriptions(cache=cache).filter(
+                        member=member
+                    ),
+                    cache=cache,
                 )
         else:
             form.save(member_id=member_id)
@@ -315,7 +339,7 @@ def get_add_subscription_form(request, **kwargs):
             actor=request.user,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
-            subscriptions=form.subs,
+            subscriptions=form.subscriptions,
         ).save()
 
     return get_form_modal(
@@ -335,8 +359,10 @@ def get_add_coop_shares_form(request, **kwargs):
 
     check_permission_or_self(member_id, request)
     member = Member.objects.get(pk=member_id)
-
-    if not get_parameter_value(Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES):
+    cache = {}
+    if not get_parameter_value(
+        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
+    ):
         # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
 
         wl_kwargs = kwargs.copy()
@@ -353,10 +379,11 @@ def get_add_coop_shares_form(request, **kwargs):
             "Mitglieder die im Probezeit sind dürfen keine weitere Anteile zeichnen"
         )
 
-    today = get_today()
+    today = get_today(cache=cache)
     kwargs["initial"] = {
         "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
     }
+    kwargs["cache"] = cache
     return get_form_modal(
         request=request,
         form_class=CooperativeShareForm,
@@ -385,7 +412,8 @@ def get_cancel_trial_form(request, **kwargs):
         cancel_coop = form.is_cancel_coop_selected()
         if cancel_coop:
             TextLogEntry().populate(
-                text="Beitrittserklärung zur Genossenschaft zurückgezogen",
+                text=MembershipTextService.get_membership_text(cache={})
+                + " zurückgezogen",
                 user=form.member,
                 actor=request.user,
             ).save()

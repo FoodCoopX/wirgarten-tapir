@@ -18,10 +18,12 @@ class TapirParameter(models.Model):
     datatype = models.CharField(max_length=8)
     order_priority = models.IntegerField(null=False, default=-1)
     value = models.CharField(max_length=4096, null=True)
+    enabled = models.BooleanField(default=True)
+    debug = models.BooleanField(default=False)
     options: [tuple] = None
     validators: [callable] = []
 
-    def full_clean(self):
+    def full_clean(self, *_, **__):
         for validator in self.validators:
             validator(self.value)
 
@@ -49,6 +51,6 @@ class TapirParameter(models.Model):
 
 
 class TapirParameterDefinitionImporter:
-    def import_definitions(self, skip_validation: bool = False):
+    def import_definitions(self):
         """Import the parameter definitions for the module."""
         pass

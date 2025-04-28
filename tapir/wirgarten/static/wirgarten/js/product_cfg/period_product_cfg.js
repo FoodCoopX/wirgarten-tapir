@@ -9,7 +9,7 @@ const init = (c_p_map_json, pe_c_map_json) => {
 const activateGrowingPeriodList = (pe_c_map_json) => {
   const params = Tapir.getUrlParams();
   const children = Array.from(
-    document.getElementById("list_growing_periods").children
+    document.getElementById("list_growing_periods").children,
   );
   children.forEach((child) => {
     const id = `period-${params.periodId}`;
@@ -26,7 +26,7 @@ const activateGrowingPeriodList = (pe_c_map_json) => {
 const activateCapacityList = (c_p_map_json) => {
   const params = Tapir.getUrlParams();
   const children = Array.from(
-    document.getElementById("list_capacities").children
+    document.getElementById("list_capacities").children,
   );
   const id = `c-${params.capacityId}`;
   children.forEach((child) => {
@@ -99,7 +99,7 @@ const manageProductDependentButtons = (params) => {
 
 const manageGrowingPeriodDependentButtons = (params) => {
   const buttons = Array.from(
-    document.getElementsByClassName("need-growing-period")
+    document.getElementsByClassName("need-growing-period"),
   );
   buttons.forEach((btn) => {
     const deleteCondition =
@@ -117,7 +117,7 @@ const manageGrowingPeriodDependentButtons = (params) => {
 
 const manageCapacityDependentButtons = (params) => {
   const buttons = Array.from(
-    document.getElementsByClassName("need-product-type")
+    document.getElementsByClassName("need-product-type"),
   );
   buttons.forEach((btn) => {
     const deleteCondition =
@@ -182,12 +182,12 @@ const getProductAddForm = () => {
 const getGrowingPeriodAddForm = () => {
   const params = Tapir.getUrlParams();
   const url = `/wirgarten/product/periodadd${Tapir.stringifyUrlParams(params)}`;
-  const title = "Neue Anbauperiode anlegen";
+  const title = "Neue Vertragsperiode anlegen";
   FormModal.load(
     url,
     title,
     "Es wird empfohlen stattdessen die Copy Funktion auf die letzte Periode anzuwenden, damit Produkte und weitere Einstellungen übernommen werden. Diese sind nachträglich noch editierbar.",
-    "warning"
+    "warning",
   );
 };
 
@@ -198,8 +198,8 @@ const getGrowingPeriodCopyForm = () => {
   }/periodcopy${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(
     url,
-    "Neue Anbauperiode anlegen",
-    "Produkte werden von der gewählten Anbauperiode übernommen."
+    "Neue Vertragsperiode anlegen",
+    "Produkte werden von der gewählten Vertragsperiode übernommen.",
   );
 };
 
@@ -249,14 +249,14 @@ const deleteProduct = () => {
         params.prodId
       }/delete${Tapir.stringifyUrlParams({ ...params, prodId: undefined })}`;
       window.location.replace(url);
-    }
+    },
   );
 };
 
 const deleteCapacity = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du den Produkttypen wirklich für diese Anbauperiode löschen?",
+    "Möchtest du den Produkttypen wirklich für diese Vertragsperiode löschen?",
     "Löschen",
     "danger",
     () => {
@@ -268,14 +268,14 @@ const deleteCapacity = () => {
         capacityId: undefined,
       })}`;
       window.location.replace(url);
-    }
+    },
   );
 };
 
 const deleteGrowingPeriod = () => {
   ConfirmationModal.open(
     "Bist du dir sicher?",
-    "Möchtest du diese Anbauperiode wirklich löschen?",
+    "Möchtest du diese Vertragsperiode wirklich löschen?",
     "Löschen",
     "danger",
     () => {
@@ -287,6 +287,6 @@ const deleteGrowingPeriod = () => {
         periodId: undefined,
       })}`;
       window.location.replace(url);
-    }
+    },
   );
 };

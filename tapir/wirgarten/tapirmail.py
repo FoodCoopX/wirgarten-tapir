@@ -18,7 +18,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
 )
@@ -166,6 +166,7 @@ def _register_filters():
 
 
 def _register_tokens():
+    cache = {}
     register_tokens(
         user_tokens={
             "Vorname": "first_name",
@@ -179,25 +180,39 @@ def _register_tokens():
             "Ernteanteilsgrößen": "base_subscriptions_text",
         },
         general_tokens={
-            "WirGarten Standort": lambda: get_parameter_value(Parameter.SITE_NAME),
-            "Admin Name": lambda: get_parameter_value(Parameter.SITE_ADMIN_NAME),
-            "Admin Email": lambda: get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+            "WirGarten Standort": lambda: get_parameter_value(
+                ParameterKeys.SITE_NAME, cache=cache
+            ),
+            "Admin Name": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_NAME, cache=cache
+            ),
+            "Admin Email": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+            ),
             "Admin Telefonnr": lambda: get_parameter_value(
-                Parameter.SITE_ADMIN_TELEPHONE
+                ParameterKeys.SITE_ADMIN_TELEPHONE, cache=cache
             ),
-            "Admin Image": lambda: get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
-            "Kontakt Email": lambda: get_parameter_value(Parameter.SITE_EMAIL),
+            "Admin Image": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_IMAGE, cache=cache
+            ),
+            "Kontakt Email": lambda: get_parameter_value(
+                ParameterKeys.SITE_EMAIL, cache=cache
+            ),
             "Datenschutzerklärung Link": lambda: get_parameter_value(
-                Parameter.SITE_PRIVACY_LINK
+                ParameterKeys.SITE_PRIVACY_LINK, cache=cache
             ),
-            "Mitglieder-FAQ Link": lambda: get_parameter_value(Parameter.SITE_FAQ_LINK),
-            "Satzung Link": lambda: get_parameter_value(Parameter.COOP_STATUTE_LINK),
+            "Mitglieder-FAQ Link": lambda: get_parameter_value(
+                ParameterKeys.SITE_FAQ_LINK, cache=cache
+            ),
+            "Satzung Link": lambda: get_parameter_value(
+                ParameterKeys.COOP_STATUTE_LINK, cache=cache
+            ),
             "Infos zur Genossenschaft": lambda: get_parameter_value(
-                Parameter.COOP_INFO_LINK
+                ParameterKeys.COOP_INFO_LINK, cache=cache
             ),
-            "Jahr (aktuell)": lambda: get_today().year,
-            "Jahr (nächstes)": lambda: get_today().year + 1,
-            "Jahr (übernächstes)": lambda: get_today().year + 2,
+            "Jahr (aktuell)": lambda: get_today(cache=cache).year,
+            "Jahr (nächstes)": lambda: get_today(cache=cache).year + 1,
+            "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
     )
     pass

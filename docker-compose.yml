@@ -21,6 +21,7 @@ services:
     environment:
       VIRTUAL_HOST: localhost
       DEBUG: 1
+      DJANGO_VITE_DEBUG: True
     depends_on:
       - db
       - selenium
@@ -43,7 +44,7 @@ services:
       DEFAULT_HOST: localhost
 
   db:
-    image: postgres:13
+    image: postgres:14
     environment:
       - POSTGRES_DB=tapir
       - POSTGRES_PASSWORD=tapir
@@ -94,6 +95,16 @@ services:
     image: adminer
     ports:
       - "8280:8080"
+
+  vite:
+    build:
+      context: .
+      dockerfile: ./vite.Dockerfile
+    tty: true
+    ports:
+      - '5173:5173'
+    volumes:
+      - .:/app
 
 volumes:
   nginx-certs-volume:

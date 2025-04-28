@@ -1,18 +1,18 @@
 import base64
 import json
-from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
-from django.conf import settings
 from tapir.accounts.models import EmailChangeRequest, TapirUser
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.tapirmail import Events
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 # FIXME: this file has a dependency on tapir/wirgarten! Replace the send_email call as soon as the mail module is ready
 
@@ -47,7 +47,7 @@ def change_email(request, **kwargs):
             Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
             new_email,
         )
-
+        cache = {}
         # send confirmation to old email address
         send_email(
             to_email=[orig_email],
@@ -58,6 +58,7 @@ def change_email(request, **kwargs):
                 f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
                 f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
             ),
+            cache=cache,
         )
 
         # FIXME: reference to wirgarten namespace!

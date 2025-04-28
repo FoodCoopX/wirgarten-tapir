@@ -3,10 +3,11 @@ from collections import defaultdict
 
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
-from django.db import transaction
+from django.db import transaction, models
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
 from tapir.wirgarten.models import (
     ExportedFile,
@@ -17,15 +18,15 @@ from tapir.wirgarten.models import (
     ProductType,
     ScheduledTask,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.service.payment import generate_new_payments, get_existing_payments
+from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_product_price,
 )
 from tapir.wirgarten.tapirmail import Events
@@ -56,7 +57,8 @@ def _export_pick_list(product_type, include_equivalents=True):
     Exports picklist or supplier list as CSV for a product type.
     indclude_equivalents: If true, the M-Äquivalent column is included -> Kommissionierliste, else Lieferantenliste
     """
-    next_delivery_date = get_next_delivery_date()
+    cache = {}
+    next_delivery_date = get_next_delivery_date(cache=cache)
     if product_type.delivery_cycle != WEEKLY[0]:
         _, week, _ = next_delivery_date.isocalendar()
         is_even_week = week % 2 == 0
@@ -82,7 +84,7 @@ def _export_pick_list(product_type, include_equivalents=True):
     KEY_PICKUP_LOCATION = "Abholort"
     KEY_M_EQUIVALENT = "M-Äquivalent"
 
-    subscriptions = get_active_subscriptions(next_delivery_date).filter(
+    subscriptions = get_active_subscriptions(next_delivery_date, cache=cache).filter(
         product__type_id=product_type.id
     )
     grouped_subscriptions = defaultdict(list)
@@ -93,7 +95,7 @@ def _export_pick_list(product_type, include_equivalents=True):
         ].append(subscription)
 
     variants = list(Product.objects.filter(type_id=product_type.id))
-    variants.sort(key=lambda x: get_product_price(x).price)
+    variants.sort(key=lambda x: get_product_price(x, cache=cache).price)
     variant_names = [x.name for x in variants]
 
     header = [
@@ -105,7 +107,7 @@ def _export_pick_list(product_type, include_equivalents=True):
     output, writer = begin_csv_string(header)
 
     base_price = get_product_price(
-        Product.objects.filter(type_id=product_type.id, base=True).first()
+        Product.objects.filter(type_id=product_type.id, base=True).first(), cache=cache
     ).price
 
     for pickup_location, subs in sorted(
@@ -132,9 +134,12 @@ def _export_pick_list(product_type, include_equivalents=True):
         filetype=ExportedFile.FileType.CSV,
         content=bytes("".join(output.csv_string), "utf-8"),
         send_email=get_parameter_value(
-            Parameter.PICK_LIST_SEND_ADMIN_EMAIL
-            if include_equivalents
-            else Parameter.SUPPLIER_LIST_SEND_ADMIN_EMAIL
+            (
+                ParameterKeys.PICKING_SEND_ADMIN_EMAIL
+                if include_equivalents
+                else ParameterKeys.SUPPLIER_LIST_SEND_ADMIN_EMAIL
+            ),
+            cache=cache,
         ),
     )
 
@@ -146,14 +151,14 @@ def export_pick_list_csv():
     """
     all_product_types = {pt.name: pt for pt in get_active_product_types()}
     include_product_types = get_parameter_value(
-        Parameter.PICK_LIST_PRODUCT_TYPES
+        ParameterKeys.PICKING_PRODUCT_TYPES
     ).split(",")
 
     for type_name in include_product_types:
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{Parameter.PICK_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_pick_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.PICKING_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], True)
@@ -166,14 +171,14 @@ def export_supplier_list_csv():
     """
     all_product_types = {pt.name: pt for pt in get_active_product_types()}
     include_product_types = get_parameter_value(
-        Parameter.SUPPLIER_LIST_PRODUCT_TYPES
+        ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES
     ).split(",")
 
     for type_name in include_product_types:
         type_name = type_name.strip()
         if type_name not in all_product_types:
             print(
-                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{Parameter.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
+                f"""export_supplier_list_csv(): Ignoring unknown product type value in parameter '{ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES}': {type_name}. Possible values: {all_product_types.keys}"""
             )
             continue
         _export_pick_list(all_product_types[type_name], False)
@@ -181,22 +186,27 @@ def export_supplier_list_csv():
 
 def send_email_member_contract_end_reminder(member_id: str):
     member = Member.objects.get(pk=member_id)
-
-    today = get_today()
+    cache = {}
+    today = get_today(cache=cache)
     next_month = today + relativedelta(months=1)
-    active_subs = get_active_subscriptions().filter(member=member)
+    active_subs = get_active_subscriptions(cache=cache).filter(member=member)
     if (
         active_subs.filter(end_date__lte=next_month).exists()
-        and not get_future_subscriptions()
+        and not get_active_and_future_subscriptions(cache=cache)
         .filter(member=member, start_date__gt=today)
         .exists()
     ):
         contract_list = format_subscription_list_html(active_subs)
         send_email(
             to_email=[member.email],
-            subject=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_SUBJECT),
-            content=get_parameter_value(Parameter.EMAIL_CONTRACT_END_REMINDER_CONTENT),
+            subject=get_parameter_value(
+                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_SUBJECT, cache=cache
+            ),
+            content=get_parameter_value(
+                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_CONTENT, cache=cache
+            ),
             variables={"contract_list": contract_list},
+            cache=cache,
         )
 
         TransactionalTrigger.fire_action(
@@ -211,8 +221,9 @@ def send_email_member_contract_end_reminder(member_id: str):
 @shared_task
 @transaction.atomic
 def export_payment_parts_csv(reference_date=None):
+    cache = {}
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     def export_product_or_coop_payment_csv(
         product_type: bool | ProductType, payments: list[Payment]
@@ -259,6 +270,7 @@ def export_payment_parts_csv(reference_date=None):
             filetype=ExportedFile.FileType.CSV,
             content=bytes("".join(output.csv_string), "utf-8"),
             send_email=True,
+            cache=cache,
         )
         transaction = PaymentTransaction.objects.create(file=file, type=payment_type)
         for p in payments:
@@ -266,14 +278,14 @@ def export_payment_parts_csv(reference_date=None):
             p.save()
 
     due_date = reference_date.replace(
-        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
     )
 
     print(
         f"[task] export_payment_parts_csv: generating payments for due date {format_date(due_date)}"
     )
 
-    payments = generate_new_payments(due_date)
+    payments = generate_new_payments(due_date, cache=cache)
     for p in payments:
         if p.id is None:
             p.save()
@@ -285,33 +297,46 @@ def export_payment_parts_csv(reference_date=None):
     }
 
     # export for product types
-    for pt in get_active_product_types():
+    for pt in get_active_product_types(cache=cache):
         export_product_or_coop_payment_csv(
             pt, payments_grouped[pt.name] if pt.name in payments_grouped else []
         )
 
-    # export for coop shares
-    coop_share_payments = Payment.objects.filter(
-        transaction__isnull=True, due_date__lte=due_date, type="Genossenschaftsanteile"
-    )
-    export_product_or_coop_payment_csv(
-        False,
-        coop_share_payments,
-    )
+    if (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COOPERATIVE
+    ):
+        # export for coop shares
+        coop_share_payments = Payment.objects.filter(
+            transaction__isnull=True,
+            due_date__lte=due_date,
+            type="Genossenschaftsanteile",
+        )
+        export_product_or_coop_payment_csv(
+            False,
+            coop_share_payments,
+        )
 
 
 @shared_task
-def generate_member_numbers():
+def generate_member_numbers(print_results=True):
     members = Member.objects.filter(member_no__isnull=True)
     today = get_today()
+    members_to_update = []
+    max_member_no = Member.objects.aggregate(models.Max("member_no"))["member_no__max"]
+    if max_member_no is None:
+        max_member_no = 0
     for member in members:
-        with transaction.atomic():
-            if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
-                member.member_no = member.generate_member_no()
-                member.save()
+        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
+            member.member_no = member.generate_member_no(max_member_no)
+            max_member_no = max(max_member_no, member.member_no)
+            members_to_update.append(member)
 
-                TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
-
+    with transaction.atomic():
+        Member.objects.bulk_update(members_to_update, ["member_no"])
+        for member in members_to_update:
+            TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
+            if print_results:
                 print(
                     f"[task] generate_member_numbers: generated member_no for {member}"
                 )

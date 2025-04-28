@@ -10,6 +10,10 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
     MarketingFeedbackForm,
@@ -29,7 +33,7 @@ from tapir.wirgarten.models import (
     Subscription,
     Member,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
@@ -39,10 +43,10 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_available_product_types,
     get_current_growing_period,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     is_product_type_available,
 )
-from tapir.wirgarten.utils import get_now, get_today
+from tapir.wirgarten.utils import get_now, get_today, legal_status_is_cooperative
 
 
 def questionaire_trafficsource_view(request, **_):
@@ -98,16 +102,15 @@ class RegistrationWizardViewBase(CookieWizardView):
     def __init__(self, *args, **kwargs):
         super(RegistrationWizardViewBase, self).__init__(*args, **kwargs)
 
-        today = get_today()
+        self.cache = {}
+
+        today = get_today(cache=self.cache)
         self.growing_period = get_current_growing_period(
-            get_next_contract_start_date(today)
+            get_next_contract_start_date(today, cache=self.cache), cache=self.cache
         )
 
-        if not self.growing_period:
-            self.coop_shares_only = True
-        else:
-            self.start_date = get_next_contract_start_date(today)
-            self.end_date = self.growing_period.end_date
+        self.start_date = get_next_contract_start_date(today, cache=self.cache)
+        self.end_date = self.growing_period.end_date
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
 
@@ -119,26 +122,37 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @classmethod
     def as_view(cls, *args, **kwargs):
-        base_prod_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        cache = {}
+        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         form_list = [
             (STEP_BASE_PRODUCT, BaseProductForm),
             (STEP_BASE_PRODUCT_NOT_AVAILABLE, EmptyForm),
-            (STEP_COOP_SHARES, CooperativeShareForm),
-            (STEP_COOP_SHARES_NOT_AVAILABLE, EmptyForm),
         ]
+        if (
+            get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+            == LEGAL_STATUS_COOPERATIVE
+        ):
+            form_list += [
+                (STEP_COOP_SHARES, CooperativeShareForm),
+                (STEP_COOP_SHARES_NOT_AVAILABLE, EmptyForm),
+            ]
+
         steps_kwargs = settings.REGISTRATION_STEPS
         if STEP_BASE_PRODUCT not in steps_kwargs:
-            base_product = ProductType.objects.get(id=base_prod_id)
             steps_kwargs[STEP_BASE_PRODUCT] = {
-                "product_type_id": base_prod_id,
-                "title": base_product.name,
-                "description": base_product.name,
+                "product_type_id": base_product_type.id,
+                "title": base_product_type.name,
+                "description": base_product_type.name,
             }
-        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = base_prod_id
+        steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = (
+            base_product_type.id if base_product_type is not None else None
+        )
         for pt in [
             x
-            for x in get_available_product_types(get_next_contract_start_date())
-            if x.id != base_prod_id
+            for x in get_available_product_types(
+                get_next_contract_start_date(cache=cache), cache=cache
+            )
+            if x.id != base_product_type.id
         ]:
             step = "additional_product_" + pt.name
             if step not in steps_kwargs:
@@ -172,59 +186,41 @@ class RegistrationWizardViewBase(CookieWizardView):
         )
 
     def dispatch(self, request, *args, **kwargs):
-        """
-        This method is called when the request is first received. If '?coop_shares_only=true' is set in the request,
-        the wizard will skip the harvest shares step and only show the coop shares step and skips the summary as well.
-        """
-        self.coop_shares_only = (
-            hasattr(self, "coop_shares_only") and self.coop_shares_only
-        ) or ("coop_shares_only" in request.GET)
-
         self.condition_dict = self.init_conditions()
         return super().dispatch(request, *args, **kwargs)
 
     def init_conditions(self):
-        if self.coop_shares_only:
-            return {
-                STEP_BASE_PRODUCT: False,
-                STEP_BASE_PRODUCT_NOT_AVAILABLE: False,
-                STEP_COOP_SHARES: True,
-                STEP_COOP_SHARES_NOT_AVAILABLE: False,
-                STEP_PICKUP_LOCATION: False,
-                STEP_SUMMARY: False,
-                **{f: False for f in self.dynamic_steps},
-            }
-
         _coop_shares_without_harvest_shares_possible = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
         )
 
         _show_harvest_shares = is_product_type_available(
-            ProductType.objects.get(
-                id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-            ),
+            BaseProductTypeService.get_base_product_type(cache=self.cache),
             reference_date=self.start_date,
+            cache=self.cache,
         )
+
+        if legal_status_is_cooperative(cache=self.cache):
+            step_coop_shares_enabled = True
+            step_coop_shares_enabled_not_available_enabled = False
+            if not _coop_shares_without_harvest_shares_possible:
+                step_coop_shares_enabled = lambda x: has_selected_base_product(x)
+                step_coop_shares_enabled_not_available_enabled = (
+                    lambda x: not has_selected_base_product(x)
+                )
+
+        else:
+            step_coop_shares_enabled = False
+            step_coop_shares_enabled_not_available_enabled = False
 
         return {
             STEP_BASE_PRODUCT: _show_harvest_shares,
-            STEP_BASE_PRODUCT_NOT_AVAILABLE: self.coop_shares_only == False
-            and not _show_harvest_shares,
-            STEP_COOP_SHARES: (
-                (lambda x: has_selected_base_product(x))
-                if not _coop_shares_without_harvest_shares_possible
-                else True
-            ),
-            STEP_COOP_SHARES_NOT_AVAILABLE: (
-                (lambda x: not has_selected_base_product(x))
-                if not _coop_shares_without_harvest_shares_possible
-                else False
-            ),
+            STEP_BASE_PRODUCT_NOT_AVAILABLE: not _show_harvest_shares,
+            STEP_COOP_SHARES: step_coop_shares_enabled,
+            STEP_COOP_SHARES_NOT_AVAILABLE: step_coop_shares_enabled_not_available_enabled,
             **{f: lambda x: has_selected_base_product(x) for f in self.dynamic_steps},
             STEP_PICKUP_LOCATION: lambda x: has_selected_base_product(x),
-            STEP_SUMMARY: lambda x: (
-                has_selected_base_product(x) if self.coop_shares_only == False else True
-            ),
+            STEP_SUMMARY: True,
         }
 
     def has_step(self, step):
@@ -241,6 +237,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     # gather data from dependent forms
     def get_form_initial(self, step=None):
+        cache = {}
         initial = self.initial_dict
         if step in [STEP_BASE_PRODUCT, *self.dynamic_steps]:
             initial["start_date"] = self.start_date
@@ -259,8 +256,10 @@ class RegistrationWizardViewBase(CookieWizardView):
             if self.has_step(STEP_BASE_PRODUCT) and is_base_product_selected(
                 self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
             ):
-                base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-                product_type = ProductType.objects.get(id=base_product_id)
+                base_product_type_id = BaseProductTypeService.get_base_product_type(
+                    cache=cache
+                ).id
+                product_type = ProductType.objects.get(id=base_product_type_id)
                 initial["subs"][product_type.name] = []
                 data = self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
                 for key, quantity in data.items():
@@ -268,9 +267,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                         product_name = key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
                         product = Product.objects.get(
                             name__iexact=product_name,
-                            type_id=get_parameter_value(
-                                Parameter.COOP_BASE_PRODUCT_TYPE
-                            ),
+                            type_id=base_product_type_id,
                         )
                         initial["subs"][product_type.name].append(
                             Subscription(product=product, quantity=quantity)
@@ -332,7 +329,8 @@ class RegistrationWizardViewBase(CookieWizardView):
         member.iban = personal_details_form.cleaned_data["iban"]
         member.is_active = False
 
-        member.is_student = form_dict[STEP_COOP_SHARES].cleaned_data["is_student"]
+        if STEP_COOP_SHARES in form_dict.keys():
+            member.is_student = form_dict[STEP_COOP_SHARES].cleaned_data["is_student"]
 
         now = get_now()
         member.sepa_consent = now
@@ -346,7 +344,6 @@ class RegistrationWizardViewBase(CookieWizardView):
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
         member = self.save_member(form_dict)
-
         try:
             if STEP_PICKUP_LOCATION in form_dict:
                 MemberPickupLocation.objects.create(
@@ -360,18 +357,20 @@ class RegistrationWizardViewBase(CookieWizardView):
             start_date = (
                 self.start_date
                 if hasattr(self, "start_date")
-                else get_next_contract_start_date()
+                else get_next_contract_start_date(cache=self.cache)
             )
             self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
-                "growing_period", get_current_growing_period()
+                "growing_period", get_current_growing_period(cache=self.cache)
             )
             if self.growing_period and self.growing_period.start_date > get_today():
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(ref_date=start_date)
+            actual_coop_start = get_next_contract_start_date(
+                ref_date=start_date, cache=self.cache
+            )
 
-            mandate_ref = create_mandate_ref(member)
-            if not member.is_student:
+            mandate_ref = create_mandate_ref(member, cache=self.cache)
+            if not member.is_student and STEP_COOP_SHARES in form_dict.keys():
                 buy_cooperative_shares(
                     quantity=form_dict[STEP_COOP_SHARES].cleaned_data[
                         "cooperative_shares"
@@ -398,7 +397,9 @@ class RegistrationWizardViewBase(CookieWizardView):
                         )
 
                 send_order_confirmation(
-                    member, get_future_subscriptions().filter(member=member)
+                    member,
+                    get_active_and_future_subscriptions().filter(member=member),
+                    cache=self.cache,
                 )
         except Exception as e:
             member.delete()

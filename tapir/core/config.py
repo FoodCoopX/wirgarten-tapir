@@ -1,0 +1,9 @@
+LEGAL_STATUS_ASSOCIATION = "association"
+LEGAL_STATUS_COOPERATIVE = "coop"
+LEGAL_STATUS_COMPANY = "company"
+
+LEGAL_STATUS_OPTIONS = [
+    (LEGAL_STATUS_ASSOCIATION, "Verein"),
+    (LEGAL_STATUS_COOPERATIVE, "Genossenschaft"),
+    (LEGAL_STATUS_COMPANY, "Einzelunternehmen"),
+]

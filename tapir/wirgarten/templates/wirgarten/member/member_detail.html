@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load django_vite %}
 {% load tapir_static %}
 {% load i18n %}
 {% load log %}
@@ -12,8 +13,10 @@
     </title>
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/member_detail.css' %}">
+    {% vite_asset 'member_profile/member_profile_entry.tsx' %}
 {% endblock head %}
 {% block content %}
+    {% csrf_token %}
     {% with False as lock_functions %}
         <div id="member-detail-container">
             <div id="member-detail-left-column">
@@ -22,7 +25,6 @@
                     <div id="email-change-verify" class="alert alert-success">
                         <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
                         <p>
-                            '=' expected
                             Wir haben dir eine Mail geschickt an <strong>{{ object.email }}</strong>.
                             <br />
                             Bitte klicke den Link um deine Änderung wirksam zu machen.
@@ -31,127 +33,140 @@
                 {% endif %}
                 <div id="member-contracts">
                     <div id="contract-tiles">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="contract-tile-number">
-                                    <strong>{{ coop_shares_total|default:'0' }}</strong> ×
-                                </div>
-                                <strong>Genossenschaftsanteile</strong>
-                                <hr />
-                                <small>
-                                    <table style="width:100%">
-                                        {% for entry in coop_shares %}
-                                            <tr data-bs-toggle="tooltip" data-bs-placement="top" title="{{ entry }}">
-                                                <td>
-                                                    <span class="material-icons" style="font-size:1em">
-                                                        {% if entry.transaction_type == 'purchase' %}
-                                                            add
-                                                        {% elif entry.transaction_type == 'cancellation' %}
-                                                            remove
-                                                        {% elif entry.transaction_type == 'transfer_in' %}
-                                                            login
-                                                        {% elif entry.transaction_type == 'transfer_out' %}
-                                                            logout
-                                                        {% endif %}
-                                                    </span>
-                                                </td>
-                                                <td>{{ entry.valid_at|format_date }}</td>
-                                                <td style="text-align:right">{{ entry.total_price|format_currency }} €</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </table>
-                                </small>
-                            </div>
-                            <div class="card-footer d-flex justify-content-end">
-                                <div data-bs-toggle="tooltip" title="Anteile bearbeiten">
-                                    <button {% if object.is_in_coop_trial %} data-bs-toggle="modal" data-bs-target="#cannotOrderMoreSharesModal" {% else %} onclick="handleAddCoopShares();" {% endif %}
-                                            class="btn btn-outline-success mx-1 px-2"
-                                            style="float:right">
-                                        <span class="material-icons">add</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% for type in subscriptions.keys %}
+                        {% if show_coop_shares %}
                             <div class="card">
                                 <div class="card-body">
                                     <div class="contract-tile-number">
-                                        <strong>{{ sub_quantities|get_value:type }}</strong> ×
+                                        <strong>{{ coop_shares_total|default:'0' }}</strong> ×
                                     </div>
-                                    <strong>{% translate type %}</strong>
-                                    {% if sub_quantities|get_value:type > 0 %}
-                                        <hr />
-                                        <small>
-                                            {% for key, val in subscriptions.items %}
-                                                {% if key == type %}
-                                                    <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span>
-                                                    <br />
-                                                    <div style="margin-top:0.5em; line-height:1.1em">
+                                    <strong>Genossenschaftsanteile</strong>
+                                    <hr />
+                                    <small>
+                                        <table style="width:100%">
+                                            {% for entry in coop_shares %}
+                                                <tr data-bs-toggle="tooltip" data-bs-placement="top" title="{{ entry }}">
+                                                    <td>
+                                                        <span class="material-icons" style="font-size:1em">
+                                                            {% if entry.transaction_type == 'purchase' %}
+                                                                add
+                                                            {% elif entry.transaction_type == 'cancellation' %}
+                                                                remove
+                                                            {% elif entry.transaction_type == 'transfer_in' %}
+                                                                login
+                                                            {% elif entry.transaction_type == 'transfer_out' %}
+                                                                logout
+                                                            {% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ entry.valid_at|format_date }}</td>
+                                                    <td style="text-align:right">{{ entry.total_price|format_currency }} €</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </table>
+                                    </small>
+                                </div>
+                                <div class="card-footer d-flex justify-content-end">
+                                    <div data-bs-toggle="tooltip" title="Anteile bearbeiten">
+                                        <button {% if object.is_in_coop_trial %} data-bs-toggle="modal" data-bs-target="#cannotOrderMoreSharesModal" {% else %} onclick="handleAddCoopShares();" {% endif %}
+                                                class="btn btn-outline-primary"
+                                                style="float:right">
+                                            <span class="material-icons">add</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% for product_type_name in subscriptions.keys %}
+                            {% with product_types_by_name|get_value:product_type_name as product_type %}
+                                <div class="card">
+                                    <div class="card-body">
+                                        {% if not product_type.single_subscription_only %}
+                                            <div class="contract-tile-number">
+                                                <strong>{{ sub_quantities|get_value:product_type_name }}</strong> ×
+                                            </div>
+                                        {% endif %}
+                                        <strong>{% translate product_type_name %}</strong>
+                                        {% if sub_quantities|get_value:product_type_name > 0 %}
+                                            <hr />
+                                            <small>
+                                                {% for key, val in subscriptions.items %}
+                                                    {% if key == product_type_name %}
                                                         {% for sub in val %}
                                                             <span {% if sub.cancellation_ts %}style="text-decoration:line-through;color:#6A6A6A"{% endif %}>
-                                                                <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;
+                                                                {% if not product_type.single_subscription_only %}
+                                                                    <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;
+                                                                {% endif %}
                                                                 <strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;
                                                                 {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                                                     (
                                                                     {% if sub.solidarity_price > 0 %}+{% endif %}
                                                                     {% widthratio sub.solidarity_price 1 100 %}%)
                                                                 {% elif sub.solidarity_price_absolute > 0 %}
-                                                                    (+{{ sub.solidarity_price_absolute|format_currency }}€)
+                                                                    (+
+                                                                    {{ sub.solidarity_price_absolute|format_currency }}
+                                                                    €)
                                                                 {% endif %}
+                                                                <span>{{ sub.start_date|format_date }}
+                                                                    {% if sub.end_date %}- {{ sub.end_date|format_date }}{% endif %}
+                                                                </span>
                                                                 <br />
                                                             </span>
                                                         {% endfor %}
-                                                    </div>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </small>
-                                    {% endif %}
+                                                        <br />
+                                                        <div style="margin-top:0.5em; line-height:1.1em"></div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer"
+                                         style="display:flex;
+                                                justify-content:space-between">
+                                        {% with sub_totals|get_value:product_type_name|default:0 as sub_total %}
+                                            <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
+                                            </span>
+                                        {% endwith %}
+                                        <div class="d-flex flex-row gap-2">
+                                            {% if forloop.counter0 == 0 or available_product_types|get_value:product_type_name|default:False %}
+                                                <button data-bs-toggle="tooltip"
+                                                        data-bs-placement="bottom"
+                                                        title="Anteile bearbeiten"
+                                                        onclick="handleAddSubscription('{{ product_type_name }}')"
+                                                        class="btn btn-outline-primary">
+                                                    <span class="material-icons">edit</span>
+                                                </button>
+                                            {% else %}
+                                                <button data-bs-toggle="tooltip"
+                                                        data-bs-placement="bottom"
+                                                        title="Aktuell nicht verfügbar"
+                                                        class="btn btn-outline-secondary">
+                                                    <span class="material-icons">add</span>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-footer"
-                                     style="display:flex;
-                                            justify-content:space-between">
-                                    {% with sub_totals|get_value:type|default:0 as sub_total %}
-                                        <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
-                                        </span>
-                                    {% endwith %}
-                                    {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
-                                        <button data-bs-toggle="tooltip"
-                                                data-bs-placement="bottom"
-                                                title="Anteile bearbeiten"
-                                                onclick="handleAddSubscription('{{ type }}')"
-                                                class="btn btn-outline-success mx-1 px-2">
-                                            <span class="material-icons">edit</span>
-                                        </button>
-                                    {% else %}
-                                        <button data-bs-toggle="tooltip"
-                                                data-bs-placement="bottom"
-                                                title="Aktuell nicht verfügbar"
-                                                class="btn btn-outline-secondary mx-1 px-2">
-                                            <span class="material-icons">add</span>
-                                        </button>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            {% endwith %}
                         {% endfor %}
+                        {% if subscriptionAutomaticRenewal %}
+                            <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
+                                <span class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             <div id="member-detail-middle-column">
-                <div id="member-pickup-location" class="card">
-                    <h5 class="card-header d-flex justify-content-between align-items-center">
-                        {% translate "Abholung" %}
-                        <button class="btn tapir-btn btn-outline-primary"
-                                {% if lock_functions %}disabled="disabled"{% endif %}
-                                onclick="FormModal.load(`{% url 'wirgarten:member_pickup_location_choice' object.pk %}`, 'Abholort ändern')">
-                            <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                        </button>
-                    </h5>
-                    <div class="card-body">
-                        <div style="overflow-y: scroll; max-height: 30em;">
-                            {% include 'wirgarten/member/member_deliveries_table.html' with member=object deliveries=deliveries hide_info=True %}
-                        </div>
-                    </div>
-                </div>
+                <span id="delivery_list_card"
+                      data-member-id="{{ object.pk }}"
+                      data-jokers-enabled="{{ jokersEnabled }}"
+                      data-pickup-location-modal-url="{% url 'wirgarten:member_pickup_location_choice' object.pk %}">
+                    <span class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                </span>
                 <div class="card">
                     <a href="{% url 'wirgarten:member_payments' object.pk %}"
                        style="text-decoration:none;
@@ -173,175 +188,178 @@
                 </div>
             </div>
             <div id="member-detail-right-column">
-                <div class="card">
-                    <div class="row g-0">
-                        <h5 class="card-header  d-flex justify-content-between align-items-center">
-                            Bei Fragen wende dich gerne an:
-                            <a class="btn tapir-btn btn-warning"
-                               target="_blank"
-                               href="{{ 'wirgarten.site.faq_link' | parameter }}">
-                                <span class="material-icons">link</span>{% translate 'Zum FAQ' %}
-                            </a>
-                        </h5>
-                        <div class="col-md-8">
-                            <div class="card-body">
-                                <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
-                                <br />
-                                <br />
-                                <a class="card-text"
-                                   style="text-decoration:none;
-                                          color:inherit"
-                                   href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
-                                   target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
-                                <br />
-                                <a class="card-text"
-                                   style="text-decoration:none;
-                                          color:inherit"
-                                   href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
-                                   target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
+                <div class="row">
+                    <div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5>Bei Fragen wende dich gerne an:</h5>
+                                    <a class="btn tapir-btn btn-warning"
+                                       target="_blank"
+                                       href="{{ 'wirgarten.site.faq_link' | parameter }}">
+                                        <span class="material-icons">link</span>{% translate 'Zum FAQ' %}
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <img src="{{ 'wirgarten.site.admin_image'|parameter }}"
-                                 class="card-img"
-                                 alt="{{ 'wirgarten.site.admin_name'|parameter }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="member-personal-data"
-                 class="card"
-                 style="margin-bottom:1em;
-                        margin-top:1em">
-                <h5 class="card-header d-flex justify-content-between align-items-center">
-                    {% translate "Persönliche Daten" %}
-                    <button class="btn tapir-btn btn-outline-primary"
-                            onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
-                            id="tapir_user_edit_button">
-                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                    </button>
-                </h5>
-                <div class="card-body">
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
-                        <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
-                    </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
-                        {% if email_change_request %}
-                            <div class="col-8" id="tapir_user_changed_email">
-                                <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
-                                <br />
-                                <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span class="badge bg-danger">Nicht verifiziert</span></span>
+                            <div class="card-body" style="padding-right: 0">
+                                <div class="d-flex flex-row">
+                                    <div class="d-flex flex-column">
+                                        <strong class="card-title">{{ 'wirgarten.site.admin_name'|parameter }}</strong>
+                                        <a class="card-text"
+                                           style="text-decoration:none;
+                                                  color:inherit"
+                                           href="tel:{{ 'wirgarten.site.admin_telephone'|parameter }}"
+                                           target="_blank">📞&nbsp;&nbsp;{{ 'wirgarten.site.admin_telephone'|parameter }}</a>
+                                        <a class="card-text"
+                                           style="text-decoration:none;
+                                                  color:inherit"
+                                           href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
+                                           target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
+                                    </div>
+                                    <img src="{{ 'wirgarten.site.admin_image'|parameter }}"
+                                         class="card-img"
+                                         alt="{{ 'wirgarten.site.admin_name'|parameter }}">
+                                </div>
                             </div>
-                        {% else %}
-                            <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
-                        <div class="col-8" id="tapir_user_phone_number">
-                            {% if object.phone_number %}
-                                {{ object.phone_number|format_phone_number }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
-                        <div class="col-8" id="tapir_user_birthdate">
-                            {% if object.birthdate %}
-                                {{ object.birthdate|format_date }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
-                        <div class="col-8" id="tapir_user_address">
-                            {% if object.street and object.city %}
-                                {{ object.get_display_address }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if object.pk == request.user.pk %}
-                        <div>
-                            <hr />
-                            <a style="float: right"
-                               class="btn tapir-btn btn-outline-primary ms-1"
-                               href="{% url 'password_change' %}"><span class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div id="member-payment-data" class="card">
-                <h5 class="card-header d-flex justify-content-between align-items-center">
-                    {% translate "Bankverbindung" %}
-                    <button class="btn tapir-btn btn-outline-primary"
-                            {% if lock_functions %}disabled="disabled"{% endif %}
-                            onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
-                        <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
-                    </button>
-                </h5>
-                <div class="card-body">
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
-                        <div class="col-8" id="tapir_user_account_owner">
-                            {% if object.account_owner %}
-                                {{ object.account_owner }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row m-1">
-                        <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
-                        <div class="col-8" id="tapir_user_iban">
-                            {% if object.iban %}
-                                {{ object.iban }}
-                            {% else %}
-                                <span class="text-danger">{% translate "Missing" %}</span>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% if object.is_in_coop_trial %}
-            <div class="modal fade" id="cannotOrderMoreSharesModal" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5">Probezeit</h1>
-                            <button type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+        <div id="member-personal-data"
+             class="card"
+             style="margin-bottom:1em;
+                    margin-top:1em">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Persönliche Daten" %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        onclick="FormModal.load(`{% url 'wirgarten:member_edit' object.pk %}`, 'Persönliche Daten ändern')"
+                        id="tapir_user_edit_button">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+            </h5>
+            <div class="card-body">
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Name" %}:</div>
+                    <div class="col-8" id="tapir_user_display_name">{{ object.get_display_name }}</div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Email" %}:</div>
+                    {% if email_change_request %}
+                        <div class="col-8" id="tapir_user_changed_email">
+                            <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
+                            <br />
+                            <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span class="badge bg-danger">Nicht verifiziert</span></span>
                         </div>
-                        <div class="modal-body">
-                            Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
-                        </div>
+                    {% else %}
+                        <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
+                    {% endif %}
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Telefon" %}:</div>
+                    <div class="col-8" id="tapir_user_phone_number">
+                        {% if object.phone_number %}
+                            {{ object.phone_number|format_phone_number }}
+                        {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Geburtsdatum" %}:</div>
+                    <div class="col-8" id="tapir_user_birthdate">
+                        {% if object.birthdate %}
+                            {{ object.birthdate|format_date }}
+                        {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Adresse" %}:</div>
+                    <div class="col-8" id="tapir_user_address">
+                        {% if object.street and object.city %}
+                            {{ object.get_display_address }}
+                        {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if object.pk == request.user.pk %}
+                    <div>
+                        <hr />
+                        <a style="float: right"
+                           class="btn tapir-btn btn-outline-primary ms-1"
+                           href="{% url 'password_change' %}"><span class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div id="member-payment-data" class="card">
+            <h5 class="card-header d-flex justify-content-between align-items-center">
+                {% translate "Bankverbindung" %}
+                <button class="btn tapir-btn btn-outline-primary"
+                        {% if lock_functions %}disabled="disabled"{% endif %}
+                        onclick="FormModal.load('{% url 'wirgarten:member_edit_payment_details' object.pk %}', 'Bankverbindung ändern')">
+                    <span class="material-icons">edit</span>{% translate 'Bearbeiten' %}
+                </button>
+            </h5>
+            <div class="card-body">
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "Kontoinhaber" %}:</div>
+                    <div class="col-8" id="tapir_user_account_owner">
+                        {% if object.account_owner %}
+                            {{ object.account_owner }}
+                        {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row m-1">
+                    <div class="col-4 fw-bold text-end">{% translate "IBAN" %}:</div>
+                    <div class="col-8" id="tapir_user_iban">
+                        {% if object.iban %}
+                            {{ object.iban }}
+                        {% else %}
+                            <span class="text-danger">{% translate "Missing" %}</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        {% endif %}
-        {% if perms.accounts.manage %}
-            <hr />
-            {% user_log_entry_list object %}
-            <script>
+        </div>
+    </div>
+    {% if object.is_in_coop_trial %}
+        <div class="modal fade" id="cannotOrderMoreSharesModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Probezeit</h1>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der
+                        Genossenschaft geworden bist
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if perms.accounts.manage %}
+        <hr />
+        {% user_log_entry_list object %}
+        <script>
                 const handleOpenEmail = (subject, contentUrl) => {
                     ConfirmationModal.open('Email "' + subject + '"', `<iframe style="height:75vh" width="100%" height="100%" src="${contentUrl}" />`)
                 }
-            </script>
-        {% endif %}
-        <script>
+        </script>
+    {% endif %}
+    <script>
             const handleAddSubscription = (productType, waitlist = false) => {
                 {% if object.iban and object.pickup_location %}
                     FormModal.load(`{% url 'wirgarten:member_add_subscription' object.pk %}?productType=` + productType, waitlist ? "Warteliste" : productType + ' bearbeiten');
@@ -358,7 +376,8 @@
                             'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning'
                         {% endif %})
                 {% else %}
-                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br />- Bitte trage deine Bankverbindung ein.{% endif %}")
+                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>
+                        {% if not object.iban %}<br />-Bitte trage deine Bankverbindung ein.{% endif %}")
                 {% endif %}
             }
 
@@ -366,6 +385,6 @@
                 FormModal.load(`{% url 'wirgarten:member_cancel_trial' object.pk %}`, 'Verträge kündigen')
             }
 
-        </script>
-    {% endwith %}
+    </script>
+{% endwith %}
 {% endblock content %}

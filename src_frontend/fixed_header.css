@@ -1,0 +1,11 @@
+.fixed_header tbody {
+    display: block;
+    overflow: auto;
+    max-height: 200px;
+}
+
+.fixed_header thead, .fixed_header tbody tr, .fixed_header tfoot {
+    display: table;
+    width: 100%;
+    table-layout: fixed; /* even columns width , fix width of table too*/
+}

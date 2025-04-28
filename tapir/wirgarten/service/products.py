@@ -1,14 +1,16 @@
 from datetime import date
 from decimal import Decimal
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Q
 
 from tapir.configuration.models import TapirParameter
-from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Payable,
@@ -19,7 +21,8 @@ from tapir.wirgarten.models import (
     Subscription,
     TaxRate,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -27,7 +30,7 @@ from tapir.wirgarten.validators import (
 )
 
 
-def get_total_price_for_subs(subs: List[Payable]) -> float:
+def get_total_price_for_subs(subs: List[Payable], cache: Dict) -> float:
     """
     Returns the total amount of one payment for the given list of subs.
 
@@ -37,41 +40,10 @@ def get_total_price_for_subs(subs: List[Payable]) -> float:
     if not subs:
         return 0
 
-    return round(sum([x.total_price() for x in subs]), 2)
+    return round(sum([x.total_price(cache=cache) for x in subs]), 2)
 
 
-def product_type_order_by(id_field: str = "id", name_field: str = "name"):
-    """
-    The result of the function is meant to be passed to the order_by clause of QuerySets referencing
-    (directly or indirectly) product types.
-    The base product type which is configured via parameter is the first result. In case the parameter is not there,
-    only the name field will be used to order.
-
-    It is basically a workaround to use this order by condition in a static way,
-    although it depends on the parameter to be there.
-
-    :param id_field: name/path of the "id" field. E.g. "product_type__id"
-    :param name_field: name/path of the "name" field. E.g. "product_type__name"
-    :return: an array of order conditions
-    """
-
-    try:
-        return [
-            Case(
-                When(
-                    **{id_field: get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)},
-                    then=Value(0),
-                ),
-                default=1,
-                output_field=IntegerField(),
-            ),
-            name_field,
-        ]
-    except BaseException:
-        return [name_field]
-
-
-def get_active_product_types(reference_date: date = None) -> iter:
+def get_active_product_types(reference_date: date = None, cache: Dict = None) -> iter:
     """
     Returns the product types which are active for the given reference date.
 
@@ -79,48 +51,79 @@ def get_active_product_types(reference_date: date = None) -> iter:
     :return: the QuerySet of ProductTypes filtered for the given reference date
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    return ProductType.objects.filter(
-        id__in=ProductCapacity.objects.filter(
-            period__start_date__lte=reference_date, period__end_date__gte=reference_date
-        ).values("product_type__id")
-    ).order_by(*product_type_order_by())
+    def compute():
+        return ProductType.objects.filter(
+            id__in=ProductCapacity.objects.filter(
+                period__start_date__lte=reference_date,
+                period__end_date__gte=reference_date,
+            ).values("product_type__id")
+        ).order_by(*product_type_order_by(cache=cache))
+
+    active_product_types_by_date_cache = get_from_cache_or_compute(
+        cache, "active_product_types_by_date", lambda: {}
+    )
+
+    return get_from_cache_or_compute(
+        active_product_types_by_date_cache, reference_date, compute
+    )
 
 
-def get_available_product_types(reference_date: date = None) -> list:
+def get_available_product_types(
+    reference_date: date = None, cache: Dict = None
+) -> list:
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    product_types = get_active_product_types(reference_date)
+    product_types = get_active_product_types(reference_date, cache=cache)
     return [p for p in product_types if is_product_type_available(p, reference_date)]
 
 
 def get_next_growing_period(
-    reference_date: date = None,
+    reference_date: date = None, cache: Dict = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    return (
-        GrowingPeriod.objects.filter(start_date__gt=reference_date)
-        .order_by("start_date")
-        .first()
+    def compute():
+        return (
+            GrowingPeriod.objects.filter(start_date__gt=reference_date)
+            .order_by("start_date")
+            .first()
+        )
+
+    next_growing_periods_by_date_cache = get_from_cache_or_compute(
+        cache, "next_growing_periods_by_date", lambda: {}
+    )
+
+    return get_from_cache_or_compute(
+        next_growing_periods_by_date_cache, reference_date, compute
     )
 
 
 def get_current_growing_period(
-    reference_date: date = None,
+    reference_date: date = None, cache: Dict | None = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
         reference_date = get_today()
 
-    return (
-        GrowingPeriod.objects.filter(
-            start_date__lte=reference_date, end_date__gte=reference_date
+    def compute():
+        growing_periods = get_from_cache_or_compute(
+            cache,
+            "all_growing_periods",
+            lambda: set(GrowingPeriod.objects.order_by("start_date")),
         )
-        .order_by("start_date")
-        .first()
+        for growing_period in growing_periods:
+            if growing_period.start_date <= reference_date <= growing_period.end_date:
+                return growing_period
+        return None
+
+    growing_periods_by_date_cache = get_from_cache_or_compute(
+        cache, "growing_periods_by_date", lambda: {}
+    )
+    return get_from_cache_or_compute(
+        growing_periods_by_date_cache, reference_date, compute
     )
 
 
@@ -189,7 +192,7 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
     return True
 
 
-def get_active_product_capacities(reference_date: date = None):
+def get_active_product_capacities(reference_date: date = None, cache: Dict = None):
     """
     Gets the active product capacities for the given reference date.
 
@@ -197,14 +200,26 @@ def get_active_product_capacities(reference_date: date = None):
     :return: queryset of active product capacities
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
-    return ProductCapacity.objects.filter(
-        period__start_date__lte=reference_date, period__end_date__gte=reference_date
-    ).order_by(*product_type_order_by("product_type_id", "product_type__name"))
+    def compute():
+        return ProductCapacity.objects.filter(
+            period__start_date__lte=reference_date, period__end_date__gte=reference_date
+        ).order_by(
+            *product_type_order_by("product_type_id", "product_type__name", cache=cache)
+        )
+
+    active_product_capacities_by_date_cache = get_from_cache_or_compute(
+        cache, "active_product_capacities_by_date", lambda: {}
+    )
+    return get_from_cache_or_compute(
+        active_product_capacities_by_date_cache, reference_date, compute
+    )
 
 
-def get_future_subscriptions(reference_date: date = None):
+def get_active_and_future_subscriptions(
+    reference_date: date = None, cache: Dict | None = None
+):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
 
@@ -212,14 +227,23 @@ def get_future_subscriptions(reference_date: date = None):
     :return: queryset of active and future subscriptions
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache)
 
-    return Subscription.objects.filter(end_date__gte=reference_date).order_by(
-        *product_type_order_by("product__type_id", "product__type__name")
+    def compute():
+        filters = Q(end_date__gte=reference_date) | Q(end_date__isnull=True)
+        return Subscription.objects.filter(filters).order_by(
+            *product_type_order_by("product__type_id", "product__type__name", cache)
+        )
+
+    active_and_future_subscriptions_by_date_cache = get_from_cache_or_compute(
+        cache, "active_and_future_subscriptions_by_date", lambda: {}
+    )
+    return get_from_cache_or_compute(
+        active_and_future_subscriptions_by_date_cache, reference_date, compute
     )
 
 
-def get_active_subscriptions(reference_date: date = None):
+def get_active_subscriptions(reference_date: date = None, cache: Dict | None = None):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
@@ -227,10 +251,18 @@ def get_active_subscriptions(reference_date: date = None):
     :return: queryset of active subscription
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache)
 
-    return get_future_subscriptions(reference_date).filter(
-        start_date__lte=reference_date
+    def compute():
+        return get_active_and_future_subscriptions(reference_date, cache).filter(
+            start_date__lte=reference_date
+        )
+
+    active_subscriptions_by_date_cache = get_from_cache_or_compute(
+        cache, "active_subscriptions_by_date", lambda: {}
+    )
+    return get_from_cache_or_compute(
+        active_subscriptions_by_date_cache, reference_date, compute
     )
 
 
@@ -261,7 +293,11 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
     return product
 
 
-def get_product_price(product: str | Product, reference_date: date = None):
+def get_product_price(
+    product: str | Product,
+    reference_date: date = None,
+    cache: Dict | None = None,
+):
     """
     Returns the currently active product price.
 
@@ -270,17 +306,26 @@ def get_product_price(product: str | Product, reference_date: date = None):
     :return: the ProductPrice instance
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache)
     if isinstance(product, Product):
         product = product.id
 
-    prices = ProductPrice.objects.filter(product_id=product).order_by("-valid_from")
+    cache_for_this_product = get_from_cache_or_compute(cache, product, lambda: {})
+    price_by_date_cache = get_from_cache_or_compute(
+        cache_for_this_product, "price_by_date", lambda: {}
+    )
 
-    # If there's only one price, return it
-    if prices.count() == 1:
-        return prices.first()
-    # Otherwise, return the price valid up to the reference date
-    return prices.filter(valid_from__lte=reference_date).first()
+    def get_price():
+        prices = list(TapirCache.get_product_prices_by_product_id(cache, product))
+        if len(prices) == 1:
+            return prices[0]
+        prices.sort(key=lambda p: p.valid_from, reverse=True)
+        for price in prices:
+            if price.valid_from <= reference_date:
+                return price
+        return None
+
+    return get_from_cache_or_compute(price_by_date_cache, reference_date, get_price)
 
 
 @transaction.atomic
@@ -381,6 +426,10 @@ def create_product_type_capacity(
     default_tax_rate: float,
     capacity: Decimal,
     period_id: str,
+    notice_period_duration: int,
+    is_affected_by_jokers: bool,
+    is_association_membership: bool,
+    must_be_subscribed_to: bool,
     product_type_id: str = "",
 ):
     """
@@ -402,6 +451,9 @@ def create_product_type_capacity(
         pt.contract_link = contract_link
         pt.icon_link = icon_link
         pt.single_subscription_only = single_subscription_only
+        pt.is_affected_by_jokers = is_affected_by_jokers
+        pt.is_association_membership = is_association_membership
+        pt.must_be_subscribed_to = must_be_subscribed_to
         pt.save()
     else:
         pt = ProductType.objects.create(
@@ -410,11 +462,14 @@ def create_product_type_capacity(
             contract_link=contract_link,
             icon_link=icon_link,
             single_subscription_only=single_subscription_only,
+            is_affected_by_jokers=is_affected_by_jokers,
+            is_association_membership=is_association_membership,
+            must_be_subscribed_to=must_be_subscribed_to,
         )
-        if not ProductType.objects.exists():
-            TapirParameter.objects.filter(name=Parameter.COOP_BASE_PRODUCT_TYPE).update(
-                value=pt.id
-            )
+        if not ProductType.objects.exclude(id=pt.id).exists():
+            TapirParameter.objects.filter(
+                name=ParameterKeys.COOP_BASE_PRODUCT_TYPE
+            ).update(value=pt.id)
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)
@@ -423,6 +478,12 @@ def create_product_type_capacity(
         product_type_id=pt.id,
         tax_rate=default_tax_rate,
         tax_rate_change_date=today if period.start_date < today else period.start_date,
+    )
+
+    NoticePeriodManager.set_notice_period_duration(
+        product_type=pt,
+        growing_period=period,
+        notice_period_duration=notice_period_duration,
     )
 
     # capacity
@@ -444,6 +505,10 @@ def update_product_type_capacity(
     default_tax_rate: float,
     capacity: Decimal,
     tax_rate_change_date: date,
+    is_affected_by_jokers: bool,
+    notice_period_duration: int,
+    must_be_subscribed_to: bool,
+    is_association_membership: bool,
 ):
     """
     Updates the product type and the capacity for the given period.
@@ -457,20 +522,29 @@ def update_product_type_capacity(
     """
 
     # capacity
-    cp = ProductCapacity.objects.get(id=id_)
-    cp.capacity = capacity
-    cp.save()
+    product_capacity = ProductCapacity.objects.get(id=id_)
+    product_capacity.capacity = capacity
+    product_capacity.save()
 
-    cp.product_type.name = name
-    cp.product_type.contract_link = contract_link
-    cp.product_type.icon_link = icon_link
-    cp.product_type.single_subscription_only = single_subscription_only
-    cp.product_type.delivery_cycle = delivery_cycle
-    cp.product_type.save()
+    product_capacity.product_type.name = name
+    product_capacity.product_type.contract_link = contract_link
+    product_capacity.product_type.icon_link = icon_link
+    product_capacity.product_type.single_subscription_only = single_subscription_only
+    product_capacity.product_type.delivery_cycle = delivery_cycle
+    product_capacity.product_type.is_affected_by_jokers = is_affected_by_jokers
+    product_capacity.product_type.must_be_subscribed_to = must_be_subscribed_to
+    product_capacity.product_type.is_association_membership = is_association_membership
+    product_capacity.product_type.save()
+
+    NoticePeriodManager.set_notice_period_duration(
+        product_type=product_capacity.product_type,
+        growing_period=product_capacity.period,
+        notice_period_duration=notice_period_duration,
+    )
 
     # tax rate
     create_or_update_default_tax_rate(
-        product_type_id=cp.product_type.id,
+        product_type_id=product_capacity.product_type.id,
         tax_rate=default_tax_rate,
         tax_rate_change_date=tax_rate_change_date,
     )
@@ -535,13 +609,17 @@ def create_or_update_default_tax_rate(
         )
 
 
-def get_free_product_capacity(product_type_id: str, reference_date: date = None):
+def get_free_product_capacity(
+    product_type_id: str,
+    reference_date: date = None,
+    cache: Dict | None = None,
+):
     if reference_date is None:
         reference_date = get_today()
 
-    active_product_capacities = get_active_product_capacities(reference_date).filter(
-        product_type_id=product_type_id
-    )
+    active_product_capacities = get_active_product_capacities(
+        reference_date, cache=cache
+    ).filter(product_type_id=product_type_id)
 
     if not active_product_capacities.exists():
         return 0
@@ -549,9 +627,11 @@ def get_free_product_capacity(product_type_id: str, reference_date: date = None)
     total_capacity = float(active_product_capacities.first().capacity)
     used_capacity = sum(
         map(
-            lambda sub: float(get_product_price(sub.product, reference_date).size)
+            lambda sub: float(
+                get_product_price(sub.product_id, reference_date, cache=cache).size
+            )
             * sub.quantity,
-            get_active_subscriptions(reference_date).filter(
+            get_active_subscriptions(reference_date, cache=cache).filter(
                 product__type_id=product_type_id
             ),
         )
@@ -569,7 +649,7 @@ def get_smallest_product_size(
         product_type = product_type.id
 
     products = Product.objects.filter(type__id=product_type)
-    if products.count() == 0:
+    if not products.exists():
         raise ObjectDoesNotExist("No products found")
 
     all_prices = ProductPrice.objects.filter(product__type__id=product_type)
@@ -592,7 +672,9 @@ def get_smallest_product_size(
 
 
 def is_product_type_available(
-    product_type: ProductType | str, reference_date: date = None
+    product_type: ProductType | str,
+    reference_date: date = None,
+    cache: Dict | None = None,
 ) -> bool:
     if reference_date is None:
         reference_date = get_today()
@@ -604,5 +686,7 @@ def is_product_type_available(
         return False
 
     return get_free_product_capacity(
-        product_type_id=product_type, reference_date=reference_date
+        product_type_id=product_type,
+        reference_date=reference_date,
+        cache=cache,
     ) >= get_smallest_product_size(product_type, reference_date)

@@ -4,12 +4,16 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import Product, ProductType
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
 from tapir.wirgarten.service.products import get_product_price
+from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
 class SummaryForm(forms.Form):
@@ -17,7 +21,8 @@ class SummaryForm(forms.Form):
         return True
 
     def __init__(self, *args, **kwargs):
-        super(SummaryForm, self).__init__(*args, **kwargs)
+        self.cache = kwargs.pop("cache", {})
+        super().__init__(*args, **kwargs)
         initial = kwargs["initial"]
 
         start_date = initial["general"]["start_date"]
@@ -27,13 +32,13 @@ class SummaryForm(forms.Form):
         self.harvest_shares = dict()
         self.harvest_shares_info = dict()
 
-        base_type = ProductType.objects.get(
-            id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
         )
 
         harvest_share_products = {
             f"{BASE_PRODUCT_FIELD_PREFIX}{p.name}": p
-            for p in list(Product.objects.filter(deleted=False, type=base_type))
+            for p in list(Product.objects.filter(deleted=False, type=base_product_type))
         }
 
         for key, val in initial["base_product"].items():
@@ -43,7 +48,9 @@ class SummaryForm(forms.Form):
                     "price": "{:.2f}".format(
                         get_product_price(harvest_share_products[key], start_date).price
                     ),
-                    "name": _(harvest_share_products[key].name + "-" + base_type.name),
+                    "name": _(
+                        harvest_share_products[key].name + "-" + base_product_type.name
+                    ),
                 }
             else:
                 self.harvest_shares_info[key] = val
@@ -76,7 +83,7 @@ class SummaryForm(forms.Form):
         self.harvest_shares_info["end_date"] = end_date
 
         self.harvest_shares_info["delivery_interval"] = DeliveryCycleDict[
-            base_type.delivery_cycle
+            base_product_type.delivery_cycle
         ]
 
         self.harvest_shares_info["has_shares"] = harvest_shares_total > 0
@@ -97,7 +104,9 @@ class SummaryForm(forms.Form):
             delivery_date_offset = pl.delivery_date_offset
 
         self.harvest_shares_info["first_delivery_date"] = (
-            get_next_delivery_date_for_product_type(base_type, start_date)
+            get_next_delivery_date_for_product_type(
+                base_product_type, start_date, cache=self.cache
+            )
             + relativedelta(days=delivery_date_offset)
         )
 
@@ -111,7 +120,9 @@ class SummaryForm(forms.Form):
             "amount": coop_shares_amount,
             "price": "{:.2f}".format(coop_share_price),
             "total": "{:.2f}".format(coop_share_price * coop_shares_amount),
-            "statute_link": get_parameter_value(Parameter.COOP_STATUTE_LINK),
+            "statute_link": get_parameter_value(
+                ParameterKeys.COOP_STATUTE_LINK, cache=self.cache
+            ),
         }
 
         chicken_shares_type = ProductType.objects.get(name="Hühneranteile")
@@ -123,7 +134,7 @@ class SummaryForm(forms.Form):
                     chicken_shares_type.delivery_cycle
                 ],
                 "first_delivery_date": get_next_delivery_date_for_product_type(
-                    chicken_shares_type, start_date
+                    chicken_shares_type, start_date, cache=self.cache
                 )
                 + relativedelta(days=delivery_date_offset),
             }
@@ -176,3 +187,5 @@ class SummaryForm(forms.Form):
         self.has_additional_shares = self.harvest_shares_info["has_shares"] and (
             self.chicken_shares_info["has_shares"] or self.bestellcoop["sign_up"]
         )
+
+        self.show_cooperative_content = legal_status_is_cooperative(cache=self.cache)

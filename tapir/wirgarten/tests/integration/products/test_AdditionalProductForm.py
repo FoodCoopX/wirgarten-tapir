@@ -1,8 +1,12 @@
 import datetime
+from unittest.mock import patch
 
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
 from tapir.wirgarten.models import (
     ProductType,
     GrowingPeriod,
@@ -10,7 +14,8 @@ from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
 )
-from tapir.wirgarten.parameters import ParameterDefinitions, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     ProductFactory,
     ProductPriceFactory,
@@ -44,7 +49,7 @@ class TestAdditionalProductForm(TapirIntegrationTest):
         base_product = ProductFactory.create()
         base_product_type = ProductType.objects.get()
         GrowingPeriodFactory.create()
-        TapirParameter.objects.filter(key=Parameter.COOP_BASE_PRODUCT_TYPE).update(
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=base_product_type.id
         )
         additional_product: Product = ProductFactory.create()
@@ -108,3 +113,39 @@ class TestAdditionalProductForm(TapirIntegrationTest):
             product=additional_product.id
         ).first()
         self.assertIsNone(new_subscription)
+
+    def test_additionalProductForm_memberDoesntHaveBaseProductSubscriptionButSettingAllowIt_subscriptionNotCreated(
+        self,
+    ):
+        member = self.create_member_and_login()
+        [_, additional_product] = self.create_additional_product()
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+        ).update(value=True)
+
+        response = self.try_to_order_additional_product(member, additional_product)
+
+        self.assertStatusCode(response, 200)
+        new_subscription = Subscription.objects.filter(
+            product=additional_product.id
+        ).first()
+        self.assertIsNotNone(new_subscription)
+        self.assertEqual(new_subscription.quantity, 3)
+
+    @patch.object(SubscriptionChangeValidator, "validate_single_subscription")
+    @patch.object(SubscriptionChangeValidator, "validate_must_be_subscribed_to")
+    @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
+    def test_additionalProductForm_default_validationCalled(self, *validation_mocks):
+        member = self.create_member_and_login()
+        [base_product, additional_product] = self.create_additional_product()
+        SubscriptionFactory.create(
+            member=member, period=GrowingPeriod.objects.get(), product=base_product
+        )
+
+        response = self.try_to_order_additional_product(member, additional_product)
+
+        self.assertStatusCode(response, 200)
+        for mock in validation_mocks:
+            mock.assert_called_once()

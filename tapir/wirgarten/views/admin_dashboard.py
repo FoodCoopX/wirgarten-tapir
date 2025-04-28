@@ -12,18 +12,20 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.services.base_product_type_service import (
+    BaseProductTypeService,
+)
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
     Product,
-    ProductType,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
@@ -33,14 +35,19 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
-    get_active_subscriptions,
     get_current_growing_period,
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
     get_free_product_capacity,
 )
-from tapir.wirgarten.utils import format_currency, format_date, get_today
+from tapir.wirgarten.utils import (
+    format_currency,
+    format_date,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 @require_GET
@@ -66,23 +73,30 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/admin_dashboard.html"
     permission_required = "coop.view"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        current_growing_period = get_current_growing_period()
+        current_growing_period = get_current_growing_period(cache=self.cache)
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
 
-        base_product_id = get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-        try:
-            self.harvest_share_type = ProductType.objects.get(id=base_product_id)
-        except ProductType.DoesNotExist:
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
+        if base_product_type is None:
             context["no_base_product_type"] = True
             return context
+        self.harvest_share_type = base_product_type
 
-        next_contract_start_date = get_next_contract_start_date()
-        next_growing_period = get_next_growing_period(next_contract_start_date)
+        next_contract_start_date = get_next_contract_start_date(cache=self.cache)
+        next_growing_period = get_next_growing_period(
+            next_contract_start_date, cache=self.cache
+        )
 
         context["next_contract_start_date"] = next_contract_start_date
         context["next_period_start_date"] = (
@@ -90,16 +104,17 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         )
 
         self.add_capacity_chart_context(
-            context, base_product_id, next_contract_start_date
+            context, base_product_type.id, next_contract_start_date
         )
         if next_growing_period:
             self.add_capacity_chart_context(
-                context, base_product_id, next_growing_period.start_date, "next"
+                context, base_product_type.id, next_growing_period.start_date, "next"
             )
         self.add_traffic_source_questionaire_chart_context(context)
         self.add_cancellation_chart_context(context)
         self.add_cancellation_reasons_chart_context(context)
         self.add_cancelled_coop_shares_context(context)
+        self.add_cancelled_association_memberships_context(context)
 
         context["active_members"] = len(
             list(filter(lambda x: x.coop_shares_quantity > 0, Member.objects.all()))
@@ -138,13 +153,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             get_automatically_calculated_solidarity_excess()
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
-            Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
+            ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache
         )
         context["status_negative_soli_price_allowed"] = get_parameter_value(
-            Parameter.HARVEST_NEGATIVE_SOLIPRICE_ENABLED
+            ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=self.cache
         )
 
-        today = get_today()
+        today = get_today(cache=self.cache)
         (
             context["harvest_share_variants_data"],
             context["harvest_share_variants_labels"],
@@ -156,6 +171,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             )
         )
 
+        context["show_cooperative_content"] = legal_status_is_cooperative(
+            cache=self.cache
+        )
+        context["show_association_content"] = legal_status_is_association(
+            cache=self.cache
+        )
+
         return context
 
     def add_cancelled_coop_shares_context(self, context):
@@ -164,7 +186,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             for c in (
                 CoopShareTransaction.objects.filter(
                     transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
-                    valid_at__gte=get_today(),
+                    valid_at__gte=get_today(cache=self.cache),
                 )
                 .annotate(year=ExtractYear("valid_at"))
                 .values("year")
@@ -175,9 +197,25 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         context["cancelled_coop_shares_labels"] = list(cancellations.keys())
         context["cancelled_coop_shares_data"] = list(cancellations.values())
 
+    def add_cancelled_association_memberships_context(self, context):
+        cancellations_per_year = {}
+        for cancelled_membership in Subscription.objects.filter(
+            product__type__is_association_membership=True, end_date__isnull=False
+        ).order_by("end_date"):
+            if cancelled_membership.end_date.year not in cancellations_per_year.keys():
+                cancellations_per_year[cancelled_membership.end_date.year] = 0
+            cancellations_per_year[cancelled_membership.end_date.year] += 1
+
+        context["cancelled_association_memberships_labels"] = list(
+            cancellations_per_year.keys()
+        )
+        context["cancelled_association_memberships_data"] = list(
+            cancellations_per_year.values()
+        )
+
     def add_cancellation_reasons_chart_context(self, context):
         qs = QuestionaireCancellationReasonResponse.objects.filter(
-            timestamp__gte=get_today() + relativedelta(day=1, years=-1)
+            timestamp__gte=get_today(cache=self.cache) + relativedelta(day=1, years=-1)
         )
         total = qs.count()
         if total == 0:
@@ -204,7 +242,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancellation_chart_context(self, context):
         month_labels = [
-            get_today() + relativedelta(day=1, months=-i + 1) for i in range(13)
+            get_today(cache=self.cache) + relativedelta(day=1, months=-i + 1)
+            for i in range(13)
         ][::-1]
 
         cancellations_data = [
@@ -252,14 +291,12 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         prefix="current",
     ):
         if reference_date is None:
-            reference_date = get_next_contract_start_date()
+            reference_date = get_next_contract_start_date(cache=self.cache)
 
         active_product_capacities = {
-            c.product_type.id: c for c in get_active_product_capacities(reference_date)
+            c.product_type.id: c
+            for c in get_active_product_capacities(reference_date, cache=self.cache)
         }
-        active_subscriptions = get_active_subscriptions(reference_date).order_by(
-            "-product__type"
-        )
 
         KEY_CAPACITY_LINKS = prefix + "_capacity_links"
         KEY_CAPACITY_LABELS = prefix + "_capacity_labels"
@@ -284,7 +321,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 float(product_capacity.capacity) or 1
             )  # "or 1" to avoid a division by 0
 
-            free_capacity = get_free_product_capacity(product_type.id, reference_date)
+            free_capacity = get_free_product_capacity(
+                product_type.id, reference_date, cache=self.cache
+            )
             used_capacity = total_capacity - free_capacity
 
             context[KEY_USED_CAPACITY].append(used_capacity / total_capacity * 100)
@@ -297,7 +336,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             ).first()
 
             base_share_size = float(
-                get_product_price(base_product, reference_date).size
+                get_product_price(base_product, reference_date, cache=self.cache).size
             )
 
             free_share_count = round(free_capacity / base_share_size, 2)
@@ -317,7 +356,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_traffic_source_questionaire_chart_context(self, context):
         month_labels = [
-            get_today() + relativedelta(day=1, months=-i) for i in range(13)
+            get_today(cache=self.cache) + relativedelta(day=1, months=-i)
+            for i in range(13)
         ][::-1]
 
         # Create an additional queryset for "No Response"
@@ -401,12 +441,13 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def get_contract_distribution_chart_data(self, context):
         contract_types = {
-            pt["name"]: 0 for pt in get_active_product_types().values("name")
+            pt["name"]: 0
+            for pt in get_active_product_types(cache=self.cache).values("name")
         }
         contract_types.update(
             {
                 x["product__type__name"]: x["member_count"]
-                for x in get_future_subscriptions()
+                for x in get_active_and_future_subscriptions(cache=self.cache)
                 .values("product__type__name")
                 .annotate(member_count=Count("member_id", distinct=True))
                 .order_by("-member_count")

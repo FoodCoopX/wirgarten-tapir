@@ -1,11 +1,12 @@
 from django import template
-from django.db.models import Sum
+from django.core.handlers.wsgi import WSGIRequest
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
 from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
+from tapir.wirgarten.utils import is_debug_instance
 
 register = template.Library()
 
@@ -49,6 +50,12 @@ def add_admin_links(groups, request):
         material_icon="event_repeat",
         url=reverse_lazy("wirgarten:jobs"),
     )
+    if is_debug_instance():
+        debug_group.add_link(
+            display_name=_("Test data"),
+            material_icon="reset_wrench",
+            url=reverse_lazy("utils:reset_test_data"),
+        )
 
     admin_group = SidebarLinkGroup(name=_("Administration"))
     admin_group.add_link(
@@ -64,7 +71,7 @@ def add_admin_links(groups, request):
         )
     if request.user.has_perm(Permission.Products.VIEW):
         admin_group.add_link(
-            display_name=_("Anbauperiode & Produkte"),
+            display_name=_("Vertragsperiode & Produkte"),
             material_icon="agriculture",
             url=reverse_lazy("wirgarten:product"),
         )
@@ -87,6 +94,18 @@ def add_admin_links(groups, request):
             display_name=_("Lastschrift"),
             material_icon="account_balance",
             url=reverse_lazy("wirgarten:payment_transactions"),
+        )
+
+    if request.user.has_perm(Permission.Coop.MANAGE):
+        admin_group.add_link(
+            display_name=_("CSV-Exports"),
+            material_icon="attach_file",
+            url=reverse_lazy("generic_exports:csv_export_editor"),
+        )
+        admin_group.add_link(
+            display_name=_("PDF-Exports"),
+            material_icon="attach_file",
+            url=reverse_lazy("generic_exports:pdf_export_editor"),
         )
 
     if request.user.has_perm(Permission.Accounts.VIEW):
@@ -130,3 +149,16 @@ def add_admin_links(groups, request):
     groups.append(admin_group)
 
     groups.append(debug_group)
+
+
+@register.inclusion_tag(
+    "core/tags/javascript_environment_variables.html", takes_context=True
+)
+def javascript_environment_variables(context):
+    request: WSGIRequest = context["request"]
+    api_root = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}"
+    if request.get_host() == "localhost":
+        api_root = f"{api_root}:8000"
+    return {
+        "env_vars": {"REACT_APP_API_ROOT": api_root},
+    }

@@ -5,8 +5,8 @@ from formtools.wizard.views import StepsHelper
 
 from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import Product
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import (
-    Parameter,
     ParameterDefinitions,
 )
 from tapir.wirgarten.tests.factories import (
@@ -29,9 +29,9 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
 
     def create_growing_period_with_one_subscription(self, year: int):
         self.product: Product = ProductFactory.create()
-        param = TapirParameter.objects.get(pk=Parameter.COOP_BASE_PRODUCT_TYPE)
-        param.value = self.product.type.id
-        param.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=self.product.type.id
+        )
 
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=year, month=1, day=1),

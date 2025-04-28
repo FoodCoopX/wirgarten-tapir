@@ -2,155 +2,223 @@
 {% load django_bootstrap5 %}
 {% load wirgarten %}
 {% load tapir_static %}
-
 {% block content %}
-<div style="margin-top: 1em">
-    <div class="card">
-        <div class="card-header">
-            <h4>Neue Zeichnungen</h4>
-        </div>
-        <div style="height: calc(100vh - 12.5em);">
-            <ul class="nav nav-tabs" id="myTab" role="tablist"
-                style="margin:1em; width: calc(100% - 2em);  display: grid; grid-template-columns: 1fr 1fr 1fr; grid-gap: 1em"
-            >
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="new_harvest_and_coop_shares-tab" data-bs-toggle="tab"
-                            data-bs-target="#new_harvest_and_coop_shares"
-                            type="button"
-                            role="tab" aria-controls="new_harvest_and_coop_shares" aria-selected="true"
-                            style="width: 100%"
-                    >Neue Ernte & Geno-Anteile&nbsp;&nbsp;<span
-                            class="badge bg-primary"
-                    >{{new_harvest_and_coop_shares|length}}</span>&nbsp;&nbsp;<span
-                            id="new_harvest_and_coop_shares-selected-badge"
-                            class="badge bg-success" style="display:hidden"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="new_coop_shares-tab" data-bs-toggle="tab"
-                            data-bs-target="#new_coop_shares"
-                            type="button" style="width: 100%"
-                            role="tab" aria-controls="new_coop_shares" aria-selected="false">Neue Geno-Anteile&nbsp;&nbsp;<span
-                            class="badge bg-primary">{{new_coop_shares|length}}</span>&nbsp;&nbsp;<span
-                            id="new_coop_shares-selected-badge"
-                            class="badge bg-success" style="display:hidden"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="new_additional_shares-tab" data-bs-toggle="tab"
-                            data-bs-target="#new_additional_shares"
-                            type="button" style="width: 100%"
-                            role="tab" aria-controls="new_additional_shares" aria-selected="false">Neue Zusatzanteile&nbsp;&nbsp;<span
-                            class="badge bg-primary">{{new_additional_shares|length}}</span>&nbsp;&nbsp;<span
-                            id="new_additional_shares-selected-badge"
-                            class="badge bg-success" style="display:hidden"></span>
-                    </button>
-                </li>
-            </ul>
-            <div class="tab-content" id="myTabContent" style="overflow-y: scroll; height: 72vh;">
-                <div class="tab-pane fade show active" id="new_harvest_and_coop_shares" role="tabpanel"
-                     aria-labelledby="new_harvest_and_coop_shares-tab">
-                    <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
-                        <thead class="sticky-top" style="background: #FFFFFF;">
-                        <tr>
-                            <td><input type="checkbox" id="checkall-new_harvest_and_coop_shares"
-                                       onchange="handleAllCheckboxes('new_harvest_and_coop_shares', this.checked)">
-                            </td>
-                            <th>Name</th>
-                            <th>Erntevertrag</th>
-                            <th>Geno-Anteile</th>
-                            <th>Zeitpunkt</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for contract in new_harvest_and_coop_shares %}
-                        <tr id="tr-new_harvest_and_coop_shares-{{contract.id}}" class="tr-href" href="#"
-                            onclick="handleCheckbox('new_harvest_and_coop_shares', '{{contract.id}}')">
-                            <td><input id="input-new_harvest_and_coop_shares-{{contract.id}}"
-                                       class="input-new_harvest_and_coop_shares"
-                                       onchange="handleCheckbox('new_harvest_and_coop_shares', '{{contract.id}}')"
-                                       type="checkbox"/></td>
-                            <td>{{contract.member}}</td>
-                            <td>{{contract}}</td>
-                            <td>
-                                {% for share in new_coop_shares %}
-                                {% if share.member == contract.member and share.timestamp|date:"Y-m-d" == contract.created_at|date:"Y-m-d" and share.valid_at > contract.start_date%}
-                                {{share.total_price}} € ({{share.quantity}} Anteile)<br/>
-                                {% endif %}
+    <div style="margin-top: 1em">
+        <div class="card">
+            <div class="card-header">
+                <h4>Neue Zeichnungen</h4>
+            </div>
+            <div style="height: calc(100vh - 12.5em);">
+                <ul class="nav nav-tabs"
+                    id="myTab"
+                    role="tablist"
+                    style="margin:1em;
+                           width: calc(100% - 2em);
+                           display: grid;
+                           grid-template-columns: 1fr 1fr 1fr;
+                           grid-gap: 1em">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                                id="new_harvest_and_coop_shares-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#new_harvest_and_coop_shares"
+                                type="button"
+                                role="tab"
+                                aria-controls="new_harvest_and_coop_shares"
+                                aria-selected="true"
+                                style="width: 100%">
+                            {% if show_cooperative_content %}
+                                Neue Ernte & Geno-Anteile
+                            {% else %}
+                                Neue Ernteanteile
+                            {% endif %}
+                            &nbsp;&nbsp;<span class="badge bg-primary">{{ new_harvest_and_coop_shares|length }}</span>&nbsp;&nbsp;<span id="new_harvest_and_coop_shares-selected-badge"
+      class="badge bg-success"
+      style="display:hidden"></span>
+                        </button>
+                    </li>
+                    {% if show_cooperative_content %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="new_coop_shares-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#new_coop_shares"
+                                    type="button"
+                                    style="width: 100%"
+                                    role="tab"
+                                    aria-controls="new_coop_shares"
+                                    aria-selected="false">
+                                Neue Geno-Anteile&nbsp;&nbsp;<span class="badge bg-primary">{{ new_coop_shares|length }}</span>&nbsp;&nbsp;<span id="new_coop_shares-selected-badge"
+      class="badge bg-success"
+      style="display:hidden"></span>
+                            </button>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="new_additional_shares-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#new_additional_shares"
+                                type="button"
+                                style="width: 100%"
+                                role="tab"
+                                aria-controls="new_additional_shares"
+                                aria-selected="false">
+                            Neue Zusatzanteile&nbsp;&nbsp;<span class="badge bg-primary">{{ new_additional_shares|length }}</span>&nbsp;&nbsp;<span id="new_additional_shares-selected-badge"
+      class="badge bg-success"
+      style="display:hidden"></span>
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content"
+                     id="myTabContent"
+                     style="overflow-y: scroll;
+                            height: 72vh">
+                    <div class="tab-pane fade show active"
+                         id="new_harvest_and_coop_shares"
+                         role="tabpanel"
+                         aria-labelledby="new_harvest_and_coop_shares-tab">
+                        <table class="table"
+                               aria-label="Liste"
+                               style="margin:1em;
+                                      width: calc(100% - 2em)">
+                            <thead class="sticky-top" style="background: #FFFFFF;">
+                                <tr>
+                                    <td>
+                                        <input type="checkbox"
+                                               id="checkall-new_harvest_and_coop_shares"
+                                               onchange="handleAllCheckboxes('new_harvest_and_coop_shares', this.checked)">
+                                    </td>
+                                    <th>Name</th>
+                                    <th>Erntevertrag</th>
+                                    {% if show_cooperative_content %}<th>Geno-Anteile</th>{% endif %}
+                                    <th>Zeitpunkt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in new_harvest_and_coop_shares %}
+                                    <tr id="tr-new_harvest_and_coop_shares-{{ contract.id }}"
+                                        class="tr-href"
+                                        href="#"
+                                        onclick="handleCheckbox('new_harvest_and_coop_shares', '{{ contract.id }}')">
+                                        <td>
+                                            <input id="input-new_harvest_and_coop_shares-{{ contract.id }}"
+                                                   class="input-new_harvest_and_coop_shares"
+                                                   onchange="handleCheckbox('new_harvest_and_coop_shares', '{{ contract.id }}')"
+                                                   type="checkbox" />
+                                        </td>
+                                        <td>{{ contract.member }}</td>
+                                        <td>{{ contract }}</td>
+                                        {% if show_cooperative_content %}
+                                            <td>
+                                                {% for share in new_coop_shares %}
+                                                    {% if share.member == contract.member and share.timestamp|date:"Y-m-d" == contract.created_at|date:"Y-m-d" and share.valid_at > contract.start_date %}
+                                                        {{ share.total_price }} € ({{ share.quantity }} Anteile)
+                                                        <br />
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                        {% endif %}
+                                        <td>{{ contract.created_at|format_date }}</td>
+                                    </tr>
                                 {% endfor %}
-                            </td>
-                            <td>{{contract.created_at|format_date}}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="new_coop_shares" role="tabpanel" aria-labelledby="new_coop_shares-tab">
-                    <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
-                        <thead class="sticky-top" style="background: #FFFFFF;">
-                        <tr>
-                            <td><input type="checkbox" id="checkall-new_coop_shares"
-                                       onchange="handleAllCheckboxes('new_coop_shares', this.checked)">
-                            </td>
-                            <th>Name</th>
-                            <th>Geno-Anteile</th>
-                            <th>Zeitpunkt</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for contract in new_coop_shares %}
-                        <tr id="tr-new_coop_shares-{{contract.id}}" class="tr-href" href="#"
-                            onclick="handleCheckbox('new_coop_shares', '{{contract.id}}')">
-                            <td><input id="input-new_coop_shares-{{contract.id}}"
-                                       class="input-new_coop_shares"
-                                       onchange="handleCheckbox('new_coop_shares', '{{contract.id}}')"
-                                       type="checkbox"/></td>
-                            <td>{{contract.member}}</td>
-                            <td>{{contract.total_price}} € ({{contract.quantity}} Anteile)</td>
-                            <td>{{contract.timestamp}}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="tab-pane fade" id="new_additional_shares" role="tabpanel"
-                     aria-labelledby="new_additional_shares-tab">
-                    <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
-                        <thead class="sticky-top" style="background: #FFFFFF;">
-                        <tr>
-                            <td><input type="checkbox" id="checkall-new_additional_shares"
-                                       onchange="handleAllCheckboxes('new_additional_shares', this.checked)">
-                            </td>
-                            <th>Name</th>
-                            <th>Zusatzvertrag</th>
-                            <th>Zeitpunkt</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for contract in new_additional_shares %}
-                        <tr id="tr-new_additional_shares-{{contract.id}}" class="tr-href" href="#"
-                            onclick="handleCheckbox('new_additional_shares', '{{contract.id}}')">
-                            <td><input id="input-new_additional_shares-{{contract.id}}"
-                                       class="input-new_additional_shares"
-                                       onchange="handleCheckbox('new_additional_shares', '{{contract.id}}')"
-                                       type="checkbox"/></td>
-                            <td>{{contract.member}}</td>
-                            <td>{{contract}}</td>
-                            <td>{{contract.created_at}}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if show_cooperative_content %}
+                        <div class="tab-pane fade"
+                             id="new_coop_shares"
+                             role="tabpanel"
+                             aria-labelledby="new_coop_shares-tab">
+                            <table class="table"
+                                   aria-label="Liste"
+                                   style="margin:1em;
+                                          width: calc(100% - 2em)">
+                                <thead class="sticky-top" style="background: #FFFFFF;">
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox"
+                                                   id="checkall-new_coop_shares"
+                                                   onchange="handleAllCheckboxes('new_coop_shares', this.checked)">
+                                        </td>
+                                        <th>Name</th>
+                                        <th>Geno-Anteile</th>
+                                        <th>Zeitpunkt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in new_coop_shares %}
+                                        <tr id="tr-new_coop_shares-{{ contract.id }}"
+                                            class="tr-href"
+                                            href="#"
+                                            onclick="handleCheckbox('new_coop_shares', '{{ contract.id }}')">
+                                            <td>
+                                                <input id="input-new_coop_shares-{{ contract.id }}"
+                                                       class="input-new_coop_shares"
+                                                       onchange="handleCheckbox('new_coop_shares', '{{ contract.id }}')"
+                                                       type="checkbox" />
+                                            </td>
+                                            <td>{{ contract.member }}</td>
+                                            <td>{{ contract.total_price }} € ({{ contract.quantity }} Anteile)</td>
+                                            <td>{{ contract.timestamp }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    <div class="tab-pane fade"
+                         id="new_additional_shares"
+                         role="tabpanel"
+                         aria-labelledby="new_additional_shares-tab">
+                        <table class="table"
+                               aria-label="Liste"
+                               style="margin:1em;
+                                      width: calc(100% - 2em)">
+                            <thead class="sticky-top" style="background: #FFFFFF;">
+                                <tr>
+                                    <td>
+                                        <input type="checkbox"
+                                               id="checkall-new_additional_shares"
+                                               onchange="handleAllCheckboxes('new_additional_shares', this.checked)">
+                                    </td>
+                                    <th>Name</th>
+                                    <th>Zusatzvertrag</th>
+                                    <th>Zeitpunkt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contract in new_additional_shares %}
+                                    <tr id="tr-new_additional_shares-{{ contract.id }}"
+                                        class="tr-href"
+                                        href="#"
+                                        onclick="handleCheckbox('new_additional_shares', '{{ contract.id }}')">
+                                        <td>
+                                            <input id="input-new_additional_shares-{{ contract.id }}"
+                                                   class="input-new_additional_shares"
+                                                   onchange="handleCheckbox('new_additional_shares', '{{ contract.id }}')"
+                                                   type="checkbox" />
+                                        </td>
+                                        <td>{{ contract.member }}</td>
+                                        <td>{{ contract }}</td>
+                                        <td>{{ contract.created_at }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="card-footer">
-            <button id="confirmBtn" style="float:right" class="btn tapir-btn btn-success" disabled="disabled"
-                    onclick="handleCheckButton()">
-                <span class="material-icons">check</span>Ausgewählte Zeichnungen geprüft
-            </button>
+            <div class="card-footer">
+                <button id="confirmBtn"
+                        style="float:right"
+                        class="btn tapir-btn btn-success"
+                        disabled="disabled"
+                        onclick="handleCheckButton()">
+                    <span class="material-icons">check</span>Ausgewählte Zeichnungen geprüft
+                </button>
+            </div>
         </div>
     </div>
-</div>
-<script src="{% static 'wirgarten/js/new_contracts_overview.js' %}"></script>
+    <script src="{% static 'wirgarten/js/new_contracts_overview.js' %}"></script>
 {% endblock %}

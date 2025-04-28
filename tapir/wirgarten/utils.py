@@ -1,12 +1,18 @@
 import datetime
 from decimal import Decimal
+from typing import Dict
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
 from django.utils import timezone
+from tapir_mail.service.shortcuts import make_timezone_aware
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.is_debug_instance import is_debug_instance
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 def format_date(value: datetime.date | datetime.datetime) -> str:
@@ -38,13 +44,43 @@ def check_permission_or_self(pk, request):
         raise PermissionDenied
 
 
-def get_today() -> datetime.date:
+def get_today(cache: Dict | None = None) -> datetime.date:
+    if is_debug_instance():
+        return get_debug_now(cache).date()
     return timezone.localdate()
 
 
-def get_now() -> datetime.datetime:
+def get_now(cache: Dict | None = None) -> datetime.datetime:
+    if is_debug_instance():
+        return get_debug_now(cache)
     return timezone.now()
+
+
+def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
+    date_as_string = get_parameter_value(ParameterKeys.TESTS_OVERRIDE_DATE, cache)
+    if date_as_string == "disabled":
+        return timezone.now()
+
+    try:
+        now = datetime.datetime.fromisoformat(date_as_string)
+        return make_timezone_aware(now)
+    except ValueError:
+        return timezone.now()
 
 
 def format_subscription_list_html(subs):
     return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
+
+
+def legal_status_is_cooperative(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COOPERATIVE
+    )
+
+
+def legal_status_is_association(cache):
+    return (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_ASSOCIATION
+    )
