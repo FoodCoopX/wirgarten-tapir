@@ -200,7 +200,9 @@ def get_product_type_capacity_edit_form(request, **kwargs):
             is_affected_by_jokers=form.cleaned_data["is_affected_by_jokers"],
             notice_period_duration=form.cleaned_data["notice_period"],
             must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
-            is_association_membership=form.cleaned_data["is_association_membership"],
+            is_association_membership=form.cleaned_data.get(
+                "is_association_membership", False
+            ),
         ),
         redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
         **kwargs,
@@ -224,7 +226,9 @@ def get_product_type_capacity_add_form(request, **kwargs):
             product_type_id=form.cleaned_data["product_type"],
             notice_period_duration=form.cleaned_data["notice_period"],
             must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
-            is_association_membership=form.cleaned_data["is_association_membership"],
+            is_association_membership=form.cleaned_data.get(
+                "is_association_membership", False
+            ),
         )
 
     def redirect_url(data):
