@@ -137,6 +137,7 @@ class ProductGenerator:
                 single_subscription_only=True,
                 subscriptions_have_end_dates=False,
                 must_be_subscribed_to=True,
+                is_association_membership=True,
             )
             TaxRate.objects.create(
                 product_type=association_membership,

@@ -17,7 +17,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, legal_status_is_association
 from tapir.wirgarten.validators import (
     validate_date_range,
     validate_growing_period_overlap,
@@ -156,6 +156,17 @@ class ProductTypeForm(forms.Form):
                 else False
             ),
         )
+
+        if legal_status_is_association(cache=cache):
+            self.fields["is_association_membership"] = forms.BooleanField(
+                required=False,
+                label=_("Repräsentiert Vereinsmitgliedschaften"),
+                initial=(
+                    product_type.is_association_membership
+                    if product_type is not None
+                    else False
+                ),
+            )
 
 
 class ProductForm(forms.Form):

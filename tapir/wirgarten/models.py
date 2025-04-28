@@ -185,6 +185,9 @@ class ProductType(TapirModel):
             "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
         ),
     )
+    is_association_membership = models.BooleanField(
+        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:

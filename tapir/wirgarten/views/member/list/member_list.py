@@ -18,7 +18,7 @@ from django_filters import (
 from django_filters.views import FilterView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
@@ -236,6 +236,12 @@ class MemberListView(PermissionRequiredMixin, FilterView):
                 ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
             )
             == LEGAL_STATUS_COOPERATIVE
+        )
+        context["show_association_content"] = (
+            get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+            )
+            == LEGAL_STATUS_ASSOCIATION
         )
         return context
 
