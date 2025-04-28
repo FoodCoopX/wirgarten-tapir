@@ -12,7 +12,6 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -42,7 +41,13 @@ from tapir.wirgarten.service.products import (
     get_product_price,
     get_free_product_capacity,
 )
-from tapir.wirgarten.utils import format_currency, format_date, get_today
+from tapir.wirgarten.utils import (
+    format_currency,
+    format_date,
+    get_today,
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 
 @require_GET
@@ -109,6 +114,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         self.add_cancellation_chart_context(context)
         self.add_cancellation_reasons_chart_context(context)
         self.add_cancelled_coop_shares_context(context)
+        self.add_cancelled_association_memberships_context(context)
 
         context["active_members"] = len(
             list(filter(lambda x: x.coop_shares_quantity > 0, Member.objects.all()))
@@ -165,11 +171,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             )
         )
 
-        context["show_cooperative_content"] = (
-            get_parameter_value(
-                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
-            )
-            == LEGAL_STATUS_COOPERATIVE
+        context["show_cooperative_content"] = legal_status_is_cooperative(
+            cache=self.cache
+        )
+        context["show_association_content"] = legal_status_is_association(
+            cache=self.cache
         )
 
         return context
@@ -190,6 +196,22 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         }
         context["cancelled_coop_shares_labels"] = list(cancellations.keys())
         context["cancelled_coop_shares_data"] = list(cancellations.values())
+
+    def add_cancelled_association_memberships_context(self, context):
+        cancellations_per_year = {}
+        for cancelled_membership in Subscription.objects.filter(
+            product__type__is_association_membership=True, end_date__isnull=False
+        ).order_by("end_date"):
+            if cancelled_membership.end_date.year not in cancellations_per_year.keys():
+                cancellations_per_year[cancelled_membership.end_date.year] = 0
+            cancellations_per_year[cancelled_membership.end_date.year] += 1
+
+        context["cancelled_association_memberships_labels"] = list(
+            cancellations_per_year.keys()
+        )
+        context["cancelled_association_memberships_data"] = list(
+            cancellations_per_year.values()
+        )
 
     def add_cancellation_reasons_chart_context(self, context):
         qs = QuestionaireCancellationReasonResponse.objects.filter(

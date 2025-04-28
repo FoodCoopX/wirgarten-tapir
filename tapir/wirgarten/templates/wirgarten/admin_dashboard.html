@@ -167,6 +167,31 @@
                     </div>
                 </div>
             {% endif %}
+            {% if show_association_content %}
+                <div class="dashboard-section-heading">
+                    <hr />
+                    Daten des Vereins
+                </div>
+                <div class="dashboard-tile card clickable"
+                     style="grid-area: span 1 / span 2">
+                    <a href="{% url 'wirgarten:member_list' %}">
+                        <div class="card-body">
+                            <div class="dashboard-tile-number">
+                                <strong>{{ active_members }}</strong>
+                                <span class="material-icons">groups</span>
+                            </div>
+                            <small><strong>Mitglieder</strong></small>
+                        </div>
+                    </a>
+                </div>
+                <div class="dashboard-tile card harvest-share-variants-tile"
+                     style="grid-area: span 2 / span 4">
+                    <div class="card-body">
+                        <h4>Gekündigtes Mitgliedschaften pro Jahr (Anzahl)</h4>
+                        <canvas style="max-height:20em" id="cancellation-association_memberships"></canvas>
+                    </div>
+                </div>
+            {% endif %}
             <div class="dashboard-section-heading">
                 <hr />
                 Statusanzeigen
@@ -498,6 +523,32 @@
       }
     },
   }
+  });
+
+  new Chart(document.getElementById('cancellation-association_memberships'), {
+      type: 'bar',
+      data: {
+          labels: {{ cancelled_association_memberships_labels | safe}},
+          datasets: [{
+              label: "Gekündigte Mitgliedschaften pro Jahr (Anzahl)",
+              data: {{ cancelled_association_memberships_data | safe}},
+              backgroundColor: COLORS.reverse()
+          }]
+      },
+      options: {
+          scales: {
+              x: {
+                  ticks: {
+                      autoSkip: false,
+                      callback: function (value, index) {
+                          const maxLength = 18;
+                          const labels = this.chart.data.labels;
+                          return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
+                      }
+                  }
+              }
+          },
+      }
   });
 
         </script>
