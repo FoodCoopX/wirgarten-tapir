@@ -20,6 +20,8 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_wirgarten()
             case Organization.BIOTOP:
                 cls.generate_pickup_locations_for_biotop()
+            case Organization.VEREIN:
+                cls.generate_pickup_locations_for_biotop()
             case _:
                 raise ImproperlyConfigured(f"Unknown organization: {organization}")
 

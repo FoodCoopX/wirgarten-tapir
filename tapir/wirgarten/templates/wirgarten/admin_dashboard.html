@@ -131,63 +131,92 @@
                     <h3 id="cashflow-loading">Loading...</h3>
                 </div>
             </div>
-            <div class="dashboard-section-heading">
-                <hr />
-                Daten der Genossenschaft
-            </div>
-            <div class="dashboard-tile card clickable"
-                 style="grid-area: span 1 / span 2">
-                <a href="{% url 'wirgarten:member_list' %}">
+            {% if show_cooperative_content %}
+                <div class="dashboard-section-heading">
+                    <hr />
+                    Daten der Genossenschaft
+                </div>
+                <div class="dashboard-tile card clickable"
+                     style="grid-area: span 1 / span 2">
+                    <a href="{% url 'wirgarten:member_list' %}">
+                        <div class="card-body">
+                            <div class="dashboard-tile-number">
+                                <strong>{{ active_members }}</strong>
+                                <span class="material-icons">groups</span>
+                            </div>
+                            <small><strong>Mitglieder</strong></small>
+                        </div>
+                    </a>
+                </div>
+                <div class="dashboard-tile card harvest-share-variants-tile"
+                     style="grid-area: span 2 / span 4">
+                    <div class="card-body">
+                        <h4>Gekündigtes Geschäftsguthaben</h4>
+                        <canvas style="max-height:20em" id="cancellation-coop-shares"></canvas>
+                    </div>
+                </div>
+                <div class="dashboard-tile card next-payment-tile"
+                     style="grid-area: span 1 / span 2">
                     <div class="card-body">
                         <div class="dashboard-tile-number">
-                            <strong>{{ active_members }}</strong>
-                            <span class="material-icons">groups</span>
+                            <strong>{{ coop_shares_value }}</strong> €
                         </div>
-                        <small><strong>Mitglieder</strong></small>
+                        <small><strong>Geschäftsguthaben</strong>
+                            <br />
+                        (gesamt)</small>
                     </div>
-                </a>
-            </div>
-            <div class="dashboard-tile card harvest-share-variants-tile"
-                 style="grid-area: span 2 / span 4">
-                <div class="card-body">
-                    <h4>Gekündigtes Geschäftsguthaben</h4>
-                    <canvas style="max-height:20em" id="cancellation-coop-shares"></canvas>
                 </div>
-            </div>
-            <div class="dashboard-tile card next-payment-tile"
-                 style="grid-area: span 1 / span 2">
-                <div class="card-body">
-                    <div class="dashboard-tile-number">
-                        <strong>{{ coop_shares_value }}</strong> €
+            {% endif %}
+            {% if show_association_content %}
+                <div class="dashboard-section-heading">
+                    <hr />
+                    Daten des Vereins
+                </div>
+                <div class="dashboard-tile card clickable"
+                     style="grid-area: span 1 / span 2">
+                    <a href="{% url 'wirgarten:member_list' %}">
+                        <div class="card-body">
+                            <div class="dashboard-tile-number">
+                                <strong>{{ active_members }}</strong>
+                                <span class="material-icons">groups</span>
+                            </div>
+                            <small><strong>Mitglieder</strong></small>
+                        </div>
+                    </a>
+                </div>
+                <div class="dashboard-tile card harvest-share-variants-tile"
+                     style="grid-area: span 2 / span 4">
+                    <div class="card-body">
+                        <h4>Gekündigtes Mitgliedschaften pro Jahr (Anzahl)</h4>
+                        <canvas style="max-height:20em" id="cancellation-association_memberships"></canvas>
                     </div>
-                    <small><strong>Geschäftsguthaben</strong>
-                        <br />
-                    (gesamt)</small>
                 </div>
-            </div>
+            {% endif %}
             <div class="dashboard-section-heading">
                 <hr />
                 Statusanzeigen
             </div>
-            <div class="dashboard-tile card clickable">
-                <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
-                    <div class="card-body">
-                        {% if status_seperate_coop_shares %}
-                            <div class="dashboard-tile-status positive">
-                                <span class="material-icons">task_alt</span>
-                            </div>
-                        {% else %}
-                            <div class="dashboard-tile-status negative">
-                                <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
-                            </div>
-                        {% endif %}
-                        <small><strong>Geno-Anteile</strong>
-                            <br />
-                            {% if not status_seperate_coop_shares %}<strong>nicht</strong>{% endif %}
-                        separat zeichenbar</small>
-                    </div>
-                </a>
-            </div>
+            {% if show_cooperative_content %}
+                <div class="dashboard-tile card clickable">
+                    <a href="{% url 'configuration:parameters' %}?q=wirgarten.coop.shares_independent">
+                        <div class="card-body">
+                            {% if status_seperate_coop_shares %}
+                                <div class="dashboard-tile-status positive">
+                                    <span class="material-icons">task_alt</span>
+                                </div>
+                            {% else %}
+                                <div class="dashboard-tile-status negative">
+                                    <span style="color: var(--bs-danger)" class="material-icons">hide_source</span>
+                                </div>
+                            {% endif %}
+                            <small><strong>Geno-Anteile</strong>
+                                <br />
+                                {% if not status_seperate_coop_shares %}<strong>nicht</strong>{% endif %}
+                            separat zeichenbar</small>
+                        </div>
+                    </a>
+                </div>
+            {% endif %}
             <div class="dashboard-tile card clickable">
                 <a href="{% url 'configuration:parameters' %}?q=wirgarten.harvest.negative_soliprice_enabled">
                     <div class="card-body">
@@ -494,6 +523,32 @@
       }
     },
   }
+  });
+
+  new Chart(document.getElementById('cancellation-association_memberships'), {
+      type: 'bar',
+      data: {
+          labels: {{ cancelled_association_memberships_labels | safe}},
+          datasets: [{
+              label: "Gekündigte Mitgliedschaften pro Jahr (Anzahl)",
+              data: {{ cancelled_association_memberships_data | safe}},
+              backgroundColor: COLORS.reverse()
+          }]
+      },
+      options: {
+          scales: {
+              x: {
+                  ticks: {
+                      autoSkip: false,
+                      callback: function (value, index) {
+                          const maxLength = 18;
+                          const labels = this.chart.data.labels;
+                          return labels[index].length > maxLength ? labels[index].slice(0, maxLength) + "..." : labels[index];
+                      }
+                  }
+              }
+          },
+      }
   });
 
         </script>

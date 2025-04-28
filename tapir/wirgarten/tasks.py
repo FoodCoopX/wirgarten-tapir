@@ -7,6 +7,7 @@ from django.db import transaction, models
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
 from tapir.wirgarten.models import (
     ExportedFile,
@@ -301,14 +302,20 @@ def export_payment_parts_csv(reference_date=None):
             pt, payments_grouped[pt.name] if pt.name in payments_grouped else []
         )
 
-    # export for coop shares
-    coop_share_payments = Payment.objects.filter(
-        transaction__isnull=True, due_date__lte=due_date, type="Genossenschaftsanteile"
-    )
-    export_product_or_coop_payment_csv(
-        False,
-        coop_share_payments,
-    )
+    if (
+        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
+        == LEGAL_STATUS_COOPERATIVE
+    ):
+        # export for coop shares
+        coop_share_payments = Payment.objects.filter(
+            transaction__isnull=True,
+            due_date__lte=due_date,
+            type="Genossenschaftsanteile",
+        )
+        export_product_or_coop_payment_csv(
+            False,
+            coop_share_payments,
+        )
 
 
 @shared_task

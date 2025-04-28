@@ -57,6 +57,9 @@ class GetCancellationDataView(APIView):
             "subscribed_products": self.build_subscribed_products_data(
                 member, cache=cache
             ),
+            "legal_status": get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
+            ),
         }
 
         return Response(

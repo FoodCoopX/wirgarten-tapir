@@ -11,6 +11,11 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import (
+    LEGAL_STATUS_COOPERATIVE,
+    LEGAL_STATUS_OPTIONS,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
@@ -18,6 +23,10 @@ from tapir.subscriptions.config import (
 )
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import (
+    legal_status_is_cooperative,
+    legal_status_is_association,
+)
 
 OPTIONS_WEEKDAYS = [
     (0, _("Montag")),
@@ -32,7 +41,7 @@ OPTIONS_WEEKDAYS = [
 
 class ParameterCategory:
     SITE = "Standort"
-    COOP = "Genossenschaft"
+    BUSINESS = "{{legal_status}}"
     ADDITIONAL_SHARES = "Zusatzabos"
     HARVEST = "Ernteanteile"
     SUPPLIER_LIST = "Lieferantenliste"
@@ -44,6 +53,7 @@ class ParameterCategory:
     JOKERS = "Joker"
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
+    ORGANIZATION = "Organisation"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -174,9 +184,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=2,
             description="Die Mindestanzahl der Genossenschaftsanteile die ein neues Mitglied zeichnen muss.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             order_priority=1000,
-            meta=ParameterMeta(validators=[MinValueValidator(limit_value=0)]),
+            meta=ParameterMeta(
+                validators=[MinValueValidator(limit_value=0)],
+                show_only_when=legal_status_is_cooperative,
+            ),
         )
 
         parameter_definition(
@@ -184,19 +197,44 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/satzung",
-            description="Der Link zur Satzung der Genossenschaft.",
-            category=ParameterCategory.COOP,
+            description="Der Link zur Satzung des Betriebs.",
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(
             key=ParameterKeys.COOP_INFO_LINK,
-            label="Link zu weiteren Infos über die Genossenschaft",
+            label="Link zu weiteren Infos über der Betrieb",
             datatype=TapirParameterDatatype.STRING,
             initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
-            description="Der Link zu weiteren Infos über die Genossenschaft/Mitgliedschaft.",
-            category=ParameterCategory.COOP,
+            description="Der Link zu weiteren Infos über der Betrieb.",
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(validators=[URLValidator()]),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD,
+            label="Kündigungsfrist für die Vereinsmitgliedschaft",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=2,
+            description="",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(show_only_when=legal_status_is_association),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT,
+            label="Einheit der Kündigungsfrist für die Vereinsmitgliedschaft",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob der Feld 'Kündigungsfrist für die Vereinsmitgliedschaft' Monate oder Wochen angibt",
+            category=ParameterCategory.BUSINESS,
+            meta=ParameterMeta(
+                options=NOTICE_PERIOD_UNIT_OPTIONS,
+                show_only_when=legal_status_is_association,
+            ),
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -319,12 +357,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Genossenschaftsanteile sind vom Mitglied separat von Ernteanteilen zeichenbar.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
                 options=[
                     (True, "separat zeichenbar"),
                     (False, "nicht separat zeichenbar"),
-                ]
+                ],
+                show_only_when=legal_status_is_cooperative,
             ),
             order_priority=800,
         )
@@ -485,7 +524,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value=get_default_product_type(),
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
-            category=ParameterCategory.COOP,
+            category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
                 options=[
                     (product_type.id, product_type.name)
@@ -805,6 +844,11 @@ Dein WirGarten-Team""",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=2,
             enabled=is_debug_instance(),
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                )
+            ),
         )
 
         parameter_definition(
@@ -840,6 +884,18 @@ Dein WirGarten-Team""",
             "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=0,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            label="Rechtsform der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=LEGAL_STATUS_COOPERATIVE,
+            description="",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=10,
+            meta=ParameterMeta(options=LEGAL_STATUS_OPTIONS),
+            enabled=is_debug_instance(),
         )
 
         if getattr(settings, "DEBUG", False):

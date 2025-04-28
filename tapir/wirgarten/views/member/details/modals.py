@@ -10,6 +10,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.log.models import TextLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -411,7 +412,8 @@ def get_cancel_trial_form(request, **kwargs):
         cancel_coop = form.is_cancel_coop_selected()
         if cancel_coop:
             TextLogEntry().populate(
-                text="Beitrittserklärung zur Genossenschaft zurückgezogen",
+                text=MembershipTextService.get_membership_text(cache={})
+                + " zurückgezogen",
                 user=form.member,
                 actor=request.user,
             ).save()

@@ -29,7 +29,11 @@ class TapirCache:
             return {
                 subscription
                 for subscription in all_subscriptions
-                if subscription.start_date <= reference_date <= subscription.end_date
+                if subscription.start_date <= reference_date
+                and (
+                    subscription.end_date is None
+                    or reference_date <= subscription.end_date
+                )
             }
 
         subscriptions_by_date = get_from_cache_or_compute(
@@ -154,7 +158,9 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "last_subscription",
-            lambda: Subscription.objects.order_by("end_date").last(),
+            lambda: Subscription.objects.filter(end_date__isnull=False)
+            .order_by("end_date")
+            .last(),
         )
 
     @classmethod

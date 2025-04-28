@@ -121,6 +121,7 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
         .filter(member=member)
         .select_related("product__type")
     )
+
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):
@@ -133,9 +134,11 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
         ]
         active_subs = list(
             filter(
-                lambda subscription: subscription.start_date
-                <= next_delivery_date
-                <= subscription.end_date
+                lambda subscription: subscription.start_date <= next_delivery_date
+                and (
+                    subscription.end_date is None
+                    or next_delivery_date <= subscription.end_date
+                )
                 and subscription.product.type.delivery_cycle
                 in accepted_delivery_cycles,
                 subscriptions,

@@ -11,7 +11,7 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import ProductTypeFactory, GrowingPeriodFactory
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestNoticePeriodManager(TapirIntegrationTest):
@@ -226,3 +226,29 @@ class TestNoticePeriodManager(TapirIntegrationTest):
         result = NoticePeriodManager.get_max_cancellation_date(subscription, cache={})
 
         self.assertEqual(datetime.date(year=2025, month=10, day=17), result)
+
+    def test_getMaxCancellationDateUnitWeeks_subscriptionHasNoEndDate_returnsDateRelativeToToday(
+        self,
+    ):
+        subscription = Mock()
+        subscription.end_date = None
+        mock_timezone(self, datetime.datetime(year=2025, month=4, day=1))
+
+        result = NoticePeriodManager.get_max_cancellation_date_unit_weeks(
+            subscription=subscription, notice_period_duration=4, cache={}
+        )
+
+        self.assertEqual(datetime.date(year=2025, month=4, day=29), result)
+
+    def test_getMaxCancellationDateUnitMonths_subscriptionHasNoEndDate_returnsDateRelativeToToday(
+        self,
+    ):
+        subscription = Mock()
+        subscription.end_date = None
+        mock_timezone(self, datetime.datetime(year=2025, month=4, day=1))
+
+        result = NoticePeriodManager.get_max_cancellation_date_unit_months(
+            subscription=subscription, notice_period_duration=2, cache={}
+        )
+
+        self.assertEqual(datetime.date(year=2025, month=6, day=1), result)

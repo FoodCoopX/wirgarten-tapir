@@ -17,12 +17,15 @@ from django_filters import (
 )
 from django_filters.views import FilterView
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
     MemberPickupLocation,
     PickupLocation,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
@@ -217,6 +220,10 @@ class MemberListView(PermissionRequiredMixin, FilterView):
     paginate_by = 20
     model = Member
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         filter_query = self.request.GET.urlencode()
@@ -224,11 +231,25 @@ class MemberListView(PermissionRequiredMixin, FilterView):
         query_dict.pop("page", None)
         new_query_string = urlencode(query_dict, doseq=True)
         context["filter_query"] = new_query_string
+        context["show_cooperative_content"] = (
+            get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+            )
+            == LEGAL_STATUS_COOPERATIVE
+        )
+        context["show_association_content"] = (
+            get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+            )
+            == LEGAL_STATUS_ASSOCIATION
+        )
         return context
 
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = annotate_member_queryset_with_coop_shares_total_value(queryset)
-        queryset = annotate_member_queryset_with_monthly_payment(queryset, get_today())
+        queryset = annotate_member_queryset_with_monthly_payment(
+            queryset, get_today(cache=self.cache)
+        )
 
         return queryset

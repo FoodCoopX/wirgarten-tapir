@@ -129,24 +129,65 @@ class ProductGenerator:
             product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
         )
 
-        hofpunkt = ProductType.objects.create(
-            name="Hofpunkt",
-            delivery_cycle=NO_DELIVERY[0],
-            is_affected_by_jokers=False,
-            single_subscription_only=True,
-        )
-        TaxRate.objects.create(
-            product_type=hofpunkt,
-            tax_rate=0.07,
-            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
-        )
-        cls.generate_product(
-            product_type=hofpunkt,
-            name="Mitgliedschaft",
-            base_price=3,
-            size=1,
-            base=True,
-        )
+        if organization == Organization.VEREIN:
+            association_membership = ProductType.objects.create(
+                name="Vereinsmitgliedschaft",
+                delivery_cycle=NO_DELIVERY[0],
+                is_affected_by_jokers=False,
+                single_subscription_only=True,
+                subscriptions_have_end_dates=False,
+                must_be_subscribed_to=True,
+                is_association_membership=True,
+            )
+            TaxRate.objects.create(
+                product_type=association_membership,
+                tax_rate=0,
+                valid_from=GrowingPeriod.objects.order_by("start_date")
+                .first()
+                .start_date,
+            )
+            cls.generate_product(
+                product_type=association_membership,
+                name="Typ A",
+                base_price=10,
+                size=1,
+                base=True,
+            )
+            cls.generate_product(
+                product_type=association_membership,
+                name="Typ B",
+                base_price=17.5,
+                size=1,
+                base=False,
+            )
+            cls.generate_product(
+                product_type=association_membership,
+                name="Typ C",
+                base_price=22.5,
+                size=1,
+                base=False,
+            )
+        else:
+            hofpunkt = ProductType.objects.create(
+                name="Hofpunkt",
+                delivery_cycle=NO_DELIVERY[0],
+                is_affected_by_jokers=False,
+                single_subscription_only=True,
+            )
+            TaxRate.objects.create(
+                product_type=hofpunkt,
+                tax_rate=0.07,
+                valid_from=GrowingPeriod.objects.order_by("start_date")
+                .first()
+                .start_date,
+            )
+            cls.generate_product(
+                product_type=hofpunkt,
+                name="Mitgliedschaft",
+                base_price=3,
+                size=1,
+                base=True,
+            )
 
         if organization == Organization.BIOTOP:
             ProductBasketSizeEquivalence.objects.create(

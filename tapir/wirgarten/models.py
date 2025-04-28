@@ -169,6 +169,25 @@ class ProductType(TapirModel):
     is_affected_by_jokers = models.BooleanField(
         default=True, verbose_name=_("Nimmt am Joker-Verfahren teil")
     )
+    subscriptions_have_end_dates = models.BooleanField(
+        default=True,
+        verbose_name=_("Verträge haben ein End-Datum"),
+        help_text=_(
+            "Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent bis sie gekündigt werden und "
+            "haben nicht zwangsläufig ein End-Datum. "
+            "Solche Produkte sind nicht mit Vertragsperiode verbunden."
+        ),
+    )
+    must_be_subscribed_to = models.BooleanField(
+        default=False,
+        verbose_name=_("Muss gezeichnet werden"),
+        help_text=_(
+            "Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen."
+        ),
+    )
+    is_association_membership = models.BooleanField(
+        default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:
@@ -629,10 +648,10 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=False)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=False)
-    period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=False)
+    period = models.ForeignKey(GrowingPeriod, on_delete=models.DO_NOTHING, null=True)
     quantity = models.PositiveSmallIntegerField(null=False)
     start_date = models.DateField(null=False)
-    end_date = models.DateField(null=False)
+    end_date = models.DateField(null=True)
     cancellation_ts = models.DateTimeField(null=True)
     solidarity_price = models.FloatField(default=0.0)
     solidarity_price_absolute = models.DecimalField(
@@ -741,7 +760,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         return self._used_capacity
 
     def clean(self):
-        if self.start_date >= self.end_date:
+        if self.end_date is not None and self.start_date >= self.end_date:
             raise ValidationError({"start_date": "Start date must be before end date."})
 
         if (

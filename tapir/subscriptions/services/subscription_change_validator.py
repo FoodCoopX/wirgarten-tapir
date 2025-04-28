@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Subscription, Member, PickupLocation
+from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.service.products import (
     get_current_growing_period,
     get_product_price,
@@ -35,7 +35,6 @@ class SubscriptionChangeValidator:
         if not cls.should_validate_cannot_reduce_size(
             logged_in_user_is_admin=logged_in_user_is_admin,
             subscription_start_date=subscription_start_date,
-            member_id=member_id,
             cache=cache,
         ):
             return
@@ -72,7 +71,6 @@ class SubscriptionChangeValidator:
         cls,
         logged_in_user_is_admin: bool,
         subscription_start_date: datetime.date,
-        member_id: str,
         cache: Dict,
     ):
         if logged_in_user_is_admin:
@@ -82,15 +80,13 @@ class SubscriptionChangeValidator:
         growing_period = get_current_growing_period(
             subscription_start_date, cache=cache
         )
+
         if not growing_period:
             return False
         if growing_period.start_date > get_today(cache=cache):
             return False
 
-        subscriptions = Subscription.objects.filter(
-            member__id=member_id, period=growing_period
-        )
-        return subscriptions.exists()
+        return True
 
     @classmethod
     def calculate_capacity_used_by_the_ordered_products(
@@ -198,4 +194,48 @@ class SubscriptionChangeValidator:
                 _(
                     "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
                 )
+            )
+
+    @classmethod
+    def validate_must_be_subscribed_to(
+        cls,
+        form: Form,
+        field_prefix: str,
+        product_type: ProductType,
+        cache: Dict,
+    ):
+        if not product_type.must_be_subscribed_to:
+            return
+
+        capacity_used_by_the_ordered_products = (
+            cls.calculate_capacity_used_by_the_ordered_products(
+                form=form,
+                return_capacity_in_euros=False,
+                field_prefix=field_prefix,
+                cache=cache,
+            )
+        )
+
+        if capacity_used_by_the_ordered_products <= 0:
+            raise ValidationError(_("Dieses Produkt ist Pflicht."))
+
+    @classmethod
+    def validate_single_subscription(
+        cls,
+        form: Form,
+        field_prefix: str,
+        product_type: ProductType,
+    ):
+        if not product_type.single_subscription_only:
+            return
+
+        nb_checked = 0
+        for key, checked in form.cleaned_data.items():
+            if not key.startswith(field_prefix) or not checked:
+                continue
+            nb_checked += 1
+
+        if nb_checked > 1:
+            raise ValidationError(
+                _(f"{product_type.name} dürfen nur einmal ausgewählt werden.")
             )

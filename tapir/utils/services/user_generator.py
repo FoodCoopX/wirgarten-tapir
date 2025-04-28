@@ -13,7 +13,6 @@ from tapir.subscriptions.services.base_product_type_service import (
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
-from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.subscription import SOLIDARITY_PRICES
 from tapir.wirgarten.models import (
     Member,
@@ -85,9 +84,13 @@ class UserGenerator:
         ).select_related("type")
         products_from_base_type = [product for product in products_from_base_type]
         additional_products = Product.objects.exclude(
-            type=base_product_type
+            type=base_product_type, type__must_be_subscribed_to=True
         ).select_related("type")
         additional_products = [product for product in additional_products]
+        required_products = [
+            product
+            for product in Product.objects.filter(type__must_be_subscribed_to=True)
+        ]
 
         members_that_need_a_pickup_location = set()
 
@@ -140,6 +143,10 @@ class UserGenerator:
                     additional_products=additional_products,
                 )
                 members_that_need_a_pickup_location.add(member)
+                if len(required_products) > 0:
+                    cls.create_subscription_to_required_products(
+                        member=member, products=required_products, cache=cache
+                    )
 
         cls.link_members_to_pickup_location(members_that_need_a_pickup_location)
         generate_member_numbers(print_results=False)
@@ -161,14 +168,14 @@ class UserGenerator:
         products_from_base_type: List[HarvestShareProduct],
         additional_products: List[Product],
     ):
-        mandate_ref = get_or_create_mandate_ref(member, cache)
-        future_growing_period = cls.get_future_growing_period(cache)
+        mandate_ref = get_or_create_mandate_ref(member, cache=cache)
+        future_growing_period = cls.get_future_growing_period(cache=cache)
         start_date = get_next_contract_start_date(
             cls.get_random_date_in_range_biased_towards_lower_end(
                 member.date_joined.date(), future_growing_period.end_date
             )
         )
-        growing_period = get_current_growing_period(start_date, cache)
+        growing_period = get_current_growing_period(start_date, cache=cache)
         end_date = growing_period.end_date
 
         number_product_subscriptions = random.choices(
@@ -176,7 +183,7 @@ class UserGenerator:
         )[0]
         already_subscribed_products_ids = set()
 
-        previous_growing_period = cls.get_past_growing_period(cache)
+        previous_growing_period = cls.get_past_growing_period(cache=cache)
         current_growing_period = get_current_growing_period(cache=cache)
 
         min_shares = 0
@@ -202,8 +209,8 @@ class UserGenerator:
                 solidarity_price = 0
                 solidarity_price_absolute = random.randrange(-25, 25)
 
-            quantity = random.randint(1, 3)
-            if product.type.delivery_cycle == NO_DELIVERY[0]:
+            quantity = random.choices([1, 2, 3], weights=[20, 1, 1], k=1)[0]
+            if product.type.single_subscription_only:
                 quantity = 1
 
             if not create_subs_for_additional_products:
@@ -238,6 +245,22 @@ class UserGenerator:
                     )
 
         return min_shares
+
+    @classmethod
+    def create_subscription_to_required_products(
+        cls, member: Member, products: List[Product], cache: Dict
+    ):
+        growing_period = get_current_growing_period(cache=cache)
+
+        Subscription.objects.create(
+            member=member,
+            product=random.choice(products),
+            start_date=growing_period.start_date,
+            end_date=None,
+            period=None,
+            quantity=1,
+            mandate_ref=get_or_create_mandate_ref(member, cache=cache),
+        )
 
     @classmethod
     def create_coop_shares_for_user(cls, member: Member, min_shares: int, cache: Dict):

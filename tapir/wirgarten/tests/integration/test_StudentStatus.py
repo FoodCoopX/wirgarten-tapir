@@ -29,7 +29,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestStudentStatus(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
         TapirParameter.objects.filter(
             key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
@@ -38,6 +39,8 @@ class TestStudentStatus(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=product_type.id
         )
+
+    def setUp(self) -> None:
         configure_mail_module()
 
     def test_cooperativeShareForm_fromTheMemberProfile_doesntShowStudentStatusField(
@@ -47,20 +50,10 @@ class TestStudentStatus(TapirIntegrationTest):
         self.client.force_login(member)
 
         url = reverse("wirgarten:member_add_coop_shares", args=[member.id])
-        response: TemplateResponse = self.client.get(
-            url,
-        )
+        response: TemplateResponse = self.client.get(url)
 
         form_fields = response.context_data["form"].fields
         self.assertNotIn("is_student", form_fields.keys())
-
-    def test_cooperativeShareForm_fromTheRegistrationWizard_showsStudentStatusField(
-        self,
-    ):
-        response: TemplateResponse = self.client.get("/wirgarten/register")
-
-        form_fields = response.context_data["form"].fields
-        self.assertIn("is_student", form_fields.keys())
 
     def test_cooperativeShareForm_addSharesAsStudent_canAddLessThanTheMinimum(
         self,

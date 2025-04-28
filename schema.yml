@@ -2910,8 +2910,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductForCancellation'
+        legal_status:
+          $ref: '#/components/schemas/LegalStatusEnum'
       required:
       - can_cancel_coop_membership
+      - legal_status
       - subscribed_products
     CsvExportModel:
       type: object
@@ -3682,6 +3685,16 @@ components:
       - cancellation_limit
       - delivery_date
       - joker
+    LegalStatusEnum:
+      enum:
+      - association
+      - coop
+      - company
+      type: string
+      description: |-
+        * `association` - Verein
+        * `coop` - Genossenschaft
+        * `company` - Einzelunternehmen
     LocaleEnum:
       enum:
       - de_DE.utf-8
@@ -4575,6 +4588,16 @@ components:
         is_affected_by_jokers:
           type: boolean
           title: Nimmt am Joker-Verfahren teil
+        subscriptions_have_end_dates:
+          type: boolean
+          title: Verträge haben ein End-Datum
+          description: Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent
+            bis sie gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche
+            Produkte sind nicht mit Vertragsperiode verbunden.
+        must_be_subscribed_to:
+          type: boolean
+          title: Muss gezeichnet werden
+          description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
       required:
       - name
     RecipientRequest:
@@ -4845,6 +4868,7 @@ components:
         end_date:
           type: string
           format: date
+          nullable: true
         cancellation_ts:
           type: string
           format: date-time
@@ -4888,13 +4912,12 @@ components:
           type: string
         period:
           type: string
+          nullable: true
         mandate_ref:
           type: string
       required:
-      - end_date
       - mandate_ref
       - member
-      - period
       - product
       - quantity
       - start_date

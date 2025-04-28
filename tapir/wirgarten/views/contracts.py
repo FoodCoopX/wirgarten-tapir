@@ -14,6 +14,8 @@ from django.views.generic import TemplateView, View
 from django_filters import BooleanFilter, FilterSet, ModelChoiceFilter, ChoiceFilter
 from django_filters.views import FilterView
 
+from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -28,6 +30,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Subscription,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
 )
@@ -44,6 +47,10 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
     template_name = "wirgarten/subscription/new_contracts_overview.html"
     permission_required = "accounts.view"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -52,8 +59,9 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
         ).order_by("timestamp")
 
-        cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         harvest_shares = Subscription.objects.filter(
             admin_confirmed__isnull=True, product__type=base_product_type
         ).order_by("created_at")
@@ -67,6 +75,14 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
         context["new_harvest_and_coop_shares"] = harvest_shares
         context["new_coop_shares"] = coop_shares
         context["new_additional_shares"] = additional_shares
+
+        context["show_cooperative_content"] = (
+            get_parameter_value(
+                ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=self.cache
+            )
+            == LEGAL_STATUS_COOPERATIVE
+        )
+
         return context
 
 

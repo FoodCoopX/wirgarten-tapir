@@ -394,13 +394,17 @@ class BaseProductForm(forms.Form):
                     self.product_type, self.growing_period, cache=self.cache
                 )
 
+            end_date = self.growing_period.end_date
+            if not product.type.subscriptions_have_end_dates:
+                end_date = None
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
                 period=self.growing_period,
                 quantity=quantity,
                 start_date=self.start_date,
-                end_date=self.growing_period.end_date,
+                end_date=end_date,
                 mandate_ref=mandate_ref,
                 consent_ts=(
                     now
@@ -415,7 +419,7 @@ class BaseProductForm(forms.Form):
             )
 
             self.subscriptions.append(sub)
-
+        self.cache.pop("active_and_future_subscriptions_by_date")
         member = Member.objects.get(id=member_id)
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -559,6 +563,19 @@ class BaseProductForm(forms.Form):
             cache=self.cache,
         )
 
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
+        )
+
         return super().clean()
 
 
@@ -646,11 +663,15 @@ class AdditionalProductForm(forms.Form):
             ]
 
         if self.product_type.single_subscription_only:
-            prod_name = [p for p in self.products.values() if p.base][0].name
-            self.fields[self.field_prefix + prod_name] = forms.BooleanField(
-                required=False,
-                label=_(f"{prod_name} {self.product_type.name}"),
-            )
+            for k, v in self.products.items():
+                self.fields[k] = forms.BooleanField(
+                    required=False,
+                    initial=False,
+                    label=_(
+                        f"{k.replace(self.field_prefix, '')} {self.product_type.name}"
+                    ),
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
+                )
         else:
             for k, v in self.products.items():
                 self.fields[k] = forms.IntegerField(
@@ -776,6 +797,9 @@ class AdditionalProductForm(forms.Form):
                             self.product_type, self.growing_period, cache=self.cache
                         )
                     )
+                end_date = self.growing_period.end_date
+                if not product.type.subscriptions_have_end_dates:
+                    end_date = None
                 self.subscriptions.append(
                     Subscription(
                         member_id=member_id,
@@ -783,7 +807,7 @@ class AdditionalProductForm(forms.Form):
                         quantity=quantity,
                         period=self.growing_period,
                         start_date=self.start_date,
-                        end_date=self.growing_period.end_date,
+                        end_date=end_date,
                         mandate_ref=mandate_ref,
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
@@ -793,6 +817,7 @@ class AdditionalProductForm(forms.Form):
                 )
 
         Subscription.objects.bulk_create(self.subscriptions)
+        self.cache.pop("active_and_future_subscriptions_by_date")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
@@ -904,25 +929,25 @@ class AdditionalProductForm(forms.Form):
                 cache=self.cache
             )
 
-        self.validate_pickup_location(cache=self.cache)
-
-        SubscriptionChangeValidator.validate_pickup_location_capacity(
-            pickup_location=self.get_pickup_location(),
-            form=self,
-            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            subscription_start_date=self.start_date,
-            member=Member.objects.get(id=self.member_id),
-            cache=self.cache,
-        )
-        SubscriptionChangeValidator.validate_cannot_reduce_size(
-            logged_in_user_is_admin=self.is_admin,
-            subscription_start_date=self.start_date,
-            member_id=self.member_id,
-            form=self,
-            field_prefix=self.field_prefix,
-            product_type_id=self.product_type.id,
-            cache=self.cache,
-        )
+        if self.member_id:
+            self.validate_pickup_location(cache=self.cache)
+            SubscriptionChangeValidator.validate_pickup_location_capacity(
+                pickup_location=self.get_pickup_location(),
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                subscription_start_date=self.start_date,
+                member=Member.objects.get(id=self.member_id),
+                cache=self.cache,
+            )
+            SubscriptionChangeValidator.validate_cannot_reduce_size(
+                logged_in_user_is_admin=self.is_admin,
+                subscription_start_date=self.start_date,
+                member_id=self.member_id,
+                form=self,
+                field_prefix=self.field_prefix,
+                product_type_id=self.product_type.id,
+                cache=self.cache,
+            )
         SubscriptionChangeValidator.validate_total_capacity(
             form=self,
             field_prefix=self.field_prefix,
@@ -930,6 +955,17 @@ class AdditionalProductForm(forms.Form):
             member_id=self.member_id,
             subscription_start_date=self.start_date,
             cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=self.field_prefix,
+            product_type=self.product_type,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self, field_prefix=self.field_prefix, product_type=self.product_type
         )
 
         return super().clean()

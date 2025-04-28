@@ -33,8 +33,6 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class DataGenerator:
-    GENERATE_TEST_DATA_FOR = Organization.BIOTOP
-
     @staticmethod
     def clear():
         print("Clearing data...")
@@ -66,11 +64,8 @@ class DataGenerator:
         print("Done")
 
     @classmethod
-    def generate_all(cls, override_generate_test_data_for: Organization | None = None):
+    def generate_all(cls, generate_test_data_for: Organization):
         factory.random.reseed_random("tapir")
-        generate_test_data_for = cls.GENERATE_TEST_DATA_FOR
-        if override_generate_test_data_for:
-            generate_test_data_for = override_generate_test_data_for
 
         cls.generate_growing_periods(generate_test_data_for)
         ProductGenerator.generate_product_data(generate_test_data_for)
@@ -128,7 +123,7 @@ class DataGenerator:
     def get_starting_month_for_growing_period(
         cls, generate_test_data_for: Organization
     ):
-        if generate_test_data_for == Organization.BIOTOP:
+        if generate_test_data_for in [Organization.BIOTOP, Organization.VEREIN]:
             return 1
         if generate_test_data_for == Organization.WIRGARTEN:
             return 7

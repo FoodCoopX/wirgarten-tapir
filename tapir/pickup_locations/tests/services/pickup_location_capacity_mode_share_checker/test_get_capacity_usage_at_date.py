@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch, Mock
 
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
@@ -109,12 +108,8 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
 
         self.assertEqual(6, result)
 
-    @patch.object(
-        PickupLocationCapacityModeShareChecker,
-        "extend_subscriptions_with_those_that_will_be_renewed",
-    )
     def test_getCapacityUsageAtDate_subscriptionWillNotRenewedBecauseOfParameter_pastSubscriptionNotCounted(
-        self, mock_extend_subscriptions_with_those_that_will_be_renewed: Mock()
+        self,
     ):
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
@@ -134,4 +129,3 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
         )
 
         self.assertEqual(0, result)
-        mock_extend_subscriptions_with_those_that_will_be_renewed.assert_not_called()

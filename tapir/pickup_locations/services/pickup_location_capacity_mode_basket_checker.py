@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Set
+from typing import Dict
 
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.basket_size_capacities_service import (
@@ -14,7 +14,6 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
-from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
@@ -25,7 +24,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
-    get_current_growing_period,
 )
 
 
@@ -162,43 +160,6 @@ class PickupLocationCapacityModeBasketChecker:
                 cache=cache,
             ),
         )
-
-    @classmethod
-    def extend_subscriptions_with_those_that_will_be_renewed(
-        cls,
-        subscriptions: Set[Subscription],
-        reference_date: datetime.date,
-        member_ids_at_pickup_location: Set[str],
-        cache: Dict,
-    ):
-        relevant_subscriptions = set(subscriptions)
-
-        current_growing_period = get_current_growing_period(reference_date, cache)
-
-        member_ids_that_have_a_subscription_at_reference_date = {
-            subscription.member_id for subscription in relevant_subscriptions
-        }
-
-        end_of_previous_growing_period = (
-            current_growing_period.start_date - datetime.timedelta(days=1)
-        )
-        subscriptions_that_will_get_renewed = {
-            subscription
-            for subscription in TapirCache.get_all_subscriptions(cache)
-            if (
-                subscription.start_date
-                <= end_of_previous_growing_period
-                <= subscription.end_date
-                and subscription.member_id in member_ids_at_pickup_location
-                and subscription.cancellation_ts is None
-                and subscription.member_id
-                not in member_ids_that_have_a_subscription_at_reference_date
-            )
-        }
-
-        relevant_subscriptions.update(subscriptions_that_will_get_renewed)
-
-        return relevant_subscriptions
 
     @classmethod
     def get_capacity_used_by_member_before_changes(

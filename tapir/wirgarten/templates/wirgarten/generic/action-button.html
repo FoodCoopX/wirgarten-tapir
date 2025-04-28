@@ -1,5 +1,5 @@
 <button {% if id %}id="{{ id }}"{% endif %}
-        onclick="{{ onclick }}"
+        onclick="{{ onclick|safe }}"
         {% if title %}data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ title }}"{% endif %}
         class="btn btn-outline-{{ type|default:'success' }} mx-1 {{ class }}"
         {% if disabled %}disabled{% endif %}>
