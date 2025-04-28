@@ -12,9 +12,6 @@ from tapir.configuration.models import (
     TapirParameterDefinitionImporter,
 )
 from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.association_memberships_manager import (
-    AssociationMembershipsManager,
-)
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_OPTIONS,
@@ -216,35 +213,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=ParameterKeys.COOP_ASSOCIATION_MEMBERSHIPS_LINK,
-            label="Beitragsordnung Kategorien",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Mitgliedschaft M1[10];Mitgliedschaft M2[17.5];",
-            description="Kategorien und Preise der mögliche Mitgliedschaften des Vereins. "
-            "Format: 'Kategorie[Preis];Kategorie[Preis];... "
-            "Wenn es keine Kategorien gibt, 'disabled' eintragen.'",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(
-                validators=[
-                    AssociationMembershipsManager.validate_association_memberships
-                ],
-                show_only_when=legal_status_is_association,
-            ),
-        )
-
-        parameter_definition(
-            key=ParameterKeys.COOP_ASSOCIATION_MEMBERSHIPS,
-            label="Link zur Beitragsordnung",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="https://lueneburg.wirgarten.com/genossenschaft/",
-            description="",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(
-                validators=[URLValidator()], show_only_when=legal_status_is_association
-            ),
-        )
-
-        parameter_definition(
             key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD,
             label="Kündigungsfrist für die Vereinsmitgliedschaft",
             datatype=TapirParameterDatatype.INTEGER,
@@ -398,22 +366,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 show_only_when=legal_status_is_cooperative,
             ),
             order_priority=800,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.COOP_ASSOCIATION_MEMBERSHIP_INDEPENDENT_FROM_HARVEST_SHARES,
-            label="Vereinsmitgliedschaft separat von Ernteanteilen zeichenbar",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            description="Vereinsmitgliedschaft ist vom Mitglied separat von Ernteanteilen zeichenbar.",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(
-                options=[
-                    (True, "separat zeichenbar"),
-                    (False, "nicht separat zeichenbar"),
-                ],
-                show_only_when=legal_status_is_association,
-            ),
         )
 
         MEMBER_RENEWAL_ALERT_VARS = [

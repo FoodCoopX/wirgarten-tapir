@@ -19,15 +19,10 @@ class ParameterKeys:
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
-    COOP_ASSOCIATION_MEMBERSHIPS = f"{PREFIX}.coop.association_memberships"
-    COOP_ASSOCIATION_MEMBERSHIPS_LINK = f"{PREFIX}.coop.association_memberships_link"
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
     COOP_MEMBERSHIP_NOTICE_PERIOD = f"{PREFIX}.coop.membership_notice_period"
     COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT = f"{PREFIX}.coop.membership_notice_period_unit"
-    COOP_ASSOCIATION_MEMBERSHIP_INDEPENDENT_FROM_HARVEST_SHARES = (
-        f"{PREFIX}.coop.association_membership_independent_from_harverst_shares"
-    )
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
