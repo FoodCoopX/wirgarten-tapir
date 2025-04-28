@@ -570,6 +570,12 @@ class BaseProductForm(forms.Form):
             cache=self.cache,
         )
 
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
+        )
+
         return super().clean()
 
 
@@ -657,11 +663,15 @@ class AdditionalProductForm(forms.Form):
             ]
 
         if self.product_type.single_subscription_only:
-            prod_name = [p for p in self.products.values() if p.base][0].name
-            self.fields[self.field_prefix + prod_name] = forms.BooleanField(
-                required=False,
-                label=_(f"{prod_name} {self.product_type.name}"),
-            )
+            for k, v in self.products.items():
+                self.fields[k] = forms.BooleanField(
+                    required=False,
+                    initial=False,
+                    label=_(
+                        f"{k.replace(self.field_prefix, '')} {self.product_type.name}"
+                    ),
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
+                )
         else:
             for k, v in self.products.items():
                 self.fields[k] = forms.IntegerField(
@@ -952,6 +962,10 @@ class AdditionalProductForm(forms.Form):
             field_prefix=self.field_prefix,
             product_type=self.product_type,
             cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_single_subscription(
+            form=self, field_prefix=self.field_prefix, product_type=self.product_type
         )
 
         return super().clean()

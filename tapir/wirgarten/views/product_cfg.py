@@ -199,6 +199,7 @@ def get_product_type_capacity_edit_form(request, **kwargs):
             tax_rate_change_date=form.cleaned_data["tax_rate_change_date"],
             is_affected_by_jokers=form.cleaned_data["is_affected_by_jokers"],
             notice_period_duration=form.cleaned_data["notice_period"],
+            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
         ),
         redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
         **kwargs,
@@ -221,6 +222,7 @@ def get_product_type_capacity_add_form(request, **kwargs):
             period_id=kwargs[KW_PERIOD_ID],
             product_type_id=form.cleaned_data["product_type"],
             notice_period_duration=form.cleaned_data["notice_period"],
+            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
         )
 
     def redirect_url(data):

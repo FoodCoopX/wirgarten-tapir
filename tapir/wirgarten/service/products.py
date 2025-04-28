@@ -5,6 +5,7 @@ from typing import List, Dict
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.db.models import Q
 
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
@@ -229,7 +230,8 @@ def get_active_and_future_subscriptions(
         reference_date = get_today(cache)
 
     def compute():
-        return Subscription.objects.filter(end_date__gte=reference_date).order_by(
+        filters = Q(end_date__gte=reference_date) | Q(end_date__isnull=True)
+        return Subscription.objects.filter(filters).order_by(
             *product_type_order_by("product__type_id", "product__type__name", cache)
         )
 
@@ -499,6 +501,7 @@ def update_product_type_capacity(
     tax_rate_change_date: date,
     is_affected_by_jokers: bool,
     notice_period_duration: int,
+    must_be_subscribed_to: bool,
 ):
     """
     Updates the product type and the capacity for the given period.
@@ -522,6 +525,7 @@ def update_product_type_capacity(
     product_capacity.product_type.single_subscription_only = single_subscription_only
     product_capacity.product_type.delivery_cycle = delivery_cycle
     product_capacity.product_type.is_affected_by_jokers = is_affected_by_jokers
+    product_capacity.product_type.must_be_subscribed_to = must_be_subscribed_to
     product_capacity.product_type.save()
 
     NoticePeriodManager.set_notice_period_duration(

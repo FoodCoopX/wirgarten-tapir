@@ -257,6 +257,7 @@ class UserGenerator:
             start_date=growing_period.start_date,
             end_date=None,
             period=None,
+            quantity=1,
             mandate_ref=get_or_create_mandate_ref(member, cache=cache),
         )
 

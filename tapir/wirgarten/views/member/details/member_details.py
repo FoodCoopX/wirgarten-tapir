@@ -10,6 +10,7 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -19,9 +20,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import generate_future_deliveries
 from tapir.wirgarten.service.member import (
-    get_next_contract_start_date,
     get_subscriptions_in_trial_period,
 )
 from tapir.wirgarten.service.payment import (
@@ -90,34 +89,20 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        additional_products_available = (
-            get_active_and_future_subscriptions(cache=cache)
-            .filter(
-                member_id=self.object.id,
-                end_date__gt=get_next_contract_start_date(cache=cache),
-                product__type=base_product_type,
-            )
-            .exists()
-        )
 
         context["available_product_types"] = {
-            product_type.name: base_product_type is not None
-            and product_type.id == base_product_type.id
-            or (
-                additional_products_available
-                and (
-                    product_type.single_subscription_only
-                    and not Subscription.objects.filter(
-                        member_id=self.object.id, product__type_id=product_type.id
-                    ).exists()
-                )
-                or not product_type.single_subscription_only
-            )
+            product_type.name: True
             for product_type in get_available_product_types(
                 reference_date=next_month, cache=cache
             )
         }
-        context["deliveries"] = generate_future_deliveries(self.object, cache=cache)
+
+        context["product_types_by_name"] = {
+            product_type.name: product_type
+            for product_type in TapirCache.get_product_types_in_standard_order(
+                cache=cache
+            )
+        }
 
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         next_due_date = get_next_payment_date(cache=cache)

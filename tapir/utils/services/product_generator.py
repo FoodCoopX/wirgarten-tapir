@@ -147,21 +147,21 @@ class ProductGenerator:
             )
             cls.generate_product(
                 product_type=association_membership,
-                name="Vereinsmitgliedschaft Typ A",
+                name="Typ A",
                 base_price=10,
                 size=1,
                 base=True,
             )
             cls.generate_product(
                 product_type=association_membership,
-                name="Vereinsmitgliedschaft Typ B",
+                name="Typ B",
                 base_price=17.5,
                 size=1,
                 base=False,
             )
             cls.generate_product(
                 product_type=association_membership,
-                name="Vereinsmitgliedschaft Typ C",
+                name="Typ C",
                 base_price=22.5,
                 size=1,
                 base=False,

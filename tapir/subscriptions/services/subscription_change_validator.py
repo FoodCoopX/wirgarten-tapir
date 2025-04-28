@@ -222,3 +222,24 @@ class SubscriptionChangeValidator:
 
         if capacity_used_by_the_ordered_products <= 0:
             raise ValidationError(_("Dieses Produkt ist Pflicht."))
+
+    @classmethod
+    def validate_single_subscription(
+        cls,
+        form: Form,
+        field_prefix: str,
+        product_type: ProductType,
+    ):
+        if not product_type.single_subscription_only:
+            return
+
+        nb_checked = 0
+        for key, checked in form.cleaned_data.items():
+            if not key.startswith(field_prefix) or not checked:
+                continue
+            nb_checked += 1
+
+        if nb_checked > 1:
+            raise ValidationError(
+                _(f"{product_type.name} dürfen nur einmal ausgewählt werden.")
+            )

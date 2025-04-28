@@ -76,24 +76,26 @@
                                 </div>
                             </div>
                         {% endif %}
-                        {% for type in subscriptions.keys %}
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="contract-tile-number">
-                                        <strong>{{ sub_quantities|get_value:type }}</strong> ×
-                                    </div>
-                                    <strong>{% translate type %}</strong>
-                                    {% if sub_quantities|get_value:type > 0 %}
-                                        <hr />
-                                        <small>
-                                            {% for key, val in subscriptions.items %}
-                                                {% if key == type %}
-                                                    <span>{{ val.0.start_date|format_date }} - {{ val.0.end_date|format_date }}</span>
-                                                    <br />
-                                                    <div style="margin-top:0.5em; line-height:1.1em">
+                        {% for product_type_name in subscriptions.keys %}
+                            {% with product_types_by_name|get_value:product_type_name as product_type %}
+                                <div class="card">
+                                    <div class="card-body">
+                                        {% if not product_type.single_subscription_only %}
+                                            <div class="contract-tile-number">
+                                                <strong>{{ sub_quantities|get_value:product_type_name }}</strong> ×
+                                            </div>
+                                        {% endif %}
+                                        <strong>{% translate product_type_name %}</strong>
+                                        {% if sub_quantities|get_value:product_type_name > 0 %}
+                                            <hr />
+                                            <small>
+                                                {% for key, val in subscriptions.items %}
+                                                    {% if key == product_type_name %}
                                                         {% for sub in val %}
                                                             <span {% if sub.cancellation_ts %}style="text-decoration:line-through;color:#6A6A6A"{% endif %}>
-                                                                <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;
+                                                                {% if not product_type.single_subscription_only %}
+                                                                    <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;
+                                                                {% endif %}
                                                                 <strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;
                                                                 {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
                                                                     (
@@ -104,42 +106,47 @@
                                                                     {{ sub.solidarity_price_absolute|format_currency }}
                                                                     €)
                                                                 {% endif %}
+                                                                <span>{{ sub.start_date|format_date }}
+                                                                    {% if sub.end_date %}- {{ sub.end_date|format_date }}{% endif %}
+                                                                </span>
                                                                 <br />
                                                             </span>
                                                         {% endfor %}
-                                                    </div>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </small>
-                                    {% endif %}
-                                </div>
-                                <div class="card-footer"
-                                     style="display:flex;
-                                            justify-content:space-between">
-                                    {% with sub_totals|get_value:type|default:0 as sub_total %}
-                                        <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
-                                        </span>
-                                    {% endwith %}
-                                    <div class="d-flex flex-row gap-2">
-                                        {% if forloop.counter0 == 0 or available_product_types|get_value:type|default:False %}
-                                            <button data-bs-toggle="tooltip"
-                                                    data-bs-placement="bottom"
-                                                    title="Anteile bearbeiten"
-                                                    onclick="handleAddSubscription('{{ type }}')"
-                                                    class="btn btn-outline-primary">
-                                                <span class="material-icons">edit</span>
-                                            </button>
-                                        {% else %}
-                                            <button data-bs-toggle="tooltip"
-                                                    data-bs-placement="bottom"
-                                                    title="Aktuell nicht verfügbar"
-                                                    class="btn btn-outline-secondary">
-                                                <span class="material-icons">add</span>
-                                            </button>
+                                                        <br />
+                                                        <div style="margin-top:0.5em; line-height:1.1em"></div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </small>
                                         {% endif %}
                                     </div>
+                                    <div class="card-footer"
+                                         style="display:flex;
+                                                justify-content:space-between">
+                                        {% with sub_totals|get_value:product_type_name|default:0 as sub_total %}
+                                            <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
+                                            </span>
+                                        {% endwith %}
+                                        <div class="d-flex flex-row gap-2">
+                                            {% if forloop.counter0 == 0 or available_product_types|get_value:product_type_name|default:False %}
+                                                <button data-bs-toggle="tooltip"
+                                                        data-bs-placement="bottom"
+                                                        title="Anteile bearbeiten"
+                                                        onclick="handleAddSubscription('{{ product_type_name }}')"
+                                                        class="btn btn-outline-primary">
+                                                    <span class="material-icons">edit</span>
+                                                </button>
+                                            {% else %}
+                                                <button data-bs-toggle="tooltip"
+                                                        data-bs-placement="bottom"
+                                                        title="Aktuell nicht verfügbar"
+                                                        class="btn btn-outline-secondary">
+                                                    <span class="material-icons">add</span>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endwith %}
                         {% endfor %}
                         {% if subscriptionAutomaticRenewal %}
                             <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">

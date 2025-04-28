@@ -110,15 +110,13 @@ class ProductTypeForm(forms.Form):
             label=_("Liefer-/Abholzyklus"),
             choices=DeliveryCycle,
         )
-        if get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
-        ):
-            self.fields["notice_period"] = forms.IntegerField(
-                initial=initial_notice_period,
-                required=True,
-                label=_("Kündigungsfrist"),
-                help_text=_("Anzahl an Monate"),
-            )
+
+        self.fields["notice_period"] = forms.IntegerField(
+            initial=initial_notice_period,
+            required=True,
+            label=_("Kündigungsfrist"),
+            help_text=_("Anzahl an Monate"),
+        )
 
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
@@ -148,6 +146,15 @@ class ProductTypeForm(forms.Form):
             initial=product_type.is_affected_by_jokers if product_type else True,
             required=False,
             label=_("Nimmt am Joker-Verfahren teil"),
+        )
+        self.fields["must_be_subscribed_to"] = forms.BooleanField(
+            required=False,
+            label=_("Ist Pflicht"),
+            initial=(
+                product_type.must_be_subscribed_to
+                if product_type is not None
+                else False
+            ),
         )
 
 
