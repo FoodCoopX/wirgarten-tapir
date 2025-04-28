@@ -133,9 +133,11 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
         ]
         active_subs = list(
             filter(
-                lambda subscription: subscription.start_date
-                <= next_delivery_date
-                <= subscription.end_date
+                lambda subscription: subscription.start_date <= next_delivery_date
+                and (
+                    subscription.end_date is None
+                    or subscription.end_date <= next_delivery_date
+                )
                 and subscription.product.type.delivery_cycle
                 in accepted_delivery_cycles,
                 subscriptions,

@@ -757,7 +757,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         return self._used_capacity
 
     def clean(self):
-        if self.start_date >= self.end_date:
+        if self.end_date is not None and self.start_date >= self.end_date:
             raise ValidationError({"start_date": "Start date must be before end date."})
 
         if (

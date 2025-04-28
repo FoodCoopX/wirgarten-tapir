@@ -394,13 +394,17 @@ class BaseProductForm(forms.Form):
                     self.product_type, self.growing_period, cache=self.cache
                 )
 
+            end_date = self.growing_period.end_date
+            if not product.type.subscriptions_have_end_dates:
+                end_date = None
+
             sub = Subscription.objects.create(
                 member_id=member_id,
                 product=product,
                 period=self.growing_period,
                 quantity=quantity,
                 start_date=self.start_date,
-                end_date=self.growing_period.end_date,
+                end_date=end_date,
                 mandate_ref=mandate_ref,
                 consent_ts=(
                     now
@@ -556,6 +560,13 @@ class BaseProductForm(forms.Form):
             form=self,
             field_prefix=BASE_PRODUCT_FIELD_PREFIX,
             product_type_id=product_type_id,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            product_type=self.product_type,
             cache=self.cache,
         )
 
@@ -776,6 +787,9 @@ class AdditionalProductForm(forms.Form):
                             self.product_type, self.growing_period, cache=self.cache
                         )
                     )
+                end_date = self.growing_period.end_date
+                if not product.type.subscriptions_have_end_dates:
+                    end_date = None
                 self.subscriptions.append(
                     Subscription(
                         member_id=member_id,
@@ -783,7 +797,7 @@ class AdditionalProductForm(forms.Form):
                         quantity=quantity,
                         period=self.growing_period,
                         start_date=self.start_date,
-                        end_date=self.growing_period.end_date,
+                        end_date=end_date,
                         mandate_ref=mandate_ref,
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
@@ -929,6 +943,13 @@ class AdditionalProductForm(forms.Form):
             product_type_id=self.product_type.id,
             member_id=self.member_id,
             subscription_start_date=self.start_date,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_must_be_subscribed_to(
+            form=self,
+            field_prefix=self.field_prefix,
+            product_type=self.product_type,
             cache=self.cache,
         )
 

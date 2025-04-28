@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Set
+from typing import Dict
 
 from tapir.pickup_locations.services.highest_usage_after_date_service import (
     HighestUsageAfterDateService,
@@ -14,7 +14,6 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -25,7 +24,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_product_price,
-    get_current_growing_period,
 )
 
 
@@ -146,50 +144,6 @@ class PickupLocationCapacityModeShareChecker:
             total_size += size * subscription.quantity
 
         return float(total_size)
-
-    @classmethod
-    def extend_subscriptions_with_those_that_will_be_renewed(
-        cls,
-        relevant_subscriptions: Set[Subscription],
-        reference_date: datetime.date,
-        product_type: ProductType,
-        member_ids_at_pickup_location,
-        cache: Dict,
-    ):
-        current_growing_period = get_current_growing_period(
-            reference_date,
-            get_from_cache_or_compute(cache, "growing_period_at_date", lambda: {}),
-        )
-
-        products = TapirCache.get_products_with_product_type(cache, product_type.id)
-
-        for product in products:
-            members_that_have_a_subscription_of_product_at_reference_date = {
-                subscription.member_id
-                for subscription in relevant_subscriptions
-                if subscription.product_id == product.id
-            }
-
-            end_of_previous_growing_period = (
-                current_growing_period.start_date - datetime.timedelta(days=1)
-            )
-            subscriptions_that_will_get_renewed = {
-                subscription
-                for subscription in TapirCache.get_all_subscriptions(cache)
-                if (
-                    subscription.start_date
-                    <= end_of_previous_growing_period
-                    <= subscription.end_date
-                    and subscription.member_id in member_ids_at_pickup_location
-                    and subscription.cancellation_ts is None
-                    and subscription.member_id
-                    not in members_that_have_a_subscription_of_product_at_reference_date
-                )
-            }
-
-            relevant_subscriptions.update(subscriptions_that_will_get_renewed)
-
-        return relevant_subscriptions
 
     @classmethod
     def get_capacity_used_by_member_before_changes(

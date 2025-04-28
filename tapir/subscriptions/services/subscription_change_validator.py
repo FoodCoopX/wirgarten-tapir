@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Subscription, Member, PickupLocation
+from tapir.wirgarten.models import Subscription, Member, PickupLocation, ProductType
 from tapir.wirgarten.service.products import (
     get_current_growing_period,
     get_product_price,
@@ -199,3 +199,26 @@ class SubscriptionChangeValidator:
                     "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus."
                 )
             )
+
+    @classmethod
+    def validate_must_be_subscribed_to(
+        cls,
+        form: Form,
+        field_prefix: str,
+        product_type: ProductType,
+        cache: Dict,
+    ):
+        if not product_type.must_be_subscribed_to:
+            return
+
+        capacity_used_by_the_ordered_products = (
+            cls.calculate_capacity_used_by_the_ordered_products(
+                form=form,
+                return_capacity_in_euros=False,
+                field_prefix=field_prefix,
+                cache=cache,
+            )
+        )
+
+        if capacity_used_by_the_ordered_products <= 0:
+            raise ValidationError(_("Dieses Produkt ist Pflicht."))
