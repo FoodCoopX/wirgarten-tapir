@@ -1,8 +1,12 @@
 import datetime
+from unittest.mock import patch
 
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.models import (
     ProductCapacity,
@@ -281,3 +285,19 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         subscription: Subscription = Subscription.objects.get()
         self.assertEqual(member.id, subscription.member_id)
         self.assertEqual(2, subscription.quantity)
+
+    @patch.object(SubscriptionChangeValidator, "validate_single_subscription")
+    @patch.object(SubscriptionChangeValidator, "validate_must_be_subscribed_to")
+    @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
+    def test_baseProductForm_default_callsValidation(self, *validation_mocks):
+        self.create_test_data_and_login(capacity=200)
+
+        response = self.send_add_subscription_request(2, 1)
+
+        self.assertStatusCode(response, 200)
+        self.assertEqual(Subscription.objects.count(), 2)
+
+        for mock in validation_mocks:
+            mock.assert_called_once()

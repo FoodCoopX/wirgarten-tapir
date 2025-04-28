@@ -132,6 +132,8 @@ class TestAdditionalProductForm(TapirIntegrationTest):
         self.assertIsNotNone(new_subscription)
         self.assertEqual(new_subscription.quantity, 3)
 
+    @patch.object(SubscriptionChangeValidator, "validate_single_subscription")
+    @patch.object(SubscriptionChangeValidator, "validate_must_be_subscribed_to")
     @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")

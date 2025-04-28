@@ -10,7 +10,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Subscription, Member, PickupLocation, ProductType
+from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.service.products import (
     get_current_growing_period,
     get_product_price,
@@ -35,7 +35,6 @@ class SubscriptionChangeValidator:
         if not cls.should_validate_cannot_reduce_size(
             logged_in_user_is_admin=logged_in_user_is_admin,
             subscription_start_date=subscription_start_date,
-            member_id=member_id,
             cache=cache,
         ):
             return
@@ -72,7 +71,6 @@ class SubscriptionChangeValidator:
         cls,
         logged_in_user_is_admin: bool,
         subscription_start_date: datetime.date,
-        member_id: str,
         cache: Dict,
     ):
         if logged_in_user_is_admin:
@@ -82,15 +80,13 @@ class SubscriptionChangeValidator:
         growing_period = get_current_growing_period(
             subscription_start_date, cache=cache
         )
+
         if not growing_period:
             return False
         if growing_period.start_date > get_today(cache=cache):
             return False
 
-        subscriptions = Subscription.objects.filter(
-            member__id=member_id, period=growing_period
-        )
-        return subscriptions.exists()
+        return True
 
     @classmethod
     def calculate_capacity_used_by_the_ordered_products(
