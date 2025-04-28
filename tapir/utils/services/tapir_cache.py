@@ -158,7 +158,7 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "last_subscription",
-            lambda: Subscription.objects.filter(end_date__isnull=None)
+            lambda: Subscription.objects.filter(end_date__isnull=False)
             .order_by("end_date")
             .last(),
         )
