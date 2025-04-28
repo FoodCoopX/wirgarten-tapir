@@ -143,9 +143,10 @@ class UserGenerator:
                     additional_products=additional_products,
                 )
                 members_that_need_a_pickup_location.add(member)
-                cls.create_subscription_to_required_products(
-                    member=member, products=required_products, cache=cache
-                )
+                if len(required_products) > 0:
+                    cls.create_subscription_to_required_products(
+                        member=member, products=required_products, cache=cache
+                    )
 
         cls.link_members_to_pickup_location(members_that_need_a_pickup_location)
         generate_member_numbers(print_results=False)
