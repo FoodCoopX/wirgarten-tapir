@@ -349,12 +349,32 @@ class BaseProductForm(forms.Form):
                 ],
             )
 
-        self.harvest_shares = ",".join(
-            map(
-                lambda p: BASE_PRODUCT_FIELD_PREFIX + p.name + ":" + str(prices[p.id]),
-                harvest_share_products,
+        if self.choose_growing_period:
+            available_growing_periods = GrowingPeriod.objects.filter(
+                end_date__gte=self.start_date,
+            ).order_by("start_date")
+        else:
+            available_growing_periods = [self.growing_period]
+        harvest_share_strings = []
+        for growing_period in available_growing_periods:
+            prices = {
+                prod.id: get_product_price(
+                    prod, max(self.start_date, growing_period.start_date)
+                ).price
+                for prod in harvest_share_products
+            }
+            harvest_share_strings.append(
+                ",".join(
+                    map(
+                        lambda p: BASE_PRODUCT_FIELD_PREFIX
+                        + p.name
+                        + ":"
+                        + str(prices[p.id]),
+                        harvest_share_products,
+                    )
+                )
             )
-        )
+        self.harvest_shares = ";".join(harvest_share_strings)
 
     @transaction.atomic
     def save(
