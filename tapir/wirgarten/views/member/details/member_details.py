@@ -6,6 +6,7 @@ from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -153,7 +154,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         ):
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"].append(
-                "Beitrittserklärung zur Genossenschaft",
+                MembershipTextService.get_membership_text(cache=cache)
             )
             context["next_trial_end_date"] = (
                 share_ownerships[0].valid_at + relativedelta(days=-1)

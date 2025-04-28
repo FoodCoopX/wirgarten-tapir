@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import ProductSerializer
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
@@ -14,6 +15,7 @@ class ProductForCancellationSerializer(serializers.Serializer):
 class CancellationDataSerializer(serializers.Serializer):
     can_cancel_coop_membership = serializers.BooleanField()
     subscribed_products = ProductForCancellationSerializer(many=True)
+    legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):

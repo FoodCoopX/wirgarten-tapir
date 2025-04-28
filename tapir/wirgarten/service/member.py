@@ -18,6 +18,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -367,7 +368,7 @@ def send_cancellation_confirmation_email(
 
     contract_list = f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}"
     if revoke_coop_membership:
-        contract_list += "\n- Beitrittserklärung zur Genossenschaft"
+        contract_list += "\n- " + MembershipTextService.get_membership_text(cache=cache)
 
     future_subs = get_active_and_future_subscriptions(
         contract_end_date + relativedelta(days=1), cache=cache

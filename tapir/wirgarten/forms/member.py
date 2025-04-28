@@ -23,6 +23,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.accounts.models import KeycloakUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -520,7 +521,8 @@ class TrialCancellationForm(Form):
             ).first()
 
             self.fields["cancel_coop"] = BooleanField(
-                label="Beitrittserklärung zur Genossenschaft widerrufen", required=False
+                label=f"{MembershipTextService.get_membership_text(cache=cache)} widerrufen",
+                required=False,
             )
 
     def is_valid(self):

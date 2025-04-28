@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
-import { ProductForCancellation, SubscriptionsApi } from "../../api-client";
+import {
+  LegalStatusEnum,
+  ProductForCancellation,
+  SubscriptionsApi,
+} from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
@@ -23,6 +27,7 @@ const SubscriptionCancellationModal: React.FC<
     ProductForCancellation[]
   >([]);
   const [canCancelCoopMembership, setCanCancelCoopMembership] = useState(false);
+  const [legalStatus, setLegalStatus] = useState<LegalStatusEnum>();
   const [loading, setLoading] = useState(true);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<
@@ -37,9 +42,10 @@ const SubscriptionCancellationModal: React.FC<
     setLoading(true);
     api
       .subscriptionsCancellationDataRetrieve({ memberId: memberId })
-      .then((test) => {
-        setSubscribedProducts(test.subscribedProducts);
-        setCanCancelCoopMembership(test.canCancelCoopMembership);
+      .then((data) => {
+        setSubscribedProducts(data.subscribedProducts);
+        setCanCancelCoopMembership(data.canCancelCoopMembership);
+        setLegalStatus(data.legalStatus);
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
@@ -75,6 +81,13 @@ const SubscriptionCancellationModal: React.FC<
     return result;
   }
 
+  function getMembershipText() {
+    if (legalStatus === LegalStatusEnum.Association) {
+      return "Beitrittserklärung zum Verein";
+    }
+    return "Beitrittserklärung zur Genossenschaft";
+  }
+
   function buildConfirmationModalText() {
     return (
       <>
@@ -93,9 +106,7 @@ const SubscriptionCancellationModal: React.FC<
               );
             },
           )}
-          {cancelCoopMembershipSelected && (
-            <li>Beitrittserklärung zu genossenschaft</li>
-          )}
+          {cancelCoopMembershipSelected && <li>{getMembershipText()}</li>}
         </ul>
       </>
     );
@@ -180,7 +191,7 @@ const SubscriptionCancellationModal: React.FC<
                     }
                     required={false}
                     checked={cancelCoopMembershipSelected}
-                    label={"Beitrittserklärung zur Genossenschaft widerrufen"}
+                    label={getMembershipText() + " widerrufen"}
                   />
                 </Form.Group>
               )}
