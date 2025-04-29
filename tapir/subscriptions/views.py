@@ -73,7 +73,7 @@ class GetCancellationDataView(APIView):
             {
                 "product": subscribed_product,
                 "is_in_trial": TrialPeriodManager.is_product_in_trial(
-                    subscribed_product, member
+                    subscribed_product, member, cache=cache
                 ),
                 "cancellation_date": SubscriptionCancellationManager.get_earliest_possible_cancellation_date(
                     product=subscribed_product, member=member, cache=cache

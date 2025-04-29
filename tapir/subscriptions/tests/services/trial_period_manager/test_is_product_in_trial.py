@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch, Mock, call
 
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -7,54 +6,77 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,
     ProductFactory,
+    GrowingPeriodFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestIsProductInTrial(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         self.today = mock_timezone(
             self, datetime.datetime(year=2021, month=8, day=10)
         ).date()
-        ParameterDefinitions().import_definitions()
 
-    @patch.object(TrialPeriodManager, "is_subscription_in_trial")
-    def test_isProductInTrial_atLeastOneSubscriptionInTrial_returnsTrue(
-        self, mock_is_subscription_in_trial: Mock
-    ):
+    def test_isProductInTrial_earliestSubscriptionIsInTrial_returnsTrue(self):
         member = MemberFactory.create()
         product = ProductFactory.create()
-        subscriptions = SubscriptionFactory.create_batch(
-            size=3, member=member, product=product
+        growing_period_1 = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2021, month=1, day=1),
+            end_date=datetime.datetime(year=2021, month=12, day=31),
         )
-        SubscriptionFactory.create(member=member, product=ProductFactory.create())
-        mock_is_subscription_in_trial.side_effect = [False, True, False]
+        growing_period_2 = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2022, month=1, day=1),
+            end_date=datetime.datetime(year=2022, month=12, day=31),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=growing_period_1,
+            product=product,
+            start_date=datetime.date(year=2021, month=8, day=1),
+        )
+        SubscriptionFactory.create(
+            member=member, period=growing_period_2, product=product
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=growing_period_1,
+            product=ProductFactory.create(),
+        )
 
-        result = TrialPeriodManager.is_product_in_trial(product, member)
+        result = TrialPeriodManager.is_product_in_trial(product, member, cache={})
 
         self.assertTrue(result)
-        self.assertEqual(2, mock_is_subscription_in_trial.call_count)
-        mock_is_subscription_in_trial.assert_has_calls(
-            [call(subscription, self.today) for subscription in subscriptions[:2]],
-            any_order=True,
-        )
 
-    @patch.object(TrialPeriodManager, "is_subscription_in_trial")
-    def test_isProductInTrial_noSubscriptionInTrial_returnsFalse(
-        self, mock_is_subscription_in_trial: Mock
-    ):
+    def test_isProductInTrial_noSubscriptionInTrial_returnsFalse(self):
         member = MemberFactory.create()
         product = ProductFactory.create()
-        subscriptions = SubscriptionFactory.create_batch(
-            size=3, member=member, product=product
+        growing_period_1 = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2021, month=1, day=1),
+            end_date=datetime.datetime(year=2021, month=12, day=31),
         )
-        mock_is_subscription_in_trial.return_value = False
+        growing_period_2 = GrowingPeriodFactory.create(
+            start_date=datetime.datetime(year=2022, month=1, day=1),
+            end_date=datetime.datetime(year=2022, month=12, day=31),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=growing_period_1,
+            product=product,
+            start_date=datetime.date(year=2021, month=6, day=1),
+        )
+        SubscriptionFactory.create(
+            member=member, period=growing_period_2, product=product
+        )
+        SubscriptionFactory.create(
+            member=member,
+            period=growing_period_1,
+            product=ProductFactory.create(),
+        )
 
-        result = TrialPeriodManager.is_product_in_trial(product, member)
+        result = TrialPeriodManager.is_product_in_trial(product, member, cache={})
 
         self.assertFalse(result)
-        self.assertEqual(3, mock_is_subscription_in_trial.call_count)
-        mock_is_subscription_in_trial.assert_has_calls(
-            [call(subscription, self.today) for subscription in subscriptions],
-            any_order=True,
-        )

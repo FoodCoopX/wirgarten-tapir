@@ -55,15 +55,18 @@ class TrialPeriodManager:
         cls,
         product: Product,
         member: Member,
+        cache: Dict,
         reference_date: datetime.date | None = None,
     ) -> bool:
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache=cache)
 
-        subscriptions = get_active_and_future_subscriptions().filter(
-            member=member, product=product
+        return cls.is_subscription_in_trial(
+            get_active_and_future_subscriptions(
+                reference_date=reference_date, cache=cache
+            )
+            .filter(member=member, product=product)
+            .order_by("start_date")
+            .first(),
+            reference_date,
         )
-        for subscription in subscriptions:
-            if cls.is_subscription_in_trial(subscription, reference_date):
-                return True
-        return False

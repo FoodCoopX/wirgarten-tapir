@@ -60,7 +60,7 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
         mock_get_subscribed_products.assert_called_once_with(member)
         self.assertEqual(3, mock_is_product_in_trial.call_count)
         mock_is_product_in_trial.assert_has_calls(
-            [call(product, member) for product in subscribed_products]
+            [call(product, member, cache=cache) for product in subscribed_products]
         )
         self.assertEqual(3, mock_get_earliest_possible_cancellation_date.call_count)
         mock_get_earliest_possible_cancellation_date.assert_has_calls(

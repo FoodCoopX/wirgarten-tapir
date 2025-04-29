@@ -39,21 +39,21 @@ const SubscriptionCancellationModal: React.FC<
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
-    setLoading(true);
-    api
-      .subscriptionsCancellationDataRetrieve({ memberId: memberId })
-      .then((data) => {
-        setSubscribedProducts(data.subscribedProducts);
-        setCanCancelCoopMembership(data.canCancelCoopMembership);
-        setLegalStatus(data.legalStatus);
-      })
-      .catch(handleRequestError)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
     setSelectedProducts([]);
     setErrors([]);
+
+    if (show) {
+      setLoading(true);
+      api
+        .subscriptionsCancellationDataRetrieve({ memberId: memberId })
+        .then((data) => {
+          setSubscribedProducts(data.subscribedProducts);
+          setCanCancelCoopMembership(data.canCancelCoopMembership);
+          setLegalStatus(data.legalStatus);
+        })
+        .catch(handleRequestError)
+        .finally(() => setLoading(false));
+    }
   }, [show]);
 
   function changeSelection(product: ProductForCancellation, selected: boolean) {
