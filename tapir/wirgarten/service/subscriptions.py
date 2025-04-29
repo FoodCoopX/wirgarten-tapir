@@ -3,6 +3,7 @@ import datetime
 from django.db.models import Subquery, OuterRef, F, Case, When, FloatField
 
 from tapir.wirgarten.models import ProductPrice
+from tapir.wirgarten.service.products import get_next_growing_period
 
 
 def annotate_subscriptions_queryset_with_monthly_payment_including_solidarity(
@@ -55,4 +56,14 @@ def annotate_subscriptions_queryset_with_product_price(
             .order_by("-valid_from")
             .values("price")[:1]
         )
+    )
+
+
+def growing_period_selectable_in_base_product_form(
+    reference_date: datetime.date,
+) -> bool:
+    next_growing_period = get_next_growing_period()
+    return (
+        next_growing_period
+        and (next_growing_period.start_date - reference_date).days <= 61
     )

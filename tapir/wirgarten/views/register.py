@@ -41,6 +41,10 @@ from tapir.wirgarten.service.products import (
     get_current_growing_period,
     get_future_subscriptions,
     is_product_type_available,
+    get_next_growing_period,
+)
+from tapir.wirgarten.service.subscriptions import (
+    growing_period_selectable_in_base_product_form,
 )
 from tapir.wirgarten.utils import get_now, get_today
 
@@ -199,17 +203,25 @@ class RegistrationWizardViewBase(CookieWizardView):
             Parameter.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         )
 
-        _show_harvest_shares = is_product_type_available(
-            ProductType.objects.get(
-                id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
-            ),
-            reference_date=self.start_date,
-        )
+        growing_periods = [get_current_growing_period()]
+        if growing_period_selectable_in_base_product_form(reference_date=get_today()):
+            growing_periods.append(get_next_growing_period())
+        is_base_product_available_at_least_once = False
+        for growing_period in growing_periods:
+            if is_product_type_available(
+                ProductType.objects.get(
+                    id=get_parameter_value(Parameter.COOP_BASE_PRODUCT_TYPE)
+                ),
+                reference_date=max(self.start_date, growing_period.start_date),
+            ):
+                is_base_product_available_at_least_once = True
+                break
 
         return {
-            STEP_BASE_PRODUCT: _show_harvest_shares,
-            STEP_BASE_PRODUCT_NOT_AVAILABLE: self.coop_shares_only == False
-            and not _show_harvest_shares,
+            STEP_BASE_PRODUCT: not self.coop_shares_only
+            and is_base_product_available_at_least_once,
+            STEP_BASE_PRODUCT_NOT_AVAILABLE: not self.coop_shares_only
+            and not is_base_product_available_at_least_once,
             STEP_COOP_SHARES: (
                 (lambda x: has_selected_base_product(x))
                 if not _coop_shares_without_harvest_shares_possible

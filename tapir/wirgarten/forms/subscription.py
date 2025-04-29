@@ -45,7 +45,10 @@ from tapir.wirgarten.service.products import (
     get_free_product_capacity,
     get_product_price,
     get_total_price_for_subs,
-    get_next_growing_period,
+    is_product_type_available,
+)
+from tapir.wirgarten.service.subscriptions import (
+    growing_period_selectable_in_base_product_form,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -85,7 +88,6 @@ class BaseProductForm(forms.Form):
         self.member_id = kwargs.pop("member_id", None)
         self.is_admin = kwargs.pop("is_admin", False)
         self.require_at_least_one = kwargs.pop("enable_validation", False)
-        self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
 
         self.start_date = kwargs.pop(
@@ -94,11 +96,10 @@ class BaseProductForm(forms.Form):
         self.intro_template = initial.pop("intro_template", None)
         self.outro_template = initial.pop("outro_template", None)
 
+        self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         if initial and not self.choose_growing_period:
-            next_growing_period = get_next_growing_period()
-            self.choose_growing_period = (
-                next_growing_period
-                and (next_growing_period.start_date - get_today()).days <= 61
+            self.choose_growing_period = growing_period_selectable_in_base_product_form(
+                reference_date=get_today()
             )
 
         super().__init__(*args, **kwargs)
@@ -156,9 +157,19 @@ class BaseProductForm(forms.Form):
                 end_date__gte=self.start_date,
             ).order_by("start_date")
 
+            growing_periods_with_free_capacity = list(
+                filter(
+                    lambda growing_period: is_product_type_available(
+                        self.product_type,
+                        reference_date=max(self.start_date, growing_period.start_date),
+                    ),
+                    available_growing_periods,
+                )
+            )
+
             self.solidarity_total = []
             self.free_capacity = []
-            for period in available_growing_periods:
+            for period in growing_periods_with_free_capacity:
                 start_date = max(period.start_date, self.start_date)
                 solidarity_total = f"{get_available_solidarity(start_date)}".replace(
                     ",", "."
@@ -170,23 +181,37 @@ class BaseProductForm(forms.Form):
                 )
                 self.free_capacity.append(free_capacity)
 
+            help_texts = []
+            if not self.member_id:
+                help_texts.append(
+                    "<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
+                    "als auch kommende Vertragsperiode (ab 1.7.) "
+                    "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
+                    "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
+                    "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen</span>"
+                )
+            for growing_period in available_growing_periods:
+                if growing_period in growing_periods_with_free_capacity:
+                    continue
+                help_texts.append(
+                    f"<span>Für die Vertragsperiode vom {format_date(growing_period.start_date)} "
+                    f"zum {format_date(growing_period.end_date)} sind leider derzeit alle Ernteanteile vergeben</span>"
+                )
+
             self.fields["growing_period"] = forms.ModelChoiceField(
-                queryset=available_growing_periods,
+                queryset=(
+                    GrowingPeriod.objects.filter(
+                        id__in=[
+                            growing_period.id
+                            for growing_period in growing_periods_with_free_capacity
+                        ]
+                    )
+                ),
                 label=_("Vertragsperiode"),
                 required=True,
                 empty_label=None,
                 initial=0,
-                help_text=(
-                    None
-                    if self.member_id
-                    else _(
-                        "<span style='font-weight: bold; color: #CC3333;'>Hinweis: Wenn du sowohl für die aktuelle (bis zum 30.6.) "
-                        "als auch kommende Vertragsperiode (ab 1.7.) "
-                        "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
-                        "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
-                        "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen</span>"
-                    )
-                ),
+                help_text="<br/>".join(help_texts),
             )
         else:
             self.growing_period = get_current_growing_period(self.start_date)

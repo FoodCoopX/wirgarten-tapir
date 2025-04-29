@@ -208,7 +208,10 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         member = Member.objects.get()
         current_growing_period = GrowingPeriod.objects.get()
         SubscriptionFactory.create(
-            solidarity_price=0.25, product=Product.objects.get(name="M"), quantity=1
+            solidarity_price=0.25,
+            product=Product.objects.get(name="M"),
+            quantity=1,
+            period=current_growing_period,
         )
 
         response = self.send_add_subscription_request(
