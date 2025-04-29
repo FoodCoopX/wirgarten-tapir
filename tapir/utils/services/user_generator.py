@@ -83,9 +83,11 @@ class UserGenerator:
             type=base_product_type
         ).select_related("type")
         products_from_base_type = [product for product in products_from_base_type]
-        additional_products = Product.objects.exclude(
-            type=base_product_type, type__must_be_subscribed_to=True
-        ).select_related("type")
+        additional_products = (
+            Product.objects.exclude(type=base_product_type)
+            .exclude(type__must_be_subscribed_to=True)
+            .select_related("type")
+        )
         additional_products = [product for product in additional_products]
         required_products = [
             product
@@ -179,7 +181,7 @@ class UserGenerator:
         end_date = growing_period.end_date
 
         number_product_subscriptions = random.choices(
-            [0, 1, 2], weights=[1, 5, 1], k=1
+            [0, 1, 2], weights=[1, 25, 1], k=1
         )[0]
         already_subscribed_products_ids = set()
 
@@ -209,7 +211,7 @@ class UserGenerator:
                 solidarity_price = 0
                 solidarity_price_absolute = random.randrange(-25, 25)
 
-            quantity = random.choices([1, 2, 3], weights=[20, 1, 1], k=1)[0]
+            quantity = random.choices([1, 2, 3], weights=[25, 1, 1], k=1)[0]
             if product.type.single_subscription_only:
                 quantity = 1
 
@@ -227,6 +229,7 @@ class UserGenerator:
                 solidarity_price_absolute=solidarity_price_absolute,
                 mandate_ref=mandate_ref,
             )
+
             if growing_period == previous_growing_period:
                 if random.random() < 0.25:
                     subscription.cancellation_ts = previous_growing_period.start_date
