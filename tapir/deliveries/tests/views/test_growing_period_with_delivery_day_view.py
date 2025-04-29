@@ -74,6 +74,7 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
                 "growing_period_start_date": "2020-01-03",
                 "growing_period_weeks_without_delivery": [4, 7, 12],
                 "joker_restrictions": "15.02.-20.03.[3]",
+                "jokers_enabled": True,
                 "max_jokers_per_member": 3,
             },
             response_content,
