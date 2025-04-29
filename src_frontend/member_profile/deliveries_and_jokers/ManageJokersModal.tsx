@@ -13,7 +13,6 @@ import {
   DeliveriesApi,
   Delivery,
   Joker,
-  JokerRestriction,
   JokerWithCancellationLimit,
   UsedJokerInGrowingPeriod,
 } from "../../api-client";
@@ -51,9 +50,6 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   const api = useApi(DeliveriesApi, csrfToken);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
   const [infoLoading, setInfoLoading] = useState(false);
-  const [maxJokersPerGrowingPeriod, setMaxJokersPerGrowingPeriod] =
-    useState(-1);
-  const [restrictions, setRestrictions] = useState<JokerRestriction[]>([]);
   const [weekdayLimit, setWeekdayLimit] = useState(6);
   const [requestLoading, setRequestLoading] = useState(false);
   const [selectedJokerForCancellation, setSelectedJokerForCancellation] =
@@ -80,9 +76,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .deliveriesApiMemberJokerInformationRetrieve({ memberId: memberId })
       .then((info) => {
         setJokers(info.usedJokers);
-        setMaxJokersPerGrowingPeriod(info.maxJokersPerGrowingPeriod);
         setWeekdayLimit(info.weekdayLimit);
-        setRestrictions(info.jokerRestrictions);
         setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
       })
       .catch(handleRequestError)
@@ -246,6 +240,54 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     });
   }
 
+  function buildJokerRestrictions() {
+    let atLeastOneRestriction = false;
+    for (const growingPeriodInfos of usedJokerInGrowingPeriods) {
+      if (growingPeriodInfos.jokerRestrictions.length > 0) {
+        atLeastOneRestriction = true;
+      }
+    }
+    if (!atLeastOneRestriction) {
+      return <></>;
+    }
+
+    return (
+      <p>
+        Es gibt zusätzliche Einschränkungen in der folgende Perioden:
+        <ul>
+          {usedJokerInGrowingPeriods.map(buildJokerRestrictionForGrowingPeriod)}
+        </ul>
+      </p>
+    );
+  }
+
+  function buildJokerRestrictionForGrowingPeriod(
+    growingPeriodInfos: UsedJokerInGrowingPeriod,
+  ) {
+    if (growingPeriodInfos.jokerRestrictions.length <= 0) {
+      return <></>;
+    }
+
+    return (
+      <li>
+        Vertragsjahr {formatDateNumeric(growingPeriodInfos.growingPeriodStart)}{" "}
+        bis {formatDateNumeric(growingPeriodInfos.growingPeriodEnd)}
+        {":"}
+        <ul>
+          {growingPeriodInfos.jokerRestrictions.map((restriction) => {
+            return (
+              <li key={restriction.startDay + "-" + restriction.startMonth}>
+                {restriction.startDay}.{restriction.startMonth}. bis{" "}
+                {restriction.endDay}.{restriction.endMonth}.: maximal{" "}
+                {restriction.maxJokers} Joker.
+              </li>
+            );
+          })}
+        </ul>
+      </li>
+    );
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
       <Modal.Header closeButton>
@@ -275,31 +317,18 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
                     )}
                     {": "}
                     {usedJokerInGrowingPeriod.numberOfUsedJokers} von{" "}
-                    {maxJokersPerGrowingPeriod} Joker eingesetzt.
+                    {usedJokerInGrowingPeriod.maxJokers} Joker eingesetzt.
                   </li>
                 );
               })}
             </ul>
           </ListGroup.Item>
           <ListGroup.Item>
-            Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor Liefertag
-            eingesetzt oder abgesagt werden. <br />
-            {restrictions.length > 0 && (
-              <>
-                Zusätzliche Einschränkungen:
-                <ul>
-                  {restrictions.map((restriction) => (
-                    <li
-                      key={restriction.startDay + "-" + restriction.startMonth}
-                    >
-                      {restriction.startDay}.{restriction.startMonth}. bis{" "}
-                      {restriction.endDay}.{restriction.endMonth}.: maximal{" "}
-                      {restriction.maxJokers} Joker.
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+            <p>
+              Joker können bis {getWeekdayLimitDisplay()} 23:59 Uhr vor
+              Liefertag eingesetzt oder abgesagt werden.{" "}
+            </p>
+            {buildJokerRestrictions()}
           </ListGroup.Item>
 
           <ListGroup.Item>
