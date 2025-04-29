@@ -89,8 +89,6 @@ class ParameterKeys:
         f"{PREFIX}.email.contract_change_confirmation.content"
     )
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
-    JOKERS_AMOUNT_PER_CONTRACT = f"{PREFIX}.jokers.amount_per_contract"
-    JOKERS_RESTRICTIONS = f"{PREFIX}.jokers.restrictions"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT = (

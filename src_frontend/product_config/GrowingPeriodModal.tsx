@@ -25,6 +25,9 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
     [],
   );
   const [adjustments, setAdjustments] = useState<DeliveryDayAdjustment[]>([]);
+  const [jokersEnabled, setJokersEnabled] = useState(false);
+  const [maxJokersPerMember, setMaxJokersPerMember] = useState(0);
+  const [jokerRestrictions, setJokerRestrictions] = useState("");
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -44,6 +47,9 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         setEndDate(response.growingPeriodEndDate);
         setWeeksWithoutDelivery(response.growingPeriodWeeksWithoutDelivery);
         setAdjustments(response.adjustments);
+        setJokersEnabled(response.jokersEnabled);
+        setMaxJokersPerMember(response.maxJokersPerMember);
+        setJokerRestrictions(response.jokerRestrictions);
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -65,6 +71,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
           growingPeriodEndDate: endDate,
           growingPeriodWeeksWithoutDelivery: weeksWithoutDelivery,
           adjustments: adjustments,
+          jokerRestrictions: jokerRestrictions,
+          maxJokersPerMember: maxJokersPerMember,
         },
       })
       .then(() => location.reload())
@@ -132,25 +140,84 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
       <ListGroup variant={"flush"}>
         <Form id={"growingPeriodForm"}>
           <ListGroup.Item>
-            <Form.Group className={"mb-2"}>
-              <Form.Label>Anfangsdatum</Form.Label>
-              <Form.Control
-                type={"date"}
-                onChange={(event) => setStartDate(new Date(event.target.value))}
-                required={true}
-                value={dayjs(startDate).format("YYYY-MM-DD")}
-              />
-            </Form.Group>
-            <Form.Group className={"mb-2"}>
-              <Form.Label>Enddatum</Form.Label>
-              <Form.Control
-                type={"date"}
-                onChange={(event) => setEndDate(new Date(event.target.value))}
-                required={true}
-                value={dayjs(endDate).format("YYYY-MM-DD")}
-              />
-            </Form.Group>
+            <Row>
+              <Col>
+                <Form.Group className={"mb-2"}>
+                  <Form.Label>Anfangsdatum</Form.Label>
+                  <Form.Control
+                    type={"date"}
+                    onChange={(event) =>
+                      setStartDate(new Date(event.target.value))
+                    }
+                    required={true}
+                    value={dayjs(startDate).format("YYYY-MM-DD")}
+                  />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group className={"mb-2"}>
+                  <Form.Label>Enddatum</Form.Label>
+                  <Form.Control
+                    type={"date"}
+                    onChange={(event) =>
+                      setEndDate(new Date(event.target.value))
+                    }
+                    required={true}
+                    value={dayjs(endDate).format("YYYY-MM-DD")}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
           </ListGroup.Item>
+          {jokersEnabled && (
+            <ListGroup.Item>
+              <Row>
+                <Col>
+                  <Form.Group className={"mb-2"}>
+                    <Form.Label>
+                      Maximal Anzahl an Joker per Mitglied
+                    </Form.Label>
+                    <Form.Control
+                      type={"number"}
+                      onChange={(event) =>
+                        setMaxJokersPerMember(parseInt(event.target.value))
+                      }
+                      required={true}
+                      value={maxJokersPerMember}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <Form.Group className={"mb-2"}>
+                    <Form.Label>Joker Einschränkungen</Form.Label>
+                    <Form.Control
+                      type={"text"}
+                      onChange={(event) =>
+                        setJokerRestrictions(event.target.value)
+                      }
+                      required={true}
+                      value={jokerRestrictions}
+                    />
+                    <Form.Text>
+                      Zeiträume, in denen das Mitglied nur eine begrenzte Anzahl
+                      an Jokern setzen kann. zB: maximal 2 Joker pro Mitglied im
+                      August. <br />
+                      Format:
+                      StartDatum-EndDatum[AnzahlJoker];StartDatum-EndDatum[AnzahlJoker]{" "}
+                      <br />
+                      Beispiel: 01.08.-31.08.[2];15.02.-20.03.[3] heißt maximal
+                      2 Joker im Zeitraum 01.08. - 31.08. und maximal 3 Joker im
+                      Zeitraum 15.02. - 20.03.. <br />
+                      Wenn es keine Einschränkungen geben soll, bitte "disabled"
+                      eintragen.
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+            </ListGroup.Item>
+          )}
           <ListGroup.Item>
             <Row>
               <Col>
@@ -276,7 +343,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
+    <Modal show={show} onHide={onHide} centered={true} size={"xl"}>
       <Modal.Header closeButton>
         <h5 className={"mb-0"}>Vertragsperiode verwalten</h5>
       </Modal.Header>

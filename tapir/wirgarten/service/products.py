@@ -128,7 +128,12 @@ def get_current_growing_period(
 
 
 @transaction.atomic
-def create_growing_period(start_date: date, end_date: date) -> GrowingPeriod:
+def create_growing_period(
+    start_date: date,
+    end_date: date,
+    max_jokers_per_member: int,
+    joker_restrictions: str,
+) -> GrowingPeriod:
     """
     Creates a new growing period with the given start and end dates
 
@@ -143,6 +148,8 @@ def create_growing_period(start_date: date, end_date: date) -> GrowingPeriod:
     return GrowingPeriod.objects.create(
         start_date=start_date,
         end_date=end_date,
+        max_jokers_per_member=max_jokers_per_member,
+        joker_restrictions=joker_restrictions,
     )
 
 
@@ -156,7 +163,13 @@ def copy_growing_period(growing_period_id: str, start_date: date, end_date: date
     :param end_date: the end of the new growing period
     """
 
-    new_growing_period = create_growing_period(start_date=start_date, end_date=end_date)
+    source_growing_period = GrowingPeriod.objects.get(id=growing_period_id)
+    new_growing_period = create_growing_period(
+        start_date=start_date,
+        end_date=end_date,
+        max_jokers_per_member=source_growing_period.max_jokers_per_member,
+        joker_restrictions=source_growing_period.joker_restrictions,
+    )
     ProductCapacity.objects.bulk_create(
         map(
             lambda x: ProductCapacity(

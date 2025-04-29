@@ -96,14 +96,8 @@ class GetMemberJokerInformationView(APIView):
 
         data = {
             "used_jokers": joker_data,
-            "max_jokers_per_growing_period": get_parameter_value(
-                ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT, cache=cache
-            ),
             "weekday_limit": get_parameter_value(
                 ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
-            ),
-            "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(
-                cache=cache
             ),
             "used_joker_in_growing_period": self.build_data_used_joker_in_growing_period(
                 member_id
@@ -133,6 +127,10 @@ class GetMemberJokerInformationView(APIView):
                         "growing_period_start": growing_period.start_date,
                         "growing_period_end": growing_period.end_date,
                         "number_of_used_jokers": nb_used_jokers_in_growing_period,
+                        "max_jokers": growing_period.max_jokers_per_member,
+                        "joker_restrictions": JokerManagementService.get_extra_joker_restrictions(
+                            growing_period
+                        ),
                     }
                 ).data
             )
@@ -229,6 +227,10 @@ class GrowingPeriodViewSet(ModelViewSet):
 
 
 class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
     @extend_schema(
         responses={200: GrowingPeriodWithDeliveryDayAdjustmentsSerializer()},
         parameters=[OpenApiParameter(name="growing_period_id", type=str)],
@@ -260,6 +262,11 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
                         }
                         for adjustment in adjustments
                     ],
+                    "max_jokers_per_member": growing_period.max_jokers_per_member,
+                    "joker_restrictions": growing_period.joker_restrictions,
+                    "jokers_enabled": get_parameter_value(
+                        ParameterKeys.JOKERS_ENABLED, cache=self.cache
+                    ),
                 }
             ).data,
             status=status.HTTP_200_OK,
@@ -291,6 +298,12 @@ class GrowingPeriodWithDeliveryDayAdjustmentsView(APIView):
             ]
             growing_period.weeks_without_delivery = request_serializer.validated_data[
                 "growing_period_weeks_without_delivery"
+            ]
+            growing_period.max_jokers_per_member = request_serializer.validated_data[
+                "max_jokers_per_member"
+            ]
+            growing_period.joker_restrictions = request_serializer.validated_data[
+                "joker_restrictions"
             ]
             growing_period.save()
 

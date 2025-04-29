@@ -10,7 +10,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_get_loggedInAsNormalUser_returns403(self):
@@ -44,6 +45,8 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=1, day=3),
             end_date=datetime.date(year=2020, month=12, day=5),
             weeks_without_delivery=[12, 4, 7],
+            max_jokers_per_member=3,
+            joker_restrictions="15.02.-20.03.[3]",
         )
 
         DeliveryDayAdjustment.objects.create(
@@ -60,18 +63,20 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
         response_content = response.json()
-        self.assertEqual(response_content["growing_period_id"], growing_period.id)
-        self.assertEqual(response_content["growing_period_start_date"], "2020-01-03")
-        self.assertEqual(response_content["growing_period_end_date"], "2020-12-05")
         self.assertEqual(
-            response_content["growing_period_weeks_without_delivery"], [4, 7, 12]
-        )
-        self.assertEqual(
-            response_content["adjustments"],
-            [
-                {"calendar_week": 4, "adjusted_weekday": 1},
-                {"calendar_week": 6, "adjusted_weekday": 5},
-            ],
+            {
+                "adjustments": [
+                    {"adjusted_weekday": 1, "calendar_week": 4},
+                    {"adjusted_weekday": 5, "calendar_week": 6},
+                ],
+                "growing_period_end_date": "2020-12-05",
+                "growing_period_id": growing_period.id,
+                "growing_period_start_date": "2020-01-03",
+                "growing_period_weeks_without_delivery": [4, 7, 12],
+                "joker_restrictions": "15.02.-20.03.[3]",
+                "max_jokers_per_member": 3,
+            },
+            response_content,
         )
 
     def test_patch_loggedInAsNormalUser_returns403(self):
@@ -96,6 +101,8 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
                 "growing_period_end_date": "2020-12-05",
                 "growing_period_weeks_without_delivery": [],
                 "adjustments": [],
+                "max_jokers_per_member": 2,
+                "joker_restrictions": "disabled",
             },
             content_type="application/json",
         )
@@ -110,6 +117,8 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
             start_date=datetime.date(year=2020, month=1, day=3),
             end_date=datetime.date(year=2020, month=12, day=5),
             weeks_without_delivery=[12, 4, 7],
+            max_jokers_per_member=2,
+            joker_restrictions="15.02.-20.03.[3]",
         )
         DeliveryDayAdjustment.objects.create(
             growing_period=growing_period, calendar_week=6, adjusted_weekday=5
@@ -131,6 +140,8 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
                     {"calendar_week": 8, "adjusted_weekday": 3},
                     {"calendar_week": 9, "adjusted_weekday": 4},
                 ],
+                "max_jokers_per_member": 3,
+                "joker_restrictions": "16.03.-21.04.[2]",
             },
             content_type="application/json",
         )
@@ -162,3 +173,5 @@ class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
                 calendar_week=9, adjusted_weekday=4, growing_period=growing_period
             ).exists()
         )
+        self.assertEqual(3, growing_period.max_jokers_per_member)
+        self.assertEqual("16.03.-21.04.[2]", growing_period.joker_restrictions)

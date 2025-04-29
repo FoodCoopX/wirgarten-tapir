@@ -1,12 +1,10 @@
 import datetime
 from unittest.mock import Mock
 
-from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -17,20 +15,27 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
         ParameterDefinitions().import_definitions()
 
     def test_canJokerBeUsedRelativeToRestrictions_noRestrictions_returnsTrue(self):
-        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
-            value="disabled"
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2022, month=5, day=1),
+            end_date=datetime.date(year=2022, month=5, day=30),
+            joker_restrictions="disabled",
         )
+
         self.assertTrue(
             JokerManagementService.can_joker_be_used_relative_to_restrictions(
-                Mock(), Mock(), cache={}
+                Mock(),
+                reference_date=datetime.date(year=2022, month=5, day=15),
+                cache={},
             )
         )
 
     def test_canJokerBeUsedRelativeToRestrictions_restrictionsAllowNewJoker_returnsTrue(
         self,
     ):
-        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
-            value="01.08.-31.08.[2];15.02.-20.03.[3]"
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            joker_restrictions="01.08.-31.08.[2];15.02.-20.03.[3]",
         )
         member = MemberFactory.create()
         Joker.objects.create(
@@ -50,8 +55,10 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
     def test_canJokerBeUsedRelativeToRestrictions_restrictionsDontAllowNewJoker_returnsFalse(
         self,
     ):
-        TapirParameter.objects.filter(key=ParameterKeys.JOKERS_RESTRICTIONS).update(
-            value="01.08.-31.08.[2];15.02.-20.03.[3]"
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            joker_restrictions="01.08.-31.08.[2];15.02.-20.03.[3]",
         )
         member = MemberFactory.create()
         Joker.objects.create(

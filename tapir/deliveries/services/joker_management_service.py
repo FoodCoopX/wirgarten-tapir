@@ -5,7 +5,6 @@ from typing import List, Dict
 
 from django.core.exceptions import ValidationError
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
@@ -14,8 +13,7 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.models import Member, Subscription
-from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
 from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
 
@@ -59,9 +57,7 @@ class JokerManagementService:
             date__lte=growing_period.end_date,
         ).count()
 
-        return nb_used_jokers_in_growing_period < get_parameter_value(
-            ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT, cache=cache
-        )
+        return nb_used_jokers_in_growing_period < growing_period.max_jokers_per_member
 
     @classmethod
     def can_joker_be_cancelled(cls, joker: Joker, cache: Dict) -> bool:
@@ -104,14 +100,15 @@ class JokerManagementService:
         ).exists()
 
     @classmethod
-    def get_extra_joker_restrictions(
-        cls, restrictions_as_string: str = None, cache: Dict = None
-    ) -> List[JokerRestriction]:
-        if restrictions_as_string is None:
-            restrictions_as_string = get_parameter_value(
-                ParameterKeys.JOKERS_RESTRICTIONS, cache=cache
-            )
+    def get_extra_joker_restrictions(cls, growing_period: GrowingPeriod):
+        return cls.get_extra_joker_restrictions_from_string(
+            growing_period.joker_restrictions
+        )
 
+    @classmethod
+    def get_extra_joker_restrictions_from_string(
+        cls, restrictions_as_string: str
+    ) -> List[JokerRestriction]:
         if restrictions_as_string == "disabled":
             return []
 
@@ -152,7 +149,7 @@ class JokerManagementService:
     @classmethod
     def validate_joker_restrictions(cls, restrictions_as_string: str):
         try:
-            cls.get_extra_joker_restrictions(restrictions_as_string)
+            cls.get_extra_joker_restrictions_from_string(restrictions_as_string)
         except Exception as e:
             raise ValidationError(f"Invalid joker restriction value: {e}")
 
@@ -160,7 +157,10 @@ class JokerManagementService:
     def can_joker_be_used_relative_to_restrictions(
         cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        restrictions = cls.get_extra_joker_restrictions(cache=cache)
+        growing_period = get_current_growing_period(
+            reference_date=reference_date, cache=cache
+        )
+        restrictions = cls.get_extra_joker_restrictions(growing_period=growing_period)
         for restriction in restrictions:
             restriction_start_date = datetime.date(
                 year=reference_date.year,

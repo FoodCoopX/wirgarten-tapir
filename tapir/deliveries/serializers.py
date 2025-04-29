@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from tapir.deliveries.models import Joker
+from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.wirgarten.models import (
     Subscription,
     PickupLocation,
@@ -86,13 +87,13 @@ class UsedJokerInGrowingPeriodSerializer(serializers.Serializer):
     growing_period_start = serializers.DateField()
     growing_period_end = serializers.DateField()
     number_of_used_jokers = serializers.IntegerField()
+    joker_restrictions = JokerRestrictionSerializer(many=True)
+    max_jokers = serializers.IntegerField()
 
 
 class MemberJokerInformationSerializer(serializers.Serializer):
     used_jokers = JokerWithCancellationLimitSerializer(many=True)
-    max_jokers_per_growing_period = serializers.IntegerField()
     weekday_limit = serializers.IntegerField()
-    joker_restrictions = JokerRestrictionSerializer(many=True)
     used_joker_in_growing_period = UsedJokerInGrowingPeriodSerializer(many=True)
 
 
@@ -109,3 +110,8 @@ class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
         child=serializers.IntegerField()
     )
     adjustments = DeliveryDayAdjustmentSerializer(many=True)
+    max_jokers_per_member = serializers.IntegerField()
+    joker_restrictions = serializers.CharField(
+        validators=[JokerManagementService.validate_joker_restrictions]
+    )
+    jokers_enabled = serializers.BooleanField(read_only=True)

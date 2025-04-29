@@ -1,9 +1,7 @@
 import datetime
 
-from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests import factories
 from tapir.wirgarten.tests.factories import MemberFactory, GrowingPeriodFactory
@@ -27,11 +25,8 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
     def test_canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod_fewEnoughJokerUsed_returnsTrue(
         self,
     ):
-        growing_period = GrowingPeriodFactory.create()
+        growing_period = GrowingPeriodFactory.create(max_jokers_per_member=3)
         member = MemberFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT
-        ).update(value="3")
         Joker.objects.create(
             member=member, date=growing_period.start_date + datetime.timedelta(days=1)
         )
@@ -51,11 +46,8 @@ class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest
     def test_canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod_tooManyJokerUsed_returnsFalse(
         self,
     ):
-        growing_period = GrowingPeriodFactory.create()
+        growing_period = GrowingPeriodFactory.create(max_jokers_per_member=2)
         member = MemberFactory.create()
-        TapirParameter.objects.filter(
-            key=ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT
-        ).update(value="2")
         Joker.objects.create(
             member=member, date=growing_period.start_date + datetime.timedelta(days=1)
         )

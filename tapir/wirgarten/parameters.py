@@ -64,9 +64,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             validate_html,
             validate_iso_datetime_or_disabled,
         )
-        from tapir.deliveries.services.joker_management_service import (
-            JokerManagementService,
-        )
         from tapir.pickup_locations.services.basket_size_capacities_service import (
             BasketSizeCapacitiesService,
         )
@@ -794,34 +791,6 @@ Dein WirGarten-Team""",
             description="Temporäre Liefer-Pausen pro Mitglied erlauben",
             category=ParameterCategory.JOKERS,
             order_priority=3,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.JOKERS_AMOUNT_PER_CONTRACT,
-            label="Joker pro Jahr",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=4,
-            description="Anzahl an Joker das ein Mitglied pro Vertragsjahr einsetzen darf",
-            category=ParameterCategory.JOKERS,
-            order_priority=2,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.JOKERS_RESTRICTIONS,
-            label="Besondere Einschränkungen",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="01.08.-31.08.[2];",
-            description="""Zeiträume, in denen das Mitglied nur eine begrenzte Anzahl an Jokern setzen kann. 
-            zB: maximal 2 Joker pro Mitglied im August.
-            Format: StartDatum-EndDatum[AnzahlJoker];StartDatum-EndDatum[AnzahlJoker]
-            Beispiel: 01.08.-31.08.[2];15.02.-20.03.[3] heißt maximal 2 Joker im Zeitraum 01.08. - 31.08. und maximal 3 Joker im Zeitraum 15.02. - 20.03..
-            Wenn es keine Einschränkungen geben soll, bitte "disabled" eintragen.
-            """,
-            category=ParameterCategory.JOKERS,
-            order_priority=1,
-            meta=ParameterMeta(
-                validators=[JokerManagementService.validate_joker_restrictions]
-            ),
         )
 
         parameter_definition(

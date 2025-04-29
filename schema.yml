@@ -3587,6 +3587,13 @@ components:
             type: integer
             maximum: 53
             minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          maxLength: 1024
       required:
       - end_date
       - start_date
@@ -3609,6 +3616,14 @@ components:
             type: integer
             maximum: 53
             minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          minLength: 1
+          maxLength: 1024
       required:
       - end_date
       - start_date
@@ -3631,12 +3646,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeliveryDayAdjustment'
+        max_jokers_per_member:
+          type: integer
+        joker_restrictions:
+          type: string
+        jokers_enabled:
+          type: boolean
+          readOnly: true
       required:
       - adjustments
       - growing_period_end_date
       - growing_period_id
       - growing_period_start_date
       - growing_period_weeks_without_delivery
+      - joker_restrictions
+      - jokers_enabled
+      - max_jokers_per_member
     Joker:
       type: object
       properties:
@@ -3710,21 +3735,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JokerWithCancellationLimit'
-        max_jokers_per_growing_period:
-          type: integer
         weekday_limit:
           type: integer
-        joker_restrictions:
-          type: array
-          items:
-            $ref: '#/components/schemas/JokerRestriction'
         used_joker_in_growing_period:
           type: array
           items:
             $ref: '#/components/schemas/UsedJokerInGrowingPeriod'
       required:
-      - joker_restrictions
-      - max_jokers_per_growing_period
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
@@ -4058,6 +4075,14 @@ components:
             type: integer
             maximum: 53
             minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          minLength: 1
+          maxLength: 1024
     PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
       type: object
       properties:
@@ -4078,6 +4103,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeliveryDayAdjustmentRequest'
+        max_jokers_per_member:
+          type: integer
+        joker_restrictions:
+          type: string
+          minLength: 1
     PatchedPdfExportModelRequest:
       type: object
       properties:
@@ -4598,6 +4628,9 @@ components:
           type: boolean
           title: Muss gezeichnet werden
           description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+        is_association_membership:
+          type: boolean
+          title: Repräsentiert Vereinsmitgliedschaften
       required:
       - name
     RecipientRequest:
@@ -5065,9 +5098,17 @@ components:
           format: date
         number_of_used_jokers:
           type: integer
+        joker_restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerRestriction'
+        max_jokers:
+          type: integer
       required:
       - growing_period_end
       - growing_period_start
+      - joker_restrictions
+      - max_jokers
       - number_of_used_jokers
   securitySchemes:
     cookieAuth:
