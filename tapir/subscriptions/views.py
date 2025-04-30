@@ -79,20 +79,24 @@ class GetCancellationDataView(APIView):
                     product=subscribed_product, member=member, cache=cache
                 ),
             }
-            for subscribed_product in cls.get_subscribed_products(member)
+            for subscribed_product in cls.get_subscribed_products(member, cache=cache)
         ]
 
     @classmethod
-    def get_subscribed_products(cls, member):
+    def get_subscribed_products(cls, member, cache: Dict):
         return {
             subscription.product
-            for subscription in get_active_and_future_subscriptions().filter(
+            for subscription in get_active_and_future_subscriptions(cache=cache).filter(
                 member=member, cancellation_ts__isnull=True
             )
         }
 
 
 class CancelSubscriptionsView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
     @extend_schema(
         responses={200: CancelSubscriptionsViewResponseSerializer()},
         parameters=[
@@ -111,15 +115,16 @@ class CancelSubscriptionsView(APIView):
             for product_id in product_ids
             if product_id != ""
         }
-        subscribed_products = GetCancellationDataView.get_subscribed_products(member)
+        subscribed_products = GetCancellationDataView.get_subscribed_products(
+            member, cache=self.cache
+        )
         cancel_coop_membership = (
             request.query_params.get("cancel_coop_membership") == "true"
         )
-        cache = {}
         if (
             cancel_coop_membership
             and not MembershipCancellationManager.can_member_cancel_coop_membership(
-                member, cache=cache
+                member, cache=self.cache
             )
         ):
             return self.build_response(
@@ -143,13 +148,17 @@ class CancelSubscriptionsView(APIView):
         if (
             not get_parameter_value(
                 ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                cache=cache,
+                cache=self.cache,
             )
             and self.is_at_least_one_additional_product_not_selected(
-                subscribed_products, products_selected_for_cancellation, cache=cache
+                subscribed_products,
+                products_selected_for_cancellation,
+                cache=self.cache,
             )
             and self.are_all_base_products_selected(
-                subscribed_products, products_selected_for_cancellation, cache=cache
+                subscribed_products,
+                products_selected_for_cancellation,
+                cache=self.cache,
             )
         ):
             return self.build_response(
@@ -164,12 +173,12 @@ class CancelSubscriptionsView(APIView):
         with transaction.atomic():
             for product in products_selected_for_cancellation:
                 SubscriptionCancellationManager.cancel_subscriptions(
-                    product, member, cache=cache
+                    product, member, cache=self.cache
                 )
 
             if cancel_coop_membership:
                 MembershipCancellationManager.cancel_coop_membership(
-                    member, cache=cache
+                    member, cache=self.cache
                 )
 
         return Response("OK", status=status.HTTP_200_OK)
