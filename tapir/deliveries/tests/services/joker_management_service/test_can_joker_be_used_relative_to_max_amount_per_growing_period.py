@@ -9,8 +9,11 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestCanJokerBeUsedRelativeToMaxAmountPerGrowingPeriod(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+
+    def setUp(self) -> None:
         mock_timezone(self, factories.NOW)
 
     def test_canJokerBeUsedRelativeToMaxAmountPerGrowingPeriod_noGrowingPeriod_returnsFalse(

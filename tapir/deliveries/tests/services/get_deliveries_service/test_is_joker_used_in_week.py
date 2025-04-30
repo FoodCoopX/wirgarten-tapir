@@ -10,7 +10,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGetDeliveriesServiceIsJokerUsedInWeek(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_isJokerUsedInWeek_noJokerInWeek_returnsFalse(self):

@@ -33,8 +33,11 @@ from tapir.wirgarten.tests.test_utils import (
 
 
 class TestAdditionalProductForm(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+
+    def setUp(self):
         now = datetime.datetime(year=2023, month=6, day=12)
         mock_timezone(self, now)
 

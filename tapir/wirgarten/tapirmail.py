@@ -60,6 +60,8 @@ class Events:
     # Email Adresse wurde erfolgreich geändert
     MEMBERAREA_CHANGE_EMAIL_SUCCESS = "memberarea_change_email_success"
 
+    CONTRACT_CANCELLED = "contract_canceled"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -275,6 +277,14 @@ def _register_triggers():
     )
     TransactionalTrigger.register_action(
         "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
+    )
+    TransactionalTrigger.register_action(
+        "Vertrag gekündigt",
+        Events.CONTRACT_CANCELLED,
+        {
+            "Vertragsliste": "contract_list",
+            "Vertragsende": "contract_end_date",
+        },
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY

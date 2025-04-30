@@ -16,8 +16,11 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestGet(TapirIntegrationTest):
     maxDiff = 2000
 
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+
+    def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2023, month=2, day=15))
 
     def test_get_normalMemberAsksForOwnData_returnsCorrectData(

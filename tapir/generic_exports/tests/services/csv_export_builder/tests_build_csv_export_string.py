@@ -8,7 +8,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestBuildCsvExportString(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_buildCsvExportString_default_returnsCorrectString(self):

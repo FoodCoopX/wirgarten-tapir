@@ -24,7 +24,8 @@ from tapir.wirgarten.views.register import (
 
 
 class TestRegistrationWizardViewBase(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def create_growing_period_with_one_subscription(self, year: int):

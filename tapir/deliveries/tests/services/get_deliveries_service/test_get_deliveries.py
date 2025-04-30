@@ -9,8 +9,11 @@ from tapir.wirgarten.tests.test_utils import mock_timezone, TapirIntegrationTest
 
 
 class TestGetDeliveriesServiceGetDeliveries(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+
+    def setUp(self):
         mock_timezone(self, factories.NOW)
 
     @patch.object(GetDeliveriesService, "build_delivery_object")

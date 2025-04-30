@@ -9,7 +9,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestBuildContexts(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     @patch.object(PdfExportBuilder, "build_context_for_entry")

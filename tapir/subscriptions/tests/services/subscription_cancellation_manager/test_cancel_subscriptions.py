@@ -21,8 +21,11 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestCancelSubscriptions(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
+
+    def setUp(self) -> None:
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)

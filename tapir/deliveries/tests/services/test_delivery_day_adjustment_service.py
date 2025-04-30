@@ -12,7 +12,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestDeliveryDayAdjustmentService(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_getAdjustedDeliveryWeekday_noGrowingPeriod_returnsDefaultWeekday(self):

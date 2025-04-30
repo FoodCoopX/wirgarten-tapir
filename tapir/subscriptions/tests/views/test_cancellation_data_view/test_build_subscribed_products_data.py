@@ -57,7 +57,7 @@ class TestBuildSubscribedProductsData(SimpleTestCase):
             result,
         )
 
-        mock_get_subscribed_products.assert_called_once_with(member)
+        mock_get_subscribed_products.assert_called_once_with(member, cache=cache)
         self.assertEqual(3, mock_is_product_in_trial.call_count)
         mock_is_product_in_trial.assert_has_calls(
             [call(product, member, cache=cache) for product in subscribed_products]

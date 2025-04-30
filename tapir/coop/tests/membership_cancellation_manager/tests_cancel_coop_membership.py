@@ -10,9 +10,12 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestCancelCoopMembership(TapirIntegrationTest):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2024, month=9, day=27))
-        ParameterDefinitions().import_definitions()
 
     def test_cancelCoopMembership_default_deletesAllFutureSharePurchases(self):
         member = MemberFactory.create()

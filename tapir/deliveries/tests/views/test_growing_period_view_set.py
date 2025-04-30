@@ -6,7 +6,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGrowingPeriodViewSet(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_growingPeriodViewSet_loggedInAsNormalUser_returns403(self):

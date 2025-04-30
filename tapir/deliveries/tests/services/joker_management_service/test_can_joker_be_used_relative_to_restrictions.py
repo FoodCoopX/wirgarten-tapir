@@ -11,7 +11,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
     TapirIntegrationTest
 ):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_canJokerBeUsedRelativeToRestrictions_noRestrictions_returnsTrue(self):

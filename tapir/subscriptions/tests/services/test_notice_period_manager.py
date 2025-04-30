@@ -15,7 +15,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestNoticePeriodManager(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_setNoticePeriodDuration_noticePeriodObjectAlreadyExists_existingObjectUpdated(

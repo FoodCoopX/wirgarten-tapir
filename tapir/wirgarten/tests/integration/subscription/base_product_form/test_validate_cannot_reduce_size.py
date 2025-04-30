@@ -29,9 +29,12 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestValidateCannotReduceSize(TapirIntegrationTest):
     NOW = timezone.make_aware(datetime.datetime(year=2024, month=3, day=15))
 
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         super().setUp()
-        ParameterDefinitions().import_definitions()
         mock_timezone(self, self.NOW)
 
         product_type = ProductTypeFactory(name="Ernteanteile", delivery_cycle=WEEKLY[0])

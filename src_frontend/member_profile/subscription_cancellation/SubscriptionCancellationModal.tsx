@@ -161,6 +161,11 @@ const SubscriptionCancellationModal: React.FC<
                 </div>
               ))}
 
+              <Form.Text>
+                Wenn du früher kündigen möchtest, wende dich bitte an unsere
+                Verwaltung.
+              </Form.Text>
+
               {subscribedProducts.map(
                 (subscribedProduct: ProductForCancellation) => {
                   return (

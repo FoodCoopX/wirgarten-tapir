@@ -38,6 +38,7 @@ class SubscriptionCancellationManager:
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         )
 
+        cancelled_subscriptions = []
         for subscription in get_active_and_future_subscriptions(cache=cache).filter(
             member=member, product=product
         ):
@@ -56,3 +57,6 @@ class SubscriptionCancellationManager:
             subscription.cancellation_ts = get_now()
             subscription.end_date = cancellation_date
             subscription.save()
+            cancelled_subscriptions.append(subscription)
+
+        return cancelled_subscriptions

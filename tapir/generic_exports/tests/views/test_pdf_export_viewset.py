@@ -6,7 +6,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestPdfExportViewset(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_pdfExportViewset_loggedInAsNormalUser_returns403(self):

@@ -7,7 +7,8 @@ from tapir.wirgarten.utils import get_now
 
 
 class TestBuildContextForEntry(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_buildContextForEntry_default_buildsContextWithOnlyUsedColumns(self):
