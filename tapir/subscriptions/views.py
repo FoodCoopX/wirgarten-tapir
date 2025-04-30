@@ -118,6 +118,7 @@ class CancelSubscriptionsView(APIView):
         subscribed_products = GetCancellationDataView.get_subscribed_products(
             member, cache=self.cache
         )
+
         cancel_coop_membership = (
             request.query_params.get("cancel_coop_membership") == "true"
         )
@@ -181,7 +182,7 @@ class CancelSubscriptionsView(APIView):
                     member, cache=self.cache
                 )
 
-        return Response("OK", status=status.HTTP_200_OK)
+        return self.build_response(subscriptions_cancelled=True, errors=[])
 
     @staticmethod
     def are_all_base_products_selected(
