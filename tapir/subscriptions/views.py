@@ -4,7 +4,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
@@ -16,6 +16,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.deliveries.serializers import ProductTypeSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -38,8 +39,15 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, Product, Subscription, PickupLocation
+from tapir.wirgarten.models import (
+    Member,
+    Product,
+    Subscription,
+    PickupLocation,
+    ProductType,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -312,6 +320,14 @@ class ExtendedProductView(APIView):
         )
 
 
+class ProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ProductTypeSerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def get_queryset(self):
+        return ProductType.objects.order_by(*product_type_order_by())
+
+
 class CancelledSubscriptionsApiView(APIView):
     serializer_class = CancelledSubscriptionSerializer
     pagination_class = LimitOffsetPagination
@@ -324,15 +340,18 @@ class CancelledSubscriptionsApiView(APIView):
     @extend_schema(
         responses={200: CancelledSubscriptionSerializer(many=True)},
         parameters=[
-            OpenApiParameter(name="limit", type=int),
-            OpenApiParameter(name="offset", type=int),
+            OpenApiParameter(name="limit", type=int, required=True),
+            OpenApiParameter(name="offset", type=int, required=True),
+            OpenApiParameter(name="product_type_id", type=str, required=True),
         ],
     )
     @action(detail=False)
     def get(self, request: Request):
         pagination = self.pagination_class()
         subscriptions = Subscription.objects.filter(
-            cancellation_ts__isnull=False, cancellation_admin_confirmed__isnull=True
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+            product__type_id=request.query_params.get("product_type_id"),
         ).order_by("cancellation_ts")
         subscriptions = pagination.paginate_queryset(subscriptions, request)
         members = Member.objects.filter(

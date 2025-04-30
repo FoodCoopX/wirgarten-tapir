@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { CancelledSubscription, SubscriptionsApi } from "../api-client";
+import {
+  CancelledSubscription,
+  ProductType,
+  SubscriptionsApi,
+} from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
@@ -28,13 +32,36 @@ const NewContractCancellationsCard: React.FC<
     CancelledSubscription[]
   >([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedProductType, setSelectedProductType] = useState<ProductType>();
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [productTypesLoading, setProductTypesLoading] = useState(true);
 
   useEffect(() => {
+    subscriptionsApi
+      .subscriptionsProductTypesList()
+      .then((result) => {
+        setProductTypes(result);
+        setSelectedProductType(result[0]);
+      })
+      .catch(handleRequestError)
+      .finally(() => setProductTypesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedProductType]);
+
+  useEffect(() => {
+    if (!selectedProductType) return;
+
+    setSelectedSubscriptions([]);
+
     setLoading(true);
     subscriptionsApi
       .subscriptionsApiCancelledSubscriptionsList({
         limit: DEFAULT_PAGE_SIZE,
         offset: currentPage * DEFAULT_PAGE_SIZE,
+        productTypeId: selectedProductType.id!,
       })
       .then((paginatedResults) => {
         setCancelledSubscriptions(paginatedResults.results);
@@ -42,7 +69,7 @@ const NewContractCancellationsCard: React.FC<
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
-  }, [currentPage]);
+  }, [currentPage, selectedProductType]);
 
   function onSelectionUpdated(
     checked: boolean,
@@ -85,6 +112,32 @@ const NewContractCancellationsCard: React.FC<
     );
   }
 
+  function getProductTypeTabs() {
+    if (productTypesLoading) {
+      return <></>;
+    }
+
+    return (
+      <ul className="nav nav-tabs card-header-tabs">
+        {productTypes.map((productType) => {
+          let className = "nav-link";
+          if (selectedProductType === productType) {
+            className += " active";
+          }
+          return (
+            <li
+              className="nav-item"
+              style={{ cursor: "pointer" }}
+              onClick={() => setSelectedProductType(productType)}
+            >
+              <a className={className}>{productType.name}</a>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -105,6 +158,7 @@ const NewContractCancellationsCard: React.FC<
                   onClick={() => setShowConfirmModal(true)}
                 />
               </div>
+              {getProductTypeTabs()}
             </Card.Header>
             <Card.Body className={"p-0"}>
               <Table striped hover responsive className={"mb-0"}>
@@ -121,7 +175,7 @@ const NewContractCancellationsCard: React.FC<
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
+                  {loading || productTypesLoading ? (
                     <PlaceholderTableRows
                       nbRows={DEFAULT_PAGE_SIZE}
                       nbColumns={8}

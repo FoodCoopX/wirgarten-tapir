@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.subscriptions import views
 
@@ -25,3 +26,7 @@ urlpatterns = [
         name="cancelled_subscriptions",
     ),
 ]
+
+router = DefaultRouter()
+router.register(r"product_types", views.ProductTypeViewSet, basename="product_types")
+urlpatterns += router.urls
