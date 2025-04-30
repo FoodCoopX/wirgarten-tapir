@@ -136,6 +136,11 @@ def add_admin_links(groups, request):
             url=reverse_lazy("wirgarten:new_contracts"),
             notification_count=coop_shares + product_shares,
         )
+        members_group.add_link(
+            display_name=_("Neue Kündigungen"),
+            material_icon="contract_delete",
+            url=reverse_lazy("wirgarten:new_contract_cancellations"),
+        )
 
         waitlist_entries = WaitingListEntry.objects.count()
         members_group.add_link(

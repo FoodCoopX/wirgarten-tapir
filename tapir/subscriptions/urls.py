@@ -19,4 +19,9 @@ urlpatterns = [
         views.ExtendedProductView.as_view(),
         name="extended_product",
     ),
+    path(
+        "api/cancelled_subscriptions",
+        views.CancelledSubscriptionsApiView.as_view(),
+        name="cancelled_subscriptions",
+    ),
 ]

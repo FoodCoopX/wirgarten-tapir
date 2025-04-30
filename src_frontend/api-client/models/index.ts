@@ -1,12 +1,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
+export * from './BlankEnum';
 export * from './BounceTypeEnum';
 export * from './BuildCsvExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
 export * from './CancelSubscriptionsViewResponse';
 export * from './CancellationData';
+export * from './CancelledSubscription';
+export * from './CountryEnum';
 export * from './CsvExportModel';
 export * from './CsvExportModelRequest';
 export * from './DayOfWeekEnum';
@@ -38,7 +41,10 @@ export * from './JokerRestriction';
 export * from './JokerWithCancellationLimit';
 export * from './LegalStatusEnum';
 export * from './LocaleEnum';
+export * from './Member';
+export * from './MemberCountry';
 export * from './MemberJokerInformation';
+export * from './PaginatedCancelledSubscriptionList';
 export * from './PaginatedEmailConfigurationDispatchList';
 export * from './PaginatedEmailConfigurationList';
 export * from './PaginatedEmailConfigurationVersionList';
@@ -72,6 +78,7 @@ export * from './PickupLocationCapacityByShareRequest';
 export * from './PickupLocationCapacityChangePoint';
 export * from './PickupLocationCapacityEvolution';
 export * from './PickupLocationOpeningTime';
+export * from './PreferredLanguageEnum';
 export * from './Product';
 export * from './ProductBasketSizeEquivalence';
 export * from './ProductBasketSizeEquivalenceRequest';

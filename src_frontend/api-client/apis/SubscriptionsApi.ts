@@ -18,6 +18,7 @@ import type {
   CancelSubscriptionsViewResponse,
   CancellationData,
   ExtendedProduct,
+  PaginatedCancelledSubscriptionList,
   PatchedExtendedProductRequest,
 } from '../models/index';
 import {
@@ -27,9 +28,16 @@ import {
     CancellationDataToJSON,
     ExtendedProductFromJSON,
     ExtendedProductToJSON,
+    PaginatedCancelledSubscriptionListFromJSON,
+    PaginatedCancelledSubscriptionListToJSON,
     PatchedExtendedProductRequestFromJSON,
     PatchedExtendedProductRequestToJSON,
 } from '../models/index';
+
+export interface SubscriptionsApiCancelledSubscriptionsListRequest {
+    limit?: number;
+    offset?: number;
+}
 
 export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
     patchedExtendedProductRequest?: PatchedExtendedProductRequest;
@@ -53,6 +61,38 @@ export interface SubscriptionsCancellationDataRetrieveRequest {
  * 
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async subscriptionsApiCancelledSubscriptionsListRaw(requestParameters: SubscriptionsApiCancelledSubscriptionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaginatedCancelledSubscriptionList>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/api/cancelled_subscriptions`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PaginatedCancelledSubscriptionListFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsApiCancelledSubscriptionsList(requestParameters: SubscriptionsApiCancelledSubscriptionsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaginatedCancelledSubscriptionList> {
+        const response = await this.subscriptionsApiCancelledSubscriptionsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

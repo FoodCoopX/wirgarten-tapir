@@ -6,6 +6,7 @@ from tapir.wirgarten.views.contracts import (
     NewContractsView,
     SubscriptionListView,
     confirm_new_contracts,
+    NewSubscriptionCancellationsView,
 )
 from tapir.wirgarten.views.debug.scheduled_tasks import (
     JobsListView,
@@ -170,6 +171,11 @@ urlpatterns = [
     ),
     path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
     path("admin/newcontracts", NewContractsView.as_view(), name="new_contracts"),
+    path(
+        "admin/new_contract_cancellations",
+        NewSubscriptionCancellationsView.as_view(),
+        name="new_contract_cancellations",
+    ),
     path(
         "admin/newcontracts/confirm",
         confirm_new_contracts,

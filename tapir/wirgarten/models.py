@@ -673,6 +673,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
         decimal_places=2, max_digits=8, null=True, blank=True
     )
     notice_period_duration = models.IntegerField(null=True)
+    cancellation_admin_confirmed = models.DateTimeField(null=True)
 
     @property
     @deprecated(
