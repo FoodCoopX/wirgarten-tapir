@@ -28,11 +28,15 @@ def create_field(param: TapirParameter, cache: Dict):
         vars_sorted = map(lambda x: "{" + x + "}", sorted(param_meta.vars_hint))
         help_text += f"""<br/><small><strong>Variablen:</strong> {", ".join(vars_sorted)}</small>"""
 
-    if param_meta.options is not None and len(param_meta.options) > 0:
+    options = param_meta.options
+    if param_meta.options_callable is not None:
+        options = param_meta.options_callable()
+
+    if options is not None and len(options) > 0:
         return forms.ChoiceField(
             label=_(param.label),
             help_text=help_text,
-            choices=param_meta.options,
+            choices=options,
             required=True,
             initial=param_value,
             validators=param_meta.validators,

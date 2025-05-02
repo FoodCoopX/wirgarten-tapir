@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from lxml import etree
 
-from tapir.wirgarten.models import GrowingPeriod
+from tapir.wirgarten.models import GrowingPeriod, ProductType
 
 
 def validate_growing_period_overlap(start_date: date, end_date: date):
@@ -95,3 +95,10 @@ def validate_iso_datetime_or_disabled(date_as_string: str):
         datetime.datetime.fromisoformat(date_as_string)
     except ValueError as e:
         raise ValidationError(f"Invalid date: {date_as_string}, error: {e}")
+
+
+def validate_base_product_type_exists(base_product_type_id: str):
+    if not ProductType.objects.filter(id=base_product_type_id).exists():
+        raise ValidationError(
+            f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."
+        )

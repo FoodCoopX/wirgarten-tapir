@@ -34,6 +34,7 @@ class ParameterMeta:
     def __init__(
         self,
         options: [tuple] = None,
+        options_callable: callable = None,
         validators: [callable] = None,
         textarea=False,
         vars_hint: [str] = None,
@@ -47,6 +48,7 @@ class ParameterMeta:
 
         self.vars_hint = vars_hint
         self.options = options
+        self.options_callable = options_callable
         self.validators = validators
         self.textarea = textarea
         self.show_only_when = show_only_when

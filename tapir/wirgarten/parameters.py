@@ -63,6 +63,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.wirgarten.validators import (
             validate_html,
             validate_iso_datetime_or_disabled,
+            validate_base_product_type_exists,
         )
         from tapir.pickup_locations.services.basket_size_capacities_service import (
             BasketSizeCapacitiesService,
@@ -523,10 +524,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
-                options=[
+                options_callable=lambda: [
                     (product_type.id, product_type.name)
                     for product_type in ProductType.objects.all()
-                ]
+                ],
+                validators=[validate_base_product_type_exists],
             ),
             enabled=is_debug_instance(),
         )
