@@ -5,7 +5,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, permissions, viewsets
+from rest_framework import status, permissions
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
@@ -17,7 +17,6 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.deliveries.serializers import ProductTypeSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -49,7 +48,6 @@ from tapir.wirgarten.models import (
     ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -326,14 +324,6 @@ class ExtendedProductView(APIView):
             "OK",
             status=status.HTTP_200_OK,
         )
-
-
-class ProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = ProductTypeSerializer
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-
-    def get_queryset(self):
-        return ProductType.objects.order_by(*product_type_order_by())
 
 
 class CancelledSubscriptionsApiView(APIView):

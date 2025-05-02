@@ -884,43 +884,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/CancellationData'
           description: ''
-  /subscriptions/product_types/:
-    get:
-      operationId: subscriptions_product_types_list
-      tags:
-      - subscriptions
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductType'
-          description: ''
-  /subscriptions/product_types/{id}/:
-    get:
-      operationId: subscriptions_product_types_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        description: A unique value identifying this product type.
-        required: true
-      tags:
-      - subscriptions
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductType'
-          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
