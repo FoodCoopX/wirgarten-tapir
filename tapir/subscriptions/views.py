@@ -1,6 +1,7 @@
 from typing import Dict
 
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -53,7 +54,12 @@ from tapir.wirgarten.service.products import (
     get_product_price,
 )
 from tapir.wirgarten.tapirmail import Events
-from tapir.wirgarten.utils import check_permission_or_self, format_date, get_today
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    format_date,
+    get_today,
+    get_now,
+)
 
 
 class GetCancellationDataView(APIView):
@@ -184,7 +190,7 @@ class CancelSubscriptionsView(APIView):
                 False,
                 [
                     _(
-                        "Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."
+                        "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
                     )
                 ],
             )
@@ -392,3 +398,34 @@ class CancelledSubscriptionsApiView(APIView):
             many=True,
         )
         return pagination.get_paginated_response(serializer.data)
+
+
+class ConfirmSubscriptionCancellationView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="subscription_ids", type=str, required=True, many=True
+            ),
+        ],
+    )
+    def post(self, request: Request):
+        subscription_ids = request.query_params.getlist("subscription_ids")
+
+        subscriptions = Subscription.objects.filter(id__in=subscription_ids)
+
+        ids_not_found = [
+            subscription_id
+            for subscription_id in subscription_ids
+            if subscription_id
+            not in [subscription.id for subscription in subscriptions]
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(f"No subscription with ids {ids_not_found} found")
+
+        subscriptions.update(cancellation_admin_confirmed=get_now())
+
+        return Response("OK", status=status.HTTP_200_OK)

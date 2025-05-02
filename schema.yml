@@ -757,6 +757,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
           description: ''
+  /subscriptions/api/confirm_subscription_cancellation:
+    post:
+      operationId: subscriptions_api_confirm_subscription_cancellation_create
+      parameters:
+      - in: query
+        name: subscription_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /subscriptions/api/extended_product:
     get:
       operationId: subscriptions_api_extended_product_retrieve

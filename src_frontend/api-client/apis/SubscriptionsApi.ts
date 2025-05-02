@@ -36,6 +36,10 @@ export interface SubscriptionsApiCancelledSubscriptionsListRequest {
   productTypeId: string;
 }
 
+export interface SubscriptionsApiConfirmSubscriptionCancellationCreateRequest {
+  subscriptionIds: Array<string>;
+}
+
 export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
   patchedExtendedProductRequest?: PatchedExtendedProductRequest;
 }
@@ -130,6 +134,59 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiConfirmSubscriptionCancellationCreateRaw(
+    requestParameters: SubscriptionsApiConfirmSubscriptionCancellationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["subscriptionIds"] == null) {
+      throw new runtime.RequiredError(
+        "subscriptionIds",
+        'Required parameter "subscriptionIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionCancellationCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    if (requestParameters["subscriptionIds"] != null) {
+      queryParameters["subscription_ids"] =
+        requestParameters["subscriptionIds"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/confirm_subscription_cancellation`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async subscriptionsApiConfirmSubscriptionCancellationCreate(
+    requestParameters: SubscriptionsApiConfirmSubscriptionCancellationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.subscriptionsApiConfirmSubscriptionCancellationCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

@@ -35,6 +35,7 @@ const NewContractCancellationsCard: React.FC<
   const [selectedProductType, setSelectedProductType] = useState<ProductType>();
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [productTypesLoading, setProductTypesLoading] = useState(true);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     subscriptionsApi
@@ -52,6 +53,10 @@ const NewContractCancellationsCard: React.FC<
   }, [selectedProductType]);
 
   useEffect(() => {
+    loadSubscriptions();
+  }, [currentPage, selectedProductType]);
+
+  function loadSubscriptions() {
     if (!selectedProductType) return;
 
     setSelectedSubscriptions([]);
@@ -69,7 +74,7 @@ const NewContractCancellationsCard: React.FC<
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
-  }, [currentPage, selectedProductType]);
+  }
 
   function onSelectionUpdated(
     checked: boolean,
@@ -136,6 +141,24 @@ const NewContractCancellationsCard: React.FC<
         })}
       </ul>
     );
+  }
+
+  function onConfirm() {
+    setConfirmLoading(true);
+    subscriptionsApi
+      .subscriptionsApiConfirmSubscriptionCancellationCreate({
+        subscriptionIds: selectedSubscriptions.map(
+          (cancelledSubscription) => cancelledSubscription.subscription.id!,
+        ),
+      })
+      .then(() => {
+        loadSubscriptions();
+      })
+      .catch(handleRequestError)
+      .finally(() => {
+        setConfirmLoading(false);
+        setShowConfirmModal(false);
+      });
   }
 
   return (
@@ -265,7 +288,7 @@ const NewContractCancellationsCard: React.FC<
         confirmButtonIcon={"order_approve"}
         confirmButtonText={"Bestätigen"}
         message={getConfirmationMessage()}
-        onConfirm={() => alert("TODO")}
+        onConfirm={onConfirm}
         confirmButtonVariant={"primary"}
         open={showConfirmModal}
         title={"Prüfung bestätigen"}
