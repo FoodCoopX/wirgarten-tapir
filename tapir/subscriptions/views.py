@@ -52,6 +52,7 @@ from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
+    get_current_growing_period,
 )
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
@@ -381,20 +382,40 @@ class CancelledSubscriptionsApiView(APIView):
             pickup_location.id: pickup_location for pickup_location in pickup_locations
         }
 
-        serializer = CancelledSubscriptionSerializer(
-            [
+        subscription_datas = []
+        for subscription in subscriptions:
+            member = members_by_id[subscription.member_id]
+            pickup_location = pickup_locations_by_id[
+                getattr(
+                    member,
+                    MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
+                )
+            ]
+            cancellation_type = "Reguläre Kündigung"
+            if (
+                get_current_growing_period(
+                    subscription.end_date, cache=self.cache
+                ).end_date
+                > subscription.end_date
+            ):
+                cancellation_type = "Unterjährige Kündigung"
+            if TrialPeriodManager.is_subscription_in_trial(
+                subscription=subscription,
+                reference_date=subscription.cancellation_ts.date(),
+            ):
+                cancellation_type = "Kündigung in der Probezeit"
+
+            subscription_datas.append(
                 {
                     "subscription": subscription,
-                    "member": members_by_id[subscription.member_id],
-                    "pickup_location": pickup_locations_by_id[
-                        getattr(
-                            members_by_id[subscription.member_id],
-                            MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
-                        )
-                    ],
+                    "member": member,
+                    "pickup_location": pickup_location,
+                    "cancellation_type": cancellation_type,
                 }
-                for subscription in subscriptions
-            ],
+            )
+
+        serializer = CancelledSubscriptionSerializer(
+            subscription_datas,
             many=True,
         )
         return pagination.get_paginated_response(serializer.data)

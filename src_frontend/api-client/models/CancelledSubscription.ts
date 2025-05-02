@@ -43,6 +43,12 @@ export interface CancelledSubscription {
    * @memberof CancelledSubscription
    */
   pickupLocation: PickupLocation;
+  /**
+   *
+   * @type {string}
+   * @memberof CancelledSubscription
+   */
+  cancellationType: string;
 }
 
 /**
@@ -55,6 +61,8 @@ export function instanceOfCancelledSubscription(
     return false;
   if (!("member" in value) || value["member"] === undefined) return false;
   if (!("pickupLocation" in value) || value["pickupLocation"] === undefined)
+    return false;
+  if (!("cancellationType" in value) || value["cancellationType"] === undefined)
     return false;
   return true;
 }
@@ -76,6 +84,7 @@ export function CancelledSubscriptionFromJSONTyped(
     subscription: SubscriptionFromJSON(json["subscription"]),
     member: MemberFromJSON(json["member"]),
     pickupLocation: PickupLocationFromJSON(json["pickup_location"]),
+    cancellationType: json["cancellation_type"],
   };
 }
 
@@ -95,5 +104,6 @@ export function CancelledSubscriptionToJSONTyped(
     subscription: SubscriptionToJSON(value["subscription"]),
     member: MemberToJSON(value["member"]),
     pickup_location: PickupLocationToJSON(value["pickupLocation"]),
+    cancellation_type: value["cancellationType"],
   };
 }

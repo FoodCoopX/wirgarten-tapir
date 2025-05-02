@@ -3017,7 +3017,10 @@ components:
           $ref: '#/components/schemas/Member'
         pickup_location:
           $ref: '#/components/schemas/PickupLocation'
+        cancellation_type:
+          type: string
       required:
+      - cancellation_type
       - member
       - pickup_location
       - subscription

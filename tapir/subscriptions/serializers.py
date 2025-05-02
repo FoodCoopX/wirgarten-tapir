@@ -50,3 +50,4 @@ class CancelledSubscriptionSerializer(serializers.Serializer):
     subscription = SubscriptionSerializer()
     member = MemberSerializer()
     pickup_location = PickupLocationSerializer()
+    cancellation_type = serializers.CharField()

@@ -131,6 +131,7 @@ const NewContractCancellationsCard: React.FC<
           }
           return (
             <li
+              key={productType.id}
               className="nav-item"
               style={{ cursor: "pointer" }}
               onClick={() => setSelectedProductType(productType)}
@@ -195,13 +196,14 @@ const NewContractCancellationsCard: React.FC<
                     <th>Verteilort</th>
                     <th>Kündigung zum</th>
                     <th>Gekündigt am</th>
+                    <th>Art der Kündigung</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading || productTypesLoading ? (
                     <PlaceholderTableRows
                       nbRows={DEFAULT_PAGE_SIZE}
-                      nbColumns={8}
+                      nbColumns={9}
                       size={"xs"}
                     />
                   ) : (
@@ -263,6 +265,7 @@ const NewContractCancellationsCard: React.FC<
                               cancelledSubscription.subscription.cancellationTs,
                             )}
                           </td>
+                          <td>{cancelledSubscription.cancellationType}</td>
                         </tr>
                       );
                     })
