@@ -1,10 +1,14 @@
 from typing import Dict
 
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, permissions
+from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
@@ -13,13 +17,19 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
 )
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
+    CancelledSubscriptionSerializer,
+    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -30,14 +40,26 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, Product
+from tapir.wirgarten.models import (
+    Member,
+    Product,
+    Subscription,
+    PickupLocation,
+    ProductType,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
+    get_current_growing_period,
 )
 from tapir.wirgarten.tapirmail import Events
-from tapir.wirgarten.utils import check_permission_or_self, format_date
+from tapir.wirgarten.utils import (
+    check_permission_or_self,
+    format_date,
+    get_today,
+    get_now,
+)
 
 
 class GetCancellationDataView(APIView):
@@ -168,7 +190,7 @@ class CancelSubscriptionsView(APIView):
                 False,
                 [
                     _(
-                        "Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."
+                        "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
                     )
                 ],
             )
@@ -302,3 +324,160 @@ class ExtendedProductView(APIView):
             "OK",
             status=status.HTTP_200_OK,
         )
+
+
+class CancelledSubscriptionsApiView(APIView):
+    serializer_class = CancelledSubscriptionSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: CancelledSubscriptionSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="limit", type=int, required=True),
+            OpenApiParameter(name="offset", type=int, required=True),
+            OpenApiParameter(name="product_type_id", type=str, required=True),
+        ],
+    )
+    @action(detail=False)
+    def get(self, request: Request):
+        pagination = self.pagination_class()
+        subscriptions = self.get_unconfirmed_cancelled_subscriptions(
+            product_type_id=request.query_params.get("product_type_id")
+        ).order_by("cancellation_ts")
+        subscriptions = pagination.paginate_queryset(subscriptions, request)
+        members = Member.objects.filter(
+            id__in=[subscription.member_id for subscription in subscriptions]
+        ).distinct()
+        members = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
+            members, reference_date=get_today(cache=self.cache)
+        )
+        pickup_locations = PickupLocation.objects.filter(
+            id__in=[
+                getattr(
+                    member,
+                    MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
+                )
+                for member in members
+            ]
+        )
+
+        members_by_id = {member.id: member for member in members}
+        pickup_locations_by_id = {
+            pickup_location.id: pickup_location for pickup_location in pickup_locations
+        }
+
+        subscription_datas = []
+        for subscription in subscriptions:
+            member = members_by_id[subscription.member_id]
+            pickup_location = pickup_locations_by_id[
+                getattr(
+                    member,
+                    MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
+                )
+            ]
+            cancellation_type, show_warning = self.get_cancellation_type(subscription)
+
+            subscription_datas.append(
+                {
+                    "subscription": subscription,
+                    "member": member,
+                    "pickup_location": pickup_location,
+                    "cancellation_type": cancellation_type,
+                    "show_warning": show_warning,
+                }
+            )
+
+        serializer = CancelledSubscriptionSerializer(
+            subscription_datas,
+            many=True,
+        )
+        return pagination.get_paginated_response(serializer.data)
+
+    @classmethod
+    def get_unconfirmed_cancelled_subscriptions(cls, product_type_id):
+        return Subscription.objects.filter(
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+            product__type_id=product_type_id,
+        )
+
+    def get_cancellation_type(self, subscription: Subscription):
+        cancellation_type = "Reguläre Kündigung"
+        show_warning = False
+        if (
+            get_current_growing_period(subscription.end_date, cache=self.cache).end_date
+            > subscription.end_date
+        ):
+            cancellation_type = "Unterjährige Kündigung"
+            show_warning = True
+        if TrialPeriodManager.is_subscription_in_trial(
+            subscription=subscription,
+            reference_date=subscription.cancellation_ts.date(),
+        ):
+            cancellation_type = "Kündigung in der Probezeit"
+            show_warning = False
+
+        return cancellation_type, show_warning
+
+
+class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={
+            200: ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer()
+        },
+    )
+    def get(self, request: Request):
+        product_types = ProductType.objects.all()
+        number_of_subscriptions = [
+            CancelledSubscriptionsApiView.get_unconfirmed_cancelled_subscriptions(
+                product_type.id
+            ).count()
+            for product_type in product_types
+        ]
+        return Response(
+            ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
+                {
+                    "product_types": list(product_types),
+                    "number_of_subscriptions": number_of_subscriptions,
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ConfirmSubscriptionCancellationView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="subscription_ids", type=str, required=True, many=True
+            ),
+        ],
+    )
+    def post(self, request: Request):
+        subscription_ids = request.query_params.getlist("subscription_ids")
+
+        subscriptions = Subscription.objects.filter(id__in=subscription_ids)
+
+        ids_not_found = [
+            subscription_id
+            for subscription_id in subscription_ids
+            if subscription_id
+            not in [subscription.id for subscription in subscriptions]
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(f"No subscription with ids {ids_not_found} found")
+
+        subscriptions.update(cancellation_admin_confirmed=get_now())
+
+        return Response("OK", status=status.HTTP_200_OK)

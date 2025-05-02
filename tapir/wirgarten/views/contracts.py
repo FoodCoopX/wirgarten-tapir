@@ -86,6 +86,11 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
         return context
 
 
+class NewSubscriptionCancellationsView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Accounts.MANAGE
+    template_name = "wirgarten/subscription/new_contract_cancellations.html"
+
+
 @permission_required("accounts.manage")
 @transaction.atomic
 def confirm_new_contracts(request, **kwargs):

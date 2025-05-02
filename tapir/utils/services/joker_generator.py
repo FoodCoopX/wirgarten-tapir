@@ -30,6 +30,7 @@ class JokerGenerator:
                     continue
                 subscriptions.sort(key=lambda subscription: subscription.start_date)
                 start_date = subscriptions[0].start_date
+                subscriptions.sort(key=lambda subscription: subscription.end_date)
                 end_date = subscriptions[-1].end_date
                 nb_jokers = random.randint(
                     0, get_current_growing_period(cache=cache).max_jokers_per_member

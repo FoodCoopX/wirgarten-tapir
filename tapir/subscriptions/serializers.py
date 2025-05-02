@@ -1,9 +1,15 @@
 from rest_framework import serializers
 
 from tapir.core.config import LEGAL_STATUS_OPTIONS
-from tapir.deliveries.serializers import ProductSerializer
+from tapir.deliveries.serializers import (
+    ProductSerializer,
+    SubscriptionSerializer,
+    PickupLocationSerializer,
+    ProductTypeSerializer,
+)
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
+from tapir.wirgarten.models import Member
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -33,3 +39,24 @@ class ExtendedProductSerializer(serializers.Serializer):
     basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
+
+
+class MemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = "__all__"
+
+
+class CancelledSubscriptionSerializer(serializers.Serializer):
+    subscription = SubscriptionSerializer()
+    member = MemberSerializer()
+    pickup_location = PickupLocationSerializer()
+    cancellation_type = serializers.CharField()
+    show_warning = serializers.BooleanField()
+
+
+class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
+    serializers.Serializer
+):
+    product_types = ProductTypeSerializer(many=True)
+    number_of_subscriptions = serializers.ListField(child=serializers.IntegerField())

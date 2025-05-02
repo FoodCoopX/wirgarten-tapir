@@ -20,152 +20,159 @@ import {
     ProductToJSON,
     ProductToJSONTyped,
 } from './Product';
+import type { Member } from './Member';
+import {
+    MemberFromJSON,
+    MemberFromJSONTyped,
+    MemberToJSON,
+    MemberToJSONTyped,
+} from './Member';
 
 /**
  * 
  * @export
- * @interface Subscription
+ * @interface SubscriptionWithMember
  */
-export interface Subscription {
+export interface SubscriptionWithMember {
     /**
      * 
      * @type {string}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     id?: string;
     /**
      * 
      * @type {Product}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     product: Product;
     /**
      * 
+     * @type {Member}
+     * @memberof SubscriptionWithMember
+     */
+    member: Member;
+    /**
+     * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     adminConfirmed?: Date | null;
     /**
      * 
      * @type {number}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     quantity: number;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     startDate: Date;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     endDate?: Date | null;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     cancellationTs?: Date | null;
     /**
      * 
      * @type {number}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     solidarityPrice?: number;
     /**
      * 
      * @type {string}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     solidarityPriceAbsolute?: string | null;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     createdAt?: Date;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     consentTs?: Date | null;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     withdrawalConsentTs?: Date | null;
     /**
      * 
      * @type {boolean}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     trialDisabled?: boolean;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     trialEndDateOverride?: Date | null;
     /**
      * 
      * @type {string}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     priceOverride?: string | null;
     /**
      * 
      * @type {number}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     noticePeriodDuration?: number | null;
     /**
      * 
      * @type {Date}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     cancellationAdminConfirmed?: Date | null;
     /**
      * 
      * @type {string}
-     * @memberof Subscription
-     */
-    member: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     period?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof Subscription
+     * @memberof SubscriptionWithMember
      */
     mandateRef: string;
 }
 
 /**
- * Check if a given object implements the Subscription interface.
+ * Check if a given object implements the SubscriptionWithMember interface.
  */
-export function instanceOfSubscription(value: object): value is Subscription {
+export function instanceOfSubscriptionWithMember(value: object): value is SubscriptionWithMember {
     if (!('product' in value) || value['product'] === undefined) return false;
+    if (!('member' in value) || value['member'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
-    if (!('member' in value) || value['member'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
     return true;
 }
 
-export function SubscriptionFromJSON(json: any): Subscription {
-    return SubscriptionFromJSONTyped(json, false);
+export function SubscriptionWithMemberFromJSON(json: any): SubscriptionWithMember {
+    return SubscriptionWithMemberFromJSONTyped(json, false);
 }
 
-export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolean): Subscription {
+export function SubscriptionWithMemberFromJSONTyped(json: any, ignoreDiscriminator: boolean): SubscriptionWithMember {
     if (json == null) {
         return json;
     }
@@ -173,6 +180,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'id': json['id'] == null ? undefined : json['id'],
         'product': ProductFromJSON(json['product']),
+        'member': MemberFromJSON(json['member']),
         'adminConfirmed': json['admin_confirmed'] == null ? undefined : (new Date(json['admin_confirmed'])),
         'quantity': json['quantity'],
         'startDate': (new Date(json['start_date'])),
@@ -188,17 +196,16 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'priceOverride': json['price_override'] == null ? undefined : json['price_override'],
         'noticePeriodDuration': json['notice_period_duration'] == null ? undefined : json['notice_period_duration'],
         'cancellationAdminConfirmed': json['cancellation_admin_confirmed'] == null ? undefined : (new Date(json['cancellation_admin_confirmed'])),
-        'member': json['member'],
         'period': json['period'] == null ? undefined : json['period'],
         'mandateRef': json['mandate_ref'],
     };
 }
 
-  export function SubscriptionToJSON(json: any): Subscription {
-      return SubscriptionToJSONTyped(json, false);
+  export function SubscriptionWithMemberToJSON(json: any): SubscriptionWithMember {
+      return SubscriptionWithMemberToJSONTyped(json, false);
   }
 
-  export function SubscriptionToJSONTyped(value?: Subscription | null, ignoreDiscriminator: boolean = false): any {
+  export function SubscriptionWithMemberToJSONTyped(value?: SubscriptionWithMember | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -207,6 +214,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'id': value['id'],
         'product': ProductToJSON(value['product']),
+        'member': MemberToJSON(value['member']),
         'admin_confirmed': value['adminConfirmed'] == null ? undefined : ((value['adminConfirmed'] as any).toISOString()),
         'quantity': value['quantity'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
@@ -222,7 +230,6 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'price_override': value['priceOverride'],
         'notice_period_duration': value['noticePeriodDuration'],
         'cancellation_admin_confirmed': value['cancellationAdminConfirmed'] == null ? undefined : ((value['cancellationAdminConfirmed'] as any).toISOString()),
-        'member': value['member'],
         'period': value['period'],
         'mandate_ref': value['mandateRef'],
     };
