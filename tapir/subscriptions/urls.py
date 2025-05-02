@@ -30,6 +30,11 @@ urlpatterns = [
         views.ConfirmSubscriptionCancellationView.as_view(),
         name="confirm_subscription_cancellation",
     ),
+    path(
+        "api/product_types_and_number_of_cancelled_subscriptions",
+        views.ProductTypesAndNumberOfCancelledSubscriptionsToConfirmView.as_view(),
+        name="product_types_and_number_of_cancelled_subscriptions",
+    ),
 ]
 
 router = DefaultRouter()

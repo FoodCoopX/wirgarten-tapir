@@ -6,10 +6,12 @@ import random
 from typing import Dict, List, Set
 
 from faker import Faker
+from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
@@ -232,7 +234,26 @@ class UserGenerator:
 
             if growing_period == previous_growing_period:
                 if random.random() < 0.25:
-                    subscription.cancellation_ts = previous_growing_period.start_date
+                    days_range = (subscription.end_date - subscription.start_date).days
+                    subscription.cancellation_ts = make_timezone_aware(
+                        datetime.datetime.combine(
+                            subscription.start_date
+                            + datetime.timedelta(days=random.randint(0, days_range)),
+                            datetime.time(hour=12),
+                        )
+                    )
+                    if TrialPeriodManager.is_product_in_trial(
+                        product=subscription.product,
+                        member=member,
+                        cache=cache,
+                        reference_date=subscription.cancellation_ts.date(),
+                    ):
+                        subscription.end_date = (
+                            TrialPeriodManager.get_earliest_trial_cancellation_date(
+                                reference_date=subscription.cancellation_ts.date(),
+                                cache=cache,
+                            )
+                        )
                     subscription.save()
                 else:
                     Subscription.objects.create(

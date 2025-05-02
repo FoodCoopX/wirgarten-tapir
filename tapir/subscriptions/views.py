@@ -30,6 +30,7 @@ from tapir.subscriptions.serializers import (
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
     CancelledSubscriptionSerializer,
+    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -355,10 +356,8 @@ class CancelledSubscriptionsApiView(APIView):
     @action(detail=False)
     def get(self, request: Request):
         pagination = self.pagination_class()
-        subscriptions = Subscription.objects.filter(
-            cancellation_ts__isnull=False,
-            cancellation_admin_confirmed__isnull=True,
-            product__type_id=request.query_params.get("product_type_id"),
+        subscriptions = self.get_unconfirmed_cancelled_subscriptions(
+            product_type_id=request.query_params.get("product_type_id")
         ).order_by("cancellation_ts")
         subscriptions = pagination.paginate_queryset(subscriptions, request)
         members = Member.objects.filter(
@@ -392,6 +391,7 @@ class CancelledSubscriptionsApiView(APIView):
                 )
             ]
             cancellation_type = "Reguläre Kündigung"
+            show_warning = False
             if (
                 get_current_growing_period(
                     subscription.end_date, cache=self.cache
@@ -399,11 +399,13 @@ class CancelledSubscriptionsApiView(APIView):
                 > subscription.end_date
             ):
                 cancellation_type = "Unterjährige Kündigung"
+                show_warning = True
             if TrialPeriodManager.is_subscription_in_trial(
                 subscription=subscription,
                 reference_date=subscription.cancellation_ts.date(),
             ):
                 cancellation_type = "Kündigung in der Probezeit"
+                show_warning = False
 
             subscription_datas.append(
                 {
@@ -411,6 +413,7 @@ class CancelledSubscriptionsApiView(APIView):
                     "member": member,
                     "pickup_location": pickup_location,
                     "cancellation_type": cancellation_type,
+                    "show_warning": show_warning,
                 }
             )
 
@@ -419,6 +422,41 @@ class CancelledSubscriptionsApiView(APIView):
             many=True,
         )
         return pagination.get_paginated_response(serializer.data)
+
+    @classmethod
+    def get_unconfirmed_cancelled_subscriptions(cls, product_type_id):
+        return Subscription.objects.filter(
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+            product__type_id=product_type_id,
+        )
+
+
+class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={
+            200: ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer()
+        },
+    )
+    def get(self, request: Request):
+        product_types = ProductType.objects.all()
+        number_of_subscriptions = [
+            CancelledSubscriptionsApiView.get_unconfirmed_cancelled_subscriptions(
+                product_type.id
+            ).count()
+            for product_type in product_types
+        ]
+        return Response(
+            ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
+                {
+                    "product_types": list(product_types),
+                    "number_of_subscriptions": number_of_subscriptions,
+                }
+            ).data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class ConfirmSubscriptionCancellationView(APIView):

@@ -89,6 +89,7 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
+models/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts

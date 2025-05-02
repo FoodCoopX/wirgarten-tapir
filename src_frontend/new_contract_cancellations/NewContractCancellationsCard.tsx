@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Table } from "react-bootstrap";
+import { Badge, Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   CancelledSubscription,
@@ -36,13 +36,16 @@ const NewContractCancellationsCard: React.FC<
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [productTypesLoading, setProductTypesLoading] = useState(true);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [numberOfSubscriptionsToConfirm, setNumberOfSubscriptionsToConfirm] =
+    useState<number[]>([]);
 
   useEffect(() => {
     subscriptionsApi
-      .subscriptionsProductTypesList()
+      .subscriptionsApiProductTypesAndNumberOfCancelledSubscriptionsRetrieve()
       .then((result) => {
-        setProductTypes(result);
-        setSelectedProductType(result[0]);
+        setProductTypes(result.productTypes);
+        setSelectedProductType(result.productTypes[0]);
+        setNumberOfSubscriptionsToConfirm(result.numberOfSubscriptions);
       })
       .catch(handleRequestError)
       .finally(() => setProductTypesLoading(false));
@@ -71,6 +74,11 @@ const NewContractCancellationsCard: React.FC<
       .then((paginatedResults) => {
         setCancelledSubscriptions(paginatedResults.results);
         setSubscriptionCount(paginatedResults.count);
+
+        const newArray = [...numberOfSubscriptionsToConfirm];
+        newArray[productTypes.indexOf(selectedProductType)] =
+          paginatedResults.count;
+        setNumberOfSubscriptionsToConfirm(newArray);
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
@@ -136,12 +144,21 @@ const NewContractCancellationsCard: React.FC<
               style={{ cursor: "pointer" }}
               onClick={() => setSelectedProductType(productType)}
             >
-              <a className={className}>{productType.name}</a>
+              <a className={className}>
+                {productType.name} <Badge>{getBadgeText(productType)}</Badge>
+              </a>
             </li>
           );
         })}
       </ul>
     );
+  }
+
+  function getBadgeText(productType: ProductType) {
+    const number =
+      numberOfSubscriptionsToConfirm[productTypes.indexOf(productType)];
+    if (number === -1) return "...";
+    return number;
   }
 
   function onConfirm() {
@@ -265,7 +282,14 @@ const NewContractCancellationsCard: React.FC<
                               cancelledSubscription.subscription.cancellationTs,
                             )}
                           </td>
-                          <td>{cancelledSubscription.cancellationType}</td>
+                          <td>
+                            {cancelledSubscription.showWarning && (
+                              <span className={"material-icons text-warning"}>
+                                warning
+                              </span>
+                            )}
+                            {cancelledSubscription.cancellationType}
+                          </td>
                         </tr>
                       );
                     })
@@ -295,6 +319,7 @@ const NewContractCancellationsCard: React.FC<
         confirmButtonVariant={"primary"}
         open={showConfirmModal}
         title={"Prüfung bestätigen"}
+        loading={confirmLoading}
       />
     </>
   );

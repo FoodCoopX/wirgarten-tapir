@@ -128,7 +128,6 @@ class KeycloakUser(AbstractUser):
                 "lastName": self.last_name,
                 "enabled": True,
             }
-            print("Creating Keycloak user: ", data)
 
             keycloak_id = kc.get_user_id(self.email)
             if keycloak_id is not None:

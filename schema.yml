@@ -822,6 +822,20 @@ paths:
               schema:
                 type: string
           description: ''
+  /subscriptions/api/product_types_and_number_of_cancelled_subscriptions:
+    get:
+      operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse'
+          description: ''
   /subscriptions/cancel_subscriptions:
     post:
       operationId: subscriptions_cancel_subscriptions_create
@@ -3019,10 +3033,13 @@ components:
           $ref: '#/components/schemas/PickupLocation'
         cancellation_type:
           type: string
+        show_warning:
+          type: boolean
       required:
       - cancellation_type
       - member
       - pickup_location
+      - show_warning
       - subscription
     CountryEnum:
       enum:
@@ -5393,6 +5410,20 @@ components:
           title: Repräsentiert Vereinsmitgliedschaften
       required:
       - name
+    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse:
+      type: object
+      properties:
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductType'
+        number_of_subscriptions:
+          type: array
+          items:
+            type: integer
+      required:
+      - number_of_subscriptions
+      - product_types
     RecipientRequest:
       type: object
       properties:

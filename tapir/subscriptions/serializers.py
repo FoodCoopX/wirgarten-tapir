@@ -5,6 +5,7 @@ from tapir.deliveries.serializers import (
     ProductSerializer,
     SubscriptionSerializer,
     PickupLocationSerializer,
+    ProductTypeSerializer,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
@@ -51,3 +52,11 @@ class CancelledSubscriptionSerializer(serializers.Serializer):
     member = MemberSerializer()
     pickup_location = PickupLocationSerializer()
     cancellation_type = serializers.CharField()
+    show_warning = serializers.BooleanField()
+
+
+class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
+    serializers.Serializer
+):
+    product_types = ProductTypeSerializer(many=True)
+    number_of_subscriptions = serializers.ListField(child=serializers.IntegerField())
