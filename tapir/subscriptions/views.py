@@ -380,22 +380,7 @@ class CancelledSubscriptionsApiView(APIView):
                     MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
                 )
             ]
-            cancellation_type = "Reguläre Kündigung"
-            show_warning = False
-            if (
-                get_current_growing_period(
-                    subscription.end_date, cache=self.cache
-                ).end_date
-                > subscription.end_date
-            ):
-                cancellation_type = "Unterjährige Kündigung"
-                show_warning = True
-            if TrialPeriodManager.is_subscription_in_trial(
-                subscription=subscription,
-                reference_date=subscription.cancellation_ts.date(),
-            ):
-                cancellation_type = "Kündigung in der Probezeit"
-                show_warning = False
+            cancellation_type, show_warning = self.get_cancellation_type(subscription)
 
             subscription_datas.append(
                 {
@@ -420,6 +405,24 @@ class CancelledSubscriptionsApiView(APIView):
             cancellation_admin_confirmed__isnull=True,
             product__type_id=product_type_id,
         )
+
+    def get_cancellation_type(self, subscription: Subscription):
+        cancellation_type = "Reguläre Kündigung"
+        show_warning = False
+        if (
+            get_current_growing_period(subscription.end_date, cache=self.cache).end_date
+            > subscription.end_date
+        ):
+            cancellation_type = "Unterjährige Kündigung"
+            show_warning = True
+        if TrialPeriodManager.is_subscription_in_trial(
+            subscription=subscription,
+            reference_date=subscription.cancellation_ts.date(),
+        ):
+            cancellation_type = "Kündigung in der Probezeit"
+            show_warning = False
+
+        return cancellation_type, show_warning
 
 
 class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmView(APIView):
