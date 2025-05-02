@@ -4,8 +4,14 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
+from tapir.subscriptions.views import CancelledSubscriptionsApiView
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
-from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
+from tapir.wirgarten.models import (
+    Subscription,
+    CoopShareTransaction,
+    WaitingListEntry,
+    ProductType,
+)
 from tapir.wirgarten.utils import is_debug_instance
 
 register = template.Library()
@@ -118,7 +124,7 @@ def add_admin_links(groups, request):
 
         members_group.add_link(
             display_name=_("Verträge"),
-            material_icon="history_edu",
+            material_icon="contract",
             url=reverse_lazy("wirgarten:subscription_list"),
         )
 
@@ -132,7 +138,7 @@ def add_admin_links(groups, request):
 
         members_group.add_link(
             display_name=_("Neue Zeichnungen"),
-            material_icon="approval_delegation",
+            material_icon="contract_edit",
             url=reverse_lazy("wirgarten:new_contracts"),
             notification_count=coop_shares + product_shares,
         )
@@ -140,6 +146,14 @@ def add_admin_links(groups, request):
             display_name=_("Neue Kündigungen"),
             material_icon="contract_delete",
             url=reverse_lazy("wirgarten:new_contract_cancellations"),
+            notification_count=sum(
+                [
+                    CancelledSubscriptionsApiView.get_unconfirmed_cancelled_subscriptions(
+                        product_type.id
+                    ).count()
+                    for product_type in ProductType.objects.all()
+                ]
+            ),
         )
 
         waitlist_entries = WaitingListEntry.objects.count()
