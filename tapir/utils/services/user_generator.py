@@ -75,7 +75,7 @@ class UserGenerator:
     def generate_users_and_subscriptions(cls, organization: Organization):
         user_count = 200
         if organization == Organization.BIOTOP:
-            user_count = 700
+            user_count = 250
         # Users generated with https://randomuser.me
         print(f"Creating {user_count} users, this may take a while")
         random.seed("wirgarten")
