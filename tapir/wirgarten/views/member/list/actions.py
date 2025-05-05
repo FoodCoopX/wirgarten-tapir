@@ -246,7 +246,7 @@ class ExportMembersView(View):
         return response
 
     def get_queryset(self):
-        return MemberListView.get_queryset(self)
+        return MemberListView().get_queryset()
 
     def get_filterset_class(self):
         return MemberFilter
