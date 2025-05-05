@@ -47,3 +47,11 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=ProductType.objects.get(name="Ernteanteile").id
         )
+
+        if organization == Organization.BIOTOP:
+            TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
+                value=5
+            )
+            TapirParameter.objects.filter(
+                key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+            ).update(value=True)

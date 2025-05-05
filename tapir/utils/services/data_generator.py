@@ -70,8 +70,8 @@ class DataGenerator:
         cls.generate_growing_periods(generate_test_data_for)
         ProductGenerator.generate_product_data(generate_test_data_for)
         PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
-        UserGenerator.generate_users_and_subscriptions()
         ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
+        UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
         JokerGenerator.generate_jokers()
 
     @classmethod
