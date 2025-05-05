@@ -27,6 +27,7 @@ def create_field(param: TapirParameter, cache: Dict):
     if param_meta.vars_hint:
         vars_sorted = map(lambda x: "{" + x + "}", sorted(param_meta.vars_hint))
         help_text += f"""<br/><small><strong>Variablen:</strong> {", ".join(vars_sorted)}</small>"""
+    help_text = tokenize_parameter(help_text, cache=cache)
 
     options = param_meta.options
     if param_meta.options_callable is not None:

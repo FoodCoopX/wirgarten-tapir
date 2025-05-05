@@ -6,6 +6,7 @@ from django.template.defaultfilters import stringfilter
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import format_date, get_now
 
 register = template.Library()
 
@@ -29,7 +30,7 @@ def tokenize_parameter(text: str, cache: Dict = None):
             legal_status = status[1]
             break
 
-    tokens = {"legal_status": legal_status}
+    tokens = {"legal_status": legal_status, "now": format_date(get_now(cache=cache))}
 
     for token, value in tokens.items():
         text = text.replace("{{" + token + "}}", value)

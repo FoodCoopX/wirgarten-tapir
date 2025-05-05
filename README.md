@@ -19,15 +19,9 @@ Next, set up the test database and load test data
 
     # Create tables
     docker-compose exec web poetry run python manage.py migrate
-    
-    # Import master data
-    docker-compose exec web ./import-masterdata.sh
 
     # Import configuration parameter definitions
     docker-compose exec web poetry run python manage.py parameter_definitions
-
-    # Load admin (password: admin) account
-    docker-compose exec web poetry run python manage.py loaddata admin_account
     
     # Load lots of test users
     docker-compose exec web poetry run python manage.py populate --reset_all

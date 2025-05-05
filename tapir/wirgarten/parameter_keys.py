@@ -97,5 +97,6 @@ class ParameterKeys:
     SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT = (
         f"{PREFIX}.subscriptions.additional_product_allowed_without_base_product"
     )
+    TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
     ORGANISATION_LEGAL_STATUS = f"{PREFIX}.organisation.legal_status"

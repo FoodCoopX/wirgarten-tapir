@@ -87,10 +87,7 @@ def validate_html(html: str):
         raise ValidationError(f"Unclosed HTML tag {tag} at {position}!")
 
 
-def validate_iso_datetime_or_disabled(date_as_string: str):
-    if date_as_string == "disabled":
-        return
-
+def validate_iso_datetime(date_as_string: str):
     try:
         datetime.datetime.fromisoformat(date_as_string)
     except ValueError as e:
@@ -98,6 +95,10 @@ def validate_iso_datetime_or_disabled(date_as_string: str):
 
 
 def validate_base_product_type_exists(base_product_type_id: str):
+    if not ProductType.objects.exists():
+        # This allows the creation of the parameter on fresh installs
+        return
+
     if not ProductType.objects.filter(id=base_product_type_id).exists():
         raise ValidationError(
             f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."

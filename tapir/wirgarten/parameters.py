@@ -15,6 +15,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
     LEGAL_STATUS_OPTIONS,
+    TEST_DATE_OVERRIDE_MANUAL,
+    TEST_DATE_OVERRIDE_DISABLED,
+    TEST_DATE_OVERRIDE_OPTIONS,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
@@ -62,7 +65,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import (
             validate_html,
-            validate_iso_datetime_or_disabled,
+            validate_iso_datetime,
             validate_base_product_type_exists,
         )
         from tapir.pickup_locations.services.basket_size_capacities_service import (
@@ -871,15 +874,35 @@ Dein WirGarten-Team""",
 
         if getattr(settings, "DEBUG", False):
             parameter_definition(
+                key=ParameterKeys.TESTS_OVERRIDE_DATE_PRESET,
+                label="Datum festlegen",
+                datatype=TapirParameterDatatype.STRING,
+                initial_value=TEST_DATE_OVERRIDE_DISABLED,
+                description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird.<br />"
+                'Wenn "Manuell" eingetragen ist, "taucht nach speichern ein zweites Feld um eine beliebiges Datum zu setzen.<br />'
+                'Wenn "Nicht festgelegt" eingetragen ist, werden die echte Datum und Uhrzeit verwendet.<br />'
+                "Aktuell verwendetes Datum: {{now}}",
+                category=ParameterCategory.TEST,
+                order_priority=2,
+                debug=True,
+                meta=ParameterMeta(options=TEST_DATE_OVERRIDE_OPTIONS),
+            )
+
+            parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE,
-                label="Datum setzen",
+                label="Beliebiges Test-Datum",
                 datatype=TapirParameterDatatype.STRING,
                 initial_value="2025-04-01 09:30",
-                description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird. Format ist YYYY-MM-DD HH:MM. "
-                "Es kann auch 'disabled' eingetragen werden, dann werden die echte Datum und Uhrzeit verwendet. "
-                "Dieses Parameter ist nur bei Test-Instanzen verfügbar.",
+                description="Format: YYYY-MM-DD HH:MM.<br />"
+                f'Wird nur eingesetzt wenn der Parameter "Datum festlegen" gleich Oben zu "Manuell" gesetzt ist.',
                 category=ParameterCategory.TEST,
                 order_priority=1,
                 debug=True,
-                meta=ParameterMeta(validators=[validate_iso_datetime_or_disabled]),
+                meta=ParameterMeta(
+                    validators=[validate_iso_datetime],
+                    show_only_when=lambda cache: get_parameter_value(
+                        ParameterKeys.TESTS_OVERRIDE_DATE_PRESET, cache=cache
+                    )
+                    == TEST_DATE_OVERRIDE_MANUAL,
+                ),
             )
