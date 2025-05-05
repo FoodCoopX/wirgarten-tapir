@@ -188,14 +188,9 @@ class BaseProductForm(forms.Form):
                     "als auch kommende Vertragsperiode (ab 1.7.) "
                     "Ernteanteile zeichnen möchtest, dann wähle die aktuelle Vertragsperiode aus "
                     "und verlängere anschließend bequem über den Mitgliederbereich deinen Vertrag "
-                    "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen</span>"
-                )
-            for growing_period in available_growing_periods:
-                if growing_period in growing_periods_with_free_capacity:
-                    continue
-                help_texts.append(
-                    f"<span>Für die Vertragsperiode vom {format_date(growing_period.start_date)} "
-                    f"zum {format_date(growing_period.end_date)} sind leider derzeit alle Ernteanteile vergeben</span>"
+                    "für die kommende Vertragsperiode. So musst du nicht erneut die Formularseiten ausfüllen. "
+                    "Sollten für die alte Vertragsperiode (bis zum 30.6.) alle Ernteanteile vergeben sein, "
+                    "kannst du nur die neue Vertragsperiode (ab 1.7.) auswählen</span>"
                 )
 
             self.fields["growing_period"] = forms.ModelChoiceField(
