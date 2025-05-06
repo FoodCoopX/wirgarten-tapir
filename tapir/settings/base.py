@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "tapir.subscriptions",
     "tapir.coop",
     "tapir.pickup_locations",
+    "tapir.waiting_list",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields

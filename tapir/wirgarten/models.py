@@ -1138,7 +1138,6 @@ class WaitingListEntry(TapirModel):
     created_at = models.DateTimeField(auto_now_add=True)
     privacy_consent = models.DateTimeField()
     number_of_coop_shares = models.PositiveSmallIntegerField()
-    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=True)
     # if desired_start_date is null, the wish is "as soon as possible"
     desired_start_date = models.DateField(null=True)
 
@@ -1157,10 +1156,20 @@ class WaitingListPickupLocationWishes(TapirModel):
         ]
 
     waiting_list_entry = models.ForeignKey(
-        WaitingListEntry, on_delete=models.DO_NOTHING
+        WaitingListEntry,
+        on_delete=models.DO_NOTHING,
+        related_name="pickup_location_wishes",
     )
     pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
     priority = models.PositiveSmallIntegerField()
+
+
+class WaitingListProductWishes(TapirModel):
+    waiting_list_entry = models.ForeignKey(
+        WaitingListEntry, on_delete=models.DO_NOTHING, related_name="product_wishes"
+    )
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    quantity = models.PositiveSmallIntegerField()
 
 
 class QuestionaireTrafficSourceOption(TapirModel):
