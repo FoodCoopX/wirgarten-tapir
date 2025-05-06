@@ -1,0 +1,7 @@
+{% if show_warning %}
+    <span class="material-icons text-warning"
+          data-bs-toggle="tooltip"
+          data-bs-title="Dieses Mitglied ist eingetragen in der Verteilsort, hat aber keine Vertrag"
+          id="tooltip_{{ member_id }}">warning</span>
+    <script>new bootstrap.Tooltip(document.getElementById("tooltip_{{ member_id }}"))</script>
+{% endif %}
