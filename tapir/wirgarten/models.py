@@ -19,6 +19,7 @@ from django.db.models import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
+from phonenumber_field.modelfields import PhoneNumberField
 from typing_extensions import deprecated
 
 from tapir.accounts.models import TapirUser, KeycloakUserManager
@@ -28,6 +29,7 @@ from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.utils.models import CountryField
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
@@ -1123,17 +1125,42 @@ class SubscriptionChangeLogEntry(LogEntry):
 
 
 class WaitingListEntry(TapirModel):
-    class WaitingListType(models.TextChoices):
-        HARVEST_SHARES = "HARVEST_SHARES", _("Ernteanteile")
-        COOP_SHARES = "COOP_SHARES", _("Genossenschaftsanteile")
-
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
-    first_name = models.CharField(null=False, blank=False, max_length=256)
-    last_name = models.CharField(null=False, blank=False, max_length=256)
-    email = models.CharField(null=False, blank=False, max_length=256)
-    type = models.CharField(choices=WaitingListType.choices, null=False, max_length=32)
-    created_at = models.DateTimeField(auto_now_add=True, null=False)
-    privacy_consent = models.DateTimeField(null=False)
+    first_name = models.CharField(max_length=256)
+    last_name = models.CharField(max_length=256)
+    phone = PhoneNumberField(_("Phone number"), blank=True, null=True)
+    email = models.CharField(max_length=256)
+    street = models.CharField(_("Street and house number"), max_length=150, blank=True)
+    street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)
+    postcode = models.CharField(_("Postcode"), max_length=32, blank=True)
+    city = models.CharField(_("City"), max_length=50, blank=True)
+    country = CountryField(_("Country"), blank=True, default="DE")
+    created_at = models.DateTimeField(auto_now_add=True)
+    privacy_consent = models.DateTimeField()
+    number_of_coop_shares = models.PositiveSmallIntegerField()
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, null=True)
+    # if desired_start_date is null, the wish is "as soon as possible"
+    desired_start_date = models.DateField(null=True)
+
+
+class WaitingListPickupLocationWishes(TapirModel):
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["waiting_list_entry", "priority"],
+                name="unique_waiting_list_priority",
+            ),
+            UniqueConstraint(
+                fields=["waiting_list_entry", "pickup_location"],
+                name="unique_waiting_list_location",
+            ),
+        ]
+
+    waiting_list_entry = models.ForeignKey(
+        WaitingListEntry, on_delete=models.DO_NOTHING
+    )
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
+    priority = models.PositiveSmallIntegerField()
 
 
 class QuestionaireTrafficSourceOption(TapirModel):

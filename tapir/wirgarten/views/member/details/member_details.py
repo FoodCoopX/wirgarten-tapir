@@ -272,7 +272,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 context["renewal_status"] = "unknown"  # --> show renewal notice
             elif WaitingListEntry.objects.filter(
                 email=self.object.email,
-                type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
             ).exists():
                 context["renewal_status"] = "waitlist"  # --> show waitlist confirmation
             else:

@@ -279,9 +279,7 @@ def buy_cooperative_shares(
     return coop_share_tx
 
 
-def create_wait_list_entry(
-    first_name: str, last_name: str, email: str, type: WaitingListEntry.WaitingListType
-):
+def create_wait_list_entry(first_name: str, last_name: str, email: str):
     """
     Create a wait list entry for a non-member.
 
@@ -301,7 +299,6 @@ def create_wait_list_entry(
         last_name=last_name,
         email=email,
         privacy_consent=get_now(),
-        type=type,
         member=member,
     )
 

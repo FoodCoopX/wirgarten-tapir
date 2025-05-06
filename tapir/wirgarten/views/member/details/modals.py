@@ -34,7 +34,6 @@ from tapir.wirgarten.models import (
     ProductType,
     QuestionaireCancellationReasonResponse,
     SubscriptionChangeLogEntry,
-    WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -191,7 +190,6 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
             email=x.cleaned_data["email"],
-            type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
         ),
         **kwargs,
     )
@@ -206,7 +204,6 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
             email=x.cleaned_data["email"],
-            type=WaitingListEntry.WaitingListType.COOP_SHARES,
         ),
         **kwargs,
     )

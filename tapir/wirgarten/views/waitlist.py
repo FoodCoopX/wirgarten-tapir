@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django_filters import (
     FilterSet,
-    ChoiceFilter,
     CharFilter,
 )
 from django_filters.views import FilterView
@@ -26,31 +25,21 @@ from tapir.wirgarten.utils import (
 
 
 class WaitingListFilter(FilterSet):
-    type = ChoiceFilter(
-        label=_("Warteliste"),
-        lookup_expr="exact",
-        choices=WaitingListEntry.WaitingListType.choices,
-        empty_label=None,
-        initial=0,
-    )
+    class Meta:
+        model = WaitingListEntry
+        fields = ["first_name", "last_name", "email"]
+
     first_name = CharFilter(label=_("Vorname"), lookup_expr="icontains")
     last_name = CharFilter(label=_("Nachname"), lookup_expr="icontains")
     email = CharFilter(label=_("Email"), lookup_expr="icontains")
 
     def __init__(self, data=None, *args, **kwargs):
         if data is None:
-            data = {"type": WaitingListEntry.WaitingListType.HARVEST_SHARES}
+            data = {}
         else:
             data = data.copy()
 
-            if not data["type"]:
-                data["type"] = WaitingListEntry.WaitingListType.HARVEST_SHARES
-
         super().__init__(data, *args, **kwargs)
-
-    class Meta:
-        model = WaitingListEntry
-        fields = ["type", "first_name", "last_name", "email"]
 
 
 class WaitingListView(PermissionRequiredMixin, FilterView):
@@ -65,16 +54,6 @@ class WaitingListView(PermissionRequiredMixin, FilterView):
 @csrf_protect
 @permission_required(Permission.Coop.MANAGE)
 def export_waitinglist(request, **kwargs):
-    waitlist_type = request.environ["QUERY_STRING"].replace("type=", "")
-    if not waitlist_type:
-        return  # unknown waitlist type, can never happen from UI
-
-    waitlist_type_label = list(
-        filter(
-            lambda x: x[0] == waitlist_type, WaitingListEntry.WaitingListType.choices
-        )
-    )[0][1]
-
     KEY_FIRST_NAME = "Vorname"
     KEY_LAST_NAME = "Nachname"
     KEY_EMAIL = "Email"
@@ -83,7 +62,7 @@ def export_waitinglist(request, **kwargs):
     output, writer = begin_csv_string(
         [KEY_FIRST_NAME, KEY_LAST_NAME, KEY_EMAIL, KEY_SINCE]
     )
-    for entry in WaitingListEntry.objects.filter(type=waitlist_type):
+    for entry in WaitingListEntry.objects.all():
         writer.writerow(
             {
                 KEY_FIRST_NAME: entry.first_name,
@@ -93,9 +72,7 @@ def export_waitinglist(request, **kwargs):
             }
         )
 
-    filename = (
-        f"Warteliste-{waitlist_type_label}_{get_now().strftime('%Y%m%d_%H%M%S')}.csv"
-    )
+    filename = f"Warteliste-{get_now().strftime('%Y%m%d_%H%M%S')}.csv"
     mime_type, _ = mimetypes.guess_type(filename)
     response = HttpResponse("".join(output.csv_string), content_type=mime_type)
     response["Content-Disposition"] = "attachment; filename=%s" % filename
