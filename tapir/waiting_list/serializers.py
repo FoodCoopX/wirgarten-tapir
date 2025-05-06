@@ -16,7 +16,7 @@ class WaitingListEntrySerializer(serializers.Serializer):
     city = serializers.CharField()
     country = serializers.CharField()
     date_of_entry_in_cooperative = serializers.DateField()
-    product = ProductSerializer(required=False)
     current_pickup_location = PickupLocationSerializer(required=False)
     pickup_location_wishes = PickupLocationSerializer(required=False, many=True)
+    product_wishes = ProductSerializer(required=False, many=True)
     desired_start_date = serializers.DateField()

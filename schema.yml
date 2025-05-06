@@ -2852,6 +2852,31 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /waiting_list/api/list:
+    get:
+      operationId: waiting_list_api_list_list
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWaitingListEntryList'
+          description: ''
 components:
   schemas:
     AutomatedExportCycleEnum:
@@ -4638,6 +4663,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedWaitingListEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListEntry'
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -5868,6 +5916,63 @@ components:
       - joker_restrictions
       - max_jokers
       - number_of_used_jokers
+    WaitingListEntry:
+      type: object
+      properties:
+        member_no:
+          type: integer
+        waiting_since:
+          type: string
+          format: date-time
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email_address:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        post_code:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        date_of_entry_in_cooperative:
+          type: string
+          format: date
+        current_pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        pickup_location_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocation'
+        product_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        desired_start_date:
+          type: string
+          format: date
+      required:
+      - city
+      - country
+      - date_of_entry_in_cooperative
+      - desired_start_date
+      - email_address
+      - first_name
+      - last_name
+      - member_no
+      - phone_number
+      - post_code
+      - street
+      - street_2
+      - waiting_since
   securitySchemes:
     cookieAuth:
       type: apiKey
