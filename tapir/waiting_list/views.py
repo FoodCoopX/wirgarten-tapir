@@ -113,6 +113,7 @@ class WaitingListApiView(APIView):
             "number_of_coop_shares": entry.number_of_coop_shares,
             "comment": entry.comment,
             "category": entry.category,
+            "member_already_exists": entry.member is not None,
         }
 
     def fill_entry_with_personal_data(self, entry: WaitingListEntry):

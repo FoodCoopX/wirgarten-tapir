@@ -48,6 +48,12 @@ export interface WaitingListEntryDetails {
     memberNo: number;
     /**
      * 
+     * @type {boolean}
+     * @memberof WaitingListEntryDetails
+     */
+    memberAlreadyExists: boolean;
+    /**
+     * 
      * @type {Date}
      * @memberof WaitingListEntryDetails
      */
@@ -168,6 +174,7 @@ export interface WaitingListEntryDetails {
 export function instanceOfWaitingListEntryDetails(value: object): value is WaitingListEntryDetails {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('memberNo' in value) || value['memberNo'] === undefined) return false;
+    if (!('memberAlreadyExists' in value) || value['memberAlreadyExists'] === undefined) return false;
     if (!('waitingSince' in value) || value['waitingSince'] === undefined) return false;
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
@@ -195,6 +202,7 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         
         'id': json['id'],
         'memberNo': json['member_no'],
+        'memberAlreadyExists': json['member_already_exists'],
         'waitingSince': (new Date(json['waiting_since'])),
         'firstName': json['first_name'],
         'lastName': json['last_name'],
@@ -230,6 +238,7 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         
         'id': value['id'],
         'member_no': value['memberNo'],
+        'member_already_exists': value['memberAlreadyExists'],
         'waiting_since': ((value['waitingSince']).toISOString()),
         'first_name': value['firstName'],
         'last_name': value['lastName'],

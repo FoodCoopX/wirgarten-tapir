@@ -6197,6 +6197,8 @@ components:
           type: string
         member_no:
           type: integer
+        member_already_exists:
+          type: boolean
         waiting_since:
           type: string
           format: date-time
@@ -6253,6 +6255,7 @@ components:
       - first_name
       - id
       - last_name
+      - member_already_exists
       - member_no
       - number_of_coop_shares
       - phone_number

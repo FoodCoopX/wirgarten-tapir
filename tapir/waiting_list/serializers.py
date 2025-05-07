@@ -7,6 +7,7 @@ from tapir.wirgarten.models import WaitingListEntry
 class WaitingListEntryDetailsSerializer(serializers.Serializer):
     id = serializers.CharField()
     member_no = serializers.IntegerField()
+    member_already_exists = serializers.BooleanField()
     waiting_since = serializers.DateTimeField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
