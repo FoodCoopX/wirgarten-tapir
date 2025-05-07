@@ -5930,7 +5930,7 @@ components:
           type: string
         last_name:
           type: string
-        email_address:
+        email:
           type: string
           format: email
         phone_number:
@@ -5965,14 +5965,17 @@ components:
         desired_start_date:
           type: string
           format: date
+        number_of_coop_shares:
+          type: integer
       required:
       - city
       - country
-      - email_address
+      - email
       - first_name
       - id
       - last_name
       - member_no
+      - number_of_coop_shares
       - phone_number
       - postcode
       - street

@@ -9,6 +9,7 @@ import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatAddress from "../utils/formatAddress.ts";
 import { formatDateText } from "../utils/formatDateText.ts";
+import "./waiting_list_card.css";
 
 interface WaitingListCardProps {
   csrfToken: string;
@@ -45,7 +46,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         <td>
           {entry.firstName} {entry.lastName}
         </td>
-        <td>{entry.emailAddress}</td>
+        <td>{entry.email}</td>
         <td>{entry.phoneNumber}</td>
         <td>
           {formatAddress(
@@ -57,10 +58,14 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         </td>
         <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
         <td>
-          {entry.currentProducts?.map((product) => product.name).join(", ")}
+          {entry.currentProducts
+            ?.map((product) => product.type.name + " " + product.name)
+            .join(", ")}
         </td>
         <td>
-          {entry.productWishes?.map((product) => product.name).join(", ")}
+          {entry.productWishes
+            ?.map((product) => product.type.name + " " + product.name)
+            .join(", ")}
         </td>
         <td>{entry.currentPickupLocation?.name}</td>
         <td>
@@ -68,6 +73,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
             ?.map((pickupLocation) => pickupLocation.name)
             .join(", ")}
         </td>
+        <td>{entry.numberOfCoopShares}</td>
         <td>
           {entry.desiredStartDate
             ? formatDateText(entry.desiredStartDate)
@@ -92,7 +98,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
               </div>
             </Card.Header>
             <Card.Body className={"p-0"}>
-              <Table striped hover responsive>
+              <Table striped hover responsive className={"max-column-width"}>
                 <thead>
                   <tr>
                     <th>Mitgliedsnummer</th>
@@ -106,6 +112,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                     <th>Gewünschte Produkte</th>
                     <th>Derzeitiger Verteilort</th>
                     <th>Verteilort Prioritäten</th>
+                    <th>Geno-Anteilen gewünscht</th>
                     <th>Wunsch-Startdatum</th>
                   </tr>
                 </thead>

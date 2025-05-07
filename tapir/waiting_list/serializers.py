@@ -9,7 +9,7 @@ class WaitingListEntrySerializer(serializers.Serializer):
     waiting_since = serializers.DateTimeField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    email_address = serializers.EmailField()
+    email = serializers.EmailField()
     phone_number = serializers.CharField()
     street = serializers.CharField()
     street_2 = serializers.CharField()
@@ -22,3 +22,4 @@ class WaitingListEntrySerializer(serializers.Serializer):
     pickup_location_wishes = PickupLocationSerializer(required=False, many=True)
     product_wishes = ProductSerializer(required=False, many=True)
     desired_start_date = serializers.DateField(required=False)
+    number_of_coop_shares = serializers.IntegerField()

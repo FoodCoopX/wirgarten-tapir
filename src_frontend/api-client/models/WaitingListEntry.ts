@@ -69,7 +69,7 @@ export interface WaitingListEntry {
      * @type {string}
      * @memberof WaitingListEntry
      */
-    emailAddress: string;
+    email: string;
     /**
      * 
      * @type {string}
@@ -142,6 +142,12 @@ export interface WaitingListEntry {
      * @memberof WaitingListEntry
      */
     desiredStartDate?: Date;
+    /**
+     * 
+     * @type {number}
+     * @memberof WaitingListEntry
+     */
+    numberOfCoopShares: number;
 }
 
 /**
@@ -153,13 +159,14 @@ export function instanceOfWaitingListEntry(value: object): value is WaitingListE
     if (!('waitingSince' in value) || value['waitingSince'] === undefined) return false;
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('emailAddress' in value) || value['emailAddress'] === undefined) return false;
+    if (!('email' in value) || value['email'] === undefined) return false;
     if (!('phoneNumber' in value) || value['phoneNumber'] === undefined) return false;
     if (!('street' in value) || value['street'] === undefined) return false;
     if (!('street2' in value) || value['street2'] === undefined) return false;
     if (!('postcode' in value) || value['postcode'] === undefined) return false;
     if (!('city' in value) || value['city'] === undefined) return false;
     if (!('country' in value) || value['country'] === undefined) return false;
+    if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
     return true;
 }
 
@@ -178,7 +185,7 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'waitingSince': (new Date(json['waiting_since'])),
         'firstName': json['first_name'],
         'lastName': json['last_name'],
-        'emailAddress': json['email_address'],
+        'email': json['email'],
         'phoneNumber': json['phone_number'],
         'street': json['street'],
         'street2': json['street_2'],
@@ -191,6 +198,7 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'pickupLocationWishes': json['pickup_location_wishes'] == null ? undefined : ((json['pickup_location_wishes'] as Array<any>).map(PickupLocationFromJSON)),
         'productWishes': json['product_wishes'] == null ? undefined : ((json['product_wishes'] as Array<any>).map(ProductFromJSON)),
         'desiredStartDate': json['desired_start_date'] == null ? undefined : (new Date(json['desired_start_date'])),
+        'numberOfCoopShares': json['number_of_coop_shares'],
     };
 }
 
@@ -210,7 +218,7 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'waiting_since': ((value['waitingSince']).toISOString()),
         'first_name': value['firstName'],
         'last_name': value['lastName'],
-        'email_address': value['emailAddress'],
+        'email': value['email'],
         'phone_number': value['phoneNumber'],
         'street': value['street'],
         'street_2': value['street2'],
@@ -223,6 +231,7 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'pickup_location_wishes': value['pickupLocationWishes'] == null ? undefined : ((value['pickupLocationWishes'] as Array<any>).map(PickupLocationToJSON)),
         'product_wishes': value['productWishes'] == null ? undefined : ((value['productWishes'] as Array<any>).map(ProductToJSON)),
         'desired_start_date': value['desiredStartDate'] == null ? undefined : ((value['desiredStartDate']).toISOString().substring(0,10)),
+        'number_of_coop_shares': value['numberOfCoopShares'],
     };
 }
 

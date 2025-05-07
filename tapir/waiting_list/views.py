@@ -83,7 +83,7 @@ class WaitingListApiView(APIView):
                     cache=self.cache
                 )
                 .filter(member=entry.member)
-                .select_related("product")
+                .select_related("product__type")
             }
 
         return {
@@ -92,8 +92,8 @@ class WaitingListApiView(APIView):
             "waiting_since": entry.created_at,
             "first_name": entry.first_name,
             "last_name": entry.last_name,
-            "email_address": entry.email,
-            "phone_number": entry.phone,
+            "email": entry.email,
+            "phone_number": entry.phone_number,
             "street": entry.street,
             "street_2": entry.street_2,
             "postcode": entry.postcode,
@@ -107,6 +107,7 @@ class WaitingListApiView(APIView):
             ],
             "product_wishes": [wish.product for wish in entry.product_wishes.all()],
             "desired_start_date": entry.desired_start_date,
+            "number_of_coop_shares": entry.number_of_coop_shares,
         }
 
     def fill_entry_with_personal_data(self, entry: WaitingListEntry):
@@ -114,7 +115,7 @@ class WaitingListApiView(APIView):
             "first_name",
             "last_name",
             "email",
-            "phone",
+            "phone_number",
             "street",
             "street_2",
             "postcode",
