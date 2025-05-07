@@ -23,3 +23,5 @@ class WaitingListEntrySerializer(serializers.Serializer):
     product_wishes = ProductSerializer(required=False, many=True)
     desired_start_date = serializers.DateField(required=False)
     number_of_coop_shares = serializers.IntegerField()
+    comment = serializers.CharField()
+    category = serializers.CharField(required=False)

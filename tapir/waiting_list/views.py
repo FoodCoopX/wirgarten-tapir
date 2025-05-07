@@ -108,6 +108,8 @@ class WaitingListApiView(APIView):
             "product_wishes": [wish.product for wish in entry.product_wishes.all()],
             "desired_start_date": entry.desired_start_date,
             "number_of_coop_shares": entry.number_of_coop_shares,
+            "comment": entry.comment,
+            "category": entry.category,
         }
 
     def fill_entry_with_personal_data(self, entry: WaitingListEntry):

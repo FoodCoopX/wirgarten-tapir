@@ -79,6 +79,8 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
             ? formatDateText(entry.desiredStartDate)
             : "so früh wie möglich"}
         </td>
+        <td>{entry.category}</td>
+        <td>{entry.comment}</td>
       </tr>
     );
   }
@@ -114,6 +116,8 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                     <th>Verteilort Prioritäten</th>
                     <th>Geno-Anteilen gewünscht</th>
                     <th>Wunsch-Startdatum</th>
+                    <th>Kategorie</th>
+                    <th>Kommentar</th>
                   </tr>
                 </thead>
                 <tbody>

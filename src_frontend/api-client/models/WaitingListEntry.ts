@@ -148,6 +148,18 @@ export interface WaitingListEntry {
      * @memberof WaitingListEntry
      */
     numberOfCoopShares: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof WaitingListEntry
+     */
+    comment: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WaitingListEntry
+     */
+    category?: string;
 }
 
 /**
@@ -167,6 +179,7 @@ export function instanceOfWaitingListEntry(value: object): value is WaitingListE
     if (!('city' in value) || value['city'] === undefined) return false;
     if (!('country' in value) || value['country'] === undefined) return false;
     if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
+    if (!('comment' in value) || value['comment'] === undefined) return false;
     return true;
 }
 
@@ -199,6 +212,8 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'productWishes': json['product_wishes'] == null ? undefined : ((json['product_wishes'] as Array<any>).map(ProductFromJSON)),
         'desiredStartDate': json['desired_start_date'] == null ? undefined : (new Date(json['desired_start_date'])),
         'numberOfCoopShares': json['number_of_coop_shares'],
+        'comment': json['comment'],
+        'category': json['category'] == null ? undefined : json['category'],
     };
 }
 
@@ -232,6 +247,8 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'product_wishes': value['productWishes'] == null ? undefined : ((value['productWishes'] as Array<any>).map(ProductToJSON)),
         'desired_start_date': value['desiredStartDate'] == null ? undefined : ((value['desiredStartDate']).toISOString().substring(0,10)),
         'number_of_coop_shares': value['numberOfCoopShares'],
+        'comment': value['comment'],
+        'category': value['category'],
     };
 }
 

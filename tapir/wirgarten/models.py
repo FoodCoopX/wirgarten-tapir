@@ -1140,6 +1140,8 @@ class WaitingListEntry(TapirModel):
     number_of_coop_shares = models.PositiveSmallIntegerField()
     # if desired_start_date is null, the wish is "as soon as possible"
     desired_start_date = models.DateField(null=True)
+    comment = models.TextField(blank=True)
+    category = models.CharField(max_length=100, null=True)
 
 
 class WaitingListPickupLocationWishes(TapirModel):
@@ -1157,7 +1159,7 @@ class WaitingListPickupLocationWishes(TapirModel):
 
     waiting_list_entry = models.ForeignKey(
         WaitingListEntry,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="pickup_location_wishes",
     )
     pickup_location = models.ForeignKey(PickupLocation, on_delete=models.DO_NOTHING)
@@ -1166,7 +1168,7 @@ class WaitingListPickupLocationWishes(TapirModel):
 
 class WaitingListProductWishes(TapirModel):
     waiting_list_entry = models.ForeignKey(
-        WaitingListEntry, on_delete=models.DO_NOTHING, related_name="product_wishes"
+        WaitingListEntry, on_delete=models.CASCADE, related_name="product_wishes"
     )
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
     quantity = models.PositiveSmallIntegerField()

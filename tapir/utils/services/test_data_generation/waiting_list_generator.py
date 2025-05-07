@@ -3,6 +3,8 @@ import itertools
 import random
 from typing import Dict
 
+from faker import Faker
+
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -10,6 +12,9 @@ from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.test_data_generation.user_generator import UserGenerator
+from tapir.waiting_list.services.waiting_list_categories_service import (
+    WaitingListCategoriesService,
+)
 from tapir.wirgarten.models import (
     WaitingListEntry,
     Member,
@@ -42,6 +47,7 @@ class WaitingListGenerator:
         members = set(Member.objects.all())
 
         entries = []
+        fake = Faker("la")
         for index, parsed_user in enumerate(
             parsed_users[user_count : user_count + waiting_list_count]
         ):
@@ -49,6 +55,14 @@ class WaitingListGenerator:
                 privacy_consent=get_now(cache=cache),
                 number_of_coop_shares=0,
             )
+
+            if random.random() < 0.3:
+                entry.comment = fake.paragraph(nb_sentences=3)
+
+            categories = WaitingListCategoriesService.get_categories(cache=cache)
+            if len(categories) > 0 and random.random() < 0.3:
+                entry.category = random.choice(categories)
+
             if random.random() < 0.5:
                 entry.member = random.choice(list(members))
                 members.remove(entry.member)

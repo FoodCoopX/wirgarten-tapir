@@ -43,6 +43,7 @@ class DataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            WaitingListEntry,
             MemberPickupLocation,
             PickupLocation,
             Subscription,
@@ -53,7 +54,6 @@ class DataGenerator:
             ProductType,
             LogEntry,
             CoopShareTransaction,
-            WaitingListEntry,
             QuestionaireTrafficSourceResponse,
             Payment,
             MandateReference,

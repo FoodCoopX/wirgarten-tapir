@@ -5967,8 +5967,13 @@ components:
           format: date
         number_of_coop_shares:
           type: integer
+        comment:
+          type: string
+        category:
+          type: string
       required:
       - city
+      - comment
       - country
       - email
       - first_name
