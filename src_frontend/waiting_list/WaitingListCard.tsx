@@ -1,11 +1,82 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
+import { useApi } from "../hooks/useApi.ts";
+import { WaitingListApi, WaitingListEntry } from "../api-client";
+import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
+import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import formatAddress from "../utils/formatAddress.ts";
+import { formatDateText } from "../utils/formatDateText.ts";
 
 interface WaitingListCardProps {
   csrfToken: string;
 }
 
 const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
+  const api = useApi(WaitingListApi, csrfToken);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [waitingListEntries, setWaitingListEntries] = useState<
+    WaitingListEntry[]
+  >([]);
+  const [totalNumberOfEntries, setTotalNumberOfEntries] = useState(0);
+
+  useEffect(() => {
+    api
+      .waitingListApiListList({
+        limit: DEFAULT_PAGE_SIZE,
+        offset: DEFAULT_PAGE_SIZE * currentPage,
+      })
+      .then((paginatedData) => {
+        setWaitingListEntries(paginatedData.results);
+        setTotalNumberOfEntries(paginatedData.count);
+      })
+      .catch(handleRequestError)
+      .finally(() => setLoading(false));
+  }, [currentPage]);
+
+  function buildWaitingListEntryRow(entry: WaitingListEntry) {
+    return (
+      <tr key={entry.id}>
+        <td>{entry.memberNo}</td>
+        <td>{formatDateNumeric(entry.waitingSince)}</td>
+        <td>
+          {entry.firstName} {entry.lastName}
+        </td>
+        <td>{entry.emailAddress}</td>
+        <td>{entry.phoneNumber}</td>
+        <td>
+          {formatAddress(
+            entry.street,
+            entry.street2,
+            entry.postcode,
+            entry.city,
+          )}
+        </td>
+        <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
+        <td>
+          {entry.currentProducts?.map((product) => product.name).join(", ")}
+        </td>
+        <td>
+          {entry.productWishes?.map((product) => product.name).join(", ")}
+        </td>
+        <td>{entry.currentPickupLocation?.name}</td>
+        <td>
+          {entry.pickupLocationWishes
+            ?.map((pickupLocation) => pickupLocation.name)
+            .join(", ")}
+        </td>
+        <td>
+          {entry.desiredStartDate
+            ? formatDateText(entry.desiredStartDate)
+            : "so früh wie möglich"}
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -26,8 +97,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                   <tr>
                     <th>Mitgliedsnummer</th>
                     <th>Eintragungsdatum auf Warteliste</th>
-                    <th>Vorname</th>
-                    <th>Nachname</th>
+                    <th>Name</th>
                     <th>Email-Adresse</th>
                     <th>Telefonnummer</th>
                     <th>Wohnort</th>
@@ -39,8 +109,27 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                     <th>Wunsch-Startdatum</th>
                   </tr>
                 </thead>
+                <tbody>
+                  {loading ? (
+                    <PlaceholderTableRows
+                      nbRows={DEFAULT_PAGE_SIZE}
+                      nbColumns={13}
+                      size={"xs"}
+                    />
+                  ) : (
+                    waitingListEntries.map(buildWaitingListEntryRow)
+                  )}
+                </tbody>
               </Table>
             </Card.Body>
+            <Card.Footer>
+              <BootstrapPagination
+                currentPage={currentPage}
+                pageSize={DEFAULT_PAGE_SIZE}
+                itemCount={totalNumberOfEntries}
+                goToPage={setCurrentPage}
+              />
+            </Card.Footer>
           </Card>
         </Col>
       </Row>

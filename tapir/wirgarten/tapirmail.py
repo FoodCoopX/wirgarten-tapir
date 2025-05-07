@@ -333,9 +333,7 @@ def create_or_update_recipient(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=WaitingListEntry)
 def delete_recipient(sender, instance, **kwargs):
     try:
-        static_segment = StaticSegment.objects.get(
-            name=f"Warteliste: {instance.get_type_display()}"
-        )
+        static_segment = StaticSegment.objects.get(name="Warteliste")
         recipient = StaticSegmentRecipient.objects.get(
             segment=static_segment, email=instance.email
         )

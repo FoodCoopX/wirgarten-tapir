@@ -3,7 +3,7 @@ import sys
 from django.core.management.base import BaseCommand
 
 from tapir.utils.config import Organization
-from tapir.utils.services.data_generator import DataGenerator
+from tapir.utils.services.test_data_generation.data_generator import DataGenerator
 
 
 class Command(BaseCommand):

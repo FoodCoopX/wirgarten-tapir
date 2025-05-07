@@ -3,7 +3,6 @@ from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import permissions
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.coop.services.membership_cancellation_manager import (
@@ -17,6 +16,7 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import WaitingListEntrySerializer
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import WaitingListEntry
+from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
 
 
@@ -53,13 +53,17 @@ class WaitingListApiView(APIView):
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry) for entry in entries]
+        serializer = WaitingListEntrySerializer(data, many=True)
 
-        return Response(WaitingListEntrySerializer(data, many=True).data)
+        return pagination.get_paginated_response(serializer.data)
 
     def build_entry_data(self, entry: WaitingListEntry):
         date_of_entry_in_cooperative = None
         current_pickup_location = None
+        member_no = None
+        current_products = None
         if entry.member is not None:
+            member_no = entry.member.member_no
             self.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
                 MembershipCancellationManager.get_coop_entry_date(entry.member)
@@ -73,9 +77,18 @@ class WaitingListApiView(APIView):
                 cache=self.cache,
                 pickup_location_id=pickup_location_id,
             )
+            current_products = {
+                subscription.product
+                for subscription in get_active_and_future_subscriptions(
+                    cache=self.cache
+                )
+                .filter(member=entry.member)
+                .select_related("product")
+            }
 
         return {
-            "member_no": entry.member.member_no,
+            "id": entry.id,
+            "member_no": member_no,
             "waiting_since": entry.created_at,
             "first_name": entry.first_name,
             "last_name": entry.last_name,
@@ -88,6 +101,7 @@ class WaitingListApiView(APIView):
             "country": entry.country,
             "date_of_entry_in_cooperative": date_of_entry_in_cooperative,
             "current_pickup_location": current_pickup_location,
+            "current_products": current_products,
             "pickup_location_wishes": [
                 wish.pickup_location for wish in entry.pickup_location_wishes.all()
             ],

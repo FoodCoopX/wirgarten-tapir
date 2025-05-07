@@ -5919,6 +5919,8 @@ components:
     WaitingListEntry:
       type: object
       properties:
+        id:
+          type: string
         member_no:
           type: integer
         waiting_since:
@@ -5937,7 +5939,7 @@ components:
           type: string
         street_2:
           type: string
-        post_code:
+        postcode:
           type: string
         city:
           type: string
@@ -5948,6 +5950,10 @@ components:
           format: date
         current_pickup_location:
           $ref: '#/components/schemas/PickupLocation'
+        current_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
         pickup_location_wishes:
           type: array
           items:
@@ -5962,14 +5968,13 @@ components:
       required:
       - city
       - country
-      - date_of_entry_in_cooperative
-      - desired_start_date
       - email_address
       - first_name
+      - id
       - last_name
       - member_no
       - phone_number
-      - post_code
+      - postcode
       - street
       - street_2
       - waiting_since

@@ -6,7 +6,7 @@ from django.views.generic import FormView
 
 from tapir.utils.config import Organization
 from tapir.utils.forms import ResetTestDataForm
-from tapir.utils.services.data_generator import DataGenerator
+from tapir.utils.services.test_data_generation.data_generator import DataGenerator
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.utils import is_debug_instance
 
