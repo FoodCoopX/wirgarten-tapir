@@ -6,6 +6,7 @@ interface ConfirmDeleteModalProps {
   open: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
@@ -13,6 +14,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   open,
   onConfirm,
   onCancel,
+  loading,
 }) => {
   return (
     <ConfirmModal
@@ -24,6 +26,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
       confirmButtonVariant="danger"
       onConfirm={onConfirm}
       onCancel={onCancel}
+      loading={loading}
     />
   );
 };

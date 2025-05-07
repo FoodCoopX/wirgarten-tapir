@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.waiting_list import views
 
@@ -15,3 +16,11 @@ urlpatterns = [
         name="api_list",
     ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"waiting_list_entries",
+    views.WaitingListEntryViewSet,
+    basename="waiting_list_entries",
+)
+urlpatterns += router.urls

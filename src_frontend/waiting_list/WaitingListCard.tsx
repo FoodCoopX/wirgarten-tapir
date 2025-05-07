@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { WaitingListApi, WaitingListEntry } from "../api-client";
+import { WaitingListApi, WaitingListEntryDetails } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
@@ -10,6 +10,7 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatAddress from "../utils/formatAddress.ts";
 import { formatDateText } from "../utils/formatDateText.ts";
 import "./waiting_list_card.css";
+import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
 
 interface WaitingListCardProps {
   csrfToken: string;
@@ -20,11 +21,19 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [waitingListEntries, setWaitingListEntries] = useState<
-    WaitingListEntry[]
+    WaitingListEntryDetails[]
   >([]);
   const [totalNumberOfEntries, setTotalNumberOfEntries] = useState(0);
+  const [selectedEntryForEdition, setSelectedEntryForEdition] =
+    useState<WaitingListEntryDetails>();
 
   useEffect(() => {
+    loadPage();
+  }, [currentPage]);
+
+  function loadPage() {
+    setLoading(true);
+
     api
       .waitingListApiListList({
         limit: DEFAULT_PAGE_SIZE,
@@ -36,11 +45,15 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
-  }, [currentPage]);
+  }
 
-  function buildWaitingListEntryRow(entry: WaitingListEntry) {
+  function buildWaitingListEntryRow(entry: WaitingListEntryDetails) {
     return (
-      <tr key={entry.id}>
+      <tr
+        key={entry.id}
+        style={{ cursor: "pointer" }}
+        onClick={() => setSelectedEntryForEdition(entry)}
+      >
         <td>{entry.memberNo}</td>
         <td>{formatDateNumeric(entry.waitingSince)}</td>
         <td>
@@ -144,6 +157,15 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           </Card>
         </Col>
       </Row>
+      {selectedEntryForEdition && (
+        <WaitingListEntryEditModal
+          show={true}
+          entryDetails={selectedEntryForEdition}
+          csrfToken={csrfToken}
+          onClose={() => setSelectedEntryForEdition(undefined)}
+          reloadEntries={loadPage}
+        />
+      )}
     </>
   );
 };

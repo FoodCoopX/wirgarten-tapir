@@ -24,131 +24,124 @@ import {
 /**
  * 
  * @export
- * @interface WaitingListEntry
+ * @interface WaitingListEntryRequest
  */
-export interface WaitingListEntry {
+export interface WaitingListEntryRequest {
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     id?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     firstName: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     lastName: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     phoneNumber?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     email: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     street?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     street2?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     postcode?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     city?: string;
     /**
      * 
      * @type {MemberCountry}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     country?: MemberCountry;
     /**
      * 
      * @type {Date}
-     * @memberof WaitingListEntry
-     */
-    readonly createdAt: Date;
-    /**
-     * 
-     * @type {Date}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     privacyConsent: Date;
     /**
      * 
      * @type {number}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     numberOfCoopShares: number;
     /**
      * 
      * @type {Date}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     desiredStartDate?: Date | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     comment?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     category?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof WaitingListEntryRequest
      */
     member?: string | null;
 }
 
 /**
- * Check if a given object implements the WaitingListEntry interface.
+ * Check if a given object implements the WaitingListEntryRequest interface.
  */
-export function instanceOfWaitingListEntry(value: object): value is WaitingListEntry {
+export function instanceOfWaitingListEntryRequest(value: object): value is WaitingListEntryRequest {
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('email' in value) || value['email'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('privacyConsent' in value) || value['privacyConsent'] === undefined) return false;
     if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
     return true;
 }
 
-export function WaitingListEntryFromJSON(json: any): WaitingListEntry {
-    return WaitingListEntryFromJSONTyped(json, false);
+export function WaitingListEntryRequestFromJSON(json: any): WaitingListEntryRequest {
+    return WaitingListEntryRequestFromJSONTyped(json, false);
 }
 
-export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: boolean): WaitingListEntry {
+export function WaitingListEntryRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): WaitingListEntryRequest {
     if (json == null) {
         return json;
     }
@@ -164,7 +157,6 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'postcode': json['postcode'] == null ? undefined : json['postcode'],
         'city': json['city'] == null ? undefined : json['city'],
         'country': json['country'] == null ? undefined : MemberCountryFromJSON(json['country']),
-        'createdAt': (new Date(json['created_at'])),
         'privacyConsent': (new Date(json['privacy_consent'])),
         'numberOfCoopShares': json['number_of_coop_shares'],
         'desiredStartDate': json['desired_start_date'] == null ? undefined : (new Date(json['desired_start_date'])),
@@ -174,11 +166,11 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
     };
 }
 
-  export function WaitingListEntryToJSON(json: any): WaitingListEntry {
-      return WaitingListEntryToJSONTyped(json, false);
+  export function WaitingListEntryRequestToJSON(json: any): WaitingListEntryRequest {
+      return WaitingListEntryRequestToJSONTyped(json, false);
   }
 
-  export function WaitingListEntryToJSONTyped(value?: Omit<WaitingListEntry, 'created_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function WaitingListEntryRequestToJSONTyped(value?: WaitingListEntryRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

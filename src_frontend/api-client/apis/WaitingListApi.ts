@@ -15,16 +15,47 @@
 
 import * as runtime from '../runtime';
 import type {
-  PaginatedWaitingListEntryList,
+  PaginatedWaitingListEntryDetailsList,
+  PatchedWaitingListEntryRequest,
+  WaitingListEntry,
+  WaitingListEntryRequest,
 } from '../models/index';
 import {
-    PaginatedWaitingListEntryListFromJSON,
-    PaginatedWaitingListEntryListToJSON,
+    PaginatedWaitingListEntryDetailsListFromJSON,
+    PaginatedWaitingListEntryDetailsListToJSON,
+    PatchedWaitingListEntryRequestFromJSON,
+    PatchedWaitingListEntryRequestToJSON,
+    WaitingListEntryFromJSON,
+    WaitingListEntryToJSON,
+    WaitingListEntryRequestFromJSON,
+    WaitingListEntryRequestToJSON,
 } from '../models/index';
 
 export interface WaitingListApiListListRequest {
     limit: number;
     offset: number;
+}
+
+export interface WaitingListWaitingListEntriesCreateRequest {
+    waitingListEntryRequest: WaitingListEntryRequest;
+}
+
+export interface WaitingListWaitingListEntriesDestroyRequest {
+    id: string;
+}
+
+export interface WaitingListWaitingListEntriesPartialUpdateRequest {
+    id: string;
+    patchedWaitingListEntryRequest?: PatchedWaitingListEntryRequest;
+}
+
+export interface WaitingListWaitingListEntriesRetrieveRequest {
+    id: string;
+}
+
+export interface WaitingListWaitingListEntriesUpdateRequest {
+    id: string;
+    waitingListEntryRequest: WaitingListEntryRequest;
 }
 
 /**
@@ -34,7 +65,7 @@ export class WaitingListApi extends runtime.BaseAPI {
 
     /**
      */
-    async waitingListApiListListRaw(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaginatedWaitingListEntryList>> {
+    async waitingListApiListListRaw(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaginatedWaitingListEntryDetailsList>> {
         if (requestParameters['limit'] == null) {
             throw new runtime.RequiredError(
                 'limit',
@@ -68,13 +99,207 @@ export class WaitingListApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => PaginatedWaitingListEntryListFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => PaginatedWaitingListEntryDetailsListFromJSON(jsonValue));
     }
 
     /**
      */
-    async waitingListApiListList(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaginatedWaitingListEntryList> {
+    async waitingListApiListList(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaginatedWaitingListEntryDetailsList> {
         const response = await this.waitingListApiListListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesCreateRaw(requestParameters: WaitingListWaitingListEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaitingListEntry>> {
+        if (requestParameters['waitingListEntryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'waitingListEntryRequest',
+                'Required parameter "waitingListEntryRequest" was null or undefined when calling waitingListWaitingListEntriesCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WaitingListEntryRequestToJSON(requestParameters['waitingListEntryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WaitingListEntryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesCreate(requestParameters: WaitingListWaitingListEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaitingListEntry> {
+        const response = await this.waitingListWaitingListEntriesCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesDestroyRaw(requestParameters: WaitingListWaitingListEntriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling waitingListWaitingListEntriesDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesDestroy(requestParameters: WaitingListWaitingListEntriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.waitingListWaitingListEntriesDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WaitingListEntry>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WaitingListEntryFromJSON));
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WaitingListEntry>> {
+        const response = await this.waitingListWaitingListEntriesListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesPartialUpdateRaw(requestParameters: WaitingListWaitingListEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaitingListEntry>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling waitingListWaitingListEntriesPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedWaitingListEntryRequestToJSON(requestParameters['patchedWaitingListEntryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WaitingListEntryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesPartialUpdate(requestParameters: WaitingListWaitingListEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaitingListEntry> {
+        const response = await this.waitingListWaitingListEntriesPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesRetrieveRaw(requestParameters: WaitingListWaitingListEntriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaitingListEntry>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling waitingListWaitingListEntriesRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WaitingListEntryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesRetrieve(requestParameters: WaitingListWaitingListEntriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaitingListEntry> {
+        const response = await this.waitingListWaitingListEntriesRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesUpdateRaw(requestParameters: WaitingListWaitingListEntriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaitingListEntry>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling waitingListWaitingListEntriesUpdate().'
+            );
+        }
+
+        if (requestParameters['waitingListEntryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'waitingListEntryRequest',
+                'Required parameter "waitingListEntryRequest" was null or undefined when calling waitingListWaitingListEntriesUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/waiting_list/waiting_list_entries/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WaitingListEntryRequestToJSON(requestParameters['waitingListEntryRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WaitingListEntryFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async waitingListWaitingListEntriesUpdate(requestParameters: WaitingListWaitingListEntriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaitingListEntry> {
+        const response = await this.waitingListWaitingListEntriesUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

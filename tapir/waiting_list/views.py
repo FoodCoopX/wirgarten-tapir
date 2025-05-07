@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import permissions
+from rest_framework import permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 
@@ -13,7 +13,10 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.waiting_list.serializers import WaitingListEntrySerializer
+from tapir.waiting_list.serializers import (
+    WaitingListEntryDetailsSerializer,
+    WaitingListEntrySerializer,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import WaitingListEntry
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
@@ -26,7 +29,7 @@ class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView)
 
 
 class WaitingListApiView(APIView):
-    serializer_class = WaitingListEntrySerializer(many=True)
+    serializer_class = WaitingListEntryDetailsSerializer(many=True)
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     pagination_class = LimitOffsetPagination
 
@@ -35,7 +38,7 @@ class WaitingListApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: WaitingListEntrySerializer(many=True)},
+        responses={200: WaitingListEntryDetailsSerializer(many=True)},
         parameters=[
             OpenApiParameter(name="limit", type=int, required=True),
             OpenApiParameter(name="offset", type=int, required=True),
@@ -53,7 +56,7 @@ class WaitingListApiView(APIView):
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry) for entry in entries]
-        serializer = WaitingListEntrySerializer(data, many=True)
+        serializer = WaitingListEntryDetailsSerializer(data, many=True)
 
         return pagination.get_paginated_response(serializer.data)
 
@@ -126,3 +129,9 @@ class WaitingListApiView(APIView):
         ]
         for field in personal_data_fields:
             setattr(entry, field, getattr(entry.member, field))
+
+
+class WaitingListEntryViewSet(viewsets.ModelViewSet):
+    queryset = WaitingListEntry.objects.all()
+    serializer_class = WaitingListEntrySerializer
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]

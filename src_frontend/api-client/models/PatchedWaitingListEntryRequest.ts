@@ -24,149 +24,136 @@ import {
 /**
  * 
  * @export
- * @interface WaitingListEntry
+ * @interface PatchedWaitingListEntryRequest
  */
-export interface WaitingListEntry {
+export interface PatchedWaitingListEntryRequest {
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     id?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
-    firstName: string;
+    firstName?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
-    lastName: string;
+    lastName?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     phoneNumber?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
-    email: string;
+    email?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     street?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     street2?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     postcode?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     city?: string;
     /**
      * 
      * @type {MemberCountry}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     country?: MemberCountry;
     /**
      * 
      * @type {Date}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
-    readonly createdAt: Date;
-    /**
-     * 
-     * @type {Date}
-     * @memberof WaitingListEntry
-     */
-    privacyConsent: Date;
+    privacyConsent?: Date;
     /**
      * 
      * @type {number}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
-    numberOfCoopShares: number;
+    numberOfCoopShares?: number;
     /**
      * 
      * @type {Date}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     desiredStartDate?: Date | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     comment?: string;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     category?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof WaitingListEntry
+     * @memberof PatchedWaitingListEntryRequest
      */
     member?: string | null;
 }
 
 /**
- * Check if a given object implements the WaitingListEntry interface.
+ * Check if a given object implements the PatchedWaitingListEntryRequest interface.
  */
-export function instanceOfWaitingListEntry(value: object): value is WaitingListEntry {
-    if (!('firstName' in value) || value['firstName'] === undefined) return false;
-    if (!('lastName' in value) || value['lastName'] === undefined) return false;
-    if (!('email' in value) || value['email'] === undefined) return false;
-    if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
-    if (!('privacyConsent' in value) || value['privacyConsent'] === undefined) return false;
-    if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
+export function instanceOfPatchedWaitingListEntryRequest(value: object): value is PatchedWaitingListEntryRequest {
     return true;
 }
 
-export function WaitingListEntryFromJSON(json: any): WaitingListEntry {
-    return WaitingListEntryFromJSONTyped(json, false);
+export function PatchedWaitingListEntryRequestFromJSON(json: any): PatchedWaitingListEntryRequest {
+    return PatchedWaitingListEntryRequestFromJSONTyped(json, false);
 }
 
-export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: boolean): WaitingListEntry {
+export function PatchedWaitingListEntryRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): PatchedWaitingListEntryRequest {
     if (json == null) {
         return json;
     }
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
-        'firstName': json['first_name'],
-        'lastName': json['last_name'],
+        'firstName': json['first_name'] == null ? undefined : json['first_name'],
+        'lastName': json['last_name'] == null ? undefined : json['last_name'],
         'phoneNumber': json['phone_number'] == null ? undefined : json['phone_number'],
-        'email': json['email'],
+        'email': json['email'] == null ? undefined : json['email'],
         'street': json['street'] == null ? undefined : json['street'],
         'street2': json['street_2'] == null ? undefined : json['street_2'],
         'postcode': json['postcode'] == null ? undefined : json['postcode'],
         'city': json['city'] == null ? undefined : json['city'],
         'country': json['country'] == null ? undefined : MemberCountryFromJSON(json['country']),
-        'createdAt': (new Date(json['created_at'])),
-        'privacyConsent': (new Date(json['privacy_consent'])),
-        'numberOfCoopShares': json['number_of_coop_shares'],
+        'privacyConsent': json['privacy_consent'] == null ? undefined : (new Date(json['privacy_consent'])),
+        'numberOfCoopShares': json['number_of_coop_shares'] == null ? undefined : json['number_of_coop_shares'],
         'desiredStartDate': json['desired_start_date'] == null ? undefined : (new Date(json['desired_start_date'])),
         'comment': json['comment'] == null ? undefined : json['comment'],
         'category': json['category'] == null ? undefined : json['category'],
@@ -174,11 +161,11 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
     };
 }
 
-  export function WaitingListEntryToJSON(json: any): WaitingListEntry {
-      return WaitingListEntryToJSONTyped(json, false);
+  export function PatchedWaitingListEntryRequestToJSON(json: any): PatchedWaitingListEntryRequest {
+      return PatchedWaitingListEntryRequestToJSONTyped(json, false);
   }
 
-  export function WaitingListEntryToJSONTyped(value?: Omit<WaitingListEntry, 'created_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PatchedWaitingListEntryRequestToJSONTyped(value?: PatchedWaitingListEntryRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -195,7 +182,7 @@ export function WaitingListEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'postcode': value['postcode'],
         'city': value['city'],
         'country': MemberCountryToJSON(value['country']),
-        'privacy_consent': ((value['privacyConsent']).toISOString()),
+        'privacy_consent': value['privacyConsent'] == null ? undefined : ((value['privacyConsent']).toISOString()),
         'number_of_coop_shares': value['numberOfCoopShares'],
         'desired_start_date': value['desiredStartDate'] == null ? undefined : ((value['desiredStartDate'] as any).toISOString().substring(0,10)),
         'comment': value['comment'],

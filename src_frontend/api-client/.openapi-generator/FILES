@@ -58,7 +58,7 @@ models/PaginatedEmailDispatchList.ts
 models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
-models/PaginatedWaitingListEntryList.ts
+models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
@@ -73,6 +73,7 @@ models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
+models/PatchedWaitingListEntryRequest.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PickingModeEnum.ts
@@ -116,5 +117,7 @@ models/TriggerFieldDefinition.ts
 models/UploadTypeEnum.ts
 models/UsedJokerInGrowingPeriod.ts
 models/WaitingListEntry.ts
+models/WaitingListEntryDetails.ts
+models/WaitingListEntryRequest.ts
 models/index.ts
 runtime.ts

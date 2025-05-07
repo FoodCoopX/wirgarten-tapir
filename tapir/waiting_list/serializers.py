@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import ProductSerializer, PickupLocationSerializer
+from tapir.wirgarten.models import WaitingListEntry
 
 
-class WaitingListEntrySerializer(serializers.Serializer):
+class WaitingListEntryDetailsSerializer(serializers.Serializer):
     id = serializers.CharField()
     member_no = serializers.IntegerField()
     waiting_since = serializers.DateTimeField()
@@ -25,3 +26,9 @@ class WaitingListEntrySerializer(serializers.Serializer):
     number_of_coop_shares = serializers.IntegerField()
     comment = serializers.CharField()
     category = serializers.CharField(required=False)
+
+
+class WaitingListEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitingListEntry
+        fields = "__all__"
