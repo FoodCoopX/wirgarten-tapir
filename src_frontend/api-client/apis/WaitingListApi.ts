@@ -72,6 +72,30 @@ export class WaitingListApi extends runtime.BaseAPI {
 
     /**
      */
+    async waitingListApiCategoriesRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<string>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/waiting_list/api/categories`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     */
+    async waitingListApiCategoriesRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<string>> {
+        const response = await this.waitingListApiCategoriesRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async waitingListApiListListRaw(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PaginatedWaitingListEntryDetailsList>> {
         if (requestParameters['limit'] == null) {
             throw new runtime.RequiredError(

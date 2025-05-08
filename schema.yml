@@ -2889,6 +2889,22 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /waiting_list/api/categories:
+    get:
+      operationId: waiting_list_api_categories_retrieve
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: ''
   /waiting_list/api/list:
     get:
       operationId: waiting_list_api_list_list
@@ -6447,7 +6463,6 @@ components:
           type: string
         category:
           type: string
-          minLength: 1
       required:
       - city
       - comment

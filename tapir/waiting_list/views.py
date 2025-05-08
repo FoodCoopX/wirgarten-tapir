@@ -21,6 +21,9 @@ from tapir.waiting_list.serializers import (
     WaitingListEntrySerializer,
     WaitingListEntryUpdateSerializer,
 )
+from tapir.waiting_list.services.waiting_list_categories_service import (
+    WaitingListCategoriesService,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     WaitingListEntry,
@@ -206,3 +209,17 @@ class WaitingListEntryUpdateView(APIView):
         WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class WaitingListCategoriesView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: list[str]},
+        request=WaitingListEntryUpdateSerializer,
+    )
+    def get(self, request):
+        return Response(
+            WaitingListCategoriesService.get_categories(cache={}),
+            status=status.HTTP_200_OK,
+        )

@@ -20,6 +20,11 @@ urlpatterns = [
         views.WaitingListEntryUpdateView.as_view(),
         name="update_entry",
     ),
+    path(
+        "api/categories",
+        views.WaitingListCategoriesView.as_view(),
+        name="categories",
+    ),
 ]
 
 router = DefaultRouter()

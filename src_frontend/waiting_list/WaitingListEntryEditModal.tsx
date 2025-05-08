@@ -25,6 +25,7 @@ interface WaitingListEntryEditModalProps {
   reloadEntries: () => void;
   pickupLocations: PickupLocation[];
   products: Product[];
+  categories: string[];
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
@@ -35,6 +36,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   reloadEntries,
   pickupLocations,
   products,
+  categories,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -54,6 +56,8 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   const [productWishes, setProductWishes] = useState<WaitingListProductWish[]>(
     [],
   );
+  const [comment, setComment] = useState("");
+  const [category, setCategory] = useState("");
 
   useEffect(() => {
     setFirstName(entryDetails.firstName);
@@ -67,6 +71,8 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setDesiredStartDate(entryDetails.desiredStartDate);
     setPickupLocationWishes(entryDetails.pickupLocationWishes ?? []);
     setProductWishes(entryDetails.productWishes ?? []);
+    setComment(entryDetails.comment);
+    setCategory(entryDetails.category ?? "");
   }, [entryDetails]);
 
   function onConfirmDelete() {
@@ -94,8 +100,8 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           postcode: postcode,
           city: city,
           desiredStartDate: desiredStartDate,
-          category: entryDetails.category,
-          comment: entryDetails.comment,
+          category: category,
+          comment: comment,
           id: entryDetails.id,
           pickupLocationIds: pickupLocationWishes.map(
             (wish) => wish.pickupLocation.id!,
@@ -252,14 +258,43 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 </Row>
                 <Row className={"mt-2"}>
                   <Col>
-                    <Form.Label>Gewünschtes Anfangsdatum</Form.Label>
+                    <Form.Group controlId={"form.desiredStartDate"}>
+                      <Form.Label>Gewünschtes Anfangsdatum</Form.Label>
+                      <Form.Control
+                        type={"date"}
+                        onChange={(event) =>
+                          setDesiredStartDate(new Date(event.target.value))
+                        }
+                        value={dayjs(desiredStartDate).format("YYYY-MM-DD")}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group controlId={"form.category"}>
+                      <Form.Label>Category</Form.Label>
+                      <Form.Select
+                        onChange={(event) => setCategory(event.target.value)}
+                        value={category}
+                      >
+                        <option value={""}>Keine Kategorie</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row className={"mt-2"}>
+                  <Col>
+                    <Form.Label>Kommentar</Form.Label>
                     <Form.Control
-                      type={"date"}
-                      onChange={(event) =>
-                        setDesiredStartDate(new Date(event.target.value))
-                      }
-                      required={true}
-                      value={dayjs(desiredStartDate).format("YYYY-MM-DD")}
+                      as={"textarea"}
+                      type={"text"}
+                      placeholder={"Kommentar"}
+                      onChange={(event) => setComment(event.target.value)}
+                      value={comment}
                     />
                   </Col>
                 </Row>

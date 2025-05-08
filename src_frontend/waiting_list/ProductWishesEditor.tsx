@@ -55,7 +55,9 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
         <h5>Produkt-Wünsche</h5>
       </Row>
       <Row>
-        {wishes && (
+        {wishes.length === 0 ? (
+          <span className={"mb-2"}>Kein Produkt-Wunsch</span>
+        ) : (
           <Table striped hover responsive>
             <thead>
               <tr>

@@ -63,7 +63,9 @@ const PickupLocationWishesEditor: React.FC<PickupLocationWishesEditorProps> = ({
         <h5>Abholort-Wechselwünsche</h5>
       </Row>
       <Row>
-        {wishes && (
+        {wishes.length === 0 ? (
+          <span className={"mb-2"}>Kein Wechselwunsch</span>
+        ) : (
           <Table striped hover responsive>
             <thead>
               <tr>

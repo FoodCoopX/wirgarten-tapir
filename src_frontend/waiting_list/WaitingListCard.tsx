@@ -37,6 +37,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     useState<WaitingListEntryDetails>();
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     pickupLocationApi
@@ -47,6 +48,11 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     subscriptionsApi
       .subscriptionsProductsList()
       .then(setProducts)
+      .catch(handleRequestError);
+
+    waitingListApi
+      .waitingListApiCategoriesRetrieve()
+      .then(setCategories)
       .catch(handleRequestError);
   }, []);
 
@@ -194,6 +200,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           reloadEntries={loadPage}
           pickupLocations={pickupLocations}
           products={products}
+          categories={categories}
         />
       )}
     </>

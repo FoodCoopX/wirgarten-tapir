@@ -72,4 +72,4 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     product_quantities = serializers.ListField(child=serializers.IntegerField())
     desired_start_date = serializers.DateField(required=False)
     comment = serializers.CharField(allow_blank=True)
-    category = serializers.CharField(required=False)
+    category = serializers.CharField(required=False, allow_blank=True)
