@@ -7,5 +7,5 @@ if (domNode) {
   const root = createRoot(domNode);
   root.render(<WaitingListCard csrfToken={getCsrfToken()} />);
 } else {
-  console.error("Failed to render csv editor from React");
+  console.error("Failed to render waiting list from React");
 }
