@@ -159,8 +159,8 @@ def add_admin_links(groups, request):
         waitlist_entries = WaitingListEntry.objects.count()
         members_group.add_link(
             display_name=_("Warteliste"),
-            material_icon="schedule",
-            url=reverse_lazy("wirgarten:waitinglist"),
+            material_icon="pending_actions",
+            url=reverse_lazy("waiting_list:list"),
             notification_count=waitlist_entries,
         )
 

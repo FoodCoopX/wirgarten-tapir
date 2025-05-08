@@ -6,13 +6,18 @@ from django.core.exceptions import ImproperlyConfigured
 from tapir.accounts.models import EmailChangeRequest
 from tapir.log.models import LogEntry
 from tapir.utils.config import Organization
-from tapir.utils.services.configuration_generator import ConfigurationGenerator
-from tapir.utils.services.joker_generator import JokerGenerator
-from tapir.utils.services.pickup_location_generator import (
+from tapir.utils.services.test_data_generation.configuration_generator import (
+    ConfigurationGenerator,
+)
+from tapir.utils.services.test_data_generation.joker_generator import JokerGenerator
+from tapir.utils.services.test_data_generation.pickup_location_generator import (
     PickupLocationGenerator,
 )
-from tapir.utils.services.product_generator import ProductGenerator
-from tapir.utils.services.user_generator import UserGenerator
+from tapir.utils.services.test_data_generation.product_generator import ProductGenerator
+from tapir.utils.services.test_data_generation.user_generator import UserGenerator
+from tapir.utils.services.test_data_generation.waiting_list_generator import (
+    WaitingListGenerator,
+)
 from tapir.wirgarten.models import (
     Subscription,
     CoopShareTransaction,
@@ -38,6 +43,7 @@ class DataGenerator:
         print("Clearing data...")
 
         model_classes = [
+            WaitingListEntry,
             MemberPickupLocation,
             PickupLocation,
             Subscription,
@@ -48,7 +54,6 @@ class DataGenerator:
             ProductType,
             LogEntry,
             CoopShareTransaction,
-            WaitingListEntry,
             QuestionaireTrafficSourceResponse,
             Payment,
             MandateReference,
@@ -67,12 +72,19 @@ class DataGenerator:
     def generate_all(cls, generate_test_data_for: Organization):
         factory.random.reseed_random("tapir")
 
+        print(f"Generating test data for {generate_test_data_for}...")
         cls.generate_growing_periods(generate_test_data_for)
+        print("Creating products...")
         ProductGenerator.generate_product_data(generate_test_data_for)
+        print("Creating pickup locations...")
         PickupLocationGenerator.generate_pickup_locations(generate_test_data_for)
+        print("Updating configuration...")
         ConfigurationGenerator.update_settings_for_organization(generate_test_data_for)
         UserGenerator.generate_users_and_subscriptions(generate_test_data_for)
+        print("Creating jokers...")
         JokerGenerator.generate_jokers()
+        print("Creating waiting list...")
+        WaitingListGenerator.generate_waiting_list(generate_test_data_for)
 
     @classmethod
     def generate_growing_periods(cls, generate_test_data_for: Organization):

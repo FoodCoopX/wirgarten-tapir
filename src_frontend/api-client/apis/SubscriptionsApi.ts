@@ -20,6 +20,7 @@ import type {
   ExtendedProduct,
   PaginatedCancelledSubscriptionList,
   PatchedExtendedProductRequest,
+  Product,
   ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse,
 } from '../models/index';
 import {
@@ -33,6 +34,8 @@ import {
     PaginatedCancelledSubscriptionListToJSON,
     PatchedExtendedProductRequestFromJSON,
     PatchedExtendedProductRequestToJSON,
+    ProductFromJSON,
+    ProductToJSON,
     ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseFromJSON,
     ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseToJSON,
 } from '../models/index';
@@ -63,6 +66,10 @@ export interface SubscriptionsCancelSubscriptionsCreateRequest {
 
 export interface SubscriptionsCancellationDataRetrieveRequest {
     memberId?: string;
+}
+
+export interface SubscriptionsProductsRetrieveRequest {
+    id: string;
 }
 
 /**
@@ -310,6 +317,61 @@ export class SubscriptionsApi extends runtime.BaseAPI {
      */
     async subscriptionsCancellationDataRetrieve(requestParameters: SubscriptionsCancellationDataRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CancellationData> {
         const response = await this.subscriptionsCancellationDataRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async subscriptionsProductsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Product>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/products/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProductFromJSON));
+    }
+
+    /**
+     */
+    async subscriptionsProductsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Product>> {
+        const response = await this.subscriptionsProductsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async subscriptionsProductsRetrieveRaw(requestParameters: SubscriptionsProductsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Product>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling subscriptionsProductsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/products/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProductFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsProductsRetrieve(requestParameters: SubscriptionsProductsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Product> {
+        const response = await this.subscriptionsProductsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

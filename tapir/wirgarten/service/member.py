@@ -280,29 +280,30 @@ def buy_cooperative_shares(
 
 
 def create_wait_list_entry(
-    first_name: str, last_name: str, email: str, type: WaitingListEntry.WaitingListType
+    member: Member | None,
+    first_name: str,
+    last_name: str,
+    email: str,
+    phone_number: str,
+    street: str,
+    street_2: str,
+    postcode: str,
+    city: str,
 ):
-    """
-    Create a wait list entry for a non-member.
-
-    :param first_name: the first name of the interested person
-    :param last_name: the last name of the interested person
-    :param email: the contact email address
-    :return: the newly created WaitListEntry
-    """
-
-    try:
-        member = Member.objects.get(email=email)
-    except Member.DoesNotExist:
-        member = None
-
     return WaitingListEntry.objects.create(
+        member=member,
         first_name=first_name,
         last_name=last_name,
         email=email,
         privacy_consent=get_now(),
-        type=type,
-        member=member,
+        phone_number=phone_number,
+        street=street,
+        street_2=street_2,
+        postcode=postcode,
+        city=city,
+        country="DE",
+        comment="",
+        number_of_coop_shares=0,
     )
 
 
@@ -484,6 +485,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
     contract_start_date = subs[0].start_date
 
     future_deliveries = generate_future_deliveries(member, cache=cache)
+    print("SEND CONFIRMATION")
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
@@ -500,7 +502,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
         },
         cache=cache,
     )
-
+    print("CONFIRMATION SENT")
     TransactionalTrigger.fire_action(
         Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         member.email,

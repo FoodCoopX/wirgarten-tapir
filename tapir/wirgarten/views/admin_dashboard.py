@@ -23,7 +23,6 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
-    WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
@@ -133,20 +132,6 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         context["cancellations_during_trial"] = len(
             Subscription.objects.filter(cancellation_ts__isnull=False)
-        )
-
-        waiting_list_counts = {
-            r["type"]: r["count"]
-            for r in WaitingListEntry.objects.all()
-            .values("type")
-            .annotate(count=Count("type"))
-        }
-
-        context["waiting_list_coop_shares"] = waiting_list_counts.get(
-            WaitingListEntry.WaitingListType.COOP_SHARES, 0
-        )
-        context["waiting_list_harvest_shares"] = waiting_list_counts.get(
-            WaitingListEntry.WaitingListType.HARVEST_SHARES, 0
         )
 
         context["solidarity_overplus"] = (

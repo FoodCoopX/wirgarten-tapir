@@ -298,14 +298,8 @@ def _register_triggers():
     register_trigger(OnboardingTrigger)
 
 
-def get_waitlist_segment_name(entry_type):
-    return f"Warteliste: {WaitingListEntry.WaitingListType(entry_type).label}"
-
-
 def synchronize_waitlist_segment_for_entry(entry):
-    static_segment, _ = StaticSegment.objects.get_or_create(
-        name=get_waitlist_segment_name(entry.type)
-    )
+    static_segment, _ = StaticSegment.objects.get_or_create(name="Warteliste")
 
     recipient, created = StaticSegmentRecipient.objects.get_or_create(
         segment=static_segment,
@@ -324,16 +318,11 @@ def synchronize_waitlist_segments():
         synchronize_waitlist_segment_for_entry(entry)
 
     # Handle deletion of recipients no longer in WaitingList
-    for waitlist_type in WaitingListEntry.WaitingListType:
-        segment_name = get_waitlist_segment_name(waitlist_type)
-        for recipient in StaticSegmentRecipient.objects.filter(
-            segment__name=segment_name
-        ):
-            if not WaitingListEntry.objects.filter(email=recipient.email).exists():
-                print(
-                    f"Deleting recipient {recipient.email} from segment {segment_name}"
-                )
-                recipient.delete()
+    segment_name = "Warteliste"
+    for recipient in StaticSegmentRecipient.objects.filter(segment__name=segment_name):
+        if not WaitingListEntry.objects.filter(email=recipient.email).exists():
+            print(f"Deleting recipient {recipient.email} from segment {segment_name}")
+            recipient.delete()
 
 
 @receiver(post_save, sender=WaitingListEntry)
@@ -344,9 +333,7 @@ def create_or_update_recipient(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=WaitingListEntry)
 def delete_recipient(sender, instance, **kwargs):
     try:
-        static_segment = StaticSegment.objects.get(
-            name=f"Warteliste: {instance.get_type_display()}"
-        )
+        static_segment = StaticSegment.objects.get(name="Warteliste")
         recipient = StaticSegmentRecipient.objects.get(
             segment=static_segment, email=instance.email
         )

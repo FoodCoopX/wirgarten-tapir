@@ -1,9 +1,9 @@
-.openapi-generator-ignore
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PickupLocationsApi.ts
 apis/SubscriptionsApi.ts
 apis/TapirmailApi.ts
+apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
@@ -58,6 +58,7 @@ models/PaginatedEmailDispatchList.ts
 models/PaginatedEmailDispatchWithRetriesList.ts
 models/PaginatedEmailTemplateList.ts
 models/PaginatedGroupedEmailDispatchList.ts
+models/PaginatedWaitingListEntryDetailsList.ts
 models/PatchedBundledEmailConfigurationRequest.ts
 models/PatchedCsvExportModelRequest.ts
 models/PatchedEmailConfigurationDispatchRequest.ts
@@ -72,6 +73,7 @@ models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
+models/PatchedWaitingListEntryRequest.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PickingModeEnum.ts
@@ -114,5 +116,11 @@ models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
 models/UploadTypeEnum.ts
 models/UsedJokerInGrowingPeriod.ts
+models/WaitingListEntry.ts
+models/WaitingListEntryDetails.ts
+models/WaitingListEntryRequest.ts
+models/WaitingListEntryUpdateRequest.ts
+models/WaitingListPickupLocationWish.ts
+models/WaitingListProductWish.ts
 models/index.ts
 runtime.ts

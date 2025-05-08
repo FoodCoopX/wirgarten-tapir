@@ -884,6 +884,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/CancellationData'
           description: ''
+  /subscriptions/products/:
+    get:
+      operationId: subscriptions_products_list
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+  /subscriptions/products/{id}/:
+    get:
+      operationId: subscriptions_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this product.
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2852,6 +2889,214 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /waiting_list/api/categories:
+    get:
+      operationId: waiting_list_api_categories_retrieve
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: ''
+  /waiting_list/api/list:
+    get:
+      operationId: waiting_list_api_list_list
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
+          description: ''
+  /waiting_list/api/update_entry:
+    post:
+      operationId: waiting_list_api_update_entry_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /waiting_list/waiting_list_entries/:
+    get:
+      operationId: waiting_list_waiting_list_entries_list
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    post:
+      operationId: waiting_list_waiting_list_entries_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+  /waiting_list/waiting_list_entries/{id}/:
+    get:
+      operationId: waiting_list_waiting_list_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    put:
+      operationId: waiting_list_waiting_list_entries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    patch:
+      operationId: waiting_list_waiting_list_entries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    delete:
+      operationId: waiting_list_waiting_list_entries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
     AutomatedExportCycleEnum:
@@ -4638,6 +4883,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedWaitingListEntryDetailsList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListEntryDetails'
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -4983,6 +5251,70 @@ components:
         upload_type:
           $ref: '#/components/schemas/UploadTypeEnum'
         uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+    PatchedWaitingListEntryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          minLength: 1
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        member:
           type: string
           minLength: 1
           nullable: true
@@ -5868,6 +6200,319 @@ components:
       - joker_restrictions
       - max_jokers
       - number_of_used_jokers
+    WaitingListEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        first_name:
+          type: string
+          maxLength: 256
+        last_name:
+          type: string
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          maxLength: 100
+        member:
+          type: string
+          nullable: true
+      required:
+      - created_at
+      - email
+      - first_name
+      - last_name
+      - number_of_coop_shares
+      - privacy_consent
+    WaitingListEntryDetails:
+      type: object
+      properties:
+        id:
+          type: string
+        member_no:
+          type: integer
+        member_already_exists:
+          type: boolean
+        waiting_since:
+          type: string
+          format: date-time
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        date_of_entry_in_cooperative:
+          type: string
+          format: date
+        current_pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        current_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pickup_location_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListPickupLocationWish'
+        product_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListProductWish'
+        desired_start_date:
+          type: string
+          format: date
+        number_of_coop_shares:
+          type: integer
+        comment:
+          type: string
+        category:
+          type: string
+      required:
+      - city
+      - comment
+      - country
+      - email
+      - first_name
+      - id
+      - last_name
+      - member_already_exists
+      - member_no
+      - number_of_coop_shares
+      - phone_number
+      - postcode
+      - street
+      - street_2
+      - waiting_since
+    WaitingListEntryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          minLength: 1
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        member:
+          type: string
+          minLength: 1
+          nullable: true
+      required:
+      - email
+      - first_name
+      - last_name
+      - number_of_coop_shares
+      - privacy_consent
+    WaitingListEntryUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_quantities:
+          type: array
+          items:
+            type: integer
+        desired_start_date:
+          type: string
+          format: date
+        comment:
+          type: string
+        category:
+          type: string
+      required:
+      - city
+      - comment
+      - email
+      - first_name
+      - id
+      - last_name
+      - phone_number
+      - pickup_location_ids
+      - postcode
+      - product_ids
+      - product_quantities
+      - street
+      - street_2
+    WaitingListPickupLocationWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - pickup_location
+      - priority
+      - waiting_list_entry
+    WaitingListProductWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - product
+      - quantity
+      - waiting_list_entry
   securitySchemes:
     cookieAuth:
       type: apiKey

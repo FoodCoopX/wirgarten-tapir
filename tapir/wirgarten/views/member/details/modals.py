@@ -34,7 +34,6 @@ from tapir.wirgarten.models import (
     ProductType,
     QuestionaireCancellationReasonResponse,
     SubscriptionChangeLogEntry,
-    WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -176,11 +175,18 @@ def get_pickup_location_choice_form(request, **kwargs):
 
 @require_http_methods(["GET", "POST"])
 def get_harvest_shares_waiting_list_form(request, **kwargs):
+    member = None
     if request.user and Member.objects.filter(id=request.user.id).exists():
+        member = request.user
         kwargs["initial"] = {
             "first_name": request.user.first_name,
             "last_name": request.user.last_name,
             "email": request.user.email,
+            "phone_number": request.user.phone_number,
+            "street": request.user.street,
+            "street_2": request.user.street_2,
+            "postcode": request.user.postcode,
+            "city": request.user.city,
         }
         kwargs["redirect_url_resolver"] = lambda _: member_detail_url(request.user.id)
 
@@ -191,7 +197,12 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
             email=x.cleaned_data["email"],
-            type=WaitingListEntry.WaitingListType.HARVEST_SHARES,
+            phone_number=x.cleaned_data["phone_number"],
+            street=x.cleaned_data["street"],
+            street_2=x.cleaned_data["street_2"],
+            postcode=x.cleaned_data["postcode"],
+            city=x.cleaned_data["city"],
+            member=member,
         ),
         **kwargs,
     )
@@ -199,6 +210,20 @@ def get_harvest_shares_waiting_list_form(request, **kwargs):
 
 @require_http_methods(["GET", "POST"])
 def get_coop_shares_waiting_list_form(request, **kwargs):
+    member = None
+    if request.user and Member.objects.filter(id=request.user.id).exists():
+        member = request.user
+        kwargs["initial"] = {
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "email": request.user.email,
+            "phone_number": request.user.phone_number,
+            "street": request.user.street,
+            "street_2": request.user.street_2,
+            "postcode": request.user.postcode,
+            "city": request.user.city,
+        }
+
     return get_form_modal(
         request=request,
         form_class=WaitingListForm,
@@ -206,7 +231,12 @@ def get_coop_shares_waiting_list_form(request, **kwargs):
             first_name=x.cleaned_data["first_name"],
             last_name=x.cleaned_data["last_name"],
             email=x.cleaned_data["email"],
-            type=WaitingListEntry.WaitingListType.COOP_SHARES,
+            phone_number=x.cleaned_data["phone_number"],
+            street=x.cleaned_data["street"],
+            street_2=x.cleaned_data["street_2"],
+            postcode=x.cleaned_data["postcode"],
+            city=x.cleaned_data["city"],
+            member=member,
         ),
         **kwargs,
     )

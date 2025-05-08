@@ -72,10 +72,14 @@ class UserGenerator:
         return json.loads(json_string)["results"]
 
     @classmethod
-    def generate_users_and_subscriptions(cls, organization: Organization):
-        user_count = 200
+    def get_user_count(cls, organization: Organization):
         if organization == Organization.BIOTOP:
-            user_count = 250
+            return 250
+        return 200
+
+    @classmethod
+    def generate_users_and_subscriptions(cls, organization: Organization):
+        user_count = cls.get_user_count(organization)
         # Users generated with https://randomuser.me
         print(f"Creating {user_count} users, this may take a while")
         random.seed("wirgarten")

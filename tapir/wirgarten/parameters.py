@@ -872,6 +872,16 @@ Dein WirGarten-Team""",
             enabled=is_debug_instance(),
         )
 
+        parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_WAITING_LIST_CATEGORIES,
+            label="Warteliste-Kategorien",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Kategorie 1, Kategorie 2, Kategorie 3",
+            description="Kategorien die in an Einträge der Warteliste zugewiesen werden können. Format: Kategorien-Namen mit ',' separiert. Anzahl beliebig",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
+        )
+
         if getattr(settings, "DEBUG", False):
             parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE_PRESET,
