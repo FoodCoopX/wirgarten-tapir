@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { WaitingListApi, WaitingListEntryDetails } from "../api-client";
+import {
+  PickupLocation,
+  PickupLocationsApi,
+  WaitingListApi,
+  WaitingListEntryDetails,
+} from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
@@ -17,7 +22,8 @@ interface WaitingListCardProps {
 }
 
 const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
-  const api = useApi(WaitingListApi, csrfToken);
+  const waitingListApi = useApi(WaitingListApi, csrfToken);
+  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [waitingListEntries, setWaitingListEntries] = useState<
@@ -26,6 +32,14 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [totalNumberOfEntries, setTotalNumberOfEntries] = useState(0);
   const [selectedEntryForEdition, setSelectedEntryForEdition] =
     useState<WaitingListEntryDetails>();
+  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+
+  useEffect(() => {
+    pickupLocationApi
+      .pickupLocationsPickupLocationsList()
+      .then(setPickupLocations)
+      .catch(handleRequestError);
+  }, []);
 
   useEffect(() => {
     loadPage();
@@ -34,7 +48,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   function loadPage() {
     setLoading(true);
 
-    api
+    waitingListApi
       .waitingListApiListList({
         limit: DEFAULT_PAGE_SIZE,
         offset: DEFAULT_PAGE_SIZE * currentPage,
@@ -77,13 +91,18 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         </td>
         <td>
           {entry.productWishes
-            ?.map((product) => product.type.name + " " + product.name)
+            ?.map(
+              (productWish) =>
+                productWish.product.type.name + " " + productWish.product.name,
+            )
             .join(", ")}
         </td>
         <td>{entry.currentPickupLocation?.name}</td>
         <td>
           {entry.pickupLocationWishes
-            ?.map((pickupLocation) => pickupLocation.name)
+            ?.map(
+              (pickupLocationWish) => pickupLocationWish.pickupLocation.name,
+            )
             .join(", ")}
         </td>
         <td>{entry.numberOfCoopShares}</td>
@@ -164,6 +183,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           csrfToken={csrfToken}
           onClose={() => setSelectedEntryForEdition(undefined)}
           reloadEntries={loadPage}
+          pickupLocations={pickupLocations}
         />
       )}
     </>

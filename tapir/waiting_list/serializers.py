@@ -1,7 +1,27 @@
 from rest_framework import serializers
 
 from tapir.deliveries.serializers import ProductSerializer, PickupLocationSerializer
-from tapir.wirgarten.models import WaitingListEntry
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+    WaitingListProductWish,
+    WaitingListPickupLocationWish,
+)
+
+
+class WaitingListProductWishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitingListProductWish
+        fields = "__all__"
+
+    product = ProductSerializer()
+
+
+class WaitingListPickupLocationWishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitingListPickupLocationWish
+        fields = "__all__"
+
+    pickup_location = PickupLocationSerializer()
 
 
 class WaitingListEntryDetailsSerializer(serializers.Serializer):
@@ -21,8 +41,10 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     date_of_entry_in_cooperative = serializers.DateField(required=False)
     current_pickup_location = PickupLocationSerializer(required=False)
     current_products = ProductSerializer(required=False, many=True)
-    pickup_location_wishes = PickupLocationSerializer(required=False, many=True)
-    product_wishes = ProductSerializer(required=False, many=True)
+    pickup_location_wishes = WaitingListPickupLocationWishSerializer(
+        required=False, many=True
+    )
+    product_wishes = WaitingListProductWishSerializer(required=False, many=True)
     desired_start_date = serializers.DateField(required=False)
     number_of_coop_shares = serializers.IntegerField()
     comment = serializers.CharField()

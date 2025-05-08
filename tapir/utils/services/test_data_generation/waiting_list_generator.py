@@ -19,8 +19,8 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     Member,
     PickupLocation,
-    WaitingListPickupLocationWishes,
-    WaitingListProductWishes,
+    WaitingListPickupLocationWish,
+    WaitingListProductWish,
     ProductType,
 )
 from tapir.wirgarten.utils import get_now, get_today
@@ -147,8 +147,8 @@ class WaitingListGenerator:
                 )
 
         WaitingListEntry.objects.bulk_update(entries, ["number_of_coop_shares"])
-        WaitingListPickupLocationWishes.objects.bulk_create(pickup_location_wishes)
-        WaitingListProductWishes.objects.bulk_create(product_wishes)
+        WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
+        WaitingListProductWish.objects.bulk_create(product_wishes)
 
     @classmethod
     def build_pickup_location_wishes(
@@ -175,10 +175,10 @@ class WaitingListGenerator:
             pickup_location = random.choice(list(possible_pickup_locations))
             possible_pickup_locations.remove(pickup_location)
             pickup_location_wishes.append(
-                WaitingListPickupLocationWishes(
+                WaitingListPickupLocationWish(
                     waiting_list_entry=entry,
                     pickup_location=pickup_location,
-                    priority=priority,
+                    priority=priority + 1,
                 )
             )
 
@@ -199,7 +199,7 @@ class WaitingListGenerator:
             )
             product = random.choice(list(possible_products))
             product_wishes.append(
-                WaitingListProductWishes(
+                WaitingListProductWish(
                     waiting_list_entry=entry, product=product, quantity=1
                 )
             )

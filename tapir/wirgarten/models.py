@@ -1144,7 +1144,7 @@ class WaitingListEntry(TapirModel):
     category = models.CharField(max_length=100, null=True)
 
 
-class WaitingListPickupLocationWishes(TapirModel):
+class WaitingListPickupLocationWish(TapirModel):
     class Meta:
         constraints = [
             UniqueConstraint(
@@ -1166,7 +1166,7 @@ class WaitingListPickupLocationWishes(TapirModel):
     priority = models.PositiveSmallIntegerField()
 
 
-class WaitingListProductWishes(TapirModel):
+class WaitingListProductWish(TapirModel):
     waiting_list_entry = models.ForeignKey(
         WaitingListEntry, on_delete=models.CASCADE, related_name="product_wishes"
     )

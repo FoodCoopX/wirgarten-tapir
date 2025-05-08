@@ -6233,11 +6233,11 @@ components:
         pickup_location_wishes:
           type: array
           items:
-            $ref: '#/components/schemas/PickupLocation'
+            $ref: '#/components/schemas/WaitingListPickupLocationWish'
         product_wishes:
           type: array
           items:
-            $ref: '#/components/schemas/Product'
+            $ref: '#/components/schemas/WaitingListProductWish'
         desired_start_date:
           type: string
           format: date
@@ -6333,6 +6333,42 @@ components:
       - last_name
       - number_of_coop_shares
       - privacy_consent
+    WaitingListPickupLocationWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - pickup_location
+      - priority
+      - waiting_list_entry
+    WaitingListProductWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - product
+      - quantity
+      - waiting_list_entry
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -119,5 +119,7 @@ models/UsedJokerInGrowingPeriod.ts
 models/WaitingListEntry.ts
 models/WaitingListEntryDetails.ts
 models/WaitingListEntryRequest.ts
+models/WaitingListPickupLocationWish.ts
+models/WaitingListProductWish.ts
 models/index.ts
 runtime.ts

@@ -20,6 +20,13 @@ import {
     PickupLocationToJSON,
     PickupLocationToJSONTyped,
 } from './PickupLocation';
+import type { WaitingListProductWish } from './WaitingListProductWish';
+import {
+    WaitingListProductWishFromJSON,
+    WaitingListProductWishFromJSONTyped,
+    WaitingListProductWishToJSON,
+    WaitingListProductWishToJSONTyped,
+} from './WaitingListProductWish';
 import type { Product } from './Product';
 import {
     ProductFromJSON,
@@ -27,6 +34,13 @@ import {
     ProductToJSON,
     ProductToJSONTyped,
 } from './Product';
+import type { WaitingListPickupLocationWish } from './WaitingListPickupLocationWish';
+import {
+    WaitingListPickupLocationWishFromJSON,
+    WaitingListPickupLocationWishFromJSONTyped,
+    WaitingListPickupLocationWishToJSON,
+    WaitingListPickupLocationWishToJSONTyped,
+} from './WaitingListPickupLocationWish';
 
 /**
  * 
@@ -132,16 +146,16 @@ export interface WaitingListEntryDetails {
     currentProducts?: Array<Product>;
     /**
      * 
-     * @type {Array<PickupLocation>}
+     * @type {Array<WaitingListPickupLocationWish>}
      * @memberof WaitingListEntryDetails
      */
-    pickupLocationWishes?: Array<PickupLocation>;
+    pickupLocationWishes?: Array<WaitingListPickupLocationWish>;
     /**
      * 
-     * @type {Array<Product>}
+     * @type {Array<WaitingListProductWish>}
      * @memberof WaitingListEntryDetails
      */
-    productWishes?: Array<Product>;
+    productWishes?: Array<WaitingListProductWish>;
     /**
      * 
      * @type {Date}
@@ -216,8 +230,8 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         'dateOfEntryInCooperative': json['date_of_entry_in_cooperative'] == null ? undefined : (new Date(json['date_of_entry_in_cooperative'])),
         'currentPickupLocation': json['current_pickup_location'] == null ? undefined : PickupLocationFromJSON(json['current_pickup_location']),
         'currentProducts': json['current_products'] == null ? undefined : ((json['current_products'] as Array<any>).map(ProductFromJSON)),
-        'pickupLocationWishes': json['pickup_location_wishes'] == null ? undefined : ((json['pickup_location_wishes'] as Array<any>).map(PickupLocationFromJSON)),
-        'productWishes': json['product_wishes'] == null ? undefined : ((json['product_wishes'] as Array<any>).map(ProductFromJSON)),
+        'pickupLocationWishes': json['pickup_location_wishes'] == null ? undefined : ((json['pickup_location_wishes'] as Array<any>).map(WaitingListPickupLocationWishFromJSON)),
+        'productWishes': json['product_wishes'] == null ? undefined : ((json['product_wishes'] as Array<any>).map(WaitingListProductWishFromJSON)),
         'desiredStartDate': json['desired_start_date'] == null ? undefined : (new Date(json['desired_start_date'])),
         'numberOfCoopShares': json['number_of_coop_shares'],
         'comment': json['comment'],
@@ -252,8 +266,8 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         'date_of_entry_in_cooperative': value['dateOfEntryInCooperative'] == null ? undefined : ((value['dateOfEntryInCooperative']).toISOString().substring(0,10)),
         'current_pickup_location': PickupLocationToJSON(value['currentPickupLocation']),
         'current_products': value['currentProducts'] == null ? undefined : ((value['currentProducts'] as Array<any>).map(ProductToJSON)),
-        'pickup_location_wishes': value['pickupLocationWishes'] == null ? undefined : ((value['pickupLocationWishes'] as Array<any>).map(PickupLocationToJSON)),
-        'product_wishes': value['productWishes'] == null ? undefined : ((value['productWishes'] as Array<any>).map(ProductToJSON)),
+        'pickup_location_wishes': value['pickupLocationWishes'] == null ? undefined : ((value['pickupLocationWishes'] as Array<any>).map(WaitingListPickupLocationWishToJSON)),
+        'product_wishes': value['productWishes'] == null ? undefined : ((value['productWishes'] as Array<any>).map(WaitingListProductWishToJSON)),
         'desired_start_date': value['desiredStartDate'] == null ? undefined : ((value['desiredStartDate']).toISOString().substring(0,10)),
         'number_of_coop_shares': value['numberOfCoopShares'],
         'comment': value['comment'],

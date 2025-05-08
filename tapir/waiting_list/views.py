@@ -105,10 +105,8 @@ class WaitingListApiView(APIView):
             "date_of_entry_in_cooperative": date_of_entry_in_cooperative,
             "current_pickup_location": current_pickup_location,
             "current_products": current_products,
-            "pickup_location_wishes": [
-                wish.pickup_location for wish in entry.pickup_location_wishes.all()
-            ],
-            "product_wishes": [wish.product for wish in entry.product_wishes.all()],
+            "pickup_location_wishes": entry.pickup_location_wishes.all(),
+            "product_wishes": entry.product_wishes.all(),
             "desired_start_date": entry.desired_start_date,
             "number_of_coop_shares": entry.number_of_coop_shares,
             "comment": entry.comment,

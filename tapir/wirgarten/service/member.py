@@ -481,6 +481,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
     contract_start_date = subs[0].start_date
 
     future_deliveries = generate_future_deliveries(member, cache=cache)
+    print("SEND CONFIRMATION")
     send_email(
         to_email=[member.email],
         subject=get_parameter_value(
@@ -497,7 +498,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
         },
         cache=cache,
     )
-
+    print("CONFIRMATION SENT")
     TransactionalTrigger.fire_action(
         Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
         member.email,
