@@ -43,6 +43,7 @@ export default defineConfig(() => {
             "/new_contract_cancellations/new_contract_cancellations_entry.tsx",
           ),
           dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
+          waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
         },
       },
     },
