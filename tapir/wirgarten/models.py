@@ -1128,7 +1128,7 @@ class WaitingListEntry(TapirModel):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING, null=True)
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
-    phone_number = PhoneNumberField(_("Phone number"), blank=True, null=True)
+    phone_number = PhoneNumberField(_("Phone number"))
     email = models.CharField(max_length=256)
     street = models.CharField(_("Street and house number"), max_length=150, blank=True)
     street_2 = models.CharField(_("Extra address line"), max_length=150, blank=True)

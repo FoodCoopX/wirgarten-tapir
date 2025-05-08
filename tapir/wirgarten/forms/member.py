@@ -384,6 +384,11 @@ class WaitingListForm(Form):
         self.fields["email"] = CharField(
             label=_("Email"), validators=[EmailValidator()]
         )
+        self.fields["phone_number"] = TapirPhoneNumberField(label=_("Telefon-Nr"))
+        self.fields["street"] = CharField(label=_("Adresse"))
+        self.fields["street_2"] = CharField(label=_("Adresszusatz"))
+        self.fields["postcode"] = CharField(label=_("Postleitzahl"))
+        self.fields["city"] = CharField(label=_("Stadt"))
         self.fields["privacy_consent"] = BooleanField(
             label=_("Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."),
             required=True,
