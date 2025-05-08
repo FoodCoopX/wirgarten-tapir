@@ -2914,6 +2914,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
+  /waiting_list/api/update_entry:
+    post:
+      operationId: waiting_list_api_update_entry_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /waiting_list/waiting_list_entries/:
     get:
       operationId: waiting_list_waiting_list_entries_list
@@ -6370,6 +6396,72 @@ components:
       - last_name
       - number_of_coop_shares
       - privacy_consent
+    WaitingListEntryUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_quantities:
+          type: array
+          items:
+            type: integer
+        desired_start_date:
+          type: string
+          format: date
+        comment:
+          type: string
+        category:
+          type: string
+          minLength: 1
+      required:
+      - city
+      - comment
+      - email
+      - first_name
+      - id
+      - last_name
+      - phone_number
+      - pickup_location_ids
+      - postcode
+      - product_ids
+      - product_quantities
+      - street
+      - street_2
     WaitingListPickupLocationWish:
       type: object
       properties:

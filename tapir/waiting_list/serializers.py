@@ -55,3 +55,21 @@ class WaitingListEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListEntry
         fields = "__all__"
+
+
+class WaitingListEntryUpdateSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone_number = serializers.CharField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField(allow_blank=True)
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    pickup_location_ids = serializers.ListField(child=serializers.CharField())
+    product_ids = serializers.ListField(child=serializers.CharField())
+    product_quantities = serializers.ListField(child=serializers.IntegerField())
+    desired_start_date = serializers.DateField(required=False)
+    comment = serializers.CharField(allow_blank=True)
+    category = serializers.CharField(required=False)

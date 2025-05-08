@@ -15,6 +15,11 @@ urlpatterns = [
         views.WaitingListApiView.as_view(),
         name="api_list",
     ),
+    path(
+        "api/update_entry",
+        views.WaitingListEntryUpdateView.as_view(),
+        name="update_entry",
+    ),
 ]
 
 router = DefaultRouter()

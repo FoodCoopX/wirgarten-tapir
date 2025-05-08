@@ -113,5 +113,6 @@ export * from './UsedJokerInGrowingPeriod';
 export * from './WaitingListEntry';
 export * from './WaitingListEntryDetails';
 export * from './WaitingListEntryRequest';
+export * from './WaitingListEntryUpdateRequest';
 export * from './WaitingListPickupLocationWish';
 export * from './WaitingListProductWish';

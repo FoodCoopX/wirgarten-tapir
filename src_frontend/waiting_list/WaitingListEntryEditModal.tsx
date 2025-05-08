@@ -38,7 +38,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
-  const [deletionLoading, setDeletionLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -70,12 +70,46 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   }, [entryDetails]);
 
   function onConfirmDelete() {
-    setDeletionLoading(true);
+    setLoading(true);
     api
       .waitingListWaitingListEntriesDestroy({ id: entryDetails.id })
       .then(() => reloadEntries())
       .catch(handleRequestError)
-      .finally(() => setDeletionLoading(false));
+      .finally(() => setLoading(false));
+  }
+
+  function onSave() {
+    setLoading(true);
+
+    pickupLocationWishes.sort((a, b) => a.priority - b.priority);
+    api
+      .waitingListApiUpdateEntryCreate({
+        waitingListEntryUpdateRequest: {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phoneNumber: phoneNumber,
+          street: street,
+          street2: street2,
+          postcode: postcode,
+          city: city,
+          desiredStartDate: desiredStartDate,
+          category: entryDetails.category,
+          comment: entryDetails.comment,
+          id: entryDetails.id,
+          pickupLocationIds: pickupLocationWishes.map(
+            (wish) => wish.pickupLocation.id!,
+          ),
+          productIds: productWishes.map((wish) => wish.product.id!),
+          productQuantities: productWishes.map((wish) => wish.quantity),
+        },
+      })
+      .then(() => {
+        reloadEntries();
+        onClose();
+      })
+      .catch(handleRequestError)
+      .finally(() => setLoading(false));
   }
 
   return (
@@ -257,12 +291,14 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
             icon={"delete"}
             text={"Löschen"}
             onClick={() => setShowConfirmDeleteModal(true)}
+            loading={loading}
           />
           <TapirButton
             variant={"primary"}
             icon={"save"}
             text={"Speichern"}
-            onClick={() => alert("TODO")}
+            onClick={onSave}
+            loading={loading}
           />
         </Modal.Footer>
       </Modal>
@@ -277,7 +313,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
         }
         open={showConfirmDeleteModal}
         onCancel={() => setShowConfirmDeleteModal(false)}
-        loading={deletionLoading}
+        loading={loading}
       />
     </>
   );

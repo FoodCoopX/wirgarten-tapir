@@ -1,8 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.coop.services.membership_cancellation_manager import (
@@ -16,9 +19,14 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
+    WaitingListEntryUpdateSerializer,
 )
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import WaitingListEntry
+from tapir.wirgarten.models import (
+    WaitingListEntry,
+    WaitingListProductWish,
+    WaitingListPickupLocationWish,
+)
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
 
@@ -114,7 +122,8 @@ class WaitingListApiView(APIView):
             "member_already_exists": entry.member is not None,
         }
 
-    def fill_entry_with_personal_data(self, entry: WaitingListEntry):
+    @staticmethod
+    def fill_entry_with_personal_data(entry: WaitingListEntry):
         personal_data_fields = [
             "first_name",
             "last_name",
@@ -134,3 +143,66 @@ class WaitingListEntryViewSet(viewsets.ModelViewSet):
     queryset = WaitingListEntry.objects.all()
     serializer_class = WaitingListEntrySerializer
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+
+class WaitingListEntryUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: str},
+        request=WaitingListEntryUpdateSerializer,
+    )
+    @transaction.atomic
+    def post(self, request):
+        serializer = WaitingListEntryUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        waiting_list_entry = get_object_or_404(
+            WaitingListEntry, pk=serializer.validated_data["id"]
+        )
+        waiting_list_entry.first_name = serializer.validated_data["first_name"]
+        waiting_list_entry.last_name = serializer.validated_data["last_name"]
+        waiting_list_entry.email = serializer.validated_data["email"]
+        waiting_list_entry.phone_number = serializer.validated_data["phone_number"]
+        waiting_list_entry.street = serializer.validated_data["street"]
+        waiting_list_entry.street_2 = serializer.validated_data["street_2"]
+        waiting_list_entry.postcode = serializer.validated_data["postcode"]
+        waiting_list_entry.city = serializer.validated_data["city"]
+        waiting_list_entry.desired_start_date = serializer.validated_data[
+            "desired_start_date"
+        ]
+        waiting_list_entry.comment = serializer.validated_data["comment"]
+        waiting_list_entry.category = serializer.validated_data.get("category", None)
+        waiting_list_entry.save()
+
+        waiting_list_entry.product_wishes.all().delete()
+        product_wishes = []
+        for index, product_id in enumerate(serializer.validated_data["product_ids"]):
+            product_wishes.append(
+                WaitingListProductWish(
+                    waiting_list_entry=waiting_list_entry,
+                    product_id=product_id,
+                    quantity=serializer.validated_data["product_quantities"][index],
+                )
+            )
+        WaitingListProductWish.objects.bulk_create(product_wishes)
+
+        waiting_list_entry.pickup_location_wishes.all().delete()
+        pickup_location_wishes = []
+        for index, pickup_location_id in enumerate(
+            serializer.validated_data["pickup_location_ids"]
+        ):
+            pickup_location_wishes.append(
+                WaitingListPickupLocationWish(
+                    waiting_list_entry=waiting_list_entry,
+                    pickup_location_id=pickup_location_id,
+                    priority=index + 1,
+                )
+            )
+        WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
+
+        return Response("OK", status=status.HTTP_200_OK)

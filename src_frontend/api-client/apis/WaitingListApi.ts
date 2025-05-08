@@ -19,6 +19,7 @@ import type {
   PatchedWaitingListEntryRequest,
   WaitingListEntry,
   WaitingListEntryRequest,
+  WaitingListEntryUpdateRequest,
 } from '../models/index';
 import {
     PaginatedWaitingListEntryDetailsListFromJSON,
@@ -29,11 +30,17 @@ import {
     WaitingListEntryToJSON,
     WaitingListEntryRequestFromJSON,
     WaitingListEntryRequestToJSON,
+    WaitingListEntryUpdateRequestFromJSON,
+    WaitingListEntryUpdateRequestToJSON,
 } from '../models/index';
 
 export interface WaitingListApiListListRequest {
     limit: number;
     offset: number;
+}
+
+export interface WaitingListApiUpdateEntryCreateRequest {
+    waitingListEntryUpdateRequest: WaitingListEntryUpdateRequest;
 }
 
 export interface WaitingListWaitingListEntriesCreateRequest {
@@ -106,6 +113,44 @@ export class WaitingListApi extends runtime.BaseAPI {
      */
     async waitingListApiListList(requestParameters: WaitingListApiListListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PaginatedWaitingListEntryDetailsList> {
         const response = await this.waitingListApiListListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async waitingListApiUpdateEntryCreateRaw(requestParameters: WaitingListApiUpdateEntryCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters['waitingListEntryUpdateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'waitingListEntryUpdateRequest',
+                'Required parameter "waitingListEntryUpdateRequest" was null or undefined when calling waitingListApiUpdateEntryCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/waiting_list/api/update_entry`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WaitingListEntryUpdateRequestToJSON(requestParameters['waitingListEntryUpdateRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async waitingListApiUpdateEntryCreate(requestParameters: WaitingListApiUpdateEntryCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.waitingListApiUpdateEntryCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
