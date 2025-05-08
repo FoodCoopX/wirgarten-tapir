@@ -5,7 +5,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
@@ -17,6 +17,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.deliveries.serializers import ProductSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -481,3 +482,9 @@ class ConfirmSubscriptionCancellationView(APIView):
         subscriptions.update(cancellation_admin_confirmed=get_now())
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    queryset = Product.objects.select_related("type")
+    serializer_class = ProductSerializer

@@ -4,6 +4,8 @@ import { useApi } from "../hooks/useApi.ts";
 import {
   PickupLocation,
   PickupLocationsApi,
+  Product,
+  SubscriptionsApi,
   WaitingListApi,
   WaitingListEntryDetails,
 } from "../api-client";
@@ -24,6 +26,7 @@ interface WaitingListCardProps {
 const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const waitingListApi = useApi(WaitingListApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
+  const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [waitingListEntries, setWaitingListEntries] = useState<
@@ -33,11 +36,17 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [selectedEntryForEdition, setSelectedEntryForEdition] =
     useState<WaitingListEntryDetails>();
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     pickupLocationApi
       .pickupLocationsPickupLocationsList()
       .then(setPickupLocations)
+      .catch(handleRequestError);
+
+    subscriptionsApi
+      .subscriptionsProductsList()
+      .then(setProducts)
       .catch(handleRequestError);
   }, []);
 
@@ -184,6 +193,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           onClose={() => setSelectedEntryForEdition(undefined)}
           reloadEntries={loadPage}
           pickupLocations={pickupLocations}
+          products={products}
         />
       )}
     </>

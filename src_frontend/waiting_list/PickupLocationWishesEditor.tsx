@@ -111,7 +111,7 @@ const PickupLocationWishesEditor: React.FC<PickupLocationWishesEditorProps> = ({
       </Row>
       <Row>
         <Form.Select onChange={(event) => addWish(event.target.value)}>
-          <option value={-1}>Wunsch hinzufügen</option>
+          <option value={-1}>Abholort-Wunsch hinzufügen</option>
           {pickupLocations
             .filter(
               (pickupLocation) =>

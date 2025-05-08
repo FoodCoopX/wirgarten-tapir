@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useApi } from "../hooks/useApi.ts";
 import {
   PickupLocation,
+  Product,
   WaitingListApi,
   WaitingListEntryDetails,
   WaitingListPickupLocationWish,
+  WaitingListProductWish,
 } from "../api-client";
 import "./waiting_list_card.css";
 import { Col, Form, Modal, Row } from "react-bootstrap";
@@ -13,6 +15,7 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import dayjs from "dayjs";
 import PickupLocationWishesEditor from "./PickupLocationWishesEditor.tsx";
+import ProductWishesEditor from "./ProductWishesEditor.tsx";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;
@@ -21,6 +24,7 @@ interface WaitingListEntryEditModalProps {
   onClose: () => void;
   reloadEntries: () => void;
   pickupLocations: PickupLocation[];
+  products: Product[];
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
@@ -30,6 +34,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   onClose,
   reloadEntries,
   pickupLocations,
+  products,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -46,6 +51,9 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   const [pickupLocationWishes, setPickupLocationWishes] = useState<
     WaitingListPickupLocationWish[]
   >([]);
+  const [productWishes, setProductWishes] = useState<WaitingListProductWish[]>(
+    [],
+  );
 
   useEffect(() => {
     setFirstName(entryDetails.firstName);
@@ -58,6 +66,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setCity(entryDetails.city);
     setDesiredStartDate(entryDetails.desiredStartDate);
     setPickupLocationWishes(entryDetails.pickupLocationWishes ?? []);
+    setProductWishes(entryDetails.productWishes ?? []);
   }, [entryDetails]);
 
   function onConfirmDelete() {
@@ -227,6 +236,15 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                     pickupLocations={pickupLocations}
                     setWishes={setPickupLocationWishes}
                     wishes={pickupLocationWishes}
+                    waitingListEntryId={entryDetails.id}
+                  />
+                </Row>
+                <Row className={"mt-2"}>
+                  <ProductWishesEditor
+                    wishes={productWishes}
+                    setWishes={setProductWishes}
+                    waitingListEntryId={entryDetails.id}
+                    products={products}
                   />
                 </Row>
               </Col>
