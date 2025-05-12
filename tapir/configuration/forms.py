@@ -9,6 +9,7 @@ from tapir.configuration.parameter import (
     get_parameter_meta,
 )
 from tapir.configuration.templatetags.configuration import tokenize_parameter
+from tapir.utils.forms import DateInput
 from tapir.wirgarten.utils import is_debug_instance
 
 
@@ -79,6 +80,16 @@ def create_field(param: TapirParameter, cache: Dict):
             initial=param_value,
             validators=param_meta.validators,
             disabled=not param.enabled,
+        )
+    elif param.datatype == TapirParameterDatatype.DATE.value:
+        return forms.DateField(
+            label=_(param.label),
+            help_text=help_text,
+            required=False,
+            initial=param_value,
+            validators=param_meta.validators,
+            disabled=not param.enabled,
+            widget=DateInput,
         )
     else:
         raise NotImplementedError(

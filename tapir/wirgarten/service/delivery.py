@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.delivery_day_adjustment_service import (
     DeliveryDayAdjustmentService,
 )
@@ -12,7 +13,9 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY, NO_DELIVERY
+from tapir.wirgarten.constants import (
+    NO_DELIVERY,
+)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -85,13 +88,9 @@ def get_next_delivery_date_for_product_type(
         return reference_date
 
     next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
-    _, week_num, _ = next_delivery_date.isocalendar()
-    even_week = week_num % 2 == 0
 
-    if (
-        product_type.delivery_cycle == WEEKLY[0]
-        or (even_week and product_type.delivery_cycle == EVEN_WEEKS[0])
-        or ((not even_week) and product_type.delivery_cycle == ODD_WEEKS[0])
+    if DeliveryCycleService.is_cycle_delivered_in_week(
+        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
     ):
         return next_delivery_date
     else:
@@ -125,13 +124,10 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):
-        _, week_num, _ = next_delivery_date.isocalendar()
-        even_week = week_num % 2 == 0
+        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
+            date=next_delivery_date, cache=cache
+        )
 
-        accepted_delivery_cycles = [
-            WEEKLY[0],
-            EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-        ]
         active_subs = list(
             filter(
                 lambda subscription: subscription.start_date <= next_delivery_date

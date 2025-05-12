@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.core.validators import (
     EmailValidator,
@@ -878,6 +880,16 @@ Dein WirGarten-Team""",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Kategorie 1, Kategorie 2, Kategorie 3",
             description="Kategorien die in an Einträge der Warteliste zugewiesen werden können. Format: Kategorien-Namen mit ',' separiert. Anzahl beliebig",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT,
+            label="Startpunkt der 4-Wochigen Lieferrhythmus",
+            datatype=TapirParameterDatatype.DATE,
+            initial_value=datetime.date(year=2025, month=1, day=6),
+            description="Erste Woche die geliefert wird für Produkte die der 4-Wochigen Lieferrhythmus folgen.",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
         )

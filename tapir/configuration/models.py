@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 from django.db import models
@@ -8,6 +9,7 @@ class TapirParameterDatatype(Enum):
     DECIMAL = "decimal"
     BOOLEAN = "boolean"
     STRING = "string"
+    DATE = "date"
 
 
 class TapirParameter(models.Model):
@@ -36,6 +38,8 @@ class TapirParameter(models.Model):
             return bool(self.str2bool(self.value))
         elif self.datatype == TapirParameterDatatype.STRING.value:
             return self.value
+        elif self.datatype == TapirParameterDatatype.DATE.value:
+            return datetime.date.fromisoformat(self.value)
         else:
             raise TypeError("""Unknown parameter type: {}""".format(self.datatype))
 

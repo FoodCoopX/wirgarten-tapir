@@ -3,6 +3,7 @@ from typing import Dict, Set
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
 from tapir.deliveries.services.weeks_without_delivery_service import (
     WeeksWithoutDeliveryService,
@@ -12,7 +13,6 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import (
     PickupLocationOpeningTime,
     Member,
@@ -57,7 +57,6 @@ class GetDeliveriesService:
         relevant_subscriptions = cls.get_relevant_subscriptions(
             member=member,
             reference_date=delivery_date,
-            even_week=even_week,
             cache=cache,
         )
 
@@ -108,12 +107,12 @@ class GetDeliveriesService:
 
     @classmethod
     def get_relevant_subscriptions(
-        cls, member: Member, reference_date: datetime.date, even_week: bool, cache: Dict
+        cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> Set[Subscription]:
-        accepted_delivery_cycles = [
-            WEEKLY[0],
-            EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-        ]
+        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
+            date=reference_date, cache=cache
+        )
+
         subscriptions_with_accepted_delivery_cycles = set()
         for delivery_cycle in accepted_delivery_cycles:
             subscriptions_with_accepted_delivery_cycles.update(

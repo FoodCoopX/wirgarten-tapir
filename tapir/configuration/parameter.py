@@ -1,3 +1,4 @@
+import datetime
 import re
 from typing import Dict
 
@@ -103,7 +104,7 @@ def parameter_definition(
     description: str,
     category: str,
     datatype: TapirParameterDatatype,
-    initial_value: str | int | float | bool,
+    initial_value: str | int | float | bool | datetime.date,
     order_priority: int = -1,
     enabled: bool = True,
     debug: bool = False,
@@ -183,6 +184,8 @@ def __validate_initial_value(datatype, initial_value, key, validators):
             assert datatype == TapirParameterDatatype.DECIMAL
         elif type(initial_value) == bool:
             assert datatype == TapirParameterDatatype.BOOLEAN
+        elif type(initial_value) == datetime.date:
+            assert datatype == TapirParameterDatatype.DATE
     except AssertionError:
         raise TypeError(
             "Parameter '{key}' is defined with datatype '{datatype}', \

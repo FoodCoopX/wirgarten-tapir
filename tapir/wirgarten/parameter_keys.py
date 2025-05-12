@@ -103,3 +103,6 @@ class ParameterKeys:
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
     ORGANISATION_LEGAL_STATUS = f"{PREFIX}.organisation.legal_status"
+    SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT = (
+        f"{PREFIX}.subscriptions.four_week_cycle_start_point"
+    )

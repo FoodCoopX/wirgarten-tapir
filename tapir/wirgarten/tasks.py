@@ -8,7 +8,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
-from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
@@ -59,27 +59,13 @@ def _export_pick_list(product_type, include_equivalents=True):
     """
     cache = {}
     next_delivery_date = get_next_delivery_date(cache=cache)
-    if product_type.delivery_cycle != WEEKLY[0]:
-        _, week, _ = next_delivery_date.isocalendar()
-        is_even_week = week % 2 == 0
-
-        # DEBUG LOG
+    if not DeliveryCycleService.is_cycle_delivered_in_week(
+        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
+    ):
         print(
-            product_type.name,
-            next_delivery_date,
-            product_type.delivery_cycle,
-            is_even_week,
-            (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week)
-            or (product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week),
+            f"Skipping export_pick_list_csv() for product type {product_type.name} because it is not due this week."
         )
-
-        if (product_type.delivery_cycle == EVEN_WEEKS[0] and not is_even_week) or (
-            product_type.delivery_cycle == ODD_WEEKS[0] and is_even_week
-        ):
-            print(
-                f"Skipping export_pick_list_csv() for product type {product_type.name} because it is not due this week."
-            )
-            return
+        return
 
     KEY_PICKUP_LOCATION = "Abholort"
     KEY_M_EQUIVALENT = "M-Äquivalent"

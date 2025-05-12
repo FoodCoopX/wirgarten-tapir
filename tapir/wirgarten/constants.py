@@ -7,7 +7,10 @@ DeliveryCycle = [
     WEEKLY := ("weekly", _("1x pro Woche")),
     ODD_WEEKS := ("odd_weeks", _("2x pro Monat (ungerade KW)")),
     EVEN_WEEKS := ("even_weeks", _("2x pro Monat (gerade KW)")),
-    #    MONTHLY := ("monthly", _("1x pro Monat")),
+    EVERY_FOUR_WEEKS := (
+        "every_four_weeks",
+        _("Jede 4. Woche (Startpunkt in der Konfig)"),
+    ),
 ]
 
 DeliveryCycleDict = {key: value for key, value in DeliveryCycle}
