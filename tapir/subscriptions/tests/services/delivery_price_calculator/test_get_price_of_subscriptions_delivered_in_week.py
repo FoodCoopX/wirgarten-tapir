@@ -32,17 +32,19 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         mock_get_price_of_single_delivery_without_solidarity.side_effect = [15, 26]
         member = Mock()
         reference_date = Mock()
+        cache = {}
 
         result = DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
             member=member,
             reference_date=reference_date,
             only_subscriptions_affected_by_jokers=False,
+            cache={},
         )
 
         self.assertEqual(2 * 15 + 4 * 26, result)
 
         mock_get_subscriptions_that_get_delivered_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         self.assertEqual(
             2, mock_get_price_of_single_delivery_without_solidarity.call_count
@@ -76,17 +78,19 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
         mock_get_price_of_single_delivery_without_solidarity.return_value = 26
         member = Mock()
         reference_date = Mock()
+        cache = {}
 
         result = DeliveryPriceCalculator.get_price_of_subscriptions_delivered_in_week(
             member=member,
             reference_date=reference_date,
             only_subscriptions_affected_by_jokers=True,
+            cache=cache,
         )
 
         self.assertEqual(4 * 26, result)
 
         mock_get_subscriptions_that_get_delivered_in_week.assert_called_once_with(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         mock_get_price_of_single_delivery_without_solidarity.assert_called_once_with(
             subscription_2, reference_date

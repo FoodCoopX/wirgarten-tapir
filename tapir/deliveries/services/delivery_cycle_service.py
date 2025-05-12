@@ -31,9 +31,9 @@ class DeliveryCycleService:
         _, week_num, _ = date.isocalendar()
         even_week = week_num % 2 == 0
 
-        if cycle == EVEN_WEEKS:
+        if cycle == EVEN_WEEKS[0]:
             return even_week
-        if cycle == ODD_WEEKS:
+        if cycle == ODD_WEEKS[0]:
             return not even_week
 
         raise ImproperlyConfigured(f"Unknown delivery cycle: {cycle}")
