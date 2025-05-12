@@ -35,7 +35,7 @@ class TestGetSubscriptionsThatGetDeliveredInWeek(TapirIntegrationTest):
         )
 
         result = DeliveryPriceCalculator.get_subscriptions_that_get_delivered_in_week(
-            member, datetime.date(year=2025, month=1, day=15)
+            member, datetime.date(year=2025, month=1, day=15), cache={}
         )
 
         self.assertEqual(1, result.count())
@@ -52,7 +52,7 @@ class TestGetSubscriptionsThatGetDeliveredInWeek(TapirIntegrationTest):
         )
 
         result = DeliveryPriceCalculator.get_subscriptions_that_get_delivered_in_week(
-            member, datetime.date(year=2025, month=1, day=15)
+            member, datetime.date(year=2025, month=1, day=15), cache={}
         )
 
         self.assertEqual(0, result.count())
@@ -68,7 +68,7 @@ class TestGetSubscriptionsThatGetDeliveredInWeek(TapirIntegrationTest):
         )
 
         result = DeliveryPriceCalculator.get_subscriptions_that_get_delivered_in_week(
-            member, datetime.date(year=2025, month=1, day=15)
+            member, datetime.date(year=2025, month=1, day=15), cache={}
         )
 
         self.assertEqual(1, result.count())

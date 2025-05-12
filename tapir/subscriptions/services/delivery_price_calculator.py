@@ -2,8 +2,9 @@ import datetime
 from decimal import Decimal
 from typing import Dict
 
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS, NO_DELIVERY
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
@@ -16,9 +17,10 @@ class DeliveryPriceCalculator:
         member: Member,
         reference_date: datetime.date,
         only_subscriptions_affected_by_jokers: bool,
+        cache: Dict,
     ):
         subscriptions = cls.get_subscriptions_that_get_delivered_in_week(
-            member, reference_date
+            member, reference_date, cache=cache
         )
         if only_subscriptions_affected_by_jokers:
             subscriptions = subscriptions.filter(
@@ -36,17 +38,14 @@ class DeliveryPriceCalculator:
 
     @classmethod
     def get_subscriptions_that_get_delivered_in_week(
-        cls, member: Member, reference_date: datetime.date
+        cls, member: Member, reference_date: datetime.date, cache: Dict
     ):
-        calendar_week = reference_date.isocalendar().week
-        even_week = calendar_week % 2 == 0
-
         subscriptions = get_active_subscriptions(reference_date).filter(member=member)
+        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
+            date=reference_date, cache=cache
+        )
         return subscriptions.filter(
-            product__type__delivery_cycle__in=[
-                WEEKLY[0],
-                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-            ]
+            product__type__delivery_cycle__in=accepted_delivery_cycles
         )
 
     @classmethod
@@ -66,15 +65,8 @@ class DeliveryPriceCalculator:
         count = 0
         current_date = get_next_delivery_date(growing_period.start_date, cache=cache)
         while current_date <= growing_period.end_date:
-            calendar_week = current_date.isocalendar().week
-            even_week = calendar_week % 2 == 0
-
-            if (
-                delivery_cycle == WEEKLY[0]
-                or delivery_cycle == EVEN_WEEKS[0]
-                and even_week
-                or delivery_cycle == ODD_WEEKS[0]
-                and not even_week
+            if DeliveryCycleService.is_cycle_delivered_in_week(
+                cycle=delivery_cycle, date=current_date, cache=cache
             ):
                 count += 1
 
