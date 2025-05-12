@@ -20,7 +20,7 @@ const SubscriptionCancellationCard: React.FC<
         <Card.Header>
           <h5>Verträge kündigen</h5>
         </Card.Header>
-        <Card.Body>Alle oder manche verträge kündigen</Card.Body>
+        <Card.Body>Einzelne oder alle Verträge kündigen</Card.Body>
         <Card.Footer>
           <div className={"d-flex justify-content-end"}>
             <TapirButton
