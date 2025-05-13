@@ -529,9 +529,10 @@ class BaseProductForm(forms.Form):
         )
 
         if solidarity_part_of_the_ordered_capacity > excess_solidarity:
-            self.add_error(
-                "solidarity_price_harvest_shares",
-                "Der Solidartopf ist leider nicht ausreichend ausgefüllt.",
+            raise ValidationError(
+                {
+                    "solidarity_price_harvest_shares": "Der Solidartopf ist leider nicht ausreichend ausgefüllt."
+                }
             )
 
     def clean(self):
@@ -594,6 +595,23 @@ class BaseProductForm(forms.Form):
             form=self,
             field_prefix=BASE_PRODUCT_FIELD_PREFIX,
             product_type=self.product_type,
+        )
+
+        SubscriptionChangeValidator.validate_soliprice_change(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            member_id=self.member_id,
+            subscription_start_date=self.start_date,
+            logged_in_user_is_admin=self.is_admin,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_at_least_one_change(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            member_id=self.member_id,
+            subscription_start_date=self.start_date,
+            cache=self.cache,
         )
 
         return super().clean()

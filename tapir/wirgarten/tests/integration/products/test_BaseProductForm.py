@@ -255,6 +255,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
             period=GrowingPeriod.objects.get(),
             quantity=2,
             product=Product.objects.get(name="M"),
+            solidarity_price=0,
         )
 
         response = self.send_add_subscription_request(3, 0)
@@ -289,6 +290,8 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         self.assertEqual(member.id, subscription.member_id)
         self.assertEqual(2, subscription.quantity)
 
+    @patch.object(SubscriptionChangeValidator, "validate_at_least_one_change")
+    @patch.object(SubscriptionChangeValidator, "validate_soliprice_change")
     @patch.object(SubscriptionChangeValidator, "validate_single_subscription")
     @patch.object(SubscriptionChangeValidator, "validate_must_be_subscribed_to")
     @patch.object(SubscriptionChangeValidator, "validate_cannot_reduce_size")
