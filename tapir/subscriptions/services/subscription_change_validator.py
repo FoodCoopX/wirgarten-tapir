@@ -319,6 +319,7 @@ class SubscriptionChangeValidator:
         subscription_start_date: datetime.date,
         cache: Dict,
     ):
+        # This avoids ending a contract and creating a new one on the same growing period if there are no changes.
         subscribed_product_ids = set(
             get_active_subscriptions(
                 reference_date=subscription_start_date, cache=cache
@@ -345,6 +346,10 @@ class SubscriptionChangeValidator:
             )
             if quantity == 0:
                 continue
+
+            if product is None:
+                continue
+
             ordered_product_ids.add(product.id)
 
             if product.id not in subscribed_product_ids:
