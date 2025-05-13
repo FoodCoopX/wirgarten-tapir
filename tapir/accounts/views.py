@@ -16,7 +16,7 @@ from tapir.wirgarten.tapirmail import Events
 
 # FIXME: this file has a dependency on tapir/wirgarten! Replace the send_email call as soon as the mail module is ready
 
-EMAIL_CHANGE_LINK_VALIDITY_MINUTES = 4 * 60
+EMAIL_CHANGE_LINK_VALIDITY_MINUTES = 24 * 60
 
 
 @transaction.atomic
