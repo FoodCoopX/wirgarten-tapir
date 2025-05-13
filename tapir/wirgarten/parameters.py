@@ -266,6 +266,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
+            key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
+            label="Mitglieder dürfen der Solibeitrag laufend ändern",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
+            "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
+            category=ParameterCategory.HARVEST,
+        )
+
+        parameter_definition(
             key=ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES,
             label="Produkte für Lieferantenlisten",
             datatype=TapirParameterDatatype.STRING,
