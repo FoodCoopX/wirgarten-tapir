@@ -277,6 +277,12 @@ class SubscriptionChangeValidator:
                 solidarity_fields["solidarity_price_absolute"]
             )
 
+        growing_period = get_current_growing_period(
+            reference_date=subscription_start_date, cache=cache
+        )
+        if growing_period and growing_period.start_date > get_today(cache=cache):
+            return
+
         for key in form.cleaned_data.keys():
             if not key.startswith(field_prefix):
                 continue
@@ -292,9 +298,6 @@ class SubscriptionChangeValidator:
                 .first()
             )
             if subscription_to_same_product is None:
-                continue
-
-            if subscription_to_same_product.start_date > get_today(cache=cache):
                 continue
 
             if (
