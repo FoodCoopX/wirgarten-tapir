@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import Mock
 
 from django.core.exceptions import ValidationError
@@ -77,7 +78,25 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
     ):
         form = Mock()
         cache = {}
-        subscription = SubscriptionFactory.create(solidarity_price=0.05)
+        current_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2024, month=1, day=1),
+            end_date=datetime.date(year=2024, month=12, day=31),
+        )
+        next_growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+        mock_timezone(
+            self,
+            timezone.now().replace(
+                year=current_growing_period.start_date.year,
+                month=current_growing_period.start_date.month,
+                day=10,
+            ),
+        )
+        subscription = SubscriptionFactory.create(
+            solidarity_price=0.05, period=next_growing_period
+        )
         form.cleaned_data = {
             subscription.product.name: subscription.quantity,
             "solidarity_price_harvest_shares": 0.1,
@@ -85,18 +104,6 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
         form.build_solidarity_fields.return_value = {
             "solidarity_price": 0.1,
         }
-        growing_period = GrowingPeriodFactory.create(
-            start_date=subscription.period.start_date.replace(
-                year=subscription.period.start_date.year - 1
-            )
-        )
-        mock_timezone(
-            self,
-            timezone.now().replace(
-                year=growing_period.start_date.year,
-                month=growing_period.start_date.month,
-            ),
-        )
 
         SubscriptionChangeValidator.validate_soliprice_change(
             form=form,
