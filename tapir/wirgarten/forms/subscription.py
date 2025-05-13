@@ -529,9 +529,10 @@ class BaseProductForm(forms.Form):
         )
 
         if solidarity_part_of_the_ordered_capacity > excess_solidarity:
-            self.add_error(
-                "solidarity_price_harvest_shares",
-                "Der Solidartopf ist leider nicht ausreichend ausgefüllt.",
+            raise ValidationError(
+                {
+                    "solidarity_price_harvest_shares": "Der Solidartopf ist leider nicht ausreichend ausgefüllt."
+                }
             )
 
     def clean(self):

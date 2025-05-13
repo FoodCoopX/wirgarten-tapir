@@ -56,11 +56,12 @@ class TestValidateCannotReduceSize(SimpleTestCase):
         cache = Mock()
         product_type_id = "test_product_type_id"
         member_id = "test_member_id"
+        subscription_start_date = Mock()
 
         with self.assertRaises(ValidationError):
             SubscriptionChangeValidator.validate_cannot_reduce_size(
                 logged_in_user_is_admin=False,
-                subscription_start_date=Mock(),
+                subscription_start_date=subscription_start_date,
                 member_id=member_id,
                 form=form,
                 field_prefix=field_prefix,
@@ -75,7 +76,10 @@ class TestValidateCannotReduceSize(SimpleTestCase):
             cache=cache,
         )
         mock_calculate_capacity_used_by_the_current_subscriptions.assert_called_once_with(
-            product_type_id=product_type_id, member_id=member_id, cache=cache
+            product_type_id=product_type_id,
+            member_id=member_id,
+            subscription_start_date=subscription_start_date,
+            cache=cache,
         )
 
     @patch.object(

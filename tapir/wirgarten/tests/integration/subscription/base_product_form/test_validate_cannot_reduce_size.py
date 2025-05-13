@@ -156,6 +156,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
             product=self.product_price_m.product,
             period=self.current_growing_period,
             quantity=1,
+            solidarity_price=0,
         )
 
         url = f"{reverse('wirgarten:member_add_subscription', args=[subscription.member.id])}?productType=Ernteanteile"
