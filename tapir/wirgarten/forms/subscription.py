@@ -596,6 +596,23 @@ class BaseProductForm(forms.Form):
             product_type=self.product_type,
         )
 
+        SubscriptionChangeValidator.validate_soliprice_change(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            member_id=self.member_id,
+            subscription_start_date=self.start_date,
+            logged_in_user_is_admin=self.is_admin,
+            cache=self.cache,
+        )
+
+        SubscriptionChangeValidator.validate_at_least_one_change(
+            form=self,
+            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+            member_id=self.member_id,
+            subscription_start_date=self.start_date,
+            cache=self.cache,
+        )
+
         return super().clean()
 
 

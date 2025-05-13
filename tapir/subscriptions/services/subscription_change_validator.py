@@ -6,11 +6,13 @@ from django.core.exceptions import ValidationError
 from django.forms import Form
 from django.utils.translation import gettext_lazy as _
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_current_growing_period,
     get_product_price,
@@ -50,7 +52,10 @@ class SubscriptionChangeValidator:
 
         capacity_used_by_the_current_subscriptions = (
             cls.calculate_capacity_used_by_the_current_subscriptions(
-                product_type_id=product_type_id, member_id=member_id, cache=cache
+                product_type_id=product_type_id,
+                member_id=member_id,
+                subscription_start_date=subscription_start_date,
+                cache=cache,
             )
         )
 
@@ -113,11 +118,14 @@ class SubscriptionChangeValidator:
 
     @classmethod
     def calculate_capacity_used_by_the_current_subscriptions(
-        cls, product_type_id: str, member_id: str, cache: Dict
+        cls,
+        product_type_id: str,
+        member_id: str,
+        subscription_start_date: datetime.date,
+        cache: Dict,
     ):
-        next_month = get_today() + relativedelta(months=1, day=1)
         current_subscriptions = get_active_subscriptions(
-            next_month, cache=cache
+            subscription_start_date, cache=cache
         ).filter(member_id=member_id, product__type_id=product_type_id)
         return sum(
             [
@@ -152,7 +160,10 @@ class SubscriptionChangeValidator:
 
         capacity_used_by_the_current_subscriptions = (
             cls.calculate_capacity_used_by_the_current_subscriptions(
-                product_type_id=product_type_id, member_id=member_id, cache=cache
+                product_type_id=product_type_id,
+                member_id=member_id,
+                subscription_start_date=subscription_start_date,
+                cache=cache,
             )
         )
 
@@ -239,3 +250,127 @@ class SubscriptionChangeValidator:
             raise ValidationError(
                 _(f"{product_type.name} dürfen nur einmal ausgewählt werden.")
             )
+
+    @classmethod
+    def validate_soliprice_change(
+        cls,
+        form,
+        field_prefix: str,
+        member_id: str,
+        logged_in_user_is_admin: bool,
+        subscription_start_date: datetime.date,
+        cache: Dict,
+    ):
+        if logged_in_user_is_admin:
+            return
+
+        if get_parameter_value(
+            ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE, cache=cache
+        ):
+            return
+
+        solidarity_fields = form.build_solidarity_fields()
+        if "solidarity_price_absolute" not in solidarity_fields:
+            solidarity_fields["solidarity_price_absolute"] = None
+        else:
+            solidarity_fields["solidarity_price_absolute"] = float(
+                solidarity_fields["solidarity_price_absolute"]
+            )
+
+        for key in form.cleaned_data.keys():
+            if not key.startswith(field_prefix):
+                continue
+            product = TapirCache.get_product_by_name_iexact(
+                cache, key.replace(field_prefix, "")
+            )
+
+            subscription_to_same_product = (
+                get_active_subscriptions(
+                    reference_date=subscription_start_date, cache=cache
+                )
+                .filter(member_id=member_id, product=product)
+                .first()
+            )
+            if subscription_to_same_product is None:
+                continue
+
+            if subscription_to_same_product.start_date > get_today(cache=cache):
+                continue
+
+            if (
+                subscription_to_same_product.solidarity_price_absolute
+                != solidarity_fields["solidarity_price_absolute"]
+                or subscription_to_same_product.solidarity_price
+                != float(solidarity_fields["solidarity_price"])
+            ):
+                raise ValidationError(
+                    "Der Solidarbeitrag darf nicht während ein Vertrag läuft geändert werden."
+                )
+
+    @classmethod
+    def validate_at_least_one_change(
+        cls,
+        form,
+        field_prefix: str,
+        member_id: str,
+        subscription_start_date: datetime.date,
+        cache: Dict,
+    ):
+        subscribed_product_ids = set(
+            get_active_subscriptions(
+                reference_date=subscription_start_date, cache=cache
+            )
+            .filter(member_id=member_id)
+            .values_list("product_id", flat=True)
+        )
+        ordered_product_ids = set()
+
+        solidarity_fields = form.build_solidarity_fields()
+        if "solidarity_price_absolute" not in solidarity_fields:
+            solidarity_fields["solidarity_price_absolute"] = None
+        else:
+            solidarity_fields["solidarity_price_absolute"] = float(
+                solidarity_fields["solidarity_price_absolute"]
+            )
+
+        for key, quantity in form.cleaned_data.items():
+            if not key.startswith(field_prefix):
+                continue
+
+            product = TapirCache.get_product_by_name_iexact(
+                cache, key.replace(field_prefix, "")
+            )
+            if quantity == 0:
+                continue
+            ordered_product_ids.add(product.id)
+
+            if product.id not in subscribed_product_ids:
+                return
+
+            subscription_to_same_product = (
+                get_active_subscriptions(
+                    reference_date=subscription_start_date, cache=cache
+                )
+                .filter(member_id=member_id, product=product)
+                .first()
+            )
+            if subscription_to_same_product is None:
+                return
+
+            if subscription_to_same_product.quantity != quantity:
+                return
+
+            if (
+                subscription_to_same_product.solidarity_price_absolute
+                != solidarity_fields["solidarity_price_absolute"]
+                or subscription_to_same_product.solidarity_price
+                != float(solidarity_fields["solidarity_price"])
+            ):
+                return
+
+        if subscribed_product_ids != ordered_product_ids:
+            return
+
+        raise ValidationError(
+            "Die Bestellung muss mindestens eine Änderung zum bisherigen Vertrag haben."
+        )
