@@ -165,7 +165,9 @@ def cancel_contract_at_period_end(request, **kwargs):
         subscriptions=subs,
     ).save()
 
-    TransactionalTrigger.fire_action(Events.CONTRACT_NOT_RENEWED, member.email)
+    TransactionalTrigger.fire_action(
+        key=Events.CONTRACT_NOT_RENEWED, recipient_email=member.email
+    )
 
     # TODO: remove after tapir_mail migration
     send_email(

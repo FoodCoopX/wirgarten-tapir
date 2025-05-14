@@ -82,7 +82,9 @@ def get_member_personal_data_edit_form(request, **kwargs):
             old_model=orig, new_model=member, user=member, actor=request.user
         ).save()
 
-        TransactionalTrigger.fire_action(Events.MEMBERAREA_CHANGE_DATA, member.email)
+        TransactionalTrigger.fire_action(
+            key=Events.MEMBERAREA_CHANGE_DATA, recipient_email=member.email
+        )
 
         member.save()
 
@@ -156,9 +158,9 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).save()
 
         TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-            member.email,
-            {
+            key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+            recipient_email=member.email,
+            token_data={
                 "pickup_location": new_pickup_location.name,
                 "pickup_location_start_date": change_date_str,
             },

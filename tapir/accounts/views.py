@@ -44,8 +44,8 @@ def change_email(request, **kwargs):
         EmailChangeRequest.objects.filter(created_at__lte=now - link_validity).delete()
 
         TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
-            new_email,
+            key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+            recipient_email=new_email,
         )
         cache = {}
         # send confirmation to old email address

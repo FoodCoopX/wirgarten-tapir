@@ -222,9 +222,15 @@ class KeycloakUser(AbstractUser):
         from tapir.wirgarten.tapirmail import Events
 
         TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-            orig_email,
-            {"verify_link": verify_link},
+            key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+            recipient_email=orig_email,
+            token_data={"verify_link": verify_link},
+        )
+
+        TransactionalTrigger.fire_action(
+            key=Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+            recipient_email=orig_email,
+            recipient_email_override=new_email,
         )
 
         cache = {}

@@ -57,6 +57,9 @@ class Events:
     # Mitglied möchte Email Adresse ändern, muss Bestätigungslink klicken
     MEMBERAREA_CHANGE_EMAIL_INITIATE = "memberarea_change_email_initiate"
 
+    # Mitglied möchte Email Adresse ändern, hinweis wird an der neue Adresse geschickt das er die alte Adresse lesen soll
+    MEMBERAREA_CHANGE_EMAIL_HINT = "memberarea_change_email_hint"
+
     # Email Adresse wurde erfolgreich geändert
     MEMBERAREA_CHANGE_EMAIL_SUCCESS = "memberarea_change_email_success"
 
@@ -261,6 +264,12 @@ def _register_triggers():
         Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
         {"Bestätigungslink": "verify_link"},
     )
+
+    TransactionalTrigger.register_action(
+        "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen",
+        Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+    )
+
     TransactionalTrigger.register_action(
         "Email-Änderung: Erfolg",
         Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,

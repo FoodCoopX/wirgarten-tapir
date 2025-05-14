@@ -205,9 +205,9 @@ class CancelSubscriptionsView(APIView):
                 )
                 if len(cancelled_subscriptions) > 0:
                     TransactionalTrigger.fire_action(
-                        Events.CONTRACT_CANCELLED,
-                        member.email,
-                        {
+                        key=Events.CONTRACT_CANCELLED,
+                        recipient_email=member.email,
+                        token_data={
                             "contract_list": cancelled_subscriptions,
                             "contract_end_date": format_date(
                                 cancelled_subscriptions[0].end_date
