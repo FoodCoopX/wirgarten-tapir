@@ -62,9 +62,9 @@ class TestUseJokerView(TapirIntegrationTest):
             other_member, date, cache=ANY
         )
         mock_fire_action.assert_called_once_with(
-            "deliveries.joker_used",
-            other_member.email,
-            {"joker_date": date},
+            key="deliveries.joker_used",
+            recipient_email=other_member.email,
+            token_data={"joker_date": date},
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -88,9 +88,9 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(date, joker.date)
         mock_can_joker_be_used_in_week.assert_called_once_with(user, date, cache=ANY)
         mock_fire_action.assert_called_once_with(
-            "deliveries.joker_used",
-            user.email,
-            {"joker_date": date},
+            key="deliveries.joker_used",
+            recipient_email=user.email,
+            token_data={"joker_date": date},
         )
 
     @patch.object(TransactionalTrigger, "fire_action")

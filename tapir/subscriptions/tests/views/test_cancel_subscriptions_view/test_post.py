@@ -284,9 +284,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_fire_action.assert_has_calls(
             [
                 call(
-                    Events.CONTRACT_CANCELLED,
-                    member.email,
-                    {
+                    key=Events.CONTRACT_CANCELLED,
+                    recipient_email=member.email,
+                    token_data={
                         "contract_list": [subscription],
                         "contract_end_date": format_date(growing_period.end_date),
                     },
