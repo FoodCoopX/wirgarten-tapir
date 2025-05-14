@@ -392,9 +392,9 @@ def send_cancellation_confirmation_email(
         )
 
     TransactionalTrigger.fire_action(
-        Events.TRIAL_CANCELLATION,
-        member.email,
-        {
+        key=Events.TRIAL_CANCELLATION,
+        recipient_email=member.email,
+        token_data={
             "contract_list": contract_list,
             "contract_end_date": format_date(contract_end_date),
             "last_pickup_date": last_pickup_date,
@@ -452,9 +452,9 @@ def send_contract_change_confirmation(
     )
 
     TransactionalTrigger.fire_action(
-        Events.MEMBERAREA_CHANGE_CONTRACT,
-        member.email,
-        {
+        key=Events.MEMBERAREA_CHANGE_CONTRACT,
+        recipient_email=member.email,
+        token_data={
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
             "first_pickup_date": format_date(
@@ -504,9 +504,9 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
     )
 
     TransactionalTrigger.fire_action(
-        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        member.email,
-        {
+        key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        recipient_email=member.email,
+        token_data={
             "contract_start_date": format_date(contract_start_date),
             "contract_end_date": format_date(subs[0].end_date),
             "first_pickup_date": future_deliveries[0]["delivery_date"],

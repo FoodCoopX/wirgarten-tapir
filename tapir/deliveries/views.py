@@ -164,9 +164,9 @@ class CancelJokerView(APIView):
         JokerManagementService.cancel_joker(joker)
 
         TransactionalTrigger.fire_action(
-            DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
-            joker.member.email,
-            {"joker_date": joker.date},
+            key=DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
+            recipient_email=joker.member.email,
+            token_data={"joker_date": joker.date},
         )
 
         return Response(
@@ -209,9 +209,9 @@ class UseJokerView(APIView):
         joker = Joker.objects.create(member=member, date=date)
 
         TransactionalTrigger.fire_action(
-            DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
-            member.email,
-            {"joker_date": joker.date},
+            key=DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
+            recipient_email=member.email,
+            token_data={"joker_date": joker.date},
         )
 
         return Response(

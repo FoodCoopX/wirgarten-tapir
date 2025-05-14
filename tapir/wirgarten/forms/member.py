@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db import transaction
 from django.db.models import F, Sum, Q
@@ -113,12 +114,12 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
             kc = KeycloakUser.get_keycloak_client()
             keycloak_id = kc.get_user_id(self.cleaned_data["email"])
             if keycloak_id is not None:
-                duplicate_email_error_msg = _(
-                    "Ein Nutzer mit dieser Email Adresse existiert bereits."
-                )
-                self.add_error("email", duplicate_email_error_msg)
-                print(
-                    f"Error changing email: user with same email already exists in Keycloak, but not in Tapir: {keycloak_id}"
+                raise ValidationError(
+                    {
+                        "email": _(
+                            "Ein Nutzer mit dieser Email Adresse existiert bereits."
+                        )
+                    }
                 )
         except Exception as e:
             pass
@@ -132,12 +133,10 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
         if self.instance and self.instance.id:
             duplicate_email_query = duplicate_email_query.exclude(id=self.instance.id)
 
-        duplicate_email_error_msg = _(
-            "Ein Nutzer mit dieser Email Adresse existiert bereits."
-        )
         if duplicate_email_query.exists():
-            self.add_error("email", duplicate_email_error_msg)
-            print("Error changing email: user with same email already exists in Tapir.")
+            raise ValidationError(
+                {"email": _("Ein Nutzer mit dieser Email Adresse existiert bereits.")}
+            )
 
         original = Member.objects.filter(id=self.instance.id)
         if not original.exists():
@@ -161,13 +160,9 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
                 ),
             )
 
-    def is_valid(self):
-        valid = super().is_valid()
-
+    def clean(self):
         self._validate_duplicate_email()
         self._validate_birthdate()
-
-        return valid and len(self.errors) == 0
 
 
 class MarketingFeedbackForm(Form):

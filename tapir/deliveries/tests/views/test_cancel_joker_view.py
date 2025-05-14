@@ -63,9 +63,9 @@ class TestCancelJokerView(TapirIntegrationTest):
         mock_cancel_joker.assert_called_once_with(joker)
         mock_cancel_joker.assert_called_once_with(joker)
         mock_fire_action.assert_called_once_with(
-            "deliveries.joker_cancelled",
-            other_member.email,
-            {"joker_date": datetime.date(year=2024, month=5, day=1)},
+            key="deliveries.joker_cancelled",
+            recipient_email=other_member.email,
+            token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -86,9 +86,9 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         mock_cancel_joker.assert_called_once_with(joker)
         mock_fire_action.assert_called_once_with(
-            "deliveries.joker_cancelled",
-            user.email,
-            {"joker_date": datetime.date(year=2024, month=5, day=1)},
+            key="deliveries.joker_cancelled",
+            recipient_email=user.email,
+            token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
         )
 
     @patch.object(TransactionalTrigger, "fire_action")

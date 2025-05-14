@@ -171,12 +171,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 else context["next_trial_end_date"]
             )
 
-        email_change_requests = EmailChangeRequest.objects.filter(
+        email_change_request = EmailChangeRequest.objects.filter(
             user_id=self.object.id
-        )
-        if email_change_requests.exists():
+        ).first()
+        if email_change_request is not None:
             context["email_change_request"] = {
-                "new_email": email_change_requests[0].new_email
+                "new_email": email_change_request.new_email
             }
 
         context["jokersEnabled"] = (

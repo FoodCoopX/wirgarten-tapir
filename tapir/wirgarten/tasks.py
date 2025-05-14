@@ -196,7 +196,9 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
         TransactionalTrigger.fire_action(
-            Events.FINAL_PICKUP, member.email, {"contract_list": contract_list}
+            key=Events.FINAL_PICKUP,
+            recipient_email=member.email,
+            token_data={"contract_list": contract_list},
         )
     else:
         print(
@@ -321,7 +323,9 @@ def generate_member_numbers(print_results=True):
     with transaction.atomic():
         Member.objects.bulk_update(members_to_update, ["member_no"])
         for member in members_to_update:
-            TransactionalTrigger.fire_action(Events.MEMBERSHIP_ENTRY, member.email)
+            TransactionalTrigger.fire_action(
+                key=Events.MEMBERSHIP_ENTRY, recipient_email=member.email
+            )
             if print_results:
                 print(
                     f"[task] generate_member_numbers: generated member_no for {member}"

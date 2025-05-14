@@ -1,19 +1,16 @@
-import base64
-import json
 import logging
 from functools import partial
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir import utils
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
@@ -40,6 +37,9 @@ class KeycloakUserManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
 
 
 class KeycloakUser(AbstractUser):
+    class Meta:
+        abstract = True
+
     objects = KeycloakUserManager()
 
     _kc: KeycloakAdmin = None
@@ -172,7 +172,13 @@ class KeycloakUser(AbstractUser):
 
             if email_changed:
                 if self.email_verified():
-                    self.start_email_change_process(self.email, original.email)
+                    from tapir.accounts.services.mail_change_service import (
+                        MailChangeService,
+                    )
+
+                    MailChangeService.start_email_change_process(
+                        user=self, new_email=self.email, orig_email=original.email
+                    )
                     # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
                     self.email = original.email
                 else:  # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
@@ -200,48 +206,6 @@ class KeycloakUser(AbstractUser):
                 "email": new_email,
             },
         )
-
-    @transaction.atomic
-    def start_email_change_process(self, new_email: str, orig_email: str):
-        EmailChangeRequest.objects.filter(user_id=self.id).delete()
-        email_change_request = EmailChangeRequest.objects.create(
-            new_email=new_email, user_id=self.id
-        )
-        email_change_token = base64.urlsafe_b64encode(
-            json.dumps(
-                {
-                    "new_email": email_change_request.new_email,
-                    "secret": email_change_request.secret,
-                    "user": email_change_request.user_id,
-                }
-            ).encode()
-        ).decode()
-        verify_link = f"{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={'token': email_change_token})}"
-
-        from tapir.wirgarten.service.email import send_email
-        from tapir.wirgarten.tapirmail import Events
-
-        TransactionalTrigger.fire_action(
-            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-            orig_email,
-            {"verify_link": verify_link},
-        )
-
-        cache = {}
-        send_email(
-            to_email=[orig_email],
-            subject=_("Änderung deiner Email-Adresse"),
-            content=f"Hallo {self.first_name},<br/><br/>"
-            f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
-            f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
-            f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
-            f"<br/><br/>Grüße, dein WirGarten Team",
-            cache=cache,
-        )
-
-    class Meta:
-        abstract = True
 
 
 class TapirUser(KeycloakUser):

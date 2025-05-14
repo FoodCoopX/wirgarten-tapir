@@ -132,7 +132,7 @@ elif EMAIL_ENV == "prod":
 # Crash emails will come from this address.
 SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
-SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = dict(
     SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
