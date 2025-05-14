@@ -250,6 +250,16 @@
                             <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
                             <br />
                             <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span class="badge bg-danger">Nicht verifiziert</span></span>
+                            {% if perms.accounts.manage %}
+                                <form method="POST" action="{% url 'accounts:admin_apply_mail_change' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ object.id }}" />
+                                    <input type="hidden"
+                                           name="new_email"
+                                           value="{{ email_change_request.new_email }}" />
+                                    <button type="submit" class="btn tapir-btn btn-primary btn-sm">Als verifiziert markieren</button>
+                                </form>
+                            {% endif %}
                         </div>
                     {% else %}
                         <div class="col-8" id="tapir_user_email">{{ object.email }}</div>
@@ -290,7 +300,7 @@
                         <hr />
                         <a style="float: right"
                            class="btn tapir-btn btn-outline-primary ms-1"
-                           href="{% url 'password_change' %}"><span class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                           href="{% url 'accounts:password_change' %}"><span class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
                     </div>
                 {% endif %}
             </div>

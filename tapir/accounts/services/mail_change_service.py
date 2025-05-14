@@ -35,7 +35,10 @@ class MailChangeService:
                 }
             ).encode()
         ).decode()
-        verify_link = f"{settings.SITE_URL}{reverse_lazy('change_email_confirm', kwargs={'token': email_change_token})}"
+        url = reverse_lazy(
+            "accounts:change_email_confirm", kwargs={"token": email_change_token}
+        )
+        verify_link = f"{settings.SITE_URL}{url}"
 
         TransactionalTrigger.fire_action(
             key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
