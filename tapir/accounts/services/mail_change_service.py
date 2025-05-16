@@ -6,7 +6,10 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
@@ -41,15 +44,22 @@ class MailChangeService:
         verify_link = f"{settings.SITE_URL}{url}"
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-            recipient_email=orig_email,
-            token_data={"verify_link": verify_link},
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+                recipient_id_in_base_queryset=user.id,
+                token_data={"verify_link": verify_link},
+            )
         )
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_HINT,
-            recipient_email=orig_email,
-            recipient_email_override=new_email,
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+                recipient_outside_of_base_queryset=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                    email=new_email,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                ),
+            )
         )
 
         cache = {}
@@ -81,8 +91,10 @@ class MailChangeService:
         ).delete()
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
-            recipient_email=new_email,
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+                recipient_id_in_base_queryset=user.id,
+            )
         )
         # send confirmation to old email address
         send_email(

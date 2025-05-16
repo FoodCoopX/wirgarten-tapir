@@ -3,7 +3,10 @@ from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
@@ -112,7 +115,10 @@ def cancel_contract_at_period_end(request, **kwargs):
     ).save()
 
     TransactionalTrigger.fire_action(
-        key=Events.CONTRACT_NOT_RENEWED, recipient_email=member.email
+        TransactionalTriggerData(
+            key=Events.CONTRACT_NOT_RENEWED,
+            recipient_id_in_base_queryset=member.id,
+        ),
     )
 
     # TODO: remove after tapir_mail migration

@@ -65,6 +65,8 @@ class Events:
 
     CONTRACT_CANCELLED = "contract_canceled"
 
+    FILE_EXPORTED = "file_exported"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -302,6 +304,11 @@ def _register_triggers():
         "Vertrags-/Lieferende",
         Events.FINAL_PICKUP,
         {"Vertragsliste": "contract_list"},
+    )
+    TransactionalTrigger.register_action(
+        "Datei exportiert",
+        Events.FILE_EXPORTED,
+        {"Datei-Name": "file_name"},
     )
 
     register_trigger(OnboardingTrigger)

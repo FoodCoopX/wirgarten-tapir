@@ -14,7 +14,10 @@ from django.db.models import (
     FloatField,
 )
 from django.db.models.functions import Coalesce
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
@@ -392,13 +395,15 @@ def send_cancellation_confirmation_email(
         )
 
     TransactionalTrigger.fire_action(
-        key=Events.TRIAL_CANCELLATION,
-        recipient_email=member.email,
-        token_data={
-            "contract_list": contract_list,
-            "contract_end_date": format_date(contract_end_date),
-            "last_pickup_date": last_pickup_date,
-        },
+        TransactionalTriggerData(
+            key=Events.TRIAL_CANCELLATION,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_list": contract_list,
+                "contract_end_date": format_date(contract_end_date),
+                "last_pickup_date": last_pickup_date,
+            },
+        ),
     )
 
     if not skip_email:
@@ -452,16 +457,18 @@ def send_contract_change_confirmation(
     )
 
     TransactionalTrigger.fire_action(
-        key=Events.MEMBERAREA_CHANGE_CONTRACT,
-        recipient_email=member.email,
-        token_data={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date, cache=cache)
-            ),
-            "contract_list": format_subscription_list_html(subs),
-        },
+        TransactionalTriggerData(
+            key=Events.MEMBERAREA_CHANGE_CONTRACT,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_start_date": format_date(contract_start_date),
+                "contract_end_date": format_date(subs[0].end_date),
+                "first_pickup_date": format_date(
+                    get_next_delivery_date(contract_start_date, cache=cache)
+                ),
+                "contract_list": format_subscription_list_html(subs),
+            },
+        ),
     )
 
     last_delivery_date = datetime.strptime(
@@ -504,14 +511,16 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
     )
 
     TransactionalTrigger.fire_action(
-        key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        recipient_email=member.email,
-        token_data={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": future_deliveries[0]["delivery_date"],
-            "contract_list": format_subscription_list_html(subs),
-        },
+        TransactionalTriggerData(
+            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_start_date": format_date(contract_start_date),
+                "contract_end_date": format_date(subs[0].end_date),
+                "first_pickup_date": future_deliveries[0]["delivery_date"],
+                "contract_list": format_subscription_list_html(subs),
+            },
+        ),
     )
 
     last_delivery_date = datetime.strptime(

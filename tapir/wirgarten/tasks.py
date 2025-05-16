@@ -4,7 +4,10 @@ from collections import defaultdict
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction, models
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
@@ -196,9 +199,11 @@ def send_email_member_contract_end_reminder(member_id: str):
         )
 
         TransactionalTrigger.fire_action(
-            key=Events.FINAL_PICKUP,
-            recipient_email=member.email,
-            token_data={"contract_list": contract_list},
+            TransactionalTriggerData(
+                key=Events.FINAL_PICKUP,
+                recipient_id_in_base_queryset=member.id,
+                token_data={"contract_list": contract_list},
+            ),
         )
     else:
         print(
@@ -324,7 +329,10 @@ def generate_member_numbers(print_results=True):
         Member.objects.bulk_update(members_to_update, ["member_no"])
         for member in members_to_update:
             TransactionalTrigger.fire_action(
-                key=Events.MEMBERSHIP_ENTRY, recipient_email=member.email
+                TransactionalTriggerData(
+                    key=Events.MEMBERSHIP_ENTRY,
+                    recipient_id_in_base_queryset=member.id,
+                ),
             )
             if print_results:
                 print(
