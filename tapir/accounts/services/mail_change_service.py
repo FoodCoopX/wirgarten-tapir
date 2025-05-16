@@ -96,15 +96,3 @@ class MailChangeService:
                 recipient_id_in_base_queryset=user.id,
             )
         )
-        # send confirmation to old email address
-        send_email(
-            to_email=[orig_email],
-            subject=_("Deine Email Adresse wurde geändert"),
-            content=_(
-                f"Hallo {user.first_name},<br/><br/>"
-                f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
-                f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
-            ),
-            cache=cache,
-        )

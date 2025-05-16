@@ -273,8 +273,12 @@ def _register_triggers():
     )
 
     TransactionalTrigger.register_action(
-        "Email-Änderung: Erfolg",
-        Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+        name="Email-Änderung: Erfolg",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+        required=True,
+        default_content=get_default_mail_content(
+            Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS
+        ),
     )
 
     TransactionalTrigger.register_action(
@@ -312,6 +316,11 @@ def _register_triggers():
     )
 
     register_trigger(OnboardingTrigger)
+
+
+def get_default_mail_content(key: str) -> str:
+    with open(f"tapir/wirgarten/email_drafts/{key}.mjml", "r") as file:
+        return file.read()
 
 
 def synchronize_waitlist_segment_for_entry(entry):
