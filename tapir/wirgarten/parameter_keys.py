@@ -73,12 +73,6 @@ class ParameterKeys:
     EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT = (
         f"{PREFIX}.email.contract_order_confirmation.content"
     )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.contract_change_confirmation.subject"
-    )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.contract_change_confirmation.content"
-    )
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"

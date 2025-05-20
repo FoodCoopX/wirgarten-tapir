@@ -239,15 +239,16 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
     )
-    TransactionalTrigger.register_action(
-        "Vertragsänderungen im Mitgliederbereich",
-        Events.MEMBERAREA_CHANGE_CONTRACT,
-        {
+    register_transactional_trigger(
+        name="Vertragsänderungen im Mitgliederbereich",
+        key=Events.MEMBERAREA_CHANGE_CONTRACT,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA

@@ -419,25 +419,6 @@ def send_contract_change_confirmation(
 
     future_deliveries = generate_future_deliveries(member, cache=cache)
 
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT, cache=cache
-        ),
-        content=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT, cache=cache
-        ),
-        variables={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date, cache=cache)
-            ),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
-        },
-        cache=cache,
-    )
-
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
             key=Events.MEMBERAREA_CHANGE_CONTRACT,

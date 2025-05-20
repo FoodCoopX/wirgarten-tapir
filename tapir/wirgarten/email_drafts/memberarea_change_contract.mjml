@@ -1,0 +1,15 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Vertragsänderungen im Mitgliederbereich" werden an Mitglieder geschickt wenn sie deren Vertrag mit Basis-Produkt ändern.
+                Verträge ohne Basis-Produkt sind nicht betroffen.
+                Folgende Token stehen zu verfügung:
+                {{Vertragsänderungen im Mitgliederbereich.Vertragsliste}}
+                {{Vertragsänderungen im Mitgliederbereich.Vertragsstart}}
+                {{Vertragsänderungen im Mitgliederbereich.Vertragsende}}
+                {{Vertragsänderungen im Mitgliederbereich.Erste Abholung am}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
