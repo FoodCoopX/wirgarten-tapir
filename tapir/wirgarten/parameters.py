@@ -54,7 +54,6 @@ class ParameterCategory:
     PAYMENT = "Zahlungen"
     DELIVERY = "Lieferung"
     MEMBER_DASHBOARD = "Mitgliederbereich"
-    EMAIL = "Email"
     JOKERS = "Joker"
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
