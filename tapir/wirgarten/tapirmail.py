@@ -274,6 +274,8 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen",
         Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+        required=True,
+        default_content=get_default_mail_content(Events.MEMBERAREA_CHANGE_EMAIL_HINT),
     )
 
     TransactionalTrigger.register_action(

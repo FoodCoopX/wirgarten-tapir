@@ -1,0 +1,14 @@
+
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen"
+                werden an Mitglieder geschickt wenn sie deren Email-Adresse geändert habe. Die neue
+                Adresse bekommt die Mail. Die Mail soll das Mitglied Bescheid geben dass das Bestätigungslink an der
+                alte EMail-Adresse verschickt worden ist, und dass er/sie, falls es kein Zugang zu diese alte Adresse mehr gibt, sich ans der Verwaltung wenden soll.
+                Das Trigger hat keine spezifische Tokens.
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
