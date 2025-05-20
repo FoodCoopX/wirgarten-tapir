@@ -295,13 +295,14 @@ def _register_triggers():
     register_transactional_trigger(
         name="Vertrag nicht verlängert", key=Events.CONTRACT_NOT_RENEWED, required=True
     )
-    TransactionalTrigger.register_action(
-        "Vertrag gekündigt",
-        Events.CONTRACT_CANCELLED,
-        {
+    register_transactional_trigger(
+        name="Vertrag gekündigt",
+        key=Events.CONTRACT_CANCELLED,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
