@@ -7,7 +7,10 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.apps import DeliveriesConfig
@@ -164,9 +167,11 @@ class CancelJokerView(APIView):
         JokerManagementService.cancel_joker(joker)
 
         TransactionalTrigger.fire_action(
-            key=DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
-            recipient_email=joker.member.email,
-            token_data={"joker_date": joker.date},
+            trigger_data=TransactionalTriggerData(
+                key=DeliveriesConfig.MAIL_TRIGGER_JOKER_CANCELLED,
+                recipient_id_in_base_queryset=joker.member.id,
+                token_data={"joker_date": joker.date},
+            ),
         )
 
         return Response(
@@ -209,9 +214,11 @@ class UseJokerView(APIView):
         joker = Joker.objects.create(member=member, date=date)
 
         TransactionalTrigger.fire_action(
-            key=DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
-            recipient_email=member.email,
-            token_data={"joker_date": joker.date},
+            TransactionalTriggerData(
+                key=DeliveriesConfig.MAIL_TRIGGER_JOKER_USED,
+                recipient_id_in_base_queryset=joker.member.id,
+                token_data={"joker_date": joker.date},
+            ),
         )
 
         return Response(

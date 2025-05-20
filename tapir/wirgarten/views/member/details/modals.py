@@ -6,7 +6,10 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
@@ -83,7 +86,10 @@ def get_member_personal_data_edit_form(request, **kwargs):
         ).save()
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_DATA, recipient_email=member.email
+            TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_DATA,
+                recipient_id_in_base_queryset=member.id,
+            ),
         )
 
         member.save()
@@ -158,12 +164,14 @@ def get_pickup_location_choice_form(request, **kwargs):
         ).save()
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-            recipient_email=member.email,
-            token_data={
-                "pickup_location": new_pickup_location.name,
-                "pickup_location_start_date": change_date_str,
-            },
+            TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "pickup_location": new_pickup_location.name,
+                    "pickup_location_start_date": change_date_str,
+                },
+            ),
         )
 
     return get_form_modal(
@@ -457,7 +465,7 @@ def get_cancel_trial_form(request, **kwargs):
                 subscriptions=subs_to_cancel,
             ).save()
 
-        return form.save(skip_emails=member_id != request.user.id)
+        return form.save()
 
     return get_form_modal(
         request=request,

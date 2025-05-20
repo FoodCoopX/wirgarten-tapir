@@ -5,13 +5,14 @@ from typing import Dict
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import get_now
 
@@ -41,28 +42,22 @@ class MailChangeService:
         verify_link = f"{settings.SITE_URL}{url}"
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-            recipient_email=orig_email,
-            token_data={"verify_link": verify_link},
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+                recipient_id_in_base_queryset=user.id,
+                token_data={"verify_link": verify_link},
+            )
         )
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_HINT,
-            recipient_email=orig_email,
-            recipient_email_override=new_email,
-        )
-
-        cache = {}
-        send_email(
-            to_email=[orig_email],
-            subject=_("Änderung deiner Email-Adresse"),
-            content=f"Hallo {user.first_name},<br/><br/>"
-            f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
-            f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
-            f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
-            f"<br/><br/>Grüße, dein WirGarten Team",
-            cache=cache,
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+                recipient_outside_of_base_queryset=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                    email=new_email,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                ),
+            )
         )
 
     @classmethod
@@ -81,18 +76,8 @@ class MailChangeService:
         ).delete()
 
         TransactionalTrigger.fire_action(
-            key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
-            recipient_email=new_email,
-        )
-        # send confirmation to old email address
-        send_email(
-            to_email=[orig_email],
-            subject=_("Deine Email Adresse wurde geändert"),
-            content=_(
-                f"Hallo {user.first_name},<br/><br/>"
-                f"deine Email Adresse wurde erfolgreich zu <strong>{new_email}</strong> geändert.<br/>"
-                f"""Falls du das nicht warst, ändere bitte sofort dein Passwort im <a href="{settings.SITE_URL}" target="_blank">Mitgliederbereich</a> und kontaktiere uns indem du einfach auf diese Mail antwortest."""
-                f"<br/><br/>Herzliche Grüße, dein WirGarten Team"
-            ),
-            cache=cache,
+            trigger_data=TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+                recipient_id_in_base_queryset=user.id,
+            )
         )

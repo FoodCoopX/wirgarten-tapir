@@ -573,8 +573,7 @@ class TrialCancellationForm(Form):
         subscription.save()
 
     @transaction.atomic
-    def save(self, **kwargs):
-        skip_emails = kwargs.pop("skip_emails", False)
+    def save(self, **_):
         cancel_coop = self.is_cancel_coop_selected()
 
         subs_to_cancel = self.get_subs_to_cancel()
@@ -610,11 +609,10 @@ class TrialCancellationForm(Form):
             self.share_ownership.delete()
 
         send_cancellation_confirmation_email(
-            self.member_id,
-            self.next_trial_end_date,
-            subs_to_cancel,
-            cancel_coop,
-            skip_emails,
+            member=self.member_id,
+            contract_end_date=self.next_trial_end_date,
+            subs_to_cancel=subs_to_cancel,
+            revoke_coop_membership=cancel_coop,
             cache=cache,
         )
 

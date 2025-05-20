@@ -1,0 +1,13 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Kündigung im Probemonat" werden an Mitglieder geschickt wenn sie während der Probezeit kündigen.
+                Folgende Token stehen zu verfügung:
+                {{Kündigung im Probemonat.Vertragsliste}}
+                {{Kündigung im Probemonat.Vertragsende}}
+                {{Kündigung im Probemonat.Letzte Abholung am}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

@@ -65,6 +65,8 @@ class Events:
 
     CONTRACT_CANCELLED = "contract_canceled"
 
+    FILE_EXPORTED = "file_exported"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -224,28 +226,30 @@ def _register_tokens():
 
 
 def _register_triggers():
-    TransactionalTrigger.register_action(
-        "BestellWizard: Mitgliedschaft + Ernteanteile",
-        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        {
+    register_transactional_trigger(
+        name="BestellWizard: Mitgliedschaft + Ernteanteile",
+        key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
     )
-    TransactionalTrigger.register_action(
-        "Vertragsänderungen im Mitgliederbereich",
-        Events.MEMBERAREA_CHANGE_CONTRACT,
-        {
+    register_transactional_trigger(
+        name="Vertragsänderungen im Mitgliederbereich",
+        key=Events.MEMBERAREA_CHANGE_CONTRACT,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
@@ -259,52 +263,81 @@ def _register_triggers():
         },
     )
 
-    TransactionalTrigger.register_action(
-        "Email-Änderung: Bestätigung anfordern",
-        Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-        {"Bestätigungslink": "verify_link"},
+    register_transactional_trigger(
+        name="Email-Änderung: Bestätigung anfordern",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+        tokens={"Bestätigungslink": "verify_link"},
+        required=True,
     )
 
-    TransactionalTrigger.register_action(
+    register_transactional_trigger(
         "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen",
         Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+        required=True,
     )
 
-    TransactionalTrigger.register_action(
-        "Email-Änderung: Erfolg",
-        Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+    register_transactional_trigger(
+        name="Email-Änderung: Erfolg",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+        required=True,
     )
 
-    TransactionalTrigger.register_action(
-        "Kündigung im Probemonat",
-        Events.TRIAL_CANCELLATION,
-        {
+    register_transactional_trigger(
+        name="Kündigung im Probemonat",
+        key=Events.TRIAL_CANCELLATION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
             "Letzte Abholung am": "last_pickup_date",
         },
+        required=True,
     )
-    TransactionalTrigger.register_action(
-        "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
+    register_transactional_trigger(
+        name="Vertrag nicht verlängert", key=Events.CONTRACT_NOT_RENEWED, required=True
     )
-    TransactionalTrigger.register_action(
-        "Vertrag gekündigt",
-        Events.CONTRACT_CANCELLED,
-        {
+    register_transactional_trigger(
+        name="Vertrag gekündigt",
+        key=Events.CONTRACT_CANCELLED,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
     )
+
+    register_transactional_trigger(
+        name="Vertrags-/Lieferende",
+        key=Events.FINAL_PICKUP,
+        tokens={"Vertragsliste": "contract_list"},
+        required=True,
+    )
     TransactionalTrigger.register_action(
-        "Vertrags-/Lieferende",
-        Events.FINAL_PICKUP,
-        {"Vertragsliste": "contract_list"},
+        "Datei exportiert",
+        Events.FILE_EXPORTED,
+        {"Datei-Name": "file_name"},
     )
 
     register_trigger(OnboardingTrigger)
+
+
+def register_transactional_trigger(
+    name: str, key: str, tokens: dict = None, required: bool = False
+):
+    TransactionalTrigger.register_action(
+        name=name,
+        key=key,
+        required=required,
+        tokens=tokens,
+        default_content=get_default_mail_content(key=key) if required else None,
+    )
+
+
+def get_default_mail_content(key: str) -> str:
+    with open(f"tapir/wirgarten/email_drafts/{key}.mjml", "r") as file:
+        return file.read()
 
 
 def synchronize_waitlist_segment_for_entry(entry):

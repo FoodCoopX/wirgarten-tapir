@@ -61,36 +61,6 @@ class ParameterKeys:
         f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
-    EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.cancellation_confirmation.subject"
-    )
-    EMAIL_CANCELLATION_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.cancellation_confirmation.content"
-    )
-    EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.not_renewed_confirmation.subject"
-    )
-    EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.not_renewed_confirmation.content"
-    )
-    EMAIL_CONTRACT_END_REMINDER_SUBJECT = (
-        f"{PREFIX}.email.contract_end_reminder.subject"
-    )
-    EMAIL_CONTRACT_END_REMINDER_CONTENT = (
-        f"{PREFIX}.email.contract_end_reminder.content"
-    )
-    EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.contract_order_confirmation.subject"
-    )
-    EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.contract_order_confirmation.content"
-    )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.contract_change_confirmation.subject"
-    )
-    EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.contract_change_confirmation.content"
-    )
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"

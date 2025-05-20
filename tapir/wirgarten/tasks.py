@@ -4,7 +4,10 @@ from collections import defaultdict
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
 from django.db import transaction, models
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
@@ -20,7 +23,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
 from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
@@ -183,22 +185,13 @@ def send_email_member_contract_end_reminder(member_id: str):
         .exists()
     ):
         contract_list = format_subscription_list_html(active_subs)
-        send_email(
-            to_email=[member.email],
-            subject=get_parameter_value(
-                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_SUBJECT, cache=cache
-            ),
-            content=get_parameter_value(
-                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_CONTENT, cache=cache
-            ),
-            variables={"contract_list": contract_list},
-            cache=cache,
-        )
 
         TransactionalTrigger.fire_action(
-            key=Events.FINAL_PICKUP,
-            recipient_email=member.email,
-            token_data={"contract_list": contract_list},
+            TransactionalTriggerData(
+                key=Events.FINAL_PICKUP,
+                recipient_id_in_base_queryset=member.id,
+                token_data={"contract_list": contract_list},
+            ),
         )
     else:
         print(
@@ -324,7 +317,10 @@ def generate_member_numbers(print_results=True):
         Member.objects.bulk_update(members_to_update, ["member_no"])
         for member in members_to_update:
             TransactionalTrigger.fire_action(
-                key=Events.MEMBERSHIP_ENTRY, recipient_email=member.email
+                TransactionalTriggerData(
+                    key=Events.MEMBERSHIP_ENTRY,
+                    recipient_id_in_base_queryset=member.id,
+                ),
             )
             if print_results:
                 print(

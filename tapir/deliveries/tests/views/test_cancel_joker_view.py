@@ -3,7 +3,10 @@ from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
@@ -63,9 +66,11 @@ class TestCancelJokerView(TapirIntegrationTest):
         mock_cancel_joker.assert_called_once_with(joker)
         mock_cancel_joker.assert_called_once_with(joker)
         mock_fire_action.assert_called_once_with(
-            key="deliveries.joker_cancelled",
-            recipient_email=other_member.email,
-            token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+            trigger_data=TransactionalTriggerData(
+                key="deliveries.joker_cancelled",
+                recipient_id_in_base_queryset=other_member.id,
+                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+            )
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -86,9 +91,11 @@ class TestCancelJokerView(TapirIntegrationTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         mock_cancel_joker.assert_called_once_with(joker)
         mock_fire_action.assert_called_once_with(
-            key="deliveries.joker_cancelled",
-            recipient_email=user.email,
-            token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+            trigger_data=TransactionalTriggerData(
+                key="deliveries.joker_cancelled",
+                recipient_id_in_base_queryset=user.id,
+                token_data={"joker_date": datetime.date(year=2024, month=5, day=1)},
+            ),
         )
 
     @patch.object(TransactionalTrigger, "fire_action")

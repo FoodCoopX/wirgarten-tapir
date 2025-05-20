@@ -11,7 +11,10 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
@@ -205,14 +208,16 @@ class CancelSubscriptionsView(APIView):
                 )
                 if len(cancelled_subscriptions) > 0:
                     TransactionalTrigger.fire_action(
-                        key=Events.CONTRACT_CANCELLED,
-                        recipient_email=member.email,
-                        token_data={
-                            "contract_list": cancelled_subscriptions,
-                            "contract_end_date": format_date(
-                                cancelled_subscriptions[0].end_date
-                            ),
-                        },
+                        TransactionalTriggerData(
+                            key=Events.CONTRACT_CANCELLED,
+                            recipient_id_in_base_queryset=member.id,
+                            token_data={
+                                "contract_list": cancelled_subscriptions,
+                                "contract_end_date": format_date(
+                                    cancelled_subscriptions[0].end_date
+                                ),
+                            },
+                        ),
                     )
 
             if cancel_coop_membership:
