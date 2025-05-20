@@ -283,11 +283,16 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
 
         cache = {}
         subscriptions_trial_end_dates = {}
-        for subscription in self.object_list:
-            if TrialPeriodManager.is_subscription_in_trial(subscription, cache=cache):
-                subscriptions_trial_end_dates[subscription.id] = (
-                    TrialPeriodManager.get_end_of_trial_period(subscription)
-                )
+        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            for subscription in self.object_list:
+                if TrialPeriodManager.is_subscription_in_trial(
+                    subscription, cache=cache
+                ):
+                    subscriptions_trial_end_dates[subscription.id] = (
+                        TrialPeriodManager.get_end_of_trial_period(
+                            subscription, cache=cache
+                        )
+                    )
         context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
 
         return context

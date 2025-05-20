@@ -151,7 +151,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
             next_trial_end_date = None
             for subscription in subs_in_trial:
                 trial_end_date = TrialPeriodManager.get_end_of_trial_period(
-                    subscription
+                    subscription, cache=cache
                 )
                 if next_trial_end_date is None or trial_end_date < next_trial_end_date:
                     next_trial_end_date = trial_end_date

@@ -434,6 +434,9 @@ class BaseProductForm(forms.Form):
                     else None
                 ),
                 withdrawal_consent_ts=now,
+                trial_disabled=not get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                ),
                 trial_end_date_override=existing_trial_end_date,
                 **self.build_solidarity_fields(),
                 notice_period_duration=notice_period_duration,
@@ -850,6 +853,9 @@ class AdditionalProductForm(forms.Form):
                         mandate_ref=mandate_ref,
                         consent_ts=now if self.product_type.contract_link else None,
                         withdrawal_consent_ts=now,
+                        trial_disabled=not get_parameter_value(
+                            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                        ),
                         trial_end_date_override=existing_trial_end_date,
                         notice_period_duration=notice_period_duration,
                     )
@@ -1033,7 +1039,7 @@ def cancel_subs_for_edit(
             subscription.delete()
         else:
             existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
-                subscription
+                subscription, cache=cache
             )
             subscription.save()
 

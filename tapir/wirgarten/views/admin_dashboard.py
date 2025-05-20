@@ -242,7 +242,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             # Calculate the total number of subscriptions in trial - cancelled for this month
             cancelled_subscriptions = Subscription.objects.filter(
                 start_date=start_of_month
-            ).filter(cancellation_ts__isnone=None)
+            ).filter(cancellation_ts__isnull=False)
             subscriptions_cancelled_while_in_trial = list(
                 filter(
                     lambda subscription: TrialPeriodManager.is_subscription_in_trial(

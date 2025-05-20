@@ -64,7 +64,7 @@ class AutomaticSubscriptionRenewalService:
         next_growing_period = get_next_growing_period(cache=cache)
 
         trial_disabled, trial_end_date_override = (
-            cls.get_renewed_subscription_trial_data(subscription)
+            cls.get_renewed_subscription_trial_data(subscription, cache=cache)
         )
         Subscription.objects.create(
             member=subscription.member,
@@ -84,11 +84,18 @@ class AutomaticSubscriptionRenewalService:
         )
 
     @classmethod
-    def get_renewed_subscription_trial_data(cls, old_subscription: Subscription):
+    def get_renewed_subscription_trial_data(
+        cls, old_subscription: Subscription, cache: Dict
+    ):
         # returns (trial_disabled, trial_end_date_override)
 
-        trial_end_date = TrialPeriodManager.get_end_of_trial_period(old_subscription)
-        if trial_end_date > old_subscription.end_date:
+        if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            return True, None
+
+        trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+            old_subscription, cache=cache
+        )
+        if trial_end_date is not None and trial_end_date > old_subscription.end_date:
             return False, trial_end_date
 
         return True, None

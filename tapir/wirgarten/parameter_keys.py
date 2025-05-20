@@ -79,3 +79,6 @@ class ParameterKeys:
     SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT = (
         f"{PREFIX}.subscriptions.four_week_cycle_start_point"
     )
+    TRIAL_PERIOD_ENABLED = f"{PREFIX}.trial_period.enabled"
+    TRIAL_PERIOD_DURATION = f"{PREFIX}.trial_period.duration"
+    TRIAL_PERIOD_UNIT = f"{PREFIX}.trial_period.unit"
