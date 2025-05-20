@@ -1,9 +1,11 @@
 import datetime
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from django.utils import timezone
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import (
     Subscription,
     CoopShareTransaction,
@@ -60,11 +62,17 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         self.assertEqual(0, CoopShareTransaction.objects.count())
 
+    @patch.object(TrialPeriodManager, "get_earliest_trial_cancellation_date")
     def test_trialCancellationForm_cancelAfterRenewal_alsoCancelsRenewedContract(
-        self,
+        self, mock_get_earliest_trial_cancellation_date: Mock
     ):
         member = MemberWithSubscriptionFactory.create()
         self.client.force_login(member)
+
+        earliest_trial_cancellation_date = datetime.date(year=2023, month=6, day=15)
+        mock_get_earliest_trial_cancellation_date.return_value = (
+            earliest_trial_cancellation_date
+        )
 
         current_growing_period = GrowingPeriod.objects.get()
         current_growing_period.start_date = self.NOW - datetime.timedelta(days=1)
@@ -97,17 +105,24 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
         self.assertEqual(self.NOW, current_subscription.cancellation_ts)
         self.assertEqual(self.NOW, renewed_subscription.cancellation_ts)
         self.assertEqual(
-            self.END_OF_CURRENT_MONTH.date(), current_subscription.end_date
+            earliest_trial_cancellation_date, current_subscription.end_date
         )
         self.assertEqual(
-            self.END_OF_CURRENT_MONTH.date(), renewed_subscription.end_date
+            earliest_trial_cancellation_date, renewed_subscription.end_date
         )
+        mock_get_earliest_trial_cancellation_date.assert_called_once()
 
+    @patch.object(TrialPeriodManager, "get_earliest_trial_cancellation_date")
     def test_trialCancellationForm_cancelSingleProductAfterRenewal_otherSubscriptionNotAffected(
-        self,
+        self, mock_get_earliest_trial_cancellation_date: Mock
     ):
         member = MemberWithSubscriptionFactory.create()
         self.client.force_login(member)
+
+        earliest_trial_cancellation_date = datetime.date(year=2023, month=6, day=15)
+        mock_get_earliest_trial_cancellation_date.return_value = (
+            earliest_trial_cancellation_date
+        )
 
         current_growing_period = GrowingPeriod.objects.get()
         current_growing_period.start_date = self.NOW - datetime.timedelta(days=1)
@@ -140,7 +155,7 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
         subscription_to_cancel.refresh_from_db()
         self.assertEqual(self.NOW, subscription_to_cancel.cancellation_ts)
         self.assertEqual(
-            self.END_OF_CURRENT_MONTH.date(), subscription_to_cancel.end_date
+            earliest_trial_cancellation_date, subscription_to_cancel.end_date
         )
 
         other_subscription_current.refresh_from_db()

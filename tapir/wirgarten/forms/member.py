@@ -28,6 +28,7 @@ from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import TapirPhoneNumberField
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
@@ -44,8 +45,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    get_next_trial_end_date,
-    get_subscriptions_in_trial_period,
     send_cancellation_confirmation_email,
     send_order_confirmation,
 )
@@ -403,17 +402,21 @@ class TrialCancellationForm(Form):
     template_name = "wirgarten/member/trial_cancellation_form.html"
 
     def __init__(self, *args, **kwargs):
+        self.cache = {}
         self.member_id = kwargs.pop("pk")
         super(TrialCancellationForm, self).__init__(*args, **kwargs)
 
-        self.subs = get_subscriptions_in_trial_period(self.member_id)
-        self.next_trial_end_date = get_next_trial_end_date(
-            self.subs[0] if len(self.subs) > 0 else None
+        self.subs = TrialPeriodManager.get_subscriptions_in_trial_period(
+            self.member_id, cache=self.cache
         )
-
+        self.subs = Subscription.objects.filter(
+            id__in=[subscription.id for subscription in self.subs]
+        )
+        self.next_trial_end_date = (
+            TrialPeriodManager.get_earliest_trial_cancellation_date(cache=self.cache)
+        )
         self.member = Member.objects.get(id=self.member_id)
-        cache = {}
-        today = get_today(cache=cache)
+        today = get_today(cache=self.cache)
 
         def is_new_member() -> bool:
             return (
@@ -421,7 +424,9 @@ class TrialCancellationForm(Form):
                 and self.member.coop_entry_date > today
             )
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
+        base_product_type = BaseProductTypeService.get_base_product_type(
+            cache=self.cache
+        )
         for sub in self.subs:
             key = f"{self.KEY_PREFIX}{sub.id}"
             self.fields[key] = BooleanField(
@@ -440,7 +445,7 @@ class TrialCancellationForm(Form):
             ).first()
 
             self.fields["cancel_coop"] = BooleanField(
-                label=f"{MembershipTextService.get_membership_text(cache=cache)} widerrufen",
+                label=f"{MembershipTextService.get_membership_text(cache=self.cache)} widerrufen",
                 required=False,
             )
 
@@ -498,7 +503,6 @@ class TrialCancellationForm(Form):
         subs_to_cancel = self.get_subs_to_cancel()
         for sub in subs_to_cancel:
             self.cancel_subscription(sub)
-        cache = {}
         for cancelled_subscription in subs_to_cancel:
             # If the member first renewed during their trial period, but then cancels,
             # we also cancel the renewed contracts.
@@ -514,7 +518,7 @@ class TrialCancellationForm(Form):
             )
             if not is_any_subscription_of_same_type_still_active:
                 for future_subscription in get_active_and_future_subscriptions(
-                    cache=cache
+                    cache=self.cache
                 ).filter(
                     member__id=self.member_id,
                     product__type=cancelled_subscription.product.type,
@@ -532,7 +536,7 @@ class TrialCancellationForm(Form):
             contract_end_date=self.next_trial_end_date,
             subs_to_cancel=subs_to_cancel,
             revoke_coop_membership=cancel_coop,
-            cache=cache,
+            cache=self.cache,
         )
 
         return (

@@ -10,6 +10,7 @@ from tapir.wirgarten.models import Subscription, Product, Member
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
+    get_active_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -34,6 +35,9 @@ class TrialPeriodManager:
     ) -> bool:
         if reference_date is None:
             reference_date = get_today(cache=cache)
+
+        if subscription.cancellation_ts is not None:
+            return False
 
         return cls.get_end_of_trial_period(subscription) >= reference_date
 
@@ -72,4 +76,21 @@ class TrialPeriodManager:
             .order_by("start_date")
             .first(),
             reference_date,
+        )
+
+    @classmethod
+    def get_subscriptions_in_trial_period(
+        cls, member_id: str, reference_date: datetime.date = None, cache: Dict = None
+    ) -> list[Subscription]:
+        subscriptions = get_active_subscriptions(cache=cache).filter(
+            member_id=member_id,
+        )
+
+        return list(
+            filter(
+                lambda subscription: cls.is_subscription_in_trial(
+                    subscription, reference_date=reference_date, cache=cache
+                ),
+                subscriptions,
+            )
         )

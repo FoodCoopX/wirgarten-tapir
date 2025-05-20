@@ -46,11 +46,11 @@
                               data-bs-placement="top"
                               title="Gekündigt am {{ entry.cancellation_ts|format_date }}"
                               class="material-icons">free_cancellation</span>
-                    {% elif today <= entry.trial_end_date %}
+                    {% elif entry.id in subscriptions_trial_end_dates.keys and today <= subscriptions_trial_end_dates|get_value:entry.id %}
                         <span style="color:var(--secondary)"
                               data-bs-toggle="tooltip"
                               data-bs-placement="top"
-                              title="Probezeitraum läuft bis zum {{ entry.trial_end_date|format_date }}"
+                              title="Probezeitraum läuft bis zum {{ subscriptions_trial_end_dates|get_value:entry.id|format_date }}"
                               class="material-icons">calendar_month</span>
                     {% else %}
                         <span style="color:var(--primary)"

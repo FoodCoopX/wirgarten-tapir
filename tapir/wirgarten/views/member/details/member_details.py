@@ -11,6 +11,7 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -21,9 +22,6 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import (
-    get_subscriptions_in_trial_period,
-)
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
     get_next_payment_date,
@@ -143,14 +141,21 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         if not subscription_automatic_renewal:
             self.add_renewal_notice_context(context, next_month, today, cache=cache)
 
-        subs_in_trial = get_subscriptions_in_trial_period(self.object.id)
+        subs_in_trial = TrialPeriodManager.get_subscriptions_in_trial_period(
+            self.object.id, cache=cache
+        )
         context["subscriptions_in_trial"] = []
         if subs_in_trial and not subscription_automatic_renewal:
             context["show_trial_period_notice"] = True
             context["subscriptions_in_trial"].extend(subs_in_trial)
-            context["next_trial_end_date"] = min(
-                subs_in_trial, key=lambda x: x.trial_end_date
-            ).trial_end_date
+            next_trial_end_date = None
+            for subscription in subs_in_trial:
+                trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+                    subscription
+                )
+                if next_trial_end_date is None or trial_end_date < next_trial_end_date:
+                    next_trial_end_date = trial_end_date
+            context["next_trial_end_date"] = next_trial_end_date
 
         if (
             self.object.coop_entry_date is not None

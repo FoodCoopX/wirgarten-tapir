@@ -2,7 +2,6 @@ import datetime
 from functools import partial
 from typing import Dict
 
-from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -665,23 +664,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     )
     notice_period_duration = models.IntegerField(null=True)
     cancellation_admin_confirmed = models.DateTimeField(null=True)
-
-    @property
-    @deprecated(
-        "If possible, use tapir.subscriptions.services.trial_period_manager.TrialPeriodManager.get_end_of_trial_period"
-    )
-    def trial_end_date(self):
-        if self.trial_disabled:
-            return get_today() - relativedelta(days=1)
-
-        if self.trial_end_date_override is not None:
-            return self.trial_end_date_override
-
-        return self.start_date + relativedelta(months=1, day=1, days=-1)
-
-    @trial_end_date.setter
-    def trial_end_date(self, value):
-        self.trial_end_date_override = value
 
     class Meta:
         indexes = [

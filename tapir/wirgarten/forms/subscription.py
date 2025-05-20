@@ -17,6 +17,7 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
@@ -1015,28 +1016,26 @@ def cancel_subs_for_edit(
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
 
-    :param member_id: The member's id
-    :param start_date: The start date of the new contract
-    :param product_type: The product type of the subscriptions to cancel
-
     :return: The trial end date of the last subscription that was canceled
     """
 
-    subs = get_active_subscriptions(start_date, cache=cache).filter(
+    subscriptions = get_active_subscriptions(start_date, cache=cache).filter(
         member_id=member_id, product__type=product_type
     )
 
     existing_trial_end_date = None
 
-    for sub in subs:
-        sub.end_date = start_date - relativedelta(days=1)
-        existing_trial_end_date = sub.trial_end_date
+    for subscription in subscriptions:
+        subscription.end_date = start_date - relativedelta(days=1)
         if (
-            sub.start_date > sub.end_date
+            subscription.start_date > subscription.end_date
         ):  # change was done before the contract started, so we can delete the subscription
-            sub.delete()
+            subscription.delete()
         else:
-            sub.save()
+            existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+                subscription
+            )
+            subscription.save()
 
     return existing_trial_end_date
 
