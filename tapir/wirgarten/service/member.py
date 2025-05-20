@@ -40,7 +40,6 @@ from tapir.wirgarten.service.delivery import (
     generate_future_deliveries,
     get_next_delivery_date,
 )
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
@@ -455,23 +454,6 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
     contract_start_date = subs[0].start_date
 
     future_deliveries = generate_future_deliveries(member, cache=cache)
-
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT, cache=cache
-        ),
-        content=get_parameter_value(
-            ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT, cache=cache
-        ),
-        variables={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": future_deliveries[0]["delivery_date"],
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
-        },
-        cache=cache,
-    )
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(

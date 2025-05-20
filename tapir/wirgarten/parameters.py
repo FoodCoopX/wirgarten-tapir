@@ -606,57 +606,6 @@ P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verl�
         )
 
         parameter_definition(
-            key=ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
-            label="Betreff: Email 'Bestellbestätigung'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Deine Vertragsdaten + Informationen zum Mitgliederbereich",
-            description="Betreff der Email, die bei Vertragsabschluss/-verlängerung sofort an das Mitglied geschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=6999,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT,
-            label="Inhalt: Email 'Bestelllbestätigung'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""Liebe/r {member.first_name},
-
-nachfolgend findest du alle wichtigen Vertragsdetails nochmal im Überblick:
-
-{contract_list}
-
-Wenn du <strong>Neumitglied</strong> bist, erhältst du in Kürze außerdem eine automatische Mail aus tapir (das ist unsere Mitglieder- und Ernteverwaltungssoftware), in der du gebeten wirst, dein Konto in tapir zu verifizieren. Bitte klicke einfach auf den Link und setze dann dein Passwort. Danach wirst du direkt in den Mitgliederbereich weitergeleitet. Im Mitgliederbereich findest du eine Übersicht über alle deine Verträge und kannst deine Daten, aber z.B. auch deinen Abholort, jederzeit ändern. Außerdem schicken wir dir  eine Willkommensmail mit allen wichtigen Informationen für Neumitglieder.
-
-Wenn du schon <strong>Mitglied im WirGarten Lüneburg bist</strong>, hast du bereits einen Zugang zum Mitgliederbereich. Wir melden uns dann kurz vor der ersten Abholung der neuen Vertragslaufzeit nochmal mit einer Infomail bei dir!
-
-Solltest du Fragen oder Unklarheiten haben, kannst du dich bei Lukas melden:
-
-<strong>{admin_name}</strong>
-{admin_telephone}
-{site_email}
-
-<img src="{admin_image}"/>
-""",
-            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=6998,
-            meta=ParameterMeta(
-                vars_hint=[
-                    "contract_list",
-                    "contract_start_date",
-                    "contract_end_date",
-                    "first_pickup_date",
-                ]
-                + DEFAULT_EMAIL_MEMBER_VARS
-                + DEFAULT_EMAIL_VARS,
-                validators=[
-                    validate_html,
-                ],
-                textarea=True,
-            ),
-        )
-
-        parameter_definition(
             key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
             label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
             datatype=TapirParameterDatatype.BOOLEAN,

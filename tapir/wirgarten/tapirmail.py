@@ -226,15 +226,16 @@ def _register_tokens():
 
 
 def _register_triggers():
-    TransactionalTrigger.register_action(
-        "BestellWizard: Mitgliedschaft + Ernteanteile",
-        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        {
+    register_transactional_trigger(
+        name="BestellWizard: Mitgliedschaft + Ernteanteile",
+        key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY

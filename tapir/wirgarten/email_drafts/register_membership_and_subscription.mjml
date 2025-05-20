@@ -1,0 +1,14 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "BestellWizard: Mitgliedschaft + Ernteanteile" werden an Mitglieder geschickt wenn sie ein neuen Vertrag abschließen oder explizit verlängern.
+                Folgende Token steht zu verfügung:
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsliste}}
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsstart}}
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Vertragsende}}
+                {{BestellWizard: Mitgliedschaft + Ernteanteile.Erste Abholung am}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
