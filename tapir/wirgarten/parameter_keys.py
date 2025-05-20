@@ -61,12 +61,6 @@ class ParameterKeys:
         f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
-    EMAIL_CANCELLATION_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.cancellation_confirmation.subject"
-    )
-    EMAIL_CANCELLATION_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.cancellation_confirmation.content"
-    )
     EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT = (
         f"{PREFIX}.email.not_renewed_confirmation.subject"
     )

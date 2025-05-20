@@ -280,14 +280,15 @@ def _register_triggers():
         required=True,
     )
 
-    TransactionalTrigger.register_action(
-        "Kündigung im Probemonat",
-        Events.TRIAL_CANCELLATION,
-        {
+    register_transactional_trigger(
+        name="Kündigung im Probemonat",
+        key=Events.TRIAL_CANCELLATION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
             "Letzte Abholung am": "last_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED

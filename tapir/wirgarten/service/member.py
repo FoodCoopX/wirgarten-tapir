@@ -364,7 +364,6 @@ def send_cancellation_confirmation_email(
     contract_end_date: date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
-    skip_email: bool = False,
     cache: Dict = None,
 ):
     member_id = resolve_member_id(member)
@@ -405,23 +404,6 @@ def send_cancellation_confirmation_email(
             },
         ),
     )
-
-    if not skip_email:
-        # TODO: remove this once migrated to mail module
-        send_email(
-            to_email=[member.email],
-            subject=get_parameter_value(
-                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT, cache=cache
-            ),
-            content=get_parameter_value(
-                ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT, cache=cache
-            ),
-            variables={
-                "contract_end_date": format_date(contract_end_date),
-                "contract_list": contract_list,
-            },
-            cache=cache,
-        )
 
 
 def send_contract_change_confirmation(

@@ -561,46 +561,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         DEFAULT_EMAIL_MEMBER_VARS = ["member", "last_pickup_date"]
 
         parameter_definition(
-            key=ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT,
-            label="Betreff: Email 'Kündigungsbestätigung'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Kündigungsbestätigung",
-            description="Betreff der Email, die bei Kündigung sofort an das Mitglied verschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=9999,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.EMAIL_CANCELLATION_CONFIRMATION_CONTENT,
-            label="Inhalt: Email 'Kündigungsbestätigung'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""Moin {member.first_name}, 
-
-wir finden es sehr schade, dass Du deinen Erntevertrag kündigen willst, was wir dir hiermit zum <strong>{contract_end_date}</strong> bestätigen.
-
-Wir freuen uns, wenn du uns mehr über deine Kündigungsgründe erzählen würdest. Das hilft uns immer zu schauen, ob und was wir verbessern können.
-Für uns wäre es zudem sehr hilfreich, wenn Du dich mal in deinem Freundes- und Bekanntenkreis umhört, ob jemand deinen Ernteanteil eventuell übernehmen will, damit die Genossenschaft ausreichend finanziert ist. 
-Du kannst deinen Erntevertrag dann auch schon vor Ablauf des Vertrages auf diese Person übertragen. Melde dich gerne einfach. 
-
-Viele Grüße von {admin_name} aus deinem {site_name}""",
-            description="Inhalt der Email (HTML), die bei Kündigung sofort an das Mitglied verschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=9998,
-            meta=ParameterMeta(
-                vars_hint=[
-                    "contract_end_date",
-                    "contract_list",
-                ]
-                + DEFAULT_EMAIL_MEMBER_VARS
-                + DEFAULT_EMAIL_VARS,
-                validators=[
-                    validate_html,
-                ],
-                textarea=True,
-            ),
-        )
-
-        parameter_definition(
             key=ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Bestätigung: Explizit nicht verlängert'",
             datatype=TapirParameterDatatype.STRING,

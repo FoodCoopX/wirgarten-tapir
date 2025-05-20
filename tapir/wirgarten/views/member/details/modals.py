@@ -465,7 +465,7 @@ def get_cancel_trial_form(request, **kwargs):
                 subscriptions=subs_to_cancel,
             ).save()
 
-        return form.save(skip_emails=member_id != request.user.id)
+        return form.save()
 
     return get_form_modal(
         request=request,
