@@ -261,30 +261,23 @@ def _register_triggers():
         },
     )
 
-    TransactionalTrigger.register_action(
+    register_transactional_trigger(
         name="Email-Änderung: Bestätigung anfordern",
         key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
         tokens={"Bestätigungslink": "verify_link"},
         required=True,
-        default_content=get_default_mail_content(
-            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE
-        ),
     )
 
-    TransactionalTrigger.register_action(
+    register_transactional_trigger(
         "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen",
         Events.MEMBERAREA_CHANGE_EMAIL_HINT,
         required=True,
-        default_content=get_default_mail_content(Events.MEMBERAREA_CHANGE_EMAIL_HINT),
     )
 
-    TransactionalTrigger.register_action(
+    register_transactional_trigger(
         name="Email-Änderung: Erfolg",
         key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
         required=True,
-        default_content=get_default_mail_content(
-            Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS
-        ),
     )
 
     TransactionalTrigger.register_action(
@@ -310,10 +303,12 @@ def _register_triggers():
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
     )
-    TransactionalTrigger.register_action(
-        "Vertrags-/Lieferende",
-        Events.FINAL_PICKUP,
-        {"Vertragsliste": "contract_list"},
+
+    register_transactional_trigger(
+        name="Vertrags-/Lieferende",
+        key=Events.FINAL_PICKUP,
+        tokens={"Vertragsliste": "contract_list"},
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Datei exportiert",
@@ -322,6 +317,18 @@ def _register_triggers():
     )
 
     register_trigger(OnboardingTrigger)
+
+
+def register_transactional_trigger(
+    name: str, key: str, tokens: dict = None, required: bool = False
+):
+    TransactionalTrigger.register_action(
+        name=name,
+        key=key,
+        required=required,
+        tokens=tokens,
+        default_content=get_default_mail_content(key=key) if required else None,
+    )
 
 
 def get_default_mail_content(key: str) -> str:

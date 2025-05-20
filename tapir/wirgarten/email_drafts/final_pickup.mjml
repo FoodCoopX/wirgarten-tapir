@@ -1,0 +1,10 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Vertrags-/Lieferende" werden an Mitglieder geschickt in der Woche deren letze Lieferung, z.B. wenn sie alle Verträge gekündigt haben.
+                Folgende Token steht zu verfügung: {{Vertrags-/Lieferende.Vertragsliste}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

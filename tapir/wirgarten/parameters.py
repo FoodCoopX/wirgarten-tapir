@@ -646,54 +646,6 @@ P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verl�
         )
 
         parameter_definition(
-            key=ParameterKeys.EMAIL_CONTRACT_END_REMINDER_SUBJECT,
-            label="Betreff: Email 'Vertrags-/Lieferende'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Dein letzter Ernteanteil",
-            description="Betreff der Email, die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=7999,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.EMAIL_CONTRACT_END_REMINDER_CONTENT,
-            label="Inhalt: Email 'Vertrags-/Lieferende'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""Liebe/r {member.first_name}
-
-Du hast diese Woche deine letzte Abholung gehabt. 
-
-Folgende Produktverträge sind nun abgelaufen:
-
-{contract_list}
-
-Wenn du bereits Mitglied unserer Genossenschaft bist, bleibt dein Zugang zum Mitgliederbereich bestehen und du kannst - wenn Ernteanteile verfügbar sind - jederzeit über den Mitgliederbereich einen neuen Ernteanteil abschließen.
-
-Wenn dies die letzte Abholung in deinem Probemonat war und du auch deinen Beitritt zur Genossenschaft widerrufen hast, löschen wir den Zugang zum Mitgliederbereich in den nächsten Tagen. Dann kannst du über unsere Website lueneburg.wirgarten.com einen neuen Ernteertrag abschließen, wenn du es dir anders überlegst.
-
-Egal ob letzte Lieferung nach dem Probemonat oder nach einer oder mehreren Saisons - wir danken dir für deine Unterstützung und dein Vertrauen und freuen uns, dich auch ohne Ernteanteil mal wieder im WirGarten zu treffen!
-
-Wenn du noch eine Frage oder Rückmeldung hast, melde dich gerne bei uns!
-
-Viele Grüße und alles Gute,
-{admin_name} aus deinem {site_name}
-
-P.S.: Erzähle gerne Freund:innen, Nachbar:innen, Kolleg:innen in Lüneburg vom WirGarten!""",
-            description="Inhalt der Email (HTML), die bei Vertragsende nach der letzten Lieferung an das Mitglied geschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=7998,
-            meta=ParameterMeta(
-                vars_hint=DEFAULT_EMAIL_MEMBER_VARS
-                + DEFAULT_EMAIL_VARS
-                + ["contract_list"],
-                validators=[
-                    validate_html,
-                ],
-                textarea=True,
-            ),
-        )
-
-        parameter_definition(
             key=ParameterKeys.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT,
             label="Betreff: Email 'Bestellbestätigung'",
             datatype=TapirParameterDatatype.STRING,

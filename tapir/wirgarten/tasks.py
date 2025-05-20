@@ -23,7 +23,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
 from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
@@ -186,17 +185,6 @@ def send_email_member_contract_end_reminder(member_id: str):
         .exists()
     ):
         contract_list = format_subscription_list_html(active_subs)
-        send_email(
-            to_email=[member.email],
-            subject=get_parameter_value(
-                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_SUBJECT, cache=cache
-            ),
-            content=get_parameter_value(
-                ParameterKeys.EMAIL_CONTRACT_END_REMINDER_CONTENT, cache=cache
-            ),
-            variables={"contract_list": contract_list},
-            cache=cache,
-        )
 
         TransactionalTrigger.fire_action(
             TransactionalTriggerData(

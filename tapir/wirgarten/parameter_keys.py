@@ -73,12 +73,6 @@ class ParameterKeys:
     EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT = (
         f"{PREFIX}.email.not_renewed_confirmation.content"
     )
-    EMAIL_CONTRACT_END_REMINDER_SUBJECT = (
-        f"{PREFIX}.email.contract_end_reminder.subject"
-    )
-    EMAIL_CONTRACT_END_REMINDER_CONTENT = (
-        f"{PREFIX}.email.contract_end_reminder.content"
-    )
     EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT = (
         f"{PREFIX}.email.contract_order_confirmation.subject"
     )

@@ -2,7 +2,7 @@
     <mj-section padding="0px" text-align="left">
         <mj-column>
             <mj-text padding="10px 25px 10px 25px" align="left">
-                Emails mit dem Trigger "Email-Änderung: Bestätigung Anfordern" an Mitglieder geschickt wenn sie deren Email-Adresse ändern wollen.
+                Emails mit dem Trigger "Email-Änderung: Bestätigung Anfordern" werden an Mitglieder geschickt wenn sie deren Email-Adresse ändern wollen.
                 Diese Email wird an der alte Adresse verschickt und beinhaltet ein Bestätigungslink.
                 Der Link wird aus folgenden Token angelegt: {{Email-Änderung: Bestätigung anfordern.Bestätigungslink}}
             </mj-text>
