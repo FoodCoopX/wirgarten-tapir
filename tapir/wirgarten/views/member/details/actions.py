@@ -8,15 +8,12 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     Subscription,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.member import send_order_confirmation
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
@@ -119,18 +116,6 @@ def cancel_contract_at_period_end(request, **kwargs):
             key=Events.CONTRACT_NOT_RENEWED,
             recipient_id_in_base_queryset=member.id,
         ),
-    )
-
-    # TODO: remove after tapir_mail migration
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(
-            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT, cache=cache
-        ),
-        content=get_parameter_value(
-            ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT, cache=cache
-        ),
-        cache=cache,
     )
 
     return HttpResponseRedirect(

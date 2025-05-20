@@ -61,12 +61,6 @@ class ParameterKeys:
         f"{PREFIX}.member.dashboard.renewal_alert.waitlist.content"
     )
     MEMBER_CANCELLATION_REASON_CHOICES = f"{PREFIX}.member.cancellation_reason.choices"
-    EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT = (
-        f"{PREFIX}.email.not_renewed_confirmation.subject"
-    )
-    EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT = (
-        f"{PREFIX}.email.not_renewed_confirmation.content"
-    )
     JOKERS_ENABLED = f"{PREFIX}.jokers.enabled"
     SUBSCRIPTION_AUTOMATIC_RENEWAL = f"{PREFIX}.subscriptions.automatic_renewal"
     SUBSCRIPTION_DEFAULT_NOTICE_PERIOD = f"{PREFIX}.subscriptions.default_notice_period"

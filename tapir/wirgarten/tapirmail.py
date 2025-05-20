@@ -292,8 +292,8 @@ def _register_triggers():
         },
         required=True,
     )
-    TransactionalTrigger.register_action(
-        "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
+    register_transactional_trigger(
+        name="Vertrag nicht verlängert", key=Events.CONTRACT_NOT_RENEWED, required=True
     )
     TransactionalTrigger.register_action(
         "Vertrag gekündigt",

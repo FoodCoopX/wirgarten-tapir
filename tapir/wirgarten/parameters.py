@@ -548,63 +548,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        DEFAULT_EMAIL_VARS = [
-            "year_current",
-            "year_next",
-            "year_overnext",
-            "admin_name",
-            "admin_telephone",
-            "admin_image",
-            "site_name",
-            "site_email",
-        ]
-        DEFAULT_EMAIL_MEMBER_VARS = ["member", "last_pickup_date"]
-
-        parameter_definition(
-            key=ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_SUBJECT,
-            label="Betreff: Email 'Bestätigung: Explizit nicht verlängert'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="Schade, dass du gehst!",
-            description="Betreff der Email, die bei expliziter nicht-Verlängerung sofort an das Mitglied verschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=9979,
-        )
-
-        parameter_definition(
-            key=ParameterKeys.EMAIL_NOT_RENEWED_CONFIRMATION_CONTENT,
-            label="Inhalt: Email 'Bestätigung: Explizit nicht verlängert'",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""Liebe/r {member.first_name},
-
-vielen Dank, dass du uns mitteilst, dass du deinen Ernteertrag nicht verlängern wirst - das hilft uns sehr bei der Planung! Aber trotzdem: Schade, dass Du gehst! Wir danken dir für dein Vertrauen und deine Unterstützung bis hierher!
-
-Es wäre super, wenn Du deinen Freund:innen und Bekannten vom WirGarten erzählst. Denn unsere Genossenschaft kann nur weiter bestehen, wenn ausreichend Menschen den Betrieb und unsere Art der Landwirtschaft unterstützen. Vielen Dank dafür!
-
-Wenn du es dir bis zu deinem Vertragsende doch anders überlegst, kannst du deinen Vertrag über den Mitgliederbereich einfach verlängern.
-
-Aber auch wenn du keinen Ernteanteil mehr beziehst, freuen wir uns natürlich, dich bald mal wieder im WirGarten oder anderswo zu treffen!
-
-Viele Grüße!
-{admin_name} für das WirGarten-Team
-
-P.S.: Es würde uns sehr helfen, wenn du uns Feedback gibt, warum du nicht verlängerst - antworte dazu einfach auf diese e-Mail.""",
-            description="Inhalt der Email (HTML), die bei expliziter nicht-Verlängerung sofort an das Mitglied verschickt wird.",
-            category=ParameterCategory.EMAIL,
-            order_priority=9978,
-            meta=ParameterMeta(
-                vars_hint=[
-                    "contract_end_date",
-                    "contract_list",
-                ]
-                + DEFAULT_EMAIL_MEMBER_VARS
-                + DEFAULT_EMAIL_VARS,
-                validators=[
-                    validate_html,
-                ],
-                textarea=True,
-            ),
-        )
-
         parameter_definition(
             key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
             label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
