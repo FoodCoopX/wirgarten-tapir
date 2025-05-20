@@ -262,9 +262,13 @@ def _register_triggers():
     )
 
     TransactionalTrigger.register_action(
-        "Email-Änderung: Bestätigung anfordern",
-        Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-        {"Bestätigungslink": "verify_link"},
+        name="Email-Änderung: Bestätigung anfordern",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+        tokens={"Bestätigungslink": "verify_link"},
+        required=True,
+        default_content=get_default_mail_content(
+            Events.MEMBERAREA_CHANGE_EMAIL_INITIATE
+        ),
     )
 
     TransactionalTrigger.register_action(

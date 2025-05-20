@@ -5,7 +5,6 @@ from typing import Dict
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -14,7 +13,6 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import get_now
 
@@ -60,19 +58,6 @@ class MailChangeService:
                     last_name=user.last_name,
                 ),
             )
-        )
-
-        cache = {}
-        send_email(
-            to_email=[orig_email],
-            subject=_("Änderung deiner Email-Adresse"),
-            content=f"Hallo {user.first_name},<br/><br/>"
-            f"du hast gerade die Email Adresse für deinen WirGarten Account geändert.<br/><br/>"
-            f"Bitte klicke den folgenden Link um die Änderung zu bestätigen:<br/>"
-            f"""<a target="_blank", href="{verify_link}"><strong>Email Adresse bestätigen</strong></a><br/><br/>"""
-            f"Falls du das nicht warst, kannst du diese Mail einfach löschen oder ignorieren."
-            f"<br/><br/>Grüße, dein WirGarten Team",
-            cache=cache,
         )
 
     @classmethod
