@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from bootstrap_datepicker_plus.widgets import DatePickerInput
 from dateutil.relativedelta import relativedelta
@@ -393,87 +393,6 @@ class WaitingListForm(Form):
                 site_name=get_parameter_value(ParameterKeys.SITE_NAME),
                 privacy_link=get_parameter_value(ParameterKeys.SITE_PRIVACY_LINK),
             ),
-        )
-
-
-class NonTrialCancellationForm(Form):
-    KEY_PREFIX = "sub_"
-    BASE_PROD_TYPE_ATTR = "data-base-product-type"
-
-    def __init__(self, *args, **kwargs):
-        self.member_id = kwargs.pop("pk")
-        super(NonTrialCancellationForm, self).__init__(*args, **kwargs)
-        cache = {}
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-        self.subscriptions = get_active_and_future_subscriptions().filter(
-            member_id=self.member_id,
-            end_date__gte=get_today(cache=cache) + relativedelta(months=1, day=1),
-        )
-        self.member = Member.objects.get(id=self.member_id)
-
-        for subscription in self.subscriptions:
-            key = f"{self.KEY_PREFIX}{subscription.id}"
-            self.fields[key] = BooleanField(
-                label=f"{subscription.quantity} × {subscription.product.name} {subscription.product.type.name} ({format_date(subscription.start_date)} - {format_date(subscription.end_date)})",
-                required=False,
-            )
-            if (
-                len(self.subscriptions) > 1
-                and subscription.product.type == base_product_type
-            ):
-                self.fields[key].widget = CheckboxInput(
-                    attrs={self.BASE_PROD_TYPE_ATTR: "true"}
-                )
-
-    def save(self):
-        subs_to_cancel = self.get_subs_to_cancel()
-        now = datetime.now(tz=timezone.utc)
-        end_date = now + relativedelta(months=1, day=1, days=-1)
-        for sub in subs_to_cancel:
-            sub.cancellation_ts = now
-            sub.end_date = end_date
-            sub.save()
-
-    def is_valid(self):
-        all_base_product_types_selected = True
-        at_least_one_base_product_type_selected = False
-        at_least_one_additional_product_type_selected = False
-        for k, v in self.fields.items():
-            if k in self.data:
-                if self.BASE_PROD_TYPE_ATTR in v.widget.attrs:
-                    at_least_one_base_product_type_selected = True
-                    all_base_product_types_selected = False
-                else:
-                    at_least_one_additional_product_type_selected = True
-
-        if (
-            not at_least_one_base_product_type_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _(
-                    "Bitte wähle mindestens einen Vertrag aus, oder klick 'Abbrechen' falls du doch nicht kündigen möchtest."
-                ),
-            )
-        elif (
-            all_base_product_types_selected
-            and not at_least_one_additional_product_type_selected
-        ):
-            self.add_error(
-                list(self.fields.keys())[0],
-                _("Du kannst keine Zusatzabos beziehen wenn du das Basisabo kündigst."),
-            )
-
-        return not self._errors and super(NonTrialCancellationForm, self).is_valid()
-
-    def get_subs_to_cancel(self):
-        return self.subscriptions.filter(
-            id__in=[
-                key.replace("sub_", "")
-                for key, value in self.cleaned_data.items()
-                if value
-            ]
         )
 
 

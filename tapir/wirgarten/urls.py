@@ -43,7 +43,6 @@ from tapir.wirgarten.views.member.list.member_payments import (
     get_payment_amount_edit_form,
 )
 from tapir.wirgarten.views.member.list.modals import (
-    get_cancel_non_trial_form,
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
     get_edit_price_form,
@@ -235,11 +234,6 @@ urlpatterns = [
         "members/<str:pk>/canceltrial",
         get_cancel_trial_form,
         name="member_cancel_trial",
-    ),
-    path(
-        "members/<str:pk>/cancelnontrial",
-        get_cancel_non_trial_form,
-        name="member_cancel_non_trial",
     ),
     path(
         "members/<str:pk>/resendverifyemail",

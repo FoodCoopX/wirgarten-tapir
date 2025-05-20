@@ -27,10 +27,13 @@ class TrialPeriodManager:
 
     @classmethod
     def is_subscription_in_trial(
-        cls, subscription: Subscription, reference_date: datetime.date | None = None
+        cls,
+        subscription: Subscription,
+        reference_date: datetime.date = None,
+        cache: Dict = None,
     ) -> bool:
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache=cache)
 
         return cls.get_end_of_trial_period(subscription) >= reference_date
 
@@ -39,7 +42,7 @@ class TrialPeriodManager:
         cls, reference_date: datetime.date | None = None, cache: Dict = None
     ) -> datetime.date:
         if reference_date is None:
-            reference_date = get_today()
+            reference_date = get_today(cache=cache)
 
         next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
         date_limit = DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
