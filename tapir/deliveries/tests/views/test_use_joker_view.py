@@ -3,7 +3,10 @@ from unittest.mock import patch, Mock, ANY
 
 from django.urls import reverse
 from rest_framework import status
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.models import Joker
@@ -62,9 +65,11 @@ class TestUseJokerView(TapirIntegrationTest):
             other_member, date, cache=ANY
         )
         mock_fire_action.assert_called_once_with(
-            key="deliveries.joker_used",
-            recipient_email=other_member.email,
-            token_data={"joker_date": date},
+            TransactionalTriggerData(
+                key="deliveries.joker_used",
+                recipient_id_in_base_queryset=other_member.id,
+                token_data={"joker_date": date},
+            ),
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -88,9 +93,11 @@ class TestUseJokerView(TapirIntegrationTest):
         self.assertEqual(date, joker.date)
         mock_can_joker_be_used_in_week.assert_called_once_with(user, date, cache=ANY)
         mock_fire_action.assert_called_once_with(
-            key="deliveries.joker_used",
-            recipient_email=user.email,
-            token_data={"joker_date": date},
+            TransactionalTriggerData(
+                key="deliveries.joker_used",
+                recipient_id_in_base_queryset=user.id,
+                token_data={"joker_date": date},
+            ),
         )
 
     @patch.object(TransactionalTrigger, "fire_action")

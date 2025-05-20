@@ -1,7 +1,10 @@
 from unittest.mock import patch, Mock, ANY, call
 
 from django.urls import reverse
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.models import TapirParameter
 from tapir.coop.services.membership_cancellation_manager import (
@@ -284,12 +287,14 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         mock_fire_action.assert_has_calls(
             [
                 call(
-                    key=Events.CONTRACT_CANCELLED,
-                    recipient_email=member.email,
-                    token_data={
-                        "contract_list": [subscription],
-                        "contract_end_date": format_date(growing_period.end_date),
-                    },
+                    TransactionalTriggerData(
+                        key=Events.CONTRACT_CANCELLED,
+                        recipient_id_in_base_queryset=member.id,
+                        token_data={
+                            "contract_list": [subscription],
+                            "contract_end_date": format_date(growing_period.end_date),
+                        },
+                    )
                 )
                 for subscription in subscriptions[:2]
             ],
