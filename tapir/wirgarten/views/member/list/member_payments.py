@@ -51,7 +51,7 @@ class MemberPaymentsView(
         return context
 
     def get_payments_row(self, member_id, cache: Dict):
-        prev_payments = get_previous_payments(member_id)
+        prev_payments = get_previous_payments(member_id, cache=cache)
         future_payments = generate_future_payments(member_id, cache=cache)
 
         for due_date, payments in future_payments.items():
@@ -75,11 +75,11 @@ class MemberPaymentsView(
         )
 
 
-def sub_to_dict(sub):
+def sub_to_dict(sub, cache: Dict):
     if type(sub) is dict:
         return sub
 
-    price = get_product_price(sub.product, sub.start_date).price
+    price = get_product_price(sub.product, sub.start_date, cache=cache).price
     return {
         "quantity": sub.quantity,
         "product": {
@@ -94,7 +94,7 @@ def sub_to_dict(sub):
     }
 
 
-def payment_to_dict(payment: Payment) -> dict:
+def payment_to_dict(payment: Payment, cache: Dict) -> dict:
     subs = (
         [
             {
@@ -110,7 +110,7 @@ def payment_to_dict(payment: Payment) -> dict:
         if payment.type == "Genossenschaftsanteile"
         else list(
             map(
-                lambda x: sub_to_dict(x),
+                lambda x: sub_to_dict(x, cache=cache),
                 Subscription.objects.filter(
                     mandate_ref=payment.mandate_ref,
                     start_date__lte=payment.due_date,
@@ -130,7 +130,7 @@ def payment_to_dict(payment: Payment) -> dict:
         "calculated_amount": round(
             sum(map(lambda x: float(x["total_price"]), subs)), 2
         ),
-        "subs": list(map(sub_to_dict, subs)),
+        "subs": [sub_to_dict(sub, cache=cache) for sub in subs],
         "status": payment.status,
         "edited": payment.edited,
         "upcoming": (get_today() - payment.due_date).days < 0
@@ -138,14 +138,14 @@ def payment_to_dict(payment: Payment) -> dict:
     }
 
 
-def get_previous_payments(member_id) -> dict:
+def get_previous_payments(member_id, cache: Dict) -> dict:
     payments_dict = defaultdict(list)
     payments = Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
         "-due_date"
     )
 
     for payment in payments:
-        payment_dict = payment_to_dict(payment)
+        payment_dict = payment_to_dict(payment, cache=cache)
         payments_dict[payment_dict["due_date"]].append(payment_dict)
 
     return dict(payments_dict)
@@ -177,7 +177,7 @@ def generate_future_payments(member_id, limit: int = None, cache: Dict = None):
                     "mandate_ref": sub.mandate_ref,
                     "amount": amount,
                     "calculated_amount": amount,
-                    "subs": [sub_to_dict(sub)],
+                    "subs": [sub_to_dict(sub, cache=cache)],
                     "status": Payment.PaymentStatus.DUE,
                     "edited": False,
                     "upcoming": True,

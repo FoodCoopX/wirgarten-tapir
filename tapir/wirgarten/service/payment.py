@@ -47,7 +47,6 @@ def get_next_payment_date(reference_date: date = None, cache: Dict = None):
     """
     Get the next date on which payments are due.
 
-    :param reference_date: start at this date, default: today()
     :return: the next payment due date
     """
     if reference_date is None:
@@ -66,7 +65,6 @@ def generate_new_payments(due_date: date, cache: Dict) -> list[Payment]:
     """
     Generates payments for the given due date. The generated payments are not persisted!
 
-    :param due_date: The date on which the payment will be due.
     :return: the list of new Payments
     """
     payments = []

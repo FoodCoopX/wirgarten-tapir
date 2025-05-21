@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, ANY
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentManager
 from tapir.generic_exports.services.pdf_export_builder import PdfExportBuilder
@@ -37,6 +37,7 @@ class TestBuildContexts(TapirIntegrationTest):
                     ExportSegmentManager.get_segment_by_id("members.all"),
                     mock_datetime,
                     ["member_last_name", "member_number"],
+                    cache=ANY,
                 )
                 for member in members
             ]

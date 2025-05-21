@@ -47,9 +47,13 @@ class CsvExportBuilder:
 
         previous_locale = locale.getlocale()
         locale.setlocale(locale.LC_NUMERIC, csv_export.locale)
+        cache = {}
         for db_object in queryset:
             writer.writerow(
-                [column.get_value(db_object, reference_datetime) for column in columns]
+                [
+                    column.get_value(db_object, reference_datetime, cache)
+                    for column in columns
+                ]
             )
         locale.setlocale(locale.LC_NUMERIC, previous_locale)
 
@@ -62,7 +66,7 @@ class CsvExportBuilder:
         if column_id == "":
             return ExportSegmentColumn(
                 id="",
-                get_value=lambda _, __: "",
+                get_value=lambda _, __, ___: "",
                 display_name="Leere Spalte",
                 description="",
             )

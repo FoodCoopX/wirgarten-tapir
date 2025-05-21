@@ -115,7 +115,7 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         # FIXME: it should be easier than this to get the next payments, refactor to service somehow
         next_due_date = get_next_payment_date(cache=cache)
 
-        persisted_payments = get_previous_payments(self.object.pk)
+        persisted_payments = get_previous_payments(self.object.pk, cache=cache)
         next_payments = persisted_payments.get(next_due_date, [])
 
         projected = generate_future_payments(self.object.id, 2, cache=cache)
