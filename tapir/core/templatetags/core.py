@@ -143,9 +143,9 @@ def add_admin_links(groups, request):
             notification_count=coop_shares + product_shares,
         )
         members_group.add_link(
-            display_name=_("Neue Kündigungen"),
-            material_icon="contract_delete",
-            url=reverse_lazy("wirgarten:new_contract_cancellations"),
+            display_name=_("Zeichnungen und Kündigungen"),
+            material_icon="contract_edit",
+            url=reverse_lazy("wirgarten:contract_updates"),
             notification_count=sum(
                 [
                     CancelledSubscriptionsApiView.get_unconfirmed_cancelled_subscriptions(

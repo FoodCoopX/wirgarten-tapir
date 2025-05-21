@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   BundledEmailConfiguration,
   BundledEmailConfigurationRequest,
+  CreateMissingTriggerMailRequest,
   EmailConfiguration,
   EmailConfigurationDispatch,
   EmailConfigurationDispatchRequest,
@@ -25,6 +26,7 @@ import type {
   EmailDispatchRequest,
   EmailTemplate,
   EmailTemplateRequest,
+  MissingTrigger,
   PaginatedEmailConfigurationDispatchList,
   PaginatedEmailConfigurationList,
   PaginatedEmailConfigurationVersionList,
@@ -60,6 +62,8 @@ import {
     BundledEmailConfigurationToJSON,
     BundledEmailConfigurationRequestFromJSON,
     BundledEmailConfigurationRequestToJSON,
+    CreateMissingTriggerMailRequestFromJSON,
+    CreateMissingTriggerMailRequestToJSON,
     EmailConfigurationFromJSON,
     EmailConfigurationToJSON,
     EmailConfigurationDispatchFromJSON,
@@ -76,6 +80,8 @@ import {
     EmailTemplateToJSON,
     EmailTemplateRequestFromJSON,
     EmailTemplateRequestToJSON,
+    MissingTriggerFromJSON,
+    MissingTriggerToJSON,
     PaginatedEmailConfigurationDispatchListFromJSON,
     PaginatedEmailConfigurationDispatchListToJSON,
     PaginatedEmailConfigurationListFromJSON,
@@ -161,6 +167,10 @@ export interface StoreduploadsRetrieveRequest {
 export interface StoreduploadsUpdateRequest {
     uploadId: string;
     storedUploadRequest: StoredUploadRequest;
+}
+
+export interface TapirmailApiCreateMissingTriggerCreateRequest {
+    createMissingTriggerMailRequest: CreateMissingTriggerMailRequest;
 }
 
 export interface TapirmailApiEmailConfigurationCreateRequest {
@@ -675,6 +685,44 @@ export class TapirmailApi extends runtime.BaseAPI {
      */
     async storeduploadsUpdate(requestParameters: StoreduploadsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<StoredUpload> {
         const response = await this.storeduploadsUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async tapirmailApiCreateMissingTriggerCreateRaw(requestParameters: TapirmailApiCreateMissingTriggerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters['createMissingTriggerMailRequest'] == null) {
+            throw new runtime.RequiredError(
+                'createMissingTriggerMailRequest',
+                'Required parameter "createMissingTriggerMailRequest" was null or undefined when calling tapirmailApiCreateMissingTriggerCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/tapirmail/api/create_missing_trigger`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateMissingTriggerMailRequestToJSON(requestParameters['createMissingTriggerMailRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async tapirmailApiCreateMissingTriggerCreate(requestParameters: TapirmailApiCreateMissingTriggerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.tapirmailApiCreateMissingTriggerCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -2325,6 +2373,30 @@ export class TapirmailApi extends runtime.BaseAPI {
      */
     async tapirmailApiMediaLibraryFilepondRevertDestroy(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.tapirmailApiMediaLibraryFilepondRevertDestroyRaw(initOverrides);
+    }
+
+    /**
+     */
+    async tapirmailApiMissingTriggersListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<MissingTrigger>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/tapirmail/api/missing_triggers`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(MissingTriggerFromJSON));
+    }
+
+    /**
+     */
+    async tapirmailApiMissingTriggersList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<MissingTrigger>> {
+        const response = await this.tapirmailApiMissingTriggersListRaw(initOverrides);
+        return await response.value();
     }
 
     /**

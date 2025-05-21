@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% load django_vite %}
+{% block title %}Zeichnungen und Kündigungen{% endblock %}
+{% block head %}
+    {% vite_asset 'contract_updates/contract_updates.tsx' %}
+{% endblock head %}
+{% block content %}
+    {% csrf_token %}
+    <span id="contract_updates"></span>
+{% endblock content %}
