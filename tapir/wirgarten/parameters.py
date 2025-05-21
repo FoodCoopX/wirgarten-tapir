@@ -706,6 +706,21 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
+        parameter_definition(
+            key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END,
+            label="Probezeit kann flexibel gekündigt werden.",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn an, ist es möglich während der Probezeit zu kündigen. Wenn aus, die Probezeit muss ganz benutzt werden.",
+            category=ParameterCategory.TRIAL_PERIOD,
+            order_priority=80,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
+        )
+
         if getattr(settings, "DEBUG", False):
             parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE_PRESET,

@@ -308,6 +308,7 @@ class UserGenerator:
                 ):
                     subscription.end_date = (
                         TrialPeriodManager.get_earliest_trial_cancellation_date(
+                            subscription,
                             reference_date=subscription.cancellation_ts.date(),
                             cache=cache,
                         )

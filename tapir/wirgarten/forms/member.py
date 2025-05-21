@@ -412,9 +412,13 @@ class TrialCancellationForm(Form):
         self.subs = Subscription.objects.filter(
             id__in=[subscription.id for subscription in self.subs]
         )
-        self.next_trial_end_date = (
-            TrialPeriodManager.get_earliest_trial_cancellation_date(cache=self.cache)
-        )
+        trial_end_dates = [
+            TrialPeriodManager.get_earliest_trial_cancellation_date(
+                subscription, cache=self.cache
+            )
+            for subscription in self.subs
+        ]
+        self.next_trial_end_date = min(trial_end_dates, default=None)
         self.member = Member.objects.get(id=self.member_id)
         today = get_today(cache=self.cache)
 
