@@ -44,6 +44,7 @@ export default defineConfig(() => {
           ),
           dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
           waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
+          member_list: join(INPUT_DIR, "/member_list/member_list_entry.tsx"),
         },
       },
     },
