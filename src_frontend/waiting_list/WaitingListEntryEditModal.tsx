@@ -262,10 +262,19 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                       <Form.Label>Gewünschtes Anfangsdatum</Form.Label>
                       <Form.Control
                         type={"date"}
-                        onChange={(event) =>
-                          setDesiredStartDate(new Date(event.target.value))
+                        onChange={(event) => {
+                          setDesiredStartDate(
+                            !event.target.value
+                              ? undefined
+                              : new Date(event.target.value),
+                          );
+                        }}
+                        value={
+                          desiredStartDate === undefined
+                            ? undefined
+                            : dayjs(desiredStartDate).format("YYYY-MM-DD")
                         }
-                        value={dayjs(desiredStartDate).format("YYYY-MM-DD")}
+                        required={false}
                       />
                     </Form.Group>
                   </Col>

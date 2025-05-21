@@ -175,9 +175,9 @@ class WaitingListEntryUpdateView(APIView):
         waiting_list_entry.street_2 = serializer.validated_data["street_2"]
         waiting_list_entry.postcode = serializer.validated_data["postcode"]
         waiting_list_entry.city = serializer.validated_data["city"]
-        waiting_list_entry.desired_start_date = serializer.validated_data[
-            "desired_start_date"
-        ]
+        waiting_list_entry.desired_start_date = serializer.validated_data.get(
+            "desired_start_date", None
+        )
         waiting_list_entry.comment = serializer.validated_data["comment"]
         waiting_list_entry.category = serializer.validated_data.get("category", None)
         waiting_list_entry.save()
