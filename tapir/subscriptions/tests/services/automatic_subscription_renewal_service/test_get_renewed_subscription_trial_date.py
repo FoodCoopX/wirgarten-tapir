@@ -66,3 +66,25 @@ class TestGetRenewedSubscriptionTrialDate(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
         )
+
+    @patch(
+        "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
+    )
+    def test_getRenewedSubscriptionTrialData_trialsAreDisabled_returnsTrialDisabledTrue(
+        self, mock_get_parameter_value: Mock
+    ):
+        subscription = Mock()
+        mock_get_parameter_value.return_value = False
+        cache = {}
+
+        trial_disabled, trial_end_date_override = (
+            AutomaticSubscriptionRenewalService.get_renewed_subscription_trial_data(
+                subscription, cache=cache
+            )
+        )
+
+        self.assertTrue(trial_disabled)
+        self.assertIsNone(trial_end_date_override)
+        mock_get_parameter_value.assert_called_once_with(
+            ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+        )
