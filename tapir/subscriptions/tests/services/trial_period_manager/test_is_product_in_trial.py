@@ -1,6 +1,9 @@
 import datetime
+from unittest.mock import Mock
 
+from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -76,6 +79,17 @@ class TestIsProductInTrial(TapirIntegrationTest):
             period=growing_period_1,
             product=ProductFactory.create(),
         )
+
+        result = TrialPeriodManager.is_product_in_trial(product, member, cache={})
+
+        self.assertFalse(result)
+
+    def test_isProductInTrial_trialsAreDisabled_returnsFalse(self):
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=False
+        )
+        member = Mock()
+        product = Mock()
 
         result = TrialPeriodManager.is_product_in_trial(product, member, cache={})
 
