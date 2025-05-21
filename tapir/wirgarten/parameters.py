@@ -58,6 +58,7 @@ class ParameterCategory:
     SUBSCRIPTIONS = "Verträge"
     TEST = "Tests"
     ORGANIZATION = "Organisation"
+    TRIAL_PERIOD = "Probezeit"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -659,6 +660,65 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Erste Woche die geliefert wird für Produkte die der 4-Wochigen Lieferrhythmus folgen.",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.TRIAL_PERIOD_ENABLED,
+            label="Probezeit einschalten",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Ob Verträge eine Probezeit haben in dem früher gekündigt werden kann.",
+            category=ParameterCategory.TRIAL_PERIOD,
+            order_priority=100,
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.TRIAL_PERIOD_DURATION,
+            label="Probezeit dauer",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=1,
+            description="Wir lang die Probezeit dauert, in Monate oder Woche entsprechend der Einheit parameter gleich Unten.",
+            category=ParameterCategory.TRIAL_PERIOD,
+            order_priority=90,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.TRIAL_PERIOD_UNIT,
+            label="Probezeit Dauer Einheit",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
+            description="Ob die Probezeit-Dauer Wochen oder Monaten entspricht.",
+            category=ParameterCategory.TRIAL_PERIOD,
+            order_priority=89,
+            meta=ParameterMeta(
+                options=NOTICE_PERIOD_UNIT_OPTIONS,
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END,
+            label="Probezeit kann flexibel gekündigt werden.",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn an, ist es möglich während der Probezeit zu kündigen. Wenn aus, die Probezeit muss ganz benutzt werden.",
+            category=ParameterCategory.TRIAL_PERIOD,
+            order_priority=80,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
+                ),
+            ),
         )
 
         if getattr(settings, "DEBUG", False):

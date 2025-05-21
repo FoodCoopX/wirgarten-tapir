@@ -5,10 +5,15 @@
 {% load tapir_static %}
 {% load wirgarten %}
 {% load django_bootstrap5 %}
+{% load django_vite %}
 {% block title %}
     {% translate "Mitglieder" %}
 {% endblock %}
+{% block head %}
+    {% vite_asset 'member_list/member_list_entry.tsx' %}
+{% endblock head %}
 {% block page_top %}
+    {% csrf_token %}
     <div id="success-alert" style="display:none" class="alert alert-success">
         <h4 class="alert-heading"></h4>
         <button type="button"
@@ -50,7 +55,7 @@
             {% endif %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
             <div style="width: 1em"></div>
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleTrialCancellation()' disabled=True title='Verträge kündigen' type='danger' icon='free_cancellation' class='needs-member needs-trial-period' %}
+            <span id="subscription_cancellation_button"></span>
             {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
         {% endif %}
     </span>
@@ -144,17 +149,6 @@
             Tapir.replaceUrlParams(params);
 
             activateRow();
-        }
-    }
-
-    const handleTrialCancellation = () => {
-        const params = Tapir.getUrlParams();
-        if(params.trial === "true"){
-            FormModal.load(`members/${params.member}/canceltrial`, 'Verträge kündigen')
-        } else {
-            ConfirmationModal.open("Sonderkündigung", "Dieses Mitglied ist nicht mehr in der Probezeit. Möchtest du trotzdem Verträge kündigen? Auf der nächsten Seite kannst du die Verträge auswählen.", "Weiter", "danger", () => {
-                FormModal.load(`members/${params.member}/cancelnontrial`, 'Verträge kündigen')
-            })
         }
     }
 

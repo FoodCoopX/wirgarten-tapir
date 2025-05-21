@@ -19,6 +19,7 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -279,6 +280,21 @@ class SubscriptionListView(PermissionRequiredMixin, FilterView):
         context["total_contracts"] = self.filterset.qs.aggregate(
             total_count=Sum("quantity")
         )["total_count"]
+
+        cache = {}
+        subscriptions_trial_end_dates = {}
+        if get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
+            for subscription in self.object_list:
+                if TrialPeriodManager.is_subscription_in_trial(
+                    subscription, cache=cache
+                ):
+                    subscriptions_trial_end_dates[subscription.id] = (
+                        TrialPeriodManager.get_end_of_trial_period(
+                            subscription, cache=cache
+                        )
+                    )
+        context["subscriptions_trial_end_dates"] = subscriptions_trial_end_dates
+
         return context
 
     def get_queryset(self):

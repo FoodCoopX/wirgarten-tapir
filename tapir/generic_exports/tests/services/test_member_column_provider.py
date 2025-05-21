@@ -24,53 +24,54 @@ class TestMemberColumnProvider(TapirIntegrationTest):
     def test_getValueMemberFirstName_default_returnsFirstName(self):
         member = MemberFactory.build(first_name="Bart")
 
-        result = MemberColumnProvider.get_value_member_first_name(member, None)
+        result = MemberColumnProvider.get_value_member_first_name(member, None, {})
 
         self.assertEqual("Bart", result)
 
     def test_getValueMemberLastName_default_returnsLastName(self):
         member = MemberFactory.build(last_name="Simpson")
 
-        result = MemberColumnProvider.get_value_member_last_name(member, None)
+        result = MemberColumnProvider.get_value_member_last_name(member, None, {})
 
         self.assertEqual("Simpson", result)
 
     def test_getValueMemberNumber_default_returnsMemberNumber(self):
         member = MemberFactory.build(member_no=1234)
 
-        result = MemberColumnProvider.get_value_member_number(member, None)
+        result = MemberColumnProvider.get_value_member_number(member, None, {})
 
         self.assertEqual("1234", result)
 
     def test_getValueMemberEmailAddress_default_returnsMemberEmailAddress(self):
         member = MemberFactory.build(email="test@mail.net")
 
-        result = MemberColumnProvider.get_value_member_email_address(member, None)
+        result = MemberColumnProvider.get_value_member_email_address(member, None, {})
 
         self.assertEqual("test@mail.net", result)
 
     def test_getValueMemberPhoneNumber_default_returnsMemberPhoneNumber(self):
         member = MemberFactory.build(phone_number="+49123456")
 
-        result = MemberColumnProvider.get_value_member_phone_number(member, None)
+        result = MemberColumnProvider.get_value_member_phone_number(member, None, {})
 
         self.assertEqual("+49123456", result)
 
     def test_getValueMemberIban_default_returnsMemberIban(self):
         member = MemberFactory.build(iban="test_iban")
 
-        result = MemberColumnProvider.get_value_member_iban(member, None)
+        result = MemberColumnProvider.get_value_member_iban(member, None, {})
 
         self.assertEqual("test_iban", result)
 
     def test_getValueMemberAccountOwner_default_returnsMemberAccountOwner(self):
         member = MemberFactory.build(account_owner="test owner")
 
-        result = MemberColumnProvider.get_value_member_account_owner(member, None)
+        result = MemberColumnProvider.get_value_member_account_owner(member, None, {})
 
         self.assertEqual("test owner", result)
 
-    def setupJokerData(self, member: Member):
+    @staticmethod
+    def setupJokerData(member: Member):
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=12, day=31),
@@ -98,9 +99,10 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         member = MemberFactory.create()
         mock_get_price_of_subscriptions_delivered_in_week.side_effect = [12, 27]
         jokers_before_date = self.setupJokerData(member)
+        cache = {}
 
         result = MemberColumnProvider.get_value_member_joker_credit_value(
-            member, datetime.datetime(year=2025, month=1, day=3)
+            member, datetime.datetime(year=2025, month=1, day=3), cache
         )
 
         self.assertEqual("39.00", result)
@@ -114,6 +116,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
                     member=member,
                     reference_date=joker.date,
                     only_subscriptions_affected_by_jokers=True,
+                    cache=cache,
                 )
                 for joker in jokers_before_date
             ],
@@ -125,7 +128,7 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.setupJokerData(member)
 
         result = MemberColumnProvider.get_value_member_joker_credit_details(
-            member, datetime.datetime(year=2025, month=1, day=3)
+            member, datetime.datetime(year=2025, month=1, day=3), {}
         )
 
         self.assertEqual(

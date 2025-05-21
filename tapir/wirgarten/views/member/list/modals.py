@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from django.db import transaction
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
@@ -8,20 +7,13 @@ from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CoopShareCancelForm,
     CoopShareTransferForm,
-    NonTrialCancellationForm,
     PersonalDataForm,
 )
 from tapir.wirgarten.forms.subscription import (
     EditSubscriptionPriceForm,
     EditSubscriptionDatesForm,
 )
-from tapir.wirgarten.models import SubscriptionChangeLogEntry
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
-from tapir.wirgarten.utils import (
-    check_permission_or_self,
-    format_date,
-    member_detail_url,
-)
 from tapir.wirgarten.views.modal import get_form_modal
 
 
@@ -70,37 +62,6 @@ def get_member_personal_data_create_form(request, **kwargs):
         form_class=PersonalDataForm,
         handler=lambda x: x.instance.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:member_list"),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-def get_cancel_non_trial_form(request, **kwargs):
-    member_id = kwargs["pk"]
-    check_permission_or_self(member_id, request)
-
-    @transaction.atomic
-    def save(form: NonTrialCancellationForm):
-        subs_to_cancel = form.get_subs_to_cancel()
-        if len(subs_to_cancel) > 0:
-            SubscriptionChangeLogEntry().populate(
-                actor=request.user,
-                user=form.member,
-                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-                subscriptions=subs_to_cancel,
-            ).save()
-
-        form.save()
-
-    return get_form_modal(
-        request=request,
-        form_class=NonTrialCancellationForm,
-        handler=save,
-        redirect_url_resolver=lambda x: member_detail_url(member_id)
-        + "?cancelled="
-        + format_date(x),
         **kwargs,
     )
 

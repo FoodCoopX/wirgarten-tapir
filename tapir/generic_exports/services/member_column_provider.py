@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import locale
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.subscriptions.services.delivery_price_calculator import (
@@ -82,40 +82,42 @@ class MemberColumnProvider:
         ]
 
     @classmethod
-    def get_value_member_first_name(cls, member: Member, _):
+    def get_value_member_first_name(cls, member: Member, _, __):
         return member.first_name
 
     @classmethod
-    def get_value_member_last_name(cls, member: Member, _):
+    def get_value_member_last_name(cls, member: Member, _, __):
         return member.last_name
 
     @classmethod
-    def get_value_member_number(cls, member: Member, _):
+    def get_value_member_number(cls, member: Member, _, __):
         return str(member.member_no)
 
     @classmethod
-    def get_value_member_email_address(cls, member: Member, _):
+    def get_value_member_email_address(cls, member: Member, _, __):
         return member.email
 
     @classmethod
-    def get_value_member_phone_number(cls, member: Member, _):
+    def get_value_member_phone_number(cls, member: Member, _, __):
         return member.phone_number
 
     @classmethod
-    def get_value_member_iban(cls, member: Member, _):
+    def get_value_member_iban(cls, member: Member, _, __):
         return member.iban
 
     @classmethod
-    def get_value_member_account_owner(cls, member: Member, _):
+    def get_value_member_account_owner(cls, member: Member, _, __):
         return member.account_owner
 
     @classmethod
     def get_value_member_joker_credit_value(
-        cls, member: Member, reference_datetime: datetime.datetime
+        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
     ):
         from tapir.deliveries.models import Joker
 
-        growing_period = get_current_growing_period(reference_datetime.date())
+        growing_period = get_current_growing_period(
+            reference_datetime.date(), cache=cache
+        )
         jokers = Joker.objects.filter(
             date__gte=growing_period.start_date,
             date__lte=reference_datetime,
@@ -127,6 +129,7 @@ class MemberColumnProvider:
                     member=member,
                     reference_date=joker.date,
                     only_subscriptions_affected_by_jokers=True,
+                    cache=cache,
                 )
                 for joker in jokers
             ]
@@ -134,16 +137,18 @@ class MemberColumnProvider:
         return locale.format_string("%.2f", credit_value)
 
     @classmethod
-    def get_value_member_joker_credit_intended_use(cls, _, __):
+    def get_value_member_joker_credit_intended_use(cls, _, __, ___):
         return "Noch nicht implementiert, hängt von US 2.6. ab"
 
     @classmethod
     def get_value_member_joker_credit_details(
-        cls, member: Member, reference_datetime: datetime.datetime
+        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
     ):
         from tapir.deliveries.models import Joker
 
-        growing_period = get_current_growing_period(reference_datetime.date())
+        growing_period = get_current_growing_period(
+            reference_datetime.date(), cache=cache
+        )
         nb_jokers = Joker.objects.filter(
             date__gte=growing_period.start_date,
             date__lte=reference_datetime,

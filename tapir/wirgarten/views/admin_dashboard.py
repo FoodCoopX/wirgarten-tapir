@@ -1,10 +1,9 @@
-import datetime
 import json
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.db.models import Count, DateField, ExpressionWrapper, F, Max, Sum
+from django.db.models import Count, Max, Sum
 from django.db.models.functions import ExtractYear
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -15,6 +14,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
@@ -240,18 +240,20 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             start_of_month = month
 
             # Calculate the total number of subscriptions in trial - cancelled for this month
-            trial_cancelled_count = (
-                Subscription.objects.filter(start_date=start_of_month)
-                .exclude(cancellation_ts=None)
-                .annotate(
-                    trial_end_date=ExpressionWrapper(
-                        F("start_date") + datetime.timedelta(days=30),
-                        output_field=DateField(),
-                    )
+            cancelled_subscriptions = Subscription.objects.filter(
+                start_date=start_of_month
+            ).filter(cancellation_ts__isnull=False)
+            subscriptions_cancelled_while_in_trial = list(
+                filter(
+                    lambda subscription: TrialPeriodManager.is_subscription_in_trial(
+                        subscription,
+                        reference_date=subscription.cancellation_ts.date(),
+                        cache=self.cache,
+                    ),
+                    cancelled_subscriptions,
                 )
-                .filter(cancellation_ts__lte=F("trial_end_date"))
-                .count()
             )
+            trial_cancelled_count = len(subscriptions_cancelled_while_in_trial)
 
             # Calculate the total number of new subscriptions for this month
             total_count = Subscription.objects.filter(

@@ -43,7 +43,6 @@ from tapir.wirgarten.service.delivery import (
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
-    get_active_subscriptions,
 )
 from tapir.wirgarten.service.subscriptions import (
     annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
@@ -333,29 +332,6 @@ def change_pickup_location(
         pickup_location_id=new_pickup_location.id,
         valid_from=change_date,
     )
-
-
-def get_next_trial_end_date(sub: Subscription = None):
-    return (
-        sub.trial_end_date
-        if sub
-        else (get_today() + relativedelta(day=1, months=1, days=-1))
-    )
-
-
-def get_subscriptions_in_trial_period(member: int | str | Member):
-    member_id = resolve_member_id(member)
-    today = get_today()
-    min_start_date = today + relativedelta(day=1, months=-1)
-
-    subs = get_active_subscriptions().filter(
-        member_id=member_id,
-        cancellation_ts__isnull=True,
-        start_date__gte=min_start_date,
-        end_date__gt=today,
-    )
-
-    return subs.filter(id__in=[sub.id for sub in subs if sub.trial_end_date > today])
 
 
 def send_cancellation_confirmation_email(

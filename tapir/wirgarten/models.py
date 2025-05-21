@@ -2,7 +2,6 @@ import datetime
 from functools import partial
 from typing import Dict
 
-from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -376,17 +375,6 @@ class Member(TapirUser):
         entry_date = self.coop_entry_date
         return entry_date is not None and entry_date > get_today()
 
-    @property
-    def has_trial_contracts(self):
-        from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-
-        subs = get_active_and_future_subscriptions().filter(member_id=self.id)
-        today = get_today()
-        for sub in subs:
-            if today < sub.trial_end_date and sub.cancellation_ts is None:
-                return True
-        return False
-
     def coop_shares_total_value(self):
         today = get_today()
         return (
@@ -676,23 +664,6 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     )
     notice_period_duration = models.IntegerField(null=True)
     cancellation_admin_confirmed = models.DateTimeField(null=True)
-
-    @property
-    @deprecated(
-        "If possible, use tapir.subscriptions.services.trial_period_manager.TrialPeriodManager.get_end_of_trial_period"
-    )
-    def trial_end_date(self):
-        if self.trial_disabled:
-            return get_today() - relativedelta(days=1)
-
-        if self.trial_end_date_override is not None:
-            return self.trial_end_date_override
-
-        return self.start_date + relativedelta(months=1, day=1, days=-1)
-
-    @trial_end_date.setter
-    def trial_end_date(self, value):
-        self.trial_end_date_override = value
 
     class Meta:
         indexes = [
