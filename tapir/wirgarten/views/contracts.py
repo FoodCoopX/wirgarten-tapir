@@ -87,9 +87,9 @@ class NewContractsView(PermissionRequiredMixin, TemplateView):
         return context
 
 
-class NewSubscriptionCancellationsView(PermissionRequiredMixin, TemplateView):
+class ContractUpdatesView(PermissionRequiredMixin, TemplateView):
     permission_required = Permission.Accounts.MANAGE
-    template_name = "wirgarten/subscription/new_contract_cancellations.html"
+    template_name = "wirgarten/subscription/contract_updates.html"
 
 
 @permission_required("accounts.manage")

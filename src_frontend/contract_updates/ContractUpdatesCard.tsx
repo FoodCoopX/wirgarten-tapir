@@ -14,13 +14,13 @@ import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import ConfirmModal from "../components/ConfirmModal.tsx";
 
-interface NewContractCancellationsCardProps {
+interface ContractUpdatesCardProps {
   csrfToken: string;
 }
 
-const NewContractCancellationsCard: React.FC<
-  NewContractCancellationsCardProps
-> = ({ csrfToken }) => {
+const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
+  csrfToken,
+}) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -49,6 +49,11 @@ const NewContractCancellationsCard: React.FC<
       })
       .catch(handleRequestError)
       .finally(() => setProductTypesLoading(false));
+
+    subscriptionsApi
+      .subscriptionsApiMemberDataToConfirmList()
+      .then(console.log)
+      .catch(handleRequestError);
   }, []);
 
   useEffect(() => {
@@ -325,4 +330,4 @@ const NewContractCancellationsCard: React.FC<
   );
 };
 
-export default NewContractCancellationsCard;
+export default ContractUpdatesCard;

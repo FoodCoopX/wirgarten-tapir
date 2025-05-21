@@ -31,187 +31,187 @@ import {
 /**
  * 
  * @export
- * @interface Member
+ * @interface CoopShareTransaction
  */
-export interface Member {
+export interface CoopShareTransaction {
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     id?: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     password: string;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     lastLogin?: Date | null;
     /**
      * Legt fest, dass der Benutzer alle Berechtigungen hat, ohne diese einzeln zuweisen zu müssen.
      * @type {boolean}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     isSuperuser?: boolean;
     /**
      * Erforderlich. 150 Zeichen oder weniger. Nur Buchstaben, Ziffern und @/./+/-/_.
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     username: string;
     /**
      * Legt fest, ob sich der Benutzer an der Administrationsseite anmelden kann.
      * @type {boolean}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     isStaff?: boolean;
     /**
      * Legt fest, ob dieser Benutzer aktiv ist. Kann deaktiviert werden, anstatt Benutzer zu löschen.
      * @type {boolean}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     isActive?: boolean;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     dateJoined?: Date;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     keycloakId?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     firstName: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     lastName: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     email?: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     phoneNumber?: string | null;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     birthdate?: Date | null;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     street?: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     street2?: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     postcode?: string;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     city?: string;
     /**
      * 
      * @type {CoopShareTransactionCountry}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     country?: CoopShareTransactionCountry;
     /**
      * 
      * @type {PreferredLanguageEnum}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     preferredLanguage?: PreferredLanguageEnum;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     accountOwner?: string | null;
     /**
      * 
      * @type {string}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     iban?: string | null;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     sepaConsent?: Date | null;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     withdrawalConsent?: Date | null;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     privacyConsent?: Date | null;
     /**
      * 
      * @type {Date}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     readonly createdAt: Date;
     /**
      * 
      * @type {number}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     memberNo?: number | null;
     /**
      * 
      * @type {boolean}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     isStudent?: boolean;
     /**
      * Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt alle Berechtigungen dieser Gruppen.
      * @type {Array<number>}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     groups?: Array<number>;
     /**
      * Spezifische Berechtigungen für diesen Benutzer.
      * @type {Array<number>}
-     * @memberof Member
+     * @memberof CoopShareTransaction
      */
     userPermissions?: Array<number>;
 }
@@ -219,9 +219,9 @@ export interface Member {
 
 
 /**
- * Check if a given object implements the Member interface.
+ * Check if a given object implements the CoopShareTransaction interface.
  */
-export function instanceOfMember(value: object): value is Member {
+export function instanceOfCoopShareTransaction(value: object): value is CoopShareTransaction {
     if (!('password' in value) || value['password'] === undefined) return false;
     if (!('username' in value) || value['username'] === undefined) return false;
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
@@ -230,11 +230,11 @@ export function instanceOfMember(value: object): value is Member {
     return true;
 }
 
-export function MemberFromJSON(json: any): Member {
-    return MemberFromJSONTyped(json, false);
+export function CoopShareTransactionFromJSON(json: any): CoopShareTransaction {
+    return CoopShareTransactionFromJSONTyped(json, false);
 }
 
-export function MemberFromJSONTyped(json: any, ignoreDiscriminator: boolean): Member {
+export function CoopShareTransactionFromJSONTyped(json: any, ignoreDiscriminator: boolean): CoopShareTransaction {
     if (json == null) {
         return json;
     }
@@ -273,11 +273,11 @@ export function MemberFromJSONTyped(json: any, ignoreDiscriminator: boolean): Me
     };
 }
 
-  export function MemberToJSON(json: any): Member {
-      return MemberToJSONTyped(json, false);
+  export function CoopShareTransactionToJSON(json: any): CoopShareTransaction {
+      return CoopShareTransactionToJSONTyped(json, false);
   }
 
-  export function MemberToJSONTyped(value?: Omit<Member, 'created_at'> | null, ignoreDiscriminator: boolean = false): any {
+  export function CoopShareTransactionToJSONTyped(value?: Omit<CoopShareTransaction, 'created_at'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

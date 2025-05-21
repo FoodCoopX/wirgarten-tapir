@@ -822,6 +822,22 @@ paths:
               schema:
                 type: string
           description: ''
+  /subscriptions/api/member_data_to_confirm:
+    get:
+      operationId: subscriptions_api_member_data_to_confirm_list
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDataToConfirm'
+          description: ''
   /subscriptions/api/product_types_and_number_of_cancelled_subscriptions:
     get:
       operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
@@ -920,6 +936,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+          description: ''
+  /tapirmail/api/create_missing_trigger:
+    post:
+      operationId: tapirmail_api_create_missing_trigger_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /tapirmail/api/email_configuration/:
     get:
@@ -2463,6 +2505,22 @@ paths:
       responses:
         '204':
           description: No response body
+  /tapirmail/api/missing_triggers:
+    get:
+      operationId: tapirmail_api_missing_triggers_list
+      tags:
+      - tapirmail
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingTrigger'
+          description: ''
   /tapirmail/api/segment/available_filters/:
     get:
       operationId: tapirmail_api_segment_available_filters_retrieve
@@ -3249,6 +3307,145 @@ components:
       - pickup_location
       - show_warning
       - subscription
+    CoopShareTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        password:
+          type: string
+          title: Passwort
+          maxLength: 128
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+          title: Letzte Anmeldung
+        is_superuser:
+          type: boolean
+          title: Administrator-Status
+          description: Legt fest, dass der Benutzer alle Berechtigungen hat, ohne
+            diese einzeln zuweisen zu müssen.
+        username:
+          type: string
+          title: Benutzername
+          description: Erforderlich. 150 Zeichen oder weniger. Nur Buchstaben, Ziffern
+            und @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        is_staff:
+          type: boolean
+          title: Mitarbeiter-Status
+          description: Legt fest, ob sich der Benutzer an der Administrationsseite
+            anmelden kann.
+        is_active:
+          type: boolean
+          title: Aktiv
+          description: Legt fest, ob dieser Benutzer aktiv ist. Kann deaktiviert werden,
+            anstatt Benutzer zu löschen.
+        date_joined:
+          type: string
+          format: date-time
+          title: Mitglied seit
+        keycloak_id:
+          type: string
+          nullable: true
+          maxLength: 64
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        preferred_language:
+          $ref: '#/components/schemas/PreferredLanguageEnum'
+        account_owner:
+          type: string
+          nullable: true
+          maxLength: 150
+        iban:
+          type: string
+          nullable: true
+          maxLength: 34
+        sepa_consent:
+          type: string
+          format: date-time
+          nullable: true
+        withdrawal_consent:
+          type: string
+          format: date-time
+          nullable: true
+          title: Right of withdrawal consent
+        privacy_consent:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        is_student:
+          type: boolean
+          title: Student*in
+        groups:
+          type: array
+          items:
+            type: integer
+            title: Gruppen
+          title: Gruppen
+          description: Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt
+            alle Berechtigungen dieser Gruppen.
+        user_permissions:
+          type: array
+          items:
+            type: integer
+            title: Berechtigungen
+          title: Berechtigungen
+          description: Spezifische Berechtigungen für diesen Benutzer.
+      required:
+      - created_at
+      - first_name
+      - last_name
+      - password
+      - username
     CountryEnum:
       enum:
       - AD
@@ -3731,6 +3928,18 @@ components:
         * `ZR` - Zaire
         * `ZW` - Zimbabwe
         * `ZZ` - Unknown or unspecified country
+    CreateMissingTriggerMailRequest:
+      type: object
+      properties:
+        trigger_key:
+          type: string
+          minLength: 1
+        empty_mjml:
+          type: string
+          minLength: 1
+      required:
+      - empty_mjml
+      - trigger_key
     CsvExportModel:
       type: object
       properties:
@@ -3905,12 +4114,14 @@ components:
       - weekly
       - odd_weeks
       - even_weeks
+      - every_four_weeks
       type: string
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
         * `weekly` - 1x pro Woche
         * `odd_weeks` - 2x pro Monat (ungerade KW)
         * `even_weeks` - 2x pro Monat (gerade KW)
+        * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -4682,6 +4893,39 @@ components:
       - last_name
       - password
       - username
+    MemberDataToConfirm:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/Member'
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        show_warning:
+          type: boolean
+        subscription_cancellations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_creations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionChange'
+        share_transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoopShareTransaction'
+      required:
+      - member
+      - pickup_location
+      - share_transactions
+      - show_warning
+      - subscription_cancellations
+      - subscription_changes
+      - subscription_creations
     MemberJokerInformation:
       type: object
       properties:
@@ -4699,6 +4943,19 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MissingTrigger:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        draft_version_exists:
+          type: boolean
+      required:
+      - draft_version_exists
+      - key
+      - name
     PaginatedCancelledSubscriptionList:
       type: object
       required:
@@ -5271,7 +5528,7 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
+          minLength: 1
           title: Telefonnummer
           maxLength: 128
         email:
@@ -6044,6 +6301,23 @@ components:
       - product
       - quantity
       - start_date
+    SubscriptionChange:
+      type: object
+      properties:
+        product_type:
+          $ref: '#/components/schemas/ProductType'
+        subscription_cancellations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_creations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+      required:
+      - product_type
+      - subscription_cancellations
+      - subscription_creations
     TemporaryUpload:
       type: object
       properties:
@@ -6214,7 +6488,6 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
           title: Telefonnummer
           maxLength: 128
         email:
@@ -6268,6 +6541,7 @@ components:
       - first_name
       - last_name
       - number_of_coop_shares
+      - phone_number
       - privacy_consent
     WaitingListEntryDetails:
       type: object
@@ -6359,7 +6633,7 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
+          minLength: 1
           title: Telefonnummer
           maxLength: 128
         email:
@@ -6411,6 +6685,7 @@ components:
       - first_name
       - last_name
       - number_of_coop_shares
+      - phone_number
       - privacy_consent
     WaitingListEntryUpdateRequest:
       type: object
