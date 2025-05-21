@@ -34,6 +34,7 @@ from tapir.subscriptions.serializers import (
     ExtendedProductSerializer,
     CancelledSubscriptionSerializer,
     ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer,
+    MemberDataToConfirmSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -43,6 +44,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Member,
@@ -386,7 +388,9 @@ class CancelledSubscriptionsApiView(APIView):
                     MemberPickupLocationService.ANNOTATION_CURRENT_PICKUP_LOCATION_ID,
                 )
             ]
-            cancellation_type, show_warning = self.get_cancellation_type(subscription)
+            cancellation_type, show_warning = self.get_cancellation_type(
+                subscription, cache=self.cache
+            )
 
             subscription_datas.append(
                 {
@@ -412,11 +416,12 @@ class CancelledSubscriptionsApiView(APIView):
             product__type_id=product_type_id,
         )
 
-    def get_cancellation_type(self, subscription: Subscription):
+    @classmethod
+    def get_cancellation_type(cls, subscription: Subscription, cache: dict):
         cancellation_type = "Reguläre Kündigung"
         show_warning = False
         if (
-            get_current_growing_period(subscription.end_date, cache=self.cache).end_date
+            get_current_growing_period(subscription.end_date, cache=cache).end_date
             > subscription.end_date
         ):
             cancellation_type = "Unterjährige Kündigung"
@@ -493,3 +498,143 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Product.objects.select_related("type")
     serializer_class = ProductSerializer
+
+
+class MemberDataToConfirmApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: MemberDataToConfirmSerializer(many=True)},
+    )
+    def get(self, request):
+
+        changes_by_member = {}
+
+        unconfirmed_cancellations = Subscription.objects.filter(
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+        ).select_related("member", "product__type")
+        self.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_cancellations,
+            key="cancellations",
+            changes_by_member=changes_by_member,
+        )
+
+        unconfirmed_creations = Subscription.objects.filter(
+            admin_confirmed__isnull=True
+        ).select_related("member", "product__type")
+        self.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_creations,
+            key="creations",
+            changes_by_member=changes_by_member,
+        )
+
+        cache = {}
+        data = MemberDataToConfirmSerializer(
+            [
+                self.build_data_to_confirm_for_member(
+                    member=member,
+                    changes_by_product_type=changes_by_product_type,
+                    cache=cache,
+                )
+                for member, changes_by_product_type in changes_by_member.items()
+            ],
+            many=True,
+        ).data
+
+        return Response(data)
+
+    @classmethod
+    def group_changes_by_member_and_product_type(
+        cls, subscriptions, key: str, changes_by_member: dict
+    ):
+        for subscription in subscriptions:
+            if subscription.member not in changes_by_member.keys():
+                changes_by_member[subscription.member] = {}
+
+            if (
+                subscription.product.type
+                not in changes_by_member[subscription.member].keys()
+            ):
+                changes_by_member[subscription.member][subscription.product.type] = {
+                    "cancellations": [],
+                    "creations": [],
+                }
+
+            changes_by_member[subscription.member][subscription.product.type][
+                key
+            ].append(subscription)
+
+    @classmethod
+    def build_data_to_confirm_for_member(
+        cls,
+        member: Member,
+        changes_by_product_type: dict,
+        cache: dict,
+    ) -> dict:
+        pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                member.id, reference_date=get_today(cache=cache), cache=cache
+            )
+        )
+        pickup_location = None
+        if pickup_location_id is not None:
+            TapirCache.get_pickup_location_by_id(
+                cache=cache, pickup_location_id=pickup_location_id
+            )
+
+        creations = []
+        cancellations = []
+        changes = []
+        for (
+            product_type,
+            changes_for_this_product_type,
+        ) in changes_by_product_type.items():
+            creations_for_this_product_type = changes_for_this_product_type["creations"]
+            cancellations_for_this_product_type = changes_for_this_product_type[
+                "cancellations"
+            ]
+
+            if (
+                len(creations_for_this_product_type) > 0
+                and len(cancellations_for_this_product_type) == 0
+            ):
+                creations.extend(creations_for_this_product_type)
+                continue
+
+            if (
+                len(creations_for_this_product_type) == 0
+                and len(cancellations_for_this_product_type) > 0
+            ):
+                cancellations.extend(creations_for_this_product_type)
+                continue
+
+            changes.append(
+                {
+                    "product_type": product_type,
+                    "subscription_cancellations": cancellations_for_this_product_type,
+                    "subscription_creations": creations_for_this_product_type,
+                }
+            )
+
+        cancellation_types = []
+        show_warning = False
+        for cancellation in cancellations:
+            cancellation_type, cancellation_shows_warning = (
+                CancelledSubscriptionsApiView.get_cancellation_type(
+                    cancellation, cache=cache
+                )
+            )
+            show_warning = show_warning or cancellation_shows_warning
+            cancellation_types.append(cancellation_type)
+
+        return {
+            "member": member,
+            "pickup_location": pickup_location,
+            "subscription_cancellations": cancellations,
+            "cancellation_types": cancellation_types,
+            "show_warning": show_warning,
+            "subscription_creations": creations,
+            "subscription_changes": changes,
+            "share_transactions": [],
+        }
