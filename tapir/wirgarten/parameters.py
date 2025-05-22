@@ -20,6 +20,8 @@ from tapir.core.config import (
     TEST_DATE_OVERRIDE_MANUAL,
     TEST_DATE_OVERRIDE_DISABLED,
     TEST_DATE_OVERRIDE_OPTIONS,
+    THEME_WIRGARTEN,
+    THEME_OPTIONS,
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
@@ -712,6 +714,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
                 ),
             ),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_THEME,
+            label="Theme",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=THEME_WIRGARTEN,
+            description="",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=5,
+            meta=ParameterMeta(options=THEME_OPTIONS),
         )
 
         if getattr(settings, "DEBUG", False):
