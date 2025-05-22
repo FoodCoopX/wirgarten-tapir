@@ -280,7 +280,9 @@ def get_active_subscriptions(reference_date: date = None, cache: Dict | None = N
 
 
 @transaction.atomic
-def create_product(name: str, price: Decimal, capacity_id: str, base=False):
+def create_product(
+    name: str, price: Decimal, size: float, capacity_id: str, base=False
+):
     """
     Creates a product and product price with the given attributes.
 
@@ -301,6 +303,7 @@ def create_product(name: str, price: Decimal, capacity_id: str, base=False):
         price=price,
         product=product,
         valid_from=get_next_product_price_change_date(growing_period_id=pc.period.id),
+        size=size,
     )
 
     return product
