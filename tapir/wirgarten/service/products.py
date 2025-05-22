@@ -442,7 +442,7 @@ def create_product_type_capacity(
     default_tax_rate: float,
     capacity: Decimal,
     period_id: str,
-    notice_period_duration: int,
+    notice_period_duration: int | None,
     is_affected_by_jokers: bool,
     is_association_membership: bool,
     must_be_subscribed_to: bool,

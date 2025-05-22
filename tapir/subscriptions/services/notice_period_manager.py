@@ -19,21 +19,28 @@ class NoticePeriodManager:
         cls,
         product_type: ProductType,
         growing_period: GrowingPeriod,
-        notice_period_duration,
+        notice_period_duration: int | None,
     ):
         notice_period = NoticePeriod.objects.filter(
             product_type=product_type,
             growing_period=growing_period,
         ).first()
+
+        if notice_period_duration is None:
+            if notice_period is not None:
+                notice_period.delete()
+            return
+
         if notice_period:
             notice_period.duration = notice_period_duration
             notice_period.save()
-        else:
-            NoticePeriod.objects.create(
-                product_type=product_type,
-                growing_period=growing_period,
-                duration=notice_period_duration,
-            )
+            return
+
+        NoticePeriod.objects.create(
+            product_type=product_type,
+            growing_period=growing_period,
+            duration=notice_period_duration,
+        )
 
     @classmethod
     def get_notice_period_duration(

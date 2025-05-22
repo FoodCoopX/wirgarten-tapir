@@ -111,12 +111,15 @@ class ProductTypeForm(forms.Form):
             choices=DeliveryCycle,
         )
 
-        self.fields["notice_period"] = forms.IntegerField(
-            initial=initial_notice_period,
-            required=True,
-            label=_("Kündigungsfrist"),
-            help_text=_("Anzahl an Monate"),
-        )
+        if get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+        ):
+            self.fields["notice_period"] = forms.IntegerField(
+                initial=initial_notice_period,
+                required=True,
+                label=_("Kündigungsfrist"),
+                help_text=_("Anzahl an Monate"),
+            )
 
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
