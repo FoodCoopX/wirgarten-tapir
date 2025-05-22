@@ -298,6 +298,7 @@ def get_product_add_form(request, **kwargs):
             price=form.cleaned_data["price"],
             capacity_id=kwargs[KW_CAPACITY_ID],
             base=form.cleaned_data["base"],
+            size=form.cleaned_data["size"],
         ),
         redirect_url_resolver=redirect_url,
         **kwargs,
