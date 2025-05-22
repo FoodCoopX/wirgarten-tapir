@@ -142,11 +142,12 @@ class ProductTypeForm(forms.Form):
                 else False
             ),
         )
-        self.fields["is_affected_by_jokers"] = forms.BooleanField(
-            initial=product_type.is_affected_by_jokers if product_type else True,
-            required=False,
-            label=_("Nimmt am Joker-Verfahren teil"),
-        )
+        if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
+            self.fields["is_affected_by_jokers"] = forms.BooleanField(
+                initial=product_type.is_affected_by_jokers if product_type else True,
+                required=False,
+                label=_("Nimmt am Joker-Verfahren teil"),
+            )
         self.fields["must_be_subscribed_to"] = forms.BooleanField(
             required=False,
             label=_("Ist Pflicht"),
@@ -226,8 +227,9 @@ class ProductForm(forms.Form):
 class GrowingPeriodForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(GrowingPeriodForm, self).__init__(*args)
+        self.cache = {}
 
-        today = get_today()
+        today = get_today(cache=self.cache)
         initial = {
             "id": "-",
             "start_date": today + relativedelta(days=1),
@@ -246,7 +248,9 @@ class GrowingPeriodForm(forms.Form):
                     period = period[:1][0]
                     new_start_date = period.end_date + relativedelta(days=1)
                 else:
-                    new_start_date = get_next_contract_start_date(ref_date=today)
+                    new_start_date = get_next_contract_start_date(
+                        ref_date=today, cache=self.cache
+                    )
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:
                 pass
@@ -266,6 +270,12 @@ class GrowingPeriodForm(forms.Form):
             widget=DateInput(),
             initial=initial["end_date"],
         )
+        if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=self.cache):
+            self.fields["max_jokers_per_member"] = forms.BooleanField(
+                required=False,
+                label=_("Maximal Anzahl an Joker per Mitglied"),
+                initial=4,
+            )
 
     def is_valid(self):
         super(GrowingPeriodForm, self).is_valid()
