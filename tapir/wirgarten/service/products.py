@@ -481,7 +481,7 @@ def create_product_type_capacity(
         )
         if not ProductType.objects.exclude(id=pt.id).exists():
             TapirParameter.objects.filter(
-                name=ParameterKeys.COOP_BASE_PRODUCT_TYPE
+                key=ParameterKeys.COOP_BASE_PRODUCT_TYPE
             ).update(value=pt.id)
 
     # tax rate
