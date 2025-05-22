@@ -85,3 +85,4 @@ class ParameterKeys:
     TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END = (
         f"{PREFIX}.trial_period.can_be_cancelled_before_end"
     )
+    ORGANISATION_THEME = "organisation.theme"

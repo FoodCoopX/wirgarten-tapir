@@ -25,3 +25,13 @@ TEST_DATE_OVERRIDE_OPTIONS = [
     (TEST_DATE_OVERRIDE_END_OF_FIRST_DAY_NEXT_YEAR, "01.01. nächstes Jahr, 23:59 Uhr"),
     (TEST_DATE_OVERRIDE_MANUAL, "Manuell"),
 ]
+
+THEME_BIOTOP = "biotop"
+THEME_WIRGARTEN = "wirgarten"
+THEME_L2G = "l2g"
+
+THEME_OPTIONS = [
+    (THEME_BIOTOP, "Biotop Oberland"),
+    (THEME_WIRGARTEN, "WirGarten Lüneburg"),
+    (THEME_L2G, "L2G Dickendorf"),
+]

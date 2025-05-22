@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load core %}
 {% load django_vite %}
+{% load configuration %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -20,7 +21,10 @@
         <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
         <link rel="stylesheet"
               href="{% static 'core/css/selectize.default.min.css' %}" />
-        <link rel="stylesheet" href="{% static 'core/css/custom.css' %}" />
+        {% with "organisation.theme"|parameter as theme %}
+            <link rel="stylesheet"
+                  href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+        {% endwith %}
         <link rel="stylesheet"
               href="{% static 'wirgarten/css/loading-spinner.css' %}" />
         {% include 'accounts/keycloak_script.html' %}
@@ -41,7 +45,9 @@
         <div id="page-content">
             <nav class="navbar navbar-expand-sm navbar-dark bg-dark sticky-top shadow px-3">
                 <span class="navbar-brand">
-                <img alt="Wirgarten Logo" height=30" src="{% static 'core/images/Logo_white.webp' %}"> </span>
+                    {% with "organisation.theme"|parameter as theme %}
+                    <img alt="Wirgarten Logo" height=30" src="{% static 'core/themes/'|add:theme|add:'/images/Logo_white.webp' %}"> </span>
+                {% endwith %}
                 {% if request.user.is_authenticated %}
                     <div style="width: 100%; display: flex; justify-content: space-between"> <a class="text-light nav-link" style="white-space:nowrap" href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a> <button class="btn text-light nav-link" id="logout">Logout</button> </div>
                 {% endif %}
