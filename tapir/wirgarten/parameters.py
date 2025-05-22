@@ -603,19 +603,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=1,
-            meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
-            enabled=is_debug_instance(),
-        )
-
-        parameter_definition(
-            key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
-            label="Einheit der Kündigungsfrist",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
-            description="Ob der Feld Kündigungsfrist Monate oder Wochen angibt",
-            category=ParameterCategory.SUBSCRIPTIONS,
-            order_priority=1,
-            meta=ParameterMeta(options=NOTICE_PERIOD_UNIT_OPTIONS),
+            meta=ParameterMeta(
+                options=NOTICE_PERIOD_UNIT_OPTIONS,
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+                ),
+            ),
             enabled=is_debug_instance(),
         )
 

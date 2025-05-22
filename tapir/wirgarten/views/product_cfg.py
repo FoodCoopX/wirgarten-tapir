@@ -223,12 +223,13 @@ def get_product_type_capacity_add_form(request, **kwargs):
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
             period_id=kwargs[KW_PERIOD_ID],
-            product_type_id=form.cleaned_data["product_type"],
             notice_period_duration=form.cleaned_data["notice_period"],
+            is_affected_by_jokers=form.cleaned_data.get("is_affected_by_jokers", False),
             must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
             is_association_membership=form.cleaned_data.get(
                 "is_association_membership", False
             ),
+            product_type_id=form.cleaned_data["product_type"],
         )
 
     def redirect_url(data):
@@ -324,6 +325,8 @@ def get_period_add_form(request, **kwargs):
         handler=lambda form: create_growing_period(
             start_date=form.cleaned_data["start_date"],
             end_date=form.cleaned_data["end_date"],
+            max_jokers_per_member=form.cleaned_data.get("max_jokers_per_member", 0),
+            joker_restrictions="disabled",
         ),
         redirect_url_resolver=lambda data: f"{reverse_lazy(PAGE_ROOT)}?{KW_PERIOD_ID}={data.id}",
         **kwargs,
