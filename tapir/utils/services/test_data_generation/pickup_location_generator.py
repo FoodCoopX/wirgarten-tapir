@@ -21,7 +21,9 @@ class PickupLocationGenerator:
             case Organization.BIOTOP:
                 cls.generate_pickup_locations_for_biotop()
             case Organization.VEREIN:
-                cls.generate_pickup_locations_for_biotop()
+                cls.generate_pickup_locations_for_wirgarten()
+            case Organization.L2G:
+                cls.generate_pickup_locations_for_l2g()
             case _:
                 raise ImproperlyConfigured(f"Unknown organization: {organization}")
 
@@ -593,4 +595,26 @@ class PickupLocationGenerator:
             day_of_week=5,
             open_time=datetime.time(hour=7, minute=0),
             close_time=datetime.time(hour=17, minute=30),
+        )
+
+    @classmethod
+    def generate_pickup_locations_for_l2g(cls):
+        ernteanteile = ProductType.objects.get(name="Ernteanteile")
+
+        hof = PickupLocationFactory.create(
+            name="Biohof Dickendorf",
+            coords_lon=53.2731785,
+            coords_lat=10.3741809,
+            street="Vögelser Straße 25",
+            postcode="21339",
+            city="Lüneburg-Ochtmissen",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=hof, max_capacity=30, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=hof,
+            day_of_week=3,
+            open_time=datetime.time(hour=15),
+            close_time=datetime.time(hour=20),
         )
