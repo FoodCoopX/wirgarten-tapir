@@ -606,7 +606,7 @@ class MemberDataToConfirmApiView(APIView):
                 len(creations_for_this_product_type) == 0
                 and len(cancellations_for_this_product_type) > 0
             ):
-                cancellations.extend(creations_for_this_product_type)
+                cancellations.extend(cancellations_for_this_product_type)
                 continue
 
             changes.append(

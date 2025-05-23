@@ -1033,6 +1033,7 @@ def cancel_subs_for_edit(
 
     for subscription in subscriptions:
         subscription.end_date = start_date - relativedelta(days=1)
+        subscription.cancellation_ts = get_now(cache=cache)
         if (
             subscription.start_date > subscription.end_date
         ):  # change was done before the contract started, so we can delete the subscription
