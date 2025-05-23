@@ -325,6 +325,14 @@ class PickupLocationChoiceForm(forms.Form):
             cache=self.cache,
         )
 
+        self.intro_templates = [
+            self.intro_template.replace(
+                "steps/",
+                f"steps/{get_parameter_value(ParameterKeys.ORGANISATION_THEME)}/",
+            ),
+            self.intro_template,
+        ]
+
     def is_valid(self):
         super().is_valid()
 

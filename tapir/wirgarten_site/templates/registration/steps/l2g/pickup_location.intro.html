@@ -1,0 +1,20 @@
+{% load tapir_static %}
+<div style="display:flex; flex-direction: row;">
+    <div>
+        <p>Jede Woche holst du dir deinen Ernteanteil und ggf. Zusatzanteil am Biohof Dickendorf ab.</p>
+        <p>Abholzeit: Donnerstag 15 bis 20 Uhr</p>
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field_errors in form.errors.values %}
+                        {% for error in field_errors %}<li>{{ error }}</li>{% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+    <img style="max-height:15em;
+                margin-left:2em"
+         class="photo"
+         src="{% static 'lueneburg/registration/pickup-location.png' %}">
+</div>

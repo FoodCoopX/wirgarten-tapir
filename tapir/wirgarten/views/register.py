@@ -10,7 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -196,6 +196,18 @@ class RegistrationWizardViewBase(CookieWizardView):
                 (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
             ]
         )
+
+        if (
+            get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache=cache)
+            == THEME_L2G
+        ):
+            steps_kwargs["pickup_location"][
+                "description"
+            ] = "Abholort – Hier wird dein Anteil bereitgestellt"
+        else:
+            steps_kwargs["pickup_location"][
+                "description"
+            ] = "Abholort - Wo möchtest du dein Gemüse abholen?"
 
         return super().as_view(
             *args,
