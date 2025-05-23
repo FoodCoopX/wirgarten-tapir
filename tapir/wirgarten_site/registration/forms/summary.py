@@ -180,6 +180,7 @@ class SummaryForm(forms.Form):
         for product_field_name, val in initial["additional_shares"][
             key_in_initial
         ].items():
+            val = int(val)
             if product_field_name in products_map:
                 shares[product_field_name] = {
                     "amount": val,
