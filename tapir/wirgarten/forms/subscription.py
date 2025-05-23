@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
-from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
@@ -114,7 +113,6 @@ class BaseProductForm(forms.Form):
         self.require_at_least_one = kwargs.pop("enable_validation", False)
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
         initial = kwargs.get("initial", {})
-        ic(initial)
         self.cache = kwargs.pop("cache", {})
 
         self.start_date = kwargs.pop(
@@ -122,7 +120,6 @@ class BaseProductForm(forms.Form):
             initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
         )
         self.intro_templates = initial.pop("intro_templates", None)
-        ic(self.intro_templates)
         self.outro_templates = initial.pop("outro_templates", None)
 
         if initial and not self.choose_growing_period:

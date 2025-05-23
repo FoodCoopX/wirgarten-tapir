@@ -32,7 +32,7 @@
     {% if wizard.form.sum_template %}
         {% include wizard.form.sum_template %}
     {% endif %}
-    {% if wizard.form.outro_template %}
-        <div class="summary">{% include wizard.form.outro_template %}</div>
+    {% if wizard.form.outro_templates %}
+        <div class="summary">{% include wizard.form.outro_templates %}</div>
     {% endif %}
 {% endblock %}

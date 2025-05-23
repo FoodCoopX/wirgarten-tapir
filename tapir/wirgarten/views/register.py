@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
-from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
@@ -140,7 +139,6 @@ class RegistrationWizardViewBase(CookieWizardView):
 
         steps_kwargs = settings.REGISTRATION_STEPS
         for steps_kwargs_key in steps_kwargs.keys():
-            ic(steps_kwargs_key)
             wip_kwargs = steps_kwargs[steps_kwargs_key]
             if "intro_template" in wip_kwargs.keys():
                 base_template_path = wip_kwargs["intro_template"]
@@ -198,7 +196,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                 (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
             ]
         )
-        ic(steps_kwargs.keys(), steps_kwargs[STEP_BASE_PRODUCT])
+
         return super().as_view(
             *args,
             **kwargs,
