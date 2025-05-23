@@ -1,0 +1,49 @@
+{% load tapir_static %}
+<p>
+    THIS IS L2G! Dein Erntevertrag läuft ein Jahr. Damit verschaffst du deinem WirGarten Planungssicherheit: Unser Team weiß so bereits ein Jahr im Voraus, dass die Betriebskosten gedeckt sind und die Ernte garantiert abgenommen wird. So können wir das Gemüse viel nachhaltiger anbauen und nichts wird weggeschmissen. Du kannst deinen Erntevertrag innerhalb des ersten Monats kündigen.
+</p>
+<div style="display:grid;
+            grid-template-columns: repeat(4, fit-content(25%));
+            grid-template-rows: auto;
+            grid-gap: 1em">
+    <div style="display:flex;flex-direction:column">
+        <img class="img-fluid"
+             src="{% static 'lueneburg/registration/harvest_share_s_alpha.webp' %}" />
+        <div style="margin: 1em; text-align:center">
+            <h5>ca. 2 kg Gemüse / Woche¹</h5>
+            <h5>+ ErntePost</h5>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column">
+        <img class="img-fluid"
+             src="{% static 'lueneburg/registration/harvest_share_m_alpha.webp' %}" />
+        <div style="margin: 1em; text-align:center">
+            <h5>ca. 3 kg Gemüse / Woche¹</h5>
+            <h5>+ ErntePost</h5>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column">
+        <img class="img-fluid"
+             src="{% static 'lueneburg/registration/harvest_share_l_alpha.webp' %}" />
+        <div style="margin: 1em; text-align:center">
+            <h5>ca. 4 kg Gemüse / Woche¹</h5>
+            <h5>+ ErntePost</h5>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column">
+        <img class="img-fluid"
+             src="{% static 'lueneburg/registration/harvest_share_xl_alpha.webp' %}" />
+        <div style="margin: 1em; text-align:center">
+            <h5>ca. 5 kg Gemüse / Woche¹</h5>
+            <h5>+ ErntePost</h5>
+        </div>
+    </div>
+</div>
+<div class="alert alert-warning"
+     id="no-capacity-warning"
+     style="display:none">
+    <strong>Schade,</strong>
+    aktuell sind leider keine Ernteanteile verfügbar.
+    <br />
+    Wir informieren dich sobald wir die Kapazitäten erhöhen bzw. bevor die nächste Anbausaison beginnt.
+</div>

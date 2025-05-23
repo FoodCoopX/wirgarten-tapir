@@ -1,7 +1,6 @@
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from icecream import ic
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
@@ -201,5 +200,4 @@ class SummaryForm(forms.Form):
         infos["total"] = "{:.2f}".format(total_price)
         self.total_monthly += total_price
 
-        ic(infos)
         return infos

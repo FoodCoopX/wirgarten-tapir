@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
+from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
@@ -138,6 +139,27 @@ class RegistrationWizardViewBase(CookieWizardView):
             ]
 
         steps_kwargs = settings.REGISTRATION_STEPS
+        for steps_kwargs_key in steps_kwargs.keys():
+            ic(steps_kwargs_key)
+            wip_kwargs = steps_kwargs[steps_kwargs_key]
+            if "intro_template" in wip_kwargs.keys():
+                base_template_path = wip_kwargs["intro_template"]
+                theme_template = base_template_path.replace(
+                    "steps/",
+                    f"steps/{get_parameter_value(ParameterKeys.ORGANISATION_THEME)}/",
+                )
+                wip_kwargs["intro_templates"] = [theme_template, base_template_path]
+
+            if "outro_template" in wip_kwargs.keys():
+                base_template_path = wip_kwargs["outro_template"]
+                theme_template = base_template_path.replace(
+                    "steps/",
+                    f"steps/{get_parameter_value(ParameterKeys.ORGANISATION_THEME)}/",
+                )
+                wip_kwargs["outro_templates"] = [theme_template, base_template_path]
+
+            steps_kwargs[steps_kwargs_key] = wip_kwargs
+
         if STEP_BASE_PRODUCT not in steps_kwargs:
             steps_kwargs[STEP_BASE_PRODUCT] = {
                 "product_type_id": base_product_type.id,
@@ -169,7 +191,6 @@ class RegistrationWizardViewBase(CookieWizardView):
                     AdditionalProductForm,
                 )
             )
-
         form_list.extend(
             [
                 (STEP_PICKUP_LOCATION, PickupLocationChoiceForm),
@@ -177,7 +198,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                 (STEP_PERSONAL_DETAILS, PersonalDataRegistrationForm),
             ]
         )
-
+        ic(steps_kwargs.keys(), steps_kwargs[STEP_BASE_PRODUCT])
         return super().as_view(
             *args,
             **kwargs,

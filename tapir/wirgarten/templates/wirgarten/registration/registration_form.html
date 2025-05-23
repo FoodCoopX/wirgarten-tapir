@@ -5,9 +5,9 @@
 {% load wirgarten %}
 {% block cardbody %}
     {{ wizard.form.non_field_errors }}
-    {% if wizard.form.intro_template %}
+    {% if wizard.form.intro_templates %}
         <pre class="form-intro-text">
-    {% include wizard.form.intro_template %}
+    {% include wizard.form.intro_templates %}
                     </pre>
         {% if not wizard.form.intro_text_skip_hr %}<hr />{% endif %}
     {% endif %}
