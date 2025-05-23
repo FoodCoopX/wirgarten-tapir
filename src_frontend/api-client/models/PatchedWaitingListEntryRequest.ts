@@ -12,8 +12,11 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import type { CoopShareTransactionCountry } from "./CoopShareTransactionCountry";
+import {
+  CoopShareTransactionCountryFromJSON,
+  CoopShareTransactionCountryToJSON,
+} from "./CoopShareTransactionCountry";
 
 /**
  *
@@ -44,7 +47,7 @@ export interface PatchedWaitingListEntryRequest {
    * @type {string}
    * @memberof PatchedWaitingListEntryRequest
    */
-  phoneNumber?: string | null;
+  phoneNumber?: string;
   /**
    *
    * @type {string}
@@ -77,10 +80,10 @@ export interface PatchedWaitingListEntryRequest {
   city?: string;
   /**
    *
-   * @type {MemberCountry}
+   * @type {CoopShareTransactionCountry}
    * @memberof PatchedWaitingListEntryRequest
    */
-  country?: MemberCountry;
+  country?: CoopShareTransactionCountry;
   /**
    *
    * @type {Date}
@@ -155,7 +158,7 @@ export function PatchedWaitingListEntryRequestFromJSONTyped(
     country:
       json["country"] == null
         ? undefined
-        : MemberCountryFromJSON(json["country"]),
+        : CoopShareTransactionCountryFromJSON(json["country"]),
     privacyConsent:
       json["privacy_consent"] == null
         ? undefined
@@ -198,7 +201,7 @@ export function PatchedWaitingListEntryRequestToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
-    country: MemberCountryToJSON(value["country"]),
+    country: CoopShareTransactionCountryToJSON(value["country"]),
     privacy_consent:
       value["privacyConsent"] == null
         ? undefined

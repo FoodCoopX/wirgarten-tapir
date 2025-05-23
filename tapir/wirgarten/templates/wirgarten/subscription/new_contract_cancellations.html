@@ -1,9 +1,0 @@
-{% extends "core/base.html" %}
-{% load django_vite %}
-{% block head %}
-    {% vite_asset 'new_contract_cancellations/new_contract_cancellations_entry.tsx' %}
-{% endblock head %}
-{% block content %}
-    {% csrf_token %}
-    <span id="new_contract_cancellations"></span>
-{% endblock content %}

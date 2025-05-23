@@ -12,8 +12,11 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import type { CoopShareTransactionCountry } from "./CoopShareTransactionCountry";
+import {
+  CoopShareTransactionCountryFromJSON,
+  CoopShareTransactionCountryToJSON,
+} from "./CoopShareTransactionCountry";
 
 /**
  *
@@ -44,7 +47,7 @@ export interface WaitingListEntry {
    * @type {string}
    * @memberof WaitingListEntry
    */
-  phoneNumber?: string | null;
+  phoneNumber: string;
   /**
    *
    * @type {string}
@@ -77,10 +80,10 @@ export interface WaitingListEntry {
   city?: string;
   /**
    *
-   * @type {MemberCountry}
+   * @type {CoopShareTransactionCountry}
    * @memberof WaitingListEntry
    */
-  country?: MemberCountry;
+  country?: CoopShareTransactionCountry;
   /**
    *
    * @type {Date}
@@ -133,6 +136,8 @@ export function instanceOfWaitingListEntry(
 ): value is WaitingListEntry {
   if (!("firstName" in value) || value["firstName"] === undefined) return false;
   if (!("lastName" in value) || value["lastName"] === undefined) return false;
+  if (!("phoneNumber" in value) || value["phoneNumber"] === undefined)
+    return false;
   if (!("email" in value) || value["email"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   if (!("privacyConsent" in value) || value["privacyConsent"] === undefined)
@@ -160,8 +165,7 @@ export function WaitingListEntryFromJSONTyped(
     id: json["id"] == null ? undefined : json["id"],
     firstName: json["first_name"],
     lastName: json["last_name"],
-    phoneNumber:
-      json["phone_number"] == null ? undefined : json["phone_number"],
+    phoneNumber: json["phone_number"],
     email: json["email"],
     street: json["street"] == null ? undefined : json["street"],
     street2: json["street_2"] == null ? undefined : json["street_2"],
@@ -170,7 +174,7 @@ export function WaitingListEntryFromJSONTyped(
     country:
       json["country"] == null
         ? undefined
-        : MemberCountryFromJSON(json["country"]),
+        : CoopShareTransactionCountryFromJSON(json["country"]),
     createdAt: new Date(json["created_at"]),
     privacyConsent: new Date(json["privacy_consent"]),
     numberOfCoopShares: json["number_of_coop_shares"],
@@ -206,7 +210,7 @@ export function WaitingListEntryToJSONTyped(
     street_2: value["street2"],
     postcode: value["postcode"],
     city: value["city"],
-    country: MemberCountryToJSON(value["country"]),
+    country: CoopShareTransactionCountryToJSON(value["country"]),
     privacy_consent: value["privacyConsent"].toISOString(),
     number_of_coop_shares: value["numberOfCoopShares"],
     desired_start_date:

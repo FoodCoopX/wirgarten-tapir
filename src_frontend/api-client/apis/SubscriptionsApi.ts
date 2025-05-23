@@ -18,6 +18,7 @@ import type {
   CancelSubscriptionsViewResponse,
   CancellationData,
   ExtendedProduct,
+  MemberDataToConfirm,
   PaginatedCancelledSubscriptionList,
   PatchedExtendedProductRequest,
   Product,
@@ -30,6 +31,8 @@ import {
     CancellationDataToJSON,
     ExtendedProductFromJSON,
     ExtendedProductToJSON,
+    MemberDataToConfirmFromJSON,
+    MemberDataToConfirmToJSON,
     PaginatedCancelledSubscriptionListFromJSON,
     PaginatedCancelledSubscriptionListToJSON,
     PatchedExtendedProductRequestFromJSON,
@@ -229,6 +232,30 @@ export class SubscriptionsApi extends runtime.BaseAPI {
      */
     async subscriptionsApiExtendedProductRetrieve(requestParameters: SubscriptionsApiExtendedProductRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ExtendedProduct> {
         const response = await this.subscriptionsApiExtendedProductRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async subscriptionsApiMemberDataToConfirmListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<MemberDataToConfirm>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/subscriptions/api/member_data_to_confirm`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(MemberDataToConfirmFromJSON));
+    }
+
+    /**
+     */
+    async subscriptionsApiMemberDataToConfirmList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<MemberDataToConfirm>> {
+        const response = await this.subscriptionsApiMemberDataToConfirmListRaw(initOverrides);
         return await response.value();
     }
 

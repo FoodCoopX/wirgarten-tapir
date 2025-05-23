@@ -81,6 +81,7 @@ class AutomaticSubscriptionRenewalService:
             notice_period_duration=NoticePeriodManager.get_notice_period_duration(
                 subscription.product.type, next_growing_period, cache=cache
             ),
+            admin_confirmed=subscription.admin_confirmed,
         )
 
     @classmethod

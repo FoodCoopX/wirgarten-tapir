@@ -18,13 +18,15 @@
  * * `weekly` - 1x pro Woche
  * * `odd_weeks` - 2x pro Monat (ungerade KW)
  * * `even_weeks` - 2x pro Monat (gerade KW)
+ * * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
  * @export
  */
 export const DeliveryCycleEnum = {
     NoDelivery: 'no_delivery',
     Weekly: 'weekly',
     OddWeeks: 'odd_weeks',
-    EvenWeeks: 'even_weeks'
+    EvenWeeks: 'even_weeks',
+    EveryFourWeeks: 'every_four_weeks'
 } as const;
 export type DeliveryCycleEnum = typeof DeliveryCycleEnum[keyof typeof DeliveryCycleEnum];
 
