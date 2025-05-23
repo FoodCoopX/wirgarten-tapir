@@ -43,6 +43,21 @@ REGISTRATION_STEPS = {
         "description": "BestellCoop - Möchtest du regelmäßig Grundnahrungsmittel in großen Mengen bestellen?",
         "intro_template": "registration/steps/bestellcoop.intro.html",
     },
+    "additional_product_Brot": {
+        "title": "Brot",
+        "description": "Willst du einen Brot-Zusatzanteil?",
+        "intro_template": "registration/steps/bread.intro.html",
+    },
+    "additional_product_Honig": {
+        "title": "Honig",
+        "description": "Willst du einen Honig-Zusatzanteil?",
+        "intro_template": "registration/steps/honey.intro.html",
+    },
+    "additional_product_Leinöl": {
+        "title": "Leinöl",
+        "description": "Willst du einen Leinöl-Zusatzanteil?",
+        "intro_template": "registration/steps/oil.intro.html",
+    },
     "pickup_location": {
         "title": "Abholort",
         "description": "Abholort - Wo möchtest du dein Gemüse abholen?",

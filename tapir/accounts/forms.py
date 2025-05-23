@@ -1,5 +1,4 @@
 from django import forms
-from icecream import ic
 
 from tapir.accounts.models import EmailChangeRequest
 
@@ -10,7 +9,6 @@ class AdminMailChangeForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        ic(cleaned_data)
         if not EmailChangeRequest.objects.filter(
             user_id=cleaned_data["user_id"], new_email=cleaned_data["new_email"]
         ).exists():

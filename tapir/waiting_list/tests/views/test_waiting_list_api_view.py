@@ -1,7 +1,6 @@
 import datetime
 
 from django.urls import reverse
-from icecream import ic
 
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.models import (
@@ -125,7 +124,6 @@ class TestWaitingListAPIView(TapirIntegrationTest):
             pickup_location.id,
             response_content["results"][1]["current_pickup_location"]["id"],
         )
-        ic(response_content["results"][1]["current_products"])
         self.assertEqual(
             subscription.product.id,
             response_content["results"][1]["current_products"][0]["id"],
