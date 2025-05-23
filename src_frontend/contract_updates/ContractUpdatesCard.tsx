@@ -44,44 +44,52 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
 
   function buildChanges(memberDataToConfirm: MemberDataToConfirm) {
     return (
-      <ul>
-        {memberDataToConfirm.subscriptionCreations.map((creation) => {
-          return (
-            <li>
-              Zeichnung: {creation.quantity}
-              {" × "}
-              {creation.product.name} {creation.product.type.name}
-            </li>
-          );
-        })}
-        {memberDataToConfirm.subscriptionCancellations.map((cancellation) => {
-          return (
-            <li>
-              Kündigung: {cancellation.quantity}
-              {" × "}
-              {cancellation.product.name} {cancellation.product.type.name}
-            </li>
-          );
-        })}
-        {memberDataToConfirm.subscriptionChanges.map((change) => {
-          return (
-            <li>
-              {change.productType.name}:{" "}
-              {change.subscriptionCancellations.map((cancellation) => (
-                <>
-                  {cancellation.quantity} {"×"} {cancellation.product.name}
-                </>
-              ))}{" "}
-              {" => "}{" "}
-              {change.subscriptionCreations.map((creation) => (
-                <>
-                  {creation.quantity} {"×"} {creation.product.name}
-                </>
-              ))}
-            </li>
-          );
-        })}
-      </ul>
+      <>
+        {memberDataToConfirm.showWarning && (
+          <span className={"material-icons text-warning"}>warning</span>
+        )}
+        <ul>
+          {memberDataToConfirm.subscriptionCreations.map((creation) => {
+            return (
+              <li>
+                Zeichnung: {creation.quantity}
+                {" × "}
+                {creation.product.name} {creation.product.type.name}
+              </li>
+            );
+          })}
+          {memberDataToConfirm.subscriptionCancellations.map((cancellation) => {
+            return (
+              <li>
+                Kündigung: {cancellation.quantity}
+                {" × "}
+                {cancellation.product.name} {cancellation.product.type.name}
+              </li>
+            );
+          })}
+          {memberDataToConfirm.subscriptionChanges.map((change, index) => {
+            return (
+              <li>
+                {change.productType.name}:{" "}
+                {change.subscriptionCancellations.map((cancellation) => (
+                  <>
+                    {cancellation.quantity} {"×"} {cancellation.product.name}
+                    {index !== change.subscriptionCancellations.length - 1 &&
+                      ", "}
+                  </>
+                ))}{" "}
+                {" => "}{" "}
+                {change.subscriptionCreations.map((creation, index) => (
+                  <>
+                    {creation.quantity} {"×"} {creation.product.name}
+                    {index !== change.subscriptionCreations.length - 1 && ", "}
+                  </>
+                ))}
+              </li>
+            );
+          })}
+        </ul>
+      </>
     );
   }
 

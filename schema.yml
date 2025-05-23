@@ -4900,8 +4900,6 @@ components:
           $ref: '#/components/schemas/Member'
         pickup_location:
           $ref: '#/components/schemas/PickupLocation'
-        show_warning:
-          type: boolean
         subscription_cancellations:
           type: array
           items:
@@ -4914,11 +4912,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SubscriptionChange'
+        show_warning:
+          type: boolean
+        cancellation_types:
+          type: array
+          items:
+            type: string
         share_transactions:
           type: array
           items:
             $ref: '#/components/schemas/CoopShareTransaction'
       required:
+      - cancellation_types
       - member
       - pickup_location
       - share_transactions

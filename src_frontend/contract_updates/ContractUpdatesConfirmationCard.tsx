@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { MemberDataToConfirm, SubscriptionsApi } from "../api-client";
+import {
+  MemberDataToConfirm,
+  Subscription,
+  SubscriptionsApi,
+} from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
+import formatSubscription from "../utils/formatSubscription.ts";
+import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 
 interface ContractUpdatesConfirmationCardProps {
   csrfToken: string;
@@ -17,6 +23,41 @@ const ContractUpdatesConfirmationCard: React.FC<
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(false);
 
+  function buildCancellations(
+    cancellations: Subscription[],
+    showCancellationType: boolean,
+  ) {
+    return (
+      <ul>
+        {cancellations.map((cancellation, index) => {
+          return (
+            <li>
+              {formatSubscription(cancellation)}, Vertrag endet am{" "}
+              {formatDateNumeric(cancellation.endDate)}{" "}
+              {showCancellationType &&
+                "(" + changes.cancellationTypes[index] + ")"}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  function buildCreations(creations: Subscription[]) {
+    return (
+      <ul>
+        {creations.map((creation) => {
+          return (
+            <li>
+              {formatSubscription(creation)}, Vertrag startet am{" "}
+              {formatDateNumeric(creation.startDate)}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
@@ -25,7 +66,48 @@ const ContractUpdatesConfirmationCard: React.FC<
           {changes.member.lastName} #{changes.member.memberNo}
         </h5>
       </Modal.Header>
-      <Modal.Body>SALUT</Modal.Body>
+      <Modal.Body>
+        <p>
+          Mitglied {changes.member.firstName} {changes.member.lastName} #
+          {changes.member.memberNo} hat folgende Änderungen gefordert:
+        </p>
+        {changes.subscriptionCreations.length > 0 && (
+          <>
+            <h6>Neue Zeichnungen</h6>
+            {buildCreations(changes.subscriptionCreations)}
+          </>
+        )}
+        {changes.subscriptionCancellations.length > 0 && (
+          <>
+            <h6>
+              Neue Kündigungen{" "}
+              {changes.showWarning && (
+                <span className={"material-icons text-warning"}>warning</span>
+              )}
+            </h6>
+            {buildCancellations(changes.subscriptionCancellations, true)}
+          </>
+        )}
+        {changes.subscriptionChanges.length > 0 && (
+          <>
+            <h6>Vertragsänderungen</h6>
+            <ul>
+              {changes.subscriptionChanges.map((update) => {
+                return (
+                  <>
+                    {update.productType.name}
+                    {buildCancellations(
+                      update.subscriptionCancellations,
+                      false,
+                    )}
+                    {buildCreations(update.subscriptionCreations)}
+                  </>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </Modal.Body>
       <Modal.Footer>
         <TapirButton
           text={"Bestätigen"}
