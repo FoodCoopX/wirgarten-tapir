@@ -507,7 +507,6 @@ class MemberDataToConfirmApiView(APIView):
         responses={200: MemberDataToConfirmSerializer(many=True)},
     )
     def get(self, request):
-
         changes_by_member = {}
 
         unconfirmed_cancellations = Subscription.objects.filter(
@@ -577,9 +576,10 @@ class MemberDataToConfirmApiView(APIView):
                 member.id, reference_date=get_today(cache=cache), cache=cache
             )
         )
+
         pickup_location = None
         if pickup_location_id is not None:
-            TapirCache.get_pickup_location_by_id(
+            pickup_location = TapirCache.get_pickup_location_by_id(
                 cache=cache, pickup_location_id=pickup_location_id
             )
 
