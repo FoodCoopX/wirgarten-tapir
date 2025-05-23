@@ -3,10 +3,15 @@
 {% load i18n %}
 {% load tapir_static %}
 {% load wirgarten %}
+{% load configuration %}
 {% block head %}
     {{ wizard.form.media }}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
+    {% with "organisation.theme"|parameter as theme %}
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+    {% endwith %}
     <link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
     <script src="{% static 'core/js/url-functions.js' %}"></script>
 {% endblock %}
@@ -30,10 +35,14 @@
                         <div class="d-flex justify-content-center align-items-center h-100">
                             <div class="text-white">
                                 {% blocktranslate %}
-                            <h1 class="mb-3">Schön, dass du Teil der<br /><strong>WirGarten</strong>-Gemeinschaft wirst!
-                            </h1>
-                            <h3 class="px-5">Du bekommst in nächster Zeit zwei Emails mit allen wichtigen Informationen. Solltest du innerhalb von 24h nichts von uns erhalten haben, prüfe bitte deinen SPAM-Ordner oder wende dich per Email oder Telefon an uns</h3>
-                            {% endblocktranslate %}
+                                    <h1 class="mb-3">Schön, dass du Teil der<br /><strong>WirGarten</strong>-Gemeinschaft
+                                        wirst!
+                                    </h1>
+                                    <h3 class="px-5">Du bekommst in nächster Zeit zwei Emails mit allen wichtigen
+                                        Informationen. Solltest du innerhalb von 24h nichts von uns erhalten haben,
+                                        prüfe bitte deinen SPAM-Ordner oder wende dich per Email oder Telefon an
+                                        uns</h3>
+                                {% endblocktranslate %}
                             </div>
                         </div>
                     </div>
@@ -54,23 +63,23 @@
         </div>
     </div>
     <script>
-window.addEventListener('load', () => {
-      const params = Tapir.getUrlParams();
-      const iframe = document.getElementById('questionaire');
-      iframe.src="{% url 'wirgarten:marketing_feedback_form' %}?member=" + params.member
-      iframe.onload= () =>{
-          iframe.height = ""; // Reset the height to the default value before resizing
-          iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
+        window.addEventListener('load', () => {
+            const params = Tapir.getUrlParams();
+            const iframe = document.getElementById('questionaire');
+            iframe.src = "{% url 'wirgarten:marketing_feedback_form' %}?member=" + params.member
+            iframe.onload = () => {
+                iframe.height = ""; // Reset the height to the default value before resizing
+                iframe.height = iframe.contentWindow.document.body.scrollHeight + "px";
 
-          const form = (iframe.contentDocument || iframe.contentWindow.document).getElementById('form-to-submit')
+                const form = (iframe.contentDocument || iframe.contentWindow.document).getElementById('form-to-submit')
 
-    form.addEventListener('submit', () => {
-        const thankYou = document.getElementById('thank-you');
-        iframe.style.display='none';
-        thankYou.style.display='block';
-    });
-      }
-})
+                form.addEventListener('submit', () => {
+                    const thankYou = document.getElementById('thank-you');
+                    iframe.style.display = 'none';
+                    thankYou.style.display = 'block';
+                });
+            }
+        })
 
 
     </script>

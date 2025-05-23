@@ -109,8 +109,8 @@
 }
 
 :root {
-    --primary: #32822d;
-    --secondary: #f49633;
+    --primary: #4c804a;
+    --secondary: #4c804a;
     --platinum: #e9e7e5;
     --white: #ffffff;
     --black: #000000;
@@ -819,5 +819,14 @@ main {
     }
 }
 
+.step.active .step-icon {
+    background: #dc7467;
+}
 
+.step.active p {
+    color: #dc7467;
+}
 
+.indicator-line.active {
+    background: #dc7467;
+}

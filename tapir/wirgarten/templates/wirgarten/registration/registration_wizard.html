@@ -1,106 +1,100 @@
 {% extends "wirgarten/base.html" %}
-
 {% load django_bootstrap5 %}
 {% load i18n %}
 {% load tapir_static %}
 {% load wirgarten %}
 {% load register %}
-
+{% load configuration %}
 {% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'wirgarten/css/summary.css' %}">
-<link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
-<link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
-<script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
-{{ wizard.form.media }}
-{{ form.media }}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'wirgarten/css/summary.css' %}">
+    <link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
+    <link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
+    {% with "organisation.theme"|parameter as theme %}
+        <link rel="stylesheet"
+              href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+    {% endwith %}
+    <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
+    {{ wizard.form.media }}
+    {{ form.media }}
 {% endblock %}
-
 {% block content %}
-<form action="" method="post">{% csrf_token %}
-    <div style="margin-top:1em" class="container wizard-container">
-
-        <section style="margin-bottom:3em" class="step-indicator">
-            {% for step in wizard.steps.all %}
-
-            {% if forloop.counter0 <= wizard.steps.index %}
-            {% if forloop.counter0 > 0 %}
-            <div class="indicator-line active"></div>
-            {% endif %}
-
-            <div class="step active">
-                <div class="step-icon">{{forloop.counter}}</div>
-                <p style="white-space:nowrap">{{step|get_step_title}}</p>
-            </div>
-
-            {% endif %}
-
-
-            {% if forloop.counter0 > wizard.steps.index %}
-            {% if forloop.counter0 > 0 %}
-            <div class="indicator-line"></div>
-            {% endif %}
-
-            <div class="step">
-                <div class="step-icon">{{forloop.counter1}}</div>
-                <p style="white-space:nowrap">{{step|get_step_title}}</p>
-            </div>
-            {% endif %}
-            {% endfor %}
-        </section>
-
-        <div class="card m-2">
-            <div class="card-header">
-                <h4>{{wizard.steps.current|get_step_description}}</h4>
-            </div>
-
-            <div class="card-body">
-                
-                {{ wizard.management_form }}
-                {% block cardbody%}
-
-                {%endblock%}
-
-            </div>
-            <div id="wizard-buttons" class="card-footer">
-                  <button id="wizard-continue-btn" title="Weiter" style="float:right" type="submit"
-                        class="btn tapir-btn btn-primary control-btn">
-                    <span class="material-icons">arrow_forward</span>
-                    {% if wizard.steps.current == wizard.steps.last %}
-                    {% translate 'Bestellung abschließen' %}
-                    {% else %}
-                    {% translate 'Weiter' %}
+    <form action="" method="post">
+        {% csrf_token %}
+        <div style="margin-top:1em" class="container wizard-container">
+            <section style="margin-bottom:3em" class="step-indicator">
+                {% for step in wizard.steps.all %}
+                    {% if forloop.counter0 <= wizard.steps.index %}
+                        {% if forloop.counter0 > 0 %}<div class="indicator-line active"></div>{% endif %}
+                        <div class="step active">
+                            <div class="step-icon">{{ forloop.counter }}</div>
+                            <p style="white-space:nowrap">{{ step|get_step_title }}</p>
+                        </div>
                     {% endif %}
-                </button>
-
-                     {% if wizard.steps.prev %}
-                 <button tabindex="-1" title="Zurück zum Anfang" style="height:2.3em" formnovalidate="formnovalidate"
-                        name="wizard_goto_step"
-                        class="btn tapir-btn btn-secondary control-btn hidden-default"
-                        type="submit"
-                        value="{{ wizard.steps.first }}">
-                    <span class="material-icons">first_page</span>
-                    <!-- {% translate 'first step' %}-->
-                </button>
-
-                 <button title="Zurück" style="height:2.3em" formnovalidate="formnovalidate" name="wizard_goto_step"
-                        class="btn tapir-btn btn-secondary control-btn hidden-default" tabindex="-1"
-                        type="submit"
-                        value="{{ wizard.steps.prev }}">
-                    <span class="material-icons">arrow_back</span>
-                    <!--{% translate 'Back' %}-->
-                </button>
-                {% endif %}
+                    {% if forloop.counter0 > wizard.steps.index %}
+                        {% if forloop.counter0 > 0 %}<div class="indicator-line"></div>{% endif %}
+                        <div class="step">
+                            <div class="step-icon">{{ forloop.counter1 }}</div>
+                            <p style="white-space:nowrap">{{ step|get_step_title }}</p>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </section>
+            <div class="card m-2">
+                <div class="card-header">
+                    <h4>{{ wizard.steps.current|get_step_description }}</h4>
+                </div>
+                <div class="card-body">
+                    {{ wizard.management_form }}
+                    {% block cardbody %}{% endblock %}
+                </div>
+                <div id="wizard-buttons" class="card-footer">
+                    <button id="wizard-continue-btn"
+                            title="Weiter"
+                            style="float:right"
+                            type="submit"
+                            class="btn tapir-btn btn-primary control-btn">
+                        <span class="material-icons">arrow_forward</span>
+                        {% if wizard.steps.current == wizard.steps.last %}
+                            {% translate 'Bestellung abschließen' %}
+                        {% else %}
+                            {% translate 'Weiter' %}
+                        {% endif %}
+                    </button>
+                    {% if wizard.steps.prev %}
+                        <button tabindex="-1"
+                                title="Zurück zum Anfang"
+                                style="height:2.3em"
+                                formnovalidate="formnovalidate"
+                                name="wizard_goto_step"
+                                class="btn tapir-btn btn-secondary control-btn hidden-default"
+                                type="submit"
+                                value="{{ wizard.steps.first }}">
+                            <span class="material-icons">first_page</span>
+                            <!-- {% translate 'first step' %}-->
+                        </button>
+                        <button title="Zurück"
+                                style="height:2.3em"
+                                formnovalidate="formnovalidate"
+                                name="wizard_goto_step"
+                                class="btn tapir-btn btn-secondary control-btn hidden-default"
+                                tabindex="-1"
+                                type="submit"
+                                value="{{ wizard.steps.prev }}">
+                            <span class="material-icons">arrow_back</span>
+                            <!--{% translate 'Back' %}-->
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-</form>
-<script>
+    </form>
+    <script>
     for(const btn of document.getElementsByClassName('control-btn')){
         btn.addEventListener('click', () => {
             // FIXME: replace the target URL (*) with the place the form is embedded (e.g. https://lueneburg.wirgarten.com)
             parent.postMessage('registration-page-change', '*');
         })
     }
-</script>
-{%endblock %}
+    </script>
+{% endblock %}
