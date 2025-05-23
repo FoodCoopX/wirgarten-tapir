@@ -31,7 +31,11 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total) => {
 
   for (const elementNameToPricePair of harvest_share_prices.split(",")) {
     const [elementName, price] = elementNameToPricePair.split(":");
-    document.getElementsByName(elementName)[0].nextSibling.innerText = price + " € inkl. MwSt / Monat";
+    let elements = document.getElementsByName(elementName);
+    if (elements.length === 0) {
+      elements = document.getElementsByName("base_product-" + elementName);
+    }
+    elements[0].nextSibling.innerText = price + " € inkl. MwSt / Monat";
   }
 
   const calculateTotalWithoutSoliPrice = () =>
