@@ -1,9 +1,11 @@
 import datetime
 
+from django.core.exceptions import ImproperlyConfigured
+
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY
+from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, NO_DELIVERY, EVERY_FOUR_WEEKS
 from tapir.wirgarten.models import (
     ProductType,
     Product,
@@ -78,39 +80,45 @@ class ProductGenerator:
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=ernteanteile.id
         )
+
+        match organization:
+            case Organization.WIRGARTEN:
+                cls.generate_products_wirgarten(product_type_ernteanteile=ernteanteile)
+            case Organization.BIOTOP:
+                cls.generate_products_biotop(product_type_ernteanteile=ernteanteile)
+            case Organization.VEREIN:
+                cls.generate_products_verein(product_type_ernteanteile=ernteanteile)
+            case Organization.L2G:
+                cls.generate_products_l2g(product_type_ernteanteile=ernteanteile)
+            case _:
+                raise ImproperlyConfigured(f"Unknown organization type: {organization}")
+
+    @classmethod
+    def generate_products_verein(cls, product_type_ernteanteile: ProductType):
         cls.generate_product(
-            product_type=ernteanteile,
+            product_type=product_type_ernteanteile,
             name="M",
             base_price=70.3,
-            size=1 if organization == Organization.WIRGARTEN else 2,
+            size=1,
             base=True,
             min_coop_shares=2,
         )
         cls.generate_product(
-            product_type=ernteanteile,
+            product_type=product_type_ernteanteile,
             name="S",
             base_price=48.3,
-            size=0.66 if organization == Organization.WIRGARTEN else 1.5,
+            size=0.66,
             base=False,
             min_coop_shares=1,
         )
         cls.generate_product(
-            product_type=ernteanteile,
+            product_type=product_type_ernteanteile,
             name="L",
             base_price=109.8,
-            size=1.33 if organization == Organization.WIRGARTEN else 3.5,
+            size=1.33,
             base=False,
             min_coop_shares=3,
         )
-        if organization == Organization.WIRGARTEN:
-            cls.generate_product(
-                product_type=ernteanteile,
-                name="XL",
-                base_price=129.2,
-                size=1.66,
-                base=False,
-                min_coop_shares=4,
-            )
 
         eggs = ProductType.objects.create(
             name="Hühneranteile",
@@ -129,87 +137,268 @@ class ProductGenerator:
             product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
         )
 
-        if organization == Organization.VEREIN:
-            association_membership = ProductType.objects.create(
-                name="Vereinsmitgliedschaft",
-                delivery_cycle=NO_DELIVERY[0],
-                is_affected_by_jokers=False,
-                single_subscription_only=True,
-                subscriptions_have_end_dates=False,
-                must_be_subscribed_to=True,
-                is_association_membership=True,
-            )
-            TaxRate.objects.create(
-                product_type=association_membership,
-                tax_rate=0,
-                valid_from=GrowingPeriod.objects.order_by("start_date")
-                .first()
-                .start_date,
-            )
-            cls.generate_product(
-                product_type=association_membership,
-                name="Typ A",
-                base_price=10,
-                size=1,
-                base=True,
-            )
-            cls.generate_product(
-                product_type=association_membership,
-                name="Typ B",
-                base_price=17.5,
-                size=1,
-                base=False,
-            )
-            cls.generate_product(
-                product_type=association_membership,
-                name="Typ C",
-                base_price=22.5,
-                size=1,
-                base=False,
-            )
-        else:
-            hofpunkt = ProductType.objects.create(
-                name="Hofpunkt",
-                delivery_cycle=NO_DELIVERY[0],
-                is_affected_by_jokers=False,
-                single_subscription_only=True,
-            )
-            TaxRate.objects.create(
-                product_type=hofpunkt,
-                tax_rate=0.07,
-                valid_from=GrowingPeriod.objects.order_by("start_date")
-                .first()
-                .start_date,
-            )
-            cls.generate_product(
-                product_type=hofpunkt,
-                name="Mitgliedschaft",
-                base_price=3,
-                size=1,
-                base=True,
-            )
+        association_membership = ProductType.objects.create(
+            name="Vereinsmitgliedschaft",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+            subscriptions_have_end_dates=False,
+            must_be_subscribed_to=True,
+            is_association_membership=True,
+        )
+        TaxRate.objects.create(
+            product_type=association_membership,
+            tax_rate=0,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ A",
+            base_price=10,
+            size=1,
+            base=True,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ B",
+            base_price=17.5,
+            size=1,
+            base=False,
+        )
+        cls.generate_product(
+            product_type=association_membership,
+            name="Typ C",
+            base_price=22.5,
+            size=1,
+            base=False,
+        )
 
-        if organization == Organization.BIOTOP:
-            ProductBasketSizeEquivalence.objects.create(
-                product=Product.objects.get(name="S"),
-                basket_size_name="kleine Kiste",
-                quantity=1,
-            )
-            ProductBasketSizeEquivalence.objects.create(
-                product=Product.objects.get(name="M"),
-                basket_size_name="normale Kiste",
-                quantity=1,
-            )
-            ProductBasketSizeEquivalence.objects.create(
-                product=Product.objects.get(name="L"),
-                basket_size_name="kleine Kiste",
-                quantity=1,
-            )
-            ProductBasketSizeEquivalence.objects.create(
-                product=Product.objects.get(name="L"),
-                basket_size_name="normale Kiste",
-                quantity=1,
-            )
+    @classmethod
+    def generate_products_wirgarten(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="M",
+            base_price=70.3,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="S",
+            base_price=48.3,
+            size=0.66,
+            base=False,
+            min_coop_shares=1,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="L",
+            base_price=109.8,
+            size=1.3,
+            base=False,
+            min_coop_shares=3,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="XL",
+            base_price=129.2,
+            size=1.66,
+            base=False,
+            min_coop_shares=4,
+        )
+
+        eggs = ProductType.objects.create(
+            name="Hühneranteile",
+            delivery_cycle=EVEN_WEEKS[0],
+            is_affected_by_jokers=True,
+        )
+        TaxRate.objects.create(
+            product_type=eggs,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=eggs, name="Ganze", base_price=18, size=1, base=True
+        )
+        cls.generate_product(
+            product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
+        )
+
+        hofpunkt = ProductType.objects.create(
+            name="Hofpunkt",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+        )
+        TaxRate.objects.create(
+            product_type=hofpunkt,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=hofpunkt,
+            name="Mitgliedschaft",
+            base_price=3,
+            size=1,
+            base=True,
+        )
+
+    @classmethod
+    def generate_products_biotop(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="M",
+            base_price=70.3,
+            size=2,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="S",
+            base_price=48.3,
+            size=1.5,
+            base=False,
+            min_coop_shares=1,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="L",
+            base_price=109.8,
+            size=3.5,
+            base=False,
+            min_coop_shares=3,
+        )
+
+        eggs = ProductType.objects.create(
+            name="Hühneranteile",
+            delivery_cycle=EVEN_WEEKS[0],
+            is_affected_by_jokers=True,
+        )
+        TaxRate.objects.create(
+            product_type=eggs,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=eggs, name="Ganze", base_price=18, size=1, base=True
+        )
+        cls.generate_product(
+            product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
+        )
+
+        hofpunkt = ProductType.objects.create(
+            name="Hofpunkt",
+            delivery_cycle=NO_DELIVERY[0],
+            is_affected_by_jokers=False,
+            single_subscription_only=True,
+        )
+        TaxRate.objects.create(
+            product_type=hofpunkt,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=hofpunkt,
+            name="Mitgliedschaft",
+            base_price=3,
+            size=1,
+            base=True,
+        )
+
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="S"),
+            basket_size_name="kleine Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="M"),
+            basket_size_name="normale Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="L"),
+            basket_size_name="kleine Kiste",
+            quantity=1,
+        )
+        ProductBasketSizeEquivalence.objects.create(
+            product=Product.objects.get(name="L"),
+            basket_size_name="normale Kiste",
+            quantity=1,
+        )
+
+    @classmethod
+    def generate_products_l2g(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Klein",
+            base_price=72,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Groß",
+            base_price=112,
+            size=1.6,
+            base=False,
+            min_coop_shares=4,
+        )
+
+        bread = ProductType.objects.create(
+            name="Brot",
+            delivery_cycle=WEEKLY[0],
+            is_affected_by_jokers=True,
+        )
+        TaxRate.objects.create(
+            product_type=bread,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=bread, name="Vollkornbrot", base_price=27, size=1, base=True
+        )
+        cls.generate_product(
+            product_type=bread,
+            name="Glutenfreies Vollkornbrot",
+            base_price=27,
+            size=1,
+            base=False,
+        )
+
+        honey = ProductType.objects.create(
+            name="Honig",
+            delivery_cycle=EVERY_FOUR_WEEKS[0],
+            is_affected_by_jokers=True,
+        )
+        TaxRate.objects.create(
+            product_type=honey,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=honey, name="Honig", base_price=7, size=1, base=True
+        )
+
+        oil = ProductType.objects.create(
+            name="Leinöl",
+            delivery_cycle=EVERY_FOUR_WEEKS[0],
+            is_affected_by_jokers=True,
+        )
+        TaxRate.objects.create(
+            product_type=oil,
+            tax_rate=0.07,
+            valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
+        )
+        cls.generate_product(
+            product_type=oil,
+            name="Frisches, kaltgepresstes Leinöl",
+            base_price=11,
+            size=1,
+            base=True,
+        )
 
     @classmethod
     def generate_product_capacities(cls):

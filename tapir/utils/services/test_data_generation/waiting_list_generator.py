@@ -169,7 +169,10 @@ class WaitingListGenerator:
                 )
                 possible_pickup_locations.remove(pickup_location)
 
-        nb_wishes = random.randint(1, min(3, len(possible_pickup_locations)))
+        nb_wishes = 0
+        if len(possible_pickup_locations) > 0:
+            nb_wishes = random.randint(1, min(3, len(possible_pickup_locations)))
+
         pickup_location_wishes = []
         for priority in range(nb_wishes):
             pickup_location = random.choice(list(possible_pickup_locations))

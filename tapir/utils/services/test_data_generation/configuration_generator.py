@@ -1,5 +1,12 @@
 from tapir.configuration.models import TapirParameter
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE, LEGAL_STATUS_ASSOCIATION
+from tapir.core.config import (
+    LEGAL_STATUS_COOPERATIVE,
+    LEGAL_STATUS_ASSOCIATION,
+    LEGAL_STATUS_COMPANY,
+    THEME_BIOTOP,
+    THEME_WIRGARTEN,
+    THEME_L2G,
+)
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
 from tapir.wirgarten.models import ProductType
@@ -17,15 +24,27 @@ class ConfigurationGenerator:
             Organization.BIOTOP: LEGAL_STATUS_COOPERATIVE,
             Organization.WIRGARTEN: LEGAL_STATUS_COOPERATIVE,
             Organization.VEREIN: LEGAL_STATUS_ASSOCIATION,
+            Organization.L2G: LEGAL_STATUS_COMPANY,
         }
         TapirParameter.objects.filter(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS
         ).update(value=legal_statuses[organization])
 
+        themes = {
+            Organization.BIOTOP: THEME_BIOTOP,
+            Organization.WIRGARTEN: THEME_WIRGARTEN,
+            Organization.VEREIN: THEME_BIOTOP,
+            Organization.L2G: THEME_L2G,
+        }
+        TapirParameter.objects.filter(key=ParameterKeys.ORGANISATION_THEME).update(
+            value=themes[organization]
+        )
+
         picking_modes = {
             Organization.BIOTOP: PICKING_MODE_BASKET,
             Organization.WIRGARTEN: PICKING_MODE_SHARE,
             Organization.VEREIN: PICKING_MODE_SHARE,
+            Organization.L2G: PICKING_MODE_SHARE,
         }
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=picking_modes[organization]
@@ -39,6 +58,7 @@ class ConfigurationGenerator:
             Organization.BIOTOP: 4,
             Organization.WIRGARTEN: 2,
             Organization.VEREIN: 2,
+            Organization.L2G: 3,
         }
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(
             value=delivery_day[organization]

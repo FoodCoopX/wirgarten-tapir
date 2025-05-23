@@ -20,8 +20,8 @@ class CooperativeShareForm(forms.Form):
         self.cache = kwargs.pop("cache", {})
         super().__init__(*args, **kwargs)
         initial = kwargs.get("initial", {})
-        self.intro_template = initial.pop("intro_template", None)
-        self.outro_template = initial.pop("outro_template", None)
+        self.intro_templates = initial.pop("intro_templates", None)
+        self.outro_templates = initial.pop("outro_templates", None)
 
         self.coop_share_price = settings.COOP_SHARE_PRICE
 

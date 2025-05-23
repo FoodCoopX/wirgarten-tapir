@@ -2,7 +2,6 @@ import traceback
 from typing import Iterable
 
 from django.core.management import BaseCommand
-from icecream import ic
 from tapir_mail.models import EmailConfigurationDispatch
 from tapir_mail.service.segment import (
     BASE_QUERYSET,
@@ -113,10 +112,8 @@ def apply_recipient_override(
             email_source = data[0]
             email_target = data[1]
         else:
-            ic("NOGO")
             email_source = data
             email_target = data
-        ic(override, data, email_source, email_target)
         override_map[email_source] = email_target
 
     result = [

@@ -119,8 +119,8 @@ class BaseProductForm(forms.Form):
             "start_date",
             initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
         )
-        self.intro_template = initial.pop("intro_template", None)
-        self.outro_template = initial.pop("outro_template", None)
+        self.intro_templates = initial.pop("intro_templates", None)
+        self.outro_templates = initial.pop("outro_templates", None)
 
         if initial and not self.choose_growing_period:
             next_growing_period = get_next_growing_period(cache=self.cache)
@@ -635,8 +635,8 @@ class AdditionalProductForm(forms.Form):
 
         self.product_type = get_object_or_404(ProductType, id=product_type_id)
 
-        self.intro_template = initial.pop("intro_template", None)
-        self.outro_template = initial.pop("outro_template", None)
+        self.intro_templates = initial.pop("intro_templates", None)
+        self.outro_templates = initial.pop("outro_templates", None)
 
         self.field_prefix = self.product_type.id + "_"
         self.choose_growing_period = kwargs.pop("choose_growing_period", False)
