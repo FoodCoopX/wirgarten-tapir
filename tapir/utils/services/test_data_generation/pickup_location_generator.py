@@ -610,7 +610,7 @@ class PickupLocationGenerator:
             city="Lüneburg-Ochtmissen",
         )
         PickupLocationCapabilityFactory.create(
-            pickup_location=hof, max_capacity=30, product_type=ernteanteile
+            pickup_location=hof, max_capacity=1000, product_type=ernteanteile
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=hof,

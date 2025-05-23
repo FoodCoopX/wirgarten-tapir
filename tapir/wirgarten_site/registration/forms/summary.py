@@ -1,12 +1,14 @@
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from icecream import ic
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import Product, ProductType
@@ -125,67 +127,79 @@ class SummaryForm(forms.Form):
             ),
         }
 
-        chicken_shares_type = ProductType.objects.get(name="Hühneranteile")
-        self.chicken_shares_info = dict(
-            {
-                "has_shares": False,
-                "start_date": start_date,
-                "delivery_interval": DeliveryCycleDict[
-                    chicken_shares_type.delivery_cycle
-                ],
-                "first_delivery_date": get_next_delivery_date_for_product_type(
-                    chicken_shares_type, start_date, cache=self.cache
-                )
-                + relativedelta(days=delivery_date_offset),
-            }
-        )
-        if "additional_shares" in initial:
-            chicken_share_products = {
-                f"{p.type_id}_{p.name}": p
-                for p in Product.objects.filter(type=chicken_shares_type)
-            }
-            self.chicken_shares = dict()
-            for key, val in initial["additional_shares"][
-                "additional_product_Hühneranteile"
-            ].items():
-                if key in chicken_share_products:
-                    self.chicken_shares[key] = {
-                        "amount": val,
-                        "price": "{:.2f}".format(
-                            get_product_price(chicken_share_products[key]).price
-                        ),
-                        "name": _(chicken_share_products[key].name + " Hühneranteile"),
-                    }
-
-            chicken_total = sum(
-                map(
-                    lambda i: i["amount"] * float(i["price"]),
-                    self.chicken_shares.values(),
+        self.additional_product_infos = []
+        for product_type in ProductType.objects.exclude(id=base_product_type.id):
+            self.additional_product_infos.append(
+                self.build_additional_product_type_infos(
+                    product_type=product_type,
+                    start_date=start_date,
+                    end_date=end_date,
+                    initial=initial,
+                    delivery_date_offset=delivery_date_offset,
                 )
             )
-            self.chicken_shares_info["has_shares"] = chicken_total > 0
-            self.chicken_shares_info["total"] = "{:.2f}".format(chicken_total)
-            self.total_monthly += chicken_total
-
-        self.bestellcoop = {"sign_up": False}
-        if "bestellcoop" in initial:
-            price = float(
-                get_product_price(
-                    Product.objects.filter(type__name="BestellCoop", deleted=False)[0]
-                ).price
-            )  # FIXME: name must be configurable
-            sign_up = initial["bestellcoop"]["bestellcoop"]
-            self.bestellcoop["sign_up"] = sign_up
-            self.bestellcoop["price"] = "{:.2f}".format(price)
-            self.bestellcoop["start_date"] = start_date
-            if sign_up:
-                self.total_monthly += price
 
         self.total_monthly = "{:.2f}".format(self.total_monthly)
         self.total_onetime = "{:.2f}".format(self.total_onetime)
 
-        self.has_additional_shares = self.harvest_shares_info["has_shares"] and (
-            self.chicken_shares_info["has_shares"] or self.bestellcoop["sign_up"]
+        self.show_cooperative_content = legal_status_is_cooperative(cache=self.cache)
+
+    def build_additional_product_type_infos(
+        self,
+        product_type: ProductType,
+        start_date,
+        end_date,
+        delivery_date_offset,
+        initial,
+    ):
+        infos = dict(
+            {
+                "name": product_type.name,
+                "has_shares": False,
+                "start_date": start_date,
+                "end_date": end_date,
+                "delivery_interval": DeliveryCycleDict[product_type.delivery_cycle],
+                "first_delivery_date": get_next_delivery_date_for_product_type(
+                    product_type, start_date, cache=self.cache
+                )
+                + relativedelta(days=delivery_date_offset),
+            }
         )
 
-        self.show_cooperative_content = legal_status_is_cooperative(cache=self.cache)
+        key_in_initial = f"additional_product_{product_type.name}"
+        if key_in_initial not in initial["additional_shares"]:
+            return infos
+
+        products = TapirCache.get_products_with_product_type(
+            cache=self.cache, product_type_id=product_type.id
+        )
+        products_map = {
+            f"{product.type_id}_{product.name}": product for product in products
+        }
+
+        shares = dict()
+        for product_field_name, val in initial["additional_shares"][
+            key_in_initial
+        ].items():
+            if product_field_name in products_map:
+                shares[product_field_name] = {
+                    "amount": val,
+                    "price": "{:.2f}".format(
+                        get_product_price(products_map[product_field_name]).price
+                    ),
+                    "name": products_map[product_field_name].name,
+                }
+        infos["shares"] = shares
+
+        total_price = sum(
+            map(
+                lambda i: i["amount"] * float(i["price"]),
+                shares.values(),
+            )
+        )
+        infos["has_shares"] = total_price > 0
+        infos["total"] = "{:.2f}".format(total_price)
+        self.total_monthly += total_price
+
+        ic(infos)
+        return infos

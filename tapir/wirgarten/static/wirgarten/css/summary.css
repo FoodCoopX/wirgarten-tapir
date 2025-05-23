@@ -3,7 +3,7 @@
 }
 
 .summary-card-disabled,
-.summary-card-disabled>div {
+.summary-card-disabled > div {
     background-color: #fafafa !important;
     color: #4d4d4d !important;
 }
@@ -19,8 +19,7 @@
 
 #summary_grid {
     display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+    flex-direction: column;
     margin: -0.5em;
     width: 100%;
 }
@@ -30,11 +29,11 @@
     width: 100%;
 }
 
-#summary_grid>div>div>table>tbody>tr>td {
+#summary_grid > div > div > table > tbody > tr > td {
     white-space: normal;
 }
 
-#summary_grid>div>div>table>tbody>tr>th {
+#summary_grid > div > div > table > tbody > tr > th {
     font-size: 0.9em;
 }
 
