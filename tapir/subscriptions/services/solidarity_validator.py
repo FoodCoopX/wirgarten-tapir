@@ -132,7 +132,7 @@ class SolidarityValidator:
         )
 
         if (
-            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
+            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT, cache=cache)
             == SOLIDARITY_UNIT_ABSOLUTE
         ):
             amount_of_used_solidarity = -ordered_solidarity_factor
