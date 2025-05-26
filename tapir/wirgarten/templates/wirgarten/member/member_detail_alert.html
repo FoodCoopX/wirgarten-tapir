@@ -1,163 +1,196 @@
 {% load configuration %}
 {% load wirgarten %}
-
-<div id="cancellation-confirmation" style="display:none" class="alert alert-success">
+<div id="cancellation-confirmation"
+     style="display:none"
+     class="alert alert-success">
     <h4 class="alert-heading">Kündigung eingegangen</h4>
-    <p>Deine Kündigung zum
+    <p>
+        Deine Kündigung zum
         <strong id="cancellation_date"></strong> ist eingangen und hiermit bestätigt.
     </p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-secondary"
-                onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar
-        </button>
+        <button type="button"
+                class="btn btn-secondary"
+                onclick="document.getElementById('cancellation-confirmation').style.display='none'">Alles klar</button>
     </div>
 </div>
-
-<div id="not-renewed-confirmation" style="display:none" class="alert alert-success">
+<div id="not-renewed-confirmation"
+     style="display:none"
+     class="alert alert-success">
     <h4 class="alert-heading">Bestätigung</h4>
-    <p>Danke, dass du uns frühzeitig mitgeteilt hast, dass du <strong>deinen Ernteanteil nicht verlängerst</strong>!</p>
+    <p>
+        Danke, dass du uns frühzeitig mitgeteilt hast, dass du <strong>deinen Ernteanteil nicht verlängerst</strong>!
+    </p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-secondary"
-                onclick="document.getElementById('not-renewed-confirmation').style.display='none'">Alles klar
-        </button>
+        <button type="button"
+                class="btn btn-secondary"
+                onclick="document.getElementById('not-renewed-confirmation').style.display='none'">Alles klar</button>
     </div>
 </div>
-
-<div id="email-changed-confirmation" style="display:none" class="alert alert-success">
+<div id="email-changed-confirmation"
+     style="display:none"
+     class="alert alert-success">
     <h4 class="alert-heading">Deine Email Adresse wurde geändert</h4>
-    <p>Wir kontaktieren dich jetzt nur noch über <strong>{{object.email}}</strong></p>
+    <p>
+        Wir kontaktieren dich jetzt nur noch über <strong>{{ object.email }}</strong>
+    </p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-secondary"
-                onclick="document.getElementById('email-changed-confirmation').style.display='none'">Alles klar
+        <button type="button"
+                class="btn btn-secondary"
+                onclick="document.getElementById('email-changed-confirmation').style.display='none'">
+            Alles klar
         </button>
     </div>
 </div>
-
-<div id="password-changed-confirmation" style="display:none" class="alert alert-success">
+<div id="password-changed-confirmation"
+     style="display:none"
+     class="alert alert-success">
     <h4 class="alert-heading">Das hat geklappt!</h4>
     <p>Du hast dein Passwort erfolgreich aktualisiert.</p>
     <hr>
     <div style="float:right">
-        <button type="button" class="btn btn-secondary"
-                onclick="document.getElementById('password-changed-confirmation').style.display='none'">Alles klar
+        <button type="button"
+                class="btn btn-secondary"
+                onclick="document.getElementById('password-changed-confirmation').style.display='none'">
+            Alles klar
         </button>
     </div>
 </div>
-
 {% if show_trial_period_notice %}
-<div class="alert alert-info">
-    <h4 class="alert-heading">Probezeitraum</h4>
-    <p>Du hast bis zum
-        <strong>{{next_trial_end_date|format_date}}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
-    </p>
-    {% for sub in subscriptions_in_trial %}
-    - {{sub}} {% if sub.start_date %}<small>({{sub.start_date}} - {{sub.end_date}})</small>{% endif %}<br/>
-    {% endfor %}
-    <hr>
-    <div style="float:right">
-        <button type="button" class="btn btn-danger" onclick="handleTrialCancellation()">Jetzt kündigen</button>
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Probezeitraum</h4>
+        <p>
+            Du hast bis zum
+            <strong>{{ next_trial_end_date|format_date }}</strong> die Möglichkeit deine Verträge während der Probezeit zu kündigen.
+        </p>
+        {% for sub in subscriptions_in_trial %}
+            - {{ sub }}
+            {% if sub.start_date %}<small>({{ sub.start_date }} - {{ sub.end_date }})</small>{% endif %}
+            <br />
+        {% endfor %}
+        <hr>
+        <div style="float:right">
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick="handleTrialCancellation()">Jetzt kündigen</button>
+        </div>
     </div>
-</div>
 {% endif %}
-
 {% if show_renewal_warning %}
-{% if renewal_status == 'unknown' %}
-<div class="alert alert-warning">
-    <h4 class="alert-heading">{{renewal_alert.unknown.header|safe}}</h4>
-    <p>{{renewal_alert.unknown.content|safe}}</p>
-    <hr>
-    <div style="display:flex; justify-content:space-between;">
-        <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil nicht verlängern
-        </button>
-        <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
-    </div>
-</div>
-{% elif renewal_status == 'cancelled' %}
-<div class="alert alert-info">
-    <h4 class="alert-heading">{{renewal_alert.cancelled.header|safe}}</h4>
-    <p>{{renewal_alert.cancelled.content|safe}}</p>
-    <hr>
-    <div style="float:right">
-        <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
-    </div>
-</div>
-{% elif renewal_status == 'renewed' %}
-<div class="alert alert-success">
-    <h4 class="alert-heading">{{renewal_alert.renewed.header|safe}}</h4>
-    <p>{{renewal_alert.renewed.content|safe}}</p>
-</div>
-{% elif renewal_status == 'no_capacity' %}
-<div class="alert alert-info">
-    <h4 class="alert-heading">{{renewal_alert.no_capacity.header|safe}}</h4>
-    <p>{{renewal_alert.no_capacity.content|safe}}</p>
-    <hr>
-    <div style="float:right">
-        <button type="button" class="btn btn-primary"
-                onclick="handleShowWaitlist()">Ja, ich möchte auf die Warteliste!
-        </button>
-    </div>
-</div>
-{% elif renewal_status == 'waitlist' %}
-<div class="alert alert-success">
-    <h4 class="alert-heading">Wir geben dir Bescheid!</h4>
-    <p>Du stehst auf der Warteliste für neue Ernteanteile.</p>
-</div>
-{% endif %}
-
-<div class="modal fade" id="renew-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-     aria-labelledby="renewLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="renewLabel">Ernteanteil verlängern</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    {% if renewal_status == 'unknown' %}
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">{{ renewal_alert.unknown.header|safe }}</h4>
+            <p>{{ renewal_alert.unknown.content|safe }}</p>
+            <hr>
+            <div style="display:flex; justify-content:space-between;">
+                <button type="button" class="btn btn-danger" onclick="handleCancellation()">Ernteanteil nicht verlängern</button>
+                <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
             </div>
-            <div class="modal-body">
-                <p>Schön, dass du deinen Erntevertrag verlängern möchtest!<br/>
-                    Du kannst deine aktuellen Ernteanteile und Zusatzverträge verlängern, oder eine andere Konstellation wählen.
-                </p>
-                <hr/>
-                {% for type, subs in subscriptions.items %}
-                {% if subs|length > 0 and subs.0.product %}
-                <strong>{{type}}</strong>
-                <small>
-                    <ul>
-                        {% for sub in subs %}
-                        <li>{{sub.quantity}} × {{sub.product.name}}</li>
-                        {% endfor %}
-                    </ul>
-                </small>
-                {% endif %}
-                {% endfor %}
-                <div class="form-check">
-                    <input type="checkbox" name="sepa-payment-consent" onchange="handleRenewSepaConsent()"
-                           class="form-check-input" id="id_sepa-payment-consent"><label
-                        class="form-check-label"
-                        for="id_sepa-payment-consent">Ich nehme zur Kenntnis, dass die Beträge von meiner hinterlegten Bankverbindung per Lastschrift abgebucht werden.</label>
-                </div>
+        </div>
+    {% elif renewal_status == 'cancelled' %}
+        <div class="alert alert-info">
+            <h4 class="alert-heading">{{ renewal_alert.cancelled.header|safe }}</h4>
+            <p>{{ renewal_alert.cancelled.content|safe }}</p>
+            <hr>
+            <div style="float:right">
+                <button type="button" class="btn btn-primary" onclick="handleRenewal()">Jetzt Ernteanteil verlängern</button>
             </div>
-            <div class="modal-footer" style="display:flex; justify-content:space-between;">
-                <div>
-                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Abbrechen</button>
+        </div>
+    {% elif renewal_status == 'renewed' %}
+        <div class="alert alert-success">
+            <h4 class="alert-heading">{{ renewal_alert.renewed.header|safe }}</h4>
+            <p>{{ renewal_alert.renewed.content|safe }}</p>
+        </div>
+    {% elif renewal_status == 'no_capacity' %}
+        <div class="alert alert-info">
+            <h4 class="alert-heading">{{ renewal_alert.no_capacity.header|safe }}</h4>
+            <p>{{ renewal_alert.no_capacity.content|safe }}</p>
+            <hr>
+            <div style="float:right">
+                <button type="button" class="btn btn-primary" onclick="handleShowWaitlist()">
+                    Ja, ich möchte auf die Warteliste!
+                </button>
+            </div>
+        </div>
+    {% elif renewal_status == 'waitlist' %}
+        <div class="alert alert-success">
+            <h4 class="alert-heading">Wir geben dir Bescheid!</h4>
+            <p>Du stehst auf der Warteliste für neue Ernteanteile.</p>
+        </div>
+    {% endif %}
+    <div class="modal fade"
+         id="renew-modal"
+         data-bs-backdrop="static"
+         data-bs-keyboard="false"
+         tabindex="-1"
+         aria-labelledby="renewLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="renewLabel">Ernteanteil verlängern</h1>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                 </div>
-                <div>
-                    <button id="renewChangeConditionsBtn" type="button" style="margin-right:0.5em"
-                            class="btn btn-secondary" disabled="disabled"
-                            onclick="handleRenewChangeConditions()">Auswahl ändern
-                    </button>
-                    <button id="renewSameConditionsBtn" disabled="disabled" type="button" class="btn btn-primary"
-                            onclick="handleRenewSameConditions()">Verträge verlängern
-                    </button>
+                <div class="modal-body">
+                    <p>
+                        Schön, dass du deinen Erntevertrag verlängern möchtest!
+                        <br />
+                        Du kannst deine aktuellen Ernteanteile und Zusatzverträge verlängern, oder eine andere Konstellation wählen.
+                    </p>
+                    <hr />
+                    {% for type, subs in subscriptions.items %}
+                        {% if subs|length > 0 and subs.0.product %}
+                            <strong>{{ type }}</strong>
+                            <small>
+                                <ul>
+                                    {% for sub in subs %}
+                                        <li>{{ sub.quantity }} × {{ sub.product.name }} - {{ sub.price_at_renewal_date }}€</li>
+                                    {% endfor %}
+                                </ul>
+                            </small>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="form-check">
+                        <input type="checkbox"
+                               name="sepa-payment-consent"
+                               onchange="handleRenewSepaConsent()"
+                               class="form-check-input"
+                               id="id_sepa-payment-consent">
+                        <label class="form-check-label" for="id_sepa-payment-consent">
+                            Ich nehme zur Kenntnis, dass die Beträge von meiner hinterlegten Bankverbindung per Lastschrift abgebucht werden.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer"
+                     style="display:flex;
+                            justify-content:space-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Abbrechen</button>
+                    </div>
+                    <div>
+                        <button id="renewChangeConditionsBtn"
+                                type="button"
+                                style="margin-right:0.5em"
+                                class="btn btn-secondary"
+                                disabled="disabled"
+                                onclick="handleRenewChangeConditions()">Auswahl ändern</button>
+                        <button id="renewSameConditionsBtn"
+                                disabled="disabled"
+                                type="button"
+                                class="btn btn-primary"
+                                onclick="handleRenewSameConditions()">Verträge verlängern</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endif %}
-
 <script>
     const handleRenewSepaConsent = () => {
         const renewChangeBtn = document.getElementById("renewChangeConditionsBtn");

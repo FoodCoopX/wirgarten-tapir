@@ -15,7 +15,6 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
@@ -52,7 +51,11 @@ urlpatterns = [
     path(tapir_mail_path, include("tapir_mail.urls")),
     path("deliveries/", include("tapir.deliveries.urls")),
     path("generic_exports/", include("tapir.generic_exports.urls")),
+    path("subscriptions/", include("tapir.subscriptions.urls")),
+    path("pickup_locations/", include("tapir.pickup_locations.urls")),
+    path("utils/", include("tapir.utils.urls")),
+    path("waiting_list/", include("tapir.waiting_list.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:
-    urlpatterns += [url(r"^silk/", include("silk.urls", namespace="silk"))]
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

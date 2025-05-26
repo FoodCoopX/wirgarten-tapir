@@ -1,16 +1,24 @@
 import datetime
+from typing import Dict, Set
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
+from tapir.deliveries.services.weeks_without_delivery_service import (
+    WeeksWithoutDeliveryService,
+)
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.models import (
-    Subscription,
     PickupLocationOpeningTime,
     Member,
+    Subscription,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 
 
@@ -21,37 +29,38 @@ class GetDeliveriesService:
         member: Member,
         date_from: datetime.date,
         date_to: datetime.date,
+        cache: Dict,
     ):
         deliveries = []
 
-        next_delivery_date = get_next_delivery_date(date_from)
+        next_delivery_date = get_next_delivery_date(date_from, cache=cache)
         while next_delivery_date <= date_to:
-            delivery_object = cls.build_delivery_object(member, next_delivery_date)
+            delivery_object = cls.build_delivery_object(
+                member=member, delivery_date=next_delivery_date, cache=cache
+            )
             if delivery_object:
                 deliveries.append(delivery_object)
 
             next_delivery_date = get_next_delivery_date(
-                next_delivery_date + datetime.timedelta(days=1)
+                get_monday(next_delivery_date + datetime.timedelta(days=7)), cache=cache
             )
 
         return deliveries
 
     @classmethod
-    def build_delivery_object(cls, member: Member, delivery_date: datetime.date):
+    def build_delivery_object(
+        cls, member: Member, delivery_date: datetime.date, cache: Dict
+    ):
         _, week_num, _ = delivery_date.isocalendar()
         even_week = week_num % 2 == 0
 
-        active_subs = Subscription.objects.filter(
+        relevant_subscriptions = cls.get_relevant_subscriptions(
             member=member,
-            start_date__lte=delivery_date,
-            end_date__gte=delivery_date,
-            product__type__delivery_cycle__in=[
-                WEEKLY[0],
-                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-            ],
+            reference_date=delivery_date,
+            cache=cache,
         )
 
-        if not active_subs.exists():
+        if len(relevant_subscriptions) == 0:
             return None
 
         pickup_location = member.get_pickup_location(delivery_date)
@@ -62,16 +71,67 @@ class GetDeliveriesService:
             opening_times, delivery_date
         )
 
-        return {
+        joker_used = cls.is_joker_used_in_week(member, delivery_date, cache=cache)
+
+        if joker_used:
+            relevant_subscriptions = set(
+                filter(
+                    lambda subscription: not JokerManagementService.is_subscription_affected_by_joker(
+                        subscription,
+                        cache=cache,
+                    ),
+                    relevant_subscriptions,
+                )
+            )
+
+        return {  # data for DeliverySerializer
             "delivery_date": delivery_date,
             "pickup_location": pickup_location,
             "pickup_location_opening_times": opening_times,
-            "subscriptions": active_subs,
-            "joker_used": cls.is_joker_used_in_week(member, delivery_date),
-            "can_joker_be_used": JokerManagementService.can_joker_be_used(
-                member, delivery_date
+            "subscriptions": relevant_subscriptions,
+            "joker_used": joker_used,
+            "can_joker_be_used": JokerManagementService.can_joker_be_used_in_week(
+                member,
+                delivery_date,
+                cache=cache,
+            ),
+            "can_joker_be_used_relative_to_date_limit": JokerManagementService.can_joker_be_used_relative_to_date_limit(
+                delivery_date,
+                cache=cache,
+            ),
+            "is_delivery_cancelled_this_week": WeeksWithoutDeliveryService.is_delivery_cancelled_this_week(
+                delivery_date,
+                cache=cache,
             ),
         }
+
+    @classmethod
+    def get_relevant_subscriptions(
+        cls, member: Member, reference_date: datetime.date, cache: Dict
+    ) -> Set[Subscription]:
+        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
+            date=reference_date, cache=cache
+        )
+
+        subscriptions_with_accepted_delivery_cycles = set()
+        for delivery_cycle in accepted_delivery_cycles:
+            subscriptions_with_accepted_delivery_cycles.update(
+                TapirCache.get_subscriptions_by_delivery_cycle(
+                    cache=cache, delivery_cycle=delivery_cycle
+                )
+            )
+
+        def subscription_filter(subscription: Subscription):
+            return (
+                subscription.member_id == member.id
+                and subscription in subscriptions_with_accepted_delivery_cycles
+            )
+
+        return AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+            reference_date=reference_date,
+            cache=cache,
+            subscription_filter=subscription_filter,
+        )
 
     @classmethod
     def update_delivery_date_to_opening_times(
@@ -88,9 +148,9 @@ class GetDeliveriesService:
 
     @classmethod
     def is_joker_used_in_week(
-        cls, member: Member, delivery_date: datetime.date
+        cls, member: Member, delivery_date: datetime.date, cache: Dict
     ) -> bool:
-        if not get_parameter_value(Parameter.JOKERS_ENABLED):
+        if not get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
             return False
 
         week_start = get_monday(delivery_date)

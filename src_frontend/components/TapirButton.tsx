@@ -11,11 +11,25 @@ interface TapirButtonProps {
   style?: React.CSSProperties;
   loading?: boolean;
   type?: "submit" | "reset" | "button";
+  fontSize?: number;
+  tooltip?: string;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
   function textContent() {
     return props.loading ? "Loading..." : props.text;
+  }
+
+  function fontSize() {
+    if (props.fontSize) {
+      return props.fontSize + "px";
+    }
+
+    if (props.size === "sm") {
+      return "16px";
+    }
+
+    return "";
   }
 
   return (
@@ -30,13 +44,14 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       size={props.size}
       onClick={props.onClick}
       disabled={props.disabled || props.loading}
-      type={props.type}
+      type={props.type ?? "button"}
+      title={props.tooltip}
     >
       {props.icon &&
         (props.loading ? (
           <Spinner size="sm" />
         ) : (
-          <span className={"material-icons"} style={{ fontSize: "16px" }}>
+          <span className={"material-icons"} style={{ fontSize: fontSize() }}>
             {props.icon}
           </span>
         ))}

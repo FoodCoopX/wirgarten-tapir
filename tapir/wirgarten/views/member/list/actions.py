@@ -11,9 +11,15 @@ from django.views.decorators.http import require_GET
 from django.views.generic import View
 
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import CoopShareTransaction, Member
+from tapir.wirgarten.models import CoopShareTransaction, Member, Subscription
 from tapir.wirgarten.service.file_export import begin_csv_string
-from tapir.wirgarten.utils import format_currency, format_date, get_now, get_today
+from tapir.wirgarten.utils import (
+    format_currency,
+    format_date,
+    get_now,
+    get_today,
+    legal_status_is_association,
+)
 from tapir.wirgarten.views.member.list.member_list import MemberFilter, MemberListView
 
 
@@ -45,6 +51,11 @@ def export_coop_member_list(request, **kwargs):
     KEY_COOP_SHARES_TRANSFER_DATE = "Datum der Übertragung"
     KEY_COOP_SHARES_PAYBACK_EURO = "Ausgezahltes Geschäftsguthaben"
     KEY_COMMENT = "Kommentar"
+    KEY_ASSOCIATION_MEMBERSHIP_START = "Beitrittsdatum"
+    KEY_ASSOCIATION_MEMBERSHIP_END = "Kündigung wirksam zum"
+    KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE = "Kündigungsdatum"
+
+    cache = {}
 
     # Determine maximum number of purchase transactions a member has
     max_purchase_transactions = Member.objects.annotate(
@@ -67,31 +78,55 @@ def export_coop_member_list(request, **kwargs):
         share_cols[f"KEY_COOP_SHARES_{i}_EURO"] = f"GAnteile in € {i}. Zeichnung"
         share_cols[f"KEY_COOP_SHARES_{i}_ENTRY_DATE"] = f"Eintrittsdatum {i}. Zeichnung"
 
-    output, writer = begin_csv_string(
-        [
-            KEY_MEMBER_NO,
-            KEY_FIRST_NAME,
-            KEY_LAST_NAME,
-            KEY_ADDRESS,
-            KEY_ADDRESS2,
-            KEY_POSTCODE,
-            KEY_CITY,
-            KEY_BIRTHDATE,
-            KEY_TELEPHONE,
-            KEY_EMAIL,
-            KEY_COOP_SHARES_TOTAL,
-            KEY_COOP_SHARES_TOTAL_EURO,
-            *share_cols.values(),
-            KEY_COOP_SHARES_CANCELLATION_DATE,
-            KEY_COOP_SHARES_CANCELLATION_AMOUNT,
-            KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE,
-            KEY_COOP_SHARES_TRANSFER_EURO,
-            KEY_COOP_SHARES_TRANSFER_FROM_TO,
-            KEY_COOP_SHARES_TRANSFER_DATE,
-            KEY_COOP_SHARES_PAYBACK_EURO,
-            KEY_COMMENT,
-        ]
-    )
+    columns = [
+        KEY_MEMBER_NO,
+        KEY_FIRST_NAME,
+        KEY_LAST_NAME,
+        KEY_ADDRESS,
+        KEY_ADDRESS2,
+        KEY_POSTCODE,
+        KEY_CITY,
+        KEY_BIRTHDATE,
+        KEY_TELEPHONE,
+        KEY_EMAIL,
+        KEY_COOP_SHARES_TOTAL,
+        KEY_COOP_SHARES_TOTAL_EURO,
+        *share_cols.values(),
+        KEY_COOP_SHARES_CANCELLATION_DATE,
+        KEY_COOP_SHARES_CANCELLATION_AMOUNT,
+        KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE,
+        KEY_COOP_SHARES_TRANSFER_EURO,
+        KEY_COOP_SHARES_TRANSFER_FROM_TO,
+        KEY_COOP_SHARES_TRANSFER_DATE,
+        KEY_COOP_SHARES_PAYBACK_EURO,
+        KEY_COMMENT,
+    ]
+
+    if legal_status_is_association(cache=cache):
+        columns = list(
+            filter(
+                lambda column: column
+                not in [
+                    KEY_COOP_SHARES_TOTAL,
+                    KEY_COOP_SHARES_TOTAL_EURO,
+                    KEY_COOP_SHARES_CANCELLATION_DATE,
+                    KEY_COOP_SHARES_CANCELLATION_AMOUNT,
+                    KEY_COOP_SHARES_CANCELLATION_CONTRACT_END_DATE,
+                    KEY_COOP_SHARES_TRANSFER_EURO,
+                    KEY_COOP_SHARES_TRANSFER_FROM_TO,
+                    KEY_COOP_SHARES_TRANSFER_DATE,
+                    KEY_COOP_SHARES_PAYBACK_EURO,
+                ]
+                + list(share_cols.values()),
+                columns,
+            )
+        )
+
+        columns.append(KEY_ASSOCIATION_MEMBERSHIP_START)
+        columns.append(KEY_ASSOCIATION_MEMBERSHIP_END)
+        columns.append(KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE)
+
+    output, writer = begin_csv_string(columns)
     for entry in Member.objects.order_by("member_no"):
         coop_shares = entry.coopsharetransaction_set.filter(
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE
@@ -179,6 +214,39 @@ def export_coop_member_list(request, **kwargs):
                 transfers,
             )
         )
+
+        if legal_status_is_association(cache=cache):
+            first_association_membership = (
+                Subscription.objects.filter(
+                    member_id=entry.id, product__type__is_association_membership=True
+                )
+                .order_by("start_date")
+                .first()
+            )
+            data[KEY_ASSOCIATION_MEMBERSHIP_START] = (
+                format_date(first_association_membership.start_date)
+                if first_association_membership
+                else ""
+            )
+            last_association_membership = (
+                Subscription.objects.filter(
+                    member_id=entry.id, product__type__is_association_membership=True
+                )
+                .order_by("-end_date")
+                .first()
+            )
+            data[KEY_ASSOCIATION_MEMBERSHIP_END] = (
+                format_date(last_association_membership.end_date)
+                if last_association_membership
+                else ""
+            )
+            data[KEY_ASSOCIATION_MEMBERSHIP_CANCELLATION_DATE] = (
+                format_date(last_association_membership.cancellation_ts)
+                if last_association_membership
+                else ""
+            )
+
+        data = {column: value for column, value in data.items() if column in columns}
 
         writer.writerow(data)
 

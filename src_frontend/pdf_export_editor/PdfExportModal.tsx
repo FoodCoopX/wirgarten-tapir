@@ -1,14 +1,16 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { Col, Form, Modal, Row } from "react-bootstrap";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import { Col, Form, Modal, Row, Table } from "react-bootstrap";
 import {
   AutomatedExportCycleEnum,
   ExportSegment,
+  ExportSegmentColumn,
   GenericExportsApi,
   PdfExportModel,
 } from "../api-client";
 import EmailInput from "../components/EmailInput";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportModalProps {
   show: boolean;
@@ -44,6 +46,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
   const [exportTemplate, setExportTemplate] = useState("");
   const [exportOneFilePerEntry, setExportOneFilePerEntry] = useState(false);
   const [loading, setLoading] = useState(false);
+  const templateInputRef = useRef<HTMLTextAreaElement>(null);
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
@@ -136,7 +139,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setLoading(false));
   }
 
@@ -150,10 +153,65 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
     };
   }
 
+  function onColumnClicked(column: ExportSegmentColumn) {
+    if (!templateInputRef.current) return;
+    const templateInput = templateInputRef.current;
+
+    const before = templateInput.value.slice(0, templateInput.selectionStart);
+    const after = templateInput.value.slice(
+      templateInput.selectionStart,
+      templateInput.value.length,
+    );
+
+    let toInsert = column.id;
+    if (!exportOneFilePerEntry) {
+      toInsert = "entry." + column.id;
+    }
+
+    if (
+      templateInput.value.slice(
+        templateInput.selectionStart - 2,
+        templateInput.selectionStart,
+      ) !== "{{"
+    ) {
+      if (
+        templateInput.value.slice(
+          templateInput.selectionStart - 1,
+          templateInput.selectionStart,
+        ) !== "{"
+      ) {
+        toInsert = "{{" + toInsert;
+      } else {
+        toInsert = "{" + toInsert;
+      }
+    }
+
+    if (
+      templateInput.value.slice(
+        templateInput.selectionStart,
+        templateInput.selectionStart + 2,
+      ) !== "}}"
+    ) {
+      if (
+        templateInput.value.slice(
+          templateInput.selectionStart,
+          templateInput.selectionStart + 1,
+        ) !== "}"
+      ) {
+        toInsert += "}}";
+      } else {
+        toInsert += "}";
+      }
+    }
+
+    templateInput.value = before + toInsert + after;
+    setExportTemplate(templateInput.value);
+  }
+
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"xl"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Neues Export erzeugen</h5>
+        <h5 className={"mb-0"}>Neuen Export erzeugen</h5>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -243,7 +301,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
               <Row>
                 <Col>
                   <Form.Group controlId={"form.emails"}>
-                    <Form.Label>Empfängers</Form.Label>
+                    <Form.Label>Empfänger</Form.Label>
                     <EmailInput
                       onEmailListChange={setExportEmailRecipients}
                       addresses={exportEmailRecipients}
@@ -253,52 +311,62 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
               </Row>
               <Row>
                 <Col>
-                  <Form.Group controlId={"form.cycle"}>
-                    <Form.Label>Automatisiertes Export Zyklus</Form.Label>
-                    <Form.Select
-                      onChange={(event) =>
-                        setExportCycle(
-                          event.target.value as AutomatedExportCycleEnum,
-                        )
-                      }
-                    >
-                      {Object.entries(cycleOptions()).map(([key, value]) => {
-                        return (
-                          <option
-                            key={key}
-                            value={key}
-                            selected={exportCycle === key}
-                          >
-                            {value}
-                          </option>
-                        );
-                      })}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group controlId={"form.day"}>
-                    <Form.Label>Tag</Form.Label>
-                    <Form.Control
-                      type={"number"}
-                      onChange={(event) =>
-                        setExportDay(parseInt(event.target.value))
-                      }
-                      required={true}
-                      value={exportDay}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group controlId={"form.hour"}>
-                    <Form.Label>Uhrzeit</Form.Label>
-                    <Form.Control
-                      type={"time"}
-                      onChange={(event) => setExportHour(event.target.value)}
-                      required={true}
-                      value={exportHour}
-                    />
-                  </Form.Group>
+                  <Row>
+                    <Col>
+                      <Form.Group controlId={"form.cycle"}>
+                        <Form.Label>Automatisierter Export-Zyklus</Form.Label>
+                        <Form.Select
+                          onChange={(event) =>
+                            setExportCycle(
+                              event.target.value as AutomatedExportCycleEnum,
+                            )
+                          }
+                        >
+                          {Object.entries(cycleOptions()).map(
+                            ([key, value]) => {
+                              return (
+                                <option
+                                  key={key}
+                                  value={key}
+                                  selected={exportCycle === key}
+                                >
+                                  {value}
+                                </option>
+                              );
+                            },
+                          )}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>
+                      <Form.Group controlId={"form.day"}>
+                        <Form.Label>Tag</Form.Label>
+                        <Form.Control
+                          type={"number"}
+                          onChange={(event) =>
+                            setExportDay(parseInt(event.target.value))
+                          }
+                          required={true}
+                          value={exportDay}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col>
+                      <Form.Group controlId={"form.hour"}>
+                        <Form.Label>Uhrzeit</Form.Label>
+                        <Form.Control
+                          type={"time"}
+                          onChange={(event) =>
+                            setExportHour(event.target.value)
+                          }
+                          required={true}
+                          value={exportHour}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
             </Col>
@@ -313,8 +381,42 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
                   required={true}
                   value={exportTemplate}
                   rows={17}
+                  ref={templateInputRef}
                 />
               </Form.Group>
+            </Col>
+            <Col>
+              <Table striped hover responsive>
+                <thead>
+                  <tr>
+                    <th>Token</th>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Beschreibung</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exportSegment &&
+                    exportSegment.columns.map((column) => {
+                      return (
+                        <tr>
+                          <td>{column.id}</td>
+                          <td>
+                            <TapirButton
+                              size={"sm"}
+                              icon={"new_label"}
+                              variant={"outline-primary"}
+                              onClick={() => onColumnClicked(column)}
+                              type={"button"}
+                            />
+                          </td>
+                          <td>{column.displayName}</td>
+                          <td>{column.description}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </Table>
             </Col>
           </Row>
         </Form>

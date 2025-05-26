@@ -14,7 +14,8 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGetExportSegmentsView(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_getExportSegmentsView_default_returnsCorrectData(self):

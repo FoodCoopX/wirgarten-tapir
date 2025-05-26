@@ -5,12 +5,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
 from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.forms.subscription import BaseProductForm
 from tapir.wirgarten.models import Subscription, ProductType
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import (
     ParameterDefinitions,
-    Parameter,
 )
 from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
@@ -18,6 +21,7 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     ProductCapacityFactory,
     ProductTypeFactory,
+    MemberFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -25,15 +29,18 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestValidateCannotReduceSize(TapirIntegrationTest):
     NOW = timezone.make_aware(datetime.datetime(year=2024, month=3, day=15))
 
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         super().setUp()
-        ParameterDefinitions().import_definitions()
         mock_timezone(self, self.NOW)
 
         product_type = ProductTypeFactory(name="Ernteanteile", delivery_cycle=WEEKLY[0])
-        parameter = TapirParameter.objects.get(key=Parameter.COOP_BASE_PRODUCT_TYPE)
-        parameter.value = product_type.id
-        parameter.save()
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=product_type.id
+        )
 
         self.product_price_s = ProductPriceFactory.create(
             size=0.8, product__name="S", product__type=product_type
@@ -56,10 +63,11 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
             period=self.current_growing_period,
         )
 
-    @patch.object(BaseProductForm, "validate_pickup_location_capacity")
+    @patch.object(BaseProductForm, "get_pickup_location")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
     @patch.object(BaseProductForm, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
-    @patch.object(BaseProductForm, "validate_total_capacity")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscription_formShowsError(
         self, *_
     ):
@@ -98,17 +106,57 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
             form.errors["__all__"][0],
         )
 
-    @patch.object(BaseProductForm, "validate_pickup_location_capacity")
+    @patch.object(BaseProductForm, "get_pickup_location")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
     @patch.object(BaseProductForm, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
-    @patch.object(BaseProductForm, "validate_total_capacity")
-    def test_validateCannotReduceSize_tryToIncreaseSizeOfRunningSubscription_formIsValid(
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
+    def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscriptionAsAdmin_changesApplied(
+        self, *_
+    ):
+        subscription = SubscriptionFactory.create(
+            product=self.product_price_l.product,
+            period=self.current_growing_period,
+            quantity=1,
+        )
+
+        url = f"{reverse('wirgarten:member_add_subscription', args=[subscription.member.id])}?productType=Ernteanteile"
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        response = self.client.post(
+            url,
+            data={
+                "growing_period": self.current_growing_period.id,
+                "base_product_M": 1,
+                "base_product_L": 0,
+                "solidarity_price_harvest_shares": 0.0,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(2, Subscription.objects.count())
+        subscription.refresh_from_db()
+        self.assertEqual(
+            datetime.date(year=2024, month=3, day=31), subscription.end_date
+        )
+        new_subscription = Subscription.objects.exclude(id=subscription.id).get()
+        self.assertEqual(
+            datetime.date(year=2024, month=4, day=1), new_subscription.start_date
+        )
+        self.assertEqual("M", new_subscription.product.name)
+
+    @patch.object(BaseProductForm, "get_pickup_location")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
+    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(BaseProductForm, "validate_pickup_location")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
+    def test_validateCannotReduceSize_tryToIncreaseSizeOfRunningSubscription_changesApplied(
         self, *_
     ):
         subscription = SubscriptionFactory.create(
             product=self.product_price_m.product,
             period=self.current_growing_period,
             quantity=1,
+            solidarity_price=0,
         )
 
         url = f"{reverse('wirgarten:member_add_subscription', args=[subscription.member.id])}?productType=Ernteanteile"
@@ -135,10 +183,11 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
         )
         self.assertEqual("L", new_subscription.product.name)
 
-    @patch.object(BaseProductForm, "validate_pickup_location_capacity")
+    @patch.object(BaseProductForm, "get_pickup_location")
+    @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
     @patch.object(BaseProductForm, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
-    @patch.object(BaseProductForm, "validate_total_capacity")
+    @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfFutureSubscription_formIsValid(
         self, *_
     ):

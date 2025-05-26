@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -14,10 +14,15 @@ from django.db.models import (
     FloatField,
 )
 from django.db.models.functions import Coalesce
-from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_text_service import MembershipTextService
+from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
@@ -30,16 +35,14 @@ from tapir.wirgarten.models import (
     TransferCoopSharesLogEntry,
     WaitingListEntry,
 )
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     generate_future_deliveries,
     get_next_delivery_date,
 )
-from tapir.wirgarten.service.email import send_email
 from tapir.wirgarten.service.payment import generate_mandate_ref
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
-    get_active_subscriptions,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.service.subscriptions import (
     annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
@@ -135,7 +138,7 @@ def cancel_coop_shares(
     )
 
 
-def create_mandate_ref(member: str | Member):
+def create_mandate_ref(member: str | Member, cache: Dict | None = None):
     """
     Generates and persists a new mandate reference for a member.
 
@@ -145,7 +148,7 @@ def create_mandate_ref(member: str | Member):
     member_id = resolve_member_id(member)
     ref = generate_mandate_ref(member_id)
     return MandateReference.objects.create(
-        ref=ref, member_id=member_id, start_ts=get_now()
+        ref=ref, member_id=member_id, start_ts=get_now(cache)
     )
 
 
@@ -153,29 +156,47 @@ def resolve_member_id(member: str | Member | TapirUser) -> str:
     return member.id if type(member) is not str and member.id else member
 
 
-def get_or_create_mandate_ref(member: str | Member) -> MandateReference:
+le_sum = 0
+
+
+def get_or_create_mandate_ref(
+    member: str | Member,
+    cache: Dict | None = None,
+) -> MandateReference:
     """
     Returns the existing mandate ref for a member of creates a new one if none exists.
     """
 
     member_id = resolve_member_id(member)
-    mandate_ref = False
-    for row in (
-        get_future_subscriptions()
-        .filter(member_id=member_id)
-        .order_by("-start_date")
-        .values("mandate_ref")[:1]
-    ):
-        mandate_ref = MandateReference.objects.get(ref=row["mandate_ref"])
-        break
 
-    if not mandate_ref:
-        mandate_ref = create_mandate_ref(member_id)
+    def get_from_subscriptions():
+        newest_subscription = (
+            get_active_and_future_subscriptions(reference_date=None, cache=cache)
+            .filter(member_id=member_id)
+            .order_by("-start_date")
+            .select_related("mandate_ref")
+            .first()
+        )
+        if newest_subscription:
+            return newest_subscription.mandate_ref
+        return None
 
+    mandate_ref_cache = get_from_cache_or_compute(
+        cache, "mandate_ref_cache", lambda: {}
+    )
+    mandate_ref = get_from_cache_or_compute(
+        mandate_ref_cache, member_id, get_from_subscriptions
+    )
+    if mandate_ref:
+        return mandate_ref
+
+    mandate_ref = create_mandate_ref(member_id, cache)
+    if mandate_ref_cache:
+        mandate_ref_cache[member_id] = mandate_ref
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date: date = None):
+def get_next_contract_start_date(ref_date: date = None, cache: Dict = None):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
@@ -183,7 +204,7 @@ def get_next_contract_start_date(ref_date: date = None):
     :return: the next contract start date
     """
     if ref_date is None:
-        ref_date = get_today()
+        ref_date = get_today(cache=cache)
 
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
@@ -196,6 +217,7 @@ def buy_cooperative_shares(
     member: int | str | Member,
     start_date: date = None,
     mandate_ref: MandateReference = None,
+    cache: Dict | None = None,
 ):
     """
     Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
@@ -207,14 +229,14 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     if start_date == None:
-        start_date = get_next_contract_start_date()
+        start_date = get_next_contract_start_date(cache=cache)
 
     if mandate_ref is None:
-        mandate_ref = get_or_create_mandate_ref(member_id)
+        mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
 
     share_price = settings.COOP_SHARE_PRICE
     due_date = start_date + relativedelta(
-        day=get_parameter_value(Parameter.PAYMENT_DUE_DAY)
+        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
     )
     if due_date < start_date:
         due_date = due_date + relativedelta(months=1)
@@ -250,36 +272,39 @@ def buy_cooperative_shares(
     )
 
     member = Member.objects.get(id=member_id)
-    member.sepa_consent = get_now()
-    member.save()
+    now = get_now(cache=cache)
+    if member.sepa_consent != now:
+        member.sepa_consent = get_now(cache=cache)
+        member.save(cache=cache)
 
     return coop_share_tx
 
 
 def create_wait_list_entry(
-    first_name: str, last_name: str, email: str, type: WaitingListEntry.WaitingListType
+    member: Member | None,
+    first_name: str,
+    last_name: str,
+    email: str,
+    phone_number: str,
+    street: str,
+    street_2: str,
+    postcode: str,
+    city: str,
 ):
-    """
-    Create a wait list entry for a non-member.
-
-    :param first_name: the first name of the interested person
-    :param last_name: the last name of the interested person
-    :param email: the contact email address
-    :return: the newly created WaitListEntry
-    """
-
-    try:
-        member = Member.objects.get(email=email)
-    except Member.DoesNotExist:
-        member = None
-
     return WaitingListEntry.objects.create(
+        member=member,
         first_name=first_name,
         last_name=last_name,
         email=email,
         privacy_consent=get_now(),
-        type=type,
-        member=member,
+        phone_number=phone_number,
+        street=street,
+        street_2=street_2,
+        postcode=postcode,
+        city=city,
+        country="DE",
+        comment="",
+        number_of_coop_shares=0,
     )
 
 
@@ -309,45 +334,22 @@ def change_pickup_location(
     )
 
 
-def get_next_trial_end_date(sub: Subscription = None):
-    return (
-        sub.trial_end_date
-        if sub
-        else (get_today() + relativedelta(day=1, months=1, days=-1))
-    )
-
-
-def get_subscriptions_in_trial_period(member: int | str | Member):
-    member_id = resolve_member_id(member)
-    today = get_today()
-    min_start_date = today + relativedelta(day=1, months=-1)
-
-    subs = get_active_subscriptions().filter(
-        member_id=member_id,
-        cancellation_ts__isnull=True,
-        start_date__gte=min_start_date,
-        end_date__gt=today,
-    )
-
-    return subs.filter(id__in=[sub.id for sub in subs if sub.trial_end_date > today])
-
-
 def send_cancellation_confirmation_email(
     member: str | Member,
     contract_end_date: date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
-    skip_email: bool = False,
+    cache: Dict = None,
 ):
     member_id = resolve_member_id(member)
     member = Member.objects.get(pk=member_id)
 
     contract_list = f"{'<br/>'.join(map(lambda x: '- ' + str(x), subs_to_cancel))}"
     if revoke_coop_membership:
-        contract_list += "\n- Beitrittserklärung zur Genossenschaft"
+        contract_list += "\n- " + MembershipTextService.get_membership_text(cache=cache)
 
-    future_subs = get_future_subscriptions(
-        contract_end_date + relativedelta(days=1)
+    future_subs = get_active_and_future_subscriptions(
+        contract_end_date + relativedelta(days=1), cache=cache
     ).filter(member_id=member_id)
     if (
         not future_subs.exists()
@@ -358,7 +360,7 @@ def send_cancellation_confirmation_email(
             kwargs={"member_id": member_id},
         )
 
-    future_deliveries = generate_future_deliveries(member)
+    future_deliveries = generate_future_deliveries(member, cache=cache)
 
     last_pickup_date = "Letzte Abholung schon vergangen"
     if len(future_deliveries) > 0:
@@ -367,33 +369,21 @@ def send_cancellation_confirmation_email(
         )
 
     TransactionalTrigger.fire_action(
-        Events.TRIAL_CANCELLATION,
-        member.email,
-        {
-            "contract_list": contract_list,
-            "contract_end_date": format_date(contract_end_date),
-            "last_pickup_date": last_pickup_date,
-        },
+        TransactionalTriggerData(
+            key=Events.TRIAL_CANCELLATION,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_list": contract_list,
+                "contract_end_date": format_date(contract_end_date),
+                "last_pickup_date": last_pickup_date,
+            },
+        ),
     )
 
-    if not skip_email:
-        # TODO: remove this once migrated to mail module
-        send_email(
-            to_email=[member.email],
-            subject=get_parameter_value(
-                Parameter.EMAIL_CANCELLATION_CONFIRMATION_SUBJECT
-            ),
-            content=get_parameter_value(
-                Parameter.EMAIL_CANCELLATION_CONFIRMATION_CONTENT
-            ),
-            variables={
-                "contract_end_date": format_date(contract_end_date),
-                "contract_list": contract_list,
-            },
-        )
 
-
-def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
+def send_contract_change_confirmation(
+    member: Member, subs: List[Subscription], cache: Dict
+):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending contract change confirmation for member: ",
@@ -402,37 +392,21 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member)
-
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_SUBJECT
-        ),
-        content=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_CHANGE_CONFIRMATION_CONTENT
-        ),
-        variables={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date)
-            ),
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
-        },
-    )
+    future_deliveries = generate_future_deliveries(member, cache=cache)
 
     TransactionalTrigger.fire_action(
-        Events.MEMBERAREA_CHANGE_CONTRACT,
-        member.email,
-        {
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": format_date(
-                get_next_delivery_date(contract_start_date)
-            ),
-            "contract_list": format_subscription_list_html(subs),
-        },
+        TransactionalTriggerData(
+            key=Events.MEMBERAREA_CHANGE_CONTRACT,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_start_date": format_date(contract_start_date),
+                "contract_end_date": format_date(subs[0].end_date),
+                "first_pickup_date": format_date(
+                    get_next_delivery_date(contract_start_date, cache=cache)
+                ),
+                "contract_list": format_subscription_list_html(subs),
+            },
+        ),
     )
 
     last_delivery_date = datetime.strptime(
@@ -446,7 +420,7 @@ def send_contract_change_confirmation(member: Member, subs: List[Subscription]):
     )
 
 
-def send_order_confirmation(member: Member, subs: List[Subscription]):
+def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dict):
     if not len(subs):
         raise Exception(
             "No subscriptions provided for sending order confirmation for member: ",
@@ -455,32 +429,19 @@ def send_order_confirmation(member: Member, subs: List[Subscription]):
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member)
-    send_email(
-        to_email=[member.email],
-        subject=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_SUBJECT
-        ),
-        content=get_parameter_value(
-            Parameter.EMAIL_CONTRACT_ORDER_CONFIRMATION_CONTENT
-        ),
-        variables={
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": future_deliveries[0]["delivery_date"],
-            "contract_list": f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}",
-        },
-    )
+    future_deliveries = generate_future_deliveries(member, cache=cache)
 
     TransactionalTrigger.fire_action(
-        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        member.email,
-        {
-            "contract_start_date": format_date(contract_start_date),
-            "contract_end_date": format_date(subs[0].end_date),
-            "first_pickup_date": future_deliveries[0]["delivery_date"],
-            "contract_list": format_subscription_list_html(subs),
-        },
+        TransactionalTriggerData(
+            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+            recipient_id_in_base_queryset=member.id,
+            token_data={
+                "contract_start_date": format_date(contract_start_date),
+                "contract_end_date": format_date(subs[0].end_date),
+                "first_pickup_date": future_deliveries[0]["delivery_date"],
+                "contract_list": format_subscription_list_html(subs),
+            },
+        ),
     )
 
     last_delivery_date = datetime.strptime(

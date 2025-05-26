@@ -51,6 +51,10 @@ INSTALLED_APPS = [
     "tapir.configuration",
     "tapir.deliveries",
     "tapir.generic_exports",
+    "tapir.subscriptions",
+    "tapir.coop",
+    "tapir.pickup_locations",
+    "tapir.waiting_list",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields
@@ -161,8 +165,8 @@ PHONENUMBER_DEFAULT_REGION = "DE"
 LOCALE_PATHS = [os.path.join(BASE_DIR, "tapir/translations/locale")]
 
 if ENABLE_SILK_PROFILING:
-    SILKY_PYTHON_PROFILER = True
-    SILKY_PYTHON_PROFILER_BINARY = True
+    SILKY_PYTHON_PROFILER = False
+    SILKY_PYTHON_PROFILER_BINARY = False
     SILKY_META = True
 
 # these are keycloak internal roles and will be filtered out automatically when fetching roles
@@ -206,3 +210,10 @@ DJANGO_VITE = {
         "manifest_path": "./dist/manifest.json",
     }
 }
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
+CORS_ALLOW_CREDENTIALS = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

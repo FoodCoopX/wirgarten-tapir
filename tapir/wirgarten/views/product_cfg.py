@@ -197,6 +197,12 @@ def get_product_type_capacity_edit_form(request, **kwargs):
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
             tax_rate_change_date=form.cleaned_data["tax_rate_change_date"],
+            is_affected_by_jokers=form.cleaned_data["is_affected_by_jokers"],
+            notice_period_duration=form.cleaned_data.get("notice_period", None),
+            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
+            is_association_membership=form.cleaned_data.get(
+                "is_association_membership", False
+            ),
         ),
         redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
         **kwargs,
@@ -217,6 +223,12 @@ def get_product_type_capacity_add_form(request, **kwargs):
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
             period_id=kwargs[KW_PERIOD_ID],
+            notice_period_duration=form.cleaned_data.get("notice_period", None),
+            is_affected_by_jokers=form.cleaned_data.get("is_affected_by_jokers", False),
+            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
+            is_association_membership=form.cleaned_data.get(
+                "is_association_membership", False
+            ),
             product_type_id=form.cleaned_data["product_type"],
         )
 
@@ -286,6 +298,7 @@ def get_product_add_form(request, **kwargs):
             price=form.cleaned_data["price"],
             capacity_id=kwargs[KW_CAPACITY_ID],
             base=form.cleaned_data["base"],
+            size=form.cleaned_data["size"],
         ),
         redirect_url_resolver=redirect_url,
         **kwargs,
@@ -313,6 +326,8 @@ def get_period_add_form(request, **kwargs):
         handler=lambda form: create_growing_period(
             start_date=form.cleaned_data["start_date"],
             end_date=form.cleaned_data["end_date"],
+            max_jokers_per_member=form.cleaned_data.get("max_jokers_per_member", 0),
+            joker_restrictions="disabled",
         ),
         redirect_url_resolver=lambda data: f"{reverse_lazy(PAGE_ROOT)}?{KW_PERIOD_ID}={data.id}",
         **kwargs,

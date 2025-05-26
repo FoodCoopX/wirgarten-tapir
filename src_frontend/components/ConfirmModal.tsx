@@ -12,6 +12,7 @@ interface ConfirmDeleteModalProps {
   confirmButtonIcon: string;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
@@ -23,6 +24,7 @@ const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
   confirmButtonIcon,
   onConfirm,
   onCancel,
+  loading,
 }) => {
   return (
     <Modal show={open} onHide={onCancel} centered={true}>
@@ -39,12 +41,14 @@ const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
           variant="outline-secondary"
           text="Abbrechen"
           onClick={onCancel}
+          disabled={loading}
         />
         <TapirButton
           variant={confirmButtonVariant}
           text={confirmButtonText}
           icon={confirmButtonIcon}
           onClick={onConfirm}
+          loading={loading}
         />
       </Modal.Footer>
     </Modal>

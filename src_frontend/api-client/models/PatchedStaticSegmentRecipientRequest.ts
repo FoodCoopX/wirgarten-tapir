@@ -45,10 +45,10 @@ export interface PatchedStaticSegmentRecipientRequest {
     email?: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof PatchedStaticSegmentRecipientRequest
      */
-    customData?: { [key: string]: any; } | null;
+    customData?: any | null;
     /**
      * 
      * @type {string}

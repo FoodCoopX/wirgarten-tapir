@@ -1,0 +1,12 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Email-Änderung: Erfolg"
+                werden als Bestätigung an Mitglieder geschickt nach dem sie deren Email-Adresse geändert habe. Die neue
+                Adresse bekommt die Bestätigungsmail.
+                Das Trigger hat keine spezifische Tokens.
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

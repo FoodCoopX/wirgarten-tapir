@@ -40,6 +40,21 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     account_owner = factory.Faker("last_name")
     iban = factory.Faker("iban")
 
+    @factory.post_generation
+    def member_no(self, create, member_no, **kwargs):
+        if member_no is not None:
+            self.member_no = member_no
+            return
+
+        member_no = 1
+        member_with_highest_number = (
+            Member.objects.filter(member_no__isnull=False).order_by("member_no").last()
+        )
+        if member_with_highest_number is not None:
+            member_no = member_with_highest_number.member_no + 1
+
+        self.member_no = member_no
+
 
 class MemberWithCoopSharesFactory(MemberFactory):
     @factory.post_generation
@@ -176,7 +191,7 @@ class CoopShareTransactionFactory(
     )  # cancellation, transfer_in, transfer_out (not implemented yet)
     quantity = factory.Faker("random_int", min=1, max=10)
     share_price = 50
-    valid_at = factory.Faker("date_object")
+    valid_at = NOW - datetime.timedelta(days=1)
 
 
 class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):

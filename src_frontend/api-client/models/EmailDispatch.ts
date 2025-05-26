@@ -79,16 +79,16 @@ export interface EmailDispatch {
     recipient: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatch
      */
-    recipientTokens?: { [key: string]: any; } | null;
+    recipientTokens?: any | null;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {any}
      * @memberof EmailDispatch
      */
-    additionalTokens?: { [key: string]: any; } | null;
+    additionalTokens?: any | null;
     /**
      * 
      * @type {Date}

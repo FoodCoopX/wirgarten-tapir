@@ -62,7 +62,7 @@ export interface Subscription {
      * @type {Date}
      * @memberof Subscription
      */
-    endDate: Date;
+    endDate?: Date | null;
     /**
      * 
      * @type {Date}
@@ -119,6 +119,18 @@ export interface Subscription {
     priceOverride?: string | null;
     /**
      * 
+     * @type {number}
+     * @memberof Subscription
+     */
+    noticePeriodDuration?: number | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof Subscription
+     */
+    cancellationAdminConfirmed?: Date | null;
+    /**
+     * 
      * @type {string}
      * @memberof Subscription
      */
@@ -128,7 +140,7 @@ export interface Subscription {
      * @type {string}
      * @memberof Subscription
      */
-    period: string;
+    period?: string | null;
     /**
      * 
      * @type {string}
@@ -144,9 +156,7 @@ export function instanceOfSubscription(value: object): value is Subscription {
     if (!('product' in value) || value['product'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('startDate' in value) || value['startDate'] === undefined) return false;
-    if (!('endDate' in value) || value['endDate'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
-    if (!('period' in value) || value['period'] === undefined) return false;
     if (!('mandateRef' in value) || value['mandateRef'] === undefined) return false;
     return true;
 }
@@ -166,7 +176,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'adminConfirmed': json['admin_confirmed'] == null ? undefined : (new Date(json['admin_confirmed'])),
         'quantity': json['quantity'],
         'startDate': (new Date(json['start_date'])),
-        'endDate': (new Date(json['end_date'])),
+        'endDate': json['end_date'] == null ? undefined : (new Date(json['end_date'])),
         'cancellationTs': json['cancellation_ts'] == null ? undefined : (new Date(json['cancellation_ts'])),
         'solidarityPrice': json['solidarity_price'] == null ? undefined : json['solidarity_price'],
         'solidarityPriceAbsolute': json['solidarity_price_absolute'] == null ? undefined : json['solidarity_price_absolute'],
@@ -176,8 +186,10 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trialDisabled': json['trial_disabled'] == null ? undefined : json['trial_disabled'],
         'trialEndDateOverride': json['trial_end_date_override'] == null ? undefined : (new Date(json['trial_end_date_override'])),
         'priceOverride': json['price_override'] == null ? undefined : json['price_override'],
+        'noticePeriodDuration': json['notice_period_duration'] == null ? undefined : json['notice_period_duration'],
+        'cancellationAdminConfirmed': json['cancellation_admin_confirmed'] == null ? undefined : (new Date(json['cancellation_admin_confirmed'])),
         'member': json['member'],
-        'period': json['period'],
+        'period': json['period'] == null ? undefined : json['period'],
         'mandateRef': json['mandate_ref'],
     };
 }
@@ -198,7 +210,7 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'admin_confirmed': value['adminConfirmed'] == null ? undefined : ((value['adminConfirmed'] as any).toISOString()),
         'quantity': value['quantity'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
-        'end_date': ((value['endDate']).toISOString().substring(0,10)),
+        'end_date': value['endDate'] == null ? undefined : ((value['endDate'] as any).toISOString().substring(0,10)),
         'cancellation_ts': value['cancellationTs'] == null ? undefined : ((value['cancellationTs'] as any).toISOString()),
         'solidarity_price': value['solidarityPrice'],
         'solidarity_price_absolute': value['solidarityPriceAbsolute'],
@@ -208,6 +220,8 @@ export function SubscriptionFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'trial_disabled': value['trialDisabled'],
         'trial_end_date_override': value['trialEndDateOverride'] == null ? undefined : ((value['trialEndDateOverride'] as any).toISOString().substring(0,10)),
         'price_override': value['priceOverride'],
+        'notice_period_duration': value['noticePeriodDuration'],
+        'cancellation_admin_confirmed': value['cancellationAdminConfirmed'] == null ? undefined : ((value['cancellationAdminConfirmed'] as any).toISOString()),
         'member': value['member'],
         'period': value['period'],
         'mandate_ref': value['mandateRef'],

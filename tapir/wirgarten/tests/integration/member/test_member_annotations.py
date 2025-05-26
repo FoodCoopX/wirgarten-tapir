@@ -17,9 +17,12 @@ class TestMemberAnnotations(TapirIntegrationTest):
     NOW = timezone.make_aware(datetime.datetime(year=2023, month=6, day=1))
     REFERENCE_DATE = datetime.date(year=2023, month=8, day=12)
 
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         super().setUp()
-        ParameterDefinitions().import_definitions()
         mock_timezone(self, self.NOW)
 
     def test_annotateMemberQuerysetWithMonthlyPayment_memberHasNotSubscription_annotatesZero(

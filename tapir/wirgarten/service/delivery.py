@@ -1,63 +1,67 @@
 from datetime import date
-from typing import List
+from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.wirgarten.constants import EVEN_WEEKS, ODD_WEEKS, WEEKLY, NO_DELIVERY
+from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.deliveries.services.delivery_day_adjustment_service import (
+    DeliveryDayAdjustmentService,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import (
+    NO_DELIVERY,
+)
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
-    PickupLocation,
     PickupLocationCapability,
-    PickupLocationOpeningTime,
     ProductType,
 )
-from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS, Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
+from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import (
     get_active_product_types,
-    get_future_subscriptions,
-    product_type_order_by,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
 
 
-def get_active_pickup_location_capabilities(reference_date: date = None):
+def get_active_pickup_location_capabilities(
+    reference_date: date = None, cache: Dict = None
+):
     """
     Get all pickup location capabilities for active product types for the next month.
     """
 
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     next_month = reference_date + relativedelta(months=1, day=1)
     return PickupLocationCapability.objects.filter(
-        product_type__in=get_active_product_types(next_month)
+        product_type__in=get_active_product_types(next_month, cache=cache)
     ).order_by(*product_type_order_by("product_type__id", "product_type__name"))
 
 
-def get_active_pickup_locations(
-    capabilities: List[PickupLocationCapability] = None,
+def get_next_delivery_date(
+    reference_date: date = None, delivery_weekday: int = None, cache: Dict = None
 ):
-    if capabilities is None:
-        capabilities = get_active_pickup_location_capabilities()
-
-    return PickupLocation.objects.filter(
-        id__in=capabilities.values("pickup_location__id")
-    )
-
-
-def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = None):
     """
     Calculates the next delivery date based on the reference date and the delivery weekday.
     """
 
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     if delivery_weekday is None:
-        delivery_weekday = get_parameter_value(Parameter.DELIVERY_DAY)
+        delivery_weekday = DeliveryDayAdjustmentService.get_adjusted_delivery_weekday(
+            reference_date, cache=cache
+        )
 
     if reference_date.weekday() > delivery_weekday:
         next_delivery = reference_date + relativedelta(
@@ -71,38 +75,34 @@ def get_next_delivery_date(reference_date: date = None, delivery_weekday: int = 
 
 
 def get_next_delivery_date_for_product_type(
-    product_type: ProductType, reference_date: date = None
+    product_type: ProductType, reference_date: date = None, cache: Dict = None
 ):
     """
     Calculates the next delivery date for a given product type based on the reference date.
     """
 
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
 
     if product_type.delivery_cycle == NO_DELIVERY[0]:
         return reference_date
 
-    next_delivery_date = get_next_delivery_date(reference_date)
-    _, week_num, _ = next_delivery_date.isocalendar()
-    even_week = week_num % 2 == 0
+    next_delivery_date = get_next_delivery_date(reference_date, cache=cache)
 
-    if (
-        product_type.delivery_cycle == WEEKLY[0]
-        or (even_week and product_type.delivery_cycle == EVEN_WEEKS[0])
-        or ((not even_week) and product_type.delivery_cycle == ODD_WEEKS[0])
+    if DeliveryCycleService.is_cycle_delivered_in_week(
+        cycle=product_type.delivery_cycle, date=next_delivery_date, cache=cache
     ):
         return next_delivery_date
     else:
         return get_next_delivery_date_for_product_type(
-            product_type, next_delivery_date + relativedelta(days=1)
+            product_type, next_delivery_date + relativedelta(days=1), cache=cache
         )
 
 
 @deprecated(
     "If possible, use tapir.deliveries.services.get_deliveries_service.GetDeliveriesService.get_deliveries instead"
 )
-def generate_future_deliveries(member: Member, limit: int = None):
+def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = None):
     """
     Generates a list of future deliveries for a given member.
     """
@@ -113,28 +113,42 @@ def generate_future_deliveries(member: Member, limit: int = None):
     if not last_growing_period:
         return deliveries
 
-    next_delivery_date = get_next_delivery_date()
+    next_delivery_date = get_next_delivery_date(cache=cache)
 
-    subs = get_future_subscriptions().filter(member=member)
+    subscriptions = list(
+        get_active_and_future_subscriptions(cache=cache)
+        .filter(member=member)
+        .select_related("product__type")
+    )
+
     while next_delivery_date <= last_growing_period.end_date and (
         limit is None or len(deliveries) < limit
     ):
-        _, week_num, _ = next_delivery_date.isocalendar()
-        even_week = week_num % 2 == 0
-
-        active_subs = subs.filter(
-            start_date__lte=next_delivery_date,
-            end_date__gte=next_delivery_date,
-            product__type__delivery_cycle__in=[
-                WEEKLY[0],
-                EVEN_WEEKS[0] if even_week else ODD_WEEKS[0],
-            ],
+        accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
+            date=next_delivery_date, cache=cache
         )
 
-        if active_subs.count() > 0:
-            pickup_location = member.get_pickup_location(next_delivery_date)
-            opening_times = PickupLocationOpeningTime.objects.filter(
-                pickup_location=pickup_location
+        active_subs = list(
+            filter(
+                lambda subscription: subscription.start_date <= next_delivery_date
+                and (
+                    subscription.end_date is None
+                    or next_delivery_date <= subscription.end_date
+                )
+                and subscription.product.type.delivery_cycle
+                in accepted_delivery_cycles,
+                subscriptions,
+            )
+        )
+
+        if len(active_subs) > 0:
+            pickup_location_id = (
+                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                    member_id=member.id, reference_date=next_delivery_date, cache=cache
+                )
+            )
+            opening_times = TapirCache.get_opening_times_by_pickup_location_id(
+                cache=cache, pickup_location_id=pickup_location_id
             )
             next_delivery_date += relativedelta(
                 days=(
@@ -158,7 +172,9 @@ def generate_future_deliveries(member: Member, limit: int = None):
             deliveries.append(
                 {
                     "delivery_date": next_delivery_date.isoformat(),
-                    "pickup_location": pickup_location,
+                    "pickup_location": TapirCache.get_pickup_location_by_id(
+                        cache=cache, pickup_location_id=pickup_location_id
+                    ),
                     "subs": active_subs,
                     "opening_times": opening_times,
                 }
@@ -173,17 +189,20 @@ def calculate_pickup_location_change_date(
     reference_date=None,
     next_delivery_date=None,
     change_until_weekday=None,
+    cache: Dict = None,
 ):
     """
     Calculates the date at which a member pickup location changes becomes effective.
     """
     if reference_date is None:
-        reference_date = get_today()
+        reference_date = get_today(cache=cache)
     if next_delivery_date is None:
-        next_delivery_date = get_next_delivery_date(reference_date=reference_date)
+        next_delivery_date = get_next_delivery_date(
+            reference_date=reference_date, cache=cache
+        )
     if change_until_weekday is None:
         change_until_weekday = get_parameter_value(
-            Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
+            ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
         )
 
     days_ahead = next_delivery_date.weekday() - change_until_weekday

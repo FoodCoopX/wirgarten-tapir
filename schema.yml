@@ -28,6 +28,49 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/api/growing_period_with_adjustments:
+    get:
+      operationId: deliveries_api_growing_period_with_adjustments_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: string
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriodWithDeliveryDayAdjustments'
+          description: ''
+    patch:
+      operationId: deliveries_api_growing_period_with_adjustments_partial_update
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /deliveries/api/member_deliveries:
     get:
       operationId: deliveries_api_member_deliveries_list
@@ -98,6 +141,147 @@ paths:
               schema:
                 type: string
           description: ''
+  /deliveries/growing_periods/:
+    get:
+      operationId: deliveries_growing_periods_list
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    post:
+      operationId: deliveries_growing_periods_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+  /deliveries/growing_periods/{id}/:
+    get:
+      operationId: deliveries_growing_periods_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    put:
+      operationId: deliveries_growing_periods_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GrowingPeriodRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    patch:
+      operationId: deliveries_growing_periods_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowingPeriod'
+          description: ''
+    delete:
+      operationId: deliveries_growing_periods_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this growing period.
+        required: true
+      tags:
+      - deliveries
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /generic_exports/build_csv_export:
     get:
       operationId: generic_exports_build_csv_export_retrieve
@@ -120,7 +304,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildExportResponse'
+                $ref: '#/components/schemas/BuildCsvExportResponse'
           description: ''
   /generic_exports/build_pdf_export:
     get:
@@ -444,6 +628,299 @@ paths:
       responses:
         '204':
           description: No response body
+  /pickup_locations/api/pickup_location_capacities:
+    get:
+      operationId: pickup_locations_api_pickup_location_capacities_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacities'
+          description: ''
+    patch:
+      operationId: pickup_locations_api_pickup_location_capacities_partial_update
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /pickup_locations/api/pickup_location_capacity_evolution:
+    get:
+      operationId: pickup_locations_api_pickup_location_capacity_evolution_retrieve
+      parameters:
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacityEvolution'
+          description: ''
+  /pickup_locations/pickup_locations/:
+    get:
+      operationId: pickup_locations_pickup_locations_list
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PickupLocation'
+          description: ''
+  /pickup_locations/pickup_locations/{id}/:
+    get:
+      operationId: pickup_locations_pickup_locations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pickup location.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocation'
+          description: ''
+  /subscriptions/api/cancelled_subscriptions:
+    get:
+      operationId: subscriptions_api_cancelled_subscriptions_list
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: product_type_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
+          description: ''
+  /subscriptions/api/confirm_subscription_cancellation:
+    post:
+      operationId: subscriptions_api_confirm_subscription_cancellation_create
+      parameters:
+      - in: query
+        name: subscription_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /subscriptions/api/extended_product:
+    get:
+      operationId: subscriptions_api_extended_product_retrieve
+      parameters:
+      - in: query
+        name: product_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedProduct'
+          description: ''
+    patch:
+      operationId: subscriptions_api_extended_product_partial_update
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedExtendedProductRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /subscriptions/api/product_types_and_number_of_cancelled_subscriptions:
+    get:
+      operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse'
+          description: ''
+  /subscriptions/cancel_subscriptions:
+    post:
+      operationId: subscriptions_cancel_subscriptions_create
+      parameters:
+      - in: query
+        name: cancel_coop_membership
+        schema:
+          type: boolean
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: product_ids
+        schema:
+          type: array
+          items:
+            type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelSubscriptionsViewResponse'
+          description: ''
+  /subscriptions/cancellation_data:
+    get:
+      operationId: subscriptions_cancellation_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancellationData'
+          description: ''
+  /subscriptions/products/:
+    get:
+      operationId: subscriptions_products_list
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+  /subscriptions/products/{id}/:
+    get:
+      operationId: subscriptions_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this product.
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
   /tapirmail/api/email_configuration/:
     get:
       operationId: tapirmail_api_email_configuration_list
@@ -2412,6 +2889,214 @@ paths:
                 items:
                   $ref: '#/components/schemas/TriggerDefinition'
           description: ''
+  /waiting_list/api/categories:
+    get:
+      operationId: waiting_list_api_categories_retrieve
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: ''
+  /waiting_list/api/list:
+    get:
+      operationId: waiting_list_api_list_list
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
+          description: ''
+  /waiting_list/api/update_entry:
+    post:
+      operationId: waiting_list_api_update_entry_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /waiting_list/waiting_list_entries/:
+    get:
+      operationId: waiting_list_waiting_list_entries_list
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    post:
+      operationId: waiting_list_waiting_list_entries_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+  /waiting_list/waiting_list_entries/{id}/:
+    get:
+      operationId: waiting_list_waiting_list_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    put:
+      operationId: waiting_list_waiting_list_entries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WaitingListEntryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    patch:
+      operationId: waiting_list_waiting_list_entries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitingListEntry'
+          description: ''
+    delete:
+      operationId: waiting_list_waiting_list_entries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this waiting list entry.
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
     AutomatedExportCycleEnum:
@@ -2428,6 +3113,9 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    BlankEnum:
+      enum:
+      - ''
     BounceTypeEnum:
       enum:
       - soft
@@ -2440,7 +3128,7 @@ components:
         * `hard` - Hard
         * `unknown` - Unknown
         * `not_analyzed` - Not analyzed
-    BuildExportResponse:
+    BuildCsvExportResponse:
       type: object
       properties:
         file_name:
@@ -2515,6 +3203,534 @@ components:
       - content
       - name
       - release_status
+    CancelSubscriptionsViewResponse:
+      type: object
+      properties:
+        subscriptions_cancelled:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - errors
+      - subscriptions_cancelled
+    CancellationData:
+      type: object
+      properties:
+        can_cancel_coop_membership:
+          type: boolean
+        subscribed_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductForCancellation'
+        legal_status:
+          $ref: '#/components/schemas/LegalStatusEnum'
+      required:
+      - can_cancel_coop_membership
+      - legal_status
+      - subscribed_products
+    CancelledSubscription:
+      type: object
+      properties:
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+        member:
+          $ref: '#/components/schemas/Member'
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        cancellation_type:
+          type: string
+        show_warning:
+          type: boolean
+      required:
+      - cancellation_type
+      - member
+      - pickup_location
+      - show_warning
+      - subscription
+    CountryEnum:
+      enum:
+      - AD
+      - AE
+      - AF
+      - AG
+      - AI
+      - AL
+      - AM
+      - AN
+      - AO
+      - AQ
+      - AR
+      - AS
+      - AT
+      - AU
+      - AW
+      - AZ
+      - BA
+      - BB
+      - BD
+      - BE
+      - BF
+      - BG
+      - BH
+      - BI
+      - BJ
+      - BM
+      - BN
+      - BO
+      - BR
+      - BS
+      - BT
+      - BV
+      - BW
+      - BY
+      - BZ
+      - CA
+      - CC
+      - CF
+      - CG
+      - CH
+      - CI
+      - CK
+      - CL
+      - CM
+      - CN
+      - CO
+      - CR
+      - CU
+      - CV
+      - CX
+      - CY
+      - CZ
+      - DE
+      - DJ
+      - DK
+      - DM
+      - DO
+      - DZ
+      - EC
+      - EE
+      - EG
+      - EH
+      - ER
+      - ES
+      - ET
+      - FI
+      - FJ
+      - FK
+      - FM
+      - FO
+      - FR
+      - FX
+      - GA
+      - GB
+      - GD
+      - GE
+      - GF
+      - GH
+      - GI
+      - GL
+      - GM
+      - GN
+      - GP
+      - GQ
+      - GR
+      - GS
+      - GT
+      - GU
+      - GW
+      - GY
+      - HK
+      - HM
+      - HN
+      - HR
+      - HT
+      - HU
+      - ID
+      - IE
+      - IL
+      - IN
+      - IO
+      - IQ
+      - IR
+      - IS
+      - IT
+      - JM
+      - JO
+      - JP
+      - KE
+      - KG
+      - KH
+      - KI
+      - KM
+      - KN
+      - KP
+      - KR
+      - KW
+      - KY
+      - KZ
+      - LA
+      - LB
+      - LC
+      - LI
+      - LK
+      - LR
+      - LS
+      - LT
+      - LU
+      - LV
+      - LY
+      - MA
+      - MC
+      - MD
+      - MG
+      - MH
+      - ML
+      - MN
+      - MM
+      - MO
+      - MP
+      - MQ
+      - MR
+      - MS
+      - MT
+      - MU
+      - MV
+      - MW
+      - MX
+      - MY
+      - MZ
+      - NA
+      - NC
+      - NE
+      - NF
+      - NG
+      - NI
+      - NL
+      - 'NO'
+      - NP
+      - NR
+      - NU
+      - NZ
+      - OM
+      - PA
+      - PE
+      - PF
+      - PG
+      - PH
+      - PK
+      - PL
+      - PM
+      - PN
+      - PR
+      - PT
+      - PW
+      - PY
+      - QA
+      - RE
+      - RO
+      - RU
+      - RW
+      - SA
+      - SB
+      - SC
+      - SD
+      - SE
+      - SG
+      - SH
+      - SI
+      - SJ
+      - SK
+      - SL
+      - SM
+      - SN
+      - SO
+      - SR
+      - ST
+      - SV
+      - SY
+      - SZ
+      - TC
+      - TD
+      - TF
+      - TG
+      - TH
+      - TJ
+      - TK
+      - TM
+      - TN
+      - TO
+      - TP
+      - TR
+      - TT
+      - TV
+      - TW
+      - TZ
+      - UA
+      - UG
+      - UM
+      - US
+      - UY
+      - UZ
+      - VA
+      - VC
+      - VE
+      - VG
+      - VI
+      - VN
+      - VU
+      - WF
+      - WS
+      - YE
+      - YT
+      - YU
+      - ZA
+      - ZM
+      - ZR
+      - ZW
+      - ZZ
+      type: string
+      description: |-
+        * `AD` - Andorra
+        * `AE` - United Arab Emirates
+        * `AF` - Afghanistan
+        * `AG` - Antigua & Barbuda
+        * `AI` - Anguilla
+        * `AL` - Albania
+        * `AM` - Armenia
+        * `AN` - Netherlands Antilles
+        * `AO` - Angola
+        * `AQ` - Antarctica
+        * `AR` - Argentina
+        * `AS` - American Samoa
+        * `AT` - Austria
+        * `AU` - Australia
+        * `AW` - Aruba
+        * `AZ` - Azerbaijan
+        * `BA` - Bosnia and Herzegovina
+        * `BB` - Barbados
+        * `BD` - Bangladesh
+        * `BE` - Belgium
+        * `BF` - Burkina Faso
+        * `BG` - Bulgaria
+        * `BH` - Bahrain
+        * `BI` - Burundi
+        * `BJ` - Benin
+        * `BM` - Bermuda
+        * `BN` - Brunei Darussalam
+        * `BO` - Bolivia
+        * `BR` - Brazil
+        * `BS` - Bahama
+        * `BT` - Bhutan
+        * `BV` - Bouvet Island
+        * `BW` - Botswana
+        * `BY` - Belarus
+        * `BZ` - Belize
+        * `CA` - Canada
+        * `CC` - Cocos (Keeling) Islands
+        * `CF` - Central African Republic
+        * `CG` - Congo
+        * `CH` - Switzerland
+        * `CI` - Ivory Coast
+        * `CK` - Cook Iislands
+        * `CL` - Chile
+        * `CM` - Cameroon
+        * `CN` - China
+        * `CO` - Colombia
+        * `CR` - Costa Rica
+        * `CU` - Cuba
+        * `CV` - Cape Verde
+        * `CX` - Christmas Island
+        * `CY` - Cyprus
+        * `CZ` - Czech Republic
+        * `DE` - Germany
+        * `DJ` - Djibouti
+        * `DK` - Denmark
+        * `DM` - Dominica
+        * `DO` - Dominican Republic
+        * `DZ` - Algeria
+        * `EC` - Ecuador
+        * `EE` - Estonia
+        * `EG` - Egypt
+        * `EH` - Western Sahara
+        * `ER` - Eritrea
+        * `ES` - Spain
+        * `ET` - Ethiopia
+        * `FI` - Finland
+        * `FJ` - Fiji
+        * `FK` - Falkland Islands (Malvinas)
+        * `FM` - Micronesia
+        * `FO` - Faroe Islands
+        * `FR` - France
+        * `FX` - France, Metropolitan
+        * `GA` - Gabon
+        * `GB` - United Kingdom (Great Britain)
+        * `GD` - Grenada
+        * `GE` - Georgia
+        * `GF` - French Guiana
+        * `GH` - Ghana
+        * `GI` - Gibraltar
+        * `GL` - Greenland
+        * `GM` - Gambia
+        * `GN` - Guinea
+        * `GP` - Guadeloupe
+        * `GQ` - Equatorial Guinea
+        * `GR` - Greece
+        * `GS` - South Georgia and the South Sandwich Islands
+        * `GT` - Guatemala
+        * `GU` - Guam
+        * `GW` - Guinea-Bissau
+        * `GY` - Guyana
+        * `HK` - Hong Kong
+        * `HM` - Heard & McDonald Islands
+        * `HN` - Honduras
+        * `HR` - Croatia
+        * `HT` - Haiti
+        * `HU` - Hungary
+        * `ID` - Indonesia
+        * `IE` - Ireland
+        * `IL` - Israel
+        * `IN` - India
+        * `IO` - British Indian Ocean Territory
+        * `IQ` - Iraq
+        * `IR` - Islamic Republic of Iran
+        * `IS` - Iceland
+        * `IT` - Italy
+        * `JM` - Jamaica
+        * `JO` - Jordan
+        * `JP` - Japan
+        * `KE` - Kenya
+        * `KG` - Kyrgyzstan
+        * `KH` - Cambodia
+        * `KI` - Kiribati
+        * `KM` - Comoros
+        * `KN` - St. Kitts and Nevis
+        * `KP` - Korea, Democratic People's Republic of
+        * `KR` - Korea, Republic of
+        * `KW` - Kuwait
+        * `KY` - Cayman Islands
+        * `KZ` - Kazakhstan
+        * `LA` - Lao People's Democratic Republic
+        * `LB` - Lebanon
+        * `LC` - Saint Lucia
+        * `LI` - Liechtenstein
+        * `LK` - Sri Lanka
+        * `LR` - Liberia
+        * `LS` - Lesotho
+        * `LT` - Lithuania
+        * `LU` - Luxemburg
+        * `LV` - Latvia
+        * `LY` - Libyan Arab Jamahiriya
+        * `MA` - Morocco
+        * `MC` - Monaco
+        * `MD` - Moldova, Republic of
+        * `MG` - Madagascar
+        * `MH` - Marshall Islands
+        * `ML` - Mali
+        * `MN` - Mongolia
+        * `MM` - Myanmar
+        * `MO` - Macau
+        * `MP` - Northern Mariana Islands
+        * `MQ` - Martinique
+        * `MR` - Mauritania
+        * `MS` - Monserrat
+        * `MT` - Malta
+        * `MU` - Mauritius
+        * `MV` - Maldives
+        * `MW` - Malawi
+        * `MX` - Mexico
+        * `MY` - Malaysia
+        * `MZ` - Mozambique
+        * `NA` - Namibia
+        * `NC` - New Caledonia
+        * `NE` - Niger
+        * `NF` - Norfolk Island
+        * `NG` - Nigeria
+        * `NI` - Nicaragua
+        * `NL` - Netherlands
+        * `NO` - Norway
+        * `NP` - Nepal
+        * `NR` - Nauru
+        * `NU` - Niue
+        * `NZ` - New Zealand
+        * `OM` - Oman
+        * `PA` - Panama
+        * `PE` - Peru
+        * `PF` - French Polynesia
+        * `PG` - Papua New Guinea
+        * `PH` - Philippines
+        * `PK` - Pakistan
+        * `PL` - Poland
+        * `PM` - St. Pierre & Miquelon
+        * `PN` - Pitcairn
+        * `PR` - Puerto Rico
+        * `PT` - Portugal
+        * `PW` - Palau
+        * `PY` - Paraguay
+        * `QA` - Qatar
+        * `RE` - Reunion
+        * `RO` - Romania
+        * `RU` - Russian Federation
+        * `RW` - Rwanda
+        * `SA` - Saudi Arabia
+        * `SB` - Solomon Islands
+        * `SC` - Seychelles
+        * `SD` - Sudan
+        * `SE` - Sweden
+        * `SG` - Singapore
+        * `SH` - St. Helena
+        * `SI` - Slovenia
+        * `SJ` - Svalbard & Jan Mayen Islands
+        * `SK` - Slovakia
+        * `SL` - Sierra Leone
+        * `SM` - San Marino
+        * `SN` - Senegal
+        * `SO` - Somalia
+        * `SR` - Suriname
+        * `ST` - Sao Tome & Principe
+        * `SV` - El Salvador
+        * `SY` - Syrian Arab Republic
+        * `SZ` - Swaziland
+        * `TC` - Turks & Caicos Islands
+        * `TD` - Chad
+        * `TF` - French Southern Territories
+        * `TG` - Togo
+        * `TH` - Thailand
+        * `TJ` - Tajikistan
+        * `TK` - Tokelau
+        * `TM` - Turkmenistan
+        * `TN` - Tunisia
+        * `TO` - Tonga
+        * `TP` - East Timor
+        * `TR` - Turkey
+        * `TT` - Trinidad & Tobago
+        * `TV` - Tuvalu
+        * `TW` - Taiwan, Province of China
+        * `TZ` - Tanzania, United Republic of
+        * `UA` - Ukraine
+        * `UG` - Uganda
+        * `UM` - United States Minor Outlying Islands
+        * `US` - United States of America
+        * `UY` - Uruguay
+        * `UZ` - Uzbekistan
+        * `VA` - Vatican City State (Holy See)
+        * `VC` - St. Vincent & the Grenadines
+        * `VE` - Venezuela
+        * `VG` - British Virgin Islands
+        * `VI` - United States Virgin Islands
+        * `VN` - Viet Nam
+        * `VU` - Vanuatu
+        * `WF` - Wallis & Futuna Islands
+        * `WS` - Samoa
+        * `YE` - Yemen
+        * `YT` - Mayotte
+        * `YU` - Yugoslavia
+        * `ZA` - South Africa
+        * `ZM` - Zambia
+        * `ZR` - Zaire
+        * `ZW` - Zimbabwe
+        * `ZZ` - Unknown or unspecified country
     CsvExportModel:
       type: object
       properties:
@@ -2560,6 +3776,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -2597,7 +3815,6 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
             maxLength: 512
         custom_column_names:
           type: array
@@ -2621,6 +3838,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
       required:
       - automated_export_cycle
       - automated_export_day
@@ -2667,9 +3886,15 @@ components:
           type: boolean
         can_joker_be_used:
           type: boolean
+        can_joker_be_used_relative_to_date_limit:
+          type: boolean
+        is_delivery_cancelled_this_week:
+          type: boolean
       required:
       - can_joker_be_used
+      - can_joker_be_used_relative_to_date_limit
       - delivery_date
+      - is_delivery_cancelled_this_week
       - joker_used
       - pickup_location
       - pickup_location_opening_times
@@ -2686,6 +3911,26 @@ components:
         * `weekly` - 1x pro Woche
         * `odd_weeks` - 2x pro Monat (ungerade KW)
         * `even_weeks` - 2x pro Monat (gerade KW)
+    DeliveryDayAdjustment:
+      type: object
+      properties:
+        calendar_week:
+          type: integer
+        adjusted_weekday:
+          type: integer
+      required:
+      - adjusted_weekday
+      - calendar_week
+    DeliveryDayAdjustmentRequest:
+      type: object
+      properties:
+        calendar_week:
+          type: integer
+        adjusted_weekday:
+          type: integer
+      required:
+      - adjusted_weekday
+      - calendar_week
     DispatchStatusEnum:
       enum:
       - error
@@ -2750,9 +3995,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
         sent_count:
           type: integer
           readOnly: true
@@ -2781,9 +4024,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
       required:
       - email_configuration_version
       - id
@@ -2896,12 +4137,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -2945,12 +4182,8 @@ components:
           minLength: 1
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3004,12 +4237,8 @@ components:
           format: email
           maxLength: 254
         recipient_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         additional_tokens:
-          type: object
-          additionalProperties: {}
           nullable: true
         sent_time:
           type: string
@@ -3109,6 +4338,42 @@ components:
       - description
       - display_name
       - id
+    ExtendedProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+        price:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+        basket_size_equivalences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductBasketSizeEquivalence'
+        growing_period_id:
+          type: string
+        picking_mode:
+          allOf:
+          - $ref: '#/components/schemas/PickingModeEnum'
+          readOnly: true
+      required:
+      - base
+      - basket_size_equivalences
+      - deleted
+      - id
+      - name
+      - picking_mode
+      - price
+      - size
     GroupedEmailDispatch:
       type: object
       properties:
@@ -3119,6 +4384,99 @@ components:
       required:
       - count
       - recipient
+    GrowingPeriod:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          maxLength: 1024
+      required:
+      - end_date
+      - start_date
+    GrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          minLength: 1
+          maxLength: 1024
+      required:
+      - end_date
+      - start_date
+    GrowingPeriodWithDeliveryDayAdjustments:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustment'
+        max_jokers_per_member:
+          type: integer
+        joker_restrictions:
+          type: string
+        jokers_enabled:
+          type: boolean
+          readOnly: true
+      required:
+      - adjustments
+      - growing_period_end_date
+      - growing_period_id
+      - growing_period_start_date
+      - growing_period_weeks_without_delivery
+      - joker_restrictions
+      - jokers_enabled
+      - max_jokers_per_member
     Joker:
       type: object
       properties:
@@ -3160,9 +4518,170 @@ components:
         cancellation_limit:
           type: string
           format: date
+        delivery_date:
+          type: string
+          format: date
       required:
       - cancellation_limit
+      - delivery_date
       - joker
+    LegalStatusEnum:
+      enum:
+      - association
+      - coop
+      - company
+      type: string
+      description: |-
+        * `association` - Verein
+        * `coop` - Genossenschaft
+        * `company` - Einzelunternehmen
+    LocaleEnum:
+      enum:
+      - de_DE.utf-8
+      - en_US.utf-8
+      type: string
+      description: |-
+        * `de_DE.utf-8` - Deutsch (DE)
+        * `en_US.utf-8` - English (US)
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        password:
+          type: string
+          title: Passwort
+          maxLength: 128
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+          title: Letzte Anmeldung
+        is_superuser:
+          type: boolean
+          title: Administrator-Status
+          description: Legt fest, dass der Benutzer alle Berechtigungen hat, ohne
+            diese einzeln zuweisen zu müssen.
+        username:
+          type: string
+          title: Benutzername
+          description: Erforderlich. 150 Zeichen oder weniger. Nur Buchstaben, Ziffern
+            und @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        is_staff:
+          type: boolean
+          title: Mitarbeiter-Status
+          description: Legt fest, ob sich der Benutzer an der Administrationsseite
+            anmelden kann.
+        is_active:
+          type: boolean
+          title: Aktiv
+          description: Legt fest, ob dieser Benutzer aktiv ist. Kann deaktiviert werden,
+            anstatt Benutzer zu löschen.
+        date_joined:
+          type: string
+          format: date-time
+          title: Mitglied seit
+        keycloak_id:
+          type: string
+          nullable: true
+          maxLength: 64
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          title: E-Mail-Adresse
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        preferred_language:
+          $ref: '#/components/schemas/PreferredLanguageEnum'
+        account_owner:
+          type: string
+          nullable: true
+          maxLength: 150
+        iban:
+          type: string
+          nullable: true
+          maxLength: 34
+        sepa_consent:
+          type: string
+          format: date-time
+          nullable: true
+        withdrawal_consent:
+          type: string
+          format: date-time
+          nullable: true
+          title: Right of withdrawal consent
+        privacy_consent:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        member_no:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Mitgliedsnummer
+        is_student:
+          type: boolean
+          title: Student*in
+        groups:
+          type: array
+          items:
+            type: integer
+            title: Gruppen
+          title: Gruppen
+          description: Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt
+            alle Berechtigungen dieser Gruppen.
+        user_permissions:
+          type: array
+          items:
+            type: integer
+            title: Berechtigungen
+          title: Berechtigungen
+          description: Spezifische Berechtigungen für diesen Benutzer.
+      required:
+      - created_at
+      - first_name
+      - last_name
+      - password
+      - username
     MemberJokerInformation:
       type: object
       properties:
@@ -3170,19 +4689,39 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JokerWithCancellationLimit'
-        max_jokers_per_growing_period:
-          type: integer
         weekday_limit:
           type: integer
-        joker_restrictions:
+        used_joker_in_growing_period:
           type: array
           items:
-            $ref: '#/components/schemas/JokerRestriction'
+            $ref: '#/components/schemas/UsedJokerInGrowingPeriod'
       required:
-      - joker_restrictions
-      - max_jokers_per_growing_period
+      - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    PaginatedCancelledSubscriptionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CancelledSubscription'
     PaginatedEmailConfigurationDispatchList:
       type: object
       required:
@@ -3344,6 +4883,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupedEmailDispatch'
+    PaginatedWaitingListEntryDetailsList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListEntryDetails'
     PatchedBundledEmailConfigurationRequest:
       type: object
       properties:
@@ -3403,7 +4965,6 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
             maxLength: 512
         custom_column_names:
           type: array
@@ -3427,6 +4988,8 @@ components:
         automated_export_hour:
           type: string
           format: time
+        locale:
+          $ref: '#/components/schemas/LocaleEnum'
     PatchedEmailConfigurationDispatchRequest:
       type: object
       properties:
@@ -3438,9 +5001,7 @@ components:
         scheduled_time:
           type: string
           format: date-time
-        override_recipients:
-          type: object
-          additionalProperties: {}
+        override_recipients: {}
     PatchedEmailConfigurationRequest:
       type: object
       properties:
@@ -3467,6 +5028,84 @@ components:
           minLength: 1
           maxLength: 255
         content:
+          type: string
+          minLength: 1
+    PatchedExtendedProductRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        deleted:
+          type: boolean
+        base:
+          type: boolean
+        price:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+        basket_size_equivalences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductBasketSizeEquivalenceRequest'
+        growing_period_id:
+          type: string
+          minLength: 1
+    PatchedGrowingPeriodRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+            maximum: 53
+            minimum: 1
+        max_jokers_per_member:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        joker_restrictions:
+          type: string
+          minLength: 1
+          maxLength: 1024
+    PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
+      type: object
+      properties:
+        growing_period_id:
+          type: string
+          minLength: 1
+        growing_period_start_date:
+          type: string
+          format: date
+        growing_period_end_date:
+          type: string
+          format: date
+        growing_period_weeks_without_delivery:
+          type: array
+          items:
+            type: integer
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDayAdjustmentRequest'
+        max_jokers_per_member:
+          type: integer
+        joker_restrictions:
           type: string
           minLength: 1
     PatchedPdfExportModelRequest:
@@ -3511,6 +5150,25 @@ components:
           minLength: 1
         generate_one_file_for_every_segment_entry:
           type: boolean
+    PatchedPickupLocationCapacitiesRequest:
+      type: object
+      properties:
+        picking_mode:
+          $ref: '#/components/schemas/PickingModeEnum'
+        pickup_location_id:
+          type: string
+          minLength: 1
+        pickup_location_name:
+          type: string
+          minLength: 1
+        capacities_by_shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
+        capacities_by_basket_size:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByBasketSizeRequest'
     PatchedStaticSegmentRecipientRequest:
       type: object
       properties:
@@ -3534,8 +5192,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -3595,6 +5251,70 @@ components:
         upload_type:
           $ref: '#/components/schemas/UploadTypeEnum'
         uploaded_by:
+          type: string
+          minLength: 1
+          nullable: true
+    PatchedWaitingListEntryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          minLength: 1
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        member:
           type: string
           minLength: 1
           nullable: true
@@ -3694,6 +5414,14 @@ components:
       - generate_one_file_for_every_segment_entry
       - name
       - template
+    PickingModeEnum:
+      enum:
+      - picking_mode_basket
+      - picking_mode_share
+      type: string
+      description: |-
+        * `picking_mode_basket` - Nach Kisten
+        * `picking_mode_share` - Nach Ernteanteile
     PickupLocation:
       type: object
       properties:
@@ -3751,6 +5479,99 @@ components:
       - name
       - postcode
       - street
+    PickupLocationCapacities:
+      type: object
+      properties:
+        picking_mode:
+          $ref: '#/components/schemas/PickingModeEnum'
+        pickup_location_id:
+          type: string
+        pickup_location_name:
+          type: string
+        capacities_by_shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByShare'
+        capacities_by_basket_size:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityByBasketSize'
+      required:
+      - picking_mode
+      - pickup_location_id
+      - pickup_location_name
+    PickupLocationCapacityByBasketSize:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+        capacity:
+          type: integer
+      required:
+      - basket_size_name
+    PickupLocationCapacityByBasketSizeRequest:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+          minLength: 1
+        capacity:
+          type: integer
+      required:
+      - basket_size_name
+    PickupLocationCapacityByShare:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+        product_type_id:
+          type: string
+        capacity:
+          type: integer
+      required:
+      - product_type_id
+      - product_type_name
+    PickupLocationCapacityByShareRequest:
+      type: object
+      properties:
+        product_type_name:
+          type: string
+          minLength: 1
+        product_type_id:
+          type: string
+          minLength: 1
+        capacity:
+          type: integer
+      required:
+      - product_type_id
+      - product_type_name
+    PickupLocationCapacityChangePoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        values:
+          type: array
+          items:
+            type: string
+      required:
+      - date
+      - values
+    PickupLocationCapacityEvolution:
+      type: object
+      properties:
+        table_headers:
+          type: array
+          items:
+            type: string
+        data_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationCapacityChangePoint'
+      required:
+      - data_points
+      - table_headers
     PickupLocationOpeningTime:
       type: object
       properties:
@@ -3775,6 +5596,14 @@ components:
       - day_of_week
       - open_time
       - pickup_location
+    PreferredLanguageEnum:
+      enum:
+      - de
+      - en
+      type: string
+      description: |-
+        * `de` - 🇩🇪 Deutsch
+        * `en` - 🇬🇧 English
     Product:
       type: object
       properties:
@@ -3794,6 +5623,43 @@ components:
       required:
       - name
       - type
+    ProductBasketSizeEquivalence:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+        quantity:
+          type: integer
+      required:
+      - basket_size_name
+      - quantity
+    ProductBasketSizeEquivalenceRequest:
+      type: object
+      properties:
+        basket_size_name:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+      required:
+      - basket_size_name
+      - quantity
+    ProductForCancellation:
+      type: object
+      properties:
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        is_in_trial:
+          type: boolean
+        cancellation_date:
+          type: string
+          format: date
+      required:
+      - cancellation_date
+      - is_in_trial
+      - product
     ProductType:
       type: object
       properties:
@@ -3821,8 +5687,38 @@ components:
         single_subscription_only:
           type: boolean
           title: Nur Einzelabonnement erlaubt
+        is_affected_by_jokers:
+          type: boolean
+          title: Nimmt am Joker-Verfahren teil
+        subscriptions_have_end_dates:
+          type: boolean
+          title: Verträge haben ein End-Datum
+          description: Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent
+            bis sie gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche
+            Produkte sind nicht mit Vertragsperiode verbunden.
+        must_be_subscribed_to:
+          type: boolean
+          title: Muss gezeichnet werden
+          description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+        is_association_membership:
+          type: boolean
+          title: Repräsentiert Vereinsmitgliedschaften
       required:
       - name
+    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse:
+      type: object
+      properties:
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductType'
+        number_of_subscriptions:
+          type: array
+          items:
+            type: integer
+      required:
+      - number_of_subscriptions
+      - product_types
     RecipientRequest:
       type: object
       properties:
@@ -3953,8 +5849,6 @@ components:
           format: email
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -3986,8 +5880,6 @@ components:
           minLength: 1
           maxLength: 254
         custom_data:
-          type: object
-          additionalProperties: {}
           nullable: true
         segment:
           type: string
@@ -4095,6 +5987,7 @@ components:
         end_date:
           type: string
           format: date
+          nullable: true
         cancellation_ts:
           type: string
           format: date-time
@@ -4129,17 +6022,25 @@ components:
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
           nullable: true
+        notice_period_duration:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        cancellation_admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
         period:
           type: string
+          nullable: true
         mandate_ref:
           type: string
       required:
-      - end_date
       - mandate_ref
       - member
-      - period
       - product
       - quantity
       - start_date
@@ -4263,9 +6164,7 @@ components:
           type: string
         field_name:
           type: string
-        additional_data:
-          type: object
-          additionalProperties: {}
+        additional_data: {}
       required:
       - field_name
       - label
@@ -4278,6 +6177,342 @@ components:
       description: |-
         * `F` - Uploaded file data
         * `U` - Remote file URL
+    UsedJokerInGrowingPeriod:
+      type: object
+      properties:
+        growing_period_start:
+          type: string
+          format: date
+        growing_period_end:
+          type: string
+          format: date
+        number_of_used_jokers:
+          type: integer
+        joker_restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/JokerRestriction'
+        max_jokers:
+          type: integer
+      required:
+      - growing_period_end
+      - growing_period_start
+      - joker_restrictions
+      - max_jokers
+      - number_of_used_jokers
+    WaitingListEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        first_name:
+          type: string
+          maxLength: 256
+        last_name:
+          type: string
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          maxLength: 100
+        member:
+          type: string
+          nullable: true
+      required:
+      - created_at
+      - email
+      - first_name
+      - last_name
+      - number_of_coop_shares
+      - privacy_consent
+    WaitingListEntryDetails:
+      type: object
+      properties:
+        id:
+          type: string
+        member_no:
+          type: integer
+        member_already_exists:
+          type: boolean
+        waiting_since:
+          type: string
+          format: date-time
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        street:
+          type: string
+        street_2:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        date_of_entry_in_cooperative:
+          type: string
+          format: date
+        current_pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        current_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pickup_location_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListPickupLocationWish'
+        product_wishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WaitingListProductWish'
+        desired_start_date:
+          type: string
+          format: date
+        number_of_coop_shares:
+          type: integer
+        comment:
+          type: string
+        category:
+          type: string
+      required:
+      - city
+      - comment
+      - country
+      - email
+      - first_name
+      - id
+      - last_name
+      - member_already_exists
+      - member_no
+      - number_of_coop_shares
+      - phone_number
+      - postcode
+      - street
+      - street_2
+      - waiting_since
+    WaitingListEntryRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 10
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 256
+        phone_number:
+          type: string
+          nullable: true
+          title: Telefonnummer
+          maxLength: 128
+        email:
+          type: string
+          minLength: 1
+          maxLength: 256
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        country:
+          oneOf:
+          - $ref: '#/components/schemas/CountryEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        privacy_consent:
+          type: string
+          format: date-time
+        number_of_coop_shares:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        desired_start_date:
+          type: string
+          format: date
+          nullable: true
+        comment:
+          type: string
+        category:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        member:
+          type: string
+          minLength: 1
+          nullable: true
+      required:
+      - email
+      - first_name
+      - last_name
+      - number_of_coop_shares
+      - privacy_consent
+    WaitingListEntryUpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_quantities:
+          type: array
+          items:
+            type: integer
+        desired_start_date:
+          type: string
+          format: date
+        comment:
+          type: string
+        category:
+          type: string
+      required:
+      - city
+      - comment
+      - email
+      - first_name
+      - id
+      - last_name
+      - phone_number
+      - pickup_location_ids
+      - postcode
+      - product_ids
+      - product_quantities
+      - street
+      - street_2
+    WaitingListPickupLocationWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - pickup_location
+      - priority
+      - waiting_list_entry
+    WaitingListProductWish:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        waiting_list_entry:
+          type: string
+      required:
+      - product
+      - quantity
+      - waiting_list_entry
   securitySchemes:
     cookieAuth:
       type: apiKey

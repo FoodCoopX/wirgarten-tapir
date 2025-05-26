@@ -1,6 +1,7 @@
 import csv
 import datetime
 import io
+import locale
 
 from tapir.generic_exports.models import CsvExport
 from tapir.generic_exports.services.export_segment_manager import (
@@ -44,10 +45,17 @@ class CsvExportBuilder:
         # Header row
         writer.writerow([name for name in csv_export.custom_column_names])
 
+        previous_locale = locale.getlocale()
+        locale.setlocale(locale.LC_NUMERIC, csv_export.locale)
+        cache = {}
         for db_object in queryset:
             writer.writerow(
-                [column.get_value(db_object, reference_datetime) for column in columns]
+                [
+                    column.get_value(db_object, reference_datetime, cache)
+                    for column in columns
+                ]
             )
+        locale.setlocale(locale.LC_NUMERIC, previous_locale)
 
         return result.getvalue()
 
@@ -55,6 +63,14 @@ class CsvExportBuilder:
     def get_column_by_id(
         cls, segment: ExportSegment, column_id: str
     ) -> ExportSegmentColumn:
+        if column_id == "":
+            return ExportSegmentColumn(
+                id="",
+                get_value=lambda _, __, ___: "",
+                display_name="Leere Spalte",
+                description="",
+            )
+
         for column in segment.get_available_columns():
             if column.id == column_id:
                 return column

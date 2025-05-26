@@ -63,6 +63,30 @@ export interface ProductType {
      * @memberof ProductType
      */
     singleSubscriptionOnly?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    isAffectedByJokers?: boolean;
+    /**
+     * Bestimmte Produkte wie Vereinsmitgliedschaften laufen permanent bis sie gekündigt werden und haben nicht zwangsläufig ein End-Datum. Solche Produkte sind nicht mit Vertragsperiode verbunden.
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    subscriptionsHaveEndDates?: boolean;
+    /**
+     * Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    mustBeSubscribedTo?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    isAssociationMembership?: boolean;
 }
 
 
@@ -91,6 +115,10 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'contractLink': json['contract_link'] == null ? undefined : json['contract_link'],
         'iconLink': json['icon_link'] == null ? undefined : json['icon_link'],
         'singleSubscriptionOnly': json['single_subscription_only'] == null ? undefined : json['single_subscription_only'],
+        'isAffectedByJokers': json['is_affected_by_jokers'] == null ? undefined : json['is_affected_by_jokers'],
+        'subscriptionsHaveEndDates': json['subscriptions_have_end_dates'] == null ? undefined : json['subscriptions_have_end_dates'],
+        'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
+        'isAssociationMembership': json['is_association_membership'] == null ? undefined : json['is_association_membership'],
     };
 }
 
@@ -111,6 +139,10 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'contract_link': value['contractLink'],
         'icon_link': value['iconLink'],
         'single_subscription_only': value['singleSubscriptionOnly'],
+        'is_affected_by_jokers': value['isAffectedByJokers'],
+        'subscriptions_have_end_dates': value['subscriptionsHaveEndDates'],
+        'must_be_subscribed_to': value['mustBeSubscribedTo'],
+        'is_association_membership': value['isAssociationMembership'],
     };
 }
 

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Form, Modal } from "react-bootstrap";
 import {
-  BuildExportResponse,
+  BuildCsvExportResponse,
   CsvExportModel,
   GenericExportsApi,
 } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import dayjs from "dayjs";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportBuildModalProps {
   show: boolean;
@@ -34,14 +36,14 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => {
         setLoading(false);
         onHide();
       });
   }
 
-  function downloadExportFile(response: BuildExportResponse) {
+  function downloadExportFile(response: BuildCsvExportResponse) {
     const element = document.createElement("a");
     element.setAttribute(
       "href",
@@ -57,7 +59,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Export bauen: {exportToBuild.name}</h5>
+        <h5 className={"mb-0"}>Export erstellen: {exportToBuild.name}</h5>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -68,8 +70,13 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
             <Form.Label>Datum</Form.Label>
             <Form.Control
               type={"datetime-local"}
-              onChange={(event) => setDatetime(new Date(event.target.value))}
+              onChange={(event) => {
+                console.log(event.target.value);
+                console.log(new Date(event.target.value));
+                setDatetime(new Date(event.target.value));
+              }}
               required={true}
+              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
             />
           </Form.Group>
         </Form>

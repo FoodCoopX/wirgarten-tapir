@@ -1,0 +1,18 @@
+{% load tapir_static %}
+<p>
+    Das Solawi-Jahr beginnt jährlich am 01.05. und endet am 30.04. des Folgejahres. Dein Erntevertrag läuft immer zum nächsten 30.04. aus, egal wann du einsteigst.
+</p>
+<div style="display:flex; flex-direction: row; justify-content: center; ">
+    <img style="max-width:25%"
+         src="{% static 'l2g/registration/ernteanteil_klein.jpg' %}" />
+    <img style="max-width:25%"
+         src="{% static 'l2g/registration/ernteanteil_gross.jpg' %}" />
+</div>
+<div class="alert alert-warning"
+     id="no-capacity-warning"
+     style="display:none">
+    <strong>Schade,</strong>
+    aktuell sind leider keine Ernteanteile verfügbar.
+    <br />
+    Wir informieren dich sobald wir die Kapazitäten erhöhen bzw. bevor die nächste Anbausaison beginnt.
+</div>

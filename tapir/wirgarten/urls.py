@@ -6,6 +6,7 @@ from tapir.wirgarten.views.contracts import (
     NewContractsView,
     SubscriptionListView,
     confirm_new_contracts,
+    NewSubscriptionCancellationsView,
 )
 from tapir.wirgarten.views.debug.scheduled_tasks import (
     JobsListView,
@@ -42,7 +43,6 @@ from tapir.wirgarten.views.member.list.member_payments import (
     get_payment_amount_edit_form,
 )
 from tapir.wirgarten.views.member.list.modals import (
-    get_cancel_non_trial_form,
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
     get_edit_price_form,
@@ -171,6 +171,11 @@ urlpatterns = [
     path("admin/waitinglist/export", export_waitinglist, name="export_waitlist"),
     path("admin/newcontracts", NewContractsView.as_view(), name="new_contracts"),
     path(
+        "admin/new_contract_cancellations",
+        NewSubscriptionCancellationsView.as_view(),
+        name="new_contract_cancellations",
+    ),
+    path(
         "admin/newcontracts/confirm",
         confirm_new_contracts,
         name="new_contracts_confirm",
@@ -229,11 +234,6 @@ urlpatterns = [
         "members/<str:pk>/canceltrial",
         get_cancel_trial_form,
         name="member_cancel_trial",
-    ),
-    path(
-        "members/<str:pk>/cancelnontrial",
-        get_cancel_non_trial_form,
-        name="member_cancel_non_trial",
     ),
     path(
         "members/<str:pk>/resendverifyemail",

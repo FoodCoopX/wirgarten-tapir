@@ -5,10 +5,10 @@ import TapirButton from "../components/TapirButton.tsx";
 
 interface ColumnInputProps {
   onSelectedColumnsChange: (
-    columns: ExportSegmentColumn[],
+    columnsIds: string[],
     columnNames: string[],
   ) => void;
-  selectedColumns: ExportSegmentColumn[];
+  selectedColumnIds: string[];
   columnNames: string[];
   autoFocus?: boolean;
   availableColumns: ExportSegmentColumn[];
@@ -16,32 +16,36 @@ interface ColumnInputProps {
 
 const ColumnInput: React.FC<ColumnInputProps> = ({
   onSelectedColumnsChange,
-  selectedColumns = [],
+  selectedColumnIds,
   columnNames,
   availableColumns,
 }) => {
   function addExportColumnToSelection(columnId: string) {
+    if (columnId === "") {
+      onSelectedColumnsChange([...selectedColumnIds, ""], [...columnNames, ""]);
+      return;
+    }
+
     for (const column of availableColumns) {
       if (column.id === columnId) {
         onSelectedColumnsChange(
-          [...selectedColumns, column],
-          [...columnNames, ""],
+          [...selectedColumnIds, column.id],
+          [...columnNames, column.displayName],
         );
         return;
       }
     }
+
     alert("Column not found: " + columnId);
   }
 
-  function removeExportColumnFromSelection(
-    columnToRemove: ExportSegmentColumn,
-  ) {
-    const indexToRemove = selectedColumns.findIndex(
-      (column) => column.id === columnToRemove.id,
+  function removeExportColumnFromSelection(columnIdToRemove: string) {
+    const indexToRemove = selectedColumnIds.findIndex(
+      (columnId) => columnId === columnIdToRemove,
     );
     const newSelectedColumns = [
-      ...selectedColumns.slice(0, indexToRemove),
-      ...selectedColumns.slice(indexToRemove + 1),
+      ...selectedColumnIds.slice(0, indexToRemove),
+      ...selectedColumnIds.slice(indexToRemove + 1),
     ];
     const newColumnNames = [
       ...columnNames.slice(0, indexToRemove),
@@ -55,7 +59,42 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
     index: number,
   ) {
     columnNames[index] = event.target.value;
-    onSelectedColumnsChange(selectedColumns, [...columnNames]);
+    onSelectedColumnsChange(selectedColumnIds, [...columnNames]);
+  }
+
+  function moveColumnUp(indexToMoveUp: number) {
+    swapColumnIndexes(indexToMoveUp, indexToMoveUp - 1);
+  }
+
+  function moveColumnDown(indexToMoveDown: number) {
+    swapColumnIndexes(indexToMoveDown, indexToMoveDown + 1);
+  }
+
+  function swapColumnIndexes(indexA: number, indexB: number) {
+    const columnA = selectedColumnIds[indexA];
+    const nameA = columnNames[indexA];
+    const columnB = selectedColumnIds[indexB];
+    const nameB = columnNames[indexB];
+    selectedColumnIds[indexB] = columnA;
+    columnNames[indexB] = nameA;
+    selectedColumnIds[indexA] = columnB;
+    columnNames[indexA] = nameB;
+
+    onSelectedColumnsChange([...selectedColumnIds], [...columnNames]);
+  }
+
+  function getColumnDisplayName(columnId: string) {
+    if (columnId === "") {
+      return "Leere Spalte";
+    }
+
+    for (const column of availableColumns) {
+      if (column.id === columnId) {
+        return column.displayName;
+      }
+    }
+
+    return "Unknown column: " + columnId;
   }
 
   return (
@@ -67,7 +106,7 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
       >
         <option value=""></option>
         {availableColumns
-          .filter((column) => !selectedColumns.includes(column))
+          .filter((column) => !selectedColumnIds.includes(column.id))
           .map((column) => (
             <option value={column.id} key={column.id}>
               {column.displayName}
@@ -77,24 +116,24 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
       <Table striped hover responsive>
         <thead>
           <tr>
-            <th>Interne Spalten-Name</th>
-            <th>Spalten-Name in der exportierte Datei</th>
+            <th>Interne Spaltenname</th>
+            <th>Spaltenname in der exportierte Datei</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          {selectedColumns.map((column, index) => {
+          {selectedColumnIds.map((columnId, index) => {
             return (
-              <tr key={column.id}>
+              <tr key={columnId}>
                 <td>
                   <span style={{ fontSize: ".875em" }} className={"text-wrap"}>
-                    {column.displayName}
+                    {getColumnDisplayName(columnId)}
                   </span>
                 </td>
                 <td>
                   <Form.Control
                     type={"text"}
-                    placeholder={column.displayName}
+                    placeholder={getColumnDisplayName(columnId)}
                     size={"sm"}
                     required={true}
                     value={columnNames[index]}
@@ -102,17 +141,48 @@ const ColumnInput: React.FC<ColumnInputProps> = ({
                   ></Form.Control>
                 </td>
                 <td>
-                  <TapirButton
-                    icon={"delete"}
-                    variant={"outline-danger"}
-                    size={"sm"}
-                    onClick={() => removeExportColumnFromSelection(column)}
-                  />
+                  <span className={"d-flex flex-row gap-0"}>
+                    <TapirButton
+                      icon="arrow_drop_up"
+                      variant={"outline-primary"}
+                      size={"sm"}
+                      disabled={index === 0}
+                      onClick={() => moveColumnUp(index)}
+                      type={"button"}
+                    />
+                    <TapirButton
+                      icon="arrow_drop_down"
+                      variant={"outline-primary"}
+                      size={"sm"}
+                      disabled={index === selectedColumnIds.length - 1}
+                      onClick={() => moveColumnDown(index)}
+                      type={"button"}
+                    />
+                    <TapirButton
+                      icon={"delete"}
+                      variant={"outline-danger"}
+                      size={"sm"}
+                      onClick={() => removeExportColumnFromSelection(columnId)}
+                    />
+                  </span>
                 </td>
               </tr>
             );
           })}
         </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={3}>
+              <TapirButton
+                icon={"add_column_right"}
+                text={"Leere Spalte hinzufügen"}
+                variant={"outline-primary"}
+                size={"sm"}
+                onClick={() => addExportColumnToSelection("")}
+              />
+            </td>
+          </tr>
+        </tfoot>
       </Table>
     </>
   );

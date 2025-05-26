@@ -18,7 +18,7 @@ from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.models import Member, PickupLocation, WaitingListEntry
-from tapir.wirgarten.parameters import Parameter
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
 )
@@ -57,8 +57,13 @@ class Events:
     # Mitglied möchte Email Adresse ändern, muss Bestätigungslink klicken
     MEMBERAREA_CHANGE_EMAIL_INITIATE = "memberarea_change_email_initiate"
 
+    # Mitglied möchte Email Adresse ändern, hinweis wird an der neue Adresse geschickt das er die alte Adresse lesen soll
+    MEMBERAREA_CHANGE_EMAIL_HINT = "memberarea_change_email_hint"
+
     # Email Adresse wurde erfolgreich geändert
     MEMBERAREA_CHANGE_EMAIL_SUCCESS = "memberarea_change_email_success"
+
+    CONTRACT_CANCELLED = "contract_canceled"
 
 
 class Segments:
@@ -166,6 +171,7 @@ def _register_filters():
 
 
 def _register_tokens():
+    cache = {}
     register_tokens(
         user_tokens={
             "Vorname": "first_name",
@@ -179,53 +185,69 @@ def _register_tokens():
             "Ernteanteilsgrößen": "base_subscriptions_text",
         },
         general_tokens={
-            "WirGarten Standort": lambda: get_parameter_value(Parameter.SITE_NAME),
-            "Admin Name": lambda: get_parameter_value(Parameter.SITE_ADMIN_NAME),
-            "Admin Email": lambda: get_parameter_value(Parameter.SITE_ADMIN_EMAIL),
+            "WirGarten Standort": lambda: get_parameter_value(
+                ParameterKeys.SITE_NAME, cache=cache
+            ),
+            "Admin Name": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_NAME, cache=cache
+            ),
+            "Admin Email": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_EMAIL, cache=cache
+            ),
             "Admin Telefonnr": lambda: get_parameter_value(
-                Parameter.SITE_ADMIN_TELEPHONE
+                ParameterKeys.SITE_ADMIN_TELEPHONE, cache=cache
             ),
-            "Admin Image": lambda: get_parameter_value(Parameter.SITE_ADMIN_IMAGE),
-            "Kontakt Email": lambda: get_parameter_value(Parameter.SITE_EMAIL),
+            "Admin Image": lambda: get_parameter_value(
+                ParameterKeys.SITE_ADMIN_IMAGE, cache=cache
+            ),
+            "Kontakt Email": lambda: get_parameter_value(
+                ParameterKeys.SITE_EMAIL, cache=cache
+            ),
             "Datenschutzerklärung Link": lambda: get_parameter_value(
-                Parameter.SITE_PRIVACY_LINK
+                ParameterKeys.SITE_PRIVACY_LINK, cache=cache
             ),
-            "Mitglieder-FAQ Link": lambda: get_parameter_value(Parameter.SITE_FAQ_LINK),
-            "Satzung Link": lambda: get_parameter_value(Parameter.COOP_STATUTE_LINK),
+            "Mitglieder-FAQ Link": lambda: get_parameter_value(
+                ParameterKeys.SITE_FAQ_LINK, cache=cache
+            ),
+            "Satzung Link": lambda: get_parameter_value(
+                ParameterKeys.COOP_STATUTE_LINK, cache=cache
+            ),
             "Infos zur Genossenschaft": lambda: get_parameter_value(
-                Parameter.COOP_INFO_LINK
+                ParameterKeys.COOP_INFO_LINK, cache=cache
             ),
-            "Jahr (aktuell)": lambda: get_today().year,
-            "Jahr (nächstes)": lambda: get_today().year + 1,
-            "Jahr (übernächstes)": lambda: get_today().year + 2,
+            "Jahr (aktuell)": lambda: get_today(cache=cache).year,
+            "Jahr (nächstes)": lambda: get_today(cache=cache).year + 1,
+            "Jahr (übernächstes)": lambda: get_today(cache=cache).year + 2,
         },
     )
     pass
 
 
 def _register_triggers():
-    TransactionalTrigger.register_action(
-        "BestellWizard: Mitgliedschaft + Ernteanteile",
-        Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
-        {
+    register_transactional_trigger(
+        name="BestellWizard: Mitgliedschaft + Ernteanteile",
+        key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
     )
-    TransactionalTrigger.register_action(
-        "Vertragsänderungen im Mitgliederbereich",
-        Events.MEMBERAREA_CHANGE_CONTRACT,
-        {
+    register_transactional_trigger(
+        name="Vertragsänderungen im Mitgliederbereich",
+        key=Events.MEMBERAREA_CHANGE_CONTRACT,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsstart": "contract_start_date",
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Mitgliedsdatenänderungen", Events.MEMBERAREA_CHANGE_DATA
@@ -239,48 +261,80 @@ def _register_triggers():
         },
     )
 
-    TransactionalTrigger.register_action(
-        "Email-Änderung: Bestätigung anfordern",
-        Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
-        {"Bestätigungslink": "verify_link"},
-    )
-    TransactionalTrigger.register_action(
-        "Email-Änderung: Erfolg",
-        Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+    register_transactional_trigger(
+        name="Email-Änderung: Bestätigung anfordern",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_INITIATE,
+        tokens={"Bestätigungslink": "verify_link"},
+        required=True,
     )
 
-    TransactionalTrigger.register_action(
-        "Kündigung im Probemonat",
-        Events.TRIAL_CANCELLATION,
-        {
+    register_transactional_trigger(
+        "Email-Änderung: Hinweis an neue Email die alte Adresse zu lesen",
+        Events.MEMBERAREA_CHANGE_EMAIL_HINT,
+        required=True,
+    )
+
+    register_transactional_trigger(
+        name="Email-Änderung: Erfolg",
+        key=Events.MEMBERAREA_CHANGE_EMAIL_SUCCESS,
+        required=True,
+    )
+
+    register_transactional_trigger(
+        name="Kündigung im Probemonat",
+        key=Events.TRIAL_CANCELLATION,
+        tokens={
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
             "Letzte Abholung am": "last_pickup_date",
         },
+        required=True,
     )
-    TransactionalTrigger.register_action(
-        "Vertrag nicht verlängert", Events.CONTRACT_NOT_RENEWED
+    register_transactional_trigger(
+        name="Vertrag nicht verlängert", key=Events.CONTRACT_NOT_RENEWED, required=True
+    )
+    register_transactional_trigger(
+        name="Vertrag gekündigt",
+        key=Events.CONTRACT_CANCELLED,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Vertragsende": "contract_end_date",
+        },
+        required=True,
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY
     )
-    TransactionalTrigger.register_action(
-        "Vertrags-/Lieferende",
-        Events.FINAL_PICKUP,
-        {"Vertragsliste": "contract_list"},
+
+    register_transactional_trigger(
+        name="Vertrags-/Lieferende",
+        key=Events.FINAL_PICKUP,
+        tokens={"Vertragsliste": "contract_list"},
+        required=True,
     )
 
     register_trigger(OnboardingTrigger)
 
 
-def get_waitlist_segment_name(entry_type):
-    return f"Warteliste: {WaitingListEntry.WaitingListType(entry_type).label}"
+def register_transactional_trigger(
+    name: str, key: str, tokens: dict = None, required: bool = False
+):
+    TransactionalTrigger.register_action(
+        name=name,
+        key=key,
+        required=required,
+        tokens=tokens,
+        default_content=get_default_mail_content(key=key) if required else None,
+    )
+
+
+def get_default_mail_content(key: str) -> str:
+    with open(f"tapir/wirgarten/email_drafts/{key}.mjml", "r") as file:
+        return file.read()
 
 
 def synchronize_waitlist_segment_for_entry(entry):
-    static_segment, _ = StaticSegment.objects.get_or_create(
-        name=get_waitlist_segment_name(entry.type)
-    )
+    static_segment, _ = StaticSegment.objects.get_or_create(name="Warteliste")
 
     recipient, created = StaticSegmentRecipient.objects.get_or_create(
         segment=static_segment,
@@ -299,16 +353,11 @@ def synchronize_waitlist_segments():
         synchronize_waitlist_segment_for_entry(entry)
 
     # Handle deletion of recipients no longer in WaitingList
-    for waitlist_type in WaitingListEntry.WaitingListType:
-        segment_name = get_waitlist_segment_name(waitlist_type)
-        for recipient in StaticSegmentRecipient.objects.filter(
-            segment__name=segment_name
-        ):
-            if not WaitingListEntry.objects.filter(email=recipient.email).exists():
-                print(
-                    f"Deleting recipient {recipient.email} from segment {segment_name}"
-                )
-                recipient.delete()
+    segment_name = "Warteliste"
+    for recipient in StaticSegmentRecipient.objects.filter(segment__name=segment_name):
+        if not WaitingListEntry.objects.filter(email=recipient.email).exists():
+            print(f"Deleting recipient {recipient.email} from segment {segment_name}")
+            recipient.delete()
 
 
 @receiver(post_save, sender=WaitingListEntry)
@@ -319,9 +368,7 @@ def create_or_update_recipient(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=WaitingListEntry)
 def delete_recipient(sender, instance, **kwargs):
     try:
-        static_segment = StaticSegment.objects.get(
-            name=f"Warteliste: {instance.get_type_display()}"
-        )
+        static_segment = StaticSegment.objects.get(name="Warteliste")
         recipient = StaticSegmentRecipient.objects.get(
             segment=static_segment, email=instance.email
         )

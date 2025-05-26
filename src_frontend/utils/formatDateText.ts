@@ -10,6 +10,7 @@ export function formatDateText(
     year: "numeric",
     month: "long",
     day: "numeric",
+    weekday: "short",
   };
   if (includeTime) {
     options.hour = "2-digit";

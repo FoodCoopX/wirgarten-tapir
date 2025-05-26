@@ -20,9 +20,12 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
     NOW = timezone.make_aware(datetime.datetime(year=2023, month=6, day=1))
     REFERENCE_DATE = datetime.date(year=2022, month=7, day=16)
 
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         super().setUp()
-        ParameterDefinitions().import_definitions()
         mock_timezone(self, self.NOW)
 
     def test_annotateSubscriptionsQuerysetWithProductPrice_default_annotatesCorrectPrice(

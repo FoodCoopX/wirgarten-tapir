@@ -1,47 +1,31 @@
-import datetime
+from unittest.mock import patch, Mock
 
-from tapir.configuration.models import TapirParameter
+from django.test import SimpleTestCase
+
+from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
+    DateLimitForDeliveryChangeCalculator,
+)
 from tapir.deliveries.services.joker_management_service import JokerManagementService
-from tapir.wirgarten.parameters import Parameter, ParameterDefinitions
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
-class TestJokerManagementServiceGetDateLimitForJokerChanges(TapirIntegrationTest):
-    def setUp(self) -> None:
-        ParameterDefinitions().import_definitions()
+class TestJokerManagementServiceGetDateLimitForJokerChanges(SimpleTestCase):
+    @patch.object(
+        DateLimitForDeliveryChangeCalculator,
+        "calculate_date_limit_for_delivery_changes_in_week",
+    )
+    def test_getDateLimitForJokerChanges_default_callsService(
+        self, mock_calculate_date_limit_for_delivery_changes_in_week: Mock
+    ):
+        input_date = Mock()
+        limit_date = Mock()
+        mock_calculate_date_limit_for_delivery_changes_in_week.return_value = limit_date
 
-    def test_getDateLimitForJokerChanges_default_returnsCorrectDate(self):
-        TapirParameter.objects.filter(
-            key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
-        ).update(
-            value="0"
-        )  # changes must be done before monday EOD
-        TapirParameter.objects.filter(key=Parameter.DELIVERY_DAY).update(
-            value="2"
-        )  # delivery day is wednesday
-
-        self.assertEqual(
-            datetime.date(year=2025, month=3, day=3),
-            JokerManagementService.get_date_limit_for_joker_changes(
-                datetime.date(year=2025, month=3, day=7)
-            ),
+        cache = {}
+        result = JokerManagementService.get_date_limit_for_joker_changes(
+            input_date, cache=cache
         )
 
-    def test_getDateLimitForJokerChanges_weekdayForChangesIsInTheWeekBeforeDeliveryDay_returnsCorrectDate(
-        self,
-    ):
-        TapirParameter.objects.filter(
-            key=Parameter.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL
-        ).update(
-            value="5"
-        )  # changes must be done before saturday EOD
-        TapirParameter.objects.filter(key=Parameter.DELIVERY_DAY).update(
-            value="2"
-        )  # delivery day is wednesday
-
-        self.assertEqual(
-            datetime.date(year=2025, month=3, day=1),
-            JokerManagementService.get_date_limit_for_joker_changes(
-                datetime.date(year=2025, month=3, day=7)
-            ),
+        self.assertEqual(limit_date, result)
+        mock_calculate_date_limit_for_delivery_changes_in_week.assert_called_once_with(
+            input_date, cache=cache
         )

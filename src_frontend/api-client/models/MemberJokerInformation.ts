@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { JokerRestriction } from './JokerRestriction';
+import type { UsedJokerInGrowingPeriod } from './UsedJokerInGrowingPeriod';
 import {
-    JokerRestrictionFromJSON,
-    JokerRestrictionFromJSONTyped,
-    JokerRestrictionToJSON,
-    JokerRestrictionToJSONTyped,
-} from './JokerRestriction';
+    UsedJokerInGrowingPeriodFromJSON,
+    UsedJokerInGrowingPeriodFromJSONTyped,
+    UsedJokerInGrowingPeriodToJSON,
+    UsedJokerInGrowingPeriodToJSONTyped,
+} from './UsedJokerInGrowingPeriod';
 import type { JokerWithCancellationLimit } from './JokerWithCancellationLimit';
 import {
     JokerWithCancellationLimitFromJSON,
@@ -45,19 +45,13 @@ export interface MemberJokerInformation {
      * @type {number}
      * @memberof MemberJokerInformation
      */
-    maxJokersPerGrowingPeriod: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof MemberJokerInformation
-     */
     weekdayLimit: number;
     /**
      * 
-     * @type {Array<JokerRestriction>}
+     * @type {Array<UsedJokerInGrowingPeriod>}
      * @memberof MemberJokerInformation
      */
-    jokerRestrictions: Array<JokerRestriction>;
+    usedJokerInGrowingPeriod: Array<UsedJokerInGrowingPeriod>;
 }
 
 /**
@@ -65,9 +59,8 @@ export interface MemberJokerInformation {
  */
 export function instanceOfMemberJokerInformation(value: object): value is MemberJokerInformation {
     if (!('usedJokers' in value) || value['usedJokers'] === undefined) return false;
-    if (!('maxJokersPerGrowingPeriod' in value) || value['maxJokersPerGrowingPeriod'] === undefined) return false;
     if (!('weekdayLimit' in value) || value['weekdayLimit'] === undefined) return false;
-    if (!('jokerRestrictions' in value) || value['jokerRestrictions'] === undefined) return false;
+    if (!('usedJokerInGrowingPeriod' in value) || value['usedJokerInGrowingPeriod'] === undefined) return false;
     return true;
 }
 
@@ -82,9 +75,8 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'usedJokers': ((json['used_jokers'] as Array<any>).map(JokerWithCancellationLimitFromJSON)),
-        'maxJokersPerGrowingPeriod': json['max_jokers_per_growing_period'],
         'weekdayLimit': json['weekday_limit'],
-        'jokerRestrictions': ((json['joker_restrictions'] as Array<any>).map(JokerRestrictionFromJSON)),
+        'usedJokerInGrowingPeriod': ((json['used_joker_in_growing_period'] as Array<any>).map(UsedJokerInGrowingPeriodFromJSON)),
     };
 }
 
@@ -100,9 +92,8 @@ export function MemberJokerInformationFromJSONTyped(json: any, ignoreDiscriminat
     return {
         
         'used_jokers': ((value['usedJokers'] as Array<any>).map(JokerWithCancellationLimitToJSON)),
-        'max_jokers_per_growing_period': value['maxJokersPerGrowingPeriod'],
         'weekday_limit': value['weekdayLimit'],
-        'joker_restrictions': ((value['jokerRestrictions'] as Array<any>).map(JokerRestrictionToJSON)),
+        'used_joker_in_growing_period': ((value['usedJokerInGrowingPeriod'] as Array<any>).map(UsedJokerInGrowingPeriodToJSON)),
     };
 }
 

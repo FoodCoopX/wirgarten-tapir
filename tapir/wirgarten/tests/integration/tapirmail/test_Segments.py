@@ -53,7 +53,6 @@ class SegmentTest(TapirIntegrationTest):
     def test_resolveSegment_nonCoopMembers_correctResult(self):
         expected_member_ids = [self.member_without_shares.id]
         segment_members = resolve_segments(add_segments=[Segments.NON_COOP_MEMBERS])
-
         self.assertSetEqual(self.ids(segment_members), set(expected_member_ids))
 
     def test_resolveSegment_withActiveSubscription_correctResult(self):

@@ -20,6 +20,13 @@ import {
     AutomatedExportCycleEnumToJSON,
     AutomatedExportCycleEnumToJSONTyped,
 } from './AutomatedExportCycleEnum';
+import type { LocaleEnum } from './LocaleEnum';
+import {
+    LocaleEnumFromJSON,
+    LocaleEnumFromJSONTyped,
+    LocaleEnumToJSON,
+    LocaleEnumToJSONTyped,
+} from './LocaleEnum';
 
 /**
  * 
@@ -99,6 +106,12 @@ export interface PatchedCsvExportModelRequest {
      * @memberof PatchedCsvExportModelRequest
      */
     automatedExportHour?: string;
+    /**
+     * 
+     * @type {LocaleEnum}
+     * @memberof PatchedCsvExportModelRequest
+     */
+    locale?: LocaleEnum;
 }
 
 
@@ -132,6 +145,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'automatedExportCycle': json['automated_export_cycle'] == null ? undefined : AutomatedExportCycleEnumFromJSON(json['automated_export_cycle']),
         'automatedExportDay': json['automated_export_day'] == null ? undefined : json['automated_export_day'],
         'automatedExportHour': json['automated_export_hour'] == null ? undefined : json['automated_export_hour'],
+        'locale': json['locale'] == null ? undefined : LocaleEnumFromJSON(json['locale']),
     };
 }
 
@@ -158,6 +172,7 @@ export function PatchedCsvExportModelRequestFromJSONTyped(json: any, ignoreDiscr
         'automated_export_cycle': AutomatedExportCycleEnumToJSON(value['automatedExportCycle']),
         'automated_export_day': value['automatedExportDay'],
         'automated_export_hour': value['automatedExportHour'],
+        'locale': LocaleEnumToJSON(value['locale']),
     };
 }
 

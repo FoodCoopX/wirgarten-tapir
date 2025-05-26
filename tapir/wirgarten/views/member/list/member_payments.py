@@ -1,7 +1,7 @@
-import itertools
 from collections import defaultdict
 from copy import copy
-from datetime import datetime, date
+from datetime import datetime
+from typing import Dict
 from urllib.parse import unquote
 
 from dateutil.relativedelta import relativedelta
@@ -27,9 +27,8 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.service.payment import get_next_payment_date
 from tapir.wirgarten.service.products import (
-    get_future_subscriptions,
+    get_active_and_future_subscriptions,
     get_product_price,
-    get_total_price_for_subs,
 )
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
@@ -45,14 +44,15 @@ class MemberPaymentsView(
         context = super().get_context_data(**kwargs)
         member_id = kwargs["pk"]
 
-        context["payments"] = self.get_payments_row(member_id)
+        cache = {}
+        context["payments"] = self.get_payments_row(member_id, cache=cache)
         context["member"] = Member.objects.get(pk=member_id)
 
         return context
 
-    def get_payments_row(self, member_id):
-        prev_payments = get_previous_payments(member_id)
-        future_payments = generate_future_payments(member_id)
+    def get_payments_row(self, member_id, cache: Dict):
+        prev_payments = get_previous_payments(member_id, cache=cache)
+        future_payments = generate_future_payments(member_id, cache=cache)
 
         for due_date, payments in future_payments.items():
             if due_date in prev_payments:
@@ -75,11 +75,11 @@ class MemberPaymentsView(
         )
 
 
-def sub_to_dict(sub):
+def sub_to_dict(sub, cache: Dict):
     if type(sub) is dict:
         return sub
 
-    price = get_product_price(sub.product, sub.start_date).price
+    price = get_product_price(sub.product, sub.start_date, cache=cache).price
     return {
         "quantity": sub.quantity,
         "product": {
@@ -94,7 +94,7 @@ def sub_to_dict(sub):
     }
 
 
-def payment_to_dict(payment: Payment) -> dict:
+def payment_to_dict(payment: Payment, cache: Dict) -> dict:
     subs = (
         [
             {
@@ -110,7 +110,7 @@ def payment_to_dict(payment: Payment) -> dict:
         if payment.type == "Genossenschaftsanteile"
         else list(
             map(
-                lambda x: sub_to_dict(x),
+                lambda x: sub_to_dict(x, cache=cache),
                 Subscription.objects.filter(
                     mandate_ref=payment.mandate_ref,
                     start_date__lte=payment.due_date,
@@ -130,7 +130,7 @@ def payment_to_dict(payment: Payment) -> dict:
         "calculated_amount": round(
             sum(map(lambda x: float(x["total_price"]), subs)), 2
         ),
-        "subs": list(map(sub_to_dict, subs)),
+        "subs": [sub_to_dict(sub, cache=cache) for sub in subs],
         "status": payment.status,
         "edited": payment.edited,
         "upcoming": (get_today() - payment.due_date).days < 0
@@ -138,28 +138,28 @@ def payment_to_dict(payment: Payment) -> dict:
     }
 
 
-def get_previous_payments(member_id) -> dict:
+def get_previous_payments(member_id, cache: Dict) -> dict:
     payments_dict = defaultdict(list)
     payments = Payment.objects.filter(mandate_ref__member_id=member_id).order_by(
         "-due_date"
     )
 
     for payment in payments:
-        payment_dict = payment_to_dict(payment)
+        payment_dict = payment_to_dict(payment, cache=cache)
         payments_dict[payment_dict["due_date"]].append(payment_dict)
 
     return dict(payments_dict)
 
 
-def generate_future_payments(member_id, limit: int = None):
-    subs = get_future_subscriptions().filter(member_id=member_id)
+def generate_future_payments(member_id, limit: int = None, cache: Dict = None):
+    subs = get_active_and_future_subscriptions(cache=cache).filter(member_id=member_id)
     max_end_date = subs.aggregate(Max("end_date"))["end_date__max"]
 
     payments_per_due_date = {}
     if not max_end_date:
         return payments_per_due_date
 
-    next_payment_date = get_next_payment_date()
+    next_payment_date = get_next_payment_date(cache=cache)
     while next_payment_date <= max_end_date and (
         limit is None or len(payments_per_due_date) < limit
     ):
@@ -177,7 +177,7 @@ def generate_future_payments(member_id, limit: int = None):
                     "mandate_ref": sub.mandate_ref,
                     "amount": amount,
                     "calculated_amount": amount,
-                    "subs": [sub_to_dict(sub)],
+                    "subs": [sub_to_dict(sub, cache=cache)],
                     "status": Payment.PaymentStatus.DUE,
                     "edited": False,
                     "upcoming": True,

@@ -37,6 +37,24 @@ export interface GrowingPeriod {
      * @memberof GrowingPeriod
      */
     endDate: Date;
+    /**
+     * 
+     * @type {Array<number>}
+     * @memberof GrowingPeriod
+     */
+    weeksWithoutDelivery?: Array<number>;
+    /**
+     * 
+     * @type {number}
+     * @memberof GrowingPeriod
+     */
+    maxJokersPerMember?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof GrowingPeriod
+     */
+    jokerRestrictions?: string;
 }
 
 /**
@@ -61,6 +79,9 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
         'id': json['id'] == null ? undefined : json['id'],
         'startDate': (new Date(json['start_date'])),
         'endDate': (new Date(json['end_date'])),
+        'weeksWithoutDelivery': json['weeks_without_delivery'] == null ? undefined : json['weeks_without_delivery'],
+        'maxJokersPerMember': json['max_jokers_per_member'] == null ? undefined : json['max_jokers_per_member'],
+        'jokerRestrictions': json['joker_restrictions'] == null ? undefined : json['joker_restrictions'],
     };
 }
 
@@ -78,6 +99,9 @@ export function GrowingPeriodFromJSONTyped(json: any, ignoreDiscriminator: boole
         'id': value['id'],
         'start_date': ((value['startDate']).toISOString().substring(0,10)),
         'end_date': ((value['endDate']).toISOString().substring(0,10)),
+        'weeks_without_delivery': value['weeksWithoutDelivery'],
+        'max_jokers_per_member': value['maxJokersPerMember'],
+        'joker_restrictions': value['jokerRestrictions'],
     };
 }
 

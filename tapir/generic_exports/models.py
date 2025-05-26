@@ -14,6 +14,11 @@ class AutomatedExportCycle(models.TextChoices):
     NEVER = "never", "Nie"
 
 
+class LocaleChoices(models.TextChoices):
+    DE = "de_DE.utf-8", "Deutsch (DE)"
+    EN = "en_US.utf-8", "English (US)"
+
+
 class CsvExport(TapirModel):
     export_segment_id = models.CharField(max_length=512)
     name = models.CharField(max_length=512, unique=True)
@@ -21,7 +26,9 @@ class CsvExport(TapirModel):
     separator = models.CharField(max_length=1)
     file_name = models.CharField(max_length=512)
     column_ids = ArrayField(
-        base_field=models.CharField(max_length=512), default=list, blank=True
+        base_field=models.CharField(max_length=512, blank=True),
+        default=list,
+        blank=True,
     )
     custom_column_names = ArrayField(
         base_field=models.CharField(max_length=512), default=list, blank=True
@@ -30,10 +37,13 @@ class CsvExport(TapirModel):
         base_field=models.EmailField(), default=list, blank=True
     )
     automated_export_cycle = models.CharField(
-        max_length=512, choices=AutomatedExportCycle.choices
+        max_length=512, choices=AutomatedExportCycle
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()
+    locale = models.CharField(
+        max_length=512, choices=LocaleChoices, default=LocaleChoices.DE
+    )
 
     def __str__(self):
         return self.name
@@ -60,7 +70,7 @@ class PdfExport(TapirModel):
         base_field=models.EmailField(), default=list, blank=True
     )
     automated_export_cycle = models.CharField(
-        max_length=512, choices=AutomatedExportCycle.choices
+        max_length=512, choices=AutomatedExportCycle
     )
     automated_export_day = models.IntegerField()
     automated_export_hour = models.TimeField()

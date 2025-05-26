@@ -7,7 +7,8 @@ from tapir.wirgarten.utils import get_now
 
 
 class TestBuildContextForEntry(TapirIntegrationTest):
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_buildContextForEntry_default_buildsContextWithOnlyUsedColumns(self):
@@ -15,7 +16,7 @@ class TestBuildContextForEntry(TapirIntegrationTest):
         segment = ExportSegmentManager.get_segment_by_id("members.all")
 
         result = PdfExportBuilder.build_context_for_entry(
-            member, segment, get_now(), ["member_number", "member_first_name"]
+            member, segment, get_now(), ["member_number", "member_first_name"], cache={}
         )
 
         self.assertEqual({"member_number": "1234", "member_first_name": "John"}, result)

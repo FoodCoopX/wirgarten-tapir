@@ -21,12 +21,15 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(SimpleTestCase
             factories.TODAY + datetime.timedelta(days=1)
         )
 
+        cache = {}
         self.assertTrue(
             JokerManagementService.can_joker_be_used_relative_to_date_limit(
-                reference_date
+                reference_date, cache=cache
             )
         )
-        mock_get_date_limit_for_joker_changes.assert_called_once_with(reference_date)
+        mock_get_date_limit_for_joker_changes.assert_called_once_with(
+            reference_date, cache=cache
+        )
 
     @patch.object(JokerManagementService, "get_date_limit_for_joker_changes")
     def test_canJokerBeUsedRelativeToDateLimit_dateLimitIsNotInTheFuture_returnsFalse(
@@ -35,9 +38,12 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToDateLimit(SimpleTestCase
         reference_date = Mock()
         mock_get_date_limit_for_joker_changes.return_value = factories.TODAY
 
+        cache = {}
         self.assertFalse(
             JokerManagementService.can_joker_be_used_relative_to_date_limit(
-                reference_date
+                reference_date, cache=cache
             )
         )
-        mock_get_date_limit_for_joker_changes.assert_called_once_with(reference_date)
+        mock_get_date_limit_for_joker_changes.assert_called_once_with(
+            reference_date, cache=cache
+        )

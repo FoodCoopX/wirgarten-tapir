@@ -30,6 +30,21 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/pdf_export_editor/pdf_export_editor_entry.tsx",
           ),
+          product_config: join(
+            INPUT_DIR,
+            "/product_config/product_config_entry.tsx",
+          ),
+          pickup_location_config: join(
+            INPUT_DIR,
+            "/pickup_location_config/pickup_location_config_entry.tsx",
+          ),
+          new_contract_cancellations: join(
+            INPUT_DIR,
+            "/new_contract_cancellations/new_contract_cancellations_entry.tsx",
+          ),
+          dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
+          waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),
+          member_list: join(INPUT_DIR, "/member_list/member_list_entry.tsx"),
         },
       },
     },

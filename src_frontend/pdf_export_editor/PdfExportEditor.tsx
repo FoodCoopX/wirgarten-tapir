@@ -11,6 +11,7 @@ import PdfExportTable from "./PdfExportTable.tsx";
 import PdfExportModal from "./PdfExportModal.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportEditorProps {
   csrfToken: string;
@@ -35,7 +36,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsExportSegmentsList()
       .then(setSegments)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setSegmentsLoading(false));
 
     loadExports();
@@ -46,7 +47,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsPdfExportsList()
       .then(setExports)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setExportsLoading(false));
   }
 
@@ -54,7 +55,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsPdfExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
@@ -72,7 +73,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
                 <h5 className={"mb-0"}>PDF-Export Editor</h5>
                 <TapirButton
                   variant={"outline-primary"}
-                  text={"Neues Export erzeugen"}
+                  text={"Neuen Export erzeugen"}
                   icon={"add_circle"}
                   onClick={() => setShowPdfExportModal(true)}
                   disabled={segmentsLoading}

@@ -44,7 +44,7 @@ services:
       DEFAULT_HOST: localhost
 
   db:
-    image: postgres:13
+    image: postgres:14
     environment:
       - POSTGRES_DB=tapir
       - POSTGRES_PASSWORD=tapir
@@ -105,8 +105,6 @@ services:
       - '5173:5173'
     volumes:
       - .:/app
-    environment:
-      - CHOKIDAR_USEPOLLING=true
 
 volumes:
   nginx-certs-volume:

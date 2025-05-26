@@ -62,11 +62,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "export_payments_per_product_type": {
         "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
-        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
+        "schedule": celery.schedules.crontab(day_of_month="1", minute="0", hour="3"),
     },
     "generate_member_numbers": {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
-        "schedule": celery.schedules.crontab(day_of_month=1, minute=0, hour=3),
+        "schedule": celery.schedules.crontab(day_of_month="1", minute="0", hour="3"),
     },
     "resolve_segment_and_create_email_dispatches_task": {
         "task": "tapir_mail.tasks.resolve_segment_and_create_email_dispatches_task",
@@ -83,6 +83,10 @@ CELERY_BEAT_SCHEDULE = {
     "do_automated_exports": {
         "task": "tapir.generic_exports.tasks.do_automated_exports",
         "schedule": datetime.timedelta(minutes=1),
+    },
+    "automatic_subscription_renewal": {
+        "task": "tapir.subscriptions.tasks.automatic_subscription_renewal",
+        "schedule": celery.schedules.crontab(hour="2", minute="0"),
     },
 }
 
@@ -128,7 +132,7 @@ elif EMAIL_ENV == "prod":
 # Crash emails will come from this address.
 SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 
-SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000")
+SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = dict(
     SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
@@ -176,3 +180,6 @@ CACHES = {
 TAPIR_MAIL_PATH = "/tapirmail"
 os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
 os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]

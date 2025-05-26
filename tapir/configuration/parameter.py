@@ -1,4 +1,6 @@
+import datetime
 import re
+from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -7,6 +9,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.utils.shortcuts import get_from_cache_or_compute
 
 
 def validate_format_string(value: str, allowed_vars: [str]):
@@ -32,17 +35,24 @@ class ParameterMeta:
     def __init__(
         self,
         options: [tuple] = None,
-        validators: [callable] = [],
+        options_callable: callable = None,
+        validators: [callable] = None,
         textarea=False,
         vars_hint: [str] = None,
+        show_only_when: callable = None,
     ):
+        if validators is None:
+            validators = []
+
         if vars_hint is not None and len(vars_hint) > 0:
             validators += [lambda x: validate_format_string(x, vars_hint)]
 
         self.vars_hint = vars_hint
         self.options = options
+        self.options_callable = options_callable
         self.validators = validators
         self.textarea = textarea
+        self.show_only_when = show_only_when
 
 
 class ParameterMetaInfo:
@@ -70,12 +80,22 @@ def get_parameter_meta(key: str) -> ParameterMeta | None:
     return meta_info.parameters[key]
 
 
-def get_parameter_value(key: str):
-    try:
-        param = TapirParameter.objects.get(key=key)
-        return param.get_value()
-    except ObjectDoesNotExist:
-        raise KeyError("Parameter with key '{key}' does not exist.".format(key=key))
+def get_parameter_value(key: str, cache: Dict | None = None):
+    parameters_by_key = get_from_cache_or_compute(
+        cache,
+        "parameters_by_key",
+        lambda: {
+            parameter.key: parameter for parameter in TapirParameter.objects.all()
+        },
+    )
+
+    def compute_parameter_value():
+        if key not in parameters_by_key.keys():
+            raise KeyError(f"Parameter with key '{key}' does not exist.")
+        return parameters_by_key[key].get_value()
+
+    parameter_cache = get_from_cache_or_compute(cache, "parameter_cache", lambda: {})
+    return get_from_cache_or_compute(parameter_cache, key, compute_parameter_value)
 
 
 def parameter_definition(
@@ -84,8 +104,10 @@ def parameter_definition(
     description: str,
     category: str,
     datatype: TapirParameterDatatype,
-    initial_value: str | int | float | bool,
+    initial_value: str | int | float | bool | datetime.date,
     order_priority: int = -1,
+    enabled: bool = True,
+    debug: bool = False,
     meta: ParameterMeta = ParameterMeta(
         options=None, validators=[], vars_hint=None, textarea=False
     ),
@@ -100,6 +122,8 @@ def parameter_definition(
         key,
         label,
         order_priority,
+        enabled,
+        debug,
     )
 
     meta_info.parameters[param.key] = meta
@@ -113,6 +137,8 @@ def __create_or_update_parameter(
     key,
     label,
     order_priority,
+    enabled: bool,
+    debug: bool,
 ):
     try:
         param = TapirParameter.objects.get(pk=key)
@@ -124,8 +150,10 @@ def __create_or_update_parameter(
             param.value = initial_value  # only update value with initial value if the datatype changed!
 
         param.order_priority = order_priority
+        param.enabled = enabled
+        param.debug = debug
 
-        print("\t[update] ", key)
+        # print("\t[update] ", key)
 
         param.save()
     except ObjectDoesNotExist:
@@ -139,6 +167,8 @@ def __create_or_update_parameter(
             order_priority=order_priority,
             datatype=datatype.value,
             value=str(initial_value),
+            enabled=enabled,
+            debug=debug,
         )
 
     return param
@@ -154,6 +184,8 @@ def __validate_initial_value(datatype, initial_value, key, validators):
             assert datatype == TapirParameterDatatype.DECIMAL
         elif type(initial_value) == bool:
             assert datatype == TapirParameterDatatype.BOOLEAN
+        elif type(initial_value) == datetime.date:
+            assert datatype == TapirParameterDatatype.DATE
     except AssertionError:
         raise TypeError(
             "Parameter '{key}' is defined with datatype '{datatype}', \

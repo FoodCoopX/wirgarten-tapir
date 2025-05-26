@@ -1,12 +1,13 @@
+import datetime
 import io
 import re
 from datetime import date
-from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
-
-from tapir.wirgarten.models import GrowingPeriod
+from django.utils.translation import gettext_lazy as _
 from lxml import etree
+
+from tapir.wirgarten.models import GrowingPeriod, ProductType
 
 
 def validate_growing_period_overlap(start_date: date, end_date: date):
@@ -84,3 +85,21 @@ def validate_html(html: str):
     if position:
         tag = html[position[0] : position[1]]
         raise ValidationError(f"Unclosed HTML tag {tag} at {position}!")
+
+
+def validate_iso_datetime(date_as_string: str):
+    try:
+        datetime.datetime.fromisoformat(date_as_string)
+    except ValueError as e:
+        raise ValidationError(f"Invalid date: {date_as_string}, error: {e}")
+
+
+def validate_base_product_type_exists(base_product_type_id: str):
+    if not ProductType.objects.exists():
+        # This allows the creation of the parameter on fresh installs
+        return
+
+    if not ProductType.objects.filter(id=base_product_type_id).exists():
+        raise ValidationError(
+            f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."
+        )

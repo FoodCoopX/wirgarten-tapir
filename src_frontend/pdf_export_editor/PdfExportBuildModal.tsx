@@ -3,6 +3,8 @@ import { Form, Modal } from "react-bootstrap";
 import { GenericExportsApi, PdfExportModel } from "../api-client";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import dayjs from "dayjs";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface PdfExportBuildModalProps {
   show: boolean;
@@ -30,7 +32,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => {
         setLoading(false);
         onHide();
@@ -48,7 +50,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Export bauen: {exportToBuild.name}</h5>
+        <h5 className={"mb-0"}>Export erstellen: {exportToBuild.name}</h5>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -61,6 +63,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
               type={"datetime-local"}
               onChange={(event) => setDatetime(new Date(event.target.value))}
               required={true}
+              value={dayjs(datetime).format("YYYY-MM-DDTHH:mm")}
             />
           </Form.Group>
         </Form>

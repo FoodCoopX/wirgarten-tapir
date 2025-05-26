@@ -9,7 +9,8 @@ from tapir.wirgarten.utils import get_today
 
 
 class TestTransferCoopShares(TapirIntegrationTest):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
 
     def test_transferCoopShares_default_newMembersEntryDateIsTransferDate(self):

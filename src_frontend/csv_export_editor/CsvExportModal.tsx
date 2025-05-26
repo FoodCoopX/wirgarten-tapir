@@ -4,13 +4,14 @@ import {
   AutomatedExportCycleEnum,
   CsvExportModel,
   ExportSegment,
-  ExportSegmentColumn,
   GenericExportsApi,
+  LocaleEnum,
 } from "../api-client";
 import EmailInput from "../components/EmailInput";
 import ColumnInput from "./ColumnInput.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface CsvExportModalProps {
   show: boolean;
@@ -39,7 +40,10 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   const [exportEmailRecipients, setExportEmailRecipients] = useState<string[]>(
     [],
   );
-  const [exportColumns, setExportColumns] = useState<ExportSegmentColumn[]>([]);
+  const [exportLocale, setExportLocale] = useState<LocaleEnum>(
+    LocaleEnum.DeDeUtf8,
+  );
+  const [exportColumnIds, setExportColumnIds] = useState<string[]>([]);
   const [exportColumnsNames, setExportColumnsNames] = useState<string[]>([]);
   const [exportCycle, setExportCycle] = useState<AutomatedExportCycleEnum>(
     AutomatedExportCycleEnum.Never,
@@ -50,13 +54,38 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
 
   function onSegmentSelectChanged(event: ChangeEvent<HTMLSelectElement>) {
     const segmentId = event.target.value;
+    if (exportSegment && segmentId === exportSegment.id) return;
+
     for (const segment of segments) {
       if (segment.id === segmentId) {
+        if (!allColumnsEqual(segment)) {
+          setExportColumnIds([]);
+          setExportColumnsNames([]);
+        }
         setExportSegment(segment);
         return;
       }
     }
     alert("Segment not found " + segmentId);
+  }
+
+  function allColumnsEqual(newSegment: ExportSegment) {
+    if (!exportSegment) return false;
+
+    for (const newColumn of newSegment.columns) {
+      let found = false;
+      for (const oldColumn of exportSegment.columns) {
+        if (newColumn.id === oldColumn.id) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   useEffect(() => {
@@ -71,17 +100,6 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
     return undefined;
   }
 
-  function getExportColumns(exp: CsvExportModel) {
-    const segment = getSegmentById(exp.exportSegmentId);
-    if (!segment) {
-      return [];
-    }
-
-    return segment.columns.filter((column) =>
-      exp.columnIds?.includes(column.id),
-    );
-  }
-
   useEffect(() => {
     if (exportToEdit) {
       setExportName(exportToEdit.name);
@@ -90,11 +108,12 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportSeparator(exportToEdit.separator);
       setExportFileName(exportToEdit.fileName);
       setExportEmailRecipients(exportToEdit.emailRecipients ?? []);
-      setExportColumns(getExportColumns(exportToEdit));
+      setExportColumnIds(exportToEdit.columnIds ?? []);
       setExportColumnsNames(exportToEdit.customColumnNames ?? []);
       setExportCycle(exportToEdit.automatedExportCycle);
       setExportDay(exportToEdit.automatedExportDay);
       setExportHour(exportToEdit.automatedExportHour);
+      setExportLocale(exportToEdit.locale ?? LocaleEnum.DeDeUtf8);
     } else {
       setExportName("");
       setExportSegment(segments[0]);
@@ -102,11 +121,12 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       setExportSeparator(",");
       setExportFileName("");
       setExportEmailRecipients([]);
-      setExportColumns([]);
+      setExportColumnIds([]);
       setExportColumnsNames([]);
       setExportCycle(AutomatedExportCycleEnum.Never);
       setExportDay(1);
       setExportHour("00:00");
+      setExportLocale(LocaleEnum.DeDeUtf8);
     }
   }, [exportToEdit]);
 
@@ -120,10 +140,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
 
     setLoading(true);
 
-    const columnIds = exportColumns.map((column) => column.id);
     const request = {
       exportSegmentId: exportSegment.id,
-      columnIds: columnIds,
+      columnIds: exportColumnIds,
       customColumnNames: exportColumnsNames,
       description: exportDescription,
       name: exportName,
@@ -133,6 +152,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       automatedExportCycle: exportCycle,
       automatedExportDay: exportDay,
       automatedExportHour: exportHour,
+      locale: exportLocale,
     };
 
     let promise;
@@ -152,7 +172,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(alert)
+      .catch(handleRequestError)
       .finally(() => setLoading(false));
   }
 
@@ -172,9 +192,9 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered={true}>
+    <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
-        <h5 className={"mb-0"}>Neues Export erzeugen</h5>
+        <h5 className={"mb-0"}>Neuen Export erzeugen</h5>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -257,11 +277,29 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
           <Row>
             <Col>
               <Form.Group controlId={"form.emails"}>
-                <Form.Label>Empfängers</Form.Label>
+                <Form.Label>Empfänger</Form.Label>
                 <EmailInput
                   onEmailListChange={setExportEmailRecipients}
                   addresses={exportEmailRecipients}
                 />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId={"form.locale"}>
+                <Form.Label>Locale</Form.Label>
+                <Form.Select
+                  value={exportLocale}
+                  onChange={(event) =>
+                    setExportLocale(event.target.value as LocaleEnum)
+                  }
+                >
+                  <option value={LocaleEnum.DeDeUtf8}>Deutsch</option>
+                  <option value={LocaleEnum.EnUsUtf8}>English</option>
+                </Form.Select>
+                <Form.Text>
+                  Bestimmt wie Zahlen formatiert werden (mit Komma oder Punkt
+                  z.B)
+                </Form.Text>
               </Form.Group>
             </Col>
           </Row>
@@ -271,11 +309,11 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
                 <Form.Label>Spalten</Form.Label>
                 <ColumnInput
                   onSelectedColumnsChange={(columns, columnNames) => {
-                    setExportColumns(columns);
+                    setExportColumnIds(columns);
                     setExportColumnsNames(columnNames);
                   }}
                   availableColumns={exportSegment ? exportSegment.columns : []}
-                  selectedColumns={exportColumns}
+                  selectedColumnIds={exportColumnIds}
                   columnNames={exportColumnsNames}
                 />
               </Form.Group>
@@ -284,7 +322,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
           <Row>
             <Col>
               <Form.Group controlId={"form.cycle"}>
-                <Form.Label>Automatisiertes Export Zyklus</Form.Label>
+                <Form.Label>Automatisierter Export-Zyklus</Form.Label>
                 <Form.Select
                   onChange={(event) =>
                     setExportCycle(
@@ -336,7 +374,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
       <Modal.Footer>
         <TapirButton
           text={exportToEdit ? "Speichern" : "Erzeugen"}
-          icon={"add_circle"}
+          icon={"save"}
           variant={"primary"}
           onClick={save}
           loading={loading}

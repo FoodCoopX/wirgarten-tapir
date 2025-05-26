@@ -1,0 +1,10 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Vertrag gekündigt" werden an Mitglieder geschickt wenn sie ein Vertrag kündigen.
+                Folgende Token steht zu verfügung: {{Vertrag gekündigt.Vertragsliste}} {{Vertrag gekündigt.Vertragsende}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
