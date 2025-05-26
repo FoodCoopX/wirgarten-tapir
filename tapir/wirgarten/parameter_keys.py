@@ -71,7 +71,7 @@ class ParameterKeys:
     )
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
-    ORGANISATION_LEGAL_STATUS = f"{PREFIX}.organisation.legal_status"
+
     SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT = (
         f"{PREFIX}.subscriptions.four_week_cycle_start_point"
     )
@@ -81,7 +81,10 @@ class ParameterKeys:
     TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END = (
         f"{PREFIX}.trial_period.can_be_cancelled_before_end"
     )
+
+    ORGANISATION_LEGAL_STATUS = f"{PREFIX}.organisation.legal_status"
     ORGANISATION_THEME = "organisation.theme"
+    ORGANISATION_QUESTIONAIRE_SOURCES = f"{PREFIX}.organisation.questionaire_sources"
 
     SOLIDARITY_UNIT = f"{PREFIX}.solidarity.unit"
     SOLIDARITY_CHOICES = f"{PREFIX}.solidarity.choices"

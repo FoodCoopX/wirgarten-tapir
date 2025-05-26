@@ -597,18 +597,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
-            label="Rechtsform der Organisation",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=LEGAL_STATUS_COOPERATIVE,
-            description="",
-            category=ParameterCategory.ORGANIZATION,
-            order_priority=10,
-            meta=ParameterMeta(options=LEGAL_STATUS_OPTIONS),
-            enabled=is_debug_instance(),
-        )
-
-        parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_WAITING_LIST_CATEGORIES,
             label="Warteliste-Kategorien",
             datatype=TapirParameterDatatype.STRING,
@@ -687,17 +675,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
-            key=ParameterKeys.ORGANISATION_THEME,
-            label="Theme",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=THEME_WIRGARTEN,
-            description="",
-            category=ParameterCategory.ORGANIZATION,
-            order_priority=5,
-            meta=ParameterMeta(options=THEME_OPTIONS),
-        )
-
         if getattr(settings, "DEBUG", False):
             parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE_PRESET,
@@ -734,6 +711,42 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             )
 
         self.import_definitions_solidarity()
+        self.import_definitions_organization()
+
+    @classmethod
+    def import_definitions_organization(cls):
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
+            label="Rechtsform der Organisation",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=LEGAL_STATUS_COOPERATIVE,
+            description="",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=10,
+            meta=ParameterMeta(options=LEGAL_STATUS_OPTIONS),
+            enabled=is_debug_instance(),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_THEME,
+            label="Theme",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=THEME_WIRGARTEN,
+            description="",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=5,
+            meta=ParameterMeta(options=THEME_OPTIONS),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
+            label="Vertriebskanäle",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Social Media, Zeitung, Suchmaschine",
+            description="Welche Kanäle zur Auswahl stehen am Ende der BestellWizard, als Komma-getrennte Liste. Beispiel: 'Social Media, Zeitung, Suchmaschine'",
+            category=ParameterCategory.ORGANIZATION,
+            order_priority=3,
+        )
 
     @classmethod
     def import_definitions_solidarity(cls):

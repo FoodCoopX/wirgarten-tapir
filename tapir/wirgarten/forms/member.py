@@ -171,6 +171,19 @@ class MarketingFeedbackForm(Form):
         label="",
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        sources = get_parameter_value(ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES)
+        sources = sources.split(",")
+        sources = [source.strip() for source in sources]
+
+        for source in sources:
+            QuestionaireTrafficSourceOption.objects.get_or_create(name=source)
+
+        queryset = self.fields["sources"].queryset
+        self.fields["sources"].queryset = queryset.filter(name__in=sources)
+
     @transaction.atomic
     def save(self, **kwargs):
         sources = self.cleaned_data["sources"]
