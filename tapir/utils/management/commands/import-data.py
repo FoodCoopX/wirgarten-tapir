@@ -85,7 +85,7 @@ class Command(BaseCommand):
                         valid_from=row["AO_gueltig_ab"],
                     )
                     try:
-                        m.save(bypass_keycloak=False)
+                        m.save(bypass_keycloak=True)
                         if picloc is not None:
                             mp.save()
                     except Exception as e:
