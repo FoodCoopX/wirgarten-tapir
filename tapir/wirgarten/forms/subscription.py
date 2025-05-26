@@ -200,7 +200,7 @@ class BaseProductForm(forms.Form):
                     max_value=10,
                     min_value=0,
                     initial=0,
-                    label=_(f"{prod_field.name}-{self.product_type.name}"),
+                    label=prod_field.name,
                     help_text="""{:.2f} € inkl. MwSt / Monat""".format(
                         prices[prod_field.id]
                     ),
@@ -675,25 +675,25 @@ class AdditionalProductForm(forms.Form):
             ]
 
         if self.product_type.single_subscription_only:
-            for k, v in self.products.items():
+            for k, product in self.products.items():
                 self.fields[k] = forms.BooleanField(
                     required=False,
                     initial=False,
-                    label=_(
-                        f"{k.replace(self.field_prefix, '')} {self.product_type.name}"
+                    label=product.name,
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
+                        prices[product.id]
                     ),
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
                 )
         else:
-            for k, v in self.products.items():
+            for k, product in self.products.items():
                 self.fields[k] = forms.IntegerField(
                     required=False,
                     min_value=0,
                     initial=0,
-                    label=_(
-                        f"{k.replace(self.field_prefix, '')} {self.product_type.name}"
+                    label=product.name,
+                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(
+                        prices[product.id]
                     ),
-                    help_text="""{:.2f} € inkl. MwSt / Monat""".format(prices[v.id]),
                 )
 
         if self.product_type.contract_link:

@@ -197,7 +197,7 @@ def get_product_type_capacity_edit_form(request, **kwargs):
             default_tax_rate=form.cleaned_data["tax_rate"],
             capacity=form.cleaned_data["capacity"],
             tax_rate_change_date=form.cleaned_data["tax_rate_change_date"],
-            is_affected_by_jokers=form.cleaned_data["is_affected_by_jokers"],
+            is_affected_by_jokers=form.cleaned_data.get("is_affected_by_jokers", False),
             notice_period_duration=form.cleaned_data.get("notice_period", None),
             must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
             is_association_membership=form.cleaned_data.get(
