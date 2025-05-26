@@ -1,4 +1,4 @@
-from datetime import date
+import datetime
 from decimal import Decimal
 from typing import List, Dict
 
@@ -43,7 +43,9 @@ def get_total_price_for_subs(subs: List[Payable], cache: Dict) -> float:
     return round(sum([x.total_price(cache=cache) for x in subs]), 2)
 
 
-def get_active_product_types(reference_date: date = None, cache: Dict = None) -> iter:
+def get_active_product_types(
+    reference_date: datetime.date = None, cache: Dict = None
+) -> iter:
     """
     Returns the product types which are active for the given reference date.
 
@@ -71,7 +73,7 @@ def get_active_product_types(reference_date: date = None, cache: Dict = None) ->
 
 
 def get_available_product_types(
-    reference_date: date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: Dict = None
 ) -> list:
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -81,7 +83,7 @@ def get_available_product_types(
 
 
 def get_next_growing_period(
-    reference_date: date = None, cache: Dict = None
+    reference_date: datetime.date = None, cache: Dict = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
         reference_date = get_today(cache=cache)
@@ -103,7 +105,7 @@ def get_next_growing_period(
 
 
 def get_current_growing_period(
-    reference_date: date = None, cache: Dict | None = None
+    reference_date: datetime.date = None, cache: Dict | None = None
 ) -> GrowingPeriod | None:
     if reference_date is None:
         reference_date = get_today()
@@ -129,8 +131,8 @@ def get_current_growing_period(
 
 @transaction.atomic
 def create_growing_period(
-    start_date: date,
-    end_date: date,
+    start_date: datetime.date,
+    end_date: datetime.date,
     max_jokers_per_member: int,
     joker_restrictions: str,
 ) -> GrowingPeriod:
@@ -154,7 +156,9 @@ def create_growing_period(
 
 
 @transaction.atomic
-def copy_growing_period(growing_period_id: str, start_date: date, end_date: date):
+def copy_growing_period(
+    growing_period_id: str, start_date: datetime.date, end_date: datetime.date
+):
     """
     Creates a new growing period and copies all product capacities from the given growing period.
 
@@ -205,7 +209,9 @@ def delete_growing_period_with_capacities(growing_period_id: str) -> bool:
     return True
 
 
-def get_active_product_capacities(reference_date: date = None, cache: Dict = None):
+def get_active_product_capacities(
+    reference_date: datetime.date = None, cache: Dict = None
+):
     """
     Gets the active product capacities for the given reference date.
 
@@ -231,7 +237,7 @@ def get_active_product_capacities(reference_date: date = None, cache: Dict = Non
 
 
 def get_active_and_future_subscriptions(
-    reference_date: date = None, cache: Dict | None = None
+    reference_date: datetime.date = None, cache: Dict | None = None
 ):
     """
     Gets active and future subscriptions. Future means e.g.: user just signed up and the contract starts next month
@@ -256,7 +262,9 @@ def get_active_and_future_subscriptions(
     )
 
 
-def get_active_subscriptions(reference_date: date = None, cache: Dict | None = None):
+def get_active_subscriptions(
+    reference_date: datetime.date = None, cache: Dict | None = None
+):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
 
@@ -311,7 +319,7 @@ def create_product(
 
 def get_product_price(
     product: str | Product,
-    reference_date: date = None,
+    reference_date: datetime.date = None,
     cache: Dict | None = None,
 ):
     """
@@ -520,7 +528,7 @@ def update_product_type_capacity(
     delivery_cycle: str,
     default_tax_rate: float,
     capacity: Decimal,
-    tax_rate_change_date: date,
+    tax_rate_change_date: datetime.date,
     is_affected_by_jokers: bool,
     notice_period_duration: int,
     must_be_subscribed_to: bool,
@@ -590,44 +598,34 @@ def delete_product_type_capacity(id_: str):
 
 @transaction.atomic
 def create_or_update_default_tax_rate(
-    product_type_id: str, tax_rate: float, tax_rate_change_date: date
+    product_type_id: str, tax_rate: float, tax_rate_change_date: datetime.date
 ):
-    """
-    Updates the default tax rate for the given product type id.
-
-    If a default tax rate already exists, set the end date to end of the month
-    and create a new default tax rate for next month.
-    Otherwise, just create a tax rate valid from today.
-
-    :param product_type_id:
-    :param tax_rate:
-    :return:
-    """
-
-    try:
-        tr = TaxRate.objects.get(product_type__id=product_type_id, valid_to=None)
-        if tr.tax_rate != tax_rate:
-            tr.valid_to = tax_rate_change_date + relativedelta(days=-1)
-            tr.save()
-
-            TaxRate.objects.create(
-                product_type_id=product_type_id,
-                tax_rate=tax_rate,
-                valid_from=tax_rate_change_date,
-                valid_to=None,
-            )
-    except TaxRate.DoesNotExist:
+    existing_tax_rate = TaxRate.objects.filter(
+        product_type_id=product_type_id, valid_from=tax_rate_change_date
+    )
+    if existing_tax_rate.exists():
+        existing_tax_rate.update(tax_rate=tax_rate)
+    else:
         TaxRate.objects.create(
             product_type_id=product_type_id,
             tax_rate=tax_rate,
-            valid_from=get_today(),
+            valid_from=tax_rate_change_date,
             valid_to=None,
         )
+
+    TaxRate.objects.filter(
+        product_type_id=product_type_id, valid_from__gt=tax_rate_change_date
+    ).delete()
+    TaxRate.objects.filter(
+        product_type_id=product_type_id, valid_from__lt=tax_rate_change_date
+    ).filter(Q(valid_to__isnull=True) | Q(valid_to__gte=tax_rate_change_date)).update(
+        valid_to=tax_rate_change_date - datetime.timedelta(days=1)
+    )
 
 
 def get_free_product_capacity(
     product_type_id: str,
-    reference_date: date = None,
+    reference_date: datetime.date = None,
     cache: Dict | None = None,
 ):
     if reference_date is None:
@@ -656,7 +654,7 @@ def get_free_product_capacity(
 
 
 def get_smallest_product_size(
-    product_type: ProductType | str, reference_date: date = None
+    product_type: ProductType | str, reference_date: datetime.date = None
 ):
     if reference_date is None:
         reference_date = get_today()
@@ -689,7 +687,7 @@ def get_smallest_product_size(
 
 def is_product_type_available(
     product_type: ProductType | str,
-    reference_date: date = None,
+    reference_date: datetime.date = None,
     cache: Dict | None = None,
 ) -> bool:
     if reference_date is None:

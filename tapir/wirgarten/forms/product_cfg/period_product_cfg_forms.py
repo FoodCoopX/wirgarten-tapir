@@ -57,7 +57,7 @@ class ProductTypeForm(forms.Form):
                     )
                     initial_tax_rate = self.tax_rate.tax_rate
                 except TaxRate.DoesNotExist:
-                    initial_tax_rate = 0.19  # FIXME: default value in tapir paramenter
+                    initial_tax_rate = 0.19
 
                 initial_name = product_type.name
                 initial_delivery_cycle = product_type.delivery_cycle
@@ -124,7 +124,7 @@ class ProductTypeForm(forms.Form):
         self.fields["tax_rate"] = forms.FloatField(
             initial=initial_tax_rate,
             required=True,
-            label=_("Mehrwertsteuersatz"),  # FIXME: format
+            label=_("Mehrwertsteuersatz"),
         )
 
         if product_type is not None:
