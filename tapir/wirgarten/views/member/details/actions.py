@@ -52,7 +52,7 @@ def renew_contract_same_conditions(request, **kwargs):
                     quantity=sub.quantity,
                     start_date=next_period.start_date,
                     end_date=next_period.end_date,
-                    solidarity_price=sub.solidarity_price,
+                    solidarity_price_percentage=sub.solidarity_price_percentage,
                     mandate_ref=sub.mandate_ref,
                 )
             )

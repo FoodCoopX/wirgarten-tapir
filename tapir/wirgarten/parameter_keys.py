@@ -24,10 +24,6 @@ class ParameterKeys:
     COOP_MEMBERSHIP_NOTICE_PERIOD = f"{PREFIX}.coop.membership_notice_period"
     COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT = f"{PREFIX}.coop.membership_notice_period_unit"
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
-    HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
-    HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE = (
-        f"{PREFIX}.harvest.members_are_allowed_to_change_soliprice"
-    )
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"
     PICKING_SEND_ADMIN_EMAIL = f"{PREFIX}.pick_list.admin_email_enabled"
@@ -86,3 +82,11 @@ class ParameterKeys:
         f"{PREFIX}.trial_period.can_be_cancelled_before_end"
     )
     ORGANISATION_THEME = "organisation.theme"
+
+    SOLIDARITY_UNIT = f"{PREFIX}.solidarity.unit"
+    SOLIDARITY_CHOICES = f"{PREFIX}.solidarity.choices"
+    # the following two are still named "HARVEST_" for backward compatibility but now belong to the category SOLIDARITY
+    HARVEST_NEGATIVE_SOLIPRICE_ENABLED = f"{PREFIX}.harvest.negative_soliprice_enabled"
+    HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE = (
+        f"{PREFIX}.harvest.members_are_allowed_to_change_soliprice"
+    )

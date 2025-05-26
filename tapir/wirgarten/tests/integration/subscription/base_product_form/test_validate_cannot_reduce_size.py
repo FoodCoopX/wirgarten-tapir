@@ -88,7 +88,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 1,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -128,7 +128,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 1,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -156,7 +156,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
             product=self.product_price_m.product,
             period=self.current_growing_period,
             quantity=1,
-            solidarity_price=0,
+            solidarity_price_percentage=0,
         )
 
         url = f"{reverse('wirgarten:member_add_subscription', args=[subscription.member.id])}?productType=Ernteanteile"
@@ -167,7 +167,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 0,
                 "base_product_L": 1,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -226,7 +226,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "base_product_S": 1,
                 "base_product_M": 0,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 

@@ -68,8 +68,8 @@
                 <td style="text-align:center">{{ entry.product.type.name }}</td>
                 <td style="text-align:center">{{ entry.product.name }}</td>
                 <td style="text-align:center">
-                    {% if entry.solidarity_price != 0 %}
-                        {{ entry.solidarity_price|format_percent }}
+                    {% if entry.solidarity_price_percentage != 0 %}
+                        {{ entry.solidarity_price_percentage|format_percent }}
                     {% else %}
                         {% if entry.solidarity_price_absolute %}
                             {{ entry.solidarity_price_absolute|format_currency }} €

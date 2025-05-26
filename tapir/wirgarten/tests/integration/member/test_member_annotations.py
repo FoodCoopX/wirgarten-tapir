@@ -43,13 +43,13 @@ class TestMemberAnnotations(TapirIntegrationTest):
 
         # subscription cost: 110
         subscription_1 = SubscriptionFactory.create(
-            member=member, quantity=1, solidarity_price=0.1
+            member=member, quantity=1, solidarity_price_percentage=0.1
         )
         ProductPriceFactory.create(product=subscription_1.product, price=100)
 
         # subscription cost: 144
         subscription_2 = SubscriptionFactory.create(
-            member=member, quantity=2, solidarity_price=0
+            member=member, quantity=2, solidarity_price_percentage=0
         )
         ProductPriceFactory.create(product=subscription_2.product, price=72)
 

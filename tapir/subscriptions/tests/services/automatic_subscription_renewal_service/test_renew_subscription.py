@@ -35,7 +35,7 @@ class TestRenewSubscription(SimpleTestCase):
         subscription.member = member
         subscription.product = product
         subscription.quantity = 3
-        subscription.solidarity_price = 1.2
+        subscription.solidarity_price_percentage = 1.2
         subscription.solidarity_price_absolute = Decimal("3.6")
         mandate_ref = Mock()
         subscription.mandate_ref = mandate_ref
@@ -73,7 +73,7 @@ class TestRenewSubscription(SimpleTestCase):
             quantity=3,
             start_date=start_date,
             end_date=end_date,
-            solidarity_price=1.2,
+            solidarity_price_percentage=1.2,
             solidarity_price_absolute=Decimal("3.6"),
             mandate_ref=mandate_ref,
             trial_disabled=trial_disabled,

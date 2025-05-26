@@ -15,7 +15,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_active_and_future_subscriptions,
-    get_product_price,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -178,34 +177,3 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
         or 0.0
     )
     return total_amount
-
-
-def get_automatically_calculated_solidarity_excess(
-    reference_date: date = None,
-    cache: Dict | None = None,
-) -> float:
-    """
-    Returns the total solidarity price sum for the active subscriptions during the reference date.
-
-    :param reference_date: the date for which the subscription is active
-    :return: the total solidarity overplus amount
-    """
-
-    if reference_date is None:
-        reference_date = get_today()
-
-    return sum(
-        map(
-            lambda sub: sub["quantity"]
-            * sub["solidarity_price"]
-            * float(
-                get_product_price(
-                    sub["product"],
-                    cache=cache,
-                ).price
-            ),
-            get_active_and_future_subscriptions(reference_date, cache).values(
-                "quantity", "product", "solidarity_price"
-            ),
-        )
-    )

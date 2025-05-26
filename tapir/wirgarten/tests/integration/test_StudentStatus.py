@@ -139,7 +139,7 @@ class TestStudentStatus(TapirIntegrationTest):
         data = {
             "growing_period": growing_period.id,
             "base_product_M": 1,
-            "solidarity_price_harvest_shares": 0.0,
+            "solidarity_price_choice": 0.0,
         }
         self.client.post(url, data)
 

@@ -1,7 +1,7 @@
-let soliElem = document.getElementsByName("solidarity_price_harvest_shares")[0];
+let soliElem = document.getElementsByName("solidarity_price_choice")[0];
 if (!soliElem) {
   soliElem = document.getElementsByName(
-    "base_product-solidarity_price_harvest_shares",
+    "base_product-solidarity_price_choice",
   )[0];
 }
 const origOptions = [...soliElem.options];
@@ -18,14 +18,16 @@ const calculatePrice = (harvest_share) => {
   return elem.value * price;
 };
 
-var initHarvestShareSummary = (harvest_share_prices, solidarity_total) => {
+var initHarvestShareSummary = (
+  harvest_share_prices,
+  solidarity_total,
+  solidarity_unit,
+) => {
   const resultElem = document.getElementById("harvest_shares_total");
-  let customSoliElem = document.getElementById(
-    "id_solidarity_price_absolute_harvest_shares",
-  );
+  let customSoliElem = document.getElementById("id_solidarity_price_custom");
   if (!customSoliElem) {
     customSoliElem = document.getElementById(
-      "id_base_product-solidarity_price_absolute_harvest_shares",
+      "id_base_product-solidarity_price_custom",
     );
   }
 
@@ -43,17 +45,21 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total) => {
       .split(",")
       .map(calculatePrice)
       .reduce((a, b) => a + b);
+
   const calculateTotal = () => {
-    if (soliElem.value === "custom") {
-      return (
-        calculateTotalWithoutSoliPrice() + parseFloat(customSoliElem.value)
-      );
-    } else {
-      return (
-        calculateTotalWithoutSoliPrice() * (1 + parseFloat(soliElem.value))
-      );
+    const totalWithoutSoli = calculateTotalWithoutSoliPrice();
+    let soliValue = soliElem.value;
+    if (soliValue === "custom") {
+      soliValue = customSoliElem.value;
     }
+    soliValue = parseFloat(soliValue);
+
+    if (solidarity_unit === "percentage") {
+      return totalWithoutSoli * (1 + soliValue / 100);
+    }
+    return totalWithoutSoli + soliValue;
   };
+
   const warningCannotReduceElem = document.getElementById(
     "warning-cannot-reduce",
   );
@@ -66,7 +72,7 @@ var initHarvestShareSummary = (harvest_share_prices, solidarity_total) => {
       customSoliElem.required = true;
     } else {
       customSoliElem.disabled = true;
-      customSoliElem.value = (totalWithoutSoli * soliElem.value).toFixed(2);
+      customSoliElem.value = undefined;
     }
 
     filterSoliPriceOptions(totalWithoutSoli, solidarity_total);

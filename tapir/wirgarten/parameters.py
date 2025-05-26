@@ -13,6 +13,7 @@ from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
 )
+from tapir.configuration.parameter import ParameterMeta, parameter_definition
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import (
     LEGAL_STATUS_COOPERATIVE,
@@ -27,6 +28,10 @@ from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHA
 from tapir.subscriptions.config import (
     NOTICE_PERIOD_UNIT_MONTHS,
     NOTICE_PERIOD_UNIT_OPTIONS,
+    SOLIDARITY_UNIT_PERCENT,
+    SOLIDARITY_UNIT_OPTIONS,
+    SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+    SOLIDARITY_MODE_OPTIONS,
 )
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -61,11 +66,12 @@ class ParameterCategory:
     TEST = "Tests"
     ORGANIZATION = "Organisation"
     TRIAL_PERIOD = "Probezeit"
+    SOLIDARITY = "Solidarbeitrag"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions(self):
-        from tapir.configuration.parameter import ParameterMeta, parameter_definition
+
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import (
             validate_html,
@@ -240,41 +246,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 show_only_when=legal_status_is_association,
             ),
             enabled=is_debug_instance(),
-        )
-
-        parameter_definition(
-            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
-            label="Solidarpreise möglich",
-            datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="Aktiviert oder deaktiviert niedrigere Preise für Ernteanteile oder aktiviert die automatische Berechnung.",
-            category=ParameterCategory.HARVEST,
-            meta=ParameterMeta(
-                options=[
-                    (
-                        0,
-                        "Nur positive Solidarpreise möglich (Mitglieder können keinen niedrigeren Preis wählen)",
-                    ),
-                    (
-                        1,
-                        "Negative Solidarpreise möglich (Mitglieder können immer einen niedrigeren Preis wählen)",
-                    ),
-                    (
-                        2,
-                        "Automatische Berechnung (niedrigere Preise sind möglich, wenn genügend Mitglieder mehr zahlen)",
-                    ),
-                ]
-            ),
-        )
-
-        parameter_definition(
-            key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
-            label="Mitglieder dürfen der Solibeitrag laufend ändern",
-            datatype=TapirParameterDatatype.BOOLEAN,
-            initial_value=False,
-            description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
-            "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
-            category=ParameterCategory.HARVEST,
         )
 
         parameter_definition(
@@ -761,3 +732,56 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     == TEST_DATE_OVERRIDE_MANUAL,
                 ),
             )
+
+        self.import_definitions_solidarity()
+
+    @classmethod
+    def import_definitions_solidarity(cls):
+        from tapir.subscriptions.services.solidarity_validator import (
+            SolidarityValidator,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SOLIDARITY_UNIT,
+            label="Einheit des Solidarbeitrag",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=SOLIDARITY_UNIT_PERCENT,
+            description="Bestimmt ob Mitglieder deren Solidarbeitrag als Prozent oder absolute Wert (€) eingeben.",
+            category=ParameterCategory.SOLIDARITY,
+            meta=ParameterMeta(options=SOLIDARITY_UNIT_OPTIONS),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.SOLIDARITY_CHOICES,
+            label="Vordefinierte Solidarbeitrag-Werten",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="-15,-10,-5,0,5,10,15",
+            description="Komma-getrennte Liste der Werte die beim Solidarbeitrag zu auswahl stehen."
+            "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben."
+            "Beispiel: '-15,-10,-5,0,5,10,15'"
+            "Je nach dem was im Feld 'Einheit des Solidarbeitrag' eingetragen ist sind die Werte Prozente (5%, 10%, ...) oder Euros (5€, 10€,...)",
+            category=ParameterCategory.SOLIDARITY,
+            meta=ParameterMeta(
+                validators=[SolidarityValidator.validate_solidarity_dropdown_values]
+            ),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
+            label="Solidarpreise möglich",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
+            description="Aktiviert oder deaktiviert niedrigere Preise für Ernteanteile oder aktiviert die automatische Berechnung.",
+            category=ParameterCategory.SOLIDARITY,
+            meta=ParameterMeta(options=SOLIDARITY_MODE_OPTIONS),
+        )
+
+        parameter_definition(
+            key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
+            label="Mitglieder dürfen der Solibeitrag laufend ändern",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
+            "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
+            category=ParameterCategory.HARVEST,
+        )

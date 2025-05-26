@@ -87,7 +87,7 @@ def sub_to_dict(sub, cache: Dict):
             "type": {"name": sub.product.type.name},
             "price": price,
         },
-        "solidarity_price": sub.solidarity_price,
+        "solidarity_price_percentage": sub.solidarity_price_percentage,
         "solidarity_price_absolute": sub.solidarity_price_absolute,
         "total_price": sub.total_price(),
         "price_override": sub.price_override,

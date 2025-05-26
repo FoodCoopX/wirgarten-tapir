@@ -28,10 +28,14 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
             value=cls.product_type.id
         )
         cls.subscription_1 = SubscriptionFactory.create(
-            product__type=cls.product_type, member=cls.member, solidarity_price=0.1
+            product__type=cls.product_type,
+            member=cls.member,
+            solidarity_price_percentage=0.1,
         )
         cls.subscription_2 = SubscriptionFactory.create(
-            product__type=cls.product_type, member=cls.member, solidarity_price=0.1
+            product__type=cls.product_type,
+            member=cls.member,
+            solidarity_price_percentage=0.1,
         )
         cls.product_not_subbed_to = ProductFactory.create(type=cls.product_type)
 
@@ -42,10 +46,10 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.subscription_2.product.name: self.subscription_2.quantity,
-            "solidarity_price_harvest_shares": 0.1,
+            "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price": 0.1,
+            "solidarity_price_percentage": 0.1,
         }
 
         with self.assertRaises(ValidationError):
@@ -64,10 +68,10 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.subscription_2.product.name: self.subscription_2.quantity + 1,
-            "solidarity_price_harvest_shares": 0.1,
+            "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price": 0.1,
+            "solidarity_price_percentage": 0.1,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(
@@ -85,10 +89,10 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.subscription_2.product.name: self.subscription_2.quantity,
-            "solidarity_price_harvest_shares": 0.15,
+            "solidarity_price_choice": 0.15,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price": 0.15,
+            "solidarity_price_percentage": 0.15,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(
@@ -106,10 +110,10 @@ class TestValidateAtLeastOneChange(TapirIntegrationTest):
         form.cleaned_data = {
             self.subscription_1.product.name: self.subscription_1.quantity,
             self.product_not_subbed_to.name: 1,
-            "solidarity_price_harvest_shares": 0.1,
+            "solidarity_price_choice": 0.1,
         }
         form.build_solidarity_fields.return_value = {
-            "solidarity_price": 0.1,
+            "solidarity_price_percentage": 0.1,
         }
 
         SubscriptionChangeValidator.validate_at_least_one_change(

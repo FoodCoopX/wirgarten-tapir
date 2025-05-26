@@ -645,7 +645,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=True)
     cancellation_ts = models.DateTimeField(null=True)
-    solidarity_price = models.FloatField(default=0.0)
+    solidarity_price_percentage = models.FloatField(
+        default=0.0,
+    )
     solidarity_price_absolute = models.DecimalField(
         decimal_places=2, max_digits=12, null=True
     )
@@ -696,7 +698,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
                 self._total_price = round(
                     float(self.quantity)
                     * float(price)
-                    * float(1 + self.solidarity_price),
+                    * float(1 + self.solidarity_price_percentage),
                     2,
                 )
         return self._total_price
@@ -747,10 +749,13 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
                 {"solidarity_price_absolute": "Solidarity price must be positive."}
             )
 
-        if self.solidarity_price_absolute is not None and self.solidarity_price != 0.0:
+        if (
+            self.solidarity_price_absolute is not None
+            and self.solidarity_price_percentage != 0.0
+        ):
             raise ValidationError(
                 {
-                    "solidarity_price": "Solidarity price must be 0 if absolute solidarity price is set."
+                    "solidarity_price": "Solidarity price percentage must be 0 if absolute solidarity price is set."
                 }
             )
 
@@ -763,10 +768,8 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     def long_str(self):
         if self.solidarity_price_absolute is not None:
             soliprice = f"\n\t(Solidaraufschlag: {self.solidarity_price_absolute} €)"
-        elif self.solidarity_price is not None:
-            soliprice = (
-                f"\n\t(Solidaraufschlag: {float(self.solidarity_price) * 100.0} %)"
-            )
+        elif self.solidarity_price_percentage is not None:
+            soliprice = f"\n\t(Solidaraufschlag: {float(self.solidarity_price_percentage) * 100.0} %)"
         else:
             soliprice = ""
 

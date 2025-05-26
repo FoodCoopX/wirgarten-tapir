@@ -92,7 +92,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
             data={
                 "growing_period": growing_period.id,
                 post_data_key: 1,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 

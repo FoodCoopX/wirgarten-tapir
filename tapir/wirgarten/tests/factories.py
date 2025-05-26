@@ -141,7 +141,9 @@ class SubscriptionFactory(factory.django.DjangoModelFactory[Subscription]):
     mandate_ref = factory.SubFactory(
         MandateReferenceFactory, member=factory.SelfAttribute("..member")
     )
-    solidarity_price = factory.Faker("pyfloat", min_value=-0.25, max_value=0.25)
+    solidarity_price_percentage = factory.Faker(
+        "pyfloat", min_value=-0.25, max_value=0.25
+    )
 
 
 class PickupLocationFactory(factory.django.DjangoModelFactory[PickupLocation]):
