@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
@@ -65,7 +66,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscription_formShowsError(
@@ -108,7 +109,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscriptionAsAdmin_changesApplied(
@@ -146,7 +147,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToIncreaseSizeOfRunningSubscription_changesApplied(
@@ -185,7 +186,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfFutureSubscription_formIsValid(

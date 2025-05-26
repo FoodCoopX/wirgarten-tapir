@@ -2,6 +2,7 @@ import datetime
 from unittest.mock import patch
 
 from django.urls import reverse
+from icecream import ic
 
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.subscription_change_validator import (
@@ -100,12 +101,14 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         url = f"{reverse('wirgarten:member_add_subscription', args=[member.id])}?productType=Ernteanteile"
         return self.client.post(
             url,
-            data={
-                "growing_period": growing_period.id,
-                "base_product_M": nb_m_shares,
-                "base_product_L": nb_l_shares,
-                "solidarity_price_choice": solidarity_price_factor,
-            },
+            data=ic(
+                {
+                    "growing_period": growing_period.id,
+                    "base_product_M": nb_m_shares,
+                    "base_product_L": nb_l_shares,
+                    "solidarity_price_choice": solidarity_price_factor,
+                }
+            ),
         )
 
     def test_baseProductForm_enoughCapacity_allSubscriptionsCreated(self):
@@ -201,7 +204,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         )
 
         response = self.send_add_subscription_request(
-            1, 0, current_growing_period, -0.15, member
+            1, 0, current_growing_period, -15.0, member
         )
 
         self.assertStatusCode(response, 200)
@@ -224,7 +227,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         )
 
         response = self.send_add_subscription_request(
-            1, 0, current_growing_period, -0.15, member
+            1, 0, current_growing_period, 10.0, member
         )
 
         self.assertStatusCode(response, 200)

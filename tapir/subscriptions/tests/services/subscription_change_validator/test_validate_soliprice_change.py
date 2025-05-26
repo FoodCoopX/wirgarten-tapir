@@ -61,6 +61,7 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
         }
         form.build_solidarity_fields.return_value = {
             "solidarity_price_percentage": 0.1,
+            "solidarity_price_absolute": None,
         }
 
         with self.assertRaises(ValidationError):
@@ -103,6 +104,7 @@ class TestValidateSolipriceChange(TapirIntegrationTest):
         }
         form.build_solidarity_fields.return_value = {
             "solidarity_price_percentage": 0.1,
+            "solidarity_price_absolute": None,
         }
 
         SubscriptionChangeValidator.validate_soliprice_change(
