@@ -259,11 +259,15 @@ class UserGenerator:
             already_subscribed_products_ids.add(product.id)
 
             solidarity_price_percentage = random.choice(
-                SolidarityValidator.get_solidarity_dropdown_values(cache=cache).keys()
+                list(
+                    SolidarityValidator.get_solidarity_dropdown_values(
+                        cache=cache
+                    ).keys()
+                )
             )
             solidarity_price_absolute = None
             if solidarity_price_percentage == "custom":
-                solidarity_price_percentage = None
+                solidarity_price_percentage = 0
                 solidarity_price_absolute = random.randrange(-25, 25)
 
             quantity = random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
