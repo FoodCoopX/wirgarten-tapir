@@ -84,7 +84,9 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
     def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_noSolidarity_annotatesCorrectPrice(
         self,
     ):
-        subscription = SubscriptionFactory.create(quantity=3, solidarity_price=0)
+        subscription = SubscriptionFactory.create(
+            quantity=3, solidarity_price_percentage=0
+        )
         ProductPriceFactory.create(
             product=subscription.product,
             valid_from=self.REFERENCE_DATE - datetime.timedelta(days=10),
@@ -102,7 +104,9 @@ class TestSubscriptionAnnotations(TapirIntegrationTest):
     def test_annotateSubscriptionsQuerysetWithMonthlyPaymentIncludingSolidarity_hasSolidarityFactor_annotatesCorrectPrice(
         self,
     ):
-        subscription = SubscriptionFactory.create(quantity=3, solidarity_price=0.1)
+        subscription = SubscriptionFactory.create(
+            quantity=3, solidarity_price_percentage=0.1
+        )
         ProductPriceFactory.create(
             product=subscription.product,
             valid_from=self.REFERENCE_DATE - datetime.timedelta(days=10),

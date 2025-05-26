@@ -14,6 +14,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -28,7 +29,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    get_automatically_calculated_solidarity_excess,
     get_total_payment_amount,
 )
 from tapir.wirgarten.service.products import (
@@ -134,8 +134,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             Subscription.objects.filter(cancellation_ts__isnull=False)
         )
 
-        context["solidarity_overplus"] = (
-            get_automatically_calculated_solidarity_excess()
+        context["solidarity_overplus"] = SolidarityValidator.get_solidarity_excess(
+            reference_date=get_today(cache=self.cache), cache=self.cache
         )
         context["status_seperate_coop_shares"] = get_parameter_value(
             ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=self.cache

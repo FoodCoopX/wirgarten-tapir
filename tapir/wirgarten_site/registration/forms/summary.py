@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -63,19 +64,33 @@ class SummaryForm(forms.Form):
             )
         )
 
-        solidarity_price_value = self.harvest_shares_info.get(
-            "solidarity_price_harvest_shares", 0
+        solidarity_price_choice = self.harvest_shares_info.get(
+            "solidarity_price_choice", 0
         )
 
-        if solidarity_price_value != "custom":
-            solidarity_price = float(harvest_shares_total) * float(
-                self.harvest_shares_info["solidarity_price_harvest_shares"]
-            )
+        if solidarity_price_choice != "custom":
+            if (
+                get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
+                == SOLIDARITY_UNIT_PERCENT
+            ):
+                solidarity_price = (
+                    float(harvest_shares_total) * float(solidarity_price_choice) / 100
+                )
+            else:
+                solidarity_price = float(solidarity_price_choice)
             self.harvest_shares_info["custom_soliprice"] = False
         else:
-            solidarity_price = float(
-                self.harvest_shares_info["solidarity_price_absolute_harvest_shares"]
-            )
+            if (
+                get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
+                == SOLIDARITY_UNIT_PERCENT
+            ):
+                solidarity_price = float(harvest_shares_total) * float(
+                    self.harvest_shares_info.get("solidarity_price_custom", 0)
+                )
+            else:
+                solidarity_price = float(
+                    self.harvest_shares_info.get("solidarity_price_custom", 0)
+                )
             self.harvest_shares_info["custom_soliprice"] = True
 
         self.total_monthly = float(harvest_shares_total) + solidarity_price

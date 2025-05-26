@@ -270,12 +270,6 @@ class SubscriptionChangeValidator:
             return
 
         solidarity_fields = form.build_solidarity_fields()
-        if "solidarity_price_absolute" not in solidarity_fields:
-            solidarity_fields["solidarity_price_absolute"] = None
-        else:
-            solidarity_fields["solidarity_price_absolute"] = float(
-                solidarity_fields["solidarity_price_absolute"]
-            )
 
         growing_period = get_current_growing_period(
             reference_date=subscription_start_date, cache=cache
@@ -303,8 +297,8 @@ class SubscriptionChangeValidator:
             if (
                 subscription_to_same_product.solidarity_price_absolute
                 != solidarity_fields["solidarity_price_absolute"]
-                or subscription_to_same_product.solidarity_price
-                != float(solidarity_fields["solidarity_price"])
+                or subscription_to_same_product.solidarity_price_percentage
+                != float(solidarity_fields["solidarity_price_percentage"])
             ):
                 raise ValidationError(
                     "Der Solidarbeitrag darf nicht während ein Vertrag läuft geändert werden."
@@ -330,12 +324,6 @@ class SubscriptionChangeValidator:
         ordered_product_ids = set()
 
         solidarity_fields = form.build_solidarity_fields()
-        if "solidarity_price_absolute" not in solidarity_fields:
-            solidarity_fields["solidarity_price_absolute"] = None
-        else:
-            solidarity_fields["solidarity_price_absolute"] = float(
-                solidarity_fields["solidarity_price_absolute"]
-            )
 
         for key, quantity in form.cleaned_data.items():
             if not key.startswith(field_prefix):
@@ -371,8 +359,8 @@ class SubscriptionChangeValidator:
             if (
                 subscription_to_same_product.solidarity_price_absolute
                 != solidarity_fields["solidarity_price_absolute"]
-                or subscription_to_same_product.solidarity_price
-                != float(solidarity_fields["solidarity_price"])
+                or subscription_to_same_product.solidarity_price_percentage
+                != solidarity_fields["solidarity_price_percentage"]
             ):
                 return
 

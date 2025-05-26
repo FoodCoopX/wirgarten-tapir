@@ -97,10 +97,10 @@
                                                                     <strong>{{ sub.quantity }}</strong>&nbsp;&nbsp;×&nbsp;&nbsp;
                                                                 {% endif %}
                                                                 <strong>{{ sub.product.name }}</strong>&nbsp;&nbsp;
-                                                                {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
+                                                                {% if sub.solidarity_price_percentage is not None and sub.solidarity_price_percentage != 0 %}
                                                                     (
-                                                                    {% if sub.solidarity_price > 0 %}+{% endif %}
-                                                                    {% widthratio sub.solidarity_price 1 100 %}%)
+                                                                    {% if sub.solidarity_price_percentage > 0 %}+{% endif %}
+                                                                    {% widthratio sub.solidarity_price_percentage 1 100 %}%)
                                                                 {% elif sub.solidarity_price_absolute > 0 %}
                                                                     (+
                                                                     {{ sub.solidarity_price_absolute|format_currency }}

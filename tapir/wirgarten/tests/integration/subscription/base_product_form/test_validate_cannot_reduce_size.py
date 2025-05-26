@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tapir.configuration.models import TapirParameter
+from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
@@ -65,7 +66,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscription_formShowsError(
@@ -88,7 +89,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 1,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -108,7 +109,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfRunningSubscriptionAsAdmin_changesApplied(
@@ -128,7 +129,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 1,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -146,7 +147,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToIncreaseSizeOfRunningSubscription_changesApplied(
@@ -156,7 +157,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
             product=self.product_price_m.product,
             period=self.current_growing_period,
             quantity=1,
-            solidarity_price=0,
+            solidarity_price_percentage=0,
         )
 
         url = f"{reverse('wirgarten:member_add_subscription', args=[subscription.member.id])}?productType=Ernteanteile"
@@ -167,7 +168,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "growing_period": self.current_growing_period.id,
                 "base_product_M": 0,
                 "base_product_L": 1,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 
@@ -185,7 +186,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
 
     @patch.object(BaseProductForm, "get_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_pickup_location_capacity")
-    @patch.object(BaseProductForm, "validate_solidarity_price")
+    @patch.object(SolidarityValidator, "validate_solidarity_price")
     @patch.object(BaseProductForm, "validate_pickup_location")
     @patch.object(SubscriptionChangeValidator, "validate_total_capacity")
     def test_validateCannotReduceSize_tryToReduceSizeOfFutureSubscription_formIsValid(
@@ -226,7 +227,7 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
                 "base_product_S": 1,
                 "base_product_M": 0,
                 "base_product_L": 0,
-                "solidarity_price_harvest_shares": 0.0,
+                "solidarity_price_choice": 0.0,
             },
         )
 

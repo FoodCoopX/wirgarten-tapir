@@ -15,14 +15,14 @@
         growingPeriodSelect = document.getElementById("id_base_product-growing_period");
     }
     if (!growingPeriodSelect) {
-    initHarvestShareSummary(basePrices, {{ form.solidarity_total | safe }}[0])
+    initHarvestShareSummary(basePrices, {{ form.solidarity_total | safe }}[0], "{{form.solidarity_unit}}")
     } else {
     growingPeriodSelect.addEventListener("change", function () {
         const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
-        initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
+        initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], "{{form.solidarity_unit}}")
     });
     const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
-    initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex])
+    initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], "{{form.solidarity_unit}}")
     }
   })
 </script>

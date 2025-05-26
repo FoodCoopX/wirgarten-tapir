@@ -12,13 +12,13 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.forms.subscription import SOLIDARITY_PRICES
 from tapir.wirgarten.models import (
     Member,
     GrowingPeriod,
@@ -258,10 +258,12 @@ class UserGenerator:
             product = random.choice(possible_products)
             already_subscribed_products_ids.add(product.id)
 
-            solidarity_price = random.choice(SOLIDARITY_PRICES)[0]
+            solidarity_price_percentage = random.choice(
+                SolidarityValidator.get_solidarity_dropdown_values(cache=cache).keys()
+            )
             solidarity_price_absolute = None
-            if solidarity_price == "custom":
-                solidarity_price = 0
+            if solidarity_price_percentage == "custom":
+                solidarity_price_percentage = None
                 solidarity_price_absolute = random.randrange(-25, 25)
 
             quantity = random.choices([1, 2, 3], weights=[100, 1, 1], k=1)[0]
@@ -278,7 +280,7 @@ class UserGenerator:
                 quantity=quantity,
                 start_date=start_date,
                 end_date=end_date,
-                solidarity_price=solidarity_price,
+                solidarity_price_percentage=solidarity_price_percentage,
                 solidarity_price_absolute=solidarity_price_absolute,
                 mandate_ref=mandate_ref,
             )
@@ -322,7 +324,7 @@ class UserGenerator:
                     quantity=quantity,
                     start_date=current_growing_period.start_date,
                     end_date=current_growing_period.end_date,
-                    solidarity_price=solidarity_price,
+                    solidarity_price_percentage=solidarity_price_percentage,
                     solidarity_price_absolute=solidarity_price_absolute,
                     mandate_ref=mandate_ref,
                 )

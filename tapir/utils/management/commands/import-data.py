@@ -213,7 +213,7 @@ class Command(BaseCommand):
                             start_date=row["Vertragsbeginn"],
                             end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
-                            solidarity_price=row["Solidarpreis in Prozent"],
+                            solidarity_price_percentage=row["Solidarpreis in Prozent"],
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
                             product_id=prod.id,

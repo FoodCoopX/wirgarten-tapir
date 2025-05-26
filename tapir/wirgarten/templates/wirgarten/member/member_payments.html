@@ -1,151 +1,147 @@
 {% extends "core/base.html" %}
-
 {% load django_bootstrap5 %}
 {% load tapir_static %}
 {% load i18n %}
 {% load wirgarten %}
 {% load accounts %}
-
 {% block content %}
-<div style="margin:2em" class="container">
-    <div class="card">
-        <div class="card-header">
-            <h5>Zahlungen - {{member.first_name}} {{member.last_name}}</h5>
-        </div>
-        <div class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th style="text-align:center">
-                        {% translate 'Datum' %}
-                    </th>
-                    <th style="text-align:center">
-                        {% translate 'Mandatsreferenz' %}
-                    </th>
-                    <th style="text-align:center">
-                        {% translate 'Betrag' %}
-                    </th>
-                    {% if perms.coop.manage %}
-                    <th></th>
-                    {% endif %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for payment in payments %}
-                <tr class="single-payment" data-date="{{payment.due_date}}">
-                    <td style="text-align:center">
-                        <strong id="date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}">{{payment.due_date}}</strong><br/>
-                        <p style="line-height:1.25em"><small
-                                id="datediff-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}"></small></p>
-                        <h5>
-                            {%if payment.upcoming %}
-                            <span
-                                    class="rounded-pill badge bg-info">UPCOMING</span>
-                            {% else %}
-                            <span
-                                    class="rounded-pill badge bg-{%if payment.status == 'DUE' %}danger{%elif payment.status == 'PAID' %}success{%endif%}">{{payment.status}}</span>
-                            {% endif %}
-                        </h5>
-
-                    </td>
-                    <td style="text-align:center">
-                        <strong>{{payment.mandate_ref.pk}}</strong><br/>
-                        <p style="line-height:1.25em">
-                            <small>
-                                {% for sub in payment.subs %}
-                                {{sub.quantity}} × {{sub.product.name}} {{sub.product.type.name}}<br/>
-                                {% endfor %}
-                            </small>
-                        </p>
-                    </td>
-                    <td style="text-align:center">
-                        {% if payment.edited and not payment.amount == payment.calculated_amount %}
-                        <span title="{% translate 'Manuell editiert!' %}"><span
-                                style="font-size:1.25em; color: var(--bs-warning)"
-                                class="material-icons">warning</span></span>
-                        <small>
-                            <del>{{ payment.calculated_amount }}</del>
-                        </small>
-                        {% endif %}
-                        <strong>{{payment.amount}} €</strong><br/>
-
-                        <p style="line-height:1.25em">
-                            <small>
-                                {% for sub in payment.subs %}
-                                {% if sub.price_override %}
-                                {{sub.quantity}} × {{sub.price_override|format_currency}} €
-                                {% else %}
-                                {{sub.quantity}} × {{sub.product.price}} €
-                                {% if sub.solidarity_price is not None and sub.solidarity_price != 0 %}
-                                ({% if sub.solidarity_price > 0%}+{% endif %}
-                                {% widthratio sub.solidarity_price 1 100 %}%)
-                                {% elif sub.solidarity_price_absolute > 0 %}
-                                (+{{sub.solidarity_price_absolute|format_currency}} €)
+    <div style="margin:2em" class="container">
+        <div class="card">
+            <div class="card-header">
+                <h5>Zahlungen - {{ member.first_name }} {{ member.last_name }}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center">{% translate 'Datum' %}</th>
+                            <th style="text-align:center">{% translate 'Mandatsreferenz' %}</th>
+                            <th style="text-align:center">{% translate 'Betrag' %}</th>
+                            {% if perms.coop.manage %}<th></th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                            <tr class="single-payment" data-date="{{ payment.due_date }}">
+                                <td style="text-align:center">
+                                    <strong id="date-{{ payment.due_date|date:'Y-m-d' }}-{{ payment.mandate_ref }}">{{ payment.due_date }}</strong>
+                                    <br />
+                                    <p style="line-height:1.25em">
+                                        <small id="datediff-{{ payment.due_date|date:'Y-m-d' }}-{{ payment.mandate_ref }}"></small>
+                                    </p>
+                                    <h5>
+                                        {% if payment.upcoming %}
+                                            <span class="rounded-pill badge bg-info">UPCOMING</span>
+                                        {% else %}
+                                            <span class="rounded-pill badge bg-{% if payment.status == 'DUE' %}danger{% elif payment.status == 'PAID' %}success{% endif %}">{{ payment.status }}</span>
+                                        {% endif %}
+                                    </h5>
+                                </td>
+                                <td style="text-align:center">
+                                    <strong>{{ payment.mandate_ref.pk }}</strong>
+                                    <br />
+                                    <p style="line-height:1.25em">
+                                        <small>
+                                            {% for sub in payment.subs %}
+                                                {{ sub.quantity }} × {{ sub.product.name }} {{ sub.product.type.name }}
+                                                <br />
+                                            {% endfor %}
+                                        </small>
+                                    </p>
+                                </td>
+                                <td style="text-align:center">
+                                    {% if payment.edited and not payment.amount == payment.calculated_amount %}
+                                        <span title="{% translate 'Manuell editiert!' %}"><span style="font-size:1.25em;
+             color: var(--bs-warning)"
+      class="material-icons">warning</span></span>
+                                        <small>
+                                            <del>{{ payment.calculated_amount }}</del>
+                                        </small>
+                                    {% endif %}
+                                    <strong>{{ payment.amount }} €</strong>
+                                    <br />
+                                    <p style="line-height:1.25em">
+                                        <small>
+                                            {% for sub in payment.subs %}
+                                                {% if sub.price_override %}
+                                                    {{ sub.quantity }} × {{ sub.price_override|format_currency }} €
+                                                {% else %}
+                                                    {{ sub.quantity }} × {{ sub.product.price }} €
+                                                    {% if sub.solidarity_price_percentage is not None and sub.solidarity_price_percentage != 0 %}
+                                                        (
+                                                        {% if sub.solidarity_price_percentage > 0 %}+{% endif %}
+                                                        {% widthratio sub.solidarity_price_percentage 1 100 %}%)
+                                                    {% elif sub.solidarity_price_absolute > 0 %}
+                                                        (+{{ sub.solidarity_price_absolute|format_currency }} €)
+                                                    {% endif %}
+                                                {% endif %}
+                                                <br />
+                                            {% endfor %}
+                                        </small>
+                                    </p>
+                                </td>
+                                {% if perms.coop.manage %}
+                                    <!-- FIXME: use new permission (payments.manage) -->
+                                    <td>
+                                        {% if payment.upcoming %}
+                                            <button type="button"
+                                                    onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date|format_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name }} {{ member.last_name }}', '{{ payment.type }}')"
+                                                    class="btn btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#adminEditAmountModal">
+                                                <span class="material-icons">edit</span>
+                                            </button>
+                                            <!-- Modal -->
+                                            <form id="edit-payment-form" method="post">
+                                                {% csrf_token %}
+                                                <div class="modal fade"
+                                                     id="adminEditAmountModal"
+                                                     tabindex="-1"
+                                                     aria-labelledby="adminEditAmountModalLabel"
+                                                     aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h1 class="modal-title fs-5" id="adminEditAmountModalLabel">{% translate 'Betrag bearbeiten' %}</h1>
+                                                                <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div id="edit-payment-details"></div>
+                                                                <div class="alert alert-warning" role="alert">
+                                                                    <strong>ACHTUNG:</strong>
+                                                                    <br />
+                                                                    <p style="white-space: normal">
+                                                                        Du bist im Begriff eine zukünftige Zahlung
+                                                                        für ein Mitglied zu editieren. Das kann zu unerwünschten Effekten
+                                                                        führen, z.B. würde die Auflistung der Produkte nicht mehr zu dem
+                                                                        Gesamtbetrag auf der Rechnung passen.
+                                                                    </p>
+                                                                    <strong>Bitte fahre nur fort, wenn du weißt was du tust.</strong>
+                                                                </div>
+                                                                <div id="edit-payment"></div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate 'Abbrechen' %}</button>
+                                                                <button type="submit" class="btn btn-danger">{% translate 'Betrag ändern' %}</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        {% endif %}
+                                    </td>
                                 {% endif %}
-                                {% endif %}<br/>
-                                {% endfor %}
-                            </small>
-                        </p>
-                    </td>
-
-                    {% if perms.coop.manage %} <!-- FIXME: use new permission (payments.manage) -->
-                    <td>
-                        {% if payment.upcoming %}
-                        <button type="button"
-                                onclick="loadEditForm('{{ member.id }}', '{{ payment.mandate_ref.pk }}', '{{ payment.due_date|format_date }}', '{{ payment.calculated_amount }}', '{{ member.first_name}} {{member.last_name}}', '{{payment.type}}')"
-                                class="btn btn-outline-danger" data-bs-toggle="modal"
-                                data-bs-target="#adminEditAmountModal">
-                            <span class="material-icons">edit</span>
-                        </button>
-
-                        <!-- Modal -->
-                        <form id="edit-payment-form" method="post">
-                            {% csrf_token %}
-                            <div class="modal fade" id="adminEditAmountModal" tabindex="-1"
-                                 aria-labelledby="adminEditAmountModalLabel"
-                                 aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="adminEditAmountModalLabel">
-                                                {% translate 'Betrag bearbeiten' %}</h1>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div id="edit-payment-details"></div>
-                                            <div class="alert alert-warning" role="alert">
-                                                <strong>ACHTUNG:</strong><br/>
-                                                <p style="white-space: normal">Du bist im Begriff eine zukünftige Zahlung
-                                                    für ein Mitglied zu editieren. Das kann zu unerwünschten Effekten
-                                                    führen, z.B. würde die Auflistung der Produkte nicht mehr zu dem
-                                                    Gesamtbetrag auf der Rechnung passen.</p>
-                                                <strong>Bitte fahre nur fort, wenn du weißt was du tust.</strong>
-                                            </div>
-                                            <div id="edit-payment"></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                {% translate 'Abbrechen'%}
-                                            </button>
-                                            <button type="submit" class="btn btn-danger">{% translate 'Betrag ändern' %}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                        {% endif %}
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-<script>
+    <script>
     const now = moment();
     let diff, date;
 
@@ -204,6 +200,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-</script>
+    </script>
 {% endblock %}
-

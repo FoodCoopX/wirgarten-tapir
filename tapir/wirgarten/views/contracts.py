@@ -341,7 +341,11 @@ class ExportSubscriptionList(View):
             soliprice_str = (
                 f"{sub.solidarity_price_absolute} €"
                 if sub.solidarity_price_absolute
-                else (f"{sub.solidarity_price * 100} %" if sub.solidarity_price else "")
+                else (
+                    f"{sub.solidarity_price_percentage * 100} %"
+                    if sub.solidarity_price_percentage
+                    else ""
+                )
             )
             for _ in range(sub.quantity):
                 writer.writerow(
