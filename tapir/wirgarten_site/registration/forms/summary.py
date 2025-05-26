@@ -73,8 +73,8 @@ class SummaryForm(forms.Form):
                 get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
                 == SOLIDARITY_UNIT_PERCENT
             ):
-                solidarity_price = float(harvest_shares_total) * float(
-                    solidarity_price_choice
+                solidarity_price = (
+                    float(harvest_shares_total) * float(solidarity_price_choice) / 100
                 )
             else:
                 solidarity_price = float(solidarity_price_choice)
