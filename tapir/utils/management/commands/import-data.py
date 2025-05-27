@@ -102,7 +102,7 @@ class Command(BaseCommand):
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
                     # print(row)
-                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
+                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z, Ü, K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
                     qu = int(row["Anzahl Anteile"])
                     transfer_member = None
                     valid_date = row["Datum"]
