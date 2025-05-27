@@ -31,7 +31,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--growing-period-start",
             type=str,
-            help="Start date of the growing period to use for subscriptions (format: YYYY-MM-DD)"
+            help="Start date of the growing period to use for subscriptions (format: YYYY-MM-DD)",
         )
 
     def handle(self, *args, **options):
@@ -192,7 +192,9 @@ class Command(BaseCommand):
                         )
                         self.stdout.write("Available GrowingPeriods:")
                         for gp in GrowingPeriod.objects.all():
-                            self.stdout.write(f"  - ID: {gp.id}, Start: {gp.start_date}, End: {gp.end_date}")
+                            self.stdout.write(
+                                f"  - ID: {gp.id}, Start: {gp.start_date}, End: {gp.end_date}"
+                            )
                         return
                     except ValueError as e:
                         self.stdout.write(
