@@ -278,9 +278,9 @@ class Command(BaseCommand):
                             period_id=period.id,
                             product_id=prod.id,
                             consent_ts=row["consent_vertragsgrundsätze"]
-                            + " 12:00+0200",
+                                       + " 12:00+0200",
                             withdrawal_consent_ts=row["consent_widerruf"]
-                            + " 12:00+0200",
+                                                  + " 12:00+0200",
                         )
                         # print("Subscription object successfully created.")
                     except django.db.Error as e:
