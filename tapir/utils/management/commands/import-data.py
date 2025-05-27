@@ -1,4 +1,5 @@
 import csv
+import datetime
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -27,6 +28,11 @@ class Command(BaseCommand):
         parser.add_argument("--file", nargs=1)
         parser.add_argument("--delete-all", action="store_true")
         parser.add_argument("--reset-all", action="store_true")
+        parser.add_argument(
+            "--growing-period-start",
+            type=str,
+            help="Start date of the growing period to use for subscriptions (format: YYYY-MM-DD)"
+        )
 
     def handle(self, *args, **options):
         # print(options)
@@ -156,7 +162,61 @@ class Command(BaseCommand):
                 if delete_all:
                     Subscription.objects.all().delete()
                     # identify current growing_period
-                period = GrowingPeriod.objects.get(start_date="2023-01-01")
+                # Growing Period handling
+                if options.get("growing_period_start"):
+                    start_date_str = options["growing_period_start"]
+
+                    # Validiere Datumsformat
+                    try:
+                        datetime.strptime(start_date_str, "%Y-%m-%d")
+                    except ValueError:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                f"Invalid date format '{start_date_str}'. Please use YYYY-MM-DD format (e.g., 2023-01-01)."
+                            )
+                        )
+                        return
+
+                    try:
+                        period = GrowingPeriod.objects.get(start_date=start_date_str)
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"Using GrowingPeriod: ID={period.id}, Start={period.start_date}"
+                            )
+                        )
+                    except GrowingPeriod.DoesNotExist:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                f"GrowingPeriod with start_date='{options['growing_period_start']}' does not exist!"
+                            )
+                        )
+                        self.stdout.write("Available GrowingPeriods:")
+                        for gp in GrowingPeriod.objects.all():
+                            self.stdout.write(f"  - ID: {gp.id}, Start: {gp.start_date}, End: {gp.end_date}")
+                        return
+                    except ValueError as e:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                f"Invalid date format '{options['growing_period_start']}'. Use YYYY-MM-DD format."
+                            )
+                        )
+                        return
+                else:
+                    # Fallback: Ersten verfügbaren GrowingPeriod verwenden
+                    period = GrowingPeriod.objects.first()
+                    if not period:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                "No GrowingPeriod exists! Please create one first or specify --growing-period-start."
+                            )
+                        )
+                        return
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"No --growing-period-start specified. Using first available: "
+                            f"ID={period.id}, Start={period.start_date}"
+                        )
+                    )
                 for row in reader:
                     # VertragNr,Zeitstempel,E-Mail-Adresse,Tapir-ID,Mitgliedernummer,Probevertrag,Vertragsbeginn,[S-Ernteanteil],[M-Ernteanteil],[L-Ernteanteil],[XL-Ernteanteil],product,Quantity,Richtpreis,Solidarpreis in Prozent,"Gesamtzahlung",Vertragsgrundsätze,Abholort,Email-Adressen,Ernteanteilsreduzierung/erhöhung,consent_widerruf,consent_vertragsgrundsätze,cancellation.ts
                     # print(row)
