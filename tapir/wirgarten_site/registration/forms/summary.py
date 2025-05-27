@@ -181,7 +181,7 @@ class SummaryForm(forms.Form):
         )
 
         key_in_initial = f"additional_product_{product_type.name}"
-        if key_in_initial not in initial["additional_shares"]:
+        if key_in_initial not in initial.get("additional_shares", {}):
             return infos
 
         products = TapirCache.get_products_with_product_type(

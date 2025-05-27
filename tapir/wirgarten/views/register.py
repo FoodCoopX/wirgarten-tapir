@@ -14,6 +14,7 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
     MarketingFeedbackForm,
@@ -167,13 +168,15 @@ class RegistrationWizardViewBase(CookieWizardView):
         steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = (
             base_product_type.id if base_product_type is not None else None
         )
-        for pt in [
-            x
-            for x in get_available_product_types(
+        available_and_additional_product_types = [
+            product_type
+            for product_type in get_available_product_types(
                 get_next_contract_start_date(cache=cache), cache=cache
             )
-            if x.id != base_product_type.id
-        ]:
+            if product_type.id != base_product_type.id
+        ]
+
+        for pt in available_and_additional_product_types:
             step = "additional_product_" + pt.name
             if step not in steps_kwargs:
                 steps_kwargs[step] = {
@@ -244,13 +247,26 @@ class RegistrationWizardViewBase(CookieWizardView):
             step_coop_shares_enabled = False
             step_coop_shares_enabled_not_available_enabled = False
 
+        if get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+            cache=self.cache,
+        ):
+            show_additional_products = True
+        else:
+            show_additional_products = lambda wizard: has_selected_base_product(wizard)
+
         return {
             STEP_BASE_PRODUCT: _show_harvest_shares,
             STEP_BASE_PRODUCT_NOT_AVAILABLE: not _show_harvest_shares,
             STEP_COOP_SHARES: step_coop_shares_enabled,
             STEP_COOP_SHARES_NOT_AVAILABLE: step_coop_shares_enabled_not_available_enabled,
-            **{f: lambda x: has_selected_base_product(x) for f in self.dynamic_steps},
-            STEP_PICKUP_LOCATION: lambda x: has_selected_base_product(x),
+            **{
+                additional_product_step: show_additional_products
+                for additional_product_step in self.dynamic_steps
+            },
+            STEP_PICKUP_LOCATION: lambda x: has_selected_at_least_one_deliverable_product(
+                x
+            ),
             STEP_SUMMARY: True,
         }
 
@@ -329,7 +345,10 @@ class RegistrationWizardViewBase(CookieWizardView):
                 base_prod_data = self.get_cleaned_data_for_step(STEP_BASE_PRODUCT)
                 initial[STEP_BASE_PRODUCT] = base_prod_data
 
-                if is_base_product_selected(base_prod_data):
+                if is_base_product_selected(base_prod_data) or get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+                    cache=cache,
+                ):
                     for dyn_step in self.dynamic_steps:
                         if "additional_shares" not in initial:
                             initial["additional_shares"] = {}
@@ -461,13 +480,35 @@ def is_base_product_selected(harvest_share_form_data):
 
 def has_selected_base_product(wizard) -> bool:
     if (
-        "step_data" in wizard.storage.data
-        and STEP_BASE_PRODUCT in wizard.storage.data["step_data"]
+        "step_data" not in wizard.storage.data
+        or STEP_BASE_PRODUCT not in wizard.storage.data["step_data"]
     ):
-        for key, val in wizard.storage.data["step_data"][STEP_BASE_PRODUCT].items():
-            if (
-                key.startswith(f"{STEP_BASE_PRODUCT}-{BASE_PRODUCT_FIELD_PREFIX}")
-                and int(val[0] or 0) > 0
-            ):
+        return False
+
+    for key, val in wizard.storage.data["step_data"][STEP_BASE_PRODUCT].items():
+        if (
+            key.startswith(f"{STEP_BASE_PRODUCT}-{BASE_PRODUCT_FIELD_PREFIX}")
+            and int(val[0] or 0) > 0
+        ):
+            return True
+
+    return False
+
+
+def has_selected_at_least_one_deliverable_product(wizard) -> bool:
+    for key, val in (
+        wizard.storage.data.get("step_data", {}).get(STEP_BASE_PRODUCT, {}).items()
+    ):
+        if (
+            key.startswith(f"{STEP_BASE_PRODUCT}-{BASE_PRODUCT_FIELD_PREFIX}")
+            and int(val[0] or 0) > 0
+        ):
+            return True
+
+    for product_type in ProductType.objects.exclude(delivery_cycle=NO_DELIVERY[0]):
+        step = "additional_product_" + product_type.name
+        for key, val in wizard.storage.data.get("step_data", {}).get(step, {}).items():
+            if key.startswith(f"{step}-") and int(val[0] or 0) > 0:
                 return True
+
     return False

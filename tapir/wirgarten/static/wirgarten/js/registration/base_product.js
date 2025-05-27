@@ -88,20 +88,6 @@ var initHarvestShareSummary = (
     }
 
     initDependentFields();
-
-    const submitBtn = document.getElementById("submit-btn");
-    if (warningCannotReduceElem && totalWithoutSoli < originalTotal) {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-      }
-      warningCannotReduceElem.style.display = "block";
-    } else {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-      }
-      if (warningCannotReduceElem)
-        warningCannotReduceElem.style.display = "none";
-    }
   };
 
   customSoliElem.addEventListener("change", (e) => {

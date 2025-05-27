@@ -509,7 +509,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
             initial_value=get_default_product_type(),
-            description="Der Basis Produkttyp. Andere Produkte können nicht bestellt werden, ohne einen Vertrag für den Basis Produkttypen.",
+            description="Der Basis Produkttyp. Wird als erste im BestellWizard angezeigt.",
             category=ParameterCategory.BUSINESS,
             meta=ParameterMeta(
                 options_callable=lambda: [

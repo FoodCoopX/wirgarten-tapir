@@ -580,13 +580,14 @@ class BaseProductForm(forms.Form):
             cache=self.cache,
         )
 
-        SubscriptionChangeValidator.validate_at_least_one_change(
-            form=self,
-            field_prefix=BASE_PRODUCT_FIELD_PREFIX,
-            member_id=self.member_id,
-            subscription_start_date=self.start_date,
-            cache=self.cache,
-        )
+        if self.member_id:
+            SubscriptionChangeValidator.validate_at_least_one_change(
+                form=self,
+                field_prefix=BASE_PRODUCT_FIELD_PREFIX,
+                member_id=self.member_id,
+                subscription_start_date=self.start_date,
+                cache=self.cache,
+            )
 
         return super().clean()
 
