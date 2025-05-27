@@ -46,15 +46,16 @@
                         {% for key, val in wizard.form.harvest_shares.items %}
                             {% if val.amount > 0 %}
                                 <tr>
-                                    <th>{{ val.name }}</th>
-                                    <td style="text-align:right;white-space: nowrap">{{ val.amount }} x</td>
-                                    <td style="text-align:right;white-space: nowrap">{{ val.price }} € / Monat</td>
+                                    <th style="width: 60%">{{ val.name }}</th>
+                                    <td style="text-align:right;white-space: nowrap; width: 20%;">{{ val.amount }} x</td>
+                                    <td style="text-align:right;white-space: nowrap; width: 20%;">{{ val.price }} € / Monat</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
                         {% if wizard.form.harvest_shares_info.solidarity_price_choice != 0 %}
                             <tr>
                                 <th>Solidarbeitrag</th>
+                                <td></td>
                                 <td style="text-align:right;white-space: nowrap">
                                     {{ wizard.form.harvest_shares_info.solidarity_price_diff }} € / Monat
                                 </td>
@@ -119,9 +120,9 @@
                             {% for key, val in product_infos.shares.items %}
                                 {% if val.amount > 0 %}
                                     <tr>
-                                        <th>{{ val.name }}</th>
-                                        <td style="text-align:right; white-space: nowrap">{{ val.amount }} x</td>
-                                        <td style="text-align:right;white-space: nowrap">{{ val.price }} € / Monat</td>
+                                        <th style="width: 60%">{{ val.name }}</th>
+                                        <td style="text-align:right; white-space: nowrap; width: 20%">{{ val.amount }} x</td>
+                                        <td style="text-align:right;white-space: nowrap; width: 20%">{{ val.price }} € / Monat</td>
                                     </tr>
                                 {% endif %}
                             {% endfor %}
