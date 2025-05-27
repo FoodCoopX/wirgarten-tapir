@@ -324,7 +324,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     MaxValueValidator(limit_value=31),
                 ]
             ),
-            enabled=False,
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
@@ -528,7 +528,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=False,
             description="Wenn aktiv, dann werden User nur in Tapir angelegt, ohne den Keycloak Account. Solange das der Fall ist, können sich diese User nicht anmelden.",
             category=ParameterCategory.MEMBER_DASHBOARD,
-            enabled=False,
+            enabled=is_debug_instance(),
         )
 
         parameter_definition(
