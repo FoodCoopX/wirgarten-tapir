@@ -645,9 +645,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=True)
     cancellation_ts = models.DateTimeField(null=True)
-    solidarity_price_percentage = models.FloatField(
-        default=0.0,
-    )
+    solidarity_price_percentage = models.FloatField(null=True)
     solidarity_price_absolute = models.DecimalField(
         decimal_places=2, max_digits=12, null=True
     )
