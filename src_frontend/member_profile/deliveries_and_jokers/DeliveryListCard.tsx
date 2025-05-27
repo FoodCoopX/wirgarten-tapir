@@ -16,6 +16,7 @@ import PickupLocationModal from "./PickupLocationModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import WeekOfYear from "dayjs/plugin/weekOfYear";
 
 declare let FormModal: { load: (url: string, title: string) => void };
 
@@ -44,6 +45,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   const [showManageJokersModal, setShowManageJokersModal] = useState(false);
 
   dayjs.extend(RelativeTime);
+  dayjs.extend(WeekOfYear);
   dayjs.locale("de");
 
   useEffect(() => {
