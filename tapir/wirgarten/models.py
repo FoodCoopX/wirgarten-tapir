@@ -686,19 +686,20 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
             price = get_product_price(self.product, reference_date, cache=cache).price
 
-            if self.solidarity_price_absolute is not None:
-                self._total_price = round(
-                    float(self.quantity) * float(price)
-                    + float(self.solidarity_price_absolute),
-                    2,
-                )
-            else:
-                self._total_price = round(
-                    float(self.quantity)
-                    * float(price)
-                    * float(1 + self.solidarity_price_percentage),
-                    2,
-                )
+            subscription_price_without_solidarity = float(self.quantity) * float(price)
+
+            from tapir.subscriptions.services.solidarity_validator import (
+                SolidarityValidator,
+            )
+
+            self._total_price = round(
+                subscription_price_without_solidarity
+                + SolidarityValidator.get_solidarity_factor_of_subscription(
+                    subscription=self, reference_date=reference_date, cache=cache
+                ),
+                2,
+            )
+
         return self._total_price
 
     @property
