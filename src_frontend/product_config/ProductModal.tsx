@@ -157,6 +157,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   <Form.Control
                     value={size}
                     type={"number"}
+                    step={"any"}
                     min={0}
                     onChange={(e) => setSize(parseFloat(e.target.value))}
                   />
