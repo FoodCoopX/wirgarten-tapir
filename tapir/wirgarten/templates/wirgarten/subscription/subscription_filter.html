@@ -70,7 +70,7 @@
                 <td style="text-align:center">
                     {% if entry.solidarity_price_percentage %}
                         {{ entry.solidarity_price_percentage|format_percent }}
-                    {% else if entry.solidarity_price_absolute %}
+                    {% elif entry.solidarity_price_absolute %}
                         {{ entry.solidarity_price_absolute|format_currency }} €
                     {% else %}
                         -
