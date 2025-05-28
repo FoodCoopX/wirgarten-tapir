@@ -1,28 +1,37 @@
 {% extends "wirgarten/registration/registration_wizard.html" %}
-
 {% load wirgarten %}
 {% load i18n %}
 {% load django_bootstrap5 %}
-
 {% block cardbody %}
-
-<div id="warning_no_harvest_shares" style="text-align: center; padding: 2em;">
-    <h4 class="card-title warning">
-        {% translate 'Im Moment können leider keine Genossenschaftsanteile seperat gezeichnet werden.' %}</h4>
-    Du musst also mindestens einen Ernteanteil auswählen um Mitglied der Genossenschaft werden zu können.<br/>
-    <hr/>
-    Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und wir informieren dich,<br/>sobald eine separate Zeichnung wieder
-    möglich ist.</p>
-    <button id="waitlist-btn" class="btn btn-primary" type="button"
+    <div id="warning_no_harvest_shares"
+         style="text-align: center;
+                padding: 2em">
+        <h4 class="card-title warning">
+            {% translate 'Im Moment können leider keine Genossenschaftsanteile seperat gezeichnet werden.' %}
+        </h4>
+        Du musst also mindestens einen Ernteanteil auswählen um Mitglied der Genossenschaft werden zu können.
+        <br />
+        <hr />
+        Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und wir informieren dich,
+        <br />
+        sobald eine separate Zeichnung wieder
+        möglich ist.
+    </p>
+    <button id="waitlist-btn"
+            class="btn btn-primary"
+            type="button"
             onClick="FormModal.load('{% url 'wirgarten:waitlist_coopshares' %}', 'Warteliste Genossenschaftsanteile')">
         Okay, gebt mir Bescheid!
     </button>
-    <div id="waitlist-success" class="alert alert-success" role="alert"
-         style="width: fit-content; margin: auto; display: none">
+    <div id="waitlist-success"
+         class="alert alert-success"
+         role="alert"
+         style="width: fit-content;
+                margin: auto;
+                display: none">
         <strong>Danke</strong>, wir informieren dich wenn Genossenschaftsanteile wieder verfügbar sind!
     </div>
 </div>
-
 <script>
     // quick and dirty disable continue btn in registration because signup without coop shares is not allowed
     window.addEventListener("load", () => {
@@ -43,5 +52,4 @@
 
 
 </script>
-
 {% endblock %}

@@ -1,25 +1,32 @@
 {% extends "wirgarten/registration/registration_wizard.html" %}
-
 {% load wirgarten %}
 {% load i18n %}
 {% load django_bootstrap5 %}
-
 {% block cardbody %}
-
-<div id="warning_no_harvest_shares" style="text-align: center; padding: 2em;">
-    <h4 class="card-title warning">{% translate 'Im Moment können leider keine Ernteanteile gezeichnet werden.' %}</h4>
-    Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und<br/>wir informieren dich, sobald
-    wieder Ernteanteile verfügbar sind.</p>
-    <button id="waitlist-btn" class="btn btn-primary" type="button"
+    <div id="warning_no_harvest_shares"
+         style="text-align: center;
+                padding: 2em">
+        <h4 class="card-title warning">{% translate 'Im Moment können leider keine Ernteanteile gezeichnet werden.' %}</h4>
+        Gerne kannst du dich auf unsere <strong>Warteliste</strong> setzen lassen und
+        <br />
+        wir informieren dich, sobald
+        wieder Ernteanteile verfügbar sind.
+    </p>
+    <button id="waitlist-btn"
+            class="btn btn-primary"
+            type="button"
             onClick="FormModal.load('{% url 'wirgarten:waitlist_harvestshares' %}', 'Warteliste Ernteanteile')">
         Okay, gebt mir Bescheid!
     </button>
-    <div id="waitlist-success" class="alert alert-success" role="alert"
-         style="width: fit-content; margin: auto; display: none">
+    <div id="waitlist-success"
+         class="alert alert-success"
+         role="alert"
+         style="width: fit-content;
+                margin: auto;
+                display: none">
         <strong>Danke</strong>, wir informieren dich wenn neue Ernteanteile verfügbar sind!
     </div>
 </div>
-
 <script>
     const btn = document.getElementById("waitlist-btn");
     const successMsg = document.getElementById("waitlist-success");
@@ -32,5 +39,4 @@
     });
 
 </script>
-
 {% endblock %}

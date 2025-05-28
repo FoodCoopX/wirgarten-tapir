@@ -1,23 +1,32 @@
 {% load configuration %}
 {% load tapir_static %}
-
-
-<p>Der WirGarten ist eine Genossenschaft. Er gehört allen Mitgliedern, und nur
-    <strong>Mitglieder können Gemüse beziehen</strong>.</p>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 2em; margin: 2em 0 1em 0;">
+<p>
+    Der WirGarten ist eine Genossenschaft. Er gehört allen Mitgliedern, und nur
+    <strong>Mitglieder können Gemüse beziehen</strong>.
+</p>
+<div style="display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-column-gap: 2em;
+            margin: 2em 0 1em 0">
     <div style="margin-right:1em">
-        <p style="margin-left: 1em;">Als Mitglied unserer Genossenschafts bist du gleichzeitig Miteigentümer:in deiner eigenen Gemüsegärtnerei! Du kannst bei allen Grundsatzentscheidungen deines WirGartens mitbestimmen und hast bei der Wahl von Vorstand und Aufsichtsrat ein Stimmrecht (siehe Grafik).</p>
-        <img style="width: 100%; margin: 1em" class="photo"
-             src="{% static 'lueneburg/registration/coop-2.png' %}"/>
+        <p style="margin-left: 1em;">
+            Als Mitglied unserer Genossenschafts bist du gleichzeitig Miteigentümer:in deiner eigenen Gemüsegärtnerei! Du kannst bei allen Grundsatzentscheidungen deines WirGartens mitbestimmen und hast bei der Wahl von Vorstand und Aufsichtsrat ein Stimmrecht (siehe Grafik).
+        </p>
+        <img style="width: 100%;
+                    margin: 1em"
+             class="photo"
+             src="{% static 'lueneburg/registration/coop-2.png' %}" />
     </div>
     <div style="margin-right:1em">
-        <img style="width: 100%; margin-bottom: 2em;" class="photo"
-             src="{% static 'lueneburg/registration/coop-1.png' %}"/>
-        <p>Mit deinen Genossenschaftsanteilen beteiligst du dich an der gemeinsamen Finanzierung von Investitionen, etwa für Maschinen und Gebäude. Die laufenden Kosten werden übrigens durch die Beiträge für den Ernteanteil gedeckt - davon bezahlen wir etwa Gehälter und Saatgut (siehe Grafik).</p>
+        <img style="width: 100%;
+                    margin-bottom: 2em"
+             class="photo"
+             src="{% static 'lueneburg/registration/coop-1.png' %}" />
+        <p>
+            Mit deinen Genossenschaftsanteilen beteiligst du dich an der gemeinsamen Finanzierung von Investitionen, etwa für Maschinen und Gebäude. Die laufenden Kosten werden übrigens durch die Beiträge für den Ernteanteil gedeckt - davon bezahlen wir etwa Gehälter und Saatgut (siehe Grafik).
+        </p>
     </div>
 </div>
-
 <p>
     <strong>Wieviele Genossenschaftsanteile du mindestens zeichnen musst, hängt von der Größe deines Ernteanteils ab - das wird dir unten automatisch angezeigt.
     </strong>
