@@ -124,7 +124,7 @@
         const params = Tapir.getUrlParams();
 
         if(params.contract){
-            FormModal.load(`/wirgarten/contracts/${params.contract}/editprice`, 'Betrag ändern')
+            FormModal.load(`/tapir/contracts/${params.contract}/editprice`, 'Betrag ändern')
         }
     }
 
@@ -132,7 +132,7 @@
         const params = Tapir.getUrlParams();
 
         if(params.contract){
-            FormModal.load(`/wirgarten/contracts/${params.contract}/editdates`, 'Laufzeit ändern')
+            FormModal.load(`/tapir/contracts/${params.contract}/editdates`, 'Laufzeit ändern')
         }
     }
 
@@ -140,7 +140,7 @@
         const params = Tapir.getUrlParams();
 
         if(params.contract === id){
-            window.location.href = `/wirgarten/members/${member_id}`;
+            window.location.href = `/tapir/members/${member_id}`;
         } else {
             params.contract = id;
 

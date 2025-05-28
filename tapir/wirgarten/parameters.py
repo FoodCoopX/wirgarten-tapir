@@ -97,7 +97,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Standort Name",
             datatype=TapirParameterDatatype.STRING,
             initial_value="WirGarten Lüneburg eG",
-            description="Der Name des WirGarten Standorts. Beispiel: 'WirGarten Lüneburg eG'",
+            description="Der Name des Standorts. Beispiel: 'WirGarten Lüneburg eG'",
             category=ParameterCategory.SITE,
             order_priority=1000,
         )
@@ -107,7 +107,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Straße u. Hausnummer",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Vögelser Str. 25",
-            description="Die Straße und Hausnummer des WirGarten Standorts. Beispiel: 'Vögelser Str. 25'",
+            description="Die Straße und Hausnummer des Standorts. Beispiel: 'Vögelser Str. 25'",
             category=ParameterCategory.SITE,
             order_priority=900,
         )
@@ -117,7 +117,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Postleitzahl u. Ort",
             datatype=TapirParameterDatatype.STRING,
             initial_value="21339 Lüneburg",
-            description="Die PLZ und Ort des WirGarten Standorts. Beispiel: '21339 Lüneburg'",
+            description="Die PLZ und Ort des Standorts. Beispiel: '21339 Lüneburg'",
             category=ParameterCategory.SITE,
             order_priority=800,
         )
@@ -127,7 +127,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Kontakt Email-Adresse",
             datatype=TapirParameterDatatype.STRING,
             initial_value="lueneburg@wirgarten.com",
-            description="Die Kontakt Email-Adresse des WirGarten Standorts. Beispiel: 'lueneburg@wirgarten.com'",
+            description="Die Kontakt Email-Adresse des Standorts. Beispiel: 'lueneburg@wirgarten.com'",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[EmailValidator()]),
         )
@@ -137,7 +137,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Admin Email",
             datatype=TapirParameterDatatype.STRING,
             initial_value="tapiradmin@wirgarten.com",
-            description="Die Admin Email-Adresse des WirGarten Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
+            description="Die Admin Email-Adresse des Standorts. Beispiel: 'tapiradmin@wirgarten.com'",
             category=ParameterCategory.SITE,
             meta=ParameterMeta(validators=[EmailValidator()]),
         )

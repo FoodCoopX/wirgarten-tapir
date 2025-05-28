@@ -146,7 +146,7 @@ const manageButtons = () => {
 const getCapacityEditForm = () => {
   const params = Tapir.getUrlParams();
   if (params.capacityId) {
-    const url = `/wirgarten/product/${params.periodId}/${
+    const url = `/tapir/product/${params.periodId}/${
       params.capacityId
     }/typeedit${Tapir.stringifyUrlParams(params)}`;
     FormModal.load(url, "Vertrag / Kapazität editieren");
@@ -155,7 +155,7 @@ const getCapacityEditForm = () => {
 
 const getCapacityAddForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${
+  const url = `/tapir/product/${
     params.periodId
   }/typeadd${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(url, "Vertrag / Kapazität hinzufügen");
@@ -164,7 +164,7 @@ const getCapacityAddForm = () => {
 const getProductEditForm = () => {
   const params = Tapir.getUrlParams();
   if (params.prodId) {
-    const url = `/wirgarten/product/${params.periodId}/${params.capacityId}/${
+    const url = `/tapir/product/${params.periodId}/${params.capacityId}/${
       params.prodId
     }/edit${Tapir.stringifyUrlParams(params)}`;
     FormModal.load(url, "Produkt editieren");
@@ -173,7 +173,7 @@ const getProductEditForm = () => {
 
 const getProductAddForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${params.periodId}/${
+  const url = `/tapir/product/${params.periodId}/${
     params.capacityId
   }/add${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(url, "Neues Produkt hinzufügen");
@@ -181,7 +181,7 @@ const getProductAddForm = () => {
 
 const getGrowingPeriodAddForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/periodadd${Tapir.stringifyUrlParams(params)}`;
+  const url = `/tapir/product/periodadd${Tapir.stringifyUrlParams(params)}`;
   const title = "Neue Vertragsperiode anlegen";
   FormModal.load(
     url,
@@ -193,7 +193,7 @@ const getGrowingPeriodAddForm = () => {
 
 const getGrowingPeriodCopyForm = () => {
   const params = Tapir.getUrlParams();
-  const url = `/wirgarten/product/${
+  const url = `/tapir/product/${
     params.periodId
   }/periodcopy${Tapir.stringifyUrlParams(params)}`;
   FormModal.load(

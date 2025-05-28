@@ -157,7 +157,7 @@
         detailsDiv = document.getElementById("edit-payment-details");
         formElem = document.getElementById("edit-payment-form");
 
-        const url = `/wirgarten/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}?amount=${calculatedAmount}&type=${paymentType}`
+        const url = `/tapir/payments/${memberId}/edit/${mandateRefId.replaceAll('/', '~')}/${paymentDueDate}?amount=${calculatedAmount}&type=${paymentType}`
         formElem.action = url
 
         fetch(url).then((form) => {

@@ -170,7 +170,7 @@
     const handleShowMemberDetailsPage = () => {
         const params = Tapir.getUrlParams();
 
-        window.location.href = `/wirgarten/members/${params.member}`;
+        window.location.href = `/tapir/members/${params.member}`;
     }
 
     const handleShowContractPage = () => {
@@ -180,27 +180,27 @@
 
     const handleShowPayments = () => {
         const params = Tapir.getUrlParams();
-        window.location.href = `/wirgarten/payments/${params.member}`;
+        window.location.href = `/tapir/payments/${params.member}`;
     }
 
     const handleShowDeliveries = () => {
         const params = Tapir.getUrlParams();
-        window.location.href = `/wirgarten/deliveries/${params.member}`;
+        window.location.href = `/tapir/deliveries/${params.member}`;
     }
 
     const handleTransferCoopShares = () => {
         const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
+        FormModal.load(`/tapir/members/${params.member}/coopsharestransfer`, "Genossenschaftsanteile übertragen");
     }
 
     const handleCancelCoopShares = () => {
         const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
+        FormModal.load(`/tapir/members/${params.member}/coopsharescancel`, "Genossenschaftsanteile kündigen");
     }
 
     const handleEditMemberDetails = () => {
         const params = Tapir.getUrlParams();
-        FormModal.load(`/wirgarten/members/${params.member}/edit`, 'Persönliche Daten ändern')
+        FormModal.load(`/tapir/members/${params.member}/edit`, 'Persönliche Daten ändern')
         FormModal.addCallback((e) => {
             if(e.data.type === "modal-save-successful"){
                 window.location.replace(window.location.href)

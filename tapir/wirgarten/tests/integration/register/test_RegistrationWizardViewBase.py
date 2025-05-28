@@ -58,7 +58,7 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
             valid_from=growing_period.start_date,
         )
 
-        response: TemplateResponse = self.client.get("/wirgarten/register")
+        response: TemplateResponse = self.client.get("/tapir/register")
         steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
 
         self.assertNotIn(STEP_BASE_PRODUCT, steps_helper.all)
@@ -75,7 +75,7 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
             valid_from=growing_period.start_date,
         )
 
-        response: TemplateResponse = self.client.get("/wirgarten/register")
+        response: TemplateResponse = self.client.get("/tapir/register")
         steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
 
         self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
@@ -95,7 +95,7 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
             size=0.6, product=self.product, valid_from=next_growing_period.start_date
         )
 
-        response: TemplateResponse = self.client.get("/wirgarten/register")
+        response: TemplateResponse = self.client.get("/tapir/register")
         steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
 
         self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
@@ -117,7 +117,7 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
             start_date=datetime.datetime(year=2023, month=6, day=15),
         )
 
-        response: TemplateResponse = self.client.get("/wirgarten/register")
+        response: TemplateResponse = self.client.get("/tapir/register")
         steps_helper: StepsHelper = response.context_data["wizard"]["steps"]
 
         self.assertNotIn(STEP_BASE_PRODUCT, steps_helper.all)

@@ -27,7 +27,7 @@ const initSelected = () => {
 };
 
 const handleEdit = () => {
-  url = `/wirgarten/admin/pickuplocations/edit/${Tapir.getUrlParams().selected}`;
+  url = `/tapir/admin/pickuplocations/edit/${Tapir.getUrlParams().selected}`;
   FormModal.load(url, "Abholort bearbeiten");
 };
 
@@ -40,7 +40,7 @@ const handleDelete = () => {
     () => {
       const id = Tapir.getUrlParams().selected;
       if (canDelete[id]) {
-        window.location.href = `/wirgarten/admin/pickuplocations/delete/${id}`;
+        window.location.href = `/tapir/admin/pickuplocations/delete/${id}`;
       }
     },
   );
