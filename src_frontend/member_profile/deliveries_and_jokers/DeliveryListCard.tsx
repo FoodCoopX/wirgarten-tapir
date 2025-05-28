@@ -90,7 +90,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   }
 
   function productCell(delivery: Delivery) {
-    let content = <></>;
+    let content;
     if (delivery.isDeliveryCancelledThisWeek) {
       content = <>Keine Lieferung</>;
     } else if (delivery.jokerUsed) {
@@ -103,7 +103,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
               <div key={subscription.id}>
                 {subscription.quantity}
                 {" × "}
-                {subscription.product.name} {subscription.product.type.name}
+                {subscription.product.name}
               </div>
             );
           })}
