@@ -49,31 +49,47 @@
             <nav class="navbar navbar-expand-sm navbar-dark bg-dark sticky-top shadow px-3">
                 <span class="navbar-brand">
                     {% with "organisation.theme"|parameter as theme %}
-                    <img alt="Wirgarten Logo" height=30" src="{% static 'core/themes/'|add:theme|add:'/images/Logo_white.webp' %}"> </span>
-                {% endwith %}
+                        <img alt="Wirgarten Logo"
+                             height="30"
+                             src="{% static 'core/themes/'|add:theme|add:'/images/Logo_white.webp' %}">
+                    {% endwith %}
+                </span>
                 {% if request.user.is_authenticated %}
-                    <div style="width: 100%; display: flex; justify-content: space-between"> <a class="text-light nav-link" style="white-space:nowrap" href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a> <button class="btn text-light nav-link" id="logout">Logout</button> </div>
+                    <div style="width: 100%; display: flex; justify-content: space-between">
+                        <a class="text-light nav-link" style="white-space:nowrap" href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a>
+                        <button class="btn text-light nav-link" id="logout">Logout</button>
+                    </div>
                 {% endif %}
             </nav>
             {% include 'wirgarten/generic/modal/form-modal.html' %}
             {% include 'wirgarten/generic/modal/confirmation-modal.html' %}
             <div class="container-fluid" style="padding-right:1em; padding-left:1em;">
                 {% if request.user and "coop.view" in request.user.roles %}
-                    <nav id="sidebar" class="bg-light sidebar custom-sidebar"> <div class="sidebar-sticky">
-                        {% block sidebar %}
-                            {% sidebar_links %}
-                        {% endblock %}
-                    </div> </nav>
+                    <nav id="sidebar" class="bg-light sidebar custom-sidebar">
+                        <div class="sidebar-sticky">
+                            {% block sidebar %}
+                                {% sidebar_links %}
+                            {% endblock %}
+                        </div>
+                    </nav>
                 {% endif %}
                 <main id="main-content"
                       role="main"
-                      {% if request.user and "coop.view" in request.user.roles %}style="margin-left:4em;"{% endif %}> {% bootstrap_messages %}
+                      {% if request.user and "coop.view" in request.user.roles %}style="margin-left:4em;"{% endif %}>
+                    {% bootstrap_messages %}
                     {% block content %}{% endblock %}
-                    </main> </div> </div> </body> <script src="{% static 'wirgarten/js/table-functions.js' %}"></script> <script> $(function () { $('[data-bs-toggle="tooltip"]').tooltip(); })  // Style selectize inputs like bootstrap $(".searchable-select>
- select").selectize({plugins: ["clear_button"], sortField:'text'})
+                </main>
+            </div>
+        </div>
+    </body>
+    <script src="{% static 'wirgarten/js/table-functions.js' %}"></script>
+    <script>
+        $(function () { $('[data-bs-toggle="tooltip"]').tooltip(); })
+        // Style selectize inputs like bootstrap
+        $(".searchable-select>select").selectize({plugins: ["clear_button"], sortField:'text'})
         for(const elem of document.getElementsByClassName('selectize-input')){
             elem.classList.add('form-select');
             elem.classList.add('is-valid');
         }
-                    </script>
-                </html>
+    </script>
+</html>
