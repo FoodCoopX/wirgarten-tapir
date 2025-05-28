@@ -45,19 +45,15 @@ CELERY_BEAT_SCHEDULE = {
     "export_supplier_list_csv": {
         "task": "tapir.wirgarten.tasks.export_supplier_list_csv",
         "schedule": celery.schedules.crontab(
-            day_of_week="tuesday",
             minute=0,
             hour=3,
-            # once a week, Tuesday at 03:00
         ),
     },
     "export_pick_list_csv": {
         "task": "tapir.wirgarten.tasks.export_pick_list_csv",
         "schedule": celery.schedules.crontab(
-            day_of_week="monday",
             minute=0,
             hour=4,
-            # once a week, Monday at 04:00
         ),
     },
     "export_payments_per_product_type": {
