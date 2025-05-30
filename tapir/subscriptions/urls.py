@@ -26,9 +26,9 @@ urlpatterns = [
         name="cancelled_subscriptions",
     ),
     path(
-        "api/confirm_subscription_cancellation",
-        views.ConfirmSubscriptionCancellationView.as_view(),
-        name="confirm_subscription_cancellation",
+        "api/confirm_changes",
+        views.ConfirmSubscriptionChangesView.as_view(),
+        name="confirm_subscription_changes",
     ),
     path(
         "api/product_types_and_number_of_cancelled_subscriptions",

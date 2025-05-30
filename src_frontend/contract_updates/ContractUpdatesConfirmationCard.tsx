@@ -9,17 +9,19 @@ import {
 import TapirButton from "../components/TapirButton.tsx";
 import formatSubscription from "../utils/formatSubscription.ts";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 
 interface ContractUpdatesConfirmationCardProps {
   csrfToken: string;
   changes: MemberDataToConfirm;
   show: boolean;
   onHide: () => void;
+  onConfirmed: () => void;
 }
 
 const ContractUpdatesConfirmationCard: React.FC<
   ContractUpdatesConfirmationCardProps
-> = ({ csrfToken, changes, show, onHide }) => {
+> = ({ csrfToken, changes, show, onHide, onConfirmed }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const [loading, setLoading] = useState(false);
 
@@ -56,6 +58,38 @@ const ContractUpdatesConfirmationCard: React.FC<
         })}
       </ul>
     );
+  }
+
+  function onConfirm() {
+    setLoading(true);
+
+    const confirmCreationIds = changes.subscriptionCreations.map(
+      (subscriptions) => subscriptions.id!,
+    );
+    for (const change of changes.subscriptionChanges) {
+      confirmCreationIds.push(
+        ...change.subscriptionCreations.map((subscription) => subscription.id!),
+      );
+    }
+
+    const confirmCancellationIds = changes.subscriptionCancellations.map(
+      (subscriptions) => subscriptions.id!,
+    );
+    for (const change of changes.subscriptionChanges) {
+      confirmCancellationIds.push(
+        ...change.subscriptionCancellations.map(
+          (subscription) => subscription.id!,
+        ),
+      );
+    }
+    subscriptionsApi
+      .subscriptionsApiConfirmChangesCreate({
+        confirmCreationIds: confirmCreationIds,
+        confirmCancellationIds: confirmCancellationIds,
+      })
+      .then(onConfirmed)
+      .catch(handleRequestError)
+      .finally(() => setLoading(false));
   }
 
   return (
@@ -113,7 +147,7 @@ const ContractUpdatesConfirmationCard: React.FC<
           text={"Bestätigen"}
           variant={"primary"}
           loading={loading}
-          onClick={() => alert("TODO")}
+          onClick={onConfirm}
           icon={"contract_edit"}
         />
       </Modal.Footer>

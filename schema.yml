@@ -13,8 +13,6 @@ paths:
           type: string
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -38,8 +36,6 @@ paths:
           type: string
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -62,8 +58,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -81,8 +75,6 @@ paths:
           type: string
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -102,8 +94,6 @@ paths:
           type: string
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -126,8 +116,6 @@ paths:
           type: string
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -146,8 +134,6 @@ paths:
       operationId: deliveries_growing_periods_list
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -173,8 +159,6 @@ paths:
             schema:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -194,8 +178,6 @@ paths:
         required: true
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -226,8 +208,6 @@ paths:
             schema:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -257,8 +237,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -277,8 +255,6 @@ paths:
         required: true
       tags:
       - deliveries
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -297,8 +273,6 @@ paths:
           format: date-time
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -321,8 +295,6 @@ paths:
           format: date-time
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -335,8 +307,6 @@ paths:
       operationId: generic_exports_csv_exports_list
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -362,8 +332,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -383,8 +351,6 @@ paths:
         required: true
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -415,8 +381,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -446,8 +410,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedCsvExportModelRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -466,8 +428,6 @@ paths:
         required: true
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -476,8 +436,6 @@ paths:
       operationId: generic_exports_export_segments_list
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -492,8 +450,6 @@ paths:
       operationId: generic_exports_pdf_exports_list
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -519,8 +475,6 @@ paths:
             schema:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -540,8 +494,6 @@ paths:
         required: true
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -572,8 +524,6 @@ paths:
             schema:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -603,8 +553,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedPdfExportModelRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -623,8 +571,6 @@ paths:
         required: true
       tags:
       - generic_exports
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -638,8 +584,6 @@ paths:
           type: string
       tags:
       - pickup_locations
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -662,8 +606,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -681,8 +623,6 @@ paths:
           type: string
       tags:
       - pickup_locations
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -695,8 +635,6 @@ paths:
       operationId: pickup_locations_pickup_locations_list
       tags:
       - pickup_locations
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -718,8 +656,6 @@ paths:
         required: true
       tags:
       - pickup_locations
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -748,8 +684,6 @@ paths:
         required: true
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -757,12 +691,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
           description: ''
-  /subscriptions/api/confirm_subscription_cancellation:
+  /subscriptions/api/confirm_changes:
     post:
-      operationId: subscriptions_api_confirm_subscription_cancellation_create
+      operationId: subscriptions_api_confirm_changes_create
       parameters:
       - in: query
-        name: subscription_ids
+        name: confirm_cancellation_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
+      - in: query
+        name: confirm_creation_ids
         schema:
           type: array
           items:
@@ -770,8 +711,6 @@ paths:
         required: true
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -789,8 +728,6 @@ paths:
           type: string
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -813,8 +750,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedExtendedProductRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -827,8 +762,6 @@ paths:
       operationId: subscriptions_api_member_data_to_confirm_list
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -843,8 +776,6 @@ paths:
       operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -872,8 +803,6 @@ paths:
             type: string
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -891,8 +820,6 @@ paths:
           type: string
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -905,8 +832,6 @@ paths:
       operationId: subscriptions_products_list
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -928,8 +853,6 @@ paths:
         required: true
       tags:
       - subscriptions
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -954,8 +877,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -981,8 +902,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1006,8 +925,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -1027,8 +944,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1059,8 +974,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1090,8 +1003,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1110,8 +1021,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -1127,8 +1036,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1160,8 +1067,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1187,8 +1092,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1212,8 +1115,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -1233,8 +1134,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1265,8 +1164,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1296,8 +1193,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1316,8 +1211,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -1345,8 +1238,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1373,8 +1264,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1401,8 +1290,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1415,8 +1302,6 @@ paths:
       operationId: tapirmail_api_email_configuration_version_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1442,8 +1327,6 @@ paths:
             schema:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1464,8 +1347,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1496,8 +1377,6 @@ paths:
             schema:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1527,8 +1406,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1547,8 +1424,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -1564,8 +1439,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1586,8 +1459,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1608,8 +1479,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1629,8 +1498,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1663,8 +1530,6 @@ paths:
             schema:
               $ref: '#/components/schemas/RecipientRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1699,8 +1564,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1720,8 +1583,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1753,8 +1614,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailDispatchRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1795,8 +1654,6 @@ paths:
           format: date-time
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1832,8 +1689,6 @@ paths:
           format: date-time
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1846,8 +1701,6 @@ paths:
       operationId: tapirmail_api_email_template_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1873,8 +1726,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -1894,8 +1745,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1926,8 +1775,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1957,8 +1804,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1977,8 +1822,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2000,8 +1843,6 @@ paths:
           type: integer
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2025,8 +1866,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -2046,8 +1885,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2078,8 +1915,6 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2109,8 +1944,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2129,8 +1962,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2139,8 +1970,6 @@ paths:
       operationId: tapirmail_api_media_library_filepond_fetch_retrieve
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2155,8 +1984,6 @@ paths:
         setting parameter).
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2181,8 +2008,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2198,8 +2023,6 @@ paths:
         permanent storage in line with the requirements of the parent application.
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2208,8 +2031,6 @@ paths:
       operationId: tapirmail_api_media_library_filepond_restore_retrieve
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2218,8 +2039,6 @@ paths:
       operationId: tapirmail_api_media_library_filepond_revert_destroy
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2228,8 +2047,6 @@ paths:
       operationId: storeduploads_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2255,8 +2072,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -2276,8 +2091,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2308,8 +2121,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2339,8 +2150,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStoredUploadRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2359,8 +2168,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2369,8 +2176,6 @@ paths:
       operationId: temporaryuploads_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2396,8 +2201,6 @@ paths:
             schema:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -2417,8 +2220,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2449,8 +2250,6 @@ paths:
             schema:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2480,8 +2279,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2500,8 +2297,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2510,8 +2305,6 @@ paths:
       operationId: tapirmail_api_missing_triggers_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2527,8 +2320,6 @@ paths:
       description: Get a list of available filters.
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2547,8 +2338,6 @@ paths:
       description: Get a list of available segments.
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2583,8 +2372,6 @@ paths:
             schema:
               $ref: '#/components/schemas/SegmentDataRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2609,8 +2396,6 @@ paths:
       operationId: tapirmail_api_static_segment_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2636,8 +2421,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -2657,8 +2440,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2689,8 +2470,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2720,8 +2499,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2740,8 +2517,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2750,8 +2525,6 @@ paths:
       operationId: tapirmail_api_static_segment_recipient_list
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2777,8 +2550,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -2798,8 +2569,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2830,8 +2599,6 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2861,8 +2628,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2881,8 +2646,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -2891,8 +2654,6 @@ paths:
       operationId: tapirmail_api_tokens_get_tokens_retrieve
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2911,8 +2672,6 @@ paths:
         required: true
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -2921,8 +2680,6 @@ paths:
       operationId: tapirmail_api_trigger_tokens_get_tokens_retrieve
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2936,8 +2693,6 @@ paths:
       description: Get a list of available triggers.
       tags:
       - tapirmail
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2952,8 +2707,6 @@ paths:
       operationId: waiting_list_api_categories_retrieve
       tags:
       - waiting_list
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -2979,8 +2732,6 @@ paths:
         required: true
       tags:
       - waiting_list
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3005,8 +2756,6 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3019,8 +2768,6 @@ paths:
       operationId: waiting_list_waiting_list_entries_list
       tags:
       - waiting_list
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3046,8 +2793,6 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '201':
           content:
@@ -3067,8 +2812,6 @@ paths:
         required: true
       tags:
       - waiting_list
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3099,8 +2842,6 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3130,8 +2871,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
-      security:
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -3150,8 +2889,6 @@ paths:
         required: true
       tags:
       - waiting_list
-      security:
-      - cookieAuth: []
       responses:
         '204':
           description: No response body
@@ -6254,9 +5991,10 @@ components:
           type: string
           format: date-time
           nullable: true
-        solidarity_price:
+        solidarity_price_percentage:
           type: number
           format: double
+          nullable: true
         solidarity_price_absolute:
           type: string
           format: decimal
@@ -6793,8 +6531,3 @@ components:
       - product
       - quantity
       - waiting_list_entry
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid

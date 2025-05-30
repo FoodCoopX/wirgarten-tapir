@@ -25,10 +25,15 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     MemberDataToConfirm[]
   >([]);
   const [selectedChange, setSelectedChange] = useState<MemberDataToConfirm>();
+  const [confirmedChange, setConfirmedChange] = useState<MemberDataToConfirm>();
 
   useEffect(() => {
     setLoading(true);
 
+    loadList();
+  }, []);
+
+  function loadList() {
     subscriptionsApi
       .subscriptionsApiMemberDataToConfirmList()
       .then((changes) => {
@@ -40,7 +45,13 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  function onConfirmed() {
+    setConfirmedChange(selectedChange);
+    setSelectedChange(undefined);
+    loadList();
+  }
 
   function buildChanges(memberDataToConfirm: MemberDataToConfirm) {
     return (
@@ -133,11 +144,21 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                   {loading ? (
                     <PlaceholderTableRows
                       nbRows={DEFAULT_PAGE_SIZE}
-                      nbColumns={9}
-                      size={"xs"}
+                      nbColumns={6}
+                      size={"lg"}
                     />
                   ) : (
                     changesToConfirm.map((change) => {
+                      if (change == confirmedChange) {
+                        return (
+                          <PlaceholderTableRows
+                            nbRows={1}
+                            nbColumns={6}
+                            size={"lg"}
+                          />
+                        );
+                      }
+
                       return (
                         <tr
                           key={change.member.id}
@@ -168,6 +189,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           changes={selectedChange}
           show={true}
           onHide={() => setSelectedChange(undefined)}
+          onConfirmed={onConfirmed}
         />
       )}
     </>

@@ -3,7 +3,6 @@ from typing import Dict
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, permissions, viewsets
 from rest_framework.decorators import action
@@ -194,11 +193,7 @@ class CancelSubscriptionsView(APIView):
         ):
             return self.build_response(
                 False,
-                [
-                    _(
-                        "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
-                    )
-                ],
+                ["Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."],
             )
 
         with transaction.atomic():
@@ -463,37 +458,6 @@ class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmView(APIView):
         )
 
 
-class ConfirmSubscriptionCancellationView(APIView):
-    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
-
-    @extend_schema(
-        responses={200: str},
-        parameters=[
-            OpenApiParameter(
-                name="subscription_ids", type=str, required=True, many=True
-            ),
-        ],
-    )
-    def post(self, request: Request):
-        subscription_ids = request.query_params.getlist("subscription_ids")
-
-        subscriptions = Subscription.objects.filter(id__in=subscription_ids)
-
-        ids_not_found = [
-            subscription_id
-            for subscription_id in subscription_ids
-            if subscription_id
-            not in [subscription.id for subscription in subscriptions]
-        ]
-
-        if len(ids_not_found) > 0:
-            raise Http404(f"No subscription with ids {ids_not_found} found")
-
-        subscriptions.update(cancellation_admin_confirmed=get_now())
-
-        return Response("OK", status=status.HTTP_200_OK)
-
-
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Product.objects.select_related("type")
@@ -638,3 +602,68 @@ class MemberDataToConfirmApiView(APIView):
             "subscription_changes": changes,
             "share_transactions": [],
         }
+
+
+class ConfirmSubscriptionChangesView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="confirm_cancellation_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="confirm_creation_ids", type=str, required=True, many=True
+            ),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request: Request):
+        cache = {}
+
+        confirm_cancellation_ids = request.query_params.getlist(
+            "confirm_cancellation_ids"
+        )
+        self.apply_confirmation(
+            subscription_ids_to_confirm=confirm_cancellation_ids,
+            confirmation_field="cancellation_admin_confirmed",
+            cache=cache,
+        )
+
+        confirm_creation_ids = request.query_params.getlist("confirm_creation_ids")
+        self.apply_confirmation(
+            subscription_ids_to_confirm=confirm_creation_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+        )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @staticmethod
+    def apply_confirmation(
+        subscription_ids_to_confirm: list[str],
+        confirmation_field: str,
+        cache: dict,
+    ):
+        subscription_ids_to_confirm = [
+            id.strip() for id in subscription_ids_to_confirm if id.strip() is not ""
+        ]
+
+        subscriptions_to_confirm = Subscription.objects.filter(
+            id__in=subscription_ids_to_confirm
+        ).filter(**{f"{confirmation_field}__isnull": True})
+
+        ids_not_found = [
+            subscription_id
+            for subscription_id in subscription_ids_to_confirm
+            if subscription_id
+            not in [subscription.id for subscription in subscriptions_to_confirm]
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(
+                f"No subscription to confirm with ids {ids_not_found} found, field: {confirmation_field}"
+            )
+
+        subscriptions_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
