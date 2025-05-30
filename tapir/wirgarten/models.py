@@ -90,6 +90,20 @@ class PickupLocation(TapirModel):
         return result + "</table>"
 
     @property
+    def opening_times_html_small(self):
+        formatted_times = []
+        for opening_time in PickupLocationOpeningTime.objects.filter(
+            pickup_location_id=self.id
+        ).order_by("day_of_week"):
+            open_time = opening_time.open_time.strftime("%H:%M")
+            close_time = opening_time.close_time.strftime("%H:%M")
+
+            formatted_times.append(
+                f"<span style='font-weight: semibold'>{OPTIONS_WEEKDAYS[opening_time.day_of_week][1][0:2]} </span><span'>{open_time}-{close_time}</span>"
+            )
+        return ", ".join(formatted_times)
+
+    @property
     def delivery_date_offset(self):
         opening_times = PickupLocationOpeningTime.objects.filter(
             pickup_location_id=self.id

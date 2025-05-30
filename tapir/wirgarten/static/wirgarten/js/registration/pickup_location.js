@@ -28,7 +28,8 @@ var initMap = (
     marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>
             <br/>
-                ${pl.street}, ${pl.city}<br/></br>
+                ${pl.street}, ${pl.city}<br/>
+                ${pl.opening_times}
             </div>
             `);
     marker.locationId = id;

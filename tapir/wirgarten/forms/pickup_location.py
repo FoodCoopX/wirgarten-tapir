@@ -306,7 +306,7 @@ class PickupLocationChoiceField(forms.ModelChoiceField):
         return PickupLocation.objects.filter(id__in=possible_location_ids)
 
     def label_from_instance(self, obj):
-        return f"<strong>{obj.name}</strong><br/><small>{obj.street}, {obj.postcode} {obj.city}</small>"
+        return f"<strong>{obj.name}</strong><br/><small><span>{obj.street}, {obj.postcode} {obj.city}</span><br />{obj.opening_times_html_small}</small>"
 
 
 class PickupLocationChoiceForm(forms.Form):
