@@ -39,6 +39,8 @@ class TestRenewSubscription(SimpleTestCase):
         subscription.solidarity_price_absolute = Decimal("3.6")
         mandate_ref = Mock()
         subscription.mandate_ref = mandate_ref
+        admin_confirmed = Mock()
+        subscription.admin_confirmed = admin_confirmed
 
         next_growing_period = Mock()
         start_date = Mock()
@@ -79,4 +81,5 @@ class TestRenewSubscription(SimpleTestCase):
             trial_disabled=trial_disabled,
             trial_end_date_override=trial_end_date_override,
             notice_period_duration=4,
+            admin_confirmed=admin_confirmed,
         )

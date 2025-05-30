@@ -691,9 +691,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
           description: ''
-  /subscriptions/api/confirm_changes:
+  /subscriptions/api/confirm_subscription_changes:
     post:
-      operationId: subscriptions_api_confirm_changes_create
+      operationId: subscriptions_api_confirm_subscription_changes_create
       parameters:
       - in: query
         name: confirm_cancellation_ids

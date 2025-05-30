@@ -40,7 +40,7 @@ export interface SubscriptionsApiCancelledSubscriptionsListRequest {
   productTypeId: string;
 }
 
-export interface SubscriptionsApiConfirmChangesCreateRequest {
+export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmCancellationIds: Array<string>;
   confirmCreationIds: Array<string>;
 }
@@ -144,21 +144,21 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
-  async subscriptionsApiConfirmChangesCreateRaw(
-    requestParameters: SubscriptionsApiConfirmChangesCreateRequest,
+  async subscriptionsApiConfirmSubscriptionChangesCreateRaw(
+    requestParameters: SubscriptionsApiConfirmSubscriptionChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<string>> {
     if (requestParameters["confirmCancellationIds"] == null) {
       throw new runtime.RequiredError(
         "confirmCancellationIds",
-        'Required parameter "confirmCancellationIds" was null or undefined when calling subscriptionsApiConfirmChangesCreate().',
+        'Required parameter "confirmCancellationIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
       );
     }
 
     if (requestParameters["confirmCreationIds"] == null) {
       throw new runtime.RequiredError(
         "confirmCreationIds",
-        'Required parameter "confirmCreationIds" was null or undefined when calling subscriptionsApiConfirmChangesCreate().',
+        'Required parameter "confirmCreationIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
       );
     }
 
@@ -178,7 +178,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path: `/subscriptions/api/confirm_changes`,
+        path: `/subscriptions/api/confirm_subscription_changes`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
@@ -195,14 +195,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
-  async subscriptionsApiConfirmChangesCreate(
-    requestParameters: SubscriptionsApiConfirmChangesCreateRequest,
+  async subscriptionsApiConfirmSubscriptionChangesCreate(
+    requestParameters: SubscriptionsApiConfirmSubscriptionChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<string> {
-    const response = await this.subscriptionsApiConfirmChangesCreateRaw(
-      requestParameters,
-      initOverrides,
-    );
+    const response =
+      await this.subscriptionsApiConfirmSubscriptionChangesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

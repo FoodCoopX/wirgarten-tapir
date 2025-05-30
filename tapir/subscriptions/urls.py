@@ -26,7 +26,7 @@ urlpatterns = [
         name="cancelled_subscriptions",
     ),
     path(
-        "api/confirm_changes",
+        "api/confirm_subscription_changes",
         views.ConfirmSubscriptionChangesView.as_view(),
         name="confirm_subscription_changes",
     ),
