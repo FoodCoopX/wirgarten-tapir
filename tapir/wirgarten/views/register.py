@@ -466,6 +466,13 @@ class RegistrationWizardViewBase(CookieWizardView):
 class RegistrationWizardConfirmView(generic.TemplateView):
     template_name = "registration/confirmation.html"
 
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data["coop_info_link"] = get_parameter_value(
+            ParameterKeys.COOP_INFO_LINK
+        )
+        return context_data
+
 
 def is_selected(form_data, prefix):
     for key, val in form_data.items():
