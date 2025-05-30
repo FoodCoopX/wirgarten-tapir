@@ -277,6 +277,9 @@ class UserGenerator:
             if not create_subs_for_additional_products:
                 min_shares += quantity * product.min_coop_shares
 
+            if solidarity_price_percentage is not None:
+                solidarity_price_percentage /= 100
+
             subscription = Subscription.objects.create(
                 member=member,
                 product=product,
@@ -410,6 +413,7 @@ class UserGenerator:
         confirmation_datetime = datetime.datetime.combine(
             confirmation_date, datetime.time()
         )
+        confirmation_datetime = make_timezone_aware(confirmation_datetime)
         if confirmation_date <= get_today(cache=cache):
             return confirmation_datetime
         return None

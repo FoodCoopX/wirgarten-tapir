@@ -78,7 +78,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                       ", "}
                   </>
                 ))}{" "}
-                {" => "}{" "}
+                <span className={"material-icons fs-6"}>arrow_forward</span>{" "}
                 {change.subscriptionCreations.map((creation, index) => (
                   <>
                     {creation.quantity} {"×"} {creation.product.name}

@@ -20,6 +20,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
+from tapir.wirgarten.service.products import get_active_subscriptions
 
 
 class GetDeliveriesService:
@@ -51,9 +52,6 @@ class GetDeliveriesService:
     def build_delivery_object(
         cls, member: Member, delivery_date: datetime.date, cache: Dict
     ):
-        _, week_num, _ = delivery_date.isocalendar()
-        even_week = week_num % 2 == 0
-
         relevant_subscriptions = cls.get_relevant_subscriptions(
             member=member,
             reference_date=delivery_date,
@@ -113,12 +111,20 @@ class GetDeliveriesService:
             date=reference_date, cache=cache
         )
 
+        active_subscriptions = get_active_subscriptions(
+            reference_date=reference_date, cache=cache
+        )
+
         subscriptions_with_accepted_delivery_cycles = set()
         for delivery_cycle in accepted_delivery_cycles:
-            subscriptions_with_accepted_delivery_cycles.update(
-                TapirCache.get_subscriptions_by_delivery_cycle(
+            accepted_ids = [
+                subscription.id
+                for subscription in TapirCache.get_subscriptions_by_delivery_cycle(
                     cache=cache, delivery_cycle=delivery_cycle
                 )
+            ]
+            subscriptions_with_accepted_delivery_cycles.update(
+                active_subscriptions.filter(id__in=accepted_ids)
             )
 
         def subscription_filter(subscription: Subscription):
