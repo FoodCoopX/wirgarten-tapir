@@ -27,7 +27,6 @@ def format_date(value: date | datetime):
     if type(value) is date or type(value) is datetime:
         return utils.format_date(value)
     else:
-        print(value, type(value), datetime)
         return None
 
 

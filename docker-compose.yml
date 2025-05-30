@@ -27,6 +27,7 @@ services:
       - selenium
       - keycloak
       - redis
+      - nginx-proxy
 
   nginx-proxy:
     image: jwilder/nginx-proxy
