@@ -424,6 +424,7 @@ class CancelledSubscriptionsApiView(APIView):
         if TrialPeriodManager.is_subscription_in_trial(
             subscription=subscription,
             reference_date=subscription.cancellation_ts.date(),
+            cache=cache,
         ):
             cancellation_type = "Kündigung in der Probezeit"
             show_warning = False

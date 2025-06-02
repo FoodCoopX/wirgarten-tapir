@@ -44,7 +44,7 @@ class ExtendedProductSerializer(serializers.Serializer):
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = "__all__"
+        exclude = ["groups", "user_permissions"]
 
 
 class CancelledSubscriptionSerializer(serializers.Serializer):

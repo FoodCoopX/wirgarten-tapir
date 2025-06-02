@@ -197,18 +197,6 @@ export interface Member {
    * @memberof Member
    */
   isStudent?: boolean;
-  /**
-   * Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt alle Berechtigungen dieser Gruppen.
-   * @type {Array<number>}
-   * @memberof Member
-   */
-  groups?: Array<number>;
-  /**
-   * Spezifische Berechtigungen für diesen Benutzer.
-   * @type {Array<number>}
-   * @memberof Member
-   */
-  userPermissions?: Array<number>;
 }
 
 /**
@@ -282,9 +270,6 @@ export function MemberFromJSONTyped(
     createdAt: new Date(json["created_at"]),
     memberNo: json["member_no"] == null ? undefined : json["member_no"],
     isStudent: json["is_student"] == null ? undefined : json["is_student"],
-    groups: json["groups"] == null ? undefined : json["groups"],
-    userPermissions:
-      json["user_permissions"] == null ? undefined : json["user_permissions"],
   };
 }
 
@@ -346,7 +331,5 @@ export function MemberToJSONTyped(
         : (value["privacyConsent"] as any).toISOString(),
     member_no: value["memberNo"],
     is_student: value["isStudent"],
-    groups: value["groups"],
-    user_permissions: value["userPermissions"],
   };
 }

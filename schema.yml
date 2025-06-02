@@ -4609,21 +4609,6 @@ components:
         is_student:
           type: boolean
           title: Student*in
-        groups:
-          type: array
-          items:
-            type: integer
-            title: Gruppen
-          title: Gruppen
-          description: Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt
-            alle Berechtigungen dieser Gruppen.
-        user_permissions:
-          type: array
-          items:
-            type: integer
-            title: Berechtigungen
-          title: Berechtigungen
-          description: Spezifische Berechtigungen für diesen Benutzer.
       required:
       - created_at
       - first_name
