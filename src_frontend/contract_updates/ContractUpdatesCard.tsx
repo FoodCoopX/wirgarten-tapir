@@ -117,7 +117,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
 
     return dates.reduce(function (a, b) {
       return a < b ? a : b;
-    });
+    }, new Date());
   }
 
   return (
