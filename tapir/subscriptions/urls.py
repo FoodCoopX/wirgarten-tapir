@@ -43,4 +43,9 @@ router.register(
     views.ProductViewSet,
     basename="products",
 )
+router.register(
+    r"public_product_types",
+    views.PublicProductTypeViewSet,
+    basename="public_product_types",
+)
 urlpatterns += router.urls

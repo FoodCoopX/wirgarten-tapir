@@ -88,6 +88,7 @@ export * from './ProductBasketSizeEquivalence';
 export * from './ProductBasketSizeEquivalenceRequest';
 export * from './ProductForCancellation';
 export * from './ProductType';
+export * from './PublicProductType';
 export * from './RecipientRequest';
 export * from './SegmentData';
 export * from './SegmentDataRequest';

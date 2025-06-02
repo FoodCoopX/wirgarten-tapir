@@ -207,7 +207,7 @@ SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
 
 DJANGO_VITE = {
     "default": {
-        "dev_mode": env.bool("DJANGO_VITE_DEBUG", default=False),
+        "dev_mode": True,
         "manifest_path": "./dist/manifest.json",
     }
 }

@@ -2,6 +2,7 @@
 {% load configuration %}
 {% load tapir_static %}
 {% load core %}
+<!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8">
@@ -13,6 +14,8 @@
             <link rel="shortcut icon"
                   type="image/png"
                   href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
+            <link rel="stylesheet"
+                  href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
         {% endwith %}
         {% javascript_environment_variables %}
         {% vite_hmr_client %}
@@ -20,7 +23,7 @@
         {% vite_asset 'bestell_wizard/bestell_wizard_entry.tsx' %}
     </head>
     <body>
-        <div class="container-fluid" style="padding-right:1em; padding-left:1em;">
+        <div class="container-fluid">
             <main id="main-content" role="main">
                 {% csrf_token %}
                 <span id="bestell_wizard"></span>

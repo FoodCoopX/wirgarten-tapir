@@ -33,6 +33,7 @@ from tapir.subscriptions.serializers import (
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
     MemberDataToConfirmSerializer,
+    PublicProductTypeSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -49,6 +50,7 @@ from tapir.wirgarten.models import (
     Product,
     Subscription,
     CoopShareTransaction,
+    ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -331,6 +333,12 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Product.objects.select_related("type")
     serializer_class = ProductSerializer
+
+
+class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = []
+    queryset = ProductType.objects.all()
+    serializer_class = PublicProductTypeSerializer
 
 
 class MemberDataToConfirmApiView(APIView):

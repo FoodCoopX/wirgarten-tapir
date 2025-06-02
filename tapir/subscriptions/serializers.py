@@ -9,7 +9,7 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
-from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -77,3 +77,9 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
     show_warning = serializers.BooleanField()
     cancellation_types = serializers.ListField(child=serializers.CharField())
     share_purchases = CoopShareTransactionSerializer(many=True)
+
+
+class PublicProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = ["id", "name", "description_bestellwizard"]
