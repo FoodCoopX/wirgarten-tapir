@@ -1,6 +1,7 @@
-from typing import Dict
+from typing import Dict, Type
 
 from django.db import transaction
+from django.db.models import Model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -46,6 +47,7 @@ from tapir.wirgarten.models import (
     Member,
     Product,
     Subscription,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -521,6 +523,9 @@ class ConfirmSubscriptionChangesView(APIView):
             OpenApiParameter(
                 name="confirm_creation_ids", type=str, required=True, many=True
             ),
+            OpenApiParameter(
+                name="confirm_purchase_ids", type=str, required=True, many=True
+            ),
         ],
     )
     @transaction.atomic
@@ -531,14 +536,24 @@ class ConfirmSubscriptionChangesView(APIView):
             "confirm_cancellation_ids"
         )
         self.apply_confirmation(
-            subscription_ids_to_confirm=confirm_cancellation_ids,
+            model=Subscription,
+            ids_to_confirm=confirm_cancellation_ids,
             confirmation_field="cancellation_admin_confirmed",
             cache=cache,
         )
 
         confirm_creation_ids = request.query_params.getlist("confirm_creation_ids")
         self.apply_confirmation(
-            subscription_ids_to_confirm=confirm_creation_ids,
+            model=Subscription,
+            ids_to_confirm=confirm_creation_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+        )
+
+        confirm_purchase_ids = request.query_params.getlist("confirm_purchase_ids")
+        self.apply_confirmation(
+            model=CoopShareTransaction,
+            ids_to_confirm=confirm_purchase_ids,
             confirmation_field="admin_confirmed",
             cache=cache,
         )
@@ -547,15 +562,16 @@ class ConfirmSubscriptionChangesView(APIView):
 
     @staticmethod
     def apply_confirmation(
-        subscription_ids_to_confirm: list[str],
+        model: Type[Model],
+        ids_to_confirm: list[str],
         confirmation_field: str,
         cache: dict,
     ):
         subscription_ids_to_confirm = [
-            id.strip() for id in subscription_ids_to_confirm if id.strip() is not ""
+            id.strip() for id in ids_to_confirm if id.strip() is not ""
         ]
 
-        subscriptions_to_confirm = Subscription.objects.filter(
+        subscriptions_to_confirm = model.objects.filter(
             id__in=subscription_ids_to_confirm
         ).filter(**{f"{confirmation_field}__isnull": True})
 

@@ -745,6 +745,13 @@ paths:
           items:
             type: string
         required: true
+      - in: query
+        name: confirm_purchase_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
       tags:
       - subscriptions
       security:

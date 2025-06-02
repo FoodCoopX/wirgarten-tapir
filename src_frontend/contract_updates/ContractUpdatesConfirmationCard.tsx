@@ -83,10 +83,14 @@ const ContractUpdatesConfirmationCard: React.FC<
         ),
       );
     }
+
     subscriptionsApi
       .subscriptionsApiConfirmSubscriptionChangesCreate({
         confirmCreationIds: confirmCreationIds,
         confirmCancellationIds: confirmCancellationIds,
+        confirmPurchaseIds: changes.sharePurchases.map(
+          (purchase) => purchase.id!,
+        ),
       })
       .then(onConfirmed)
       .catch(handleRequestError)

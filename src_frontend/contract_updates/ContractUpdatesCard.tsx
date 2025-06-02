@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Table } from "react-bootstrap";
+import { Badge, Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   CoopShareTransaction,
@@ -145,7 +145,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         <Col>
           <Card>
             <Card.Header>
-              <h5 className={"mb-0"}>Zeichnungen und Kündigungen</h5>
+              <h5 className={"mb-0"}>
+                Zeichnungen und Kündigungen{" "}
+                <Badge>{changesToConfirm.length}</Badge>
+              </h5>
             </Card.Header>
             <Card.Body className={"p-0"}>
               <Table striped hover responsive className={"mb-0"}>
