@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 import random
+from math import floor
 from typing import Dict, List, Set
 
 from faker import Faker
@@ -165,7 +166,7 @@ class UserGenerator:
         member.created_at = json_user.date_joined
         member.save(cache=cache)
 
-        member_without_subscriptions = random.random() < 0.33
+        member_without_subscriptions = random.random() < 0.20
         min_coop_shares = 0
         if not member_without_subscriptions:
             min_coop_shares, needs_pickup_location = cls.create_subscriptions_for_user(
@@ -387,16 +388,28 @@ class UserGenerator:
         members_that_need_a_pickup_location: Set[Member],
         organization: Organization,
     ):
-        pickup_locations = [location for location in PickupLocation.objects.all()]
-        location_that_must_be_full = PickupLocation.objects.filter(
-            name="Grünes Warenhaus"
-        ).first()
+        names_of_locations_that_must_be_full = []
+        if organization == Organization.BIOTOP:
+            names_of_locations_that_must_be_full = [
+                "Grünes Warenhaus",
+                "Biotop-Hofpunkt",
+                "Hochalmstraße Lenggries",
+            ]
+        locations_that_must_be_full = list(
+            PickupLocation.objects.filter(name__in=names_of_locations_that_must_be_full)
+        )
+        locations_that_should_not_be_full = list(
+            PickupLocation.objects.exclude(
+                name__in=names_of_locations_that_must_be_full
+            )
+        )
 
         member_pickup_locations = []
         for index, member in enumerate(members_that_need_a_pickup_location):
-            pickup_location = random.choice(pickup_locations)
-            if index < 100 and organization == Organization.BIOTOP:
-                pickup_location = location_that_must_be_full
+            if floor(index / 50) >= len(locations_that_must_be_full):
+                pickup_location = random.choice(locations_that_should_not_be_full)
+            else:
+                pickup_location = random.choice(locations_that_must_be_full)
             member_pickup_locations.append(
                 MemberPickupLocation(
                     member=member,

@@ -272,7 +272,7 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=biodelikat,
-            capacity=15,
+            capacity=10,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=biodelikat,
@@ -295,12 +295,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=zentrum,
-            capacity=15,
+            capacity=10,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=zentrum,
-            capacity=20,
+            capacity=15,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=zentrum,
@@ -323,12 +323,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=badeteil,
-            capacity=20,
+            capacity=15,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=badeteil,
-            capacity=35,
+            capacity=20,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=badeteil,
@@ -362,7 +362,7 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=norden,
-            capacity=20,
+            capacity=15,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=norden,
@@ -385,12 +385,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=hofpunkt,
-            capacity=5,
+            capacity=3,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=hofpunkt,
-            capacity=30,
+            capacity=11,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=hofpunkt,
@@ -425,12 +425,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=warenhaus,
-            capacity=45,
+            capacity=16,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=warenhaus,
-            capacity=55,
+            capacity=26,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=warenhaus,
@@ -459,12 +459,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=hochalmstrasse,
-            capacity=15,
+            capacity=6,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=hochalmstrasse,
-            capacity=30,
+            capacity=11,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=hochalmstrasse,
@@ -492,7 +492,7 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=schlossweg,
-            capacity=25,
+            capacity=15,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=schlossweg,
@@ -549,12 +549,12 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
             pickup_location=penzberg,
-            capacity=20,
+            capacity=15,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=penzberg,
-            capacity=30,
+            capacity=20,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=penzberg,
@@ -582,7 +582,7 @@ class PickupLocationGenerator:
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="normale Kiste",
             pickup_location=tutzing,
-            capacity=20,
+            capacity=15,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=tutzing,
