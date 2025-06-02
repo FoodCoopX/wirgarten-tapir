@@ -8,6 +8,7 @@ from tapir.wirgarten.tests.factories import (
     NOW,
     PickupLocationFactory,
     MemberPickupLocationFactory,
+    CoopShareTransactionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -40,6 +41,9 @@ class TestMemberDataToConfirmView(TapirIntegrationTest):
         )
         changed_subscription_after = self.create_unconfirmed_creation(
             member=member, product=changed_subscription_before.product
+        )
+        purchase = CoopShareTransactionFactory.create(
+            member=member, quantity=3, admin_confirmed=None
         )
 
         response = self.client.get(reverse("subscriptions:member_data_to_confirm"))
@@ -76,6 +80,12 @@ class TestMemberDataToConfirmView(TapirIntegrationTest):
         self.assertEqual(
             changed_subscription_after.id,
             change_data["subscription_creations"][0]["id"],
+        )
+
+        self.assertEqual(1, len(member_data["share_purchases"]))
+        self.assertEqual(
+            purchase.id,
+            member_data["share_purchases"][0]["id"],
         )
 
     @staticmethod
