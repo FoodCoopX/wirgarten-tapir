@@ -38,6 +38,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [showCoopContent, setShowCoopContent] = useState(false);
 
   useEffect(() => {
     pickupLocationApi
@@ -53,6 +54,11 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     waitingListApi
       .waitingListApiCategoriesRetrieve()
       .then(setCategories)
+      .catch(handleRequestError);
+
+    waitingListApi
+      .waitingListApiShowCoopContentRetrieve()
+      .then(setShowCoopContent)
       .catch(handleRequestError);
   }, []);
 
@@ -98,7 +104,9 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
             entry.city,
           )}
         </td>
-        <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
+        {showCoopContent && (
+          <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
+        )}
         <td>
           {entry.currentProducts
             ?.map((product) => product.type.name + " " + product.name)
@@ -120,7 +128,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
             )
             .join(", ")}
         </td>
-        <td>{entry.numberOfCoopShares}</td>
+        {showCoopContent && <td>{entry.numberOfCoopShares}</td>}
         <td>
           {entry.desiredStartDate
             ? formatDateText(entry.desiredStartDate)
@@ -156,12 +164,12 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                     <th>Email-Adresse</th>
                     <th>Telefonnummer</th>
                     <th>Wohnort</th>
-                    <th>Geno-Beitrittsdatum</th>
+                    {showCoopContent && <th>Geno-Beitrittsdatum</th>}
                     <th>Aktuelle Produkte</th>
                     <th>Gewünschte Produkte</th>
                     <th>Derzeitiger Verteilort</th>
                     <th>Verteilort Prioritäten</th>
-                    <th>Geno-Anteilen gewünscht</th>
+                    {showCoopContent && <th>Geno-Anteilen gewünscht</th>}
                     <th>Wunsch-Startdatum</th>
                     <th>Kategorie</th>
                     <th>Kommentar</th>
@@ -171,7 +179,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                   {loading ? (
                     <PlaceholderTableRows
                       nbRows={DEFAULT_PAGE_SIZE}
-                      nbColumns={13}
+                      nbColumns={showCoopContent ? 13 : 11}
                       size={"xs"}
                     />
                   ) : (

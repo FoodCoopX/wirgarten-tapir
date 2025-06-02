@@ -8,9 +8,11 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -30,6 +32,7 @@ from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today
 
@@ -216,10 +219,25 @@ class WaitingListCategoriesView(APIView):
 
     @extend_schema(
         responses={200: list[str]},
-        request=WaitingListEntryUpdateSerializer,
     )
     def get(self, request):
         return Response(
             WaitingListCategoriesService.get_categories(cache={}),
+            status=status.HTTP_200_OK,
+        )
+
+
+class WaitingListShowsCoopContentView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: bool},
+    )
+    def get(self, request):
+        return Response(
+            (
+                get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS)
+                == LEGAL_STATUS_COOPERATIVE
+            ),
             status=status.HTTP_200_OK,
         )
