@@ -29,9 +29,11 @@ TEST_DATE_OVERRIDE_OPTIONS = [
 THEME_BIOTOP = "biotop"
 THEME_WIRGARTEN = "wirgarten"
 THEME_L2G = "l2g"
+THEME_MM = "mm"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
     (THEME_WIRGARTEN, "WirGarten Lüneburg"),
     (THEME_L2G, "L2G Dickendorf"),
+    (THEME_MM, "Möllers Morgen"),
 ]
