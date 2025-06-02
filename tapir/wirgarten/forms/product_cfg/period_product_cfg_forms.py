@@ -34,6 +34,7 @@ class ProductTypeForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ProductTypeForm, self).__init__(*args)
         initial_name = ""
+        initial_description_bestellwizard = ""
         initial_delivery_cycle = NO_DELIVERY
         initial_tax_rate = 0
         initial_capacity = 0.0
@@ -60,6 +61,9 @@ class ProductTypeForm(forms.Form):
                     initial_tax_rate = 0.19
 
                 initial_name = product_type.name
+                initial_description_bestellwizard = (
+                    product_type.description_bestellwizard
+                )
                 initial_delivery_cycle = product_type.delivery_cycle
                 initial_notice_period = NoticePeriodManager.get_notice_period_duration(
                     product_type=product_type,
@@ -87,7 +91,13 @@ class ProductTypeForm(forms.Form):
                 )
 
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=False, label=_("Produkt Name")
+            initial=initial_name, required=False, label=_("Produkt-Typ Name")
+        )
+        self.fields["description_bestellwizard"] = forms.CharField(
+            initial=initial_description_bestellwizard,
+            required=True,
+            label=_("Beschreibung im BestellWizard"),
+            widget=forms.Textarea(),
         )
         self.fields["icon_link"] = forms.CharField(
             required=False,
@@ -192,6 +202,7 @@ class ProductForm(forms.Form):
                 "-valid_from"
             )
             initial_name = product.name
+
             period = GrowingPeriod.objects.get(id=kwargs[KW_PERIOD_ID])
             for price in prices:
                 if price.valid_from < period.end_date:

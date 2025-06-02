@@ -3,6 +3,23 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /core/api/get_theme:
+    get:
+      operationId: core_api_get_theme_retrieve
+      tags:
+      - core
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                enum:
+                - l2g
+                - biotop
+                type: string
+          description: ''
   /deliveries/api/cancel_joker:
     post:
       operationId: deliveries_api_cancel_joker_create
@@ -906,6 +923,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+          description: ''
+  /subscriptions/public_product_types/:
+    get:
+      operationId: subscriptions_public_product_types_list
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicProductType'
+          description: ''
+  /subscriptions/public_product_types/{id}/:
+    get:
+      operationId: subscriptions_public_product_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this product type.
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProductType'
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:
@@ -5799,6 +5853,24 @@ components:
         is_association_membership:
           type: boolean
           title: Repräsentiert Vereinsmitgliedschaften
+        description_bestellwizard:
+          type: string
+          title: Beschreibung im Bestellwizard
+      required:
+      - name
+    PublicProductType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          title: Produkt Name
+          maxLength: 128
+        description_bestellwizard:
+          type: string
+          title: Beschreibung im Bestellwizard
       required:
       - name
     RecipientRequest:

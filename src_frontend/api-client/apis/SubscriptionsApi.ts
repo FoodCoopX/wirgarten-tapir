@@ -20,6 +20,7 @@ import type {
   MemberDataToConfirm,
   PatchedExtendedProductRequest,
   Product,
+  PublicProductType,
 } from "../models/index";
 import {
   CancellationDataFromJSON,
@@ -28,6 +29,7 @@ import {
   MemberDataToConfirmFromJSON,
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
+  PublicProductTypeFromJSON,
 } from "../models/index";
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
@@ -55,6 +57,10 @@ export interface SubscriptionsCancellationDataRetrieveRequest {
 }
 
 export interface SubscriptionsProductsRetrieveRequest {
+  id: string;
+}
+
+export interface SubscriptionsPublicProductTypesRetrieveRequest {
   id: string;
 }
 
@@ -500,6 +506,106 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Product> {
     const response = await this.subscriptionsProductsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PublicProductType>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/public_product_types/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PublicProductTypeFromJSON),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PublicProductType>> {
+    const response =
+      await this.subscriptionsPublicProductTypesListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesRetrieveRaw(
+    requestParameters: SubscriptionsPublicProductTypesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PublicProductType>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling subscriptionsPublicProductTypesRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/public_product_types/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PublicProductTypeFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesRetrieve(
+    requestParameters: SubscriptionsPublicProductTypesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PublicProductType> {
+    const response = await this.subscriptionsPublicProductTypesRetrieveRaw(
       requestParameters,
       initOverrides,
     );
