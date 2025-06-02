@@ -43,6 +43,31 @@ class TapirCache:
         return get_from_cache_or_compute(subscriptions_by_date, reference_date, compute)
 
     @classmethod
+    def get_active_and_future_subscriptions_by_member_id(
+        cls, cache: dict, reference_date: datetime.date
+    ):
+        def compute():
+            from tapir.wirgarten.service.products import (
+                get_active_and_future_subscriptions,
+            )
+
+            subscriptions_by_member_id = {}
+            for subscription in get_active_and_future_subscriptions(
+                reference_date=reference_date, cache=cache
+            ):
+                if subscription.member_id not in subscriptions_by_member_id.keys():
+                    subscriptions_by_member_id[subscription.member_id] = []
+                subscriptions_by_member_id[subscription.member_id].append(subscription)
+            return subscriptions_by_member_id
+
+        subscriptions_by_date_and_member_id = get_from_cache_or_compute(
+            cache, "subscriptions_by_date_and_member_id", lambda: {}
+        )
+        return get_from_cache_or_compute(
+            subscriptions_by_date_and_member_id, reference_date, compute
+        )
+
+    @classmethod
     def get_subscriptions_by_delivery_cycle(
         cls, cache: Dict, delivery_cycle
     ) -> Set[Subscription]:

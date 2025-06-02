@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import permissions, viewsets, status
@@ -79,6 +80,8 @@ class WaitingListApiView(APIView):
         current_pickup_location = None
         member_no = None
         current_products = None
+        url_to_member_profile = None
+        current_subscriptions = None
         if entry.member is not None:
             member_no = entry.member.member_no
             self.fill_entry_with_personal_data(entry)
@@ -102,10 +105,19 @@ class WaitingListApiView(APIView):
                 .filter(member=entry.member)
                 .select_related("product__type")
             }
+            url_to_member_profile = reverse(
+                "wirgarten:member_detail", args=[entry.member.id]
+            )
+            current_subscriptions = (
+                TapirCache.get_active_and_future_subscriptions_by_member_id(
+                    cache=self.cache, reference_date=get_today(cache=self.cache)
+                ).get(entry.member.id, [])
+            )
 
         return {
             "id": entry.id,
             "member_no": member_no,
+            "url_to_member_profile": url_to_member_profile,
             "waiting_since": entry.created_at,
             "first_name": entry.first_name,
             "last_name": entry.last_name,
@@ -126,6 +138,7 @@ class WaitingListApiView(APIView):
             "comment": entry.comment,
             "category": entry.category,
             "member_already_exists": entry.member is not None,
+            "current_subscriptions": current_subscriptions,
         }
 
     @staticmethod

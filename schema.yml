@@ -6390,6 +6390,8 @@ components:
           type: integer
         member_already_exists:
           type: boolean
+        url_to_member_profile:
+          type: string
         waiting_since:
           type: string
           format: date-time
@@ -6438,6 +6440,10 @@ components:
           type: string
         category:
           type: string
+        current_subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
       required:
       - city
       - comment

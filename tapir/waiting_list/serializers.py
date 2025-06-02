@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from tapir.deliveries.serializers import ProductSerializer, PickupLocationSerializer
+from tapir.deliveries.serializers import (
+    ProductSerializer,
+    PickupLocationSerializer,
+    SubscriptionSerializer,
+)
 from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,
@@ -28,6 +32,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     id = serializers.CharField()
     member_no = serializers.IntegerField()
     member_already_exists = serializers.BooleanField()
+    url_to_member_profile = serializers.CharField(required=False)
     waiting_since = serializers.DateTimeField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -49,6 +54,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     number_of_coop_shares = serializers.IntegerField()
     comment = serializers.CharField()
     category = serializers.CharField(required=False)
+    current_subscriptions = SubscriptionSerializer(many=True, required=False)
 
 
 class WaitingListEntrySerializer(serializers.ModelSerializer):

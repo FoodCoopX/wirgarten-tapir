@@ -16,6 +16,7 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import dayjs from "dayjs";
 import PickupLocationWishesEditor from "./PickupLocationWishesEditor.tsx";
 import ProductWishesEditor from "./ProductWishesEditor.tsx";
+import formatSubscription from "../utils/formatSubscription.ts";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;
@@ -118,6 +119,14 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
       .finally(() => setLoading(false));
   }
 
+  function buildTitle() {
+    const content = entryDetails.firstName + " " + entryDetails.lastName;
+    if (entryDetails.urlToMemberProfile) {
+      return <a href={entryDetails.urlToMemberProfile}>{content}</a>;
+    } else {
+      return content;
+    }
+  }
   return (
     <>
       <Modal
@@ -128,8 +137,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
       >
         <Modal.Header closeButton>
           <h5 className={"mb-0"}>
-            Warteliste-Eintrag bearbeiten: {entryDetails.firstName}{" "}
-            {entryDetails.lastName}
+            Warteliste-Eintrag bearbeiten: {buildTitle()}
           </h5>
         </Modal.Header>
         <Modal.Body>
@@ -307,6 +315,26 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                     />
                   </Col>
                 </Row>
+                {entryDetails.currentSubscriptions && (
+                  <Row className={"mt-2"}>
+                    <h6>Schon bestehende Verträge:</h6>
+                    <div>
+                      {entryDetails.currentSubscriptions.length === 0 ? (
+                        "Keine"
+                      ) : (
+                        <ul>
+                          {entryDetails.currentSubscriptions.map(
+                            (subscription) => (
+                              <li key={subscription.id}>
+                                {formatSubscription(subscription)}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  </Row>
+                )}
               </Col>
               <Col>
                 <Row>

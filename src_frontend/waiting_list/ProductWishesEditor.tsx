@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Product, WaitingListProductWish } from "../api-client";
 import "./waiting_list_card.css";
-import { ButtonGroup, Form, Row, Table } from "react-bootstrap";
+import { ButtonGroup, Col, Form, Row, Table } from "react-bootstrap";
 import TapirButton from "../components/TapirButton.tsx";
 
 interface ProductWishesEditorProps {
@@ -17,16 +17,46 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
   setWishes,
   waitingListEntryId,
 }) => {
+  const [selectedProductTypeId, setSelectedProductTypeId] = useState<string>();
+  const [selectedProductId, setSelectedProductId] = useState<string>();
+
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    setSelectedProductTypeId(products[0].type.id);
+  }, [products]);
+
+  function getProductsOfSelectedTypeNotInWishes() {
+    return products
+      .filter((product) => product.type.id === selectedProductTypeId)
+      .filter(
+        (product) =>
+          !wishes.map((wish) => wish.product.id).includes(product.id),
+      );
+  }
+
+  useEffect(() => {
+    const productsOfType = getProductsOfSelectedTypeNotInWishes();
+    if (productsOfType.length === 0) {
+      setSelectedProductId(undefined);
+      return;
+    }
+
+    setSelectedProductId(productsOfType[0].id);
+  }, [selectedProductTypeId, wishes, products]);
+
   function removeWish(wishToRemove: WaitingListProductWish) {
     setWishes(
       wishes.filter((wish) => wish.product.id !== wishToRemove.product.id),
     );
   }
 
-  function addWish(productId: string) {
-    const product = products.find((product) => product.id === productId);
+  function addWish() {
+    const product = products.find(
+      (product) => product.id === selectedProductId,
+    );
     if (!product) {
-      alert("Pickup location not found. ID: " + productId);
+      alert("Product not found. ID: " + selectedProductId);
       return;
     }
     wishes.push({
@@ -48,6 +78,18 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
     wish.quantity = quantity;
     setWishes([...wishes]);
   }
+
+  function getProductTypes() {
+    const productTypes: { [id: string]: string } = {};
+    for (const product of products) {
+      productTypes[product.type.id!] = product.type.name;
+    }
+    return productTypes;
+  }
+
+  useEffect(() => {
+    console.log(selectedProductTypeId);
+  }, [selectedProductTypeId]);
 
   return (
     <>
@@ -103,19 +145,42 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
         )}
       </Row>
       <Row>
-        <Form.Select onChange={(event) => addWish(event.target.value)}>
-          <option value={-1}>Produkt-Wunsch hinzufügen</option>
-          {products
-            .filter(
-              (product) =>
-                !wishes.map((wish) => wish.product.id).includes(product.id),
-            )
-            .map((product) => (
+        <Col>
+          <Form.Select
+            value={selectedProductTypeId}
+            onChange={(event) => {
+              setSelectedProductTypeId(event.target.value);
+            }}
+          >
+            {Object.entries(getProductTypes()).map(
+              ([productTypeId, productTypeName]) => (
+                <option key={productTypeId} value={productTypeId}>
+                  {productTypeName}
+                </option>
+              ),
+            )}
+          </Form.Select>
+        </Col>
+        <Col>
+          <Form.Select
+            value={selectedProductId}
+            onChange={(event) => setSelectedProductId(event.target.value)}
+          >
+            {getProductsOfSelectedTypeNotInWishes().map((product) => (
               <option key={product.id} value={product.id}>
-                {product.type.name} {product.name}
+                {product.name}
               </option>
             ))}
-        </Form.Select>
+          </Form.Select>
+        </Col>
+        <Col>
+          <TapirButton
+            variant={"outline-primary"}
+            icon={"add_circle"}
+            disabled={selectedProductId === undefined}
+            onClick={() => addWish()}
+          />
+        </Col>
       </Row>
     </>
   );
