@@ -81,6 +81,7 @@ class AutomaticSubscriptionRenewalService:
             notice_period_duration=NoticePeriodManager.get_notice_period_duration(
                 subscription.product.type, next_growing_period, cache=cache
             ),
+            admin_confirmed=subscription.admin_confirmed,
         )
 
     @classmethod
@@ -112,7 +113,7 @@ class AutomaticSubscriptionRenewalService:
             return set()
 
         current_subscriptions = TapirCache.get_subscriptions_active_at_date(
-            reference_date, cache
+            current_growing_period.start_date, cache
         )
 
         members_ids_currently_subbed_to_product_id = {

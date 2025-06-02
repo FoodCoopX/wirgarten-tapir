@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   BundledEmailConfiguration,
   BundledEmailConfigurationRequest,
+  CreateMissingTriggerMailRequest,
   EmailConfiguration,
   EmailConfigurationDispatch,
   EmailConfigurationDispatchRequest,
@@ -25,6 +26,7 @@ import type {
   EmailDispatchRequest,
   EmailTemplate,
   EmailTemplateRequest,
+  MissingTrigger,
   PaginatedEmailConfigurationDispatchList,
   PaginatedEmailConfigurationList,
   PaginatedEmailConfigurationVersionList,
@@ -60,6 +62,8 @@ import {
     BundledEmailConfigurationToJSON,
     BundledEmailConfigurationRequestFromJSON,
     BundledEmailConfigurationRequestToJSON,
+    CreateMissingTriggerMailRequestFromJSON,
+    CreateMissingTriggerMailRequestToJSON,
     EmailConfigurationFromJSON,
     EmailConfigurationToJSON,
     EmailConfigurationDispatchFromJSON,
@@ -76,6 +80,8 @@ import {
     EmailTemplateToJSON,
     EmailTemplateRequestFromJSON,
     EmailTemplateRequestToJSON,
+    MissingTriggerFromJSON,
+    MissingTriggerToJSON,
     PaginatedEmailConfigurationDispatchListFromJSON,
     PaginatedEmailConfigurationDispatchListToJSON,
     PaginatedEmailConfigurationListFromJSON,
@@ -161,6 +167,10 @@ export interface StoreduploadsRetrieveRequest {
 export interface StoreduploadsUpdateRequest {
     uploadId: string;
     storedUploadRequest: StoredUploadRequest;
+}
+
+export interface TapirmailApiCreateMissingTriggerCreateRequest {
+    createMissingTriggerMailRequest: CreateMissingTriggerMailRequest;
 }
 
 export interface TapirmailApiEmailConfigurationCreateRequest {
@@ -466,6 +476,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/send_test_email/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -500,6 +513,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/`,
             method: 'POST',
@@ -532,6 +548,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'DELETE',
@@ -555,6 +574,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/`,
             method: 'GET',
@@ -588,6 +610,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'PATCH',
@@ -620,6 +645,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'GET',
@@ -660,6 +688,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/stored_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'PUT',
@@ -680,6 +711,47 @@ export class TapirmailApi extends runtime.BaseAPI {
 
     /**
      */
+    async tapirmailApiCreateMissingTriggerCreateRaw(requestParameters: TapirmailApiCreateMissingTriggerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
+        if (requestParameters['createMissingTriggerMailRequest'] == null) {
+            throw new runtime.RequiredError(
+                'createMissingTriggerMailRequest',
+                'Required parameter "createMissingTriggerMailRequest" was null or undefined when calling tapirmailApiCreateMissingTriggerCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/create_missing_trigger`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateMissingTriggerMailRequestToJSON(requestParameters['createMissingTriggerMailRequest']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     */
+    async tapirmailApiCreateMissingTriggerCreate(requestParameters: TapirmailApiCreateMissingTriggerCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.tapirmailApiCreateMissingTriggerCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async tapirmailApiEmailConfigurationCreateRaw(requestParameters: TapirmailApiEmailConfigurationCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<EmailConfiguration>> {
         if (requestParameters['emailConfigurationRequest'] == null) {
             throw new runtime.RequiredError(
@@ -694,6 +766,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/`,
             method: 'POST',
@@ -726,6 +801,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -758,6 +836,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/`,
             method: 'POST',
@@ -790,6 +871,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -821,6 +905,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/last_sent/`,
             method: 'GET',
@@ -853,6 +940,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/`,
             method: 'GET',
@@ -886,6 +976,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/next_sends/`,
             method: 'GET',
@@ -920,6 +1013,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -952,6 +1048,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -992,6 +1091,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/{id}/retryall/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -1033,6 +1135,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_dispatch/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -1065,6 +1170,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/duplicate/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1097,6 +1205,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/`,
             method: 'GET',
@@ -1130,6 +1241,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -1162,6 +1276,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1202,6 +1319,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -1234,6 +1354,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/archive/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -1267,6 +1390,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/`,
             method: 'POST',
@@ -1299,6 +1425,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -1329,6 +1458,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/draft/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -1360,6 +1492,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/get_bundled_info/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1384,6 +1519,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/`,
             method: 'GET',
@@ -1417,6 +1555,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -1449,6 +1590,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/release/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -1480,6 +1624,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1520,6 +1667,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration_version/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -1560,6 +1710,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_configuration/{id}/versions/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1611,6 +1764,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_dispatch/get_failed_dispatches/`,
             method: 'GET',
@@ -1651,6 +1807,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_dispatch/`,
             method: 'GET',
@@ -1691,6 +1850,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_dispatch/recipients_with_errors/`,
             method: 'GET',
@@ -1722,6 +1884,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_dispatch/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -1762,6 +1927,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_dispatch/{id}/retry/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'POST',
@@ -1796,6 +1964,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/`,
             method: 'POST',
@@ -1828,6 +1999,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -1851,6 +2025,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/`,
             method: 'GET',
@@ -1884,6 +2061,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/`,
             method: 'POST',
@@ -1916,6 +2096,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -1947,6 +2130,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/`,
             method: 'GET',
@@ -1980,6 +2166,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -2012,6 +2201,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -2052,6 +2244,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template_paginated/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -2086,6 +2281,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -2118,6 +2316,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -2158,6 +2359,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/email_template/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -2183,6 +2387,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/fetch/`,
             method: 'GET',
@@ -2207,6 +2414,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/load/`,
             method: 'GET',
@@ -2239,6 +2449,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/patch/{chunk_id}`.replace(`{${"chunk_id"}}`, encodeURIComponent(String(requestParameters['chunkId']))),
             method: 'PATCH',
@@ -2264,6 +2477,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/process/`,
             method: 'POST',
@@ -2288,6 +2504,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/restore/`,
             method: 'GET',
@@ -2311,6 +2530,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/filepond/revert/`,
             method: 'DELETE',
@@ -2328,6 +2550,33 @@ export class TapirmailApi extends runtime.BaseAPI {
     }
 
     /**
+     */
+    async tapirmailApiMissingTriggersListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<MissingTrigger>>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/tapirmail/api/missing_triggers`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(MissingTriggerFromJSON));
+    }
+
+    /**
+     */
+    async tapirmailApiMissingTriggersList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<MissingTrigger>> {
+        const response = await this.tapirmailApiMissingTriggersListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get a list of available filters.
      */
     async tapirmailApiSegmentAvailableFiltersRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TapirmailApiSegmentAvailableFiltersRetrieve200Response>> {
@@ -2335,6 +2584,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/segment/available_filters/`,
             method: 'GET',
@@ -2361,6 +2613,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/segment/available_segments/`,
             method: 'GET',
@@ -2396,6 +2651,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/segment/combine/`,
             method: 'POST',
@@ -2431,6 +2689,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/`,
             method: 'POST',
@@ -2463,6 +2724,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -2486,6 +2750,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/`,
             method: 'GET',
@@ -2519,6 +2786,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -2553,6 +2823,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/`,
             method: 'POST',
@@ -2585,6 +2858,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'DELETE',
@@ -2608,6 +2884,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/`,
             method: 'GET',
@@ -2641,6 +2920,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PATCH',
@@ -2673,6 +2955,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -2713,6 +2998,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment_recipient/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -2745,6 +3033,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -2785,6 +3076,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/static_segment/{id}/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'PUT',
@@ -2810,6 +3104,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/tokens/get_tokens/`,
             method: 'GET',
@@ -2841,6 +3138,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/tracking/{id}/track/`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
             method: 'GET',
@@ -2864,6 +3164,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/trigger_tokens/get_tokens/`,
             method: 'GET',
@@ -2889,6 +3192,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/triggers/`,
             method: 'GET',
@@ -2923,6 +3229,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/`,
             method: 'POST',
@@ -2955,6 +3264,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'DELETE',
@@ -2978,6 +3290,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/`,
             method: 'GET',
@@ -3011,6 +3326,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'PATCH',
@@ -3043,6 +3361,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'GET',
@@ -3083,6 +3404,9 @@ export class TapirmailApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
         const response = await this.request({
             path: `/tapirmail/api/media_library/temporary_upload/{upload_id}/`.replace(`{${"upload_id"}}`, encodeURIComponent(String(requestParameters['uploadId']))),
             method: 'PUT',

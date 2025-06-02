@@ -14,8 +14,9 @@ models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
-models/CancelledSubscription.ts
+models/CoopShareTransaction.ts
 models/CountryEnum.ts
+models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts
 models/DayOfWeekEnum.ts
@@ -49,8 +50,9 @@ models/LegalStatusEnum.ts
 models/LocaleEnum.ts
 models/Member.ts
 models/MemberCountry.ts
+models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
-models/PaginatedCancelledSubscriptionList.ts
+models/MissingTrigger.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
 models/PaginatedEmailConfigurationVersionList.ts
@@ -92,7 +94,6 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
-models/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
@@ -104,12 +105,14 @@ models/StatusEnum.ts
 models/StoredUpload.ts
 models/StoredUploadRequest.ts
 models/Subscription.ts
+models/SubscriptionChange.ts
 models/TapirmailApiSegmentAvailableFiltersRetrieve200Response.ts
 models/TapirmailApiSegmentAvailableSegmentsRetrieve200Response.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts
 models/TemporaryUploadRequest.ts
+models/TransactionTypeEnum.ts
 models/TriggerData.ts
 models/TriggerDataRequest.ts
 models/TriggerDefinition.ts

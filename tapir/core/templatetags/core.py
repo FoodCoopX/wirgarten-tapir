@@ -4,13 +4,12 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
-from tapir.subscriptions.views import CancelledSubscriptionsApiView
+from tapir.subscriptions.views import (
+    MemberDataToConfirmApiView,
+)
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
 from tapir.wirgarten.models import (
-    Subscription,
-    CoopShareTransaction,
     WaitingListEntry,
-    ProductType,
 )
 from tapir.wirgarten.utils import is_debug_instance
 
@@ -19,7 +18,7 @@ register = template.Library()
 
 @register.inclusion_tag("core/sidebar_links.html", takes_context=True)
 def sidebar_links(context):
-    groups = get_sidebar_link_groups(context["request"])
+    groups = get_sidebar_link_groups(context["request"], cache=context.get("cache", {}))
 
     for group in groups:
         for link in group.links:
@@ -30,16 +29,16 @@ def sidebar_links(context):
     return context
 
 
-def get_sidebar_link_groups(request):
+def get_sidebar_link_groups(request, cache: dict):
     groups = []
 
     if request.user.has_perm(Permission.Coop.VIEW):
-        add_admin_links(groups, request)
+        add_admin_links(groups, request, cache=cache)
 
     return groups
 
 
-def add_admin_links(groups, request):
+def add_admin_links(groups, request, cache: dict):
     debug_group = SidebarLinkGroup(name=_("Debug"))
     debug_group.add_link(
         display_name=_("Exportierte Dateien"),
@@ -128,31 +127,12 @@ def add_admin_links(groups, request):
             url=reverse_lazy("wirgarten:subscription_list"),
         )
 
-        coop_shares = CoopShareTransaction.objects.filter(
-            admin_confirmed__isnull=True,
-            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-        ).count()
-        product_shares = Subscription.objects.filter(
-            admin_confirmed__isnull=True
-        ).count()
-
         members_group.add_link(
-            display_name=_("Neue Zeichnungen"),
+            display_name=_("Zeichn. und Künd."),
             material_icon="contract_edit",
-            url=reverse_lazy("wirgarten:new_contracts"),
-            notification_count=coop_shares + product_shares,
-        )
-        members_group.add_link(
-            display_name=_("Neue Kündigungen"),
-            material_icon="contract_delete",
-            url=reverse_lazy("wirgarten:new_contract_cancellations"),
-            notification_count=sum(
-                [
-                    CancelledSubscriptionsApiView.get_unconfirmed_cancelled_subscriptions(
-                        product_type.id
-                    ).count()
-                    for product_type in ProductType.objects.all()
-                ]
+            url=reverse_lazy("wirgarten:contract_updates"),
+            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(
+                cache=cache
             ),
         )
 

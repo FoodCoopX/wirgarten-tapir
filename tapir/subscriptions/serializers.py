@@ -9,7 +9,7 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, CoopShareTransaction
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -44,7 +44,7 @@ class ExtendedProductSerializer(serializers.Serializer):
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = "__all__"
+        exclude = ["groups", "user_permissions"]
 
 
 class CancelledSubscriptionSerializer(serializers.Serializer):
@@ -55,8 +55,25 @@ class CancelledSubscriptionSerializer(serializers.Serializer):
     show_warning = serializers.BooleanField()
 
 
-class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
-    serializers.Serializer
-):
-    product_types = ProductTypeSerializer(many=True)
-    number_of_subscriptions = serializers.ListField(child=serializers.IntegerField())
+class SubscriptionChangeSerializer(serializers.Serializer):
+    product_type = ProductTypeSerializer()
+    subscription_cancellations = SubscriptionSerializer(many=True)
+    subscription_creations = SubscriptionSerializer(many=True)
+
+
+class CoopShareTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoopShareTransaction
+        fields = "__all__"
+
+
+class MemberDataToConfirmSerializer(serializers.Serializer):
+    member = MemberSerializer()
+    member_profile_url = serializers.CharField()
+    pickup_location = PickupLocationSerializer()
+    subscription_cancellations = SubscriptionSerializer(many=True)
+    subscription_creations = SubscriptionSerializer(many=True)
+    subscription_changes = SubscriptionChangeSerializer(many=True)
+    show_warning = serializers.BooleanField()
+    cancellation_types = serializers.ListField(child=serializers.CharField())
+    share_purchases = CoopShareTransactionSerializer(many=True)

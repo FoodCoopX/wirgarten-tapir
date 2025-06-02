@@ -277,6 +277,9 @@ class UserGenerator:
             if not create_subs_for_additional_products:
                 min_shares += quantity * product.min_coop_shares
 
+            if solidarity_price_percentage is not None:
+                solidarity_price_percentage /= 100
+
             subscription = Subscription.objects.create(
                 member=member,
                 product=product,
@@ -287,6 +290,7 @@ class UserGenerator:
                 solidarity_price_percentage=solidarity_price_percentage,
                 solidarity_price_absolute=solidarity_price_absolute,
                 mandate_ref=mandate_ref,
+                admin_confirmed=cls.get_confirmation_datetime(start_date, cache=cache),
             )
 
             needs_pickup_location = (
@@ -319,6 +323,11 @@ class UserGenerator:
                             cache=cache,
                         )
                     )
+                subscription.cancellation_admin_confirmed = (
+                    cls.get_confirmation_datetime(
+                        subscription.cancellation_ts.date(), cache=cache
+                    )
+                )
                 subscription.save()
             else:
                 Subscription.objects.create(
@@ -331,6 +340,9 @@ class UserGenerator:
                     solidarity_price_percentage=solidarity_price_percentage,
                     solidarity_price_absolute=solidarity_price_absolute,
                     mandate_ref=mandate_ref,
+                    admin_confirmed=cls.get_confirmation_datetime(
+                        start_date, cache=cache
+                    ),
                 )
 
         return min_shares, needs_pickup_location
@@ -349,6 +361,9 @@ class UserGenerator:
             period=None,
             quantity=1,
             mandate_ref=get_or_create_mandate_ref(member, cache=cache),
+            admin_confirmed=cls.get_confirmation_datetime(
+                growing_period.start_date, cache=cache
+            ),
         )
 
     @classmethod
@@ -391,3 +406,14 @@ class UserGenerator:
             )
 
         MemberPickupLocation.objects.bulk_create(member_pickup_locations)
+
+    @classmethod
+    def get_confirmation_datetime(cls, reference_date: datetime.date, cache: dict):
+        confirmation_date = reference_date + datetime.timedelta(days=1)
+        confirmation_datetime = datetime.datetime.combine(
+            confirmation_date, datetime.time()
+        )
+        confirmation_datetime = make_timezone_aware(confirmation_datetime)
+        if confirmation_date <= get_today(cache=cache):
+            return confirmation_datetime
+        return None

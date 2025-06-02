@@ -14,7 +14,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -39,7 +39,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -63,7 +63,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -82,7 +82,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -103,7 +103,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -127,7 +127,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -147,7 +147,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -174,7 +174,7 @@ paths:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -195,7 +195,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -227,7 +227,7 @@ paths:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -258,7 +258,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -278,7 +278,7 @@ paths:
       tags:
       - deliveries
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -298,7 +298,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -322,7 +322,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -336,7 +336,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -363,7 +363,7 @@ paths:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -384,7 +384,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -416,7 +416,7 @@ paths:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -447,7 +447,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedCsvExportModelRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -467,7 +467,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -477,7 +477,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -493,7 +493,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -520,7 +520,7 @@ paths:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -541,7 +541,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -573,7 +573,7 @@ paths:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -604,7 +604,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedPdfExportModelRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -624,7 +624,7 @@ paths:
       tags:
       - generic_exports
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -639,7 +639,7 @@ paths:
       tags:
       - pickup_locations
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -663,7 +663,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -682,7 +682,7 @@ paths:
       tags:
       - pickup_locations
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -696,7 +696,7 @@ paths:
       tags:
       - pickup_locations
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -719,7 +719,7 @@ paths:
       tags:
       - pickup_locations
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -727,42 +727,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/PickupLocation'
           description: ''
-  /subscriptions/api/cancelled_subscriptions:
-    get:
-      operationId: subscriptions_api_cancelled_subscriptions_list
-      parameters:
-      - in: query
-        name: limit
-        schema:
-          type: integer
-        required: true
-      - in: query
-        name: offset
-        schema:
-          type: integer
-        required: true
-      - in: query
-        name: product_type_id
-        schema:
-          type: string
-        required: true
-      tags:
-      - subscriptions
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
-          description: ''
-  /subscriptions/api/confirm_subscription_cancellation:
+  /subscriptions/api/confirm_subscription_changes:
     post:
-      operationId: subscriptions_api_confirm_subscription_cancellation_create
+      operationId: subscriptions_api_confirm_subscription_changes_create
       parameters:
       - in: query
-        name: subscription_ids
+        name: confirm_cancellation_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
+      - in: query
+        name: confirm_creation_ids
+        schema:
+          type: array
+          items:
+            type: string
+        required: true
+      - in: query
+        name: confirm_purchase_ids
         schema:
           type: array
           items:
@@ -771,7 +755,7 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -790,7 +774,7 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -814,7 +798,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedExtendedProductRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -822,19 +806,21 @@ paths:
               schema:
                 type: string
           description: ''
-  /subscriptions/api/product_types_and_number_of_cancelled_subscriptions:
+  /subscriptions/api/member_data_to_confirm:
     get:
-      operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
+      operationId: subscriptions_api_member_data_to_confirm_list
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDataToConfirm'
           description: ''
   /subscriptions/cancel_subscriptions:
     post:
@@ -857,7 +843,7 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -876,7 +862,7 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -890,7 +876,7 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -913,13 +899,39 @@ paths:
       tags:
       - subscriptions
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+          description: ''
+  /tapirmail/api/create_missing_trigger:
+    post:
+      operationId: tapirmail_api_create_missing_trigger_create
+      tags:
+      - tapirmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /tapirmail/api/email_configuration/:
     get:
@@ -940,7 +952,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -965,7 +977,7 @@ paths:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -986,7 +998,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1018,7 +1030,7 @@ paths:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1049,7 +1061,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1069,7 +1081,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1086,7 +1098,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1119,7 +1131,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1146,7 +1158,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1171,7 +1183,7 @@ paths:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -1192,7 +1204,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1224,7 +1236,7 @@ paths:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1255,7 +1267,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1275,7 +1287,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1304,7 +1316,7 @@ paths:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1332,7 +1344,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1360,7 +1372,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1374,7 +1386,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1401,7 +1413,7 @@ paths:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1423,7 +1435,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1455,7 +1467,7 @@ paths:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1486,7 +1498,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1506,7 +1518,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1523,7 +1535,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1545,7 +1557,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1567,7 +1579,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1588,7 +1600,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1622,7 +1634,7 @@ paths:
               $ref: '#/components/schemas/RecipientRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1658,7 +1670,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1679,7 +1691,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1712,7 +1724,7 @@ paths:
               $ref: '#/components/schemas/EmailDispatchRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1754,7 +1766,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1791,7 +1803,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1805,7 +1817,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1832,7 +1844,7 @@ paths:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -1853,7 +1865,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1885,7 +1897,7 @@ paths:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1916,7 +1928,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1936,7 +1948,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1959,7 +1971,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1984,7 +1996,7 @@ paths:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2005,7 +2017,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2037,7 +2049,7 @@ paths:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2068,7 +2080,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2088,7 +2100,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2098,7 +2110,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2114,7 +2126,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2140,7 +2152,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2157,7 +2169,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2167,7 +2179,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2177,7 +2189,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2187,7 +2199,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2214,7 +2226,7 @@ paths:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2235,7 +2247,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2267,7 +2279,7 @@ paths:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2298,7 +2310,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedStoredUploadRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2318,7 +2330,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2328,7 +2340,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2355,7 +2367,7 @@ paths:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2376,7 +2388,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2408,7 +2420,7 @@ paths:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2439,7 +2451,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2459,10 +2471,26 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
+  /tapirmail/api/missing_triggers:
+    get:
+      operationId: tapirmail_api_missing_triggers_list
+      tags:
+      - tapirmail
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingTrigger'
+          description: ''
   /tapirmail/api/segment/available_filters/:
     get:
       operationId: tapirmail_api_segment_available_filters_retrieve
@@ -2470,7 +2498,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2490,7 +2518,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2526,7 +2554,7 @@ paths:
               $ref: '#/components/schemas/SegmentDataRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2552,7 +2580,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2579,7 +2607,7 @@ paths:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2600,7 +2628,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2632,7 +2660,7 @@ paths:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2663,7 +2691,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2683,7 +2711,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2693,7 +2721,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2720,7 +2748,7 @@ paths:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2741,7 +2769,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2773,7 +2801,7 @@ paths:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2804,7 +2832,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2824,7 +2852,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2834,7 +2862,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2854,7 +2882,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2864,7 +2892,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2879,7 +2907,7 @@ paths:
       tags:
       - tapirmail
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2895,7 +2923,7 @@ paths:
       tags:
       - waiting_list
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2922,7 +2950,7 @@ paths:
       tags:
       - waiting_list
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2948,7 +2976,7 @@ paths:
               $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2962,7 +2990,7 @@ paths:
       tags:
       - waiting_list
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2989,7 +3017,7 @@ paths:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -3010,7 +3038,7 @@ paths:
       tags:
       - waiting_list
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -3042,7 +3070,7 @@ paths:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -3073,7 +3101,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -3093,7 +3121,7 @@ paths:
       tags:
       - waiting_list
       security:
-      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -3230,25 +3258,49 @@ components:
       - can_cancel_coop_membership
       - legal_status
       - subscribed_products
-    CancelledSubscription:
+    CoopShareTransaction:
       type: object
       properties:
-        subscription:
-          $ref: '#/components/schemas/Subscription'
-        member:
-          $ref: '#/components/schemas/Member'
-        pickup_location:
-          $ref: '#/components/schemas/PickupLocation'
-        cancellation_type:
+        id:
           type: string
-        show_warning:
-          type: boolean
+          maxLength: 10
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        share_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        timestamp:
+          type: string
+          format: date-time
+        valid_at:
+          type: string
+          format: date
+        member:
+          type: string
+        mandate_ref:
+          type: string
+          nullable: true
+        transfer_member:
+          type: string
+          nullable: true
+        payment:
+          type: string
+          nullable: true
       required:
-      - cancellation_type
       - member
-      - pickup_location
-      - show_warning
-      - subscription
+      - quantity
+      - share_price
+      - transaction_type
+      - valid_at
     CountryEnum:
       enum:
       - AD
@@ -3731,6 +3783,18 @@ components:
         * `ZR` - Zaire
         * `ZW` - Zimbabwe
         * `ZZ` - Unknown or unspecified country
+    CreateMissingTriggerMailRequest:
+      type: object
+      properties:
+        trigger_key:
+          type: string
+          minLength: 1
+        empty_mjml:
+          type: string
+          minLength: 1
+      required:
+      - empty_mjml
+      - trigger_key
     CsvExportModel:
       type: object
       properties:
@@ -3905,12 +3969,14 @@ components:
       - weekly
       - odd_weeks
       - even_weeks
+      - every_four_weeks
       type: string
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
         * `weekly` - 1x pro Woche
         * `odd_weeks` - 2x pro Monat (ungerade KW)
         * `even_weeks` - 2x pro Monat (gerade KW)
+        * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -4661,27 +4727,53 @@ components:
         is_student:
           type: boolean
           title: Student*in
-        groups:
-          type: array
-          items:
-            type: integer
-            title: Gruppen
-          title: Gruppen
-          description: Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt
-            alle Berechtigungen dieser Gruppen.
-        user_permissions:
-          type: array
-          items:
-            type: integer
-            title: Berechtigungen
-          title: Berechtigungen
-          description: Spezifische Berechtigungen für diesen Benutzer.
       required:
       - created_at
       - first_name
       - last_name
       - password
       - username
+    MemberDataToConfirm:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/Member'
+        member_profile_url:
+          type: string
+        pickup_location:
+          $ref: '#/components/schemas/PickupLocation'
+        subscription_cancellations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_creations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionChange'
+        show_warning:
+          type: boolean
+        cancellation_types:
+          type: array
+          items:
+            type: string
+        share_purchases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoopShareTransaction'
+      required:
+      - cancellation_types
+      - member
+      - member_profile_url
+      - pickup_location
+      - share_purchases
+      - show_warning
+      - subscription_cancellations
+      - subscription_changes
+      - subscription_creations
     MemberJokerInformation:
       type: object
       properties:
@@ -4699,29 +4791,19 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
-    PaginatedCancelledSubscriptionList:
+    MissingTrigger:
       type: object
-      required:
-      - count
-      - results
       properties:
-        count:
-          type: integer
-          example: 123
-        next:
+        key:
           type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?offset=400&limit=100
-        previous:
+        name:
           type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?offset=200&limit=100
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CancelledSubscription'
+        draft_version_exists:
+          type: boolean
+      required:
+      - draft_version_exists
+      - key
+      - name
     PaginatedEmailConfigurationDispatchList:
       type: object
       required:
@@ -5271,7 +5353,7 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
+          minLength: 1
           title: Telefonnummer
           maxLength: 128
         email:
@@ -5705,20 +5787,6 @@ components:
           title: Repräsentiert Vereinsmitgliedschaften
       required:
       - name
-    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse:
-      type: object
-      properties:
-        product_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductType'
-        number_of_subscriptions:
-          type: array
-          items:
-            type: integer
-      required:
-      - number_of_subscriptions
-      - product_types
     RecipientRequest:
       type: object
       properties:
@@ -5992,9 +6060,10 @@ components:
           type: string
           format: date-time
           nullable: true
-        solidarity_price:
+        solidarity_price_percentage:
           type: number
           format: double
+          nullable: true
         solidarity_price_absolute:
           type: string
           format: decimal
@@ -6044,6 +6113,23 @@ components:
       - product
       - quantity
       - start_date
+    SubscriptionChange:
+      type: object
+      properties:
+        product_type:
+          $ref: '#/components/schemas/ProductType'
+        subscription_cancellations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        subscription_creations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+      required:
+      - product_type
+      - subscription_cancellations
+      - subscription_creations
     TemporaryUpload:
       type: object
       properties:
@@ -6114,6 +6200,18 @@ components:
       - upload_id
       - upload_name
       - upload_type
+    TransactionTypeEnum:
+      enum:
+      - purchase
+      - cancellation
+      - transfer_out
+      - transfer_in
+      type: string
+      description: |-
+        * `purchase` - Zeichnung von Anteilen
+        * `cancellation` - Kündigung von Anteilen
+        * `transfer_out` - Abgabe von Anteilen
+        * `transfer_in` - Empfang von Anteilen
     TriggerData:
       type: object
       properties:
@@ -6214,7 +6312,6 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
           title: Telefonnummer
           maxLength: 128
         email:
@@ -6268,6 +6365,7 @@ components:
       - first_name
       - last_name
       - number_of_coop_shares
+      - phone_number
       - privacy_consent
     WaitingListEntryDetails:
       type: object
@@ -6359,7 +6457,7 @@ components:
           maxLength: 256
         phone_number:
           type: string
-          nullable: true
+          minLength: 1
           title: Telefonnummer
           maxLength: 128
         email:
@@ -6411,6 +6509,7 @@ components:
       - first_name
       - last_name
       - number_of_coop_shares
+      - phone_number
       - privacy_consent
     WaitingListEntryUpdateRequest:
       type: object
@@ -6514,7 +6613,6 @@ components:
       - quantity
       - waiting_list_entry
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
+    DrfForwardAuthentication:
+      type: http
+      scheme: basic

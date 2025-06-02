@@ -38,9 +38,9 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/pickup_location_config/pickup_location_config_entry.tsx",
           ),
-          new_contract_cancellations: join(
+          contract_updates: join(
             INPUT_DIR,
-            "/new_contract_cancellations/new_contract_cancellations_entry.tsx",
+            "/contract_updates/contract_updates_entry.tsx",
           ),
           dashboard: join(INPUT_DIR, "/dashboard/dashboard_entry.tsx"),
           waiting_list: join(INPUT_DIR, "/waiting_list/waiting_list_entry.tsx"),

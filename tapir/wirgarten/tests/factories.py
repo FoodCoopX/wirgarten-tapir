@@ -72,7 +72,7 @@ class ProductTypeFactory(factory.django.DjangoModelFactory[ProductType]):
     class Meta:
         model = ProductType
 
-    name = factory.Faker("word")
+    name = factory.Faker("sentence", nb_words=3)
     delivery_cycle = NO_DELIVERY[0]
 
 
@@ -81,7 +81,7 @@ class ProductFactory(factory.django.DjangoModelFactory[Product]):
         model = Product
 
     type = factory.SubFactory(ProductTypeFactory)
-    name = factory.Faker("word")
+    name = factory.Faker("sentence", nb_words=3)
 
     _type_counts = defaultdict(int)  # Track counts of Products for each ProductType
 

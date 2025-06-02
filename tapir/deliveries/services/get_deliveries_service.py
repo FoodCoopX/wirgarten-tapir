@@ -51,9 +51,6 @@ class GetDeliveriesService:
     def build_delivery_object(
         cls, member: Member, delivery_date: datetime.date, cache: Dict
     ):
-        _, week_num, _ = delivery_date.isocalendar()
-        even_week = week_num % 2 == 0
-
         relevant_subscriptions = cls.get_relevant_subscriptions(
             member=member,
             reference_date=delivery_date,
