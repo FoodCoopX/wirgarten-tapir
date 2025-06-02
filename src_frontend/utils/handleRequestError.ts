@@ -1,6 +1,12 @@
 import { ResponseError } from "../api-client";
 
-export async function handleRequestError(error: ResponseError) {
+export async function handleRequestError(
+  error: ResponseError,
+  errorMessage?: string,
+) {
+  if (!errorMessage) {
+    errorMessage = error.message;
+  }
   console.error(error);
-  alert(await error.response.text());
+  alert(errorMessage);
 }

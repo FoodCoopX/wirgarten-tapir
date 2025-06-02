@@ -374,13 +374,19 @@ class MemberDataToConfirmApiView(APIView):
         return Response(data)
 
     @staticmethod
-    def get_number_of_unconfirmed_changes():
+    def get_number_of_unconfirmed_changes(cache: dict):
+
         return (
             Subscription.objects.filter(
                 cancellation_ts__isnull=False,
                 cancellation_admin_confirmed__isnull=True,
             ).count()
             + Subscription.objects.filter(admin_confirmed__isnull=True).count()
+            + len(
+                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                    cache=cache
+                ).keys()
+            )
         )
 
     @classmethod
@@ -475,7 +481,11 @@ class MemberDataToConfirmApiView(APIView):
             "show_warning": show_warning,
             "subscription_creations": creations,
             "subscription_changes": changes,
-            "share_transactions": [],
+            "share_purchases": TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                cache=cache
+            ).get(
+                member.id, []
+            ),
         }
 
     @staticmethod

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  CoopShareTransaction,
   MemberDataToConfirm,
   Subscription,
   SubscriptionsApi,
@@ -33,7 +34,7 @@ const ContractUpdatesConfirmationCard: React.FC<
       <ul>
         {cancellations.map((cancellation, index) => {
           return (
-            <li>
+            <li key={cancellation.id}>
               {formatSubscription(cancellation)}, Vertrag endet am{" "}
               {formatDateNumeric(cancellation.endDate)}{" "}
               {showCancellationType &&
@@ -50,7 +51,7 @@ const ContractUpdatesConfirmationCard: React.FC<
       <ul>
         {creations.map((creation) => {
           return (
-            <li>
+            <li key={creation.id}>
               {formatSubscription(creation)}, Vertrag startet am{" "}
               {formatDateNumeric(creation.startDate)}
             </li>
@@ -92,6 +93,31 @@ const ContractUpdatesConfirmationCard: React.FC<
       .finally(() => setLoading(false));
   }
 
+  function buildSharePurchases(purchases: CoopShareTransaction[]) {
+    const purchasesByDate: { [date: string]: CoopShareTransaction[] } = {};
+    for (const purchase of purchases) {
+      const dateAsText = formatDateNumeric(purchase.validAt);
+      if (!(dateAsText in purchasesByDate)) {
+        purchasesByDate[dateAsText] = [];
+      }
+      purchasesByDate[dateAsText].push(purchase);
+    }
+
+    console.log(purchasesByDate);
+
+    return (
+      <ul>
+        {Object.entries(purchasesByDate).map(([date, purchases]) => (
+          <li key={date}>
+            {date}:{" "}
+            {purchases.reduce((sum, purchase) => sum + purchase.quantity, 0)}{" "}
+            Anteil(e) gezeichnet
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
@@ -130,19 +156,25 @@ const ContractUpdatesConfirmationCard: React.FC<
           <>
             <h6>Vertragsänderungen</h6>
             <ul>
-              {changes.subscriptionChanges.map((update) => {
+              {changes.subscriptionChanges.map((update, index) => {
                 return (
-                  <>
+                  <span key={index}>
                     {update.productType.name}
                     {buildCancellations(
                       update.subscriptionCancellations,
                       false,
                     )}
                     {buildCreations(update.subscriptionCreations)}
-                  </>
+                  </span>
                 );
               })}
             </ul>
+          </>
+        )}
+        {changes.sharePurchases.length > 0 && (
+          <>
+            <h6>Genossenschaftsanteile gezeichnet</h6>
+            {buildSharePurchases(changes.sharePurchases)}
           </>
         )}
       </Modal.Body>

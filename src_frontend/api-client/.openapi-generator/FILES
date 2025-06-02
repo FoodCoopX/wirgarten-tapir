@@ -15,7 +15,6 @@ models/BundledEmailConfigurationRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/CoopShareTransaction.ts
-models/CoopShareTransactionCountry.ts
 models/CountryEnum.ts
 models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
@@ -50,6 +49,7 @@ models/JokerWithCancellationLimit.ts
 models/LegalStatusEnum.ts
 models/LocaleEnum.ts
 models/Member.ts
+models/MemberCountry.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
 models/MissingTrigger.ts
@@ -112,6 +112,7 @@ models/TapirmailApiSegmentCombineCreate200Response.ts
 models/TapirmailApiSegmentCombineCreate200ResponseRecipientsInner.ts
 models/TemporaryUpload.ts
 models/TemporaryUploadRequest.ts
+models/TransactionTypeEnum.ts
 models/TriggerData.ts
 models/TriggerDataRequest.ts
 models/TriggerDefinition.ts

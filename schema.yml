@@ -3257,139 +3257,43 @@ components:
         id:
           type: string
           maxLength: 10
-        password:
-          type: string
-          title: Passwort
-          maxLength: 128
-        last_login:
+        admin_confirmed:
           type: string
           format: date-time
           nullable: true
-          title: Letzte Anmeldung
-        is_superuser:
-          type: boolean
-          title: Administrator-Status
-          description: Legt fest, dass der Benutzer alle Berechtigungen hat, ohne
-            diese einzeln zuweisen zu müssen.
-        username:
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        share_price:
           type: string
-          title: Benutzername
-          description: Erforderlich. 150 Zeichen oder weniger. Nur Buchstaben, Ziffern
-            und @/./+/-/_.
-          pattern: ^[\w.@+-]+$
-          maxLength: 150
-        is_staff:
-          type: boolean
-          title: Mitarbeiter-Status
-          description: Legt fest, ob sich der Benutzer an der Administrationsseite
-            anmelden kann.
-        is_active:
-          type: boolean
-          title: Aktiv
-          description: Legt fest, ob dieser Benutzer aktiv ist. Kann deaktiviert werden,
-            anstatt Benutzer zu löschen.
-        date_joined:
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        timestamp:
           type: string
           format: date-time
-          title: Mitglied seit
-        keycloak_id:
-          type: string
-          nullable: true
-          maxLength: 64
-        first_name:
-          type: string
-          maxLength: 150
-        last_name:
-          type: string
-          maxLength: 150
-        email:
-          type: string
-          title: E-Mail-Adresse
-          maxLength: 150
-        phone_number:
-          type: string
-          nullable: true
-          title: Telefonnummer
-          maxLength: 128
-        birthdate:
+        valid_at:
           type: string
           format: date
-          nullable: true
-        street:
+        member:
           type: string
-          title: Street and house number
-          maxLength: 150
-        street_2:
-          type: string
-          title: Extra address line
-          maxLength: 150
-        postcode:
-          type: string
-          maxLength: 32
-        city:
-          type: string
-          maxLength: 50
-        country:
-          oneOf:
-          - $ref: '#/components/schemas/CountryEnum'
-          - $ref: '#/components/schemas/BlankEnum'
-        preferred_language:
-          $ref: '#/components/schemas/PreferredLanguageEnum'
-        account_owner:
+        mandate_ref:
           type: string
           nullable: true
-          maxLength: 150
-        iban:
+        transfer_member:
           type: string
           nullable: true
-          maxLength: 34
-        sepa_consent:
+        payment:
           type: string
-          format: date-time
           nullable: true
-        withdrawal_consent:
-          type: string
-          format: date-time
-          nullable: true
-          title: Right of withdrawal consent
-        privacy_consent:
-          type: string
-          format: date-time
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        member_no:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
-          title: Mitgliedsnummer
-        is_student:
-          type: boolean
-          title: Student*in
-        groups:
-          type: array
-          items:
-            type: integer
-            title: Gruppen
-          title: Gruppen
-          description: Die Gruppen, denen der Benutzer angehört. Ein Benutzer bekommt
-            alle Berechtigungen dieser Gruppen.
-        user_permissions:
-          type: array
-          items:
-            type: integer
-            title: Berechtigungen
-          title: Berechtigungen
-          description: Spezifische Berechtigungen für diesen Benutzer.
       required:
-      - created_at
-      - first_name
-      - last_name
-      - password
-      - username
+      - member
+      - quantity
+      - share_price
+      - transaction_type
+      - valid_at
     CountryEnum:
       enum:
       - AD
@@ -4849,7 +4753,7 @@ components:
           type: array
           items:
             type: string
-        share_transactions:
+        share_purchases:
           type: array
           items:
             $ref: '#/components/schemas/CoopShareTransaction'
@@ -4858,7 +4762,7 @@ components:
       - member
       - member_profile_url
       - pickup_location
-      - share_transactions
+      - share_purchases
       - show_warning
       - subscription_cancellations
       - subscription_changes
@@ -6289,6 +6193,18 @@ components:
       - upload_id
       - upload_name
       - upload_type
+    TransactionTypeEnum:
+      enum:
+      - purchase
+      - cancellation
+      - transfer_out
+      - transfer_in
+      type: string
+      description: |-
+        * `purchase` - Zeichnung von Anteilen
+        * `cancellation` - Kündigung von Anteilen
+        * `transfer_out` - Abgabe von Anteilen
+        * `transfer_in` - Empfang von Anteilen
     TriggerData:
       type: object
       properties:

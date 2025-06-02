@@ -9,6 +9,7 @@ from tapir.wirgarten.models import (
     ProductPrice,
     PickupLocation,
     PickupLocationOpeningTime,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 
@@ -198,6 +199,34 @@ class TapirCache:
             lambda: list(
                 PickupLocationOpeningTime.objects.filter(
                     pickup_location_id=pickup_location_id
+                )
+            ),
+        )
+
+    @classmethod
+    def get_unconfirmed_coop_share_purchases_by_member_id(cls, cache: dict):
+        def compute():
+            transactions = cls.get_unconfirmed_coop_share_purchases(cache=cache)
+            transactions_by_member_id = {}
+            for transaction in transactions:
+                if transaction.member_id not in transactions_by_member_id.keys():
+                    transactions_by_member_id[transaction.member_id] = []
+                transactions_by_member_id[transaction.member_id].append(transaction)
+            return transactions_by_member_id
+
+        return get_from_cache_or_compute(
+            cache, "unconfirmed_coop_share_transactions_by_member_id", compute
+        )
+
+    @classmethod
+    def get_unconfirmed_coop_share_purchases(cls, cache: dict):
+        return get_from_cache_or_compute(
+            cache,
+            "unconfirmed_coop_share_purchases",
+            lambda: list(
+                CoopShareTransaction.objects.filter(
+                    admin_confirmed__isnull=True,
+                    transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
                 )
             ),
         )

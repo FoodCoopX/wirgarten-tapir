@@ -18,7 +18,7 @@ register = template.Library()
 
 @register.inclusion_tag("core/sidebar_links.html", takes_context=True)
 def sidebar_links(context):
-    groups = get_sidebar_link_groups(context["request"])
+    groups = get_sidebar_link_groups(context["request"], cache=context.get("cache", {}))
 
     for group in groups:
         for link in group.links:
@@ -29,16 +29,16 @@ def sidebar_links(context):
     return context
 
 
-def get_sidebar_link_groups(request):
+def get_sidebar_link_groups(request, cache: dict):
     groups = []
 
     if request.user.has_perm(Permission.Coop.VIEW):
-        add_admin_links(groups, request)
+        add_admin_links(groups, request, cache=cache)
 
     return groups
 
 
-def add_admin_links(groups, request):
+def add_admin_links(groups, request, cache: dict):
     debug_group = SidebarLinkGroup(name=_("Debug"))
     debug_group.add_link(
         display_name=_("Exportierte Dateien"),
@@ -131,7 +131,9 @@ def add_admin_links(groups, request):
             display_name=_("Zeichn. und Künd."),
             material_icon="contract_edit",
             url=reverse_lazy("wirgarten:contract_updates"),
-            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(),
+            notification_count=MemberDataToConfirmApiView.get_number_of_unconfirmed_changes(
+                cache=cache
+            ),
         )
 
         waitlist_entries = WaitingListEntry.objects.count()

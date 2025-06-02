@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  CoopShareTransaction,
   MemberDataToConfirm,
   type SubscriptionChange,
   SubscriptionsApi,
@@ -43,7 +44,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         );
         setChangesToConfirm(changes);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Zeichnungen: " + error.message,
+        ),
+      )
       .finally(() => setLoading(false));
   }
 
@@ -62,7 +68,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         <ul>
           {memberDataToConfirm.subscriptionCreations.map((creation) => {
             return (
-              <li>
+              <li key={creation.id}>
                 Zeichnung: {creation.quantity}
                 {" × "}
                 {creation.product.name} {creation.product.type.name}
@@ -71,7 +77,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           })}
           {memberDataToConfirm.subscriptionCancellations.map((cancellation) => {
             return (
-              <li>
+              <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
                 {cancellation.product.name} {cancellation.product.type.name}
@@ -80,28 +86,41 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           })}
           {memberDataToConfirm.subscriptionChanges.map((change, index) => {
             return (
-              <li>
+              <li key={index}>
                 {change.productType.name}:{" "}
                 {change.subscriptionCancellations.map((cancellation) => (
-                  <>
+                  <span key={cancellation.id}>
                     {cancellation.quantity} {"×"} {cancellation.product.name}
                     {index !== change.subscriptionCancellations.length - 1 &&
                       ", "}
-                  </>
+                  </span>
                 ))}{" "}
                 <span className={"material-icons fs-6"}>arrow_forward</span>{" "}
                 {change.subscriptionCreations.map((creation, index) => (
-                  <>
+                  <span key={creation.id}>
                     {creation.quantity} {"×"} {creation.product.name}
                     {index !== change.subscriptionCreations.length - 1 && ", "}
-                  </>
+                  </span>
                 ))}
               </li>
             );
           })}
+          {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) ===
+            1 && <li>1 Genossenschaftsanteil</li>}
+          {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) >
+            1 && (
+            <li>
+              {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases)}{" "}
+              Genossenschaftsanteile
+            </li>
+          )}
         </ul>
       </>
     );
+  }
+
+  function getNumberOfSharesPurchased(purchases: CoopShareTransaction[]) {
+    return purchases.reduce((sum, purchase) => sum + purchase.quantity, 0);
   }
 
   function getEarliestChange(data: MemberDataToConfirm | SubscriptionChange) {
