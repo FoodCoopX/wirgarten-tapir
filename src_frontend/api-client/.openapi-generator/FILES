@@ -14,7 +14,6 @@ models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
-models/CancelledSubscription.ts
 models/CoopShareTransaction.ts
 models/CoopShareTransactionCountry.ts
 models/CountryEnum.ts
@@ -54,7 +53,6 @@ models/Member.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
 models/MissingTrigger.ts
-models/PaginatedCancelledSubscriptionList.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
 models/PaginatedEmailConfigurationVersionList.ts
@@ -96,7 +94,6 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
-models/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts

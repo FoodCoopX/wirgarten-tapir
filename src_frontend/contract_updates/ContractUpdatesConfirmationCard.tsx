@@ -83,7 +83,7 @@ const ContractUpdatesConfirmationCard: React.FC<
       );
     }
     subscriptionsApi
-      .subscriptionsApiConfirmChangesCreate({
+      .subscriptionsApiConfirmSubscriptionChangesCreate({
         confirmCreationIds: confirmCreationIds,
         confirmCancellationIds: confirmCancellationIds,
       })
@@ -102,8 +102,12 @@ const ContractUpdatesConfirmationCard: React.FC<
       </Modal.Header>
       <Modal.Body>
         <p>
-          Mitglied {changes.member.firstName} {changes.member.lastName} #
-          {changes.member.memberNo} hat folgende Änderungen gefordert:
+          Mitglied{" "}
+          <a href={changes.memberProfileUrl}>
+            {changes.member.firstName} {changes.member.lastName} #
+            {changes.member.memberNo}
+          </a>{" "}
+          hat folgende Änderungen gefordert:
         </p>
         {changes.subscriptionCreations.length > 0 && (
           <>

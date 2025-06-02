@@ -55,13 +55,6 @@ class CancelledSubscriptionSerializer(serializers.Serializer):
     show_warning = serializers.BooleanField()
 
 
-class ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseSerializer(
-    serializers.Serializer
-):
-    product_types = ProductTypeSerializer(many=True)
-    number_of_subscriptions = serializers.ListField(child=serializers.IntegerField())
-
-
 class SubscriptionChangeSerializer(serializers.Serializer):
     product_type = ProductTypeSerializer()
     subscription_cancellations = SubscriptionSerializer(many=True)
@@ -76,6 +69,7 @@ class CoopShareTransactionSerializer(serializers.ModelSerializer):
 
 class MemberDataToConfirmSerializer(serializers.Serializer):
     member = MemberSerializer()
+    member_profile_url = serializers.CharField()
     pickup_location = PickupLocationSerializer()
     subscription_cancellations = SubscriptionSerializer(many=True)
     subscription_creations = SubscriptionSerializer(many=True)

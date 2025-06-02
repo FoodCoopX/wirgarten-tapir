@@ -18,27 +18,17 @@ import type {
   CancelSubscriptionsViewResponse,
   ExtendedProduct,
   MemberDataToConfirm,
-  PaginatedCancelledSubscriptionList,
   PatchedExtendedProductRequest,
   Product,
-  ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse,
 } from "../models/index";
 import {
   CancellationDataFromJSON,
   CancelSubscriptionsViewResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
-  PaginatedCancelledSubscriptionListFromJSON,
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
-  ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseFromJSON,
 } from "../models/index";
-
-export interface SubscriptionsApiCancelledSubscriptionsListRequest {
-  limit: number;
-  offset: number;
-  productTypeId: string;
-}
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmCancellationIds: Array<string>;
@@ -73,77 +63,6 @@ export interface SubscriptionsProductsRetrieveRequest {
 export class SubscriptionsApi extends runtime.BaseAPI {
   /**
    */
-  async subscriptionsApiCancelledSubscriptionsListRaw(
-    requestParameters: SubscriptionsApiCancelledSubscriptionsListRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<PaginatedCancelledSubscriptionList>> {
-    if (requestParameters["limit"] == null) {
-      throw new runtime.RequiredError(
-        "limit",
-        'Required parameter "limit" was null or undefined when calling subscriptionsApiCancelledSubscriptionsList().',
-      );
-    }
-
-    if (requestParameters["offset"] == null) {
-      throw new runtime.RequiredError(
-        "offset",
-        'Required parameter "offset" was null or undefined when calling subscriptionsApiCancelledSubscriptionsList().',
-      );
-    }
-
-    if (requestParameters["productTypeId"] == null) {
-      throw new runtime.RequiredError(
-        "productTypeId",
-        'Required parameter "productTypeId" was null or undefined when calling subscriptionsApiCancelledSubscriptionsList().',
-      );
-    }
-
-    const queryParameters: any = {};
-
-    if (requestParameters["limit"] != null) {
-      queryParameters["limit"] = requestParameters["limit"];
-    }
-
-    if (requestParameters["offset"] != null) {
-      queryParameters["offset"] = requestParameters["offset"];
-    }
-
-    if (requestParameters["productTypeId"] != null) {
-      queryParameters["product_type_id"] = requestParameters["productTypeId"];
-    }
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/subscriptions/api/cancelled_subscriptions`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      PaginatedCancelledSubscriptionListFromJSON(jsonValue),
-    );
-  }
-
-  /**
-   */
-  async subscriptionsApiCancelledSubscriptionsList(
-    requestParameters: SubscriptionsApiCancelledSubscriptionsListRequest,
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<PaginatedCancelledSubscriptionList> {
-    const response = await this.subscriptionsApiCancelledSubscriptionsListRaw(
-      requestParameters,
-      initOverrides,
-    );
-    return await response.value();
-  }
-
-  /**
-   */
   async subscriptionsApiConfirmSubscriptionChangesCreateRaw(
     requestParameters: SubscriptionsApiConfirmSubscriptionChangesCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -176,6 +95,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/api/confirm_subscription_changes`,
@@ -219,6 +147,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     headerParameters["Content-Type"] = "application/json";
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/api/extended_product`,
@@ -266,6 +203,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/api/extended_product`,
@@ -303,6 +249,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/api/member_data_to_confirm`,
@@ -330,46 +285,6 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
-  async subscriptionsApiProductTypesAndNumberOfCancelledSubscriptionsRetrieveRaw(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse>
-  > {
-    const queryParameters: any = {};
-
-    const headerParameters: runtime.HTTPHeaders = {};
-
-    const response = await this.request(
-      {
-        path: `/subscriptions/api/product_types_and_number_of_cancelled_subscriptions`,
-        method: "GET",
-        headers: headerParameters,
-        query: queryParameters,
-      },
-      initOverrides,
-    );
-
-    return new runtime.JSONApiResponse(response, (jsonValue) =>
-      ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponseFromJSON(
-        jsonValue,
-      ),
-    );
-  }
-
-  /**
-   */
-  async subscriptionsApiProductTypesAndNumberOfCancelledSubscriptionsRetrieve(
-    initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse> {
-    const response =
-      await this.subscriptionsApiProductTypesAndNumberOfCancelledSubscriptionsRetrieveRaw(
-        initOverrides,
-      );
-    return await response.value();
-  }
-
-  /**
-   */
   async subscriptionsCancelSubscriptionsCreateRaw(
     requestParameters: SubscriptionsCancelSubscriptionsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -391,6 +306,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/cancel_subscriptions`,
@@ -433,6 +357,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/cancellation_data`,
@@ -470,6 +403,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/products/`,
@@ -511,6 +453,15 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     const headerParameters: runtime.HTTPHeaders = {};
 
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
     const response = await this.request(
       {
         path: `/subscriptions/products/{id}/`.replace(

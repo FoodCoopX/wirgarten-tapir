@@ -43,6 +43,12 @@ export interface MemberDataToConfirm {
   member: Member;
   /**
    *
+   * @type {string}
+   * @memberof MemberDataToConfirm
+   */
+  memberProfileUrl: string;
+  /**
+   *
    * @type {PickupLocation}
    * @memberof MemberDataToConfirm
    */
@@ -92,6 +98,8 @@ export function instanceOfMemberDataToConfirm(
   value: object,
 ): value is MemberDataToConfirm {
   if (!("member" in value) || value["member"] === undefined) return false;
+  if (!("memberProfileUrl" in value) || value["memberProfileUrl"] === undefined)
+    return false;
   if (!("pickupLocation" in value) || value["pickupLocation"] === undefined)
     return false;
   if (
@@ -137,6 +145,7 @@ export function MemberDataToConfirmFromJSONTyped(
   }
   return {
     member: MemberFromJSON(json["member"]),
+    memberProfileUrl: json["member_profile_url"],
     pickupLocation: PickupLocationFromJSON(json["pickup_location"]),
     subscriptionCancellations: (
       json["subscription_cancellations"] as Array<any>
@@ -169,6 +178,7 @@ export function MemberDataToConfirmToJSONTyped(
 
   return {
     member: MemberToJSON(value["member"]),
+    member_profile_url: value["memberProfileUrl"],
     pickup_location: PickupLocationToJSON(value["pickupLocation"]),
     subscription_cancellations: (
       value["subscriptionCancellations"] as Array<any>

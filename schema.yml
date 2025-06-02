@@ -13,6 +13,8 @@ paths:
           type: string
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -36,6 +38,8 @@ paths:
           type: string
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -58,6 +62,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -75,6 +81,8 @@ paths:
           type: string
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -94,6 +102,8 @@ paths:
           type: string
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -116,6 +126,8 @@ paths:
           type: string
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -134,6 +146,8 @@ paths:
       operationId: deliveries_growing_periods_list
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -159,6 +173,8 @@ paths:
             schema:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -178,6 +194,8 @@ paths:
         required: true
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -208,6 +226,8 @@ paths:
             schema:
               $ref: '#/components/schemas/GrowingPeriodRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -237,6 +257,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedGrowingPeriodRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -255,6 +277,8 @@ paths:
         required: true
       tags:
       - deliveries
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -273,6 +297,8 @@ paths:
           format: date-time
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -295,6 +321,8 @@ paths:
           format: date-time
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -307,6 +335,8 @@ paths:
       operationId: generic_exports_csv_exports_list
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -332,6 +362,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -351,6 +383,8 @@ paths:
         required: true
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -381,6 +415,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CsvExportModelRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -410,6 +446,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedCsvExportModelRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -428,6 +466,8 @@ paths:
         required: true
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -436,6 +476,8 @@ paths:
       operationId: generic_exports_export_segments_list
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -450,6 +492,8 @@ paths:
       operationId: generic_exports_pdf_exports_list
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -475,6 +519,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -494,6 +540,8 @@ paths:
         required: true
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -524,6 +572,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PdfExportModelRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -553,6 +603,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedPdfExportModelRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -571,6 +623,8 @@ paths:
         required: true
       tags:
       - generic_exports
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -584,6 +638,8 @@ paths:
           type: string
       tags:
       - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -606,6 +662,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedPickupLocationCapacitiesRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -623,6 +681,8 @@ paths:
           type: string
       tags:
       - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -635,6 +695,8 @@ paths:
       operationId: pickup_locations_pickup_locations_list
       tags:
       - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -656,40 +718,14 @@ paths:
         required: true
       tags:
       - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickupLocation'
-          description: ''
-  /subscriptions/api/cancelled_subscriptions:
-    get:
-      operationId: subscriptions_api_cancelled_subscriptions_list
-      parameters:
-      - in: query
-        name: limit
-        schema:
-          type: integer
-        required: true
-      - in: query
-        name: offset
-        schema:
-          type: integer
-        required: true
-      - in: query
-        name: product_type_id
-        schema:
-          type: string
-        required: true
-      tags:
-      - subscriptions
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedCancelledSubscriptionList'
           description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
@@ -711,6 +747,8 @@ paths:
         required: true
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -728,6 +766,8 @@ paths:
           type: string
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -750,6 +790,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedExtendedProductRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -762,6 +804,8 @@ paths:
       operationId: subscriptions_api_member_data_to_confirm_list
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -770,18 +814,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MemberDataToConfirm'
-          description: ''
-  /subscriptions/api/product_types_and_number_of_cancelled_subscriptions:
-    get:
-      operationId: subscriptions_api_product_types_and_number_of_cancelled_subscriptions_retrieve
-      tags:
-      - subscriptions
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse'
           description: ''
   /subscriptions/cancel_subscriptions:
     post:
@@ -803,6 +835,8 @@ paths:
             type: string
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -820,6 +854,8 @@ paths:
           type: string
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -832,6 +868,8 @@ paths:
       operationId: subscriptions_products_list
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -853,6 +891,8 @@ paths:
         required: true
       tags:
       - subscriptions
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -877,6 +917,8 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateMissingTriggerMailRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -902,6 +944,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -925,6 +969,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -944,6 +990,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -974,6 +1022,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1003,6 +1053,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1021,6 +1073,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1036,6 +1090,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1067,6 +1123,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1092,6 +1150,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1115,6 +1175,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -1134,6 +1196,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1164,6 +1228,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1193,6 +1259,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailConfigurationDispatchRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1211,6 +1279,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1238,6 +1308,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailConfigurationDispatchRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1264,6 +1336,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1290,6 +1364,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1302,6 +1378,8 @@ paths:
       operationId: tapirmail_api_email_configuration_version_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1327,6 +1405,8 @@ paths:
             schema:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1347,6 +1427,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1377,6 +1459,8 @@ paths:
             schema:
               $ref: '#/components/schemas/BundledEmailConfigurationRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1406,6 +1490,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedBundledEmailConfigurationRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1424,6 +1510,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1439,6 +1527,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1459,6 +1549,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1479,6 +1571,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1498,6 +1592,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1530,6 +1626,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RecipientRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1564,6 +1662,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1583,6 +1683,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1614,6 +1716,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailDispatchRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1654,6 +1758,8 @@ paths:
           format: date-time
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1689,6 +1795,8 @@ paths:
           format: date-time
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1701,6 +1809,8 @@ paths:
       operationId: tapirmail_api_email_template_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1726,6 +1836,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -1745,6 +1857,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1775,6 +1889,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1804,6 +1920,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1822,6 +1940,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1843,6 +1963,8 @@ paths:
           type: integer
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1866,6 +1988,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -1885,6 +2009,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1915,6 +2041,8 @@ paths:
             schema:
               $ref: '#/components/schemas/EmailTemplateRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1944,6 +2072,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedEmailTemplateRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -1962,6 +2092,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -1970,6 +2102,8 @@ paths:
       operationId: tapirmail_api_media_library_filepond_fetch_retrieve
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -1984,6 +2118,8 @@ paths:
         setting parameter).
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2008,6 +2144,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2023,6 +2161,8 @@ paths:
         permanent storage in line with the requirements of the parent application.
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2031,6 +2171,8 @@ paths:
       operationId: tapirmail_api_media_library_filepond_restore_retrieve
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2039,6 +2181,8 @@ paths:
       operationId: tapirmail_api_media_library_filepond_revert_destroy
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2047,6 +2191,8 @@ paths:
       operationId: storeduploads_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2072,6 +2218,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2091,6 +2239,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2121,6 +2271,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StoredUploadRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2150,6 +2302,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStoredUploadRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2168,6 +2322,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2176,6 +2332,8 @@ paths:
       operationId: temporaryuploads_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2201,6 +2359,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2220,6 +2380,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2250,6 +2412,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TemporaryUploadRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2279,6 +2443,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedTemporaryUploadRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2297,6 +2463,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2305,6 +2473,8 @@ paths:
       operationId: tapirmail_api_missing_triggers_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2320,6 +2490,8 @@ paths:
       description: Get a list of available filters.
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2338,6 +2510,8 @@ paths:
       description: Get a list of available segments.
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2372,6 +2546,8 @@ paths:
             schema:
               $ref: '#/components/schemas/SegmentDataRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2396,6 +2572,8 @@ paths:
       operationId: tapirmail_api_static_segment_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2421,6 +2599,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2440,6 +2620,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2470,6 +2652,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2499,6 +2683,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2517,6 +2703,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2525,6 +2713,8 @@ paths:
       operationId: tapirmail_api_static_segment_recipient_list
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2550,6 +2740,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2569,6 +2761,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2599,6 +2793,8 @@ paths:
             schema:
               $ref: '#/components/schemas/StaticSegmentRecipientRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2628,6 +2824,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedStaticSegmentRecipientRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2646,6 +2844,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -2654,6 +2854,8 @@ paths:
       operationId: tapirmail_api_tokens_get_tokens_retrieve
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2672,6 +2874,8 @@ paths:
         required: true
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           description: No response body
@@ -2680,6 +2884,8 @@ paths:
       operationId: tapirmail_api_trigger_tokens_get_tokens_retrieve
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2693,6 +2899,8 @@ paths:
       description: Get a list of available triggers.
       tags:
       - tapirmail
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2707,6 +2915,8 @@ paths:
       operationId: waiting_list_api_categories_retrieve
       tags:
       - waiting_list
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2732,6 +2942,8 @@ paths:
         required: true
       tags:
       - waiting_list
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2756,6 +2968,8 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryUpdateRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2768,6 +2982,8 @@ paths:
       operationId: waiting_list_waiting_list_entries_list
       tags:
       - waiting_list
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2793,6 +3009,8 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '201':
           content:
@@ -2812,6 +3030,8 @@ paths:
         required: true
       tags:
       - waiting_list
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2842,6 +3062,8 @@ paths:
             schema:
               $ref: '#/components/schemas/WaitingListEntryRequest'
         required: true
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2871,6 +3093,8 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedWaitingListEntryRequest'
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -2889,6 +3113,8 @@ paths:
         required: true
       tags:
       - waiting_list
+      security:
+      - DrfForwardAuthentication: []
       responses:
         '204':
           description: No response body
@@ -3025,25 +3251,6 @@ components:
       - can_cancel_coop_membership
       - legal_status
       - subscribed_products
-    CancelledSubscription:
-      type: object
-      properties:
-        subscription:
-          $ref: '#/components/schemas/Subscription'
-        member:
-          $ref: '#/components/schemas/Member'
-        pickup_location:
-          $ref: '#/components/schemas/PickupLocation'
-        cancellation_type:
-          type: string
-        show_warning:
-          type: boolean
-      required:
-      - cancellation_type
-      - member
-      - pickup_location
-      - show_warning
-      - subscription
     CoopShareTransaction:
       type: object
       properties:
@@ -4620,6 +4827,8 @@ components:
       properties:
         member:
           $ref: '#/components/schemas/Member'
+        member_profile_url:
+          type: string
         pickup_location:
           $ref: '#/components/schemas/PickupLocation'
         subscription_cancellations:
@@ -4647,6 +4856,7 @@ components:
       required:
       - cancellation_types
       - member
+      - member_profile_url
       - pickup_location
       - share_transactions
       - show_warning
@@ -4683,29 +4893,6 @@ components:
       - draft_version_exists
       - key
       - name
-    PaginatedCancelledSubscriptionList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?offset=400&limit=100
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?offset=200&limit=100
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/CancelledSubscription'
     PaginatedEmailConfigurationDispatchList:
       type: object
       required:
@@ -5689,20 +5876,6 @@ components:
           title: Repräsentiert Vereinsmitgliedschaften
       required:
       - name
-    ProductTypesAndNumberOfCancelledSubscriptionsToConfirmViewResponse:
-      type: object
-      properties:
-        product_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductType'
-        number_of_subscriptions:
-          type: array
-          items:
-            type: integer
-      required:
-      - number_of_subscriptions
-      - product_types
     RecipientRequest:
       type: object
       properties:
@@ -6516,3 +6689,7 @@ components:
       - product
       - quantity
       - waiting_list_entry
+  securitySchemes:
+    DrfForwardAuthentication:
+      type: http
+      scheme: basic
