@@ -67,6 +67,7 @@ class ParameterCategory:
     ORGANIZATION = "Organisation"
     TRIAL_PERIOD = "Probezeit"
     SOLIDARITY = "Solidarbeitrag"
+    BESTELLWIZARD = "BestellWizard"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -800,4 +801,14 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
             "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
             category=ParameterCategory.HARVEST,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            label="BestellWizard in Warteiste-Modus",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, bestehende und neue Mitglieder können keine neue Produkt-Anteile buchen, egal ob es Kapazitäten gibt."
+            "Wenn ausgeschaltet, Produkt-Anteile können gebucht werden wenn es genug Kapazitäten gibt.",
+            category=ParameterCategory.BESTELLWIZARD,
         )

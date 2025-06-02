@@ -1,0 +1,30 @@
+{% load django_vite %}
+{% load configuration %}
+{% load tapir_static %}
+{% load core %}
+<html lang="{{ LANGUAGE_CODE }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>
+            {% block title %}{{ "wirgarten.site.name"|parameter }} - Tapir{% endblock %}
+        </title>
+        {% with "organisation.theme"|parameter as theme %}
+            <link rel="shortcut icon"
+                  type="image/png"
+                  href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
+        {% endwith %}
+        {% javascript_environment_variables %}
+        {% vite_hmr_client %}
+        {% vite_react_refresh %}
+        {% vite_asset 'bestell_wizard/bestell_wizard_entry.tsx' %}
+    </head>
+    <body>
+        <div class="container-fluid" style="padding-right:1em; padding-left:1em;">
+            <main id="main-content" role="main">
+                {% csrf_token %}
+                <span id="bestell_wizard"></span>
+            </main>
+        </div>
+    </body>
+</html>

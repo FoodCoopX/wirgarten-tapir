@@ -5,6 +5,7 @@ from django.db.models import Model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, permissions, viewsets
 from rest_framework.request import Request
@@ -603,3 +604,7 @@ class ConfirmSubscriptionChangesView(APIView):
             )
 
         subscriptions_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
+
+
+class BestellWizardView(TemplateView):
+    template_name = "subscriptions/bestell_wizard.html"

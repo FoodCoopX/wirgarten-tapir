@@ -30,6 +30,11 @@ urlpatterns = [
         views.MemberDataToConfirmApiView.as_view(),
         name="member_data_to_confirm",
     ),
+    path(
+        "bestell_wizard",
+        views.BestellWizardView.as_view(),
+        name="bestell_wizard",
+    ),
 ]
 
 router = DefaultRouter()
