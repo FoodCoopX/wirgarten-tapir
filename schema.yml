@@ -5856,8 +5856,28 @@ components:
         description_bestellwizard:
           type: string
           title: Beschreibung im Bestellwizard
+        order_in_bestellwizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - name
+    PublicProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 128
+        price:
+          type: number
+          format: float
+          readOnly: true
+      required:
+      - name
+      - price
     PublicProductType:
       type: object
       properties:
@@ -5871,8 +5891,18 @@ components:
         description_bestellwizard:
           type: string
           title: Beschreibung im Bestellwizard
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProduct'
+          readOnly: true
+        order_in_bestellwizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - name
+      - products
     RecipientRequest:
       type: object
       properties:

@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { PublicProduct } from "./PublicProduct";
+import { PublicProductFromJSON } from "./PublicProduct";
+
 /**
  *
  * @export
@@ -36,6 +39,18 @@ export interface PublicProductType {
    * @memberof PublicProductType
    */
   descriptionBestellwizard?: string;
+  /**
+   *
+   * @type {Array<PublicProduct>}
+   * @memberof PublicProductType
+   */
+  readonly products: Array<PublicProduct>;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicProductType
+   */
+  orderInBestellwizard?: number;
 }
 
 /**
@@ -45,6 +60,7 @@ export function instanceOfPublicProductType(
   value: object,
 ): value is PublicProductType {
   if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("products" in value) || value["products"] === undefined) return false;
   return true;
 }
 
@@ -66,6 +82,11 @@ export function PublicProductTypeFromJSONTyped(
       json["description_bestellwizard"] == null
         ? undefined
         : json["description_bestellwizard"],
+    products: (json["products"] as Array<any>).map(PublicProductFromJSON),
+    orderInBestellwizard:
+      json["order_in_bestellwizard"] == null
+        ? undefined
+        : json["order_in_bestellwizard"],
   };
 }
 
@@ -74,7 +95,7 @@ export function PublicProductTypeToJSON(json: any): PublicProductType {
 }
 
 export function PublicProductTypeToJSONTyped(
-  value?: PublicProductType | null,
+  value?: Omit<PublicProductType, "products"> | null,
   ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
@@ -85,5 +106,6 @@ export function PublicProductTypeToJSONTyped(
     id: value["id"],
     name: value["name"],
     description_bestellwizard: value["descriptionBestellwizard"],
+    order_in_bestellwizard: value["orderInBestellwizard"],
   };
 }

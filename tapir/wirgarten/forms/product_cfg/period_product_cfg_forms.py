@@ -43,6 +43,7 @@ class ProductTypeForm(forms.Form):
         initial_notice_period = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
         )
+        initial_order_in_bestellwizard = 1
 
         if KW_PERIOD_ID in kwargs:
             initial_period_id = kwargs[KW_PERIOD_ID]
@@ -64,6 +65,7 @@ class ProductTypeForm(forms.Form):
                 initial_description_bestellwizard = (
                     product_type.description_bestellwizard
                 )
+                initial_order_in_bestellwizard = product_type.order_in_bestellwizard
                 initial_delivery_cycle = product_type.delivery_cycle
                 initial_notice_period = NoticePeriodManager.get_notice_period_duration(
                     product_type=product_type,
@@ -98,6 +100,11 @@ class ProductTypeForm(forms.Form):
             required=True,
             label=_("Beschreibung im BestellWizard"),
             widget=forms.Textarea(),
+        )
+        self.fields["order_in_bestellwizard"] = forms.IntegerField(
+            initial=initial_order_in_bestellwizard,
+            required=True,
+            label=_("Reihenfolge im BestellWizard (kleiner ist früher)"),
         )
         self.fields["icon_link"] = forms.CharField(
             required=False,

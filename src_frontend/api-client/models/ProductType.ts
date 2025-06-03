@@ -90,6 +90,12 @@ export interface ProductType {
    * @memberof ProductType
    */
   descriptionBestellwizard?: string;
+  /**
+   *
+   * @type {number}
+   * @memberof ProductType
+   */
+  orderInBestellwizard?: number;
 }
 
 /**
@@ -145,6 +151,10 @@ export function ProductTypeFromJSONTyped(
       json["description_bestellwizard"] == null
         ? undefined
         : json["description_bestellwizard"],
+    orderInBestellwizard:
+      json["order_in_bestellwizard"] == null
+        ? undefined
+        : json["order_in_bestellwizard"],
   };
 }
 
@@ -172,5 +182,6 @@ export function ProductTypeToJSONTyped(
     must_be_subscribed_to: value["mustBeSubscribedTo"],
     is_association_membership: value["isAssociationMembership"],
     description_bestellwizard: value["descriptionBestellwizard"],
+    order_in_bestellwizard: value["orderInBestellwizard"],
   };
 }
