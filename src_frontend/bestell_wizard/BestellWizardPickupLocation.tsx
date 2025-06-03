@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../types/TapirTheme.ts";
 import { Col, ListGroup, ListGroupItem, Row } from "react-bootstrap";
 import { PickupLocationOpeningTime, PublicPickupLocation } from "../api-client";
 import formatAddress from "../utils/formatAddress.ts";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import "./map.css";
+import "leaflet/dist/leaflet.css";
+
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import L from "leaflet";
+import { MapRef } from "react-leaflet/MapContainer";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -21,6 +29,8 @@ const BestellWizardPickupLocation: React.FC<
   selectedPickupLocation,
   setSelectedPickupLocation,
 }) => {
+  const [map, setMap] = useState<MapRef>(null);
+
   function compareOpeningTimes(
     a: PickupLocationOpeningTime,
     b: PickupLocationOpeningTime,
@@ -33,6 +43,7 @@ const BestellWizardPickupLocation: React.FC<
       parseInt(a.openTime.split(":")[0]) - parseInt(b.openTime.split(":")[0])
     );
   }
+
   function buildOpeningTimes(pickupLocation: PublicPickupLocation) {
     return pickupLocation.openingTimes
       .sort(compareOpeningTimes)
@@ -47,6 +58,19 @@ const BestellWizardPickupLocation: React.FC<
       })
       .join(", ");
   }
+
+  useEffect(() => {
+    if (selectedPickupLocation === undefined || map === null) return;
+
+    map.setView(
+      {
+        lat: parseFloat(selectedPickupLocation.coordsLon),
+        lng: parseFloat(selectedPickupLocation.coordsLat),
+      },
+      12,
+      { animate: true },
+    );
+  }, [selectedPickupLocation]);
 
   return (
     <>
@@ -68,7 +92,7 @@ const BestellWizardPickupLocation: React.FC<
       </Row>
       <Row>
         <Col>
-          <ListGroup>
+          <ListGroup style={{ maxHeight: "50vh", overflow: "scroll" }}>
             {pickupLocations.map((pickupLocation) => (
               <ListGroupItem
                 key={pickupLocation.id}
@@ -94,7 +118,49 @@ const BestellWizardPickupLocation: React.FC<
             ))}
           </ListGroup>
         </Col>
-        <Col>Here goes the map</Col>
+        <Col>
+          <MapContainer
+            center={[
+              parseFloat(pickupLocations[0].coordsLon),
+              parseFloat(pickupLocations[0].coordsLat),
+            ]}
+            zoom={13}
+            scrollWheelZoom={false}
+            ref={setMap}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {pickupLocations.map((pickupLocation) => (
+              <Marker
+                position={[
+                  parseFloat(pickupLocation.coordsLon),
+                  parseFloat(pickupLocation.coordsLat),
+                ]}
+                icon={L.icon({ iconUrl: icon, shadowUrl: iconShadow })}
+                key={pickupLocation.id}
+              >
+                <Popup>
+                  <div
+                    className={"d-flex flex-column gap-2 align-items-center"}
+                  >
+                    <strong>{pickupLocation.name}</strong>
+                    <div>
+                      {formatAddress(
+                        pickupLocation.street,
+                        pickupLocation.street2,
+                        pickupLocation.postcode,
+                        pickupLocation.city,
+                      )}
+                    </div>
+                    <div>{buildOpeningTimes(pickupLocation)}</div>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </Col>
       </Row>
       <Row className={"mt-4"}>
         <h3>Deine erste Lieferung</h3>
