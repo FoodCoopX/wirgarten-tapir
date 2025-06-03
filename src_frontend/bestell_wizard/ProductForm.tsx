@@ -73,9 +73,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </Row>
       <Row className={"mt-4"}>
         <Col>
-          <h4>
+          <h3>
             Dein Basisbeitrag: {formatCurrency(totalPriceForThisProductType())}
-          </h4>
+          </h3>
           <p>
             Ein Beitrag für einen Ernteanteil im Biotop besteht aus dem{" "}
             <strong>Basisbeitrag</strong> und einem{" "}
