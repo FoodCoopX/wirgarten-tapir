@@ -361,6 +361,7 @@ def update_product(
     price: Decimal,
     size: Decimal,
     growing_period_id: str,
+    description_in_bestellwizard: str,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -368,12 +369,6 @@ def update_product(
     If the provided growing period starts in the future, the price change gets active at the start of the growing period.
     If it is the currently active growing period, the price change happens at the start of the next month.
 
-    :param id_: the id of the product to update
-    :param name: the name of the product
-    :param base: whether the product is the base product
-    :param price: the price of the product
-    :param growing_period_id: the growing period id
-    :return:
     """
     product = Product.objects.get(id=id_)
 
@@ -383,6 +378,7 @@ def update_product(
 
     product.name = name
     product.deleted = False
+    product.description_in_bestellwizard = description_in_bestellwizard
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)

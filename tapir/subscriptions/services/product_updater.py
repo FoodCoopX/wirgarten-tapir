@@ -19,6 +19,9 @@ class ProductUpdater:
             price=Decimal(serializer.validated_data["price"]),
             size=Decimal(serializer.validated_data["size"]),
             growing_period_id=serializer.validated_data["growing_period_id"],
+            description_in_bestellwizard=serializer.validated_data[
+                "description_in_bestellwizard"
+            ],
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

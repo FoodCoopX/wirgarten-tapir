@@ -279,7 +279,13 @@ class ExtendedProductView(APIView):
 
         data = {
             attribute: getattr(product, attribute)
-            for attribute in ["id", "name", "deleted", "base"]
+            for attribute in [
+                "id",
+                "name",
+                "deleted",
+                "base",
+                "description_in_bestellwizard",
+            ]
         }
 
         cache = {}

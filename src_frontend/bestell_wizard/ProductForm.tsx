@@ -40,15 +40,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
                 <Form.Control type={"number"} min={0}></Form.Control>
               </div>
               <div>
-                <Form.Text>
+                <Form.Text className={"text-center"} as={"p"}>
                   Basisbeitrag: {formatCurrency(product.price)} pro Monat inkl.
                   MwSt.
                 </Form.Text>
               </div>
               <div>
-                <Form.Text>
-                  Hier kommt noch eine kleine Beschreibung aus der Konfig
-                </Form.Text>
+                <Form.Text>{product.descriptionInBestellwizard}</Form.Text>
               </div>
             </Col>
           ))}

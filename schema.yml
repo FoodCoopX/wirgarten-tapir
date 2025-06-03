@@ -4499,10 +4499,13 @@ components:
           allOf:
           - $ref: '#/components/schemas/PickingModeEnum'
           readOnly: true
+        description_in_bestellwizard:
+          type: string
       required:
       - base
       - basket_size_equivalences
       - deleted
+      - description_in_bestellwizard
       - id
       - name
       - picking_mode
@@ -5206,6 +5209,9 @@ components:
         growing_period_id:
           type: string
           minLength: 1
+        description_in_bestellwizard:
+          type: string
+          minLength: 1
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -5770,6 +5776,8 @@ components:
         base:
           type: boolean
           nullable: true
+        description_in_bestellwizard:
+          type: string
       required:
       - name
       - type
@@ -5875,6 +5883,8 @@ components:
           type: number
           format: float
           readOnly: true
+        description_in_bestellwizard:
+          type: string
       required:
       - name
       - price
