@@ -204,10 +204,22 @@ class ProductType(TapirModel):
     is_association_membership = models.BooleanField(
         default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
     )
-    description_bestellwizard = models.TextField(
-        default="", verbose_name=_("Beschreibung im Bestellwizard")
+    description_bestellwizard_short = models.TextField(
+        default="",
+        verbose_name=_(
+            "Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)"
+        ),
     )
-    order_in_bestellwizard = models.IntegerField(default=1)
+    description_bestellwizard_long = models.TextField(
+        default="",
+        verbose_name=_(
+            "Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite"
+        ),
+    )
+    order_in_bestellwizard = models.IntegerField(
+        default=1,
+        verbose_name=_("Reihenfolge im BestellWizard (kleiner ist früher)"),
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:

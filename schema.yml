@@ -5873,13 +5873,17 @@ components:
         is_association_membership:
           type: boolean
           title: Repräsentiert Vereinsmitgliedschaften
-        description_bestellwizard:
+        description_bestellwizard_short:
           type: string
-          title: Beschreibung im Bestellwizard
+          title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
+        description_bestellwizard_long:
+          type: string
+          title: Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite
         order_in_bestellwizard:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+          title: Reihenfolge im BestellWizard (kleiner ist früher)
       required:
       - name
     PublicProduct:
@@ -5914,9 +5918,12 @@ components:
           type: string
           title: Produkt Name
           maxLength: 128
-        description_bestellwizard:
+        description_bestellwizard_short:
           type: string
-          title: Beschreibung im Bestellwizard
+          title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
+        description_bestellwizard_long:
+          type: string
+          title: Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite
         products:
           type: array
           items:
@@ -5926,6 +5933,7 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
+          title: Reihenfolge im BestellWizard (kleiner ist früher)
       required:
       - name
       - products

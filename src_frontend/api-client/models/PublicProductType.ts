@@ -38,7 +38,13 @@ export interface PublicProductType {
    * @type {string}
    * @memberof PublicProductType
    */
-  descriptionBestellwizard?: string;
+  descriptionBestellwizardShort?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicProductType
+   */
+  descriptionBestellwizardLong?: string;
   /**
    *
    * @type {Array<PublicProduct>}
@@ -78,10 +84,14 @@ export function PublicProductTypeFromJSONTyped(
   return {
     id: json["id"] == null ? undefined : json["id"],
     name: json["name"],
-    descriptionBestellwizard:
-      json["description_bestellwizard"] == null
+    descriptionBestellwizardShort:
+      json["description_bestellwizard_short"] == null
         ? undefined
-        : json["description_bestellwizard"],
+        : json["description_bestellwizard_short"],
+    descriptionBestellwizardLong:
+      json["description_bestellwizard_long"] == null
+        ? undefined
+        : json["description_bestellwizard_long"],
     products: (json["products"] as Array<any>).map(PublicProductFromJSON),
     orderInBestellwizard:
       json["order_in_bestellwizard"] == null
@@ -105,7 +115,8 @@ export function PublicProductTypeToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
-    description_bestellwizard: value["descriptionBestellwizard"],
+    description_bestellwizard_short: value["descriptionBestellwizardShort"],
+    description_bestellwizard_long: value["descriptionBestellwizardLong"],
     order_in_bestellwizard: value["orderInBestellwizard"],
   };
 }

@@ -40,15 +40,14 @@ const BestellWizardIntroBiotop: React.FC<BestellWizardIntroBiotopProps> = ({
     productType: PublicProductType,
     checked: boolean,
   ) {
-    let newSelection;
     if (checked) {
-      newSelection = [...selectedProductTypes, productType];
+      selectedProductTypes.push(productType);
     } else {
-      newSelection = selectedProductTypes.filter(
+      selectedProductTypes = selectedProductTypes.filter(
         (existingType) => existingType.id !== productType.id,
       );
     }
-    setSelectedProductTypes(sortProductTypes(newSelection));
+    setSelectedProductTypes([...sortProductTypes(selectedProductTypes)]);
   }
 
   return (
@@ -85,12 +84,12 @@ const BestellWizardIntroBiotop: React.FC<BestellWizardIntroBiotopProps> = ({
                   checked={selectedProductTypes.includes(publicProductType)}
                 />
                 <span>
-                  {!publicProductType.descriptionBestellwizard ? (
+                  {!publicProductType.descriptionBestellwizardShort ? (
                     "No description"
                   ) : (
                     <span
                       dangerouslySetInnerHTML={getHtmlDescription(
-                        publicProductType.descriptionBestellwizard,
+                        publicProductType.descriptionBestellwizardShort,
                       )}
                     ></span>
                   )}

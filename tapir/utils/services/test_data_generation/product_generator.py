@@ -82,8 +82,25 @@ class ProductGenerator:
 
     @classmethod
     def generate_products(cls, organization: Organization):
+        with open(
+            "tapir/utils/services/test_data_generation/product_descriptions/ernteanteile_short.html",
+            "r",
+        ) as file:
+            description_bestellwizard_short = file.read()
+
+        with open(
+            "tapir/utils/services/test_data_generation/product_descriptions/ernteanteile_long.html",
+            "r",
+        ) as file:
+            description_bestellwizard_long = file.read()
+
         ernteanteile = ProductType.objects.create(
-            name="Ernteanteile", delivery_cycle=WEEKLY[0], is_affected_by_jokers=True
+            name="Ernteanteile",
+            delivery_cycle=WEEKLY[0],
+            is_affected_by_jokers=True,
+            description_bestellwizard_short=description_bestellwizard_short,
+            description_bestellwizard_long=description_bestellwizard_long,
+            order_in_bestellwizard=1,
         )
         TaxRate.objects.create(
             product_type=ernteanteile,
@@ -139,6 +156,7 @@ class ProductGenerator:
             name="Hühneranteile",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
         )
         TaxRate.objects.create(
             product_type=eggs,
@@ -160,6 +178,7 @@ class ProductGenerator:
             subscriptions_have_end_dates=False,
             must_be_subscribed_to=True,
             is_association_membership=True,
+            order_in_bestellwizard=3,
         )
         TaxRate.objects.create(
             product_type=association_membership,
@@ -227,6 +246,7 @@ class ProductGenerator:
             name="Hühneranteile",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
         )
         TaxRate.objects.create(
             product_type=eggs,
@@ -245,6 +265,7 @@ class ProductGenerator:
             delivery_cycle=NO_DELIVERY[0],
             is_affected_by_jokers=False,
             single_subscription_only=True,
+            order_in_bestellwizard=4,
         )
         TaxRate.objects.create(
             product_type=hofpunkt,
@@ -296,6 +317,7 @@ class ProductGenerator:
             name="Hühneranteile",
             delivery_cycle=EVEN_WEEKS[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=2,
         )
         TaxRate.objects.create(
             product_type=eggs,
@@ -314,6 +336,7 @@ class ProductGenerator:
             delivery_cycle=NO_DELIVERY[0],
             is_affected_by_jokers=False,
             single_subscription_only=True,
+            order_in_bestellwizard=4,
         )
         TaxRate.objects.create(
             product_type=hofpunkt,
@@ -372,6 +395,7 @@ class ProductGenerator:
             name="Brot",
             delivery_cycle=WEEKLY[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=5,
         )
         TaxRate.objects.create(
             product_type=bread,
@@ -393,6 +417,7 @@ class ProductGenerator:
             name="Honig",
             delivery_cycle=EVERY_FOUR_WEEKS[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=6,
         )
         TaxRate.objects.create(
             product_type=honey,
@@ -407,6 +432,7 @@ class ProductGenerator:
             name="Leinöl",
             delivery_cycle=EVERY_FOUR_WEEKS[0],
             is_affected_by_jokers=True,
+            order_in_bestellwizard=7,
         )
         TaxRate.objects.create(
             product_type=oil,
