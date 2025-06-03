@@ -86,6 +86,12 @@ export interface ExtendedProduct {
    * @memberof ExtendedProduct
    */
   descriptionInBestellwizard: string;
+  /**
+   *
+   * @type {string}
+   * @memberof ExtendedProduct
+   */
+  urlOfImageInBestellwizard: string;
 }
 
 /**
@@ -110,6 +116,11 @@ export function instanceOfExtendedProduct(
   if (
     !("descriptionInBestellwizard" in value) ||
     value["descriptionInBestellwizard"] === undefined
+  )
+    return false;
+  if (
+    !("urlOfImageInBestellwizard" in value) ||
+    value["urlOfImageInBestellwizard"] === undefined
   )
     return false;
   return true;
@@ -140,6 +151,7 @@ export function ExtendedProductFromJSONTyped(
       json["growing_period_id"] == null ? undefined : json["growing_period_id"],
     pickingMode: PickingModeEnumFromJSON(json["picking_mode"]),
     descriptionInBestellwizard: json["description_in_bestellwizard"],
+    urlOfImageInBestellwizard: json["url_of_image_in_bestellwizard"],
   };
 }
 
@@ -167,5 +179,6 @@ export function ExtendedProductToJSONTyped(
     ).map(ProductBasketSizeEquivalenceToJSON),
     growing_period_id: value["growingPeriodId"],
     description_in_bestellwizard: value["descriptionInBestellwizard"],
+    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
   };
 }

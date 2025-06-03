@@ -537,7 +537,8 @@ class Product(TapirModel):
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
     base = models.BooleanField(default=False, null=True)
-    description_in_bestellwizard = models.TextField(default="")
+    description_in_bestellwizard = models.TextField(default="", blank=True)
+    url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType

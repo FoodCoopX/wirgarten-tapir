@@ -40,6 +40,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [size, setSize] = useState(0);
   const [descriptionInBestellWizard, setDescriptionInBestellWizard] =
     useState("");
+  const [urlOfImageInBestellWizard, setUrlOfImageInBestellWizard] =
+    useState("");
   const [equivalences, setEquivalences] = useState<
     ProductBasketSizeEquivalence[]
   >([]);
@@ -71,6 +73,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setDescriptionInBestellWizard(
           extendedProduct.descriptionInBestellwizard,
         );
+        setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -94,6 +97,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           deleted: deleted,
           growingPeriodId: getPeriodIdFromUrl(),
           descriptionInBestellwizard: descriptionInBestellWizard,
+          urlOfImageInBestellwizard: urlOfImageInBestellWizard,
         },
       })
       .then(() => location.reload())
@@ -183,6 +187,22 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   <Form.Text>Beispiel: "für ca. eine Person"</Form.Text>
                 </Form.Group>
               </Col>
+              <Col>
+                <Form.Group controlId={"photo"}>
+                  <Form.Label>URL zu Bild im BestellWizard</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    value={urlOfImageInBestellWizard}
+                    onChange={(e) =>
+                      setUrlOfImageInBestellWizard(e.target.value)
+                    }
+                  />
+                  <Form.Text>
+                    Bilder können z.B. im Mail-Modul unter "Medien Verwalten"
+                    hochgeladen werden
+                  </Form.Text>
+                </Form.Group>
+              </Col>
             </Row>
           </ListGroup.Item>
           {pickingMode === PickingModeEnum.Basket && (
@@ -220,17 +240,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </Table>
             </ListGroup.Item>
           )}
-          <ListGroup.Item>
-            <h5>Bild im BestellWizard</h5>
-            <Row>
-              <Col>
-                <Form.Group controlId={"photo"}>
-                  <Form.Label>Bild</Form.Label>
-                  <Form.Control type={"file"} />
-                </Form.Group>
-              </Col>
-            </Row>
-          </ListGroup.Item>
         </Form>
       </ListGroup>
     );

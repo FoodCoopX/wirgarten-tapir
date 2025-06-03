@@ -78,6 +78,12 @@ export interface PatchedExtendedProductRequest {
    * @memberof PatchedExtendedProductRequest
    */
   descriptionInBestellwizard?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PatchedExtendedProductRequest
+   */
+  urlOfImageInBestellwizard?: string;
 }
 
 /**
@@ -121,6 +127,10 @@ export function PatchedExtendedProductRequestFromJSONTyped(
       json["description_in_bestellwizard"] == null
         ? undefined
         : json["description_in_bestellwizard"],
+    urlOfImageInBestellwizard:
+      json["url_of_image_in_bestellwizard"] == null
+        ? undefined
+        : json["url_of_image_in_bestellwizard"],
   };
 }
 
@@ -153,5 +163,6 @@ export function PatchedExtendedProductRequestToJSONTyped(
           ),
     growing_period_id: value["growingPeriodId"],
     description_in_bestellwizard: value["descriptionInBestellwizard"],
+    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
   };
 }

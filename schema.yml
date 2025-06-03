@@ -4501,6 +4501,9 @@ components:
           readOnly: true
         description_in_bestellwizard:
           type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
       required:
       - base
       - basket_size_equivalences
@@ -4511,6 +4514,7 @@ components:
       - picking_mode
       - price
       - size
+      - url_of_image_in_bestellwizard
     GroupedEmailDispatch:
       type: object
       properties:
@@ -5212,6 +5216,10 @@ components:
         description_in_bestellwizard:
           type: string
           minLength: 1
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
+          minLength: 1
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -5778,6 +5786,10 @@ components:
           nullable: true
         description_in_bestellwizard:
           type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
+          maxLength: 200
       required:
       - name
       - type
@@ -5885,6 +5897,10 @@ components:
           readOnly: true
         description_in_bestellwizard:
           type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
+          maxLength: 200
       required:
       - name
       - price

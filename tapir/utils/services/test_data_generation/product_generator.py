@@ -29,13 +29,26 @@ class ProductGenerator:
         size: float,
         base: bool,
         min_coop_shares: int | None = None,
+        description_in_bestellwizard: str = "",
+        url_of_image_in_bestellwizard: str = "",
     ):
         if min_coop_shares is not None:
             product = HarvestShareProduct.objects.create(
-                type=product_type, name=name, base=base, min_coop_shares=min_coop_shares
+                type=product_type,
+                name=name,
+                base=base,
+                min_coop_shares=min_coop_shares,
+                description_in_bestellwizard=description_in_bestellwizard,
+                url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
             )
         else:
-            product = Product.objects.create(type=product_type, name=name, base=base)
+            product = Product.objects.create(
+                type=product_type,
+                name=name,
+                base=base,
+                description_in_bestellwizard=description_in_bestellwizard,
+                url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
+            )
 
         # prices were a bit cheaper last year
         start_of_previous_growing_period = (
@@ -255,6 +268,8 @@ class ProductGenerator:
             size=2,
             base=True,
             min_coop_shares=2,
+            description_in_bestellwizard="für ca. 2 Personen",
+            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_m_alpha.webp",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -263,6 +278,8 @@ class ProductGenerator:
             size=1.5,
             base=False,
             min_coop_shares=1,
+            description_in_bestellwizard="für ca. eine Person",
+            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_s_alpha.webp",
         )
         cls.generate_product(
             product_type=product_type_ernteanteile,
@@ -271,6 +288,8 @@ class ProductGenerator:
             size=3.5,
             base=False,
             min_coop_shares=3,
+            description_in_bestellwizard="für Familien mit großem Gemüsehunger",
+            url_of_image_in_bestellwizard="/static/lueneburg/registration/harvest_share_l_alpha.webp",
         )
 
         eggs = ProductType.objects.create(

@@ -362,6 +362,7 @@ def update_product(
     size: Decimal,
     growing_period_id: str,
     description_in_bestellwizard: str,
+    url_of_image_in_bestellwizard: str,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -379,6 +380,7 @@ def update_product(
     product.name = name
     product.deleted = False
     product.description_in_bestellwizard = description_in_bestellwizard
+    product.url_of_image_in_bestellwizard = url_of_image_in_bestellwizard
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)

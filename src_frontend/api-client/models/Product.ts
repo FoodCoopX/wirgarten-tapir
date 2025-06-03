@@ -57,6 +57,12 @@ export interface Product {
    * @memberof Product
    */
   descriptionInBestellwizard?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof Product
+   */
+  urlOfImageInBestellwizard?: string;
 }
 
 /**
@@ -89,6 +95,10 @@ export function ProductFromJSONTyped(
       json["description_in_bestellwizard"] == null
         ? undefined
         : json["description_in_bestellwizard"],
+    urlOfImageInBestellwizard:
+      json["url_of_image_in_bestellwizard"] == null
+        ? undefined
+        : json["url_of_image_in_bestellwizard"],
   };
 }
 
@@ -111,5 +121,6 @@ export function ProductToJSONTyped(
     deleted: value["deleted"],
     base: value["base"],
     description_in_bestellwizard: value["descriptionInBestellwizard"],
+    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
   };
 }

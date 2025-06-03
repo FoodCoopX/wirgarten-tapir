@@ -42,6 +42,12 @@ export interface PublicProduct {
    * @memberof PublicProduct
    */
   descriptionInBestellwizard?: string;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicProduct
+   */
+  urlOfImageInBestellwizard?: string;
 }
 
 /**
@@ -72,6 +78,10 @@ export function PublicProductFromJSONTyped(
       json["description_in_bestellwizard"] == null
         ? undefined
         : json["description_in_bestellwizard"],
+    urlOfImageInBestellwizard:
+      json["url_of_image_in_bestellwizard"] == null
+        ? undefined
+        : json["url_of_image_in_bestellwizard"],
   };
 }
 
@@ -91,5 +101,6 @@ export function PublicProductToJSONTyped(
     id: value["id"],
     name: value["name"],
     description_in_bestellwizard: value["descriptionInBestellwizard"],
+    url_of_image_in_bestellwizard: value["urlOfImageInBestellwizard"],
   };
 }

@@ -285,6 +285,7 @@ class ExtendedProductView(APIView):
                 "deleted",
                 "base",
                 "description_in_bestellwizard",
+                "url_of_image_in_bestellwizard",
             ]
         }
 
