@@ -8,6 +8,8 @@ import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
   CoreApi,
+  PickupLocationsApi,
+  PublicPickupLocation,
   type PublicProductType,
   SubscriptionsApi,
 } from "../api-client";
@@ -31,6 +33,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
   const coreApi = useApi(CoreApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
@@ -45,6 +48,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [waitingListMode, setWaitingListMode] =
     useState<WaitingListMode>("general");
   const [showWaitingListModal, setShowWaitingListModal] = useState(false);
+  const [pickupLocations, setPickupLocations] = useState<
+    PublicPickupLocation[]
+  >([]);
+  const [selectedPickupLocation, setSelectedPickupLocation] =
+    useState<PublicPickupLocation>();
 
   useEffect(() => {
     coreApi
@@ -59,6 +67,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       .then((types) => {
         setPublicProductTypes(sortProductTypes(types));
       })
+      .catch(handleRequestError);
+
+    pickupLocationApi
+      .pickupLocationsPublicPickupLocationsList()
+      .then(setPickupLocations)
       .catch(handleRequestError);
   }, []);
 
@@ -155,7 +168,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           />
         );
       case "pickup_location":
-        return <BestellWizardPickupLocation theme={theme} />;
+        return (
+          <BestellWizardPickupLocation
+            theme={theme}
+            pickupLocations={pickupLocations}
+            selectedPickupLocation={selectedPickupLocation}
+            setSelectedPickupLocation={setSelectedPickupLocation}
+          />
+        );
     }
   }
 
