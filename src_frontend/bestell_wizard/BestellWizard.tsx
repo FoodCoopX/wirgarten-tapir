@@ -17,12 +17,15 @@ import { sortProductTypes } from "./sortProductTypes.ts";
 import { ShoppingCart } from "./ShoppingCart.ts";
 import WaitingListModal from "./WaitingListModal.tsx";
 import { WaitingListMode } from "./WaitingListMode.ts";
+import BestellWizardPickupLocation from "./BestellWizardPickupLocation.tsx";
+import { BESTELL_WIZARD_COLUMN_SIZE } from "./BESTELL_WIZARD_COLUMN_SIZE.ts";
+import TapirButton from "../components/TapirButton.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
 }
 
-type BestellWizardStep = "intro" | "products";
+type BestellWizardStep = "intro" | "products" | "pickup_location";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -69,76 +72,140 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setShoppingCart(newShoppingCart);
   }, [publicProductTypes]);
 
-  function onIntroNextClicked() {
-    if (currentStep !== "intro") return;
-    setCurrentStep("products");
-    setCurrentProductType(selectedProductTypes[0]);
+  function onNextClicked() {
+    switch (currentStep) {
+      case "intro":
+        setCurrentStep("products");
+        setCurrentProductType(selectedProductTypes[0]);
+        return;
+      case "products":
+        if (currentProductType === undefined) return;
+        const indexOfCurrentProductType =
+          selectedProductTypes.indexOf(currentProductType);
+
+        if (indexOfCurrentProductType === selectedProductTypes.length - 1) {
+          setCurrentStep("pickup_location");
+          return;
+        }
+
+        setCurrentProductType(
+          selectedProductTypes[indexOfCurrentProductType + 1],
+        );
+        return;
+      case "pickup_location":
+        alert("Not implemented yet!");
+    }
   }
 
-  function onProductTypeNextClicked() {
-    if (currentProductType === undefined) return;
+  function onBackClicked() {
+    switch (currentStep) {
+      case "intro":
+        return;
+      case "products":
+        if (currentProductType === undefined) return;
 
-    const indexOfCurrentProductType =
-      selectedProductTypes.indexOf(currentProductType);
+        const indexOfCurrentProductType =
+          selectedProductTypes.indexOf(currentProductType);
 
-    if (indexOfCurrentProductType === selectedProductTypes.length - 1) {
-      alert("Last product reached, WIP");
-      return;
+        if (indexOfCurrentProductType === 0) {
+          setCurrentStep("intro");
+          return;
+        }
+
+        setCurrentProductType(
+          selectedProductTypes[indexOfCurrentProductType - 1],
+        );
+        return;
+      case "pickup_location":
+        setCurrentStep("products");
+    }
+  }
+
+  function buildCurrentStepComponent() {
+    if (theme === undefined) {
+      return (
+        <Row>
+          <Col>
+            <Spinner />
+          </Col>
+        </Row>
+      );
     }
 
-    setCurrentProductType(selectedProductTypes[indexOfCurrentProductType + 1]);
-  }
-
-  function onProductTypePreviousClicked() {
-    if (currentProductType === undefined) return;
-
-    const indexOfCurrentProductType =
-      selectedProductTypes.indexOf(currentProductType);
-
-    if (indexOfCurrentProductType === 0) {
-      setCurrentStep("intro");
-      return;
+    switch (currentStep) {
+      case "intro":
+        return (
+          <BestellWizardIntro
+            theme={theme}
+            selectedProductTypes={selectedProductTypes}
+            setSelectedProductTypes={setSelectedProductTypes}
+            publicProductTypes={publicProductTypes}
+          />
+        );
+      case "products":
+        if (currentProductType === undefined) {
+          return <span>No current product type, this should not happen</span>;
+        }
+        return (
+          <BestellWizardProductType
+            theme={theme}
+            productType={currentProductType}
+            shoppingCart={shoppingCart}
+            setShoppingCart={setShoppingCart}
+          />
+        );
+      case "pickup_location":
+        return <BestellWizardPickupLocation theme={theme} />;
     }
-
-    setCurrentProductType(selectedProductTypes[indexOfCurrentProductType - 1]);
   }
 
-  if (theme === undefined) {
-    return (
-      <Row>
-        <Col>
-          <Spinner />
-        </Col>
-      </Row>
-    );
+  function isNextEnabled() {
+    switch (currentStep) {
+      case "intro":
+        return selectedProductTypes.length > 0;
+      case "products":
+        return true;
+      case "pickup_location":
+        return false;
+    }
   }
 
   return (
     <>
-      {currentStep === "intro" && (
-        <BestellWizardIntro
-          theme={theme}
-          selectedProductTypes={selectedProductTypes}
-          setSelectedProductTypes={setSelectedProductTypes}
-          onIntroNextClicked={onIntroNextClicked}
-          publicProductTypes={publicProductTypes}
-        />
-      )}
-      {currentStep === "products" && currentProductType && (
-        <BestellWizardProductType
-          theme={theme}
-          productType={currentProductType}
-          onProductTypeNextClicked={onProductTypeNextClicked}
-          onProductTypePreviousClicked={onProductTypePreviousClicked}
-          shoppingCart={shoppingCart}
-          setShoppingCart={setShoppingCart}
-        />
-      )}
-      <WaitingListModal
-        show={showWaitingListModal}
-        onHide={() => setShowWaitingListModal(false)}
-        mode={waitingListMode}
-      />
+      <Row className={"justify-content-center"}>
+        <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
+          {buildCurrentStepComponent()}
+          <Row className={"justify-content-center mt-4 mb-2"}>
+            <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
+              <Row className={"justify-content-between"}>
+                <Col>
+                  <TapirButton
+                    icon={"arrow_backward"}
+                    variant={"outline-primary"}
+                    text={"Zurück"}
+                    onClick={onBackClicked}
+                    disabled={currentStep === "intro"}
+                  />
+                </Col>
+                <Col className={"d-flex justify-content-end"}>
+                  <TapirButton
+                    icon={"arrow_forward"}
+                    variant={"outline-primary"}
+                    text={"Weiter"}
+                    onClick={onNextClicked}
+                    disabled={!isNextEnabled()}
+                  />
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+          <WaitingListModal
+            show={showWaitingListModal}
+            onHide={() => setShowWaitingListModal(false)}
+            mode={waitingListMode}
+          />
+        </Col>
+      </Row>
     </>
   );
 };
