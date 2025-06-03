@@ -5,12 +5,27 @@ import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { type PublicProductType } from "../api-client";
 import { formatCurrency } from "../utils/formatCurrency.ts";
+import { ShoppingCart } from "./ShoppingCart.ts";
 
 interface ProductFormProps {
   productType: PublicProductType;
+  shoppingCart: ShoppingCart;
+  setShoppingCart: (shoppingCart: ShoppingCart) => void;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
+const ProductForm: React.FC<ProductFormProps> = ({
+  productType,
+  shoppingCart,
+  setShoppingCart,
+}) => {
+  function totalPriceForThisProductType() {
+    let total = 0;
+    for (const product of productType.products) {
+      total += product.price * shoppingCart[product.id!];
+    }
+    return total;
+  }
+
   return (
     <>
       <Row className={"justify-content-center"}>
@@ -32,7 +47,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
                 <strong>{product.name}</strong>
               </div>
               <div>
-                <Form.Control type={"number"} min={0}></Form.Control>
+                <Form.Control
+                  type={"number"}
+                  min={0}
+                  value={shoppingCart[product.id!]}
+                  onChange={(event) => {
+                    shoppingCart[product.id!] = parseInt(event.target.value);
+                    setShoppingCart(Object.assign({}, shoppingCart));
+                  }}
+                ></Form.Control>
               </div>
               <div>
                 <Form.Text className={"text-center"} as={"p"}>
@@ -50,7 +73,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
       </Row>
       <Row className={"mt-4"}>
         <Col>
-          <h4>Dein Basisbeitrag: XX.YY€</h4>
+          <h4>
+            Dein Basisbeitrag: {formatCurrency(totalPriceForThisProductType())}
+          </h4>
           <p>
             Ein Beitrag für einen Ernteanteil im Biotop besteht aus dem{" "}
             <strong>Basisbeitrag</strong> und einem{" "}

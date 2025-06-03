@@ -4,11 +4,14 @@ import { PublicProductType } from "../../api-client";
 import { BESTELL_WIZARD_COLUMN_SIZE } from "../BESTELL_WIZARD_COLUMN_SIZE.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import ProductForm from "../ProductForm.tsx";
+import { ShoppingCart } from "../ShoppingCart.ts";
 
 interface BestellWizardProductTypeBiotopProps {
   productType: PublicProductType;
   onProductTypeNextClicked: () => void;
   onProductTypePreviousClicked: () => void;
+  shoppingCart: ShoppingCart;
+  setShoppingCart: (shoppingCart: ShoppingCart) => void;
 }
 
 const BestellWizardProductTypeBiotop: React.FC<
@@ -17,6 +20,8 @@ const BestellWizardProductTypeBiotop: React.FC<
   productType,
   onProductTypeNextClicked,
   onProductTypePreviousClicked,
+  shoppingCart,
+  setShoppingCart,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -38,7 +43,11 @@ const BestellWizardProductTypeBiotop: React.FC<
       </Row>
       <Row className={"justify-content-center"}>
         <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
-          <ProductForm productType={productType} />
+          <ProductForm
+            productType={productType}
+            shoppingCart={shoppingCart}
+            setShoppingCart={setShoppingCart}
+          />
         </Col>
       </Row>
       <Row className={"justify-content-center mt-4 mb-2"}>
