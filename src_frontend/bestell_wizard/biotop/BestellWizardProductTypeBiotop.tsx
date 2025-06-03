@@ -18,12 +18,22 @@ const BestellWizardProductTypeBiotop: React.FC<
   onProductTypeNextClicked,
   onProductTypePreviousClicked,
 }) => {
+  function getHtmlDescription(description: string) {
+    return { __html: description };
+  }
+
   return (
     <>
       <Row className={"justify-content-center"}>
         <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
           <h1>{productType.name}</h1>
-          <p>Hier kommt eine Beschreibung aus der Konfig</p>
+          {
+            <span
+              dangerouslySetInnerHTML={getHtmlDescription(
+                productType.descriptionBestellwizardLong!,
+              )}
+            ></span>
+          }
         </Col>
       </Row>
       <Row className={"justify-content-center"}>

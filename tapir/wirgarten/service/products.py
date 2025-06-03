@@ -442,7 +442,8 @@ def delete_product(id_: str):
 @transaction.atomic
 def create_product_type_capacity(
     name: str,
-    description_bestellwizard: str,
+    description_bestellwizard_short: str,
+    description_bestellwizard_long: str,
     order_in_bestellwizard: int,
     contract_link: str,
     icon_link: str,
@@ -462,7 +463,8 @@ def create_product_type_capacity(
     if product_type_id is not None and len(product_type_id.strip()) > 0:
         product_type = ProductType.objects.get(id=product_type_id)
         product_type.name = name
-        product_type.description_bestellwizard = description_bestellwizard
+        product_type.description_bestellwizard_short = description_bestellwizard_short
+        product_type.description_bestellwizard_long = description_bestellwizard_long
         product_type.order_in_bestellwizard = order_in_bestellwizard
         product_type.delivery_cycle = delivery_cycle
         product_type.contract_link = contract_link
@@ -475,7 +477,8 @@ def create_product_type_capacity(
     else:
         product_type = ProductType.objects.create(
             name=name,
-            description_bestellwizard=description_bestellwizard,
+            description_bestellwizard_short=description_bestellwizard_short,
+            description_bestellwizard_long=description_bestellwizard_long,
             order_in_bestellwizard=order_in_bestellwizard,
             delivery_cycle=delivery_cycle,
             contract_link=contract_link,
@@ -517,7 +520,8 @@ def create_product_type_capacity(
 def update_product_type_capacity(
     id_: str,
     name: str,
-    description_bestellwizard: str,
+    description_bestellwizard_short: str,
+    description_bestellwizard_long: str,
     order_in_bestellwizard: int,
     contract_link: str,
     icon_link: str,
@@ -538,7 +542,12 @@ def update_product_type_capacity(
     product_capacity.save()
 
     product_capacity.product_type.name = name
-    product_capacity.product_type.description_bestellwizard = description_bestellwizard
+    product_capacity.product_type.description_bestellwizard_short = (
+        description_bestellwizard_short
+    )
+    product_capacity.product_type.description_bestellwizard_long = (
+        description_bestellwizard_long
+    )
     product_capacity.product_type.order_in_bestellwizard = order_in_bestellwizard
     product_capacity.product_type.contract_link = contract_link
     product_capacity.product_type.icon_link = icon_link

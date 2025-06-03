@@ -113,7 +113,8 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description_bestellwizard",
+            "description_bestellwizard_short",
+            "description_bestellwizard_long",
             "products",
             "order_in_bestellwizard",
         ]
