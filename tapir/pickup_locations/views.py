@@ -18,6 +18,7 @@ from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
+    PublicPickupLocationSerializer,
 )
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -306,3 +307,9 @@ class PickupLocationCapacityEvolutionView(APIView):
             "table_headers": capacities_by_basket_size.keys(),
             "data_points": data_points,
         }
+
+
+class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = []
+    queryset = PickupLocation.objects.all()
+    serializer_class = PublicPickupLocationSerializer

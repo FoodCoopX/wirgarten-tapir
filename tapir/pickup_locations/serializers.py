@@ -1,10 +1,13 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from tapir.deliveries.serializers import PickupLocationOpeningTimeSerializer
 from tapir.pickup_locations.config import (
     OPTIONS_PICKING_MODE,
     PICKING_MODE_BASKET,
     PICKING_MODE_SHARE,
 )
+from tapir.wirgarten.models import PickupLocation, PickupLocationOpeningTime
 
 
 class ProductBasketSizeEquivalenceSerializer(serializers.Serializer):
@@ -69,3 +72,28 @@ class PickupLocationCapacityChangePointSerializer(serializers.Serializer):
 class PickupLocationCapacityEvolutionSerializer(serializers.Serializer):
     table_headers = serializers.ListField(child=serializers.CharField())
     data_points = PickupLocationCapacityChangePointSerializer(many=True)
+
+
+class PublicPickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = [
+            "id",
+            "name",
+            "coords_lon",
+            "coords_lat",
+            "street",
+            "street_2",
+            "postcode",
+            "city",
+            "opening_times",
+        ]
+
+    opening_times = serializers.SerializerMethodField()
+
+    @extend_schema_field(PickupLocationOpeningTimeSerializer(many=True))
+    def get_opening_times(self, pickup_location: PickupLocation):
+        return PickupLocationOpeningTimeSerializer(
+            PickupLocationOpeningTime.objects.filter(pickup_location=pickup_location),
+            many=True,
+        ).data

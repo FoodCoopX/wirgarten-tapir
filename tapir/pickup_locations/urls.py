@@ -21,4 +21,9 @@ router = DefaultRouter()
 router.register(
     r"pickup_locations", views.PickupLocationViewSet, basename="pickup_locations"
 )
+router.register(
+    r"public_pickup_locations",
+    views.PublicPickupLocationViewSet,
+    basename="public_pickup_locations",
+)
 urlpatterns += router.urls

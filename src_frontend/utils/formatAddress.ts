@@ -1,6 +1,6 @@
 export default function formatAddress(
   street: string,
-  street2: string,
+  street2: string | undefined,
   postcode: string,
   city: string,
 ) {

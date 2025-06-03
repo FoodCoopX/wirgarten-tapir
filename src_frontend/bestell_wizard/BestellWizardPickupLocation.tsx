@@ -1,14 +1,53 @@
 import React from "react";
 import { TapirTheme } from "../types/TapirTheme.ts";
-import { Col, Row } from "react-bootstrap";
+import { Col, ListGroup, ListGroupItem, Row } from "react-bootstrap";
+import { PickupLocationOpeningTime, PublicPickupLocation } from "../api-client";
+import formatAddress from "../utils/formatAddress.ts";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
+  pickupLocations: PublicPickupLocation[];
+  selectedPickupLocation: PublicPickupLocation | undefined;
+  setSelectedPickupLocation: (
+    selectedPickupLocation: PublicPickupLocation,
+  ) => void;
 }
 
 const BestellWizardPickupLocation: React.FC<
   BestellWizardPickupLocationProps
-> = ({ theme }) => {
+> = ({
+  theme,
+  pickupLocations,
+  selectedPickupLocation,
+  setSelectedPickupLocation,
+}) => {
+  function compareOpeningTimes(
+    a: PickupLocationOpeningTime,
+    b: PickupLocationOpeningTime,
+  ) {
+    if (a.dayOfWeek !== b.dayOfWeek) {
+      return a.dayOfWeek - b.dayOfWeek;
+    }
+
+    return (
+      parseInt(a.openTime.split(":")[0]) - parseInt(b.openTime.split(":")[0])
+    );
+  }
+  function buildOpeningTimes(pickupLocation: PublicPickupLocation) {
+    return pickupLocation.openingTimes
+      .sort(compareOpeningTimes)
+      .map((openingTime) => {
+        return (
+          openingTime.dayOfWeekString.substring(0, 2) +
+          " " +
+          openingTime.openTime.substring(0, 5) +
+          "-" +
+          openingTime.closeTime.substring(0, 5)
+        );
+      })
+      .join(", ");
+  }
+
   return (
     <>
       <Row>
@@ -28,9 +67,36 @@ const BestellWizardPickupLocation: React.FC<
         </Col>
       </Row>
       <Row>
-        <Col>Here goes the widget</Col>
+        <Col>
+          <ListGroup>
+            {pickupLocations.map((pickupLocation) => (
+              <ListGroupItem
+                key={pickupLocation.id}
+                style={{ cursor: "pointer" }}
+                onClick={() => setSelectedPickupLocation(pickupLocation)}
+                className={
+                  selectedPickupLocation === pickupLocation ? "active" : ""
+                }
+              >
+                <strong>{pickupLocation.name}</strong>
+                <br />
+                <small>
+                  {formatAddress(
+                    pickupLocation.street,
+                    pickupLocation.street2,
+                    pickupLocation.postcode,
+                    pickupLocation.city,
+                  )}
+                </small>
+                <br />
+                <small>{buildOpeningTimes(pickupLocation)}</small>
+              </ListGroupItem>
+            ))}
+          </ListGroup>
+        </Col>
+        <Col>Here goes the map</Col>
       </Row>
-      <Row>
+      <Row className={"mt-4"}>
         <h3>Deine erste Lieferung</h3>
         <p>
           Dein erster Ernteanteil kann an dieser Station am XX.XX.XXX geliefert
