@@ -1,4 +1,7 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
@@ -9,7 +12,9 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
-from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType
+from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType, Product
+from tapir.wirgarten.service.products import get_product_price
+from tapir.wirgarten.utils import get_today
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -79,7 +84,36 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
     share_purchases = CoopShareTransactionSerializer(many=True)
 
 
+class PublicProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ["id", "name", "price"]
+
+    price = SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.FLOAT)
+    def get_price(self, product: Product):
+        cache = {}
+        return get_product_price(
+            product=product, reference_date=get_today(cache=cache), cache=cache
+        ).price
+
+
 class PublicProductTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductType
-        fields = ["id", "name", "description_bestellwizard"]
+        fields = [
+            "id",
+            "name",
+            "description_bestellwizard",
+            "products",
+            "order_in_bestellwizard",
+        ]
+
+    products = SerializerMethodField()
+
+    @extend_schema_field(PublicProductSerializer(many=True))
+    def get_products(self, product_type: ProductType):
+        return PublicProductSerializer(
+            Product.objects.filter(type=product_type), many=True
+        ).data

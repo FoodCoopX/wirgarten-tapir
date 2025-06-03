@@ -191,6 +191,7 @@ def get_product_type_capacity_edit_form(request, **kwargs):
             id_=kwargs[KW_CAPACITY_ID],
             name=form.cleaned_data["name"],
             description_bestellwizard=form.cleaned_data["description_bestellwizard"],
+            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
             contract_link=form.cleaned_data["contract_link"],
             icon_link=form.cleaned_data["icon_link"],
             single_subscription_only=form.cleaned_data["single_subscription_only"],
@@ -218,6 +219,7 @@ def get_product_type_capacity_add_form(request, **kwargs):
         return create_product_type_capacity(
             name=form.cleaned_data["name"],
             description_bestellwizard=form.cleaned_data["description_bestellwizard"],
+            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
             contract_link=form.cleaned_data["contract_link"],
             icon_link=form.cleaned_data["icon_link"],
             single_subscription_only=form.cleaned_data["single_subscription_only"],
