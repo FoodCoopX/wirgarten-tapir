@@ -15,6 +15,8 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./BestellWizardProductType.tsx";
 import { sortProductTypes } from "./sortProductTypes.ts";
 import { ShoppingCart } from "./ShoppingCart.ts";
+import WaitingListModal from "./WaitingListModal.tsx";
+import { WaitingListMode } from "./WaitingListMode.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -36,6 +38,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     PublicProductType[]
   >([]);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
+  const [waitingListActivated, setWaitingListActivated] = useState(false);
+  const [waitingListMode, setWaitingListMode] =
+    useState<WaitingListMode>("general");
+  const [showWaitingListModal, setShowWaitingListModal] = useState(false);
 
   useEffect(() => {
     coreApi
@@ -128,6 +134,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           setShoppingCart={setShoppingCart}
         />
       )}
+      <WaitingListModal
+        show={showWaitingListModal}
+        onHide={() => setShowWaitingListModal(false)}
+        mode={waitingListMode}
+      />
     </>
   );
 };

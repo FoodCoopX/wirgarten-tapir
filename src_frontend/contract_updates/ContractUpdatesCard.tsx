@@ -11,7 +11,7 @@ import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import ContractUpdatesConfirmationModal from "./ContractUpdatesConfirmationCard.tsx";
+import ContractUpdatesConfirmationModal from "./ContractUpdatesConfirmationModal.tsx";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
