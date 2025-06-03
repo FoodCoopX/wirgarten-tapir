@@ -36,6 +36,12 @@ export interface PublicProduct {
    * @memberof PublicProduct
    */
   readonly price: number;
+  /**
+   *
+   * @type {string}
+   * @memberof PublicProduct
+   */
+  descriptionInBestellwizard?: string;
 }
 
 /**
@@ -62,6 +68,10 @@ export function PublicProductFromJSONTyped(
     id: json["id"] == null ? undefined : json["id"],
     name: json["name"],
     price: json["price"],
+    descriptionInBestellwizard:
+      json["description_in_bestellwizard"] == null
+        ? undefined
+        : json["description_in_bestellwizard"],
   };
 }
 
@@ -80,5 +90,6 @@ export function PublicProductToJSONTyped(
   return {
     id: value["id"],
     name: value["name"],
+    description_in_bestellwizard: value["descriptionInBestellwizard"],
   };
 }

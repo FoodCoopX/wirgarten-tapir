@@ -44,6 +44,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
+    description_in_bestellwizard = serializers.CharField()
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -87,7 +88,7 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
 class PublicProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "price"]
+        fields = ["id", "name", "price", "description_in_bestellwizard"]
 
     price = SerializerMethodField()
 

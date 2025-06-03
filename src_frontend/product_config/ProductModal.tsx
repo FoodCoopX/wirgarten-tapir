@@ -38,6 +38,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [deleted, setDeleted] = useState(false);
   const [price, setPrice] = useState(0);
   const [size, setSize] = useState(0);
+  const [descriptionInBestellWizard, setDescriptionInBestellWizard] =
+    useState("");
   const [equivalences, setEquivalences] = useState<
     ProductBasketSizeEquivalence[]
   >([]);
@@ -66,6 +68,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setSize(extendedProduct.size);
         setEquivalences(extendedProduct.basketSizeEquivalences);
         setPickingMode(extendedProduct.pickingMode);
+        setDescriptionInBestellWizard(
+          extendedProduct.descriptionInBestellwizard,
+        );
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -88,6 +93,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           basketSizeEquivalences: equivalences,
           deleted: deleted,
           growingPeriodId: getPeriodIdFromUrl(),
+          descriptionInBestellwizard: descriptionInBestellWizard,
         },
       })
       .then(() => location.reload())
@@ -136,9 +142,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </Form.Group>
               </Col>
             </Row>
-          </ListGroup.Item>
-          <ListGroup.Item>
-            <Row>
+            <Row className={"mt-2"}>
               <Col>
                 <Form.Group>
                   <Form.Label>Preis (monatlich, €)</Form.Label>
@@ -161,6 +165,22 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     min={0}
                     onChange={(e) => setSize(parseFloat(e.target.value))}
                   />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Form.Group controlId={"photo"}>
+                  <Form.Label>Beschreibung im BestellWizard</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    as={"textarea"}
+                    value={descriptionInBestellWizard}
+                    onChange={(e) =>
+                      setDescriptionInBestellWizard(e.target.value)
+                    }
+                  />
+                  <Form.Text>Beispiel: "für ca. eine Person"</Form.Text>
                 </Form.Group>
               </Col>
             </Row>
@@ -200,6 +220,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </Table>
             </ListGroup.Item>
           )}
+          <ListGroup.Item>
+            <h5>Bild im BestellWizard</h5>
+            <Row>
+              <Col>
+                <Form.Group controlId={"photo"}>
+                  <Form.Label>Bild</Form.Label>
+                  <Form.Control type={"file"} />
+                </Form.Group>
+              </Col>
+            </Row>
+          </ListGroup.Item>
         </Form>
       </ListGroup>
     );
