@@ -14,6 +14,7 @@ import {
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./BestellWizardProductType.tsx";
 import { sortProductTypes } from "./sortProductTypes.ts";
+import { ShoppingCart } from "./ShoppingCart.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -34,6 +35,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [publicProductTypes, setPublicProductTypes] = useState<
     PublicProductType[]
   >([]);
+  const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
 
   useEffect(() => {
     coreApi
@@ -50,6 +52,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       })
       .catch(handleRequestError);
   }, []);
+
+  useEffect(() => {
+    const newShoppingCart: ShoppingCart = {};
+    for (const productType of publicProductTypes) {
+      for (const product of productType.products) {
+        newShoppingCart[product.id!] = 0;
+      }
+    }
+    setShoppingCart(newShoppingCart);
+  }, [publicProductTypes]);
 
   function onIntroNextClicked() {
     if (currentStep !== "intro") return;
@@ -112,6 +124,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           productType={currentProductType}
           onProductTypeNextClicked={onProductTypeNextClicked}
           onProductTypePreviousClicked={onProductTypePreviousClicked}
+          shoppingCart={shoppingCart}
+          setShoppingCart={setShoppingCart}
         />
       )}
     </>
