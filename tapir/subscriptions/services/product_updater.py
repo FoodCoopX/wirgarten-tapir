@@ -22,6 +22,9 @@ class ProductUpdater:
             description_in_bestellwizard=serializer.validated_data[
                 "description_in_bestellwizard"
             ],
+            url_of_image_in_bestellwizard=serializer.validated_data[
+                "url_of_image_in_bestellwizard"
+            ],
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

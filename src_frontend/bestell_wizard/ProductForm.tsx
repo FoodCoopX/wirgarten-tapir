@@ -21,17 +21,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
               key={product.id}
               className={"d-flex align-items-center flex-column"}
             >
-              <div>
+              <div className={"d-flex justify-content-center"}>
                 <img
-                  src={
-                    "https://upload.wikimedia.org/wikipedia/commons/8/8a/Vegetables_for_sale_in_a_market_in_France.jpg"
-                  }
-                  style={{ maxWidth: "80%" }}
+                  src={product.urlOfImageInBestellwizard}
+                  style={{ maxWidth: "75%" }}
                   alt={"Photo von " + productType.name + " " + product.name}
                 />
-                <Form.Text>
-                  Temporary pictures, later they should come from the DB
-                </Form.Text>
               </div>
               <div>
                 <strong>{product.name}</strong>
@@ -46,7 +41,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ productType }) => {
                 </Form.Text>
               </div>
               <div>
-                <Form.Text>{product.descriptionInBestellwizard}</Form.Text>
+                <Form.Text className={"text-center"} as={"p"}>
+                  {product.descriptionInBestellwizard}
+                </Form.Text>
               </div>
             </Col>
           ))}
