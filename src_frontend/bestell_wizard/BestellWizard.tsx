@@ -24,6 +24,7 @@ import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
 import { PersonalData } from "./types/PersonalData.ts";
 import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
+import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -94,16 +95,18 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       }
     }
     setShoppingCart(newShoppingCart);
+  }, [publicProductTypes]);
 
+  useEffect(() => {
     setSteps([
       "intro",
-      ...publicProductTypes.map((productType) => productType.id!),
+      ...selectedProductTypes.map((productType) => productType.id!),
       "pickup_location",
       "coop_shares",
       "personal_data",
       "summary",
     ]);
-  }, [publicProductTypes]);
+  }, [selectedProductTypes]);
 
   function onNextClicked() {
     setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
@@ -212,6 +215,70 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
   }
 
+  function getNextButton() {
+    if (currentStep === "summary") {
+      return (
+        <TapirButton
+          icon={"check"}
+          variant={"primary"}
+          text={"Bestellung abschließen"}
+          onClick={() => alert("TODO : actually order")}
+          iconPosition={"right"}
+        />
+      );
+    }
+
+    const productType = publicProductTypes.find(
+      (productType) => productType.id === currentStep,
+    );
+    if (productType !== undefined) {
+      if (isProductTypeOrdered(productType, shoppingCart)) {
+        return (
+          <TapirButton
+            icon={"add_shopping_cart"}
+            variant={"outline-primary"}
+            text={productType.name + " zur Bestellung hinzufügen"}
+            onClick={onNextClicked}
+            iconPosition={"right"}
+          />
+        );
+      }
+      return (
+        <TapirButton
+          icon={"shopping_cart_off"}
+          variant={"outline-primary"}
+          text={"Ohne " + productType.name + " weitergehen"}
+          onClick={onNextClicked}
+          iconPosition={"right"}
+        />
+      );
+    }
+
+    let text = "Weiter";
+
+    switch (currentStep) {
+      case "intro":
+        if (selectedProductTypes.length === 0) {
+          text = "Wähle mindestens eine Mitgliedschaft um weiter zu gehen";
+        }
+        break;
+      case "pickup_location":
+        if (selectedPickupLocation === undefined) {
+          text = "Wähle dein Verteilstation aus um weiter zu gehen";
+        }
+    }
+    return (
+      <TapirButton
+        icon={"chevron_right"}
+        variant={"outline-primary"}
+        text={text}
+        onClick={onNextClicked}
+        disabled={!isNextEnabled()}
+        iconPosition={"right"}
+      />
+    );
+  }
+
   return (
     <>
       <Row className={"justify-content-center p-4"}>
@@ -242,14 +309,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                     disabled={currentStep === "intro"}
                   />
                 </div>
-                <TapirButton
-                  icon={"chevron_right"}
-                  variant={"outline-primary"}
-                  text={"Weiter"}
-                  onClick={onNextClicked}
-                  disabled={!isNextEnabled()}
-                  iconPosition={"right"}
-                />
+                {getNextButton()}
               </div>
             </Card.Footer>
           </Card>
