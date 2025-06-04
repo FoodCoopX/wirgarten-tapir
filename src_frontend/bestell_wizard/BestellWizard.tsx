@@ -17,8 +17,6 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
 import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import { ShoppingCart } from "./types/ShoppingCart.ts";
-import WaitingListModal from "./WaitingListModal.tsx";
-import { WaitingListMode } from "./types/WaitingListMode.ts";
 import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import BestellWizardCoopShares from "./steps/BestellWizardCoopShares.tsx";
@@ -33,7 +31,6 @@ interface BestellWizardProps {
 
 type BestellWizardStep =
   | "intro"
-  | "products"
   | "pickup_location"
   | "coop_shares"
   | "personal_data"
@@ -47,17 +44,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
-  const [currentStep, setCurrentStep] = useState<BestellWizardStep>("intro");
-  const [currentProductType, setCurrentProductType] =
-    useState<PublicProductType>();
+  const [currentStep, setCurrentStep] = useState<BestellWizardStep | string>(
+    "intro",
+  );
   const [publicProductTypes, setPublicProductTypes] = useState<
     PublicProductType[]
   >([]);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
-  const [waitingListActivated, setWaitingListActivated] = useState(false);
-  const [waitingListMode, setWaitingListMode] =
-    useState<WaitingListMode>("general");
-  const [showWaitingListModal, setShowWaitingListModal] = useState(false);
   const [pickupLocations, setPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
@@ -70,6 +63,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   );
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractRead, setContractRead] = useState(false);
+  const [steps, setSteps] = useState<(string | BestellWizardStep)[]>(["intro"]);
 
   useEffect(() => {
     coreApi
@@ -100,74 +94,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       }
     }
     setShoppingCart(newShoppingCart);
+
+    setSteps([
+      "intro",
+      ...publicProductTypes.map((productType) => productType.id!),
+      "pickup_location",
+      "coop_shares",
+      "personal_data",
+      "summary",
+    ]);
   }, [publicProductTypes]);
 
   function onNextClicked() {
-    switch (currentStep) {
-      case "intro":
-        setCurrentStep("products");
-        setCurrentProductType(selectedProductTypes[0]);
-        return;
-      case "products":
-        if (currentProductType === undefined) return;
-        const indexOfCurrentProductType =
-          selectedProductTypes.indexOf(currentProductType);
-
-        if (indexOfCurrentProductType === selectedProductTypes.length - 1) {
-          setCurrentStep("pickup_location");
-          return;
-        }
-
-        setCurrentProductType(
-          selectedProductTypes[indexOfCurrentProductType + 1],
-        );
-        return;
-      case "pickup_location":
-        setCurrentStep("coop_shares");
-        return;
-      case "coop_shares":
-        setCurrentStep("personal_data");
-        return;
-      case "personal_data":
-        setCurrentStep("summary");
-        return;
-      case "summary":
-        alert("Not implemented yet!");
-        return;
-    }
+    setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
   }
 
   function onBackClicked() {
-    switch (currentStep) {
-      case "intro":
-        return;
-      case "products":
-        if (currentProductType === undefined) return;
-
-        const indexOfCurrentProductType =
-          selectedProductTypes.indexOf(currentProductType);
-
-        if (indexOfCurrentProductType === 0) {
-          setCurrentStep("intro");
-          return;
-        }
-
-        setCurrentProductType(
-          selectedProductTypes[indexOfCurrentProductType - 1],
-        );
-        return;
-      case "pickup_location":
-        setCurrentStep("products");
-        return;
-      case "coop_shares":
-        setCurrentStep("pickup_location");
-        return;
-      case "personal_data":
-        setCurrentStep("coop_shares");
-        return;
-      case "summary":
-        setCurrentStep("personal_data");
-    }
+    setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
   }
 
   function buildCurrentStepComponent() {
@@ -189,18 +132,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             selectedProductTypes={selectedProductTypes}
             setSelectedProductTypes={setSelectedProductTypes}
             publicProductTypes={publicProductTypes}
-          />
-        );
-      case "products":
-        if (currentProductType === undefined) {
-          return <span>No current product type, this should not happen</span>;
-        }
-        return (
-          <BestellWizardProductType
-            theme={theme}
-            productType={currentProductType}
-            shoppingCart={shoppingCart}
-            setShoppingCart={setShoppingCart}
           />
         );
       case "pickup_location":
@@ -241,6 +172,22 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             personalData={personalData}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             productTypes={publicProductTypes}
+            pickupLocation={selectedPickupLocation}
+          />
+        );
+      default:
+        const productType = publicProductTypes.find(
+          (productType) => productType.id === currentStep,
+        );
+        if (productType === undefined) {
+          return <div>Product type with id {currentStep} not found</div>;
+        }
+        return (
+          <BestellWizardProductType
+            theme={theme}
+            productType={productType}
+            shoppingCart={shoppingCart}
+            setShoppingCart={setShoppingCart}
           />
         );
     }
@@ -250,8 +197,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     switch (currentStep) {
       case "intro":
         return selectedProductTypes.length > 0;
-      case "products":
-        return true;
       case "pickup_location":
         console.log(selectedPickupLocation);
         console.log(selectedPickupLocation !== undefined);
@@ -262,6 +207,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return sepaAllowed && contractRead;
       case "summary":
         return false;
+      default:
+        return true;
     }
   }
 
@@ -278,29 +225,34 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             </Card.Body>
             <Card.Footer>
               <div className={"d-flex justify-content-between"}>
+                <div className={"d-flex flex-row gap-2"}>
+                  <TapirButton
+                    icon={"first_page"}
+                    variant={"outline-primary"}
+                    onClick={() => {
+                      setCurrentStep("intro");
+                    }}
+                    disabled={currentStep === "intro"}
+                  />
+                  <TapirButton
+                    icon={"chevron_left"}
+                    variant={"outline-primary"}
+                    text={"Zurück"}
+                    onClick={onBackClicked}
+                    disabled={currentStep === "intro"}
+                  />
+                </div>
                 <TapirButton
-                  icon={"arrow_backward"}
-                  variant={"outline-primary"}
-                  text={"Zurück"}
-                  onClick={onBackClicked}
-                  disabled={currentStep === "intro"}
-                />
-                <TapirButton
-                  icon={"arrow_forward"}
+                  icon={"chevron_right"}
                   variant={"outline-primary"}
                   text={"Weiter"}
                   onClick={onNextClicked}
                   disabled={!isNextEnabled()}
+                  iconPosition={"right"}
                 />
               </div>
             </Card.Footer>
           </Card>
-
-          <WaitingListModal
-            show={showWaitingListModal}
-            onHide={() => setShowWaitingListModal(false)}
-            mode={waitingListMode}
-          />
         </Col>
       </Row>
     </>
