@@ -7,7 +7,7 @@ export type PersonalData = {
   street2: string;
   postCode: string;
   city: string;
-  land: string;
+  country: string;
   birthdate: Date;
   account_owner: string;
   iban: string;

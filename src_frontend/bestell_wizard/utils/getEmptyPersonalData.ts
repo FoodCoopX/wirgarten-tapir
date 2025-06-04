@@ -10,7 +10,7 @@ export function getEmptyPersonalData(): PersonalData {
     street2: "",
     postCode: "",
     city: "",
-    land: "",
+    country: "DE",
     birthdate: new Date(),
     account_owner: "",
     iban: "",
