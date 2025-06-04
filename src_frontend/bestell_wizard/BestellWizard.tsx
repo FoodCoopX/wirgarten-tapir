@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import BestellWizardIntro from "./BestellWizardIntro.tsx";
+import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
 import { TapirTheme } from "../types/TapirTheme.ts";
 import { Col, Row, Spinner } from "react-bootstrap";
 
@@ -14,15 +14,18 @@ import {
   SubscriptionsApi,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import BestellWizardProductType from "./BestellWizardProductType.tsx";
-import { sortProductTypes } from "./sortProductTypes.ts";
-import { ShoppingCart } from "./ShoppingCart.ts";
+import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
+import { sortProductTypes } from "./utils/sortProductTypes.ts";
+import { ShoppingCart } from "./types/ShoppingCart.ts";
 import WaitingListModal from "./WaitingListModal.tsx";
-import { WaitingListMode } from "./WaitingListMode.ts";
-import BestellWizardPickupLocation from "./BestellWizardPickupLocation.tsx";
-import { BESTELL_WIZARD_COLUMN_SIZE } from "./BESTELL_WIZARD_COLUMN_SIZE.ts";
+import { WaitingListMode } from "./types/WaitingListMode.ts";
+import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
+import { BESTELL_WIZARD_COLUMN_SIZE } from "./utils/BESTELL_WIZARD_COLUMN_SIZE.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import BestellWizardCoopShares from "./BestellWizardCoopShares.tsx";
+import BestellWizardCoopShares from "./steps/BestellWizardCoopShares.tsx";
+import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
+import { PersonalData } from "./types/PersonalData.ts";
+import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -32,7 +35,8 @@ type BestellWizardStep =
   | "intro"
   | "products"
   | "pickup_location"
-  | "coop_shares";
+  | "coop_shares"
+  | "personal_data";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -60,6 +64,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     useState<PublicPickupLocation>();
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
+  const [personalData, setPersonalData] = useState<PersonalData>(
+    getEmptyPersonalData(),
+  );
 
   useEffect(() => {
     coreApi
@@ -116,6 +123,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setCurrentStep("coop_shares");
         return;
       case "coop_shares":
+        setCurrentStep("personal_data");
+        return;
+      case "personal_data":
         alert("Not implemented yet!");
         return;
     }
@@ -145,6 +155,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return;
       case "coop_shares":
         setCurrentStep("pickup_location");
+        return;
+      case "personal_data":
+        setCurrentStep("coop_shares");
         return;
     }
   }
@@ -200,6 +213,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
           />
         );
+      case "personal_data":
+        return (
+          <BestellWizardPersonalData
+            theme={theme}
+            personalData={personalData}
+            setPersonalData={setPersonalData}
+          />
+        );
     }
   }
 
@@ -214,6 +235,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         console.log(selectedPickupLocation !== undefined);
         return selectedPickupLocation !== undefined;
       case "coop_shares":
+        return true;
+      case "personal_data":
         return false;
     }
   }

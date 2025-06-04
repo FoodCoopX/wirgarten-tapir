@@ -1,9 +1,9 @@
 import React from "react";
-import { TapirTheme } from "../types/TapirTheme.ts";
-import { PublicProductType } from "../api-client";
-import { ShoppingCart } from "./ShoppingCart.ts";
+import { TapirTheme } from "../../types/TapirTheme.ts";
+import { PublicProductType } from "../../api-client";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { Col, Row } from "react-bootstrap";
-import ProductForm from "./ProductForm.tsx";
+import ProductForm from "../ProductForm.tsx";
 
 interface BestellWizardProductTypeProps {
   theme: TapirTheme;
@@ -26,7 +26,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     <>
       <Row>
         <Col>
-          <h1>{productType.name}</h1>
+          <h1 className={"text-center"}>{productType.name}</h1>
           {
             <span
               dangerouslySetInnerHTML={getHtmlDescription(

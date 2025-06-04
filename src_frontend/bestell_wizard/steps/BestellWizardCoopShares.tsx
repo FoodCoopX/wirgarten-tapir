@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { TapirTheme } from "../types/TapirTheme.ts";
-import { CoopApi } from "../api-client";
-import { ShoppingCart } from "./ShoppingCart.ts";
-import { formatCurrency } from "../utils/formatCurrency.ts";
+import { TapirTheme } from "../../types/TapirTheme.ts";
+import { CoopApi } from "../../api-client";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
+import { useApi } from "../../hooks/useApi.ts";
 
 interface BestellWizardCoopSharesProps {
   theme: TapirTheme;
