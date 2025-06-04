@@ -10,6 +10,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
+import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
@@ -28,18 +29,6 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   productTypes,
   pickupLocation,
 }) => {
-  function isProductTypeOrdered(productType: PublicProductType) {
-    for (const [productId, quantity] of Object.entries(shoppingCart)) {
-      if (
-        productType.products.map((product) => product.id).includes(productId) &&
-        quantity > 0
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   function getProductIdsOfProductType(productType: PublicProductType) {
     return productType.products.map((product) => product.id);
   }
@@ -99,7 +88,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
       {productTypes.map((productType) => (
         <div className={"mt-2"}>
           <BestellWizardCardSubtitle text={productType.name} />
-          {isProductTypeOrdered(productType) ? (
+          {isProductTypeOrdered(productType, shoppingCart) ? (
             buildProductTypeTable(productType)
           ) : (
             <span>Dieses Produkt ist nicht bestellt worden</span>
