@@ -5,6 +5,8 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
 import { useApi } from "../../hooks/useApi.ts";
+import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardCoopSharesProps {
   theme: TapirTheme;
@@ -42,7 +44,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
     <>
       <Row>
         <Col>
-          <h1 className={"text-center"}>Mitglied der Genossenschaft</h1>
+          <BestellWizardCardTitle text={"Mitglied der Genossenschaft"} />
           <p>
             Als Mitglied unserer Genossenschaft bist du gleichzeitig
             MiteigentümerIn deiner eigenen Gemüsegärtnerei und deines regionalen
@@ -65,10 +67,11 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               https://biotop-oberland.de/so-gehts/
             </a>
           </p>
-          <h3>
-            Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem
-            Biotop beteiligen?
-          </h3>
+          <BestellWizardCardSubtitle
+            text={
+              "Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem Biotop beteiligen?"
+            }
+          />
           <p>
             Du musst mindestens {minimumNumberOfShares} Genossenschaftsanteil zu{" "}
             {formatCurrency(priceOfAShare)} erwerben.

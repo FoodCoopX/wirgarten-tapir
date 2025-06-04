@@ -14,6 +14,8 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import L from "leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
+import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -79,8 +81,8 @@ const BestellWizardPickupLocation: React.FC<
     <>
       <Row>
         <Col>
-          <h1 className={"text-center"}>Deine Verteilstation</h1>
-          <h3>Wähle deine Verteilstation</h3>
+          <BestellWizardCardTitle text={"Deine Verteilstation"} />
+          <BestellWizardCardSubtitle text={"Wähle deine Verteilstation"} />
           <p>
             Jede Woche wird dein Ernteanteil an eine Verteilstation deiner Wahl
             geliefert. Du kannst deine Station während der Vertragslaufzeit auch
@@ -166,7 +168,7 @@ const BestellWizardPickupLocation: React.FC<
         </Col>
       </Row>
       <Row className={"mt-4"}>
-        <h3>Deine erste Lieferung</h3>
+        <BestellWizardCardSubtitle text={"Deine erste Lieferung"} />
         <p>
           Dein erster Ernteanteil kann an dieser Station am XX.XX.XXX geliefert
           werden.

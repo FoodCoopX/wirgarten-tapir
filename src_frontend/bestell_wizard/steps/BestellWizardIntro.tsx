@@ -3,6 +3,8 @@ import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
 import { Form } from "react-bootstrap";
+import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;
@@ -51,7 +53,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
 
   return (
     <>
-      <h1 className={"text-center"}>Mitmachen im Biotop</h1>
+      <BestellWizardCardTitle text={"Mitmachen im Biotop"} />
       <p>
         Du möchtest Teil des Biotops werden? Dann gibt es jetzt verschiedene
         Möglichkeiten:
@@ -65,7 +67,9 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
         Du bist bereits Mitglied? Dann schließe bitte weitere Verträge über
         deinen persönlichen <a href={"/"}>Mitglieder-Bereich</a> ab.
       </p>
-      <h3>Welche Mitgliedschaft(en) möchtest du?</h3>
+      <BestellWizardCardSubtitle
+        text={"Welche Mitgliedschaft(en) möchtest du?"}
+      />
       <div className={"d-flex flex-column gap-3"}>
         {publicProductTypes.map((publicProductType) => (
           <div key={publicProductType.id}>

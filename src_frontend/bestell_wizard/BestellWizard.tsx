@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
 import { TapirTheme } from "../types/TapirTheme.ts";
-import { Col, Row, Spinner } from "react-bootstrap";
+import { Card, Col, Row, Spinner } from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
@@ -243,33 +243,35 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
   return (
     <>
-      <Row className={"justify-content-center"}>
+      <Row className={"justify-content-center p-4"}>
         <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
-          {buildCurrentStepComponent()}
-          <Row className={"justify-content-center mt-4 mb-2"}>
-            <Col>
-              <Row className={"justify-content-between"}>
-                <Col>
-                  <TapirButton
-                    icon={"arrow_backward"}
-                    variant={"outline-primary"}
-                    text={"Zurück"}
-                    onClick={onBackClicked}
-                    disabled={currentStep === "intro"}
-                  />
-                </Col>
-                <Col className={"d-flex justify-content-end"}>
-                  <TapirButton
-                    icon={"arrow_forward"}
-                    variant={"outline-primary"}
-                    text={"Weiter"}
-                    onClick={onNextClicked}
-                    disabled={!isNextEnabled()}
-                  />
-                </Col>
-              </Row>
-            </Col>
-          </Row>
+          <Card style={{ height: "95vh" }}>
+            <Card.Header>
+              <h2 className={"text-center mb-0"}>Biotop Oberland eG</h2>
+            </Card.Header>
+            <Card.Body className={"overflow-scroll"}>
+              {buildCurrentStepComponent()}
+            </Card.Body>
+            <Card.Footer>
+              <div className={"d-flex justify-content-between"}>
+                <TapirButton
+                  icon={"arrow_backward"}
+                  variant={"outline-primary"}
+                  text={"Zurück"}
+                  onClick={onBackClicked}
+                  disabled={currentStep === "intro"}
+                />
+                <TapirButton
+                  icon={"arrow_forward"}
+                  variant={"outline-primary"}
+                  text={"Weiter"}
+                  onClick={onNextClicked}
+                  disabled={!isNextEnabled()}
+                />
+              </div>
+            </Card.Footer>
+          </Card>
+
           <WaitingListModal
             show={showWaitingListModal}
             onHide={() => setShowWaitingListModal(false)}
