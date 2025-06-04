@@ -22,12 +22,17 @@ import { WaitingListMode } from "./WaitingListMode.ts";
 import BestellWizardPickupLocation from "./BestellWizardPickupLocation.tsx";
 import { BESTELL_WIZARD_COLUMN_SIZE } from "./BESTELL_WIZARD_COLUMN_SIZE.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import BestellWizardCoopShares from "./BestellWizardCoopShares.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
 }
 
-type BestellWizardStep = "intro" | "products" | "pickup_location";
+type BestellWizardStep =
+  | "intro"
+  | "products"
+  | "pickup_location"
+  | "coop_shares";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -53,6 +58,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   >([]);
   const [selectedPickupLocation, setSelectedPickupLocation] =
     useState<PublicPickupLocation>();
+  const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
+    useState(0);
 
   useEffect(() => {
     coreApi
@@ -106,7 +113,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         );
         return;
       case "pickup_location":
+        setCurrentStep("coop_shares");
+        return;
+      case "coop_shares":
         alert("Not implemented yet!");
+        return;
     }
   }
 
@@ -131,6 +142,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return;
       case "pickup_location":
         setCurrentStep("products");
+        return;
+      case "coop_shares":
+        setCurrentStep("pickup_location");
+        return;
     }
   }
 
@@ -176,6 +191,15 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setSelectedPickupLocation={setSelectedPickupLocation}
           />
         );
+      case "coop_shares":
+        return (
+          <BestellWizardCoopShares
+            theme={theme}
+            shoppingCart={shoppingCart}
+            selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+            setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
+          />
+        );
     }
   }
 
@@ -186,6 +210,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "products":
         return true;
       case "pickup_location":
+        console.log(selectedPickupLocation);
+        console.log(selectedPickupLocation !== undefined);
+        return selectedPickupLocation !== undefined;
+      case "coop_shares":
         return false;
     }
   }
@@ -196,7 +224,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
           {buildCurrentStepComponent()}
           <Row className={"justify-content-center mt-4 mb-2"}>
-            <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
+            <Col>
               <Row className={"justify-content-between"}>
                 <Col>
                   <TapirButton

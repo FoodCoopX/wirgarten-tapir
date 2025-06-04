@@ -39,6 +39,7 @@ urlpatterns = [
     ),
     path("admin/", admin.site.urls),
     path("core/", include("tapir.core.urls")),
+    path("coop/", include("tapir.coop.urls")),
     path("accounts/", include("tapir.accounts.urls")),
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
