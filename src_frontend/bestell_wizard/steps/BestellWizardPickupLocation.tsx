@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { TapirTheme } from "../types/TapirTheme.ts";
+import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, ListGroup, ListGroupItem, Row } from "react-bootstrap";
-import { PickupLocationOpeningTime, PublicPickupLocation } from "../api-client";
-import formatAddress from "../utils/formatAddress.ts";
+import {
+  PickupLocationOpeningTime,
+  PublicPickupLocation,
+} from "../../api-client";
+import formatAddress from "../../utils/formatAddress.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import "./map.css";
+import "../map.css";
 import "leaflet/dist/leaflet.css";
 
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -76,7 +79,7 @@ const BestellWizardPickupLocation: React.FC<
     <>
       <Row>
         <Col>
-          <h1>Deine Verteilstation</h1>
+          <h1 className={"text-center"}>Deine Verteilstation</h1>
           <h3>Wähle deine Verteilstation</h3>
           <p>
             Jede Woche wird dein Ernteanteil an eine Verteilstation deiner Wahl
