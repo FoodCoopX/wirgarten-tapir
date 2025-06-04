@@ -4,17 +4,26 @@ import { Col, Form, Row } from "react-bootstrap";
 import { PersonalData } from "../types/PersonalData.ts";
 import dayjs from "dayjs";
 import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
+  sepaAllowed: boolean;
+  setSepaAllowed: (sepaAllowed: boolean) => void;
+  contractRead: boolean;
+  setContractRead: (contractRead: boolean) => void;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   theme,
   personalData,
   setPersonalData,
+  sepaAllowed,
+  setSepaAllowed,
+  contractRead,
+  setContractRead,
 }) => {
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
@@ -55,7 +64,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           <Form.Group>
             <Form.Label>E-Mail-Adresse</Form.Label>
@@ -85,7 +94,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           <Form.Group>
             <Form.Label>Straße & Hausnummer</Form.Label>
@@ -113,7 +122,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           <Form.Group>
             <Form.Label>Postleitzahl</Form.Label>
@@ -141,7 +150,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           <Form.Group>
             <Form.Label>Land</Form.Label>
@@ -162,7 +171,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           <Form.Label>Kontoinhaber*in</Form.Label>
           <Form.Control
@@ -186,6 +195,42 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               placeholder={"IBAN"}
             />
           </Form.Group>
+        </Col>
+      </Row>
+      <Row className={"mt-4"}>
+        <Col>
+          <Row>
+            <Col>
+              <BestellWizardCardSubtitle text={"Erteilung SEPA-Mandat"} />
+            </Col>
+          </Row>
+          <Row className={"mt-2"}>
+            <Col>
+              <Form.Check
+                id={"sepa-mandat"}
+                label={
+                  "Ich ermächtige die Biotop Oberland eG die gezeichneten Geschäftsanteile sowie ggf. die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+                }
+                checked={sepaAllowed}
+                onChange={(event) => setSepaAllowed(event.target.checked)}
+              />
+            </Col>
+            <Col>
+              <Form.Check
+                id={"contract"}
+                label={
+                  "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
+                }
+                checked={contractRead}
+                onChange={(event) => setContractRead(event.target.checked)}
+              />
+              <Form.Text>
+                <a href="https://biotop-oberland.de/gebuehrenordnung">
+                  https://biotop-oberland.de/gebuehrenordnung
+                </a>
+              </Form.Text>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </>

@@ -20,12 +20,12 @@ import { ShoppingCart } from "./types/ShoppingCart.ts";
 import WaitingListModal from "./WaitingListModal.tsx";
 import { WaitingListMode } from "./types/WaitingListMode.ts";
 import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
-import { BESTELL_WIZARD_COLUMN_SIZE } from "./utils/BESTELL_WIZARD_COLUMN_SIZE.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import BestellWizardCoopShares from "./steps/BestellWizardCoopShares.tsx";
 import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
 import { PersonalData } from "./types/PersonalData.ts";
 import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
+import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -36,7 +36,8 @@ type BestellWizardStep =
   | "products"
   | "pickup_location"
   | "coop_shares"
-  | "personal_data";
+  | "personal_data"
+  | "summary";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -67,6 +68,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [personalData, setPersonalData] = useState<PersonalData>(
     getEmptyPersonalData(),
   );
+  const [sepaAllowed, setSepaAllowed] = useState(false);
+  const [contractRead, setContractRead] = useState(false);
 
   useEffect(() => {
     coreApi
@@ -126,6 +129,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setCurrentStep("personal_data");
         return;
       case "personal_data":
+        setCurrentStep("summary");
+        return;
+      case "summary":
         alert("Not implemented yet!");
         return;
     }
@@ -159,6 +165,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "personal_data":
         setCurrentStep("coop_shares");
         return;
+      case "summary":
+        setCurrentStep("personal_data");
     }
   }
 
@@ -219,6 +227,20 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             theme={theme}
             personalData={personalData}
             setPersonalData={setPersonalData}
+            sepaAllowed={sepaAllowed}
+            setSepaAllowed={setSepaAllowed}
+            contractRead={contractRead}
+            setContractRead={setContractRead}
+          />
+        );
+      case "summary":
+        return (
+          <BestellWizardSummary
+            theme={theme}
+            shoppingCart={shoppingCart}
+            personalData={personalData}
+            selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+            productTypes={publicProductTypes}
           />
         );
     }
@@ -237,6 +259,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "coop_shares":
         return true;
       case "personal_data":
+        return sepaAllowed && contractRead;
+      case "summary":
         return false;
     }
   }
@@ -244,7 +268,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   return (
     <>
       <Row className={"justify-content-center p-4"}>
-        <Col sm={BESTELL_WIZARD_COLUMN_SIZE}>
+        <Col style={{ maxWidth: "1200px" }}>
           <Card style={{ height: "95vh" }}>
             <Card.Header>
               <h2 className={"text-center mb-0"}>Biotop Oberland eG</h2>
