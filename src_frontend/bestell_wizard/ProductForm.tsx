@@ -6,6 +6,7 @@ import "../../tapir/core/static/core/css/base.css";
 import { type PublicProductType } from "../api-client";
 import { formatCurrency } from "../utils/formatCurrency.ts";
 import { ShoppingCart } from "./types/ShoppingCart.ts";
+import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
 
 interface ProductFormProps {
   productType: PublicProductType;
@@ -73,9 +74,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </Row>
       <Row className={"mt-4"}>
         <Col>
-          <h3>
-            Dein Basisbeitrag: {formatCurrency(totalPriceForThisProductType())}
-          </h3>
+          <BestellWizardCardSubtitle
+            text={
+              "Dein Basisbeitrag: " +
+              formatCurrency(totalPriceForThisProductType())
+            }
+          />
           <p>
             Ein Beitrag für einen Ernteanteil im Biotop besteht aus dem{" "}
             <strong>Basisbeitrag</strong> und einem{" "}

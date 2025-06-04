@@ -3,6 +3,7 @@ import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, Form, Row } from "react-bootstrap";
 import { PersonalData } from "../types/PersonalData.ts";
 import dayjs from "dayjs";
+import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -23,7 +24,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
     <>
       <Row>
         <Col className={""}>
-          <h1 className={"text-center"}>Deine persönliche Daten</h1>
+          <BestellWizardCardTitle text={"Deine persönliche Daten"} />
         </Col>
       </Row>
       <Row>

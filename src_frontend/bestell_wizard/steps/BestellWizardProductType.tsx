@@ -4,6 +4,7 @@ import { PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { Col, Row } from "react-bootstrap";
 import ProductForm from "../ProductForm.tsx";
+import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
 
 interface BestellWizardProductTypeProps {
   theme: TapirTheme;
@@ -26,7 +27,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
     <>
       <Row>
         <Col>
-          <h1 className={"text-center"}>{productType.name}</h1>
+          <BestellWizardCardTitle text={productType.name} />
           {
             <span
               dangerouslySetInnerHTML={getHtmlDescription(
