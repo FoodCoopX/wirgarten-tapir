@@ -3,6 +3,33 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /coop/api/minimum_number_of_shares:
+    get:
+      operationId: coop_api_minimum_number_of_shares_retrieve
+      parameters:
+      - in: query
+        name: product_ids
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: quantities
+        schema:
+          type: array
+          items:
+            type: integer
+      tags:
+      - coop
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumNumberOfSharesResponse'
+          description: ''
   /core/api/get_theme:
     get:
       operationId: core_api_get_theme_retrieve
@@ -4903,6 +4930,17 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MinimumNumberOfSharesResponse:
+      type: object
+      properties:
+        minimum_number_of_shares:
+          type: integer
+        price_of_a_share:
+          type: number
+          format: double
+      required:
+      - minimum_number_of_shares
+      - price_of_a_share
     MissingTrigger:
       type: object
       properties:

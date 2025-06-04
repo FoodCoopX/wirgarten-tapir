@@ -1,3 +1,4 @@
+apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
@@ -53,6 +54,7 @@ models/Member.ts
 models/MemberCountry.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
+models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
