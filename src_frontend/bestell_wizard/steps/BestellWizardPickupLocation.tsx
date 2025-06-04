@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, ListGroup, ListGroupItem, Row } from "react-bootstrap";
-import {
-  PickupLocationOpeningTime,
-  PublicPickupLocation,
-} from "../../api-client";
+import { PublicPickupLocation } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "../map.css";
@@ -16,6 +13,7 @@ import L from "leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
 import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -35,34 +33,6 @@ const BestellWizardPickupLocation: React.FC<
   setSelectedPickupLocation,
 }) => {
   const [map, setMap] = useState<MapRef>(null);
-
-  function compareOpeningTimes(
-    a: PickupLocationOpeningTime,
-    b: PickupLocationOpeningTime,
-  ) {
-    if (a.dayOfWeek !== b.dayOfWeek) {
-      return a.dayOfWeek - b.dayOfWeek;
-    }
-
-    return (
-      parseInt(a.openTime.split(":")[0]) - parseInt(b.openTime.split(":")[0])
-    );
-  }
-
-  function buildOpeningTimes(pickupLocation: PublicPickupLocation) {
-    return pickupLocation.openingTimes
-      .sort(compareOpeningTimes)
-      .map((openingTime) => {
-        return (
-          openingTime.dayOfWeekString.substring(0, 2) +
-          " " +
-          openingTime.openTime.substring(0, 5) +
-          "-" +
-          openingTime.closeTime.substring(0, 5)
-        );
-      })
-      .join(", ");
-  }
 
   useEffect(() => {
     if (selectedPickupLocation === undefined || map === null) return;
@@ -118,7 +88,7 @@ const BestellWizardPickupLocation: React.FC<
                   )}
                 </small>
                 <br />
-                <small>{buildOpeningTimes(pickupLocation)}</small>
+                <small>{formatOpeningTimes(pickupLocation)}</small>
               </ListGroupItem>
             ))}
           </ListGroup>
@@ -159,7 +129,7 @@ const BestellWizardPickupLocation: React.FC<
                         pickupLocation.city,
                       )}
                     </div>
-                    <div>{buildOpeningTimes(pickupLocation)}</div>
+                    <div>{formatOpeningTimes(pickupLocation)}</div>
                   </div>
                 </Popup>
               </Marker>

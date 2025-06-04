@@ -5,8 +5,11 @@ import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
 import { Table } from "react-bootstrap";
-import { PublicProductType } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import formatAddress from "../../utils/formatAddress.ts";
+import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
@@ -14,6 +17,7 @@ interface BestellWizardSummaryProps {
   shoppingCart: ShoppingCart;
   selectedNumberOfCoopShares: number;
   productTypes: PublicProductType[];
+  pickupLocation: PublicPickupLocation | undefined;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -22,6 +26,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   shoppingCart,
   selectedNumberOfCoopShares,
   productTypes,
+  pickupLocation,
 }) => {
   function isProductTypeOrdered(productType: PublicProductType) {
     for (const [productId, quantity] of Object.entries(shoppingCart)) {
@@ -35,7 +40,15 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     return false;
   }
 
-  function buildProductTypeTable() {
+  function getProductIdsOfProductType(productType: PublicProductType) {
+    return productType.products.map((product) => product.id);
+  }
+
+  function getProductById(productType: PublicProductType, productId: string) {
+    return productType.products.find((product) => product.id === productId);
+  }
+
+  function buildProductTypeTable(productType: PublicProductType) {
     return (
       <Table bordered={true}>
         <tbody>
@@ -43,6 +56,23 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             <td>Erste Lieferung</td>
             <td>TODO</td>
           </tr>
+          {Object.entries(shoppingCart)
+            .filter(
+              ([productId, quantity]) =>
+                getProductIdsOfProductType(productType).includes(productId) &&
+                quantity > 0,
+            )
+            .map(([productId, quantity]) => (
+              <tr>
+                <td>{getProductById(productType, productId)?.name}</td>
+                <td>
+                  {quantity} x{" "}
+                  {formatCurrency(
+                    getProductById(productType, productId)!.price,
+                  )}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </Table>
     );
@@ -70,7 +100,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
         <div className={"mt-2"}>
           <BestellWizardCardSubtitle text={productType.name} />
           {isProductTypeOrdered(productType) ? (
-            buildProductTypeTable()
+            buildProductTypeTable(productType)
           ) : (
             <span>Dieses Produkt ist nicht bestellt worden</span>
           )}
@@ -82,6 +112,31 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           />
         </div>
       ))}
+      {pickupLocation !== undefined && (
+        <div className={"mt-2"}>
+          <BestellWizardCardSubtitle text={"Deine Verteilstation"} />
+          <Table bordered={true}>
+            <tbody>
+              <tr>
+                <td>Adresse</td>
+                <td>
+                  {pickupLocation.name} <br />
+                  {formatAddress(
+                    pickupLocation.street,
+                    pickupLocation.street2,
+                    pickupLocation.postcode,
+                    pickupLocation.city,
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>Öffnungszeiten</td>
+                <td>{formatOpeningTimes(pickupLocation)}</td>
+              </tr>
+            </tbody>
+          </Table>
+        </div>
+      )}
     </>
   );
 };
