@@ -126,3 +126,36 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
         return PublicProductSerializer(
             Product.objects.filter(type=product_type), many=True
         ).data
+
+
+class PersonalDataSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone_number = serializers.CharField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField()
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    country = serializers.CharField()
+    birthdate = serializers.DateField()
+    account_owner = serializers.CharField()
+    iban = serializers.CharField()
+
+
+class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
+    # map of productId -> quantity ordered
+    shopping_card = serializers.DictField(child=serializers.IntegerField())
+    personal_data = serializers.CharField()
+    sepa_allowed = serializers.BooleanField()
+    contract_accepted = serializers.BooleanField()
+    statute_accepted = serializers.BooleanField()
+    nb_shares = serializers.IntegerField()
+    pickup_location_id = serializers.CharField()
+
+
+class BestellWizardConfirmOrderResponseSerializer(serializers.Serializer):
+    order_confirmed = serializers.BooleanField()
+    errors = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )

@@ -7,6 +7,7 @@ import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  BestellWizardConfirmOrderResponse,
   CoreApi,
   PickupLocationsApi,
   PublicPickupLocation,
@@ -26,6 +27,8 @@ import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
 import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
 import { isPersonalDataValid } from "./utils/isPersonalDataValid.ts";
+import { getTestPersonalData } from "./utils/getTestPersonalData.ts";
+import BestellWizardEnd from "./steps/BestellWizardEnd.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -36,7 +39,8 @@ type BestellWizardStep =
   | "pickup_location"
   | "coop_shares"
   | "personal_data"
-  | "summary";
+  | "summary"
+  | "end";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -67,6 +71,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [contractRead, setContractRead] = useState(false);
   const [steps, setSteps] = useState<(string | BestellWizardStep)[]>(["intro"]);
   const [statuteRead, setStatuteRead] = useState(false);
+  const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
+  const [confirmOrderResponse, setConfirmOrderResponse] =
+    useState<BestellWizardConfirmOrderResponse>();
 
   useEffect(() => {
     coreApi
@@ -107,6 +114,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       "coop_shares",
       "personal_data",
       "summary",
+      "end",
     ]);
   }, [selectedProductTypes]);
 
@@ -182,6 +190,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocation={selectedPickupLocation}
           />
         );
+      case "end":
+        return (
+          <BestellWizardEnd theme={theme} response={confirmOrderResponse!} />
+        );
       default:
         const productType = publicProductTypes.find(
           (productType) => productType.id === currentStep,
@@ -210,11 +222,32 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return statuteRead;
       case "personal_data":
         return isPersonalDataValid(personalData) && sepaAllowed && contractRead;
-      case "summary":
-        return false;
       default:
         return true;
     }
+  }
+
+  function onConfirmOrder() {
+    setConfirmOrderLoading(true);
+
+    subscriptionsApi
+      .subscriptionsBestellWizardConfirmOrderCreate({
+        bestellWizardConfirmOrderRequestRequest: {
+          personalData: "WIP",
+          sepaAllowed: false,
+          contractAccepted: contractRead,
+          statuteAccepted: false,
+          nbShares: selectedNumberOfCoopShares,
+          pickupLocationId: selectedPickupLocation!.id!,
+          shoppingCard: shoppingCart,
+        },
+      })
+      .then((response) => {
+        setCurrentStep("end");
+        setConfirmOrderResponse(response);
+      })
+      .catch(handleRequestError)
+      .finally(() => setConfirmOrderLoading(false));
   }
 
   function getNextButton() {
@@ -224,8 +257,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           icon={"check"}
           variant={"primary"}
           text={"Bestellung abschließen"}
-          onClick={() => alert("TODO : actually order")}
+          onClick={onConfirmOrder}
           iconPosition={"right"}
+          loading={confirmOrderLoading}
         />
       );
     }
@@ -295,6 +329,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     );
   }
 
+  function setTestData() {
+    setPersonalData(getTestPersonalData());
+    setSelectedProductTypes(publicProductTypes);
+    const newShoppingCart: ShoppingCart = {};
+    for (const productType of publicProductTypes) {
+      for (const product of productType.products) {
+        newShoppingCart[product.id!] = 1;
+      }
+    }
+    setShoppingCart(newShoppingCart);
+    setSelectedPickupLocation(pickupLocations[0]);
+    setSelectedNumberOfCoopShares(7);
+    setSepaAllowed(true);
+    setContractRead(true);
+    setStatuteRead(true);
+  }
+
   return (
     <>
       <Row className={"justify-content-center p-4"}>
@@ -325,6 +376,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                     disabled={currentStep === "intro"}
                   />
                 </div>
+                <TapirButton
+                  text={"Test-Daten für alle Schritte setzen"}
+                  variant={"outline-warning"}
+                  icon={"construction"}
+                  onClick={setTestData}
+                />
                 {getNextButton()}
               </div>
             </Card.Footer>

@@ -35,6 +35,11 @@ urlpatterns = [
         views.BestellWizardView.as_view(),
         name="bestell_wizard",
     ),
+    path(
+        "bestell_wizard_confirm_order",
+        views.BestellWizardConfirmOrderApiView.as_view(),
+        name="bestell_wizard_confirm_order",
+    ),
 ]
 
 router = DefaultRouter()
