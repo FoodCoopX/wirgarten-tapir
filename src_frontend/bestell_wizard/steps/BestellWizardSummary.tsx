@@ -86,7 +86,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
         </tbody>
       </Table>
       {productTypes.map((productType) => (
-        <div className={"mt-2"}>
+        <div className={"mt-2"} key={productType.id}>
           <BestellWizardCardSubtitle text={productType.name} />
           {isProductTypeOrdered(productType, shoppingCart) ? (
             buildProductTypeTable(productType)

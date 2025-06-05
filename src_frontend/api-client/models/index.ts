@@ -1,6 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
+export * from './BestellWizardConfirmOrderRequestRequest';
+export * from './BestellWizardConfirmOrderResponse';
 export * from './BlankEnum';
 export * from './BounceTypeEnum';
 export * from './BuildCsvExportResponse';

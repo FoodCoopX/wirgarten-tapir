@@ -903,6 +903,32 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberDataToConfirm'
           description: ''
+  /subscriptions/bestell_wizard_confirm_order:
+    post:
+      operationId: subscriptions_bestell_wizard_confirm_order_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardConfirmOrderResponse'
+          description: ''
   /subscriptions/cancel_subscriptions:
     post:
       operationId: subscriptions_cancel_subscriptions_create
@@ -3273,6 +3299,49 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    BestellWizardConfirmOrderRequestRequest:
+      type: object
+      properties:
+        shopping_card:
+          type: object
+          additionalProperties:
+            type: integer
+        personal_data:
+          type: string
+          minLength: 1
+        sepa_allowed:
+          type: boolean
+        contract_accepted:
+          type: boolean
+        statute_accepted:
+          type: boolean
+        nb_shares:
+          type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - contract_accepted
+      - nb_shares
+      - personal_data
+      - pickup_location_id
+      - sepa_allowed
+      - shopping_card
+      - statute_accepted
+    BestellWizardConfirmOrderResponse:
+      type: object
+      properties:
+        order_confirmed:
+          type: boolean
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+      - errors
+      - order_confirmed
     BlankEnum:
       enum:
       - ''
