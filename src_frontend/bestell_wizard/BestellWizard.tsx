@@ -25,6 +25,7 @@ import { PersonalData } from "./types/PersonalData.ts";
 import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
 import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
+import { isPersonalDataValid } from "./utils/isPersonalDataValid.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -65,6 +66,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractRead, setContractRead] = useState(false);
   const [steps, setSteps] = useState<(string | BestellWizardStep)[]>(["intro"]);
+  const [statuteRead, setStatuteRead] = useState(false);
 
   useEffect(() => {
     coreApi
@@ -153,6 +155,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             shoppingCart={shoppingCart}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
+            statuteRead={statuteRead}
+            setStatuteRead={setStatuteRead}
           />
         );
       case "personal_data":
@@ -201,13 +205,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "intro":
         return selectedProductTypes.length > 0;
       case "pickup_location":
-        console.log(selectedPickupLocation);
-        console.log(selectedPickupLocation !== undefined);
         return selectedPickupLocation !== undefined;
       case "coop_shares":
-        return true;
+        return statuteRead;
       case "personal_data":
-        return sepaAllowed && contractRead;
+        return isPersonalDataValid(personalData) && sepaAllowed && contractRead;
       case "summary":
         return false;
       default:
@@ -265,6 +267,20 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "pickup_location":
         if (selectedPickupLocation === undefined) {
           text = "Wähle dein Verteilstation aus um weiter zu gehen";
+        }
+        break;
+      case "coop_shares":
+        if (!statuteRead) {
+          text = "Akzeptiere die Satzung um weiter zu gehen";
+        }
+        break;
+      case "personal_data":
+        if (!isPersonalDataValid(personalData)) {
+          text = "Vervollständige deine Daten um weiter zu gehen";
+        } else if (!sepaAllowed) {
+          text = "Ermächtige das SEPA-Mandat um weiter zu gehen";
+        } else if (!contractRead) {
+          text = "Akzeptiere die Vertragsgrundsätze um weiter zu gehen";
         }
     }
     return (

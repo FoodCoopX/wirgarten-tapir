@@ -5,6 +5,10 @@ import { PersonalData } from "../types/PersonalData.ts";
 import dayjs from "dayjs";
 import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import { isIbanValid } from "../utils/isIbanValid.ts";
+import { isEmailValid } from "../utils/isEmailValid.ts";
+import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
+import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -76,6 +80,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               }}
               type="email"
               placeholder={"E-Mail-Adresse"}
+              isInvalid={
+                personalData.email !== "" && !isEmailValid(personalData.email)
+              }
             />
           </Form.Group>
         </Col>
@@ -90,6 +97,10 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               }}
               placeholder={"Telefon-Nr"}
               type={"tel"}
+              isInvalid={
+                personalData.phoneNumber !== "" &&
+                !isPhoneNumberValid(personalData.phoneNumber)
+              }
             />
           </Form.Group>
         </Col>
@@ -163,10 +174,15 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
             <Form.Control
               onChange={(event) => {
                 personalData.birthdate = new Date(event.target.value);
+                updatePersonalData();
               }}
               value={dayjs(personalData.birthdate).format("YYYY-MM-DD")}
               placeholder={"Geburtsdatum"}
               type={"date"}
+              isInvalid={
+                personalData.birthdate !== undefined &&
+                !isBirthdateValid(personalData.birthdate)
+              }
             />
           </Form.Group>
         </Col>
@@ -193,6 +209,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"IBAN"}
+              isInvalid={
+                personalData.iban !== "" && !isIbanValid(personalData.iban)
+              }
             />
           </Form.Group>
         </Col>
