@@ -1,174 +1,171 @@
-{% extends "wirgarten/registration/registration_wizard.html" %} {% load
-wirgarten %} {% load register %} {% block cardbody %}
-<div id="summary_grid">
-  <!-- HARVEST SHARES -->
-  {% if wizard.form.harvest_shares_info.has_shares %}
-  <div class="card summary-card-active">
-    <div class="card-header">
-      <h5 class="card-title">Ernteanteile</h5>
+{% extends "wirgarten/registration/registration_wizard.html" %}
+{% load wirgarten %}
+{% load register %}
+{% block cardbody %}
+    <div id="summary_grid">
+        <!-- HARVEST SHARES -->
+        {% if wizard.form.harvest_shares_info.has_shares %}
+            <div class="card summary-card-active">
+                <div class="card-header">
+                    <h5 class="card-title">Ernteanteile</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Startdatum</th>
+                            <td>{{ wizard.form.harvest_shares_info.start_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Enddatum</th>
+                            <td>{{ wizard.form.harvest_shares_info.end_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Erste Lieferung</th>
+                            <td>{{ wizard.form.harvest_shares_info.first_delivery_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Lieferintervall</th>
+                            <td>
+                                <small
+                                >{{ wizard.form.harvest_shares_info.delivery_interval }}</small
+                                >
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Abholort/-zeit</th>
+                            <td>{{ wizard.form.pickup_location|safe }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <table class="table">
+                        {% for key, val in wizard.form.harvest_shares.items %} {% if val.amount > 0 %}
+                            <tr>
+                                <th style="width: 60%">{{ val.name }}</th>
+                                <td style="text-align: right; white-space: nowrap; width: 20%">
+                                    {{ val.amount }} x
+                                </td>
+                                <td style="text-align: right; white-space: nowrap; width: 20%">
+                                    {{ val.price }} € / Monat
+                                </td>
+                            </tr>
+                        {% endif %} {% endfor %} {% if wizard.form.harvest_shares_info.solidarity_price_choice != 0 %}
+                        <tr>
+                            <th>Solidarbeitrag</th>
+                            <td></td>
+                            <td style="text-align: right; white-space: nowrap">
+                                {{ wizard.form.harvest_shares_info.solidarity_price_diff }} € /
+                                Monat
+                            </td>
+                        </tr>
+                    {% endif %}
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            {% if wizard.form.harvest_shares_info.has_shares %}
+                                <th style="text-align: right; white-space: nowrap">
+                                    = {{ wizard.form.harvest_shares_info.total }} € / Monat
+                                </th>
+                            {% else %}
+                                <th style="text-align: right">keine Ernteanteile</th>
+                            {% endif %}
+                        </tr>
+                    </table>
+                    <small style="float: right; margin: -0.75em 0 -0.5em -0.75em"
+                    >inkl. MwSt</small
+                    >
+                </div>
+            </div>
+        {% else %} {% summary_card_disabled "Ernteanteile" %} {% endif %}
+        {% for product_infos in form.additional_product_infos %} {% if product_infos.has_shares %}
+            <div class="card summary-card-active">
+                <div class="card-header">
+                    <h5 class="card-title">{{ product_infos.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>Startdatum</th>
+                            <td>{{ product_infos.start_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Enddatum</th>
+                            <td>{{ product_infos.end_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Erste Lieferung</th>
+                            <td>{{ product_infos.first_delivery_date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Lieferintervall</th>
+                            <td>
+                                <small>{{ product_infos.delivery_interval }}</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Abholort/-zeit</th>
+                            <td>{{ wizard.form.pickup_location|safe }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <table class="table">
+                        {% for key, val in product_infos.shares.items %} {% if val.amount > 0 %}
+                            <tr>
+                                <th style="width: 60%">{{ val.name }}</th>
+                                <td style="text-align: right; white-space: nowrap; width: 20%">
+                                    {{ val.amount }} x
+                                </td>
+                                <td style="text-align: right; white-space: nowrap; width: 20%">
+                                    {{ val.price }} € / Monat
+                                </td>
+                            </tr>
+                        {% endif %} {% endfor %}
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th style="text-align: right; white-space: nowrap">
+                                = {{ product_infos.total }} € / Monat
+                            </th>
+                        </tr>
+                    </table>
+                    <small style="float: right; margin: -0.75em 0 -0.5em -0.75em"
+                    >inkl. MwSt</small
+                    >
+                </div>
+            </div>
+        {% else %} {% summary_card_disabled product_infos.name %} {% endif %} {% endfor %}
     </div>
-    <div class="card-body">
-      <table class="table">
-        <tr>
-          <th>Startdatum</th>
-          <td>{{ wizard.form.harvest_shares_info.start_date }}</td>
-        </tr>
-        <tr>
-          <th>Enddatum</th>
-          <td>{{ wizard.form.harvest_shares_info.end_date }}</td>
-        </tr>
-        <tr>
-          <th>Erste Lieferung</th>
-          <td>{{ wizard.form.harvest_shares_info.first_delivery_date }}</td>
-        </tr>
-        <tr>
-          <th>Lieferintervall</th>
-          <td>
-            <small
-              >{{ wizard.form.harvest_shares_info.delivery_interval }}</small
-            >
-          </td>
-        </tr>
-        <tr>
-          <th>Abholort/-zeit</th>
-          <td>{{ wizard.form.pickup_location|safe }}</td>
-        </tr>
-      </table>
-    </div>
-    <div class="card-footer">
-      <table class="table">
-        {% for key, val in wizard.form.harvest_shares.items %} {% if val.amount
-        > 0 %}
-        <tr>
-          <th style="width: 60%">{{ val.name }}</th>
-          <td style="text-align: right; white-space: nowrap; width: 20%">
-            {{ val.amount }} x
-          </td>
-          <td style="text-align: right; white-space: nowrap; width: 20%">
-            {{ val.price }} € / Monat
-          </td>
-        </tr>
-        {% endif %} {% endfor %} {% if
-        wizard.form.harvest_shares_info.solidarity_price_choice != 0 %}
-        <tr>
-          <th>Solidarbeitrag</th>
-          <td></td>
-          <td style="text-align: right; white-space: nowrap">
-            {{ wizard.form.harvest_shares_info.solidarity_price_diff }} € /
-            Monat
-          </td>
-        </tr>
-        {% endif %}
-        <tr>
-          <th></th>
-          <th></th>
-          {% if wizard.form.harvest_shares_info.has_shares %}
-          <th style="text-align: right; white-space: nowrap">
-            = {{ wizard.form.harvest_shares_info.total }} € / Monat
-          </th>
-          {% else %}
-          <th style="text-align: right">keine Ernteanteile</th>
-          {% endif %}
-        </tr>
-      </table>
-      <small style="float: right; margin: -0.75em 0 -0.5em -0.75em"
-        >inkl. MwSt</small
-      >
-    </div>
-  </div>
-  {% else %} {% summary_card_disabled "Ernteanteile" %} {% endif %} {% for
-  product_infos in form.additional_product_infos %} {% if
-  product_infos.has_shares %}
-  <div class="card summary-card-active">
-    <div class="card-header">
-      <h5 class="card-title">{{ product_infos.name }}</h5>
-    </div>
-    <div class="card-body">
-      <table class="table">
-        <tr>
-          <th>Startdatum</th>
-          <td>{{ product_infos.start_date }}</td>
-        </tr>
-        <tr>
-          <th>Enddatum</th>
-          <td>{{ product_infos.end_date }}</td>
-        </tr>
-        <tr>
-          <th>Erste Lieferung</th>
-          <td>{{ product_infos.first_delivery_date }}</td>
-        </tr>
-        <tr>
-          <th>Lieferintervall</th>
-          <td>
-            <small>{{ product_infos.delivery_interval }}</small>
-          </td>
-        </tr>
-        <tr>
-          <th>Abholort/-zeit</th>
-          <td>{{ wizard.form.pickup_location|safe }}</td>
-        </tr>
-      </table>
-    </div>
-    <div class="card-footer">
-      <table class="table">
-        {% for key, val in product_infos.shares.items %} {% if val.amount > 0 %}
-        <tr>
-          <th style="width: 60%">{{ val.name }}</th>
-          <td style="text-align: right; white-space: nowrap; width: 20%">
-            {{ val.amount }} x
-          </td>
-          <td style="text-align: right; white-space: nowrap; width: 20%">
-            {{ val.price }} € / Monat
-          </td>
-        </tr>
-        {% endif %} {% endfor %}
-        <tr>
-          <th></th>
-          <th></th>
-          <th style="text-align: right; white-space: nowrap">
-            = {{ product_infos.total }} € / Monat
-          </th>
-        </tr>
-      </table>
-      <small style="float: right; margin: -0.75em 0 -0.5em -0.75em"
-        >inkl. MwSt</small
-      >
-    </div>
-  </div>
-  {% else %} {% summary_card_disabled product_infos.name %} {% endif %} {%
-  endfor %}
-</div>
-{% if wizard.form.show_cooperative_content %}
-<!-- COOP SHARES -->
-<div class="card" style="margin-top: 1em; margin-bottom: 1em">
-  <div class="card-body" style="text-align: center">
-    <p>
-      <strong
-        >Du möchtest mit&nbsp;&nbsp;{{
-        wizard.form.coop_shares.total|format_currency }}
-        €&nbsp;&nbsp;Genossenschaftsanteilen Mitglied in unserer Genossenschaft
-        werden.</strong
-      >
-    </p>
-    <p>
-      Die Bestätigung deines Beitritts erfolgt erst nach Ablauf der
-      Kündigungsfrist deines Ernteanteils.
-      <br />
-      Du kannst deine Genossenschaftsanteile ein Jahr zum Jahresende kündigen.
-    </p>
-  </div>
-</div>
-{% endif %}
-<!-- SUM -->
-<span style="float: right; margin-top: 1em">
+    {% if wizard.form.show_cooperative_content %}
+        <!-- COOP SHARES -->
+        <div class="card" style="margin-top: 1em; margin-bottom: 1em">
+            <div class="card-body" style="text-align: center">
+                <p>
+                    <strong
+                    >Du möchtest mit&nbsp;&nbsp;{{ wizard.form.coop_shares.total|format_currency }}
+                        €&nbsp;&nbsp;Genossenschaftsanteilen Mitglied in unserer Genossenschaft
+                        werden.</strong
+                    >
+                </p>
+                <p>
+                    Die Bestätigung deines Beitritts erfolgt erst nach Ablauf der
+                    Kündigungsfrist deines Ernteanteils.
+                    <br/>
+                    Du kannst deine Genossenschaftsanteile ein Jahr zum Jahresende kündigen.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+    <!-- SUM -->
+    <span style="float: right; margin-top: 1em">
   <h5>
     {% if wizard.form.show_cooperative_content %}
-    <b>{{ wizard.form.total_onetime }} €</b>
-    <small>/ einmalig für Genossenschaftsanteile</small>
-    <br />
+        <b>{{ wizard.form.total_onetime }} €</b>
+        <small>/ einmalig für Genossenschaftsanteile</small>
+        <br/>
     {% endif %}
-    <b>{{ wizard.form.total_monthly }} €</b> <small>inkl. MwSt pro Monat</small>
-    <br />
+      <b>{{ wizard.form.total_monthly }} €</b> <small>inkl. MwSt pro Monat</small>
+    <br/>
   </h5>
 </span>
 {% endblock %}
