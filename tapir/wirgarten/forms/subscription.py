@@ -84,9 +84,9 @@ class BaseProductForm(forms.Form):
         if initial and not self.choose_growing_period:
             next_growing_period = get_next_growing_period(cache=self.cache)
             self.choose_growing_period = (
-                    next_growing_period
-                    and (next_growing_period.start_date - get_today(cache=self.cache)).days
-                    <= 61
+                next_growing_period
+                and (next_growing_period.start_date - get_today(cache=self.cache)).days
+                <= 61
             )
 
         super().__init__(*args, **kwargs)
@@ -222,8 +222,8 @@ class BaseProductForm(forms.Form):
             label=_("Solidarbeitrag² (personalisierter Beitrag)"),
         )
         if (
-                get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
-                == SOLIDARITY_UNIT_PERCENT
+            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
+            == SOLIDARITY_UNIT_PERCENT
         ):
             solidarity_price_custom_field.help_text = _(
                 "Bitte ein Prozentzahl eingeben. Beispiel: '5' eingeben um 5% extra beizutragen."
@@ -270,10 +270,10 @@ class BaseProductForm(forms.Form):
                 if len(sub_variants) > 0:
                     solidarity_key = "solidarity_price_percentage"
                     if (
-                            get_parameter_value(
-                                ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
-                            )
-                            == SOLIDARITY_UNIT_ABSOLUTE
+                        get_parameter_value(
+                            ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
+                        )
+                        == SOLIDARITY_UNIT_ABSOLUTE
                     ):
                         solidarity_key = "solidarity_price_absolute"
                     solidarity_value = list(sub_variants.values())[0][solidarity_key]
@@ -284,9 +284,9 @@ class BaseProductForm(forms.Form):
                     )
                     for key, field in self.fields.items():
                         if (
-                                key.startswith(BASE_PRODUCT_FIELD_PREFIX)
-                                and key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
-                                in sub_variants
+                            key.startswith(BASE_PRODUCT_FIELD_PREFIX)
+                            and key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
+                            in sub_variants
                         ):
                             field.initial = sub_variants[
                                 key.replace(BASE_PRODUCT_FIELD_PREFIX, "")
@@ -354,9 +354,9 @@ class BaseProductForm(forms.Form):
                 ",".join(
                     map(
                         lambda p: BASE_PRODUCT_FIELD_PREFIX
-                                  + p.name
-                                  + ":"
-                                  + str(prices[p.id]),
+                        + p.name
+                        + ":"
+                        + str(prices[p.id]),
                         harvest_share_products,
                     )
                 )
@@ -368,9 +368,9 @@ class BaseProductForm(forms.Form):
 
     @transaction.atomic
     def save(
-            self,
-            mandate_ref: MandateReference = None,
-            member_id: str = None,
+        self,
+        mandate_ref: MandateReference = None,
+        member_id: str = None,
     ):
         member_id = member_id or self.member_id
 
@@ -385,9 +385,9 @@ class BaseProductForm(forms.Form):
 
         for key, quantity in self.cleaned_data.items():
             if not (
-                    key.startswith(BASE_PRODUCT_FIELD_PREFIX)
-                    and quantity is not None
-                    and quantity > 0
+                key.startswith(BASE_PRODUCT_FIELD_PREFIX)
+                and quantity is not None
+                and quantity > 0
             ):
                 continue
 
@@ -398,7 +398,7 @@ class BaseProductForm(forms.Form):
 
             notice_period_duration = None
             if get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
+                ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
             ):
                 notice_period_duration = NoticePeriodManager.get_notice_period_duration(
                     self.product_type, self.growing_period, cache=self.cache
@@ -419,7 +419,7 @@ class BaseProductForm(forms.Form):
                 consent_ts=(
                     now
                     if self.product_type.contract_link
-                       and self.cleaned_data["consent_harvest_shares"]
+                    and self.cleaned_data["consent_harvest_shares"]
                     else None
                 ),
                 withdrawal_consent_ts=now,
@@ -448,8 +448,8 @@ class BaseProductForm(forms.Form):
             value = self.cleaned_data["solidarity_price_custom"]
 
         if (
-                get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
-                == SOLIDARITY_UNIT_PERCENT
+            get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
+            == SOLIDARITY_UNIT_PERCENT
         ):
             return {
                 "solidarity_price_percentage": float(value) / 100,
@@ -463,14 +463,14 @@ class BaseProductForm(forms.Form):
     def has_harvest_shares(self):
         for key, quantity in self.cleaned_data.items():
             if key.startswith(BASE_PRODUCT_FIELD_PREFIX) and (
-                    quantity is not None and quantity > 0
+                quantity is not None and quantity > 0
             ):
                 return True
         return False
 
     def validate_harvest_shares_consent(self):
         if self.product_type.contract_link and not self.cleaned_data.get(
-                "consent_harvest_shares", False
+            "consent_harvest_shares", False
         ):
             raise ValidationError(
                 {
@@ -784,10 +784,10 @@ class AdditionalProductForm(forms.Form):
 
     @transaction.atomic
     def save(
-            self,
-            member_id: str = None,
-            mandate_ref: MandateReference = None,
-            send_mail: bool = False,
+        self,
+        member_id: str = None,
+        mandate_ref: MandateReference = None,
+        send_mail: bool = False,
     ):
         if not member_id:
             if not self.member_id:
@@ -817,7 +817,7 @@ class AdditionalProductForm(forms.Form):
                 )
                 notice_period_duration = None
                 if get_parameter_value(
-                        ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
+                    ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
                 ):
                     notice_period_duration = (
                         NoticePeriodManager.get_notice_period_duration(
@@ -866,7 +866,7 @@ class AdditionalProductForm(forms.Form):
         total = 0.0
         for key, quantity in self.cleaned_data.items():
             if key.startswith(self.field_prefix) and (
-                    quantity is not None and quantity > 0
+                quantity is not None and quantity > 0
             ):
                 product = Product.objects.get(
                     type_id=self.product_type.id,
@@ -878,9 +878,9 @@ class AdditionalProductForm(forms.Form):
     def validate_contract_signed(self):
         has_shares_selected = self.has_shares_selected()
         if (
-                self.product_type.contract_link
-                and has_shares_selected
-                and not self.cleaned_data.get(self.consent_field_key, False)
+            self.product_type.contract_link
+            and has_shares_selected
+            and not self.cleaned_data.get(self.consent_field_key, False)
         ):
             raise ValidationError(
                 {
@@ -925,7 +925,7 @@ class AdditionalProductForm(forms.Form):
             raise ValidationError(_("Bitte wähle einen Abholort aus!"))
 
     def validate_has_base_product_subscription_at_same_growing_period(
-            self, cache: Dict
+        self, cache: Dict
     ):
         if not self.member_id or not self.has_shares_selected():
             return
@@ -938,9 +938,9 @@ class AdditionalProductForm(forms.Form):
             ),
         )
         if not Subscription.objects.filter(
-                member__id=self.member_id,
-                period=growing_period,
-                product__type=BaseProductTypeService.get_base_product_type(cache=cache),
+            member__id=self.member_id,
+            period=growing_period,
+            product__type=BaseProductTypeService.get_base_product_type(cache=cache),
         ).exists():
             self.add_error(
                 None,
@@ -952,8 +952,8 @@ class AdditionalProductForm(forms.Form):
         self.validate_contract_signed()
 
         if not get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                cache=self.cache,
+            ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+            cache=self.cache,
         ):
             self.validate_has_base_product_subscription_at_same_growing_period(
                 cache=self.cache
@@ -1002,7 +1002,7 @@ class AdditionalProductForm(forms.Form):
 
 
 def cancel_subs_for_edit(
-        member_id: str, start_date: date, product_type: ProductType, cache: Dict
+    member_id: str, start_date: date, product_type: ProductType, cache: Dict
 ) -> date:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
@@ -1020,7 +1020,7 @@ def cancel_subs_for_edit(
         subscription.end_date = start_date - relativedelta(days=1)
         subscription.cancellation_ts = get_now(cache=cache)
         if (
-                subscription.start_date > subscription.end_date
+            subscription.start_date > subscription.end_date
         ):  # change was done before the contract started, so we can delete the subscription
             subscription.delete()
         else:
