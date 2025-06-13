@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from celery import shared_task
 from dateutil.relativedelta import relativedelta
-from django.db import transaction, models
+from django.db import transaction
 from tapir_mail.triggers.transactional_trigger import (
     TransactionalTrigger,
     TransactionalTriggerData,
@@ -37,6 +37,7 @@ from tapir.wirgarten.utils import (
     format_subscription_list_html,
     get_now,
     get_today,
+    legal_status_is_cooperative,
 )
 
 
@@ -317,18 +318,22 @@ def export_payment_parts_csv(reference_date=None):
 
 
 @shared_task
-def generate_member_numbers(print_results=True):
+def generate_member_numbers(print_results=True, cache: dict = None):
+    if cache is None:
+        cache = {}
     members = Member.objects.filter(member_no__isnull=True)
-    today = get_today()
+    today = get_today(cache=cache)
     members_to_update = []
-    max_member_no = Member.objects.aggregate(models.Max("member_no"))["member_no__max"]
-    if max_member_no is None:
-        max_member_no = 0
+    next_member_number = Member.generate_member_no()
     for member in members:
-        if member.coop_shares_quantity > 0 and member.coop_entry_date <= today:
-            member.member_no = member.generate_member_no(max_member_no)
-            max_member_no = max(max_member_no, member.member_no)
-            members_to_update.append(member)
+        if legal_status_is_cooperative(cache=cache):
+            coop_entry_date = member.coop_entry_date
+            if coop_entry_date is None or coop_entry_date > today:
+                continue
+
+        member.member_no = next_member_number
+        next_member_number = Member.generate_member_no(next_member_number)
+        members_to_update.append(member)
 
     with transaction.atomic():
         Member.objects.bulk_update(members_to_update, ["member_no"])
