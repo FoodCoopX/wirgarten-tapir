@@ -5,11 +5,11 @@ from django.utils.translation import gettext_lazy as _
 DeliveryCycle = [
     NO_DELIVERY := ("no_delivery", _("Keine Lieferung/Abholung")),
     WEEKLY := ("weekly", _("1x pro Woche")),
-    ODD_WEEKS := ("odd_weeks", _("2x pro Monat (ungerade KW)")),
-    EVEN_WEEKS := ("even_weeks", _("2x pro Monat (gerade KW)")),
+    ODD_WEEKS := ("odd_weeks", _("Jede 2. Woche (ungerade KW)")),
+    EVEN_WEEKS := ("even_weeks", _("Jede 2. Woche (gerade KW)")),
     EVERY_FOUR_WEEKS := (
         "every_four_weeks",
-        _("Jede 4. Woche (Startpunkt in der Konfig)"),
+        _("Jede 4. Woche"),
     ),
 ]
 
