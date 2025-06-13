@@ -96,7 +96,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "member_already_exists": False,
                 "member_no": None,
                 "number_of_coop_shares": entry_3.number_of_coop_shares,
-                "phone_number": entry_3.phone_number,
+                "phone_number": str(entry_3.phone_number),
                 "street": entry_3.street,
                 "street_2": entry_3.street_2,
                 "postcode": entry_3.postcode,
@@ -111,6 +111,8 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "date_of_entry_in_cooperative": None,
                 "country": entry_3.country,
                 "desired_start_date": None,
+                "current_subscriptions": None,
+                "url_to_member_profile": None,
             },
             response_content["results"][0],
         )
@@ -145,4 +147,17 @@ class TestWaitingListAPIView(TapirIntegrationTest):
             response_content["results"][1]["pickup_location_wishes"][0][
                 "pickup_location"
             ]["id"],
+        )
+        self.assertEqual(
+            subscription.id,
+            response_content["results"][1]["current_subscriptions"][0]["id"],
+        )
+        self.assertEqual(
+            subscription.id,
+            response_content["results"][1]["current_subscriptions"][0]["id"],
+        )
+        url = reverse("wirgarten:member_detail", args=[member.id])
+        self.assertEqual(
+            url,
+            response_content["results"][1]["url_to_member_profile"],
         )
