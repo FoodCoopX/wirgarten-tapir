@@ -6,6 +6,7 @@ test-lint:
 
 test: test-lint
 	find tapir -path "*/tests/*.py" | grep -q . || exit 0; \
+	poetry run python manage.py collectstatic
 	poetry run pytest --cov-report xml:coverage.xml --cov=tapir --cov-config=pyproject.toml
 
 publish-docker-image:
