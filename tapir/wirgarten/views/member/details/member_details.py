@@ -6,6 +6,9 @@ from django.views import generic
 
 from tapir.accounts.models import EmailChangeRequest
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.membership_cancellation_manager import (
+    MembershipCancellationManager,
+)
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.subscriptions.services.base_product_type_service import (
@@ -156,10 +159,10 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 if next_trial_end_date is None or trial_end_date < next_trial_end_date:
                     next_trial_end_date = trial_end_date
             context["next_trial_end_date"] = next_trial_end_date
-
+        coop_entry_date = MembershipCancellationManager.get_coop_entry_date(self.object)
         if (
-            self.object.coop_entry_date is not None
-            and self.object.coop_entry_date > today
+            coop_entry_date is not None
+            and coop_entry_date > today
             and self.object.coopsharetransaction_set.aggregate(
                 quantity=Sum(F("quantity"))
             )["quantity"]

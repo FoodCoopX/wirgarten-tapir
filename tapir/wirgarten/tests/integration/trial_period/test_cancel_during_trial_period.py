@@ -13,6 +13,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
+from tapir.wirgarten.tapirmail import configure_mail_module
 from tapir.wirgarten.tests.factories import (
     MemberWithSubscriptionFactory,
     SubscriptionFactory,
@@ -35,6 +36,7 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=product_type.id
         )
+        configure_mail_module()
 
     def setUp(self):
         mock_timezone(self, self.NOW)

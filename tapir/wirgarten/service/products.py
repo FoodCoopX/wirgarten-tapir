@@ -254,8 +254,10 @@ def get_active_and_future_subscriptions(
             *product_type_order_by("product__type_id", "product__type__name", cache)
         )
 
+    key = "active_and_future_subscriptions_by_date"
+    TapirCache.register_key_in_category(cache=cache, key=key, category="subscriptions")
     active_and_future_subscriptions_by_date_cache = get_from_cache_or_compute(
-        cache, "active_and_future_subscriptions_by_date", lambda: {}
+        cache, key, lambda: {}
     )
     return get_from_cache_or_compute(
         active_and_future_subscriptions_by_date_cache, reference_date, compute
@@ -267,9 +269,6 @@ def get_active_subscriptions(
 ):
     """
     Gets currently active subscriptions. Subscriptions that are ordered but starting next month are not included!
-
-    :param reference_date: the date on which the subscription must be active
-    :return: queryset of active subscription
     """
     if reference_date is None:
         reference_date = get_today(cache)
@@ -279,6 +278,8 @@ def get_active_subscriptions(
             start_date__lte=reference_date
         )
 
+    key = "active_subscriptions_by_date"
+    TapirCache.register_key_in_category(cache=cache, key=key, category="subscriptions")
     active_subscriptions_by_date_cache = get_from_cache_or_compute(
         cache, "active_subscriptions_by_date", lambda: {}
     )

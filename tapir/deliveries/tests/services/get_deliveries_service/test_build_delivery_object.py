@@ -1,6 +1,8 @@
 import datetime
 from unittest.mock import patch, Mock
 
+from tapir_mail.service.shortcuts import make_timezone_aware
+
 from tapir.configuration.models import TapirParameter
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.deliveries.services.joker_management_service import JokerManagementService
@@ -263,7 +265,9 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
         SubscriptionFactory.create(
             member=member,
             period=past_growing_period,
-            cancellation_ts=datetime.datetime(year=2022, month=11, day=15),
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2022, month=11, day=15)
+            ),
         )
 
         ProductType.objects.update(delivery_cycle=WEEKLY[0])

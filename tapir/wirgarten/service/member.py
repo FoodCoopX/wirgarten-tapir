@@ -1,4 +1,4 @@
-from datetime import date, datetime
+import datetime
 from decimal import Decimal
 from typing import List, Dict
 
@@ -22,6 +22,7 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
+from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -34,10 +35,10 @@ from tapir.wirgarten.models import (
     Subscription,
     TransferCoopSharesLogEntry,
     WaitingListEntry,
+    GrowingPeriod,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
-    generate_future_deliveries,
     get_next_delivery_date,
 )
 from tapir.wirgarten.service.payment import generate_mandate_ref
@@ -123,8 +124,8 @@ def transfer_coop_shares(
 def cancel_coop_shares(
     member: str | Member,
     quantity: int,
-    cancellation_date: datetime | date,
-    valid_at: date,
+    cancellation_date: datetime.datetime | datetime.date,
+    valid_at: datetime.date,
 ):
     member_id = resolve_member_id(member)
 
@@ -196,7 +197,7 @@ def get_or_create_mandate_ref(
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date: date = None, cache: Dict = None):
+def get_next_contract_start_date(ref_date: datetime.date = None, cache: Dict = None):
     """
     Gets the next start date for a contract. Usually the first of the next month.
 
@@ -208,14 +209,14 @@ def get_next_contract_start_date(ref_date: date = None, cache: Dict = None):
 
     now = ref_date
     y, m = divmod(now.year * 12 + now.month, 12)
-    return date(y, m + 1, 1)
+    return datetime.date(y, m + 1, 1)
 
 
 @transaction.atomic
 def buy_cooperative_shares(
     quantity: int,
     member: int | str | Member,
-    start_date: date = None,
+    start_date: datetime.date = None,
     mandate_ref: MandateReference = None,
     cache: Dict | None = None,
 ):
@@ -310,7 +311,7 @@ def create_wait_list_entry(
 
 @transaction.atomic
 def change_pickup_location(
-    member_id: str, new_pickup_location: PickupLocation, change_date: date
+    member_id: str, new_pickup_location: PickupLocation, change_date: datetime.date
 ):
     """
     Changes the pickup location of a member at the specified change_date.
@@ -336,7 +337,7 @@ def change_pickup_location(
 
 def send_cancellation_confirmation_email(
     member: str | Member,
-    contract_end_date: date,
+    contract_end_date: datetime.date,
     subs_to_cancel: List[Subscription],
     revoke_coop_membership: bool = False,
     cache: Dict = None,
@@ -360,13 +361,14 @@ def send_cancellation_confirmation_email(
             kwargs={"member_id": member_id},
         )
 
-    future_deliveries = generate_future_deliveries(member, cache=cache)
+    end_date = GrowingPeriod.objects.order_by("end_date").last().end_date
+    future_deliveries = GetDeliveriesService.get_deliveries(
+        member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
+    )
 
     last_pickup_date = "Letzte Abholung schon vergangen"
     if len(future_deliveries) > 0:
-        last_pickup_date = format_date(
-            datetime.strptime(future_deliveries[-1]["delivery_date"], "%Y-%m-%d").date()
-        )
+        last_pickup_date = format_date(future_deliveries[-1]["delivery_date"])
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
@@ -392,7 +394,13 @@ def send_contract_change_confirmation(
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member, cache=cache)
+    end_date = GrowingPeriod.objects.order_by("end_date").last().end_date
+    for subscription in subs:
+        if subscription.end_date:
+            end_date = min(subscription.end_date, end_date)
+    future_deliveries = GetDeliveriesService.get_deliveries(
+        member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
+    )
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
@@ -409,13 +417,13 @@ def send_contract_change_confirmation(
         ),
     )
 
-    last_delivery_date = datetime.strptime(
-        future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
-    ).date()
+    last_delivery_date = future_deliveries[-1]["delivery_date"]
 
     schedule_task_unique(
         task=send_email_member_contract_end_reminder,
-        eta=last_delivery_date + relativedelta(days=1),
+        eta=datetime.datetime.combine(
+            last_delivery_date + relativedelta(days=1), datetime.time()
+        ),
         kwargs={"member_id": member.id},
     )
 
@@ -429,7 +437,13 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
 
     contract_start_date = subs[0].start_date
 
-    future_deliveries = generate_future_deliveries(member, cache=cache)
+    end_date = GrowingPeriod.objects.order_by("end_date").last().end_date
+    for subscription in subs:
+        if subscription.end_date:
+            end_date = min(subscription.end_date, end_date)
+    future_deliveries = GetDeliveriesService.get_deliveries(
+        member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
+    )
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
@@ -444,13 +458,13 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
         ),
     )
 
-    last_delivery_date = datetime.strptime(
-        future_deliveries[-1]["delivery_date"], "%Y-%m-%d"
-    ).date()
+    last_delivery_date = future_deliveries[-1]["delivery_date"]
 
     schedule_task_unique(
         task=send_email_member_contract_end_reminder,
-        eta=last_delivery_date + relativedelta(days=1),
+        eta=datetime.datetime.combine(
+            last_delivery_date + relativedelta(days=1), datetime.time(hour=0)
+        ),
         kwargs={"member_id": member.id},
     )
 

@@ -1,6 +1,7 @@
 import datetime
 
 from django.urls import reverse
+from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.waiting_list.tests.factories import WaitingListEntryFactory
 from tapir.wirgarten.models import (
@@ -65,11 +66,17 @@ class TestWaitingListAPIView(TapirIntegrationTest):
         entry_3 = WaitingListEntryFactory.create()
 
         # entries should be sorted by creation date
-        entry_1.created_at = datetime.datetime(year=2025, month=1, day=10)
+        entry_1.created_at = make_timezone_aware(
+            datetime.datetime(year=2025, month=1, day=10)
+        )
         entry_1.save()
-        entry_2.created_at = datetime.datetime(year=2025, month=1, day=15)
+        entry_2.created_at = make_timezone_aware(
+            datetime.datetime(year=2025, month=1, day=15)
+        )
         entry_2.save()
-        entry_3.created_at = datetime.datetime(year=2025, month=1, day=9)
+        entry_3.created_at = make_timezone_aware(
+            datetime.datetime(year=2025, month=1, day=9)
+        )
         entry_3.save()
 
         WaitingListProductWish.objects.create(

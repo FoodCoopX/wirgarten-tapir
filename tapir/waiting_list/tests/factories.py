@@ -1,3 +1,5 @@
+from datetime import UTC
+
 import factory
 
 from tapir.wirgarten.models import WaitingListEntry
@@ -16,4 +18,4 @@ class WaitingListEntryFactory(factory.django.DjangoModelFactory[WaitingListEntry
     city = factory.Faker("city")
     country = factory.Faker("country_code")
     number_of_coop_shares = factory.Faker("pyint", min_value=0, max_value=3)
-    privacy_consent = factory.Faker("date")
+    privacy_consent = factory.Faker("date_time", tzinfo=UTC)

@@ -17,14 +17,19 @@ from tapir.wirgarten.service.product_standard_order import product_type_order_by
 class TapirCache:
     @classmethod
     def get_all_subscriptions(cls, cache: Dict) -> Set[Subscription]:
+        key = "all_subscriptions"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
         return get_from_cache_or_compute(
-            cache, "all_subscriptions", lambda: set(Subscription.objects.order_by("id"))
+            cache, key, lambda: set(Subscription.objects.order_by("id"))
         )
 
     @classmethod
     def get_subscriptions_active_at_date(
         cls, reference_date: datetime.date, cache: Dict
     ):
+        key = "subscriptions_by_date"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         def compute():
             all_subscriptions = cls.get_all_subscriptions(cache)
             return {
@@ -37,15 +42,16 @@ class TapirCache:
                 )
             }
 
-        subscriptions_by_date = get_from_cache_or_compute(
-            cache, "subscriptions_by_date", lambda: {}
-        )
+        subscriptions_by_date = get_from_cache_or_compute(cache, key, lambda: {})
         return get_from_cache_or_compute(subscriptions_by_date, reference_date, compute)
 
     @classmethod
     def get_active_and_future_subscriptions_by_member_id(
         cls, cache: dict, reference_date: datetime.date
     ):
+        key = "subscriptions_by_date_and_member_id"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         def compute():
             from tapir.wirgarten.service.products import (
                 get_active_and_future_subscriptions,
@@ -61,7 +67,7 @@ class TapirCache:
             return subscriptions_by_member_id
 
         subscriptions_by_date_and_member_id = get_from_cache_or_compute(
-            cache, "subscriptions_by_date_and_member_id", lambda: {}
+            cache, key, lambda: {}
         )
         return get_from_cache_or_compute(
             subscriptions_by_date_and_member_id, reference_date, compute
@@ -71,8 +77,11 @@ class TapirCache:
     def get_subscriptions_by_delivery_cycle(
         cls, cache: Dict, delivery_cycle
     ) -> Set[Subscription]:
+        key = "subscriptions_by_delivery_cycle"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         subscriptions_by_delivery_cycle = get_from_cache_or_compute(
-            cache, "subscriptions_by_delivery_cycle", lambda: {}
+            cache, key, lambda: {}
         )
         return get_from_cache_or_compute(
             subscriptions_by_delivery_cycle,
@@ -86,9 +95,12 @@ class TapirCache:
 
     @classmethod
     def get_subscriptions_affected_by_jokers(cls, cache: Dict):
+        key = "subscriptions_affected_by_jokers"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         return get_from_cache_or_compute(
             cache,
-            "subscriptions_affected_by_jokers",
+            key,
             lambda: Subscription.objects.filter(
                 product__type__is_affected_by_jokers=True
             ),
@@ -144,6 +156,9 @@ class TapirCache:
 
     @classmethod
     def get_subscriptions_by_product_type(cls, cache: Dict):
+        key = "subscriptions_by_product_type"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         def compute():
             subscriptions_by_product_type = {
                 product_type: set()
@@ -158,9 +173,7 @@ class TapirCache:
                 )
             return subscriptions_by_product_type
 
-        return get_from_cache_or_compute(
-            cache, "subscriptions_by_product_type", compute
-        )
+        return get_from_cache_or_compute(cache, key, compute)
 
     @classmethod
     def get_product_by_name_iexact(cls, cache: Dict, product_name: str):
@@ -181,9 +194,12 @@ class TapirCache:
 
     @classmethod
     def get_last_subscription(cls, cache: Dict):
+        key = "last_subscription"
+        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+
         return get_from_cache_or_compute(
             cache,
-            "last_subscription",
+            key,
             lambda: Subscription.objects.filter(end_date__isnull=False)
             .order_by("end_date")
             .last(),
@@ -255,3 +271,27 @@ class TapirCache:
                 )
             ),
         )
+
+    @classmethod
+    def register_key_in_category(cls, cache: dict, key: str, category: str):
+        if cache is None:
+            return
+
+        if "categories" not in cache.keys():
+            cache["categories"] = {}
+
+        if category not in cache["categories"].keys():
+            cache["categories"][category] = set()
+
+        cache["categories"][category].add(key)
+
+    @classmethod
+    def clear_category(cls, cache: dict, category: str):
+        if cache is None:
+            return
+        if "categories" not in cache.keys():
+            return
+        if category not in cache["categories"].keys():
+            return
+        for key in cache["categories"][category]:
+            del cache[key]

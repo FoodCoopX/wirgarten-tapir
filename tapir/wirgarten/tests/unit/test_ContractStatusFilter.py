@@ -1,6 +1,7 @@
 import datetime
 
 from django.test import TestCase
+from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.tests.factories import (
@@ -51,7 +52,9 @@ class ContractStatusFilterTestCase(TestCase):
             period=current_growing_period,
             start_date=datetime.date(year=2023, month=6, day=1),
             end_date=datetime.date(year=2023, month=7, day=1),
-            cancellation_ts=datetime.date(year=2023, month=6, day=10),
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2023, month=6, day=10)
+            ),
         )
 
         self.member_that_cancelled_after_trial_period = MemberFactory.create(
@@ -60,7 +63,9 @@ class ContractStatusFilterTestCase(TestCase):
         SubscriptionFactory.create(
             member=self.member_that_cancelled_after_trial_period,
             period=current_growing_period,
-            cancellation_ts=datetime.date(year=2023, month=4, day=15),
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2023, month=4, day=15)
+            ),
         )
 
         self.member_in_trial = MemberFactory.create(first_name="member_in_trial")

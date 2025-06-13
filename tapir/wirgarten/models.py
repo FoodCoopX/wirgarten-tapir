@@ -19,7 +19,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
-from typing_extensions import deprecated
 
 from tapir.accounts.models import TapirUser, KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
@@ -386,7 +385,11 @@ class Member(TapirUser):
         super().save(*args, **kwargs)
 
     def is_in_coop_trial(self):
-        entry_date = self.coop_entry_date
+        from tapir.coop.services.membership_cancellation_manager import (
+            MembershipCancellationManager,
+        )
+
+        entry_date = MembershipCancellationManager.get_coop_entry_date(self)
         return entry_date is not None and entry_date > get_today()
 
     def coop_shares_total_value(self):
@@ -433,24 +436,12 @@ class Member(TapirUser):
         )
 
     @property
-    @deprecated(
-        "Use tapir.coop.services.membership_cancellation_manager.MembershipCancellationManager.get_coop_entry_date instead"
-    )
     def coop_entry_date(self):
-        try:
-            earliest_coopsharetransaction = self.coopsharetransaction_set.filter(
-                transaction_type__in=[
-                    CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                    CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
-                ]
-            ).earliest("valid_at")
-            return (
-                earliest_coopsharetransaction.valid_at
-                if earliest_coopsharetransaction
-                else None
-            )
-        except CoopShareTransaction.DoesNotExist:
-            return None
+        from tapir.coop.services.membership_cancellation_manager import (
+            MembershipCancellationManager,
+        )
+
+        return MembershipCancellationManager.get_coop_entry_date(self)
 
     @property
     def base_subscriptions_text(self):

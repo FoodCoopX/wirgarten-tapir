@@ -1,7 +1,6 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from tapir.wirgarten.utils import get_today
 from tapir_mail.service.segment import resolve_segments
 
 from tapir.wirgarten.tapirmail import (
@@ -23,6 +22,7 @@ from tapir.wirgarten.tests.test_utils import (
     mock_timezone,
     set_bypass_keycloak,
 )
+from tapir.wirgarten.utils import get_today
 
 
 class SegmentFilterTest(TapirIntegrationTest):
@@ -76,7 +76,7 @@ class SegmentFilterTest(TapirIntegrationTest):
             member=included_member,
             start_date=self.current_growing_period.start_date,
             end_date=self.current_growing_period.end_date,
-            cancellation_ts=self.NOW.date(),
+            cancellation_ts=self.NOW,
         )
 
         # Member who does not cancel
@@ -114,7 +114,7 @@ class SegmentFilterTest(TapirIntegrationTest):
         cancelled_member = MemberFactory.create()
         SubscriptionFactory.create(
             member=cancelled_member,
-            cancellation_ts=self.NOW.date(),
+            cancellation_ts=self.NOW,
         )
 
         expected_member_ids = [included_member.id]

@@ -33,6 +33,7 @@ TODAY = NOW.date()
 class MemberFactory(factory.django.DjangoModelFactory[Member]):
     class Meta:
         model = Member
+        skip_postgeneration_save = True
 
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
@@ -41,7 +42,7 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     iban = factory.Faker("iban")
 
     @factory.post_generation
-    def member_no(self, create, member_no, **kwargs):
+    def member_no(self: Member, create, member_no, **kwargs):
         if member_no is not None:
             self.member_no = member_no
             return
@@ -54,6 +55,9 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
             member_no = member_with_highest_number.member_no + 1
 
         self.member_no = member_no
+
+        if create:
+            self.save()
 
 
 class MemberWithCoopSharesFactory(MemberFactory):
@@ -108,7 +112,7 @@ class MandateReferenceFactory(factory.django.DjangoModelFactory[MandateReference
 
     ref = factory.LazyAttribute(lambda o: generate_mandate_ref(o.member.id))
     member = factory.SubFactory(MemberFactory)
-    start_ts = TODAY - relativedelta(months=1)
+    start_ts = NOW - relativedelta(months=1)
 
 
 class GrowingPeriodFactory(factory.django.DjangoModelFactory[GrowingPeriod]):

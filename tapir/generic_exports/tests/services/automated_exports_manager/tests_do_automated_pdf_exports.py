@@ -1,6 +1,8 @@
 import datetime
 from unittest.mock import patch, Mock
 
+from tapir_mail.service.shortcuts import make_timezone_aware
+
 from tapir.generic_exports.models import AutomatedPdfExportResult, AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
@@ -31,7 +33,7 @@ class TestDoAutomatedPdfExports(TapirIntegrationTest):
         export = PdfExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
         )
-        target_date = datetime.datetime(year=2023, month=12, day=5)
+        target_date = make_timezone_aware(datetime.datetime(year=2023, month=12, day=5))
         mock_get_datetime_of_latest_export.return_value = target_date
         AutomatedPdfExportResult.objects.create(
             export_definition=export,
@@ -52,7 +54,7 @@ class TestDoAutomatedPdfExports(TapirIntegrationTest):
         export = PdfExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
         )
-        target_date = datetime.datetime(year=2023, month=12, day=5)
+        target_date = make_timezone_aware(datetime.datetime(year=2023, month=12, day=5))
         mock_get_datetime_of_latest_export.return_value = target_date
         AutomatedPdfExportResult.objects.create(
             export_definition=export,

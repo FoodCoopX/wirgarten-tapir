@@ -30,6 +30,7 @@ from tapir.subscriptions.services.base_product_type_service import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -615,6 +616,8 @@ class SubscriptionRenewalForm(Form):
     def save(self, *args, **kwargs):
         for form in self.product_forms:
             form.save(*args, **kwargs)
+
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
 
         member_id = kwargs["member_id"]
         self.subs = get_active_and_future_subscriptions(

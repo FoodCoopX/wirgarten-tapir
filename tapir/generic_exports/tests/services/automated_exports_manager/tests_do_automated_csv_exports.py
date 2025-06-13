@@ -1,6 +1,8 @@
 import datetime
 from unittest.mock import patch, Mock
 
+from tapir_mail.service.shortcuts import make_timezone_aware
+
 from tapir.generic_exports.models import AutomatedCsvExportResult, AutomatedExportCycle
 from tapir.generic_exports.services.automated_exports_manager import (
     AutomatedExportsManager,
@@ -30,7 +32,7 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
         export = CsvExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
         )
-        target_date = datetime.datetime(year=2023, month=12, day=5)
+        target_date = make_timezone_aware(datetime.datetime(year=2023, month=12, day=5))
         mock_get_datetime_of_latest_export.return_value = target_date
         AutomatedCsvExportResult.objects.create(
             export_definition=export,
@@ -51,7 +53,7 @@ class TestDoAutomatedCsvExports(TapirIntegrationTest):
         export = CsvExportFactory.create(
             automated_export_cycle=AutomatedExportCycle.DAILY
         )
-        target_date = datetime.datetime(year=2023, month=12, day=5)
+        target_date = make_timezone_aware(datetime.datetime(year=2023, month=12, day=5))
         mock_get_datetime_of_latest_export.return_value = target_date
         AutomatedCsvExportResult.objects.create(
             export_definition=export,

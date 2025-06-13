@@ -1,6 +1,8 @@
 import datetime
 from typing import Dict, Callable
 
+from icecream import ic
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
@@ -160,6 +162,13 @@ class AutomaticSubscriptionRenewalService:
         )
         relevant_renewed_subscriptions = set(
             filter(subscription_filter, all_renewed_subscriptions)
+        )
+
+        ic(
+            subscriptions,
+            relevant_subscriptions,
+            all_renewed_subscriptions,
+            relevant_renewed_subscriptions,
         )
 
         relevant_subscriptions.update(relevant_renewed_subscriptions)

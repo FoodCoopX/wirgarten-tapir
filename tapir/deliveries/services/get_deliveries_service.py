@@ -1,6 +1,8 @@
 import datetime
 from typing import Dict, Set
 
+from icecream import ic
+
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.models import Joker
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
@@ -35,6 +37,7 @@ class GetDeliveriesService:
 
         next_delivery_date = get_next_delivery_date(date_from, cache=cache)
         while next_delivery_date <= date_to:
+            ic(next_delivery_date)
             delivery_object = cls.build_delivery_object(
                 member=member, delivery_date=next_delivery_date, cache=cache
             )
@@ -58,6 +61,7 @@ class GetDeliveriesService:
         )
 
         if len(relevant_subscriptions) == 0:
+            ic(relevant_subscriptions)
             return None
 
         pickup_location = member.get_pickup_location(delivery_date)
@@ -109,6 +113,7 @@ class GetDeliveriesService:
         accepted_delivery_cycles = DeliveryCycleService.get_cycles_delivered_in_week(
             date=reference_date, cache=cache
         )
+        ic(accepted_delivery_cycles)
 
         subscriptions_with_accepted_delivery_cycles = set()
         for delivery_cycle in accepted_delivery_cycles:
@@ -117,6 +122,7 @@ class GetDeliveriesService:
                     cache=cache, delivery_cycle=delivery_cycle
                 )
             )
+        ic(subscriptions_with_accepted_delivery_cycles)
 
         def subscription_filter(subscription: Subscription):
             return (
@@ -124,10 +130,12 @@ class GetDeliveriesService:
                 and subscription in subscriptions_with_accepted_delivery_cycles
             )
 
-        return AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
-            reference_date=reference_date,
-            cache=cache,
-            subscription_filter=subscription_filter,
+        return ic(
+            AutomaticSubscriptionRenewalService.get_subscriptions_and_renewals(
+                reference_date=reference_date,
+                cache=cache,
+                subscription_filter=subscription_filter,
+            )
         )
 
     @classmethod

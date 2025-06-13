@@ -12,6 +12,7 @@ Faker.seed("tapir")
 class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
     class Meta:
         model = CsvExport
+        skip_postgeneration_save = True
 
     export_segment_id = factory.Faker(
         "random_element",
@@ -37,6 +38,7 @@ class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
             email_recipients = [fake.email() for _ in range(nb_recipients)]
 
         self.email_recipients = email_recipients
+        self.save()
 
     @factory.post_generation
     def column_ids(self: CsvExport, create, column_ids, **kwargs):
@@ -53,6 +55,7 @@ class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
             column_ids = fake.random_elements(possible_ids, unique=True)
 
         self.column_ids = column_ids
+        self.save()
 
     @factory.post_generation
     def custom_column_names(self: CsvExport, create, names, **kwargs):
@@ -63,11 +66,13 @@ class CsvExportFactory(factory.django.DjangoModelFactory[CsvExport]):
             names = [fake.bs() for _ in self.column_ids]
 
         self.custom_column_names = names
+        self.save()
 
 
 class PdfExportFactory(factory.django.DjangoModelFactory[PdfExport]):
     class Meta:
         model = PdfExport
+        skip_postgeneration_save = True
 
     export_segment_id = factory.Faker(
         "random_element",
@@ -94,6 +99,7 @@ class PdfExportFactory(factory.django.DjangoModelFactory[PdfExport]):
             email_recipients = [fake.email() for _ in range(nb_recipients)]
 
         self.email_recipients = email_recipients
+        self.save()
 
 
 class ExportedFileFactory(factory.django.DjangoModelFactory[ExportedFile]):

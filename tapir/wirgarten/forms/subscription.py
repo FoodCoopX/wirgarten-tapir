@@ -21,6 +21,7 @@ from tapir.subscriptions.services.subscription_change_validator import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import DateInput
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
 )
@@ -432,7 +433,8 @@ class BaseProductForm(forms.Form):
             )
 
             self.subscriptions.append(sub)
-        self.cache.pop("active_and_future_subscriptions_by_date")
+
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
         member = Member.objects.get(id=member_id)
         member.sepa_consent = now
         member.save(cache=self.cache)
@@ -847,7 +849,8 @@ class AdditionalProductForm(forms.Form):
                 )
 
         Subscription.objects.bulk_create(self.subscriptions)
-        self.cache.pop("active_and_future_subscriptions_by_date")
+
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
