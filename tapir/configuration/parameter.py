@@ -1,5 +1,6 @@
 import datetime
 import re
+from collections.abc import Callable
 from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -12,7 +13,7 @@ from tapir.configuration.models import (
 from tapir.utils.shortcuts import get_from_cache_or_compute
 
 
-def validate_format_string(value: str, allowed_vars: [str]):
+def validate_format_string(value: str, allowed_vars: list[str]):
     """
     Validates if a string with potential format brackets (e.g.: "{some_variable}") only uses variables from the given array of known vars.
 
@@ -21,7 +22,7 @@ def validate_format_string(value: str, allowed_vars: [str]):
     """
 
     for match in re.findall("{[^{}]*}", f"{value}"):
-        match = match[1 : len(match) - 1].strip()  # strip brackets
+        match = match[1: len(match) - 1].strip()  # strip brackets
         match = match.split(".")[
             0
         ].strip()  # if object, use only the part before the first dot
@@ -33,13 +34,13 @@ def validate_format_string(value: str, allowed_vars: [str]):
 
 class ParameterMeta:
     def __init__(
-        self,
-        options: [tuple] = None,
-        options_callable: callable = None,
-        validators: [callable] = None,
-        textarea=False,
-        vars_hint: [str] = None,
-        show_only_when: callable = None,
+            self,
+            options: list[tuple] = None,
+            options_callable: Callable = None,
+            validators: list[Callable] = None,
+            textarea=False,
+            vars_hint: list[str] = None,
+            show_only_when: callable = None,
     ):
         if validators is None:
             validators = []
@@ -99,18 +100,18 @@ def get_parameter_value(key: str, cache: Dict | None = None):
 
 
 def parameter_definition(
-    key: str,
-    label: str,
-    description: str,
-    category: str,
-    datatype: TapirParameterDatatype,
-    initial_value: str | int | float | bool | datetime.date,
-    order_priority: int = -1,
-    enabled: bool = True,
-    debug: bool = False,
-    meta: ParameterMeta = ParameterMeta(
-        options=None, validators=[], vars_hint=None, textarea=False
-    ),
+        key: str,
+        label: str,
+        description: str,
+        category: str,
+        datatype: TapirParameterDatatype,
+        initial_value: str | int | float | bool | datetime.date,
+        order_priority: int = -1,
+        enabled: bool = True,
+        debug: bool = False,
+        meta: ParameterMeta = ParameterMeta(
+            options=None, validators=[], vars_hint=None, textarea=False
+        ),
 ):
     __validate_initial_value(datatype, initial_value, key, meta.validators)
 
@@ -130,15 +131,15 @@ def parameter_definition(
 
 
 def __create_or_update_parameter(
-    category,
-    datatype,
-    description,
-    initial_value,
-    key,
-    label,
-    order_priority,
-    enabled: bool,
-    debug: bool,
+        category,
+        datatype,
+        description,
+        initial_value,
+        key,
+        label,
+        order_priority,
+        enabled: bool,
+        debug: bool,
 ):
     try:
         param = TapirParameter.objects.get(pk=key)

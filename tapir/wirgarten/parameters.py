@@ -210,7 +210,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="https://lueneburg.wirgarten.com/satzung",
             description="Der Link zur Satzung des Betriebs.",
             category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(validators=[URLValidator()]),
+            meta=ParameterMeta(
+                validators=[URLValidator()],
+                show_only_when=legal_status_is_cooperative,
+            ),
         )
 
         parameter_definition(
@@ -591,7 +594,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Wenn dieses Feld aus ist, können Zusatzproduktverträge nur gezeichnet werden "
-            "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
+                        "wenn das Mitglied mindestens ein Basisproduktvertrag gezeichnet hat.",
             category=ParameterCategory.SUBSCRIPTIONS,
             order_priority=0,
         )
@@ -682,9 +685,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 datatype=TapirParameterDatatype.STRING,
                 initial_value=TEST_DATE_OVERRIDE_DISABLED,
                 description="Setzt die Datum und Uhrzeit die von Tapir benutzt wird.<br />"
-                'Wenn "Manuell" eingetragen ist, "taucht nach speichern ein zweites Feld um eine beliebiges Datum zu setzen.<br />'
-                'Wenn "Nicht festgelegt" eingetragen ist, werden die echte Datum und Uhrzeit verwendet.<br />'
-                "Aktuell verwendetes Datum: {{now}}",
+                            'Wenn "Manuell" eingetragen ist, "taucht nach speichern ein zweites Feld um eine beliebiges Datum zu setzen.<br />'
+                            'Wenn "Nicht festgelegt" eingetragen ist, werden die echte Datum und Uhrzeit verwendet.<br />'
+                            "Aktuell verwendetes Datum: {{now}}",
                 category=ParameterCategory.TEST,
                 order_priority=2,
                 debug=True,
@@ -697,7 +700,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 datatype=TapirParameterDatatype.STRING,
                 initial_value="2025-04-01 09:30",
                 description="Format: YYYY-MM-DD HH:MM.<br />"
-                f'Wird nur eingesetzt wenn der Parameter "Datum festlegen" gleich Oben zu "Manuell" gesetzt ist.',
+                            f'Wird nur eingesetzt wenn der Parameter "Datum festlegen" gleich Oben zu "Manuell" gesetzt ist.',
                 category=ParameterCategory.TEST,
                 order_priority=1,
                 debug=True,
@@ -706,7 +709,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                     show_only_when=lambda cache: get_parameter_value(
                         ParameterKeys.TESTS_OVERRIDE_DATE_PRESET, cache=cache
                     )
-                    == TEST_DATE_OVERRIDE_MANUAL,
+                                                 == TEST_DATE_OVERRIDE_MANUAL,
                 ),
             )
 
@@ -770,9 +773,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.STRING,
             initial_value="-15,-10,-5,0,5,10,15",
             description="Komma-getrennte Liste der Werte die beim Solidarbeitrag zu auswahl stehen."
-            "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben."
-            "Beispiel: '-15,-10,-5,0,5,10,15'"
-            "Je nach dem was im Feld 'Einheit des Solidarbeitrag' eingetragen ist sind die Werte Prozente (5%, 10%, ...) oder Euros (5€, 10€,...)",
+                        "Es gibt immer dazu für das Mitglied die Möglichkeit eine andere Wert anzugeben."
+                        "Beispiel: '-15,-10,-5,0,5,10,15'"
+                        "Je nach dem was im Feld 'Einheit des Solidarbeitrag' eingetragen ist sind die Werte Prozente (5%, 10%, ...) oder Euros (5€, 10€,...)",
             category=ParameterCategory.SOLIDARITY,
             meta=ParameterMeta(
                 validators=[SolidarityValidator.validate_solidarity_dropdown_values]
@@ -795,6 +798,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
-            "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
+                        "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
             category=ParameterCategory.HARVEST,
         )
