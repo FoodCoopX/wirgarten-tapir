@@ -18,17 +18,17 @@ This starts a container with an LDAP server and automatically loads the test dat
 Next, set up the test database and load test data
 
     # Create tables
-    docker-compose exec web poetry run python manage.py migrate
+    docker compose exec web poetry run python manage.py migrate
 
     # Import configuration parameter definitions
-    docker-compose exec web poetry run python manage.py parameter_definitions
+    docker compose exec web poetry run python manage.py parameter_definitions
     
     # Load lots of test users
-    docker-compose exec web poetry run python manage.py populate --reset_all
+    docker compose exec web poetry run python manage.py populate --reset_all
 
 ### Django Shell
 
-    docker-compose exec web poetry run python manage.py shell_plus
+    docker compose exec web poetry run python manage.py shell_plus
 
 ### LDAP
 

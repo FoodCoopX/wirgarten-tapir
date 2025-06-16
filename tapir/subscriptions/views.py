@@ -568,7 +568,7 @@ class ConfirmSubscriptionChangesView(APIView):
         cache: dict,
     ):
         subscription_ids_to_confirm = [
-            id.strip() for id in ids_to_confirm if id.strip() is not ""
+            id.strip() for id in ids_to_confirm if id.strip() != ""
         ]
 
         subscriptions_to_confirm = model.objects.filter(
