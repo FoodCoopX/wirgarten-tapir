@@ -6,7 +6,6 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from icecream import ic
 from tapir_mail.triggers.transactional_trigger import TransactionalTrigger
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
@@ -243,7 +242,6 @@ def get_renew_contracts_form(request, **kwargs):
 @login_required
 @csrf_protect
 def get_add_subscription_form(request, **kwargs):
-    ic(request, kwargs, request.POST)
     member_id = kwargs.pop("pk")
 
     check_permission_or_self(member_id, request)

@@ -614,7 +614,7 @@ class TrialCancellationForm(Form):
         if not hasattr(self, "cancel_coop"):
             self.cancel_coop = (
                 "cancel_coop" in self.cleaned_data
-                and self.cleaned_data.pop("cancel_coop")
+                and self.cleaned_data.get("cancel_coop")
                 and self.share_ownership
             )
         return self.cancel_coop
