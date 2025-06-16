@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -158,6 +159,11 @@ def javascript_environment_variables(context):
     api_root = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}"
     if request.get_host() == "localhost":
         api_root = f"{api_root}:8000"
+
     return {
-        "env_vars": {"REACT_APP_API_ROOT": api_root},
+        "env_vars": {
+            "REACT_APP_API_ROOT": api_root,
+            "TAPIRMAIL_REACT_APP_BASENAME": settings.TAPIRMAIL_REACT_APP_BASENAME,
+            "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
+        },
     }
