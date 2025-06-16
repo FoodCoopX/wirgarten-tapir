@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Callable
 
 from dateutil.relativedelta import relativedelta
 from django.db import models
@@ -23,7 +24,7 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
 )
 from tapir.wirgarten.triggers.onboarding_trigger import OnboardingTrigger
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, legal_status_is_cooperative
 
 
 # Absenden Bestellwizzard Mitgliedschaft + Ernteanteile
@@ -233,7 +234,7 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
-        required=True,
+        required=lambda: legal_status_is_cooperative(cache={}),
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
@@ -288,10 +289,16 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Letzte Abholung am": "last_pickup_date",
         },
-        required=True,
+        required=lambda: get_parameter_value(
+            ParameterKeys.TRIAL_PERIOD_ENABLED, cache={}
+        ),
     )
     register_transactional_trigger(
-        name="Vertrag nicht verlängert", key=Events.CONTRACT_NOT_RENEWED, required=True
+        name="Vertrag nicht verlängert",
+        key=Events.CONTRACT_NOT_RENEWED,
+        required=lambda: not get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache={}
+        ),
     )
     register_transactional_trigger(
         name="Vertrag gekündigt",
@@ -317,7 +324,7 @@ def _register_triggers():
 
 
 def register_transactional_trigger(
-    name: str, key: str, tokens: dict = None, required: bool = False
+    name: str, key: str, tokens: dict = None, required: bool | Callable = False
 ):
     TransactionalTrigger.register_action(
         name=name,
