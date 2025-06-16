@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+from icecream import ic
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.utils.forms import DateInput
@@ -666,6 +667,7 @@ class AdditionalProductForm(forms.Form):
     sum_template = "wirgarten/member/additional_product_sum.html"
 
     def __init__(self, *args, **kwargs):
+        ic(1, args, kwargs)
         self.is_admin = kwargs.pop("is_admin", False)
         self.member_id = kwargs.pop("member_id", None)
         initial = kwargs.get("initial", {})
@@ -683,8 +685,9 @@ class AdditionalProductForm(forms.Form):
         self.start_date = kwargs.pop(
             "start_date", initial.get("start_date", get_next_contract_start_date())
         )
+        ic(2, args, kwargs)
         super(AdditionalProductForm, self).__init__(*args, **kwargs)
-
+        ic(3, args, kwargs)
         self.consent_field_key = f"consent_{self.field_prefix}"
         products_queryset = Product.objects.filter(
             deleted=False, type=self.product_type
@@ -711,7 +714,7 @@ class AdditionalProductForm(forms.Form):
             "pickup_location": self.n_columns,
             "pickup_location_change_date": self.n_columns,
         }
-
+        ic(4, args, kwargs)
         if self.choose_growing_period:
             growing_periods = GrowingPeriod.objects.filter(
                 end_date__gte=self.start_date,
@@ -724,7 +727,7 @@ class AdditionalProductForm(forms.Form):
                         ",", "."
                     )
                 )
-
+            ic("ADDING FIELD GROWING PERIOD")
             self.fields["growing_period"] = forms.ModelChoiceField(
                 queryset=growing_periods,
                 label=_("Vertragsperiode"),
@@ -825,6 +828,7 @@ class AdditionalProductForm(forms.Form):
                 self.products.keys(),
             )
         )
+        ic(5, args, kwargs)
 
     @transaction.atomic
     def save(
@@ -842,10 +846,13 @@ class AdditionalProductForm(forms.Form):
 
         now = get_now()
 
+        ic(self.cleaned_data)
         if not hasattr(self, "growing_period"):
+            ic("NO GP")
             self.growing_period = self.cleaned_data.pop(
                 "growing_period", get_current_growing_period()
             )
+        ic("YES GP")
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
