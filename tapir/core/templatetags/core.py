@@ -1,6 +1,7 @@
 from django import template
 from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
+from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -167,3 +168,9 @@ def javascript_environment_variables(context):
             "TAPIRMAIL_REACT_APP_API_ROOT": settings.TAPIRMAIL_REACT_APP_API_ROOT,
         },
     }
+
+
+@register.simple_tag
+def get_proper_elided_page_range(p, number):
+    paginator = Paginator(p.object_list, p.per_page)
+    return paginator.get_elided_page_range(number=number)
