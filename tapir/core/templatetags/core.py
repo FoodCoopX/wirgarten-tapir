@@ -1,5 +1,5 @@
 from django import template
-from django.db.models import Sum
+from django.core.paginator import Paginator
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -130,3 +130,9 @@ def add_admin_links(groups, request):
     groups.append(admin_group)
 
     groups.append(debug_group)
+
+
+@register.simple_tag
+def get_proper_elided_page_range(p, number):
+    paginator = Paginator(p.object_list, p.per_page)
+    return paginator.get_elided_page_range(number=number)

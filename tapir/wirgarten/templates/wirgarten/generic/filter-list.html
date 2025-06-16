@@ -9,153 +9,159 @@
 {% block content %}
 
 
-<div style="margin-top: 1em;">
-    {% block page_top %}{% endblock %}
-</div>
+    <div style="margin-top: 1em;">
+        {% block page_top %}{% endblock %}
+    </div>
 
-<div {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between">
-            {% block card_header %}{% endblock %}
+    <div {% if filter.form %}style="grid-gap: 1em; display:grid; grid-template-columns: 5fr 1fr"{% endif %}>
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between">
+                {% block card_header %}{% endblock %}
+            </div>
+            <div class="card-body"
+                 style="height: calc(100vh - {% if is_paginated %}14em{% else %}9.5em{% endif %}); overflow-y: scroll; padding: 0px;">
+                <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
+                    <thead class="sticky-top" style="background: #FFFFFF;">
+                    {% block table_head %}
+                    {% endblock %}
+                    </thead>
+                    <tbody>
+                    {% block table_body %}
+                    {% endblock %}
+                    </tbody>
+                </table>
+            </div>
+            {% if is_paginated %}
+
+                <nav aria-label="Pagination"
+                     style="display:flex; justify-content:center; margin-bottom:0px; margin-top: 1em;">
+                    <ul class="pagination">
+                        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                            <a class="page-link" {% if page_obj.has_previous %}
+                               href="?page={{ page_obj.previous_page_number }}&{{ filter_query }}" {% endif %}
+                               aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% get_proper_elided_page_range paginator page_obj.number as page_range %}
+                        {% for page in page_range %}
+                            {% if page %}
+                                {% if page == page_obj.number %}
+                                    <li class="page-item active" aria-current="page">
+                                    <span class="page-link">
+                                        {{ page }}
+                                    </span>
+                                    </li>
+                                {% elif page == paginator.ELLIPSIS %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">{{ paginator.ELLIPSIS }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page }}&{{ filter_query }}">{{ page }}</a>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&hellip;</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <li class="page-item">
+                            <a class="page-link" {% if page_obj.has_next %}
+                               href="?page={{ page_obj.next_page_number }}&{{ filter_query }}" {% endif %}
+                               aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            {% endif %}
         </div>
-        <div class="card-body"
-             style="height: calc(100vh - {% if is_paginated %}14em{% else %}9.5em{% endif %}); overflow-y: scroll; padding: 0px;">
-            <table class="table" aria-label="Liste" style="margin:1em; width: calc(100% - 2em)">
-                <thead class="sticky-top" style="background: #FFFFFF;">
-                {% block table_head %}
-                {% endblock %}
-                </thead>
-                <tbody>
-                {% block table_body %}
-                {% endblock %}
-                </tbody>
-            </table>
-        </div>
-        {% if is_paginated %}
 
-        <nav aria-label="Pagination" style="display:flex; justify-content:center; margin-bottom:0px; margin-top: 1em;">
-            <ul class="pagination">
-                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                    <a class="page-link" {% if page_obj.has_previous %}
-                       href="?page={{ page_obj.previous_page_number }}&{{ filter_query }}" {% endif %}
-                       aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                {% for page in page_obj.paginator.page_range %}
-                {% if page %}
-                {% if page == page_obj.number %}
-                <li class="page-item active" aria-current="page">
-              <span class="page-link">
-                {{ page }}
-              </span>
-                </li>
-                {% else %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page }}&{{ filter_query }}">{{ page }}</a>
-                </li>
-                {% endif %}
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">&hellip;</span>
-                </li>
-                {% endif %}
-                {% endfor %}
-
-                <li class="page-item">
-                    <a class="page-link" {% if page_obj.has_next %}
-                       href="?page={{ page_obj.next_page_number }}&{{ filter_query }}" {% endif %}
-                       aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+        {% if filter.form %}
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% translate "Filter" %}</h4>
+                </div>
+                <div class="card-body">
+                    <form id="filter-form" method="get">
+                        {% for field in filter.form %}
+                            {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' %}
+                                <div class="mb-3 searchable-select">
+                                    <label class="form-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                                    {{ field }}
+                                </div>
+                            {% else %}
+                                {% bootstrap_field field %}
+                            {% endif %}
+                        {% endfor %}
+                        <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
+                            {% translate 'Suchen' %}
+                        </button>
+                    </form>
+                </div>
+            </div>
         {% endif %}
     </div>
 
-    {% if filter.form %}
-    <div class="card">
-        <div class="card-header">
-            <h4>{% translate "Filter" %}</h4>
-        </div>
-        <div class="card-body">
-            <form id="filter-form" method="get">
-                {% for field in filter.form %}
-                {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' %}
-                <div class="mb-3 searchable-select">
-                    <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
-                    {{ field }}
-                </div>
-                {% else %}
-                {% bootstrap_field field %}
-                {% endif %}
-                {% endfor %}
-                <button style="float:right" class="btn tapir-btn btn-primary" type="submit">
-                    {% translate 'Suchen' %}
-                </button>
-            </form>
-        </div>
-    </div>
-    {% endif %}
-</div>
+    <script>
+        const sortHeaders = document.querySelectorAll('th.sort-header');
+        const sortForm = document.getElementById('filter-form');
+        const sortField = document.getElementById('id_o');
 
-<script>
-const sortHeaders = document.querySelectorAll('th.sort-header');
-const sortForm = document.getElementById('filter-form');
-const sortField = document.getElementById('id_o');
+        const sortOrders = {};
 
-const sortOrders = {};
+        sortHeaders.forEach(header => {
+            const sort = header.getAttribute('data-sort');
+            const sortSymbol = document.createElement('span');
+            sortSymbol.classList.add('sort-symbol');
+            header.prepend(sortSymbol);
+            header.style.cursor = 'pointer';
 
-sortHeaders.forEach(header => {
-  const sort = header.getAttribute('data-sort');
-  const sortSymbol = document.createElement('span');
-  sortSymbol.classList.add('sort-symbol');
-  header.prepend(sortSymbol);
-  header.style.cursor = 'pointer';
+            if (sortField.value.includes(sort)) {
+                sortOrders[sort] = sortField.value.startsWith('-') ? -1 : 1;
+                sortSymbol.innerHTML = sortField.value.startsWith('-') ? '⮟ ' : '⮝ ';
+            }
+        });
 
-  if (sortField.value.includes(sort)) {
-    sortOrders[sort] = sortField.value.startsWith('-') ? -1 : 1;
-    sortSymbol.innerHTML = sortField.value.startsWith('-') ? '⮟ ' : '⮝ ';
-  }
-});
+        if (sortField) sortField.parentElement.style.display = 'none';
 
-if (sortField) sortField.parentElement.style.display = 'none';
+        sortHeaders.forEach(header => {
+            const sort = header.getAttribute('data-sort');
 
-sortHeaders.forEach(header => {
-  const sort = header.getAttribute('data-sort');
+            header.addEventListener('click', event => {
+                event.preventDefault();
 
-  header.addEventListener('click', event => {
-    event.preventDefault();
+                if (sortOrders[sort] === 1) {
+                    sortOrders[sort] = -1;
+                    sortField.value = `-${sort}`;
+                } else if (sortOrders[sort] === -1) {
+                    sortOrders[sort] = 0;
+                    sortField.value = '';
+                } else {
+                    sortOrders[sort] = 1;
+                    sortField.value = sort;
+                }
 
-    if (sortOrders[sort] === 1) {
-      sortOrders[sort] = -1;
-      sortField.value = `-${sort}`;
-    } else if (sortOrders[sort] === -1) {
-      sortOrders[sort] = 0;
-      sortField.value = '';
-    } else {
-      sortOrders[sort] = 1;
-      sortField.value = sort;
-    }
+                console.log(sortField.value)
 
-    console.log(sortField.value)
+                sortForm.submit();
 
-    sortForm.submit();
+                sortHeaders.forEach(header => {
+                    const headerSort = header.getAttribute('data-sort');
+                    const headerSortSymbol = header.querySelector('.sort-symbol');
+                    headerSortSymbol.innerHTML = '';
+                    if (sortOrders[headerSort]) {
+                        headerSortSymbol.innerHTML = sortOrders[headerSort] === -1 ? '⮟ ' : '⮝ ';
+                    }
+                });
+            });
+        });
 
-    sortHeaders.forEach(header => {
-      const headerSort = header.getAttribute('data-sort');
-      const headerSortSymbol = header.querySelector('.sort-symbol');
-      headerSortSymbol.innerHTML = '';
-      if (sortOrders[headerSort]) {
-        headerSortSymbol.innerHTML = sortOrders[headerSort] === -1 ? '⮟ ' : '⮝ ';
-      }
-    });
-  });
-});
+    </script>
 
-</script>
-
-{% block script %}{% endblock %}
+    {% block script %}{% endblock %}
 
 {% endblock %}
