@@ -48,7 +48,11 @@ from tapir.subscriptions.services.solidarity_validator_new import SolidarityVali
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
+from tapir.subscriptions.services.subscription_change_validator_new import (
+    SubscriptionChangeValidatorNew,
+)
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -665,7 +669,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         pickup_location = get_object_or_404(
             PickupLocation, id=serializer.validated_data["pickup_location_id"]
         )
-        ordered_products_to_quantity_map = {
+        order: TapirOrder = {
             get_object_or_404(Product, id=product_id): quantity
             for product_id, quantity in serializer.validated_data[
                 "shopping_card"
@@ -673,7 +677,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         }
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            ordered_products_to_quantity_map=order,
             already_registered_member=None,
             subscription_start=subscription_start_date,
             cache=self.cache,
@@ -685,11 +689,19 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
             ordered_solidarity_factor=0,  # TODO
-            order=ordered_products_to_quantity_map,
+            order=order,
             start_date=subscription_start_date,
             cache=self.cache,
         ):
-            self.add_error("solidarity_factor", "TODO")
+            self.add_error("TODO", "TODO")
+
+        if not SubscriptionChangeValidatorNew.is_there_enough_free_global_capacity_for_all_ordered_product_types(
+            order_with_all_product_types=order,
+            member_id=None,
+            subscription_start_date=subscription_start_date,
+            cache=self.cache,
+        ):
+            self.add_error("TODO", "Not enough capacity")
 
         data = {
             "order_confirmed": len(self.errors) == 0,

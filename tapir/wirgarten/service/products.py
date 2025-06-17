@@ -633,10 +633,11 @@ def get_free_product_capacity(
         reference_date, cache=cache
     ).filter(product_type_id=product_type_id)
 
-    if not active_product_capacities.exists():
+    capacity_object: ProductCapacity | None = active_product_capacities.first()
+    if capacity_object is None:
         return 0
 
-    total_capacity = float(active_product_capacities.first().capacity)
+    total_capacity = float(capacity_object.capacity)
     used_capacity = sum(
         map(
             lambda sub: float(
