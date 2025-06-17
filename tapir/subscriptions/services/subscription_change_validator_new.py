@@ -1,21 +1,90 @@
 import datetime
 
-from tapir.wirgarten.models import Product
-from tapir.wirgarten.service.products import get_product_price
+from tapir.subscriptions.services.subscription_change_validator import (
+    SubscriptionChangeValidator,
+)
+from tapir.subscriptions.types import TapirOrder
+from tapir.wirgarten.service.products import (
+    get_product_price,
+    get_free_product_capacity,
+)
 
 
 class SubscriptionChangeValidatorNew:
     @classmethod
     def calculate_global_capacity_used_by_the_ordered_products(
         cls,
-        ordered_products_to_quantity_map: dict[Product, int],
+        order_for_a_single_product_type: TapirOrder,
         reference_date: datetime.date,
         cache: dict = None,
     ):
         total = 0.0
-        for product, quantity in ordered_products_to_quantity_map:
+        for product, quantity in order_for_a_single_product_type.items():
             product_price_object = get_product_price(
                 product=product, reference_date=reference_date, cache=cache
             )
             total += float(product_price_object.size) * quantity
         return total
+
+    @classmethod
+    def is_there_enough_free_global_capacity_for_all_ordered_product_types(
+        cls,
+        order_with_all_product_types: TapirOrder,
+        member_id: str | None,
+        subscription_start_date: datetime.date,
+        cache: dict,
+    ):
+        product_type_ids = {
+            product.type_id for product in order_with_all_product_types.keys()
+        }
+
+        for product_type_id in product_type_ids:
+            enough = cls.is_there_enough_free_global_capacity_for_single_product_type(
+                order_for_a_single_product_type={
+                    product: quantity
+                    for product, quantity in order_with_all_product_types.items()
+                    if product.type_id == product_type_id
+                },
+                member_id=member_id,
+                subscription_start_date=subscription_start_date,
+                product_type_id=product_type_id,
+                cache=cache,
+            )
+            if not enough:
+                return False
+
+        return True
+
+    @classmethod
+    def is_there_enough_free_global_capacity_for_single_product_type(
+        cls,
+        order_for_a_single_product_type: TapirOrder,
+        member_id: str | None,
+        subscription_start_date: datetime.date,
+        product_type_id,
+        cache: dict,
+    ):
+        free_capacity = get_free_product_capacity(
+            product_type_id=product_type_id,
+            reference_date=subscription_start_date,
+            cache=cache,
+        )
+        capacity_used_by_the_ordered_products = (
+            cls.calculate_global_capacity_used_by_the_ordered_products(
+                order_for_a_single_product_type=order_for_a_single_product_type,
+                reference_date=subscription_start_date,
+                cache=cache,
+            )
+        )
+
+        capacity_used_by_the_current_subscriptions = SubscriptionChangeValidator.calculate_capacity_used_by_the_current_subscriptions(
+            product_type_id=product_type_id,
+            member_id=member_id,
+            subscription_start_date=subscription_start_date,
+            cache=cache,
+        )
+
+        return free_capacity >= (
+            capacity_used_by_the_ordered_products
+            - float(capacity_used_by_the_current_subscriptions)
+        )
