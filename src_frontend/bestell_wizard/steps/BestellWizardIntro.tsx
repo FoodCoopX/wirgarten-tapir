@@ -80,6 +80,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
                 updateProductSelection(publicProductType, event.target.checked)
               }
               checked={selectedProductTypes.includes(publicProductType)}
+              disabled={publicProductType.mustBeSubscribedTo}
             />
             <span>
               {!publicProductType.descriptionBestellwizardShort ? (

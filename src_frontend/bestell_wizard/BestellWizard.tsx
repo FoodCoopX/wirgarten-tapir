@@ -104,6 +104,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       }
     }
     setShoppingCart(newShoppingCart);
+
+    setSelectedProductTypes(
+      publicProductTypes.filter(
+        (productType) => productType.mustBeSubscribedTo,
+      ),
+    );
   }, [publicProductTypes]);
 
   useEffect(() => {
@@ -225,7 +231,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           isPersonalDataValid(personalData) && sepaAllowed && contractAccepted
         );
       default:
-        return true;
+        const productType = publicProductTypes.find(
+          (productType) => productType.id === currentStep,
+        );
+        if (productType === undefined) return true;
+        return (
+          !productType.mustBeSubscribedTo ||
+          !isProductTypeOrdered(productType, shoppingCart)
+        );
     }
   }
 
@@ -281,13 +294,20 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           />
         );
       }
+      let text = "Ohne " + productType.name + " weitergehen";
+      let disabled = false;
+      if (productType.mustBeSubscribedTo) {
+        text = productType.name + " müssen bestellt werden";
+        disabled = true;
+      }
       return (
         <TapirButton
           icon={"shopping_cart_off"}
           variant={"outline-primary"}
-          text={"Ohne " + productType.name + " weitergehen"}
+          text={text}
           onClick={onNextClicked}
           iconPosition={"right"}
+          disabled={disabled}
         />
       );
     }

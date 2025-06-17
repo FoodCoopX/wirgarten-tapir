@@ -117,6 +117,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "description_bestellwizard_long",
             "products",
             "order_in_bestellwizard",
+            "must_be_subscribed_to",
         ]
 
     products = SerializerMethodField()

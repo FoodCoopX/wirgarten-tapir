@@ -63,6 +63,12 @@ export interface PublicProductType {
      * @memberof PublicProductType
      */
     orderInBestellwizard?: number;
+    /**
+     * Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+     * @type {boolean}
+     * @memberof PublicProductType
+     */
+    mustBeSubscribedTo?: boolean;
 }
 
 /**
@@ -90,6 +96,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'descriptionBestellwizardLong': json['description_bestellwizard_long'] == null ? undefined : json['description_bestellwizard_long'],
         'products': ((json['products'] as Array<any>).map(PublicProductFromJSON)),
         'orderInBestellwizard': json['order_in_bestellwizard'] == null ? undefined : json['order_in_bestellwizard'],
+        'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
     };
 }
 
@@ -109,6 +116,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'description_bestellwizard_short': value['descriptionBestellwizardShort'],
         'description_bestellwizard_long': value['descriptionBestellwizardLong'],
         'order_in_bestellwizard': value['orderInBestellwizard'],
+        'must_be_subscribed_to': value['mustBeSubscribedTo'],
     };
 }
 
