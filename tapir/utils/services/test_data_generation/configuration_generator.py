@@ -6,6 +6,7 @@ from tapir.core.config import (
     THEME_BIOTOP,
     THEME_WIRGARTEN,
     THEME_L2G,
+    THEME_MM,
 )
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.utils.config import Organization
@@ -25,6 +26,7 @@ class ConfigurationGenerator:
             Organization.WIRGARTEN: LEGAL_STATUS_COOPERATIVE,
             Organization.VEREIN: LEGAL_STATUS_ASSOCIATION,
             Organization.L2G: LEGAL_STATUS_COMPANY,
+            Organization.MM: LEGAL_STATUS_COMPANY,
         }
         TapirParameter.objects.filter(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS
@@ -35,6 +37,7 @@ class ConfigurationGenerator:
             Organization.WIRGARTEN: THEME_WIRGARTEN,
             Organization.VEREIN: THEME_BIOTOP,
             Organization.L2G: THEME_L2G,
+            Organization.MM: THEME_MM,
         }
         TapirParameter.objects.filter(key=ParameterKeys.ORGANISATION_THEME).update(
             value=themes[organization]
@@ -45,6 +48,7 @@ class ConfigurationGenerator:
             Organization.WIRGARTEN: PICKING_MODE_SHARE,
             Organization.VEREIN: PICKING_MODE_SHARE,
             Organization.L2G: PICKING_MODE_SHARE,
+            Organization.MM: PICKING_MODE_SHARE,
         }
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
             value=picking_modes[organization]
@@ -52,13 +56,14 @@ class ConfigurationGenerator:
 
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
-        ).update(value=organization == Organization.BIOTOP)
+        ).update(value=organization in [Organization.BIOTOP, Organization.MM])
 
         delivery_day = {
             Organization.BIOTOP: 4,
             Organization.WIRGARTEN: 2,
             Organization.VEREIN: 2,
             Organization.L2G: 3,
+            Organization.MM: 2,
         }
         TapirParameter.objects.filter(key=ParameterKeys.DELIVERY_DAY).update(
             value=delivery_day[organization]

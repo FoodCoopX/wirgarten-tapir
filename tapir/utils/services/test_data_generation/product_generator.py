@@ -90,6 +90,8 @@ class ProductGenerator:
                 cls.generate_products_verein(product_type_ernteanteile=ernteanteile)
             case Organization.L2G:
                 cls.generate_products_l2g(product_type_ernteanteile=ernteanteile)
+            case Organization.MM:
+                cls.generate_products_mm(product_type_ernteanteile=ernteanteile)
             case _:
                 raise ImproperlyConfigured(f"Unknown organization type: {organization}")
 
@@ -418,3 +420,22 @@ class ProductGenerator:
     def generate_product_data(cls, organization: Organization):
         cls.generate_products(organization)
         cls.generate_product_capacities()
+
+    @classmethod
+    def generate_products_mm(cls, product_type_ernteanteile: ProductType):
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Ernteanteil ab Hof",
+            base_price=75,
+            size=1,
+            base=True,
+            min_coop_shares=2,
+        )
+        cls.generate_product(
+            product_type=product_type_ernteanteile,
+            name="Ernteanteil ab Depot",
+            base_price=90,
+            size=1,
+            base=False,
+            min_coop_shares=2,
+        )

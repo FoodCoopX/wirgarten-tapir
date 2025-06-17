@@ -6,3 +6,4 @@ class Organization(Enum):
     BIOTOP = "biotop"
     VEREIN = "verein"
     L2G = "l2g"
+    MM = "mm"

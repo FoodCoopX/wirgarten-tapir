@@ -176,9 +176,12 @@ class UserGenerator:
                 products_from_base_type=products_from_base_type,
                 additional_products=additional_products,
             )
-            if min_coop_shares > 0 or get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                cache=cache,
+            if len(additional_products) > 0 and (
+                min_coop_shares > 0
+                or get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+                    cache=cache,
+                )
             ):
                 _, needs_pickup_location_additional_products = (
                     cls.create_subscriptions_for_user(

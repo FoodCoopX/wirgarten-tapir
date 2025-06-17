@@ -24,6 +24,8 @@ class PickupLocationGenerator:
                 cls.generate_pickup_locations_for_wirgarten()
             case Organization.L2G:
                 cls.generate_pickup_locations_for_l2g()
+            case Organization.MM:
+                cls.generate_pickup_locations_for_mm()
             case _:
                 raise ImproperlyConfigured(f"Unknown organization: {organization}")
 
@@ -617,4 +619,104 @@ class PickupLocationGenerator:
             day_of_week=3,
             open_time=datetime.time(hour=15),
             close_time=datetime.time(hour=20),
+        )
+
+    @classmethod
+    def generate_pickup_locations_for_mm(cls):
+        ernteanteile = ProductType.objects.get(name="Ernteanteile")
+
+        wirgarten = PickupLocationFactory.create(
+            name="WirGarten Lüneburg",
+            coords_lon=53.2731785,
+            coords_lat=10.3741809,
+            street="Vögelser Straße 25",
+            postcode="21339",
+            city="Lüneburg-Ochtmissen",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=wirgarten, max_capacity=30, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=wirgarten,
+            day_of_week=3,
+            open_time=datetime.time(hour=8),
+            close_time=datetime.time(hour=17),
+        )
+
+        edeka = PickupLocationFactory.create(
+            name="Edeka Bergmann",
+            coords_lon=53.2443079,
+            coords_lat=10.3996325,
+            street="Sülfmeisterstraße 3",
+            postcode="21335",
+            city="Lüneburg",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=edeka, max_capacity=60, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=edeka,
+            day_of_week=3,
+            open_time=datetime.time(hour=8),
+            close_time=datetime.time(hour=20),
+        )
+
+        fluse = PickupLocationFactory.create(
+            name="Wohnprojekt Fluse",
+            coords_lon=53.2541747,
+            coords_lat=10.4238272,
+            street="Meisterweg 100",
+            postcode="21337",
+            city="Lüneburg",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=fluse, max_capacity=60, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=fluse,
+            day_of_week=3,
+            open_time=datetime.time(hour=1),
+            close_time=datetime.time(hour=18, minute=30),
+        )
+
+        frohnatur = PickupLocationFactory.create(
+            name="FrohNatur",
+            coords_lon=53.2476476,
+            coords_lat=10.3533381,
+            street="An der Eulenburg 28",
+            postcode="21391",
+            city="Reppenstedt",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=frohnatur, max_capacity=30, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=frohnatur,
+            day_of_week=2,
+            open_time=datetime.time(hour=13),
+            close_time=datetime.time(hour=18),
+        )
+
+        garage = PickupLocationFactory.create(
+            name="Garage am Finkenberg",
+            coords_lon=53.2421706,
+            coords_lat=10.3937467,
+            street="Finkenberg 1",
+            postcode="21339",
+            city="Lüneburg",
+        )
+        PickupLocationCapabilityFactory.create(
+            pickup_location=garage, max_capacity=None, product_type=ernteanteile
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=garage,
+            day_of_week=2,
+            open_time=datetime.time(hour=15, minute=30),
+            close_time=datetime.time(hour=23, minute=59),
+        )
+        PickupLocationOpeningTime.objects.create(
+            pickup_location=garage,
+            day_of_week=3,
+            open_time=datetime.time(hour=13),
+            close_time=datetime.time(hour=18),
         )

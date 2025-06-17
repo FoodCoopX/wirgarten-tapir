@@ -2,7 +2,6 @@ import datetime
 from unittest.mock import patch
 
 from django.urls import reverse
-from icecream import ic
 
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.subscription_change_validator import (
@@ -101,14 +100,12 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         url = f"{reverse('wirgarten:member_add_subscription', args=[member.id])}?productType=Ernteanteile"
         return self.client.post(
             url,
-            data=ic(
-                {
-                    "growing_period": growing_period.id,
-                    "base_product_M": nb_m_shares,
-                    "base_product_L": nb_l_shares,
-                    "solidarity_price_choice": solidarity_price_factor,
-                }
-            ),
+            data={
+                "growing_period": growing_period.id,
+                "base_product_M": nb_m_shares,
+                "base_product_L": nb_l_shares,
+                "solidarity_price_choice": solidarity_price_factor,
+            },
         )
 
     def test_baseProductForm_enoughCapacity_allSubscriptionsCreated(self):

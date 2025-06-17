@@ -141,6 +141,8 @@ class DataGenerator:
             return 7
         if generate_test_data_for == Organization.L2G:
             return 5
+        if generate_test_data_for == Organization.MM:
+            return 5
         raise ImproperlyConfigured(
             f"Unknown organization for test data generation: {generate_test_data_for}"
         )
