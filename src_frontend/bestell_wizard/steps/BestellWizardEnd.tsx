@@ -1,6 +1,6 @@
 import React from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { BestellWizardConfirmOrderResponse } from "../../api-client";
 
 interface BestellWizardEndProps {

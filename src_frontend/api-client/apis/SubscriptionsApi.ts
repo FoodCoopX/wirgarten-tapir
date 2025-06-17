@@ -15,6 +15,8 @@
 
 import * as runtime from '../runtime';
 import type {
+  BestellWizardCapacityCheckRequestRequest,
+  BestellWizardCapacityCheckResponse,
   BestellWizardConfirmOrderRequestRequest,
   BestellWizardConfirmOrderResponse,
   CancelSubscriptionsViewResponse,
@@ -26,6 +28,10 @@ import type {
   PublicProductType,
 } from '../models/index';
 import {
+    BestellWizardCapacityCheckRequestRequestFromJSON,
+    BestellWizardCapacityCheckRequestRequestToJSON,
+    BestellWizardCapacityCheckResponseFromJSON,
+    BestellWizardCapacityCheckResponseToJSON,
     BestellWizardConfirmOrderRequestRequestFromJSON,
     BestellWizardConfirmOrderRequestRequestToJSON,
     BestellWizardConfirmOrderResponseFromJSON,
@@ -45,6 +51,10 @@ import {
     PublicProductTypeFromJSON,
     PublicProductTypeToJSON,
 } from '../models/index';
+
+export interface SubscriptionsApiBestellWizardCapacityCheckCreateRequest {
+    bestellWizardCapacityCheckRequestRequest: BestellWizardCapacityCheckRequestRequest;
+}
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
     confirmCancellationIds: Array<string>;
@@ -86,6 +96,43 @@ export interface SubscriptionsPublicProductTypesRetrieveRequest {
  * 
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async subscriptionsApiBestellWizardCapacityCheckCreateRaw(requestParameters: SubscriptionsApiBestellWizardCapacityCheckCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BestellWizardCapacityCheckResponse>> {
+        if (requestParameters['bestellWizardCapacityCheckRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'bestellWizardCapacityCheckRequestRequest',
+                'Required parameter "bestellWizardCapacityCheckRequestRequest" was null or undefined when calling subscriptionsApiBestellWizardCapacityCheckCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/subscriptions/api/bestell_wizard_capacity_check`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BestellWizardCapacityCheckRequestRequestToJSON(requestParameters['bestellWizardCapacityCheckRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BestellWizardCapacityCheckResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsApiBestellWizardCapacityCheckCreate(requestParameters: SubscriptionsApiBestellWizardCapacityCheckCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BestellWizardCapacityCheckResponse> {
+        const response = await this.subscriptionsApiBestellWizardCapacityCheckCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      */

@@ -1,9 +1,9 @@
 import React from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PersonalData } from "../types/PersonalData.ts";
-import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
+import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
-import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Table } from "react-bootstrap";
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";

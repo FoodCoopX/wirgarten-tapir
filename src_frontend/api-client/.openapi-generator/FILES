@@ -9,6 +9,8 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
+models/BestellWizardCapacityCheckRequestRequest.ts
+models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
 models/BestellWizardConfirmOrderResponse.ts
 models/BlankEnum.ts

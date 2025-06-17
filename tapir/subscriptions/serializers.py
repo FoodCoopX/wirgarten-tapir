@@ -146,7 +146,7 @@ class PersonalDataSerializer(serializers.Serializer):
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     # map of productId -> quantity ordered
-    shopping_card = serializers.DictField(child=serializers.IntegerField())
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
     personal_data = serializers.CharField()
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
@@ -159,4 +159,16 @@ class BestellWizardConfirmOrderResponseSerializer(serializers.Serializer):
     order_confirmed = serializers.BooleanField()
     errors = serializers.DictField(
         child=serializers.ListField(child=serializers.CharField())
+    )
+
+
+class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
+    # map of productId -> quantity ordered
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+
+
+class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):
+    ids_of_products_over_capacity = serializers.ListField(child=serializers.CharField())
+    ids_of_product_types_over_capacity = serializers.ListField(
+        child=serializers.CharField()
     )

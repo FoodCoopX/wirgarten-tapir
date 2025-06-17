@@ -3,8 +3,8 @@ import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
 import { Form } from "react-bootstrap";
-import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
-import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;

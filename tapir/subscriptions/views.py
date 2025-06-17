@@ -39,6 +39,8 @@ from tapir.subscriptions.serializers import (
     PublicProductTypeSerializer,
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardConfirmOrderResponseSerializer,
+    BestellWizardCapacityCheckRequestSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
 )
 from tapir.subscriptions.services.RequiredProductTypesValidator import (
     RequiredProductTypesValidator,
@@ -678,7 +680,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         order: TapirOrder = {
             get_object_or_404(Product, id=product_id): quantity
             for product_id, quantity in serializer.validated_data[
-                "shopping_card"
+                "shopping_cart"
             ].items()
         }
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
@@ -701,12 +703,13 @@ class BestellWizardConfirmOrderApiView(APIView):
         ):
             self.add_error("TODO", "TODO")
 
-        if not SubscriptionChangeValidatorNew.is_there_enough_free_global_capacity_for_all_ordered_product_types(
+        product_type_ids_without_enough_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
             member_id=None,
             subscription_start_date=subscription_start_date,
             cache=self.cache,
-        ):
+        )
+        if len(product_type_ids_without_enough_capacity) > 0:
             self.add_error("TODO", "Not enough capacity")
 
         if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
@@ -735,3 +738,43 @@ class BestellWizardConfirmOrderApiView(APIView):
             self.errors[field] = []
 
         self.errors[field].append(message)
+
+
+class BestellWizardCapacityCheckApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardCapacityCheckResponseSerializer},
+        request=BestellWizardCapacityCheckRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardCapacityCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        order: TapirOrder = {
+            get_object_or_404(Product, id=product_id): quantity
+            for product_id, quantity in serializer.validated_data[
+                "shopping_cart"
+            ].items()
+        }
+
+        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+
+        ids_of_product_types_over_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=None,
+            subscription_start_date=subscription_start_date,
+            cache=self.cache,
+        )
+
+        response_data = {
+            "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
+            "ids_of_products_over_capacity": [],
+        }
+        return Response(
+            BestellWizardCapacityCheckResponseSerializer(response_data).data
+        )

@@ -24,7 +24,7 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @type {{ [key: string]: number; }}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    shoppingCard: { [key: string]: number; };
+    shoppingCart: { [key: string]: number; };
     /**
      * 
      * @type {string}
@@ -67,7 +67,7 @@ export interface BestellWizardConfirmOrderRequestRequest {
  * Check if a given object implements the BestellWizardConfirmOrderRequestRequest interface.
  */
 export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object): value is BestellWizardConfirmOrderRequestRequest {
-    if (!('shoppingCard' in value) || value['shoppingCard'] === undefined) return false;
+    if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
     if (!('personalData' in value) || value['personalData'] === undefined) return false;
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
     if (!('contractAccepted' in value) || value['contractAccepted'] === undefined) return false;
@@ -87,7 +87,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
     }
     return {
         
-        'shoppingCard': json['shopping_card'],
+        'shoppingCart': json['shopping_cart'],
         'personalData': json['personal_data'],
         'sepaAllowed': json['sepa_allowed'],
         'contractAccepted': json['contract_accepted'],
@@ -108,7 +108,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
 
     return {
         
-        'shopping_card': value['shoppingCard'],
+        'shopping_cart': value['shoppingCart'],
         'personal_data': value['personalData'],
         'sepa_allowed': value['sepaAllowed'],
         'contract_accepted': value['contractAccepted'],

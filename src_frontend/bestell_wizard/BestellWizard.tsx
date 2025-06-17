@@ -29,6 +29,9 @@ import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
 import { isPersonalDataValid } from "./utils/isPersonalDataValid.ts";
 import { getTestPersonalData } from "./utils/getTestPersonalData.ts";
 import BestellWizardEnd from "./steps/BestellWizardEnd.tsx";
+import { buildNextButtonParametersForProductType } from "./utils/buildNextButtonForProductType.ts";
+import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
+import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -74,6 +77,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [confirmOrderResponse, setConfirmOrderResponse] =
     useState<BestellWizardConfirmOrderResponse>();
+  const [checkingCapacities, setCheckingCapacities] = useState(false);
+  const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [productTypeIdsOverCapacity, setProductTypeIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
+  const [productWaitingListModalOpen, setProductWaitingListModalOpen] =
+    useState(false);
 
   useEffect(() => {
     coreApi
@@ -124,7 +137,66 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     ]);
   }, [selectedProductTypes]);
 
+  useEffect(() => {
+    const totalQuantityOrdered = Object.values(shoppingCart).reduce(
+      (sum, quantity) => sum + quantity,
+      0,
+    );
+    if (totalQuantityOrdered === 0) {
+      return;
+    }
+
+    setCheckingCapacities(true);
+
+    subscriptionsApi
+      .subscriptionsApiBestellWizardCapacityCheckCreate({
+        bestellWizardCapacityCheckRequestRequest: {
+          shoppingCart: shoppingCart,
+        },
+      })
+      .then((response) => {
+        setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
+        setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
+        if (
+          response.idsOfProductsOverCapacity.length === 0 &&
+          response.idsOfProductTypesOverCapacity.length === 0
+        ) {
+          setWaitingListModeEnabled(false);
+        }
+      })
+      .catch(handleRequestError)
+      .finally(() => setCheckingCapacities(false));
+  }, [shoppingCart]);
+
   function onNextClicked() {
+    if (!waitingListModeEnabled && shouldOpenWaitingListModal()) {
+      setProductWaitingListModalOpen(true);
+      return;
+    }
+    goToNextStep();
+  }
+
+  function shouldOpenWaitingListModal() {
+    const productType = publicProductTypes.find(
+      (productType) => productType.id === currentStep,
+    );
+    if (productType === undefined) {
+      return false;
+    }
+
+    if (productTypeIdsOverCapacity.includes(productType.id!)) {
+      return true;
+    }
+    for (const product of productType.products) {
+      if (productIdsOverCapacity.includes(product.id!)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function goToNextStep() {
     setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
   }
 
@@ -254,7 +326,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           statuteAccepted: statuteAccepted,
           nbShares: selectedNumberOfCoopShares,
           pickupLocationId: selectedPickupLocation!.id!,
-          shoppingCard: shoppingCart,
+          shoppingCart: shoppingCart,
         },
       })
       .then((response) => {
@@ -283,31 +355,15 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       (productType) => productType.id === currentStep,
     );
     if (productType !== undefined) {
-      if (isProductTypeOrdered(productType, shoppingCart)) {
-        return (
-          <TapirButton
-            icon={"add_shopping_cart"}
-            variant={"outline-primary"}
-            text={productType.name + " zur Bestellung hinzufügen"}
-            onClick={onNextClicked}
-            iconPosition={"right"}
-          />
-        );
-      }
-      let text = "Ohne " + productType.name + " weitergehen";
-      let disabled = false;
-      if (productType.mustBeSubscribedTo) {
-        text = productType.name + " müssen bestellt werden";
-        disabled = true;
-      }
+      const buttonParams = buildNextButtonParametersForProductType(
+        productType,
+        shoppingCart,
+        checkingCapacities,
+      );
       return (
-        <TapirButton
-          icon={"shopping_cart_off"}
-          variant={"outline-primary"}
-          text={text}
-          onClick={onNextClicked}
-          iconPosition={"right"}
-          disabled={disabled}
+        <BestellWizardNextButton
+          onNextClicked={onNextClicked}
+          params={buttonParams}
         />
       );
     }
@@ -368,6 +424,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setStatuteAccepted(true);
   }
 
+  function confirmEnableWaitingListMode() {
+    setWaitingListModeEnabled(true);
+    setProductWaitingListModalOpen(false);
+    goToNextStep();
+  }
+
+  function cancelEnableWaitingListMode() {
+    setProductWaitingListModalOpen(false);
+  }
+
   return (
     <>
       <Row className={"justify-content-center p-4"}>
@@ -410,6 +476,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           </Card>
         </Col>
       </Row>
+      <ProductWaitingListModal
+        show={productWaitingListModalOpen}
+        onHide={cancelEnableWaitingListMode}
+        confirmEnableWaitingListMode={confirmEnableWaitingListMode}
+      />
     </>
   );
 };
