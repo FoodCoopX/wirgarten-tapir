@@ -68,9 +68,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     getEmptyPersonalData(),
   );
   const [sepaAllowed, setSepaAllowed] = useState(false);
-  const [contractRead, setContractRead] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(false);
   const [steps, setSteps] = useState<(string | BestellWizardStep)[]>(["intro"]);
-  const [statuteRead, setStatuteRead] = useState(false);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [confirmOrderResponse, setConfirmOrderResponse] =
     useState<BestellWizardConfirmOrderResponse>();
@@ -163,8 +163,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             shoppingCart={shoppingCart}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
-            statuteRead={statuteRead}
-            setStatuteRead={setStatuteRead}
+            statuteAccepted={statuteAccepted}
+            setStatuteAccepted={setStatuteAccepted}
           />
         );
       case "personal_data":
@@ -175,8 +175,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setPersonalData={setPersonalData}
             sepaAllowed={sepaAllowed}
             setSepaAllowed={setSepaAllowed}
-            contractRead={contractRead}
-            setContractRead={setContractRead}
+            contractAccepted={contractAccepted}
+            setContractAccepted={setContractAccepted}
           />
         );
       case "summary":
@@ -219,9 +219,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "pickup_location":
         return selectedPickupLocation !== undefined;
       case "coop_shares":
-        return statuteRead;
+        return statuteAccepted;
       case "personal_data":
-        return isPersonalDataValid(personalData) && sepaAllowed && contractRead;
+        return (
+          isPersonalDataValid(personalData) && sepaAllowed && contractAccepted
+        );
       default:
         return true;
     }
@@ -234,9 +236,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       .subscriptionsBestellWizardConfirmOrderCreate({
         bestellWizardConfirmOrderRequestRequest: {
           personalData: "WIP",
-          sepaAllowed: false,
-          contractAccepted: contractRead,
-          statuteAccepted: false,
+          sepaAllowed: sepaAllowed,
+          contractAccepted: contractAccepted,
+          statuteAccepted: statuteAccepted,
           nbShares: selectedNumberOfCoopShares,
           pickupLocationId: selectedPickupLocation!.id!,
           shoppingCard: shoppingCart,
@@ -304,7 +306,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         }
         break;
       case "coop_shares":
-        if (!statuteRead) {
+        if (!statuteAccepted) {
           text = "Akzeptiere die Satzung um weiter zu gehen";
         }
         break;
@@ -313,7 +315,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           text = "Vervollständige deine Daten um weiter zu gehen";
         } else if (!sepaAllowed) {
           text = "Ermächtige das SEPA-Mandat um weiter zu gehen";
-        } else if (!contractRead) {
+        } else if (!contractAccepted) {
           text = "Akzeptiere die Vertragsgrundsätze um weiter zu gehen";
         }
     }
@@ -342,8 +344,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setSelectedPickupLocation(pickupLocations[0]);
     setSelectedNumberOfCoopShares(7);
     setSepaAllowed(true);
-    setContractRead(true);
-    setStatuteRead(true);
+    setContractAccepted(true);
+    setStatuteAccepted(true);
   }
 
   return (
