@@ -1,11 +1,11 @@
 import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
 
-import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
-import { type PublicProductType } from "../api-client";
-import { formatCurrency } from "../utils/formatCurrency.ts";
-import { ShoppingCart } from "./types/ShoppingCart.ts";
+import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../../tapir/core/static/core/css/base.css";
+import { type PublicProductType } from "../../api-client";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
 
 interface ProductFormProps {

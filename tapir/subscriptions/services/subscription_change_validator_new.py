@@ -27,7 +27,7 @@ class SubscriptionChangeValidatorNew:
         return total
 
     @classmethod
-    def is_there_enough_free_global_capacity_for_all_ordered_product_types(
+    def get_product_type_ids_without_enough_capacity_for_order(
         cls,
         order_with_all_product_types: TapirOrder,
         member_id: str | None,
@@ -37,7 +37,7 @@ class SubscriptionChangeValidatorNew:
         product_type_ids = {
             product.type_id for product in order_with_all_product_types.keys()
         }
-
+        product_type_ids_without_enough_capacity = []
         for product_type_id in product_type_ids:
             enough = cls.is_there_enough_free_global_capacity_for_single_product_type(
                 order_for_a_single_product_type={
@@ -51,9 +51,9 @@ class SubscriptionChangeValidatorNew:
                 cache=cache,
             )
             if not enough:
-                return False
+                product_type_ids_without_enough_capacity.append(product_type_id)
 
-        return True
+        return product_type_ids_without_enough_capacity
 
     @classmethod
     def is_there_enough_free_global_capacity_for_single_product_type(

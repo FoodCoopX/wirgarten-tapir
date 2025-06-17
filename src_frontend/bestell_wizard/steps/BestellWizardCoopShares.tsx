@@ -5,8 +5,8 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
 import { useApi } from "../../hooks/useApi.ts";
-import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
-import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardCoopSharesProps {
   theme: TapirTheme;

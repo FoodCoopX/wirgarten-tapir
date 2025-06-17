@@ -31,6 +31,11 @@ urlpatterns = [
         name="member_data_to_confirm",
     ),
     path(
+        "api/bestell_wizard_capacity_check",
+        views.BestellWizardCapacityCheckApiView.as_view(),
+        name="bestell_wizard_capacity_check",
+    ),
+    path(
         "bestell_wizard",
         views.BestellWizardView.as_view(),
         name="bestell_wizard",

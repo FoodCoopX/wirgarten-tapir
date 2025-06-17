@@ -11,8 +11,8 @@ import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import L from "leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
-import BestellWizardCardTitle from "../BestellWizardCardTitle.tsx";
-import BestellWizardCardSubtitle from "../BestellWizardCardSubtitle.tsx";
+import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
+import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 
 interface BestellWizardPickupLocationProps {
