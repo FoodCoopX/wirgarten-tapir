@@ -64,7 +64,7 @@ export function buildNextButtonParametersForIntro(
 ): NextButtonParameters {
   const atLeastOneProductSelected = selectedProductTypes.length > 0;
   return {
-    disabled: atLeastOneProductSelected,
+    disabled: !atLeastOneProductSelected,
     loading: false,
     icon: undefined,
     text: atLeastOneProductSelected
