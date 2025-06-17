@@ -1,6 +1,6 @@
 export interface NextButtonParameters {
-  icon: string;
-  text: string;
+  icon?: string;
+  text?: string;
   disabled: boolean;
   loading: boolean;
 }
