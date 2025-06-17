@@ -16,8 +16,8 @@ interface BestellWizardPersonalDataProps {
   setPersonalData: (personalData: PersonalData) => void;
   sepaAllowed: boolean;
   setSepaAllowed: (sepaAllowed: boolean) => void;
-  contractRead: boolean;
-  setContractRead: (contractRead: boolean) => void;
+  contractAccepted: boolean;
+  setContractAccepted: (contractRead: boolean) => void;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -26,8 +26,8 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   setPersonalData,
   sepaAllowed,
   setSepaAllowed,
-  contractRead,
-  setContractRead,
+  contractAccepted,
+  setContractAccepted,
 }) => {
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
@@ -240,8 +240,8 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 label={
                   "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
                 }
-                checked={contractRead}
-                onChange={(event) => setContractRead(event.target.checked)}
+                checked={contractAccepted}
+                onChange={(event) => setContractAccepted(event.target.checked)}
               />
               <Form.Text>
                 <a href="https://biotop-oberland.de/gebuehrenordnung">

@@ -13,8 +13,8 @@ interface BestellWizardCoopSharesProps {
   shoppingCart: ShoppingCart;
   selectedNumberOfCoopShares: number;
   setSelectedNumberOfCoopShares: (nbShares: number) => void;
-  statuteRead: boolean;
-  setStatuteRead: (statuteRead: boolean) => void;
+  statuteAccepted: boolean;
+  setStatuteAccepted: (statuteRead: boolean) => void;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -22,8 +22,8 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   shoppingCart,
   selectedNumberOfCoopShares,
   setSelectedNumberOfCoopShares,
-  statuteRead,
-  setStatuteRead,
+  statuteAccepted,
+  setStatuteAccepted,
 }) => {
   const coopApi = useApi(CoopApi, "unused");
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
@@ -109,8 +109,8 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
         <Col>
           <Form.Check
             id={"statute"}
-            checked={statuteRead}
-            onChange={(event) => setStatuteRead(event.target.checked)}
+            checked={statuteAccepted}
+            onChange={(event) => setStatuteAccepted(event.target.checked)}
             label={
               "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
             }
