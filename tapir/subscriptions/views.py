@@ -40,6 +40,9 @@ from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardConfirmOrderResponseSerializer,
 )
+from tapir.subscriptions.services.RequiredProductTypesValidator import (
+    RequiredProductTypesValidator,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -702,6 +705,11 @@ class BestellWizardConfirmOrderApiView(APIView):
             cache=self.cache,
         ):
             self.add_error("TODO", "Not enough capacity")
+
+        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
+            order=order
+        ):
+            self.add_error("TODO", "Missing some required products")
 
         data = {
             "order_confirmed": len(self.errors) == 0,
