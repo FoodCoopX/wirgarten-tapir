@@ -47,6 +47,9 @@ from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.subscriptions.services.single_subscription_validator import (
+    SingleSubscriptionValidator,
+)
 from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
@@ -710,6 +713,11 @@ class BestellWizardConfirmOrderApiView(APIView):
             order=order
         ):
             self.add_error("TODO", "Missing some required products")
+
+        if not SingleSubscriptionValidator.validate_single_subscription_products_are_ordered_at_most_once(
+            order=order, cache=self.cache
+        ):
+            self.add_error("TODO", "Single subscription product ordered more than once")
 
         data = {
             "order_confirmed": len(self.errors) == 0,
