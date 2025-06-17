@@ -1,49 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { CoopApi } from "../../api-client";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
-import { useApi } from "../../hooks/useApi.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardCoopSharesProps {
   theme: TapirTheme;
-  shoppingCart: ShoppingCart;
   selectedNumberOfCoopShares: number;
   setSelectedNumberOfCoopShares: (nbShares: number) => void;
   statuteAccepted: boolean;
   setStatuteAccepted: (statuteRead: boolean) => void;
+  minimumNumberOfShares: number;
+  priceOfAShare: number;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   theme,
-  shoppingCart,
   selectedNumberOfCoopShares,
   setSelectedNumberOfCoopShares,
   statuteAccepted,
   setStatuteAccepted,
+  minimumNumberOfShares,
+  priceOfAShare,
 }) => {
-  const coopApi = useApi(CoopApi, "unused");
-  const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
-  const [priceOfAShare, setPriceOfAShare] = useState(0);
-
-  useEffect(() => {
-    coopApi
-      .coopApiMinimumNumberOfSharesRetrieve({
-        productIds: Object.keys(shoppingCart),
-        quantities: Object.values(shoppingCart),
-      })
-      .then((response) => {
-        setMinimumNumberOfShares(response.minimumNumberOfShares);
-        setPriceOfAShare(response.priceOfAShare);
-        if (selectedNumberOfCoopShares < response.minimumNumberOfShares) {
-          setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
-        }
-      });
-  }, [shoppingCart]);
-
   return (
     <>
       <Row>

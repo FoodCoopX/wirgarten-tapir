@@ -8,11 +8,12 @@ import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardConfirmOrderResponse,
+  CoopApi,
   CoreApi,
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi,
+  SubscriptionsApi
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -25,13 +26,18 @@ import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
 import { PersonalData } from "./types/PersonalData.ts";
 import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
-import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
-import { isPersonalDataValid } from "./utils/isPersonalDataValid.ts";
 import { getTestPersonalData } from "./utils/getTestPersonalData.ts";
 import BestellWizardEnd from "./steps/BestellWizardEnd.tsx";
-import { buildNextButtonParametersForProductType } from "./utils/buildNextButtonForProductType.ts";
+import {
+  buildNextButtonParametersForCoopShares,
+  buildNextButtonParametersForIntro,
+  buildNextButtonParametersForPersonalData,
+  buildNextButtonParametersForPickupLocation,
+  buildNextButtonParametersForProductType
+} from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
+import { NextButtonParameters } from "./types/NextButtonParameters.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -50,6 +56,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const coreApi = useApi(CoreApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
+  const coopApi = useApi(CoopApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
@@ -87,6 +94,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
   const [productWaitingListModalOpen, setProductWaitingListModalOpen] =
     useState(false);
+  const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
+  const [priceOfAShare, setPriceOfAShare] = useState(0);
 
   useEffect(() => {
     coreApi
@@ -166,6 +175,19 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       })
       .catch(handleRequestError)
       .finally(() => setCheckingCapacities(false));
+
+    coopApi
+      .coopApiMinimumNumberOfSharesRetrieve({
+        productIds: Object.keys(shoppingCart),
+        quantities: Object.values(shoppingCart),
+      })
+      .then((response) => {
+        setMinimumNumberOfShares(response.minimumNumberOfShares);
+        setPriceOfAShare(response.priceOfAShare);
+        if (selectedNumberOfCoopShares < response.minimumNumberOfShares) {
+          setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
+        }
+      });
   }, [shoppingCart]);
 
   function onNextClicked() {
@@ -238,11 +260,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return (
           <BestellWizardCoopShares
             theme={theme}
-            shoppingCart={shoppingCart}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
+            minimumNumberOfShares={minimumNumberOfShares}
+            priceOfAShare={priceOfAShare}
           />
         );
       case "personal_data":
@@ -290,30 +313,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
   }
 
-  function isNextEnabled() {
-    switch (currentStep) {
-      case "intro":
-        return selectedProductTypes.length > 0;
-      case "pickup_location":
-        return selectedPickupLocation !== undefined;
-      case "coop_shares":
-        return statuteAccepted;
-      case "personal_data":
-        return (
-          isPersonalDataValid(personalData) && sepaAllowed && contractAccepted
-        );
-      default:
-        const productType = publicProductTypes.find(
-          (productType) => productType.id === currentStep,
-        );
-        if (productType === undefined) return true;
-        return (
-          !productType.mustBeSubscribedTo ||
-          !isProductTypeOrdered(productType, shoppingCart)
-        );
-    }
-  }
-
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
@@ -339,71 +338,63 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
   function getNextButton() {
     if (currentStep === "summary") {
-      return (
-        <TapirButton
-          icon={"check"}
-          variant={"primary"}
-          text={"Bestellung abschließen"}
-          onClick={onConfirmOrder}
-          iconPosition={"right"}
-          loading={confirmOrderLoading}
-        />
-      );
-    }
-
-    const productType = publicProductTypes.find(
-      (productType) => productType.id === currentStep,
-    );
-    if (productType !== undefined) {
-      const buttonParams = buildNextButtonParametersForProductType(
-        productType,
-        shoppingCart,
-        checkingCapacities,
-      );
+      const params = {
+        disabled: false,
+        loading: confirmOrderLoading,
+        text: "Bestellung abschließen",
+        icon: "check",
+      };
       return (
         <BestellWizardNextButton
-          onNextClicked={onNextClicked}
-          params={buttonParams}
+          params={params}
+          onNextClicked={onConfirmOrder}
         />
       );
     }
 
-    let text = "Weiter";
+    let params: NextButtonParameters;
 
     switch (currentStep) {
       case "intro":
-        if (selectedProductTypes.length === 0) {
-          text = "Wähle mindestens eine Mitgliedschaft um weiter zu gehen";
-        }
+        params = buildNextButtonParametersForIntro(selectedProductTypes);
         break;
       case "pickup_location":
-        if (selectedPickupLocation === undefined) {
-          text = "Wähle dein Verteilstation aus um weiter zu gehen";
-        }
+        params = buildNextButtonParametersForPickupLocation(
+          selectedPickupLocation,
+        );
         break;
       case "coop_shares":
-        if (!statuteAccepted) {
-          text = "Akzeptiere die Satzung um weiter zu gehen";
-        }
+        params = buildNextButtonParametersForCoopShares(
+          statuteAccepted,
+          selectedNumberOfCoopShares,
+          minimumNumberOfShares,
+        );
         break;
       case "personal_data":
-        if (!isPersonalDataValid(personalData)) {
-          text = "Vervollständige deine Daten um weiter zu gehen";
-        } else if (!sepaAllowed) {
-          text = "Ermächtige das SEPA-Mandat um weiter zu gehen";
-        } else if (!contractAccepted) {
-          text = "Akzeptiere die Vertragsgrundsätze um weiter zu gehen";
-        }
+        params = buildNextButtonParametersForPersonalData(
+          personalData,
+          sepaAllowed,
+          contractAccepted,
+        );
+        break;
+      default:
+        params = buildNextButtonParametersForProductType(
+          publicProductTypes,
+          shoppingCart,
+          checkingCapacities,
+          currentStep,
+        );
+    }
+
+    if (params.text === undefined) {
+      params.text = "Weiter";
+    }
+
+    if (params.icon === undefined) {
+      params.icon = "chevron_right";
     }
     return (
-      <TapirButton
-        icon={"chevron_right"}
-        variant={"outline-primary"}
-        text={text}
-        onClick={onNextClicked}
-        disabled={!isNextEnabled()}
-        iconPosition={"right"}
-      />
+      <BestellWizardNextButton params={params} onNextClicked={onNextClicked} />
     );
   }
 
