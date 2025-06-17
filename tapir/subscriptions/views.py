@@ -44,6 +44,7 @@ from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
@@ -156,13 +157,13 @@ class CancelSubscriptionsView(APIView):
         )
 
         cancel_coop_membership = (
-                request.query_params.get("cancel_coop_membership") == "true"
+            request.query_params.get("cancel_coop_membership") == "true"
         )
         if (
-                cancel_coop_membership
-                and not MembershipCancellationManager.can_member_cancel_coop_membership(
-            member, cache=self.cache
-        )
+            cancel_coop_membership
+            and not MembershipCancellationManager.can_member_cancel_coop_membership(
+                member, cache=self.cache
+            )
         ):
             return self.build_response(
                 False,
@@ -172,8 +173,8 @@ class CancelSubscriptionsView(APIView):
             )
 
         if (
-                cancel_coop_membership
-                and products_selected_for_cancellation != subscribed_products
+            cancel_coop_membership
+            and products_selected_for_cancellation != subscribed_products
         ):
             return self.build_response(
                 False,
@@ -183,20 +184,20 @@ class CancelSubscriptionsView(APIView):
             )
 
         if (
-                not get_parameter_value(
-                    ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
-                    cache=self.cache,
-                )
-                and self.is_at_least_one_additional_product_not_selected(
-            subscribed_products,
-            products_selected_for_cancellation,
-            cache=self.cache,
-        )
-                and self.are_all_base_products_selected(
-            subscribed_products,
-            products_selected_for_cancellation,
-            cache=self.cache,
-        )
+            not get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
+                cache=self.cache,
+            )
+            and self.is_at_least_one_additional_product_not_selected(
+                subscribed_products,
+                products_selected_for_cancellation,
+                cache=self.cache,
+            )
+            and self.are_all_base_products_selected(
+                subscribed_products,
+                products_selected_for_cancellation,
+                cache=self.cache,
+            )
         ):
             return self.build_response(
                 False,
@@ -233,15 +234,15 @@ class CancelSubscriptionsView(APIView):
 
     @staticmethod
     def are_all_base_products_selected(
-            subscribed_products: set[Product],
-            products_selected_for_cancellation: set[Product],
-            cache: Dict,
+        subscribed_products: set[Product],
+        products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
-                    subscribed_product.type_id == base_product_type.id
-                    and subscribed_product not in products_selected_for_cancellation
+                subscribed_product.type_id == base_product_type.id
+                and subscribed_product not in products_selected_for_cancellation
             ):
                 return False
 
@@ -249,15 +250,15 @@ class CancelSubscriptionsView(APIView):
 
     @staticmethod
     def is_at_least_one_additional_product_not_selected(
-            subscribed_products: set[Product],
-            products_selected_for_cancellation: set[Product],
-            cache: Dict,
+        subscribed_products: set[Product],
+        products_selected_for_cancellation: set[Product],
+        cache: Dict,
     ):
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
         for subscribed_product in subscribed_products:
             if (
-                    subscribed_product.type_id != base_product_type.id
-                    and subscribed_product not in products_selected_for_cancellation
+                subscribed_product.type_id != base_product_type.id
+                and subscribed_product not in products_selected_for_cancellation
             ):
                 return True
 
@@ -415,29 +416,29 @@ class MemberDataToConfirmApiView(APIView):
     def get_number_of_unconfirmed_changes(cache: dict):
 
         return (
-                Subscription.objects.filter(
-                    cancellation_ts__isnull=False,
-                    cancellation_admin_confirmed__isnull=True,
-                ).count()
-                + Subscription.objects.filter(admin_confirmed__isnull=True).count()
-                + len(
-            TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
-                cache=cache
-            ).keys()
-        )
+            Subscription.objects.filter(
+                cancellation_ts__isnull=False,
+                cancellation_admin_confirmed__isnull=True,
+            ).count()
+            + Subscription.objects.filter(admin_confirmed__isnull=True).count()
+            + len(
+                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                    cache=cache
+                ).keys()
+            )
         )
 
     @classmethod
     def group_changes_by_member_and_product_type(
-            cls, subscriptions, key: str, changes_by_member: dict
+        cls, subscriptions, key: str, changes_by_member: dict
     ):
         for subscription in subscriptions:
             if subscription.member not in changes_by_member.keys():
                 changes_by_member[subscription.member] = {}
 
             if (
-                    subscription.product.type
-                    not in changes_by_member[subscription.member].keys()
+                subscription.product.type
+                not in changes_by_member[subscription.member].keys()
             ):
                 changes_by_member[subscription.member][subscription.product.type] = {
                     "cancellations": [],
@@ -450,10 +451,10 @@ class MemberDataToConfirmApiView(APIView):
 
     @classmethod
     def build_data_to_confirm_for_member(
-            cls,
-            member: Member,
-            changes_by_product_type: dict,
-            cache: dict,
+        cls,
+        member: Member,
+        changes_by_product_type: dict,
+        cache: dict,
     ) -> dict:
         pickup_location_id = (
             MemberPickupLocationService.get_member_pickup_location_id_from_cache(
@@ -471,8 +472,8 @@ class MemberDataToConfirmApiView(APIView):
         cancellations = []
         changes = []
         for (
-                product_type,
-                changes_for_this_product_type,
+            product_type,
+            changes_for_this_product_type,
         ) in changes_by_product_type.items():
             if product_type is None:
                 continue
@@ -482,15 +483,15 @@ class MemberDataToConfirmApiView(APIView):
             ]
 
             if (
-                    len(creations_for_this_product_type) > 0
-                    and len(cancellations_for_this_product_type) == 0
+                len(creations_for_this_product_type) > 0
+                and len(cancellations_for_this_product_type) == 0
             ):
                 creations.extend(creations_for_this_product_type)
                 continue
 
             if (
-                    len(creations_for_this_product_type) == 0
-                    and len(cancellations_for_this_product_type) > 0
+                len(creations_for_this_product_type) == 0
+                and len(cancellations_for_this_product_type) > 0
             ):
                 cancellations.extend(cancellations_for_this_product_type)
                 continue
@@ -533,15 +534,15 @@ class MemberDataToConfirmApiView(APIView):
         cancellation_type = "Reguläre Kündigung"
         show_warning = False
         if (
-                get_current_growing_period(subscription.end_date, cache=cache).end_date
-                > subscription.end_date
+            get_current_growing_period(subscription.end_date, cache=cache).end_date
+            > subscription.end_date
         ):
             cancellation_type = "Unterjährige Kündigung"
             show_warning = True
         if TrialPeriodManager.is_subscription_in_trial(
-                subscription=subscription,
-                reference_date=subscription.cancellation_ts.date(),
-                cache=cache,
+            subscription=subscription,
+            reference_date=subscription.cancellation_ts.date(),
+            cache=cache,
         ):
             cancellation_type = "Kündigung in der Probezeit"
             show_warning = False
@@ -600,10 +601,10 @@ class ConfirmSubscriptionChangesView(APIView):
 
     @staticmethod
     def apply_confirmation(
-            model: Type[Model],
-            ids_to_confirm: list[str],
-            confirmation_field: str,
-            cache: dict,
+        model: Type[Model],
+        ids_to_confirm: list[str],
+        confirmation_field: str,
+        cache: dict,
     ):
         subscription_ids_to_confirm = [
             id.strip() for id in ids_to_confirm if id.strip() != ""
@@ -617,7 +618,7 @@ class ConfirmSubscriptionChangesView(APIView):
             subscription_id
             for subscription_id in subscription_ids_to_confirm
             if subscription_id
-               not in [subscription.id for subscription in subscriptions_to_confirm]
+            not in [subscription.id for subscription in subscriptions_to_confirm]
         ]
 
         if len(ids_not_found) > 0:
@@ -671,16 +672,24 @@ class BestellWizardConfirmOrderApiView(APIView):
             ].items()
         }
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-                pickup_location=pickup_location,
-                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
-                already_registered_member=None,
-                subscription_start=subscription_start_date,
-                cache=self.cache,
+            pickup_location=pickup_location,
+            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            already_registered_member=None,
+            subscription_start=subscription_start_date,
+            cache=self.cache,
         ):
             self.add_error(
                 "pickup_location",
                 "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus.",
             )
+
+        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
+            ordered_solidarity_factor=0,  # TODO
+            order=ordered_products_to_quantity_map,
+            start_date=subscription_start_date,
+            cache=self.cache,
+        ):
+            self.add_error("solidarity_factor", "TODO")
 
         data = {
             "order_confirmed": len(self.errors) == 0,

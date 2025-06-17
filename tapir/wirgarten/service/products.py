@@ -322,7 +322,7 @@ def get_product_price(
     product: str | Product,
     reference_date: datetime.date = None,
     cache: Dict | None = None,
-):
+) -> ProductPrice | None:
     """
     Returns the currently active product price.
 
