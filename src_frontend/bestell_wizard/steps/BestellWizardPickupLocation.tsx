@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, ListGroup, ListGroupItem, Row, Spinner } from "react-bootstrap";
-import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
+import { PublicPickupLocation } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "../map.css";
@@ -11,10 +11,6 @@ import { MapRef } from "react-leaflet/MapContainer";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { isShoppingCartEmpty } from "../utils/isShoppingCartEmpty.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -23,9 +19,9 @@ interface BestellWizardPickupLocationProps {
   setSelectedPickupLocation: (
     selectedPickupLocation: PublicPickupLocation,
   ) => void;
-  shoppingCart: ShoppingCart;
   waitingListModeEnabled: boolean;
-  csrfToken: string;
+  pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
 }
 
 const BestellWizardPickupLocation: React.FC<
@@ -35,17 +31,10 @@ const BestellWizardPickupLocation: React.FC<
   pickupLocations,
   selectedPickupLocation,
   setSelectedPickupLocation,
-  shoppingCart,
   waitingListModeEnabled,
-  csrfToken,
+  pickupLocationsWithCapacityCheckLoading,
+  pickupLocationsWithCapacityFull,
 }) => {
-  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
-  const [
-    pickupLocationsWithCapacityCheckLoading,
-    setPickupLocationsWithCapacityCheckLoading,
-  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
-  const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
-    useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [map, setMap] = useState<MapRef>(null);
 
   useEffect(() => {
@@ -60,41 +49,6 @@ const BestellWizardPickupLocation: React.FC<
       { animate: true },
     );
   }, [selectedPickupLocation]);
-
-  useEffect(() => {
-    if (pickupLocations.length === 0 || isShoppingCartEmpty(shoppingCart)) {
-      return;
-    }
-
-    setPickupLocationsWithCapacityCheckLoading(new Set(pickupLocations));
-
-    for (const pickupLocation of pickupLocations) {
-      pickupLocationApi
-        .pickupLocationsApiPickupLocationCapacityCheckCreate({
-          pickupLocationCapacityCheckRequestRequest: {
-            pickupLocationId: pickupLocation.id!,
-            shoppingCart: shoppingCart,
-          },
-        })
-        .then((response) => {
-          setPickupLocationsWithCapacityFull((set) => {
-            if (response.enoughCapacityForOrder) {
-              set.delete(pickupLocation);
-            } else {
-              set.add(pickupLocation);
-            }
-            return new Set(set);
-          });
-        })
-        .catch(handleRequestError)
-        .finally(() => {
-          setPickupLocationsWithCapacityCheckLoading((set) => {
-            set.delete(pickupLocation);
-            return new Set(set);
-          });
-        });
-    }
-  }, [pickupLocations, shoppingCart]);
 
   function buildCapacityIndicator(pickupLocation: PublicPickupLocation) {
     if (pickupLocationsWithCapacityCheckLoading.has(pickupLocation)) {

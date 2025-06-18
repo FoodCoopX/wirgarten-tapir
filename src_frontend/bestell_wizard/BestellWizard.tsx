@@ -8,16 +8,12 @@ import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardConfirmOrderResponse,
-  CoopApi,
-  CoreApi,
-  PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi,
+  SubscriptionsApi
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
-import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import { ShoppingCart } from "./types/ShoppingCart.ts";
 import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
 import TapirButton from "../components/TapirButton.tsx";
@@ -33,12 +29,17 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
 import { NextButtonParameters } from "./types/NextButtonParameters.ts";
 import { isShoppingCartEmpty } from "./utils/isShoppingCartEmpty.ts";
+import PickupLocationWaitingListModal from "./components/PickupLocationWaitingListModal.tsx";
+import { loadBaseBestellWizardData } from "./utils/loadBaseBestellWizardData.ts";
+import { updateProductsAndProductTypesOverCapacity } from "./utils/updateProductsAndProductTypesOverCapacity.ts";
+import { updateMinimumAndPriceOfShare } from "./utils/updateMinimumAndPriceOfShare.ts";
+import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapacities.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -54,10 +55,7 @@ type BestellWizardStep =
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
-  const coreApi = useApi(CoreApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
-  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
-  const coopApi = useApi(CoopApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
@@ -73,6 +71,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   >([]);
   const [selectedPickupLocation, setSelectedPickupLocation] =
     useState<PublicPickupLocation>();
+  const [
+    pickupLocationsWithCapacityCheckLoading,
+    setPickupLocationsWithCapacityCheckLoading,
+  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
+    useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
     useState(0);
   const [personalData, setPersonalData] = useState<PersonalData>(
@@ -95,33 +99,19 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
   const [productWaitingListModalOpen, setProductWaitingListModalOpen] =
     useState(false);
+  const [
+    pickupLocationWaitingListModalOpen,
+    setPickupLocationWaitingListModalOpen,
+  ] = useState(false);
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [priceOfAShare, setPriceOfAShare] = useState(0);
 
   useEffect(() => {
-    coreApi
-      .coreApiGetThemeRetrieve()
-      .then((themeAsString) => {
-        setTheme(themeAsString as TapirTheme);
-      })
-      .catch(handleRequestError);
-
-    subscriptionsApi
-      .subscriptionsPublicProductTypesList()
-      .then((types) => {
-        setPublicProductTypes(sortProductTypes(types));
-      })
-      .catch(handleRequestError);
-
-    pickupLocationApi
-      .pickupLocationsPublicPickupLocationsList()
-      .then((pickupLocations) => {
-        pickupLocations.sort((a, b) => {
-          return a.name.localeCompare(b.name);
-        });
-        setPickupLocations(pickupLocations);
-      })
-      .catch(handleRequestError);
+    loadBaseBestellWizardData(
+      setTheme,
+      setPublicProductTypes,
+      setPickupLocations,
+    );
   }, []);
 
   useEffect(() => {
@@ -157,50 +147,49 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       return;
     }
 
-    setCheckingCapacities(true);
+    updateProductsAndProductTypesOverCapacity(
+      shoppingCart,
+      setProductIdsOverCapacity,
+      setProductTypeIdsOverCapacity,
+      setWaitingListModeEnabled,
+      setCheckingCapacities,
+    );
 
-    subscriptionsApi
-      .subscriptionsApiBestellWizardCapacityCheckCreate({
-        bestellWizardCapacityCheckRequestRequest: {
-          shoppingCart: shoppingCart,
-        },
-      })
-      .then((response) => {
-        setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
-        setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
-        if (
-          response.idsOfProductsOverCapacity.length === 0 &&
-          response.idsOfProductTypesOverCapacity.length === 0
-        ) {
-          setWaitingListModeEnabled(false);
-        }
-      })
-      .catch(handleRequestError)
-      .finally(() => setCheckingCapacities(false));
-
-    coopApi
-      .coopApiMinimumNumberOfSharesRetrieve({
-        productIds: Object.keys(shoppingCart),
-        quantities: Object.values(shoppingCart),
-      })
-      .then((response) => {
-        setMinimumNumberOfShares(response.minimumNumberOfShares);
-        setPriceOfAShare(response.priceOfAShare);
-        if (selectedNumberOfCoopShares < response.minimumNumberOfShares) {
-          setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
-        }
-      });
+    updateMinimumAndPriceOfShare(
+      shoppingCart,
+      setMinimumNumberOfShares,
+      setPriceOfAShare,
+      selectedNumberOfCoopShares,
+      setSelectedNumberOfCoopShares,
+    );
   }, [shoppingCart]);
 
+  useEffect(() => {
+    if (pickupLocations.length === 0 || isShoppingCartEmpty(shoppingCart)) {
+      return;
+    }
+
+    checkPickupLocationCapacities(
+      pickupLocations,
+      shoppingCart,
+      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsWithCapacityFull,
+    );
+  }, [pickupLocations, shoppingCart]);
+
   function onNextClicked() {
-    if (!waitingListModeEnabled && shouldOpenWaitingListModal()) {
+    if (!waitingListModeEnabled && shouldOpenProductWaitingListModal()) {
       setProductWaitingListModalOpen(true);
+      return;
+    }
+    if (!waitingListModeEnabled && shouldOpenPickupLocationWaitingListModal()) {
+      setPickupLocationWaitingListModalOpen(true);
       return;
     }
     goToNextStep();
   }
 
-  function shouldOpenWaitingListModal() {
+  function shouldOpenProductWaitingListModal() {
     const productType = publicProductTypes.find(
       (productType) => productType.id === currentStep,
     );
@@ -218,6 +207,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     return false;
+  }
+
+  function shouldOpenPickupLocationWaitingListModal() {
+    if (currentStep !== "pickup_location") {
+      return false;
+    }
+
+    if (pickupLocationsWithCapacityFull.has(selectedPickupLocation!)) {
+      return true;
+    }
   }
 
   function goToNextStep() {
@@ -256,9 +255,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocations={pickupLocations}
             selectedPickupLocation={selectedPickupLocation}
             setSelectedPickupLocation={setSelectedPickupLocation}
-            shoppingCart={shoppingCart}
             waitingListModeEnabled={waitingListModeEnabled}
-            csrfToken={csrfToken}
+            pickupLocationsWithCapacityCheckLoading={
+              pickupLocationsWithCapacityCheckLoading
+            }
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
           />
         );
       case "coop_shares":
@@ -420,14 +421,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setStatuteAccepted(true);
   }
 
-  function confirmEnableWaitingListMode() {
+  function confirmEnableProductWaitingListMode() {
     setWaitingListModeEnabled(true);
     setProductWaitingListModalOpen(false);
     goToNextStep();
   }
 
-  function cancelEnableWaitingListMode() {
+  function cancelEnableProductWaitingListMode() {
     setProductWaitingListModalOpen(false);
+  }
+
+  function confirmEnablePickupLocationWaitingListMode() {
+    setWaitingListModeEnabled(true);
+    setPickupLocationWaitingListModalOpen(false);
+  }
+
+  function cancelEnablePickupLocationWaitingListMode() {
+    setPickupLocationWaitingListModalOpen(false);
   }
 
   return (
@@ -474,8 +484,15 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       </Row>
       <ProductWaitingListModal
         show={productWaitingListModalOpen}
-        onHide={cancelEnableWaitingListMode}
-        confirmEnableWaitingListMode={confirmEnableWaitingListMode}
+        onHide={cancelEnableProductWaitingListMode}
+        confirmEnableWaitingListMode={confirmEnableProductWaitingListMode}
+      />
+      <PickupLocationWaitingListModal
+        show={pickupLocationWaitingListModalOpen}
+        onHide={cancelEnablePickupLocationWaitingListMode}
+        confirmEnableWaitingListMode={
+          confirmEnablePickupLocationWaitingListMode
+        }
       />
     </>
   );
