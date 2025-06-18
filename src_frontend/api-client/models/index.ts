@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AutomatedExportCycleEnum';
+export * from './BestellWizardBaseDataResponse';
 export * from './BestellWizardCapacityCheckRequestRequest';
 export * from './BestellWizardCapacityCheckResponse';
 export * from './BestellWizardConfirmOrderRequestRequest';

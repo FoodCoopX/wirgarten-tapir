@@ -25,12 +25,6 @@ export interface MinimumNumberOfSharesResponse {
      * @memberof MinimumNumberOfSharesResponse
      */
     minimumNumberOfShares: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof MinimumNumberOfSharesResponse
-     */
-    priceOfAShare: number;
 }
 
 /**
@@ -38,7 +32,6 @@ export interface MinimumNumberOfSharesResponse {
  */
 export function instanceOfMinimumNumberOfSharesResponse(value: object): value is MinimumNumberOfSharesResponse {
     if (!('minimumNumberOfShares' in value) || value['minimumNumberOfShares'] === undefined) return false;
-    if (!('priceOfAShare' in value) || value['priceOfAShare'] === undefined) return false;
     return true;
 }
 
@@ -53,7 +46,6 @@ export function MinimumNumberOfSharesResponseFromJSONTyped(json: any, ignoreDisc
     return {
         
         'minimumNumberOfShares': json['minimum_number_of_shares'],
-        'priceOfAShare': json['price_of_a_share'],
     };
 }
 
@@ -69,7 +61,6 @@ export function MinimumNumberOfSharesResponseFromJSONTyped(json: any, ignoreDisc
     return {
         
         'minimum_number_of_shares': value['minimumNumberOfShares'],
-        'price_of_a_share': value['priceOfAShare'],
     };
 }
 

@@ -45,6 +45,8 @@ paths:
                 enum:
                 - l2g
                 - biotop
+                - wirgarten
+                - mm
                 type: string
           description: ''
   /deliveries/api/cancel_joker:
@@ -833,6 +835,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicPickupLocation'
+          description: ''
+  /subscriptions/api/bestell_wizard_base_data:
+    get:
+      operationId: subscriptions_api_bestell_wizard_base_data_retrieve
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardBaseDataResponse'
           description: ''
   /subscriptions/api/bestell_wizard_capacity_check:
     post:
@@ -3351,6 +3367,28 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    BestellWizardBaseDataResponse:
+      type: object
+      properties:
+        price_of_a_share:
+          type: number
+          format: double
+        theme:
+          type: string
+        allow_investing_membership:
+          type: boolean
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+        force_waiting_list:
+          type: boolean
+      required:
+      - allow_investing_membership
+      - force_waiting_list
+      - price_of_a_share
+      - product_types
+      - theme
     BestellWizardCapacityCheckRequestRequest:
       type: object
       properties:
@@ -5079,12 +5117,8 @@ components:
       properties:
         minimum_number_of_shares:
           type: integer
-        price_of_a_share:
-          type: number
-          format: double
       required:
       - minimum_number_of_shares
-      - price_of_a_share
     MissingTrigger:
       type: object
       properties:

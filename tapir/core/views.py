@@ -13,7 +13,7 @@ class GetThemeView(APIView):
     permission_classes = ()
 
     @extend_schema(
-        responses={200: Literal["l2g", "biotop"]},
+        responses={200: Literal["l2g", "biotop", "wirgarten", "mm"]},
     )
     def get(self, request):
         return Response(

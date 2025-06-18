@@ -172,3 +172,11 @@ class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):
     ids_of_product_types_over_capacity = serializers.ListField(
         child=serializers.CharField()
     )
+
+
+class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
+    price_of_a_share = serializers.FloatField()
+    theme = serializers.CharField()
+    allow_investing_membership = serializers.BooleanField()
+    product_types = PublicProductTypeSerializer(many=True)
+    force_waiting_list = serializers.BooleanField()

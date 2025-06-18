@@ -8,7 +8,6 @@ from tapir.coop.serializers import MinimumNumberOfSharesResponseSerializer
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
-from tapir.settings import COOP_SHARE_PRICE
 
 
 class MinimumNumberOfSharesApiView(APIView):
@@ -44,7 +43,6 @@ class MinimumNumberOfSharesApiView(APIView):
             MinimumNumberOfSharesResponseSerializer(
                 {
                     "minimum_number_of_shares": minimum_number_of_shares,
-                    "price_of_a_share": COOP_SHARE_PRICE,
                 }
             ).data,
             status=status.HTTP_200_OK,

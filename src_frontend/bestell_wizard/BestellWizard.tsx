@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
 import { TapirTheme } from "../types/TapirTheme.ts";
-import { Card, Col, Row, Spinner } from "react-bootstrap";
+import { Card, Col, ListGroup, Row, Spinner } from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardConfirmOrderResponse,
+  PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi,
+  SubscriptionsApi
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -29,17 +30,18 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
 import { NextButtonParameters } from "./types/NextButtonParameters.ts";
 import { isShoppingCartEmpty } from "./utils/isShoppingCartEmpty.ts";
 import PickupLocationWaitingListModal from "./components/PickupLocationWaitingListModal.tsx";
-import { loadBaseBestellWizardData } from "./utils/loadBaseBestellWizardData.ts";
 import { updateProductsAndProductTypesOverCapacity } from "./utils/updateProductsAndProductTypesOverCapacity.ts";
 import { updateMinimumAndPriceOfShare } from "./utils/updateMinimumAndPriceOfShare.ts";
 import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapacities.ts";
+import { sortProductTypes } from "./utils/sortProductTypes.ts";
+import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -56,6 +58,7 @@ type BestellWizardStep =
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
@@ -106,13 +109,36 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   ] = useState(false);
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [priceOfAShare, setPriceOfAShare] = useState(0);
+  const [allowInvestingMembership, setAllowInvestingMembership] =
+    useState(false);
+  const [forceWaitingList, setForceWaitingList] = useState(false);
+  const [baseDataLoading, setBaseDataLoading] = useState(true);
+  const [showGeneralWaitingListModal, setShowGeneralWaitingListModal] =
+    useState(false);
 
   useEffect(() => {
-    loadBaseBestellWizardData(
-      setTheme,
-      setPublicProductTypes,
-      setPickupLocations,
-    );
+    setBaseDataLoading(true);
+    subscriptionsApi
+      .subscriptionsApiBestellWizardBaseDataRetrieve()
+      .then((data) => {
+        setTheme(data.theme as TapirTheme);
+        setPublicProductTypes(sortProductTypes(data.productTypes));
+        setPriceOfAShare(data.priceOfAShare);
+        setAllowInvestingMembership(data.allowInvestingMembership);
+        setForceWaitingList(data.forceWaitingList);
+      })
+      .catch(handleRequestError)
+      .finally(() => setBaseDataLoading(false));
+
+    pickupLocationApi
+      .pickupLocationsPublicPickupLocationsList()
+      .then((pickupLocations) => {
+        pickupLocations.sort((a, b) => {
+          return a.name.localeCompare(b.name);
+        });
+        setPickupLocations(pickupLocations);
+      })
+      .catch(handleRequestError);
   }, []);
 
   useEffect(() => {
@@ -158,13 +184,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     updateMinimumAndPriceOfShare(
       shoppingCart,
       setMinimumNumberOfShares,
-      setPriceOfAShare,
       selectedNumberOfCoopShares,
       setSelectedNumberOfCoopShares,
     );
   }, [shoppingCart]);
 
   useEffect(() => {
+    if (forceWaitingList) {
+      setWaitingListModeEnabled(true);
+      return;
+    }
     if (
       productIdsOverCapacity.length === 0 &&
       productTypeIdsOverCapacity.length === 0 &&
@@ -175,6 +204,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       setWaitingListModeEnabled(false);
     }
   }, [
+    forceWaitingList,
     productIdsOverCapacity,
     productTypeIdsOverCapacity,
     selectedPickupLocations,
@@ -194,6 +224,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       setPickupLocationsWithCapacityFull,
     );
   }, [pickupLocations, shoppingCart]);
+
+  useEffect(() => {
+    if (forceWaitingList) {
+      setShowGeneralWaitingListModal(true);
+      setWaitingListModeEnabled(true);
+    }
+  }, [forceWaitingList]);
 
   function onNextClicked() {
     if (!waitingListModeEnabled && shouldOpenProductWaitingListModal()) {
@@ -264,6 +301,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             selectedProductTypes={selectedProductTypes}
             setSelectedProductTypes={setSelectedProductTypes}
             publicProductTypes={publicProductTypes}
+            allowInvestingMembership={allowInvestingMembership}
           />
         );
       case "pickup_location":
@@ -460,17 +498,47 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setPickupLocationWaitingListModalOpen(false);
   }
 
+  function confirmEnableGeneralWaitingListMode() {
+    setWaitingListModeEnabled(true);
+    setShowGeneralWaitingListModal(false);
+  }
+
   return (
     <>
       <Row className={"justify-content-center p-4"}>
         <Col style={{ maxWidth: "1200px" }}>
           <Card style={{ height: "95vh" }}>
             <Card.Header>
-              <h2 className={"text-center mb-0"}>Biotop Oberland eG</h2>
+              {baseDataLoading ? (
+                <div className={"d-flex justify-content-center"}>
+                  <Spinner />
+                </div>
+              ) : (
+                <h2 className={"text-center mb-0"}>Biotop Oberland eG</h2>
+              )}
             </Card.Header>
-            <Card.Body className={"overflow-scroll"}>
-              {buildCurrentStepComponent()}
-            </Card.Body>
+            <ListGroup variant={"flush"}>
+              {waitingListModeEnabled && (
+                <ListGroup.Item className={"list-group-item-warning"}>
+                  <div className={"text-center"}>Warteliste-Eintrag</div>
+                </ListGroup.Item>
+              )}
+              <ListGroup.Item className={"overflow-scroll"}>
+                {baseDataLoading ? (
+                  <div
+                    className={
+                      "d-flex justify-content-center flex-column align-items-center"
+                    }
+                    style={{ width: "100%", height: "100%" }}
+                  >
+                    <Spinner style={{ width: "10rem", height: "10rem" }} />
+                  </div>
+                ) : (
+                  buildCurrentStepComponent()
+                )}
+              </ListGroup.Item>
+            </ListGroup>
+            <Card.Body></Card.Body>
             <Card.Footer>
               <div className={"d-flex justify-content-between"}>
                 <div className={"d-flex flex-row gap-2"}>
@@ -513,6 +581,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         confirmEnableWaitingListMode={
           confirmEnablePickupLocationWaitingListMode
         }
+      />
+      <GeneralWaitingListModal
+        show={showGeneralWaitingListModal}
+        confirmEnableWaitingListMode={confirmEnableGeneralWaitingListMode}
       />
     </>
   );
