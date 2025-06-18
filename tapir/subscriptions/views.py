@@ -31,6 +31,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
+from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
@@ -41,6 +42,7 @@ from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderResponseSerializer,
     BestellWizardCapacityCheckRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
+    BestellWizardBaseDataResponseSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -778,3 +780,32 @@ class BestellWizardCapacityCheckApiView(APIView):
         return Response(
             BestellWizardCapacityCheckResponseSerializer(response_data).data
         )
+
+
+class BestellWizardBaseDataApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardBaseDataResponseSerializer},
+    )
+    def get(self, request):
+        response_data = {
+            "price_of_a_share": COOP_SHARE_PRICE,
+            "theme": get_parameter_value(
+                ParameterKeys.ORGANISATION_THEME, cache=self.cache
+            ),
+            "allow_investing_membership": get_parameter_value(
+                ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+                cache=self.cache,
+            ),
+            "product_types": ProductType.objects.all(),
+            "force_waiting_list": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
+            ),
+        }
+
+        return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

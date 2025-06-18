@@ -5,7 +5,6 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 export function updateMinimumAndPriceOfShare(
   shoppingCart: ShoppingCart,
   setMinimumNumberOfShares: (min: number) => void,
-  setPriceOfAShare: (price: number) => void,
   selectedNumberOfCoopShares: number,
   setSelectedNumberOfCoopShares: (num: number) => void,
 ) {
@@ -18,7 +17,6 @@ export function updateMinimumAndPriceOfShare(
     })
     .then((response) => {
       setMinimumNumberOfShares(response.minimumNumberOfShares);
-      setPriceOfAShare(response.priceOfAShare);
       if (selectedNumberOfCoopShares < response.minimumNumberOfShares) {
         setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
       }

@@ -15,6 +15,7 @@
 
 import * as runtime from '../runtime';
 import type {
+  BestellWizardBaseDataResponse,
   BestellWizardCapacityCheckRequestRequest,
   BestellWizardCapacityCheckResponse,
   BestellWizardConfirmOrderRequestRequest,
@@ -28,6 +29,8 @@ import type {
   PublicProductType,
 } from '../models/index';
 import {
+    BestellWizardBaseDataResponseFromJSON,
+    BestellWizardBaseDataResponseToJSON,
     BestellWizardCapacityCheckRequestRequestFromJSON,
     BestellWizardCapacityCheckRequestRequestToJSON,
     BestellWizardCapacityCheckResponseFromJSON,
@@ -96,6 +99,33 @@ export interface SubscriptionsPublicProductTypesRetrieveRequest {
  * 
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+
+    /**
+     */
+    async subscriptionsApiBestellWizardBaseDataRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BestellWizardBaseDataResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/subscriptions/api/bestell_wizard_base_data`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BestellWizardBaseDataResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsApiBestellWizardBaseDataRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BestellWizardBaseDataResponse> {
+        const response = await this.subscriptionsApiBestellWizardBaseDataRetrieveRaw(initOverrides);
+        return await response.value();
+    }
 
     /**
      */

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
-import { Form } from "react-bootstrap";
+import { Form, Spinner } from "react-bootstrap";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 
@@ -11,6 +11,7 @@ interface BestellWizardIntroProps {
   selectedProductTypes: PublicProductType[];
   setSelectedProductTypes: (selectedProductTypes: PublicProductType[]) => void;
   publicProductTypes: PublicProductType[];
+  allowInvestingMembership: boolean;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -18,6 +19,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   selectedProductTypes,
   setSelectedProductTypes,
   publicProductTypes,
+  allowInvestingMembership,
 }) => {
   const [investingMembership, setInvestingMembership] = useState(false);
 
@@ -71,42 +73,51 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
         text={"Welche Mitgliedschaft(en) möchtest du?"}
       />
       <div className={"d-flex flex-column gap-3"}>
-        {publicProductTypes.map((publicProductType) => (
-          <div key={publicProductType.id}>
+        {publicProductTypes.length === 0 ? (
+          <Spinner style={{ width: "10rem", height: "10rem" }} />
+        ) : (
+          publicProductTypes.map((publicProductType) => (
+            <div key={publicProductType.id}>
+              <Form.Check
+                id={publicProductType.id}
+                label={publicProductType.name}
+                onChange={(event) =>
+                  updateProductSelection(
+                    publicProductType,
+                    event.target.checked,
+                  )
+                }
+                checked={selectedProductTypes.includes(publicProductType)}
+                disabled={publicProductType.mustBeSubscribedTo}
+              />
+              <span>
+                {!publicProductType.descriptionBestellwizardShort ? (
+                  "No description"
+                ) : (
+                  <span
+                    dangerouslySetInnerHTML={getHtmlDescription(
+                      publicProductType.descriptionBestellwizardShort,
+                    )}
+                  ></span>
+                )}
+              </span>
+            </div>
+          ))
+        )}
+        {allowInvestingMembership && (
+          <div>
             <Form.Check
-              id={publicProductType.id}
-              label={publicProductType.name}
-              onChange={(event) =>
-                updateProductSelection(publicProductType, event.target.checked)
-              }
-              checked={selectedProductTypes.includes(publicProductType)}
-              disabled={publicProductType.mustBeSubscribedTo}
+              id={"investingMembership"}
+              label={"Fördermitgliedschaft in Genossenschaft"}
+              onChange={(event) => setInvestingMembership(event.target.checked)}
+              checked={investingMembership}
             />
             <span>
-              {!publicProductType.descriptionBestellwizardShort ? (
-                "No description"
-              ) : (
-                <span
-                  dangerouslySetInnerHTML={getHtmlDescription(
-                    publicProductType.descriptionBestellwizardShort,
-                  )}
-                ></span>
-              )}
+              Werde Teil des Biotops und unterstütze die Genossenschaft als
+              Fördermitglied der Genossenschaft ohne weiteren Vertrag.
             </span>
           </div>
-        ))}
-        <div>
-          <Form.Check
-            id={"investingMembership"}
-            label={"Fördermitgliedschaft in Genossenschaft"}
-            onChange={(event) => setInvestingMembership(event.target.checked)}
-            checked={investingMembership}
-          />
-          <span>
-            Werde Teil des Biotops und unterstütze die Genossenschaft als
-            Fördermitglied der Genossenschaft ohne weiteren Vertrag.
-          </span>
-        </div>
+        )}
       </div>
     </>
   );
