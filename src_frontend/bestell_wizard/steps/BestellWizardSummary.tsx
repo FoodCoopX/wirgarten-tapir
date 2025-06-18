@@ -19,6 +19,7 @@ interface BestellWizardSummaryProps {
   selectedNumberOfCoopShares: number;
   productTypes: PublicProductType[];
   pickupLocation: PublicPickupLocation | undefined;
+  priceOfAShare: number;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -28,6 +29,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   selectedNumberOfCoopShares,
   productTypes,
   pickupLocation,
+  priceOfAShare,
 }) => {
   function getProductIdsOfProductType(productType: PublicProductType) {
     return productType.products.map((product) => product.id);
@@ -77,7 +79,10 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
         <tbody>
           <tr>
             <td>Deine Genossenschaftsanteile</td>
-            <td>{selectedNumberOfCoopShares} * TODO PRICE</td>
+            <td>
+              {selectedNumberOfCoopShares} * {formatCurrency(priceOfAShare)} ={" "}
+              {formatCurrency(priceOfAShare * selectedNumberOfCoopShares)}
+            </td>
           </tr>
           <tr>
             <td>Abbuchung</td>

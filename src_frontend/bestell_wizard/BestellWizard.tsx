@@ -313,6 +313,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             productTypes={publicProductTypes}
             pickupLocation={selectedPickupLocations[0]}
+            priceOfAShare={priceOfAShare}
           />
         );
       case "end":
