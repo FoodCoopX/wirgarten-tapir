@@ -180,3 +180,14 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
+
+
+class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    pickup_location_id = serializers.CharField()
+
+
+class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serializer):
+    product_type_id_to_next_delivery_date_map = serializers.DictField(
+        child=serializers.DateField()
+    )

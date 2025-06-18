@@ -42,6 +42,7 @@ import { updateMinimumAndPriceOfShare } from "./utils/updateMinimumAndPriceOfSha
 import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapacities.ts";
 import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
+import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -115,6 +116,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [baseDataLoading, setBaseDataLoading] = useState(true);
   const [showGeneralWaitingListModal, setShowGeneralWaitingListModal] =
     useState(false);
+  const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
+    useState<{ [key: string]: Date }>({});
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -226,6 +229,21 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [pickupLocations, shoppingCart]);
 
   useEffect(() => {
+    if (
+      selectedPickupLocations.length === 0 ||
+      isShoppingCartEmpty(shoppingCart)
+    ) {
+      return;
+    }
+
+    fetchFirstDeliveryDates(
+      selectedPickupLocations,
+      shoppingCart,
+      setFirstDeliveryDatesByProductType,
+    );
+  }, [selectedPickupLocations, shoppingCart]);
+
+  useEffect(() => {
     if (forceWaitingList) {
       setShowGeneralWaitingListModal(true);
       setWaitingListModeEnabled(true);
@@ -316,6 +334,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               pickupLocationsWithCapacityCheckLoading
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
           />
         );
       case "coop_shares":
@@ -352,6 +371,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             productTypes={publicProductTypes}
             pickupLocation={selectedPickupLocations[0]}
             priceOfAShare={priceOfAShare}
+            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
           />
         );
       case "end":
@@ -517,13 +537,25 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 <h2 className={"text-center mb-0"}>Biotop Oberland eG</h2>
               )}
             </Card.Header>
-            <ListGroup variant={"flush"}>
+            <ListGroup
+              variant={"flush"}
+              style={{
+                overflowX: "hidden",
+                height: "100%",
+              }}
+            >
               {waitingListModeEnabled && (
                 <ListGroup.Item className={"list-group-item-warning"}>
                   <div className={"text-center"}>Warteliste-Eintrag</div>
                 </ListGroup.Item>
               )}
-              <ListGroup.Item className={"overflow-scroll"}>
+              <ListGroup.Item
+                style={{
+                  height: "100%",
+                  overflowY: "scroll",
+                  overflowX: "hidden",
+                }}
+              >
                 {baseDataLoading ? (
                   <div
                     className={
@@ -534,11 +566,19 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                     <Spinner style={{ width: "10rem", height: "10rem" }} />
                   </div>
                 ) : (
-                  buildCurrentStepComponent()
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      overflowY: "scroll",
+                      overflowX: "hidden",
+                    }}
+                  >
+                    {buildCurrentStepComponent()}
+                  </div>
                 )}
               </ListGroup.Item>
             </ListGroup>
-            <Card.Body></Card.Body>
             <Card.Footer>
               <div className={"d-flex justify-content-between"}>
                 <div className={"d-flex flex-row gap-2"}>

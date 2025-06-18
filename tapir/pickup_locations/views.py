@@ -41,7 +41,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
-from tapir.subscriptions.types import TapirOrder
+from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
@@ -348,21 +348,9 @@ class PickupLocationCapacityCheckApiView(APIView):
                 f"Unknown pickup location, id: '{serializer.validated_data["pickup_location_id"]}'"
             )
 
-        for product_id in serializer.validated_data["shopping_cart"].keys():
-            if (
-                TapirCache.get_product_by_id(cache=self.cache, product_id=product_id)
-                is None
-            ):
-                raise Http404(f"Unknown product, id: '{product_id}'")
-
-        order: TapirOrder = {
-            TapirCache.get_product_by_id(
-                cache=self.cache, product_id=product_id
-            ): quantity
-            for product_id, quantity in serializer.validated_data[
-                "shopping_cart"
-            ].items()
-        }
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
 
         response_data = {
             "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
