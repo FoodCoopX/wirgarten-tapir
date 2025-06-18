@@ -42,13 +42,13 @@ from tapir.subscriptions.serializers import (
     BestellWizardCapacityCheckRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
 )
-from tapir.subscriptions.services.RequiredProductTypesValidator import (
-    RequiredProductTypesValidator,
-)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.subscriptions.services.required_product_types_validator import (
+    RequiredProductTypesValidator,
+)
 from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )

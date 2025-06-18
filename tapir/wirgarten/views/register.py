@@ -416,7 +416,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
             actual_coop_start = get_next_contract_start_date(
-                ref_date=start_date, cache=self.cache
+                reference_date=start_date, cache=self.cache
             )
 
             mandate_ref = create_mandate_ref(member, cache=self.cache)

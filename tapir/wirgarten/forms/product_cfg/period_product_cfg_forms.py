@@ -284,7 +284,7 @@ class GrowingPeriodForm(forms.Form):
                     new_start_date = period.end_date + relativedelta(days=1)
                 else:
                     new_start_date = get_next_contract_start_date(
-                        ref_date=today, cache=self.cache
+                        reference_date=today, cache=self.cache
                     )
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:
