@@ -74,14 +74,17 @@ export function buildNextButtonParametersForIntro(
 }
 
 export function buildNextButtonParametersForPickupLocation(
-  selectedPickupLocation: PublicPickupLocation | undefined,
+  selectedPickupLocations: PublicPickupLocation[],
+  pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>,
 ): NextButtonParameters {
   return {
-    disabled: selectedPickupLocation === undefined,
+    disabled:
+      selectedPickupLocations.length === 0 ||
+      pickupLocationsWithCapacityCheckLoading.size > 0,
     icon: undefined,
-    loading: false,
+    loading: pickupLocationsWithCapacityCheckLoading.size > 0,
     text:
-      selectedPickupLocation === undefined
+      selectedPickupLocations.length === 0
         ? "Wähle dein Verteilstation aus um weiter zu gehen"
         : undefined,
   };

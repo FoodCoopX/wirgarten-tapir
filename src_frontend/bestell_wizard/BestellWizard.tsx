@@ -10,7 +10,7 @@ import {
   BestellWizardConfirmOrderResponse,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi
+  SubscriptionsApi,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -29,7 +29,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -69,8 +69,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [pickupLocations, setPickupLocations] = useState<
     PublicPickupLocation[]
   >([]);
-  const [selectedPickupLocation, setSelectedPickupLocation] =
-    useState<PublicPickupLocation>();
+  const [selectedPickupLocations, setSelectedPickupLocations] = useState<
+    PublicPickupLocation[]
+  >([]);
   const [
     pickupLocationsWithCapacityCheckLoading,
     setPickupLocationsWithCapacityCheckLoading,
@@ -151,7 +152,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       shoppingCart,
       setProductIdsOverCapacity,
       setProductTypeIdsOverCapacity,
-      setWaitingListModeEnabled,
       setCheckingCapacities,
     );
 
@@ -163,6 +163,24 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       setSelectedNumberOfCoopShares,
     );
   }, [shoppingCart]);
+
+  useEffect(() => {
+    if (
+      productIdsOverCapacity.length === 0 &&
+      productTypeIdsOverCapacity.length === 0 &&
+      selectedPickupLocations.length > 0 &&
+      pickupLocationsWithCapacityCheckLoading.size === 0 &&
+      !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+    ) {
+      setWaitingListModeEnabled(false);
+    }
+  }, [
+    productIdsOverCapacity,
+    productTypeIdsOverCapacity,
+    selectedPickupLocations,
+    pickupLocationsWithCapacityCheckLoading,
+    pickupLocationsWithCapacityFull,
+  ]);
 
   useEffect(() => {
     if (pickupLocations.length === 0 || isShoppingCartEmpty(shoppingCart)) {
@@ -214,7 +232,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       return false;
     }
 
-    if (pickupLocationsWithCapacityFull.has(selectedPickupLocation!)) {
+    if (pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])) {
       return true;
     }
   }
@@ -253,8 +271,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           <BestellWizardPickupLocation
             theme={theme}
             pickupLocations={pickupLocations}
-            selectedPickupLocation={selectedPickupLocation}
-            setSelectedPickupLocation={setSelectedPickupLocation}
+            selectedPickupLocations={selectedPickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
             waitingListModeEnabled={waitingListModeEnabled}
             pickupLocationsWithCapacityCheckLoading={
               pickupLocationsWithCapacityCheckLoading
@@ -294,7 +312,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             personalData={personalData}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             productTypes={publicProductTypes}
-            pickupLocation={selectedPickupLocation}
+            pickupLocation={selectedPickupLocations[0]}
           />
         );
       case "end":
@@ -330,7 +348,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           contractAccepted: contractAccepted,
           statuteAccepted: statuteAccepted,
           nbShares: selectedNumberOfCoopShares,
-          pickupLocationId: selectedPickupLocation!.id!,
+          pickupLocationId: selectedPickupLocations[0].id!,
           shoppingCart: shoppingCart,
         },
       })
@@ -366,7 +384,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         break;
       case "pickup_location":
         params = buildNextButtonParametersForPickupLocation(
-          selectedPickupLocation,
+          selectedPickupLocations,
+          pickupLocationsWithCapacityCheckLoading,
         );
         break;
       case "coop_shares":
@@ -414,7 +433,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       }
     }
     setShoppingCart(newShoppingCart);
-    setSelectedPickupLocation(pickupLocations[0]);
+    setSelectedPickupLocations([pickupLocations[0]]);
     setSelectedNumberOfCoopShares(7);
     setSepaAllowed(true);
     setContractAccepted(true);
