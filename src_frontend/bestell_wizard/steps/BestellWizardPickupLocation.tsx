@@ -214,7 +214,7 @@ const BestellWizardPickupLocation: React.FC<
           ggf. deinen Spam-Ordner.
         </p>
         <p>
-          Deine 6-wöchige Probezeit beginnt erst, nachdem du die erste Lieferung
+          Deine X-wöchige Probezeit beginnt erst, nachdem du die erste Lieferung
           erhalten hast. Während der Probezeit besteht keine Kündigungsfrist und
           Du kannst Deinen Ernteanteil wöchentlich jeweils zum Freitag der
           Vorwoche kündigen. Du zahlst nur die Anteile, die du erhalten hast.
