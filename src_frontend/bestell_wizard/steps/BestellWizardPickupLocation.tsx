@@ -19,6 +19,7 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import { formatDateText } from "../../utils/formatDateText.ts";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -30,6 +31,7 @@ interface BestellWizardPickupLocationProps {
   waitingListModeEnabled: boolean;
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
+  firstDeliveryDatesByProductType: { [key: string]: Date };
 }
 
 const BestellWizardPickupLocation: React.FC<
@@ -42,6 +44,7 @@ const BestellWizardPickupLocation: React.FC<
   waitingListModeEnabled,
   pickupLocationsWithCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
+  firstDeliveryDatesByProductType,
 }) => {
   const [map, setMap] = useState<MapRef>(null);
 
@@ -94,6 +97,12 @@ const BestellWizardPickupLocation: React.FC<
     setSelectedPickupLocations([...selectedPickupLocations]);
   }
 
+  function getEarliestDeliveryDate() {
+    return Object.values(firstDeliveryDatesByProductType).sort(
+      (a, b) => a.getTime() - b.getTime(),
+    )[0];
+  }
+
   return (
     <>
       <Row>
@@ -117,7 +126,7 @@ const BestellWizardPickupLocation: React.FC<
           <Col>
             <div className={"d-flex flex-row gap-2"}>
               {selectedPickupLocations.map((selectedPickupLocation, index) => (
-                <Form.Group>
+                <Form.Group key={index}>
                   <Form.Label>{index + 1}. Wunsch</Form.Label>
                   <Form.Select
                     style={{ maxWidth: "200px" }}
@@ -235,8 +244,8 @@ const BestellWizardPickupLocation: React.FC<
       <Row className={"mt-4"}>
         <BestellWizardCardSubtitle text={"Deine erste Lieferung"} />
         <p>
-          Dein erster Ernteanteil kann an dieser Station am XX.XX.XXX geliefert
-          werden.
+          Dein erster Ernteanteil kann an dieser Station am{" "}
+          {formatDateText(getEarliestDeliveryDate())} geliefert werden.
         </p>
         <p>
           Alle weiteren Informationen zur Lieferung des ersten Ernteanteils

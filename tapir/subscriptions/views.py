@@ -21,6 +21,7 @@ from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
 from tapir.deliveries.serializers import ProductSerializer
+from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -43,9 +44,14 @@ from tapir.subscriptions.serializers import (
     BestellWizardCapacityCheckRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
     BestellWizardBaseDataResponseSerializer,
+    BestellWizardDeliveryDatesForOrderRequestSerializer,
+    BestellWizardDeliveryDatesForOrderResponseSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
+)
+from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
+    EarliestPossibleContractStartDateCalculator,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.required_product_types_validator import (
@@ -61,8 +67,8 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
 from tapir.subscriptions.services.subscription_change_validator_new import (
     SubscriptionChangeValidatorNew,
 )
+from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -679,12 +685,9 @@ class BestellWizardConfirmOrderApiView(APIView):
         pickup_location = get_object_or_404(
             PickupLocation, id=serializer.validated_data["pickup_location_id"]
         )
-        order: TapirOrder = {
-            get_object_or_404(Product, id=product_id): quantity
-            for product_id, quantity in serializer.validated_data[
-                "shopping_cart"
-            ].items()
-        }
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
             ordered_products_to_quantity_map=order,
@@ -757,12 +760,9 @@ class BestellWizardCapacityCheckApiView(APIView):
         serializer = BestellWizardCapacityCheckRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        order: TapirOrder = {
-            get_object_or_404(Product, id=product_id): quantity
-            for product_id, quantity in serializer.validated_data[
-                "shopping_cart"
-            ].items()
-        }
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
 
         subscription_start_date = get_next_contract_start_date(cache=self.cache)
 
@@ -809,3 +809,56 @@ class BestellWizardBaseDataApiView(APIView):
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+
+
+class BestellWizardDeliveryDatesForOrderApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardDeliveryDatesForOrderResponseSerializer},
+        request=BestellWizardDeliveryDatesForOrderRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardDeliveryDatesForOrderRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        product_type_ids = {product.type_id for product in order.keys()}
+        pickup_location_id = serializer.validated_data["pickup_location_id"]
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache,
+            pickup_location_id=pickup_location_id,
+        )
+        if pickup_location is None:
+            raise Http404(f"Unknown pickup location")
+
+        contract_start_date = EarliestPossibleContractStartDateCalculator.get_earliest_possible_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            pickup_location_id=pickup_location_id,
+            cache=self.cache,
+        )
+        response_data = {
+            "product_type_id_to_next_delivery_date_map": {
+                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+                    reference_date=contract_start_date,
+                    pickup_location_id=pickup_location_id,
+                    delivery_cycle=TapirCache.get_product_type_by_id(
+                        cache=self.cache, product_type_id=product_type_id
+                    ).delivery_cycle,
+                    cache=self.cache,
+                )
+                for product_type_id in product_type_ids
+            },
+        }
+
+        return Response(
+            BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
+        )

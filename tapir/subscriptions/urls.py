@@ -41,6 +41,11 @@ urlpatterns = [
         name="bestell_wizard_base_data",
     ),
     path(
+        "api/bestell_wizard_delivery_dates",
+        views.BestellWizardDeliveryDatesForOrderApiView.as_view(),
+        name="bestell_wizard_delivery_dates",
+    ),
+    path(
         "bestell_wizard",
         views.BestellWizardView.as_view(),
         name="bestell_wizard",

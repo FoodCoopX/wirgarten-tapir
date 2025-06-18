@@ -6,6 +6,8 @@ export * from './BestellWizardCapacityCheckRequestRequest';
 export * from './BestellWizardCapacityCheckResponse';
 export * from './BestellWizardConfirmOrderRequestRequest';
 export * from './BestellWizardConfirmOrderResponse';
+export * from './BestellWizardDeliveryDatesForOrderRequestRequest';
+export * from './BestellWizardDeliveryDatesForOrderResponse';
 export * from './BlankEnum';
 export * from './BounceTypeEnum';
 export * from './BuildCsvExportResponse';

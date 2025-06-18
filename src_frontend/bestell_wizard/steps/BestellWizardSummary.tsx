@@ -11,6 +11,7 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
+import { formatDateText } from "../../utils/formatDateText.ts";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
@@ -20,6 +21,7 @@ interface BestellWizardSummaryProps {
   productTypes: PublicProductType[];
   pickupLocation: PublicPickupLocation | undefined;
   priceOfAShare: number;
+  firstDeliveryDatesByProductType: { [key: string]: Date };
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -30,6 +32,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   productTypes,
   pickupLocation,
   priceOfAShare,
+  firstDeliveryDatesByProductType,
 }) => {
   function getProductIdsOfProductType(productType: PublicProductType) {
     return productType.products.map((product) => product.id);
@@ -45,7 +48,9 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
         <tbody>
           <tr>
             <td>Erste Lieferung</td>
-            <td>TODO</td>
+            <td>
+              {formatDateText(firstDeliveryDatesByProductType[productType.id!])}
+            </td>
           </tr>
           {Object.entries(shoppingCart)
             .filter(

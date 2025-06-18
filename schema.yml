@@ -876,6 +876,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
           description: ''
+  /subscriptions/api/bestell_wizard_delivery_dates:
+    post:
+      operationId: subscriptions_api_bestell_wizard_delivery_dates_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
+          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -3455,6 +3481,29 @@ components:
       required:
       - errors
       - order_confirmed
+    BestellWizardDeliveryDatesForOrderRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - pickup_location_id
+      - shopping_cart
+    BestellWizardDeliveryDatesForOrderResponse:
+      type: object
+      properties:
+        product_type_id_to_next_delivery_date_map:
+          type: object
+          additionalProperties:
+            type: string
+            format: date
+      required:
+      - product_type_id_to_next_delivery_date_map
     BlankEnum:
       enum:
       - ''

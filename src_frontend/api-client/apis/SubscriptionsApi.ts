@@ -20,6 +20,8 @@ import type {
   BestellWizardCapacityCheckResponse,
   BestellWizardConfirmOrderRequestRequest,
   BestellWizardConfirmOrderResponse,
+  BestellWizardDeliveryDatesForOrderRequestRequest,
+  BestellWizardDeliveryDatesForOrderResponse,
   CancelSubscriptionsViewResponse,
   CancellationData,
   ExtendedProduct,
@@ -39,6 +41,10 @@ import {
     BestellWizardConfirmOrderRequestRequestToJSON,
     BestellWizardConfirmOrderResponseFromJSON,
     BestellWizardConfirmOrderResponseToJSON,
+    BestellWizardDeliveryDatesForOrderRequestRequestFromJSON,
+    BestellWizardDeliveryDatesForOrderRequestRequestToJSON,
+    BestellWizardDeliveryDatesForOrderResponseFromJSON,
+    BestellWizardDeliveryDatesForOrderResponseToJSON,
     CancelSubscriptionsViewResponseFromJSON,
     CancelSubscriptionsViewResponseToJSON,
     CancellationDataFromJSON,
@@ -57,6 +63,10 @@ import {
 
 export interface SubscriptionsApiBestellWizardCapacityCheckCreateRequest {
     bestellWizardCapacityCheckRequestRequest: BestellWizardCapacityCheckRequestRequest;
+}
+
+export interface SubscriptionsApiBestellWizardDeliveryDatesCreateRequest {
+    bestellWizardDeliveryDatesForOrderRequestRequest: BestellWizardDeliveryDatesForOrderRequestRequest;
 }
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
@@ -161,6 +171,43 @@ export class SubscriptionsApi extends runtime.BaseAPI {
      */
     async subscriptionsApiBestellWizardCapacityCheckCreate(requestParameters: SubscriptionsApiBestellWizardCapacityCheckCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BestellWizardCapacityCheckResponse> {
         const response = await this.subscriptionsApiBestellWizardCapacityCheckCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async subscriptionsApiBestellWizardDeliveryDatesCreateRaw(requestParameters: SubscriptionsApiBestellWizardDeliveryDatesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BestellWizardDeliveryDatesForOrderResponse>> {
+        if (requestParameters['bestellWizardDeliveryDatesForOrderRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'bestellWizardDeliveryDatesForOrderRequestRequest',
+                'Required parameter "bestellWizardDeliveryDatesForOrderRequestRequest" was null or undefined when calling subscriptionsApiBestellWizardDeliveryDatesCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/subscriptions/api/bestell_wizard_delivery_dates`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BestellWizardDeliveryDatesForOrderRequestRequestToJSON(requestParameters['bestellWizardDeliveryDatesForOrderRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BestellWizardDeliveryDatesForOrderResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async subscriptionsApiBestellWizardDeliveryDatesCreate(requestParameters: SubscriptionsApiBestellWizardDeliveryDatesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BestellWizardDeliveryDatesForOrderResponse> {
+        const response = await this.subscriptionsApiBestellWizardDeliveryDatesCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
