@@ -715,6 +715,32 @@ paths:
               schema:
                 type: string
           description: ''
+  /pickup_locations/api/pickup_location_capacity_check:
+    post:
+      operationId: pickup_locations_api_pickup_location_capacity_check_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacityCheckResponse'
+          description: ''
   /pickup_locations/api/pickup_location_capacity_evolution:
     get:
       operationId: pickup_locations_api_pickup_location_capacity_evolution_retrieve
@@ -5915,6 +5941,26 @@ components:
       required:
       - date
       - values
+    PickupLocationCapacityCheckRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - pickup_location_id
+      - shopping_cart
+    PickupLocationCapacityCheckResponse:
+      type: object
+      properties:
+        enough_capacity_for_order:
+          type: boolean
+      required:
+      - enough_capacity_for_order
     PickupLocationCapacityEvolution:
       type: object
       properties:

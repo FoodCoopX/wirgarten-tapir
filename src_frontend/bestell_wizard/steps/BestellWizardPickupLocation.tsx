@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { Col, ListGroup, ListGroupItem, Row } from "react-bootstrap";
-import { PublicPickupLocation } from "../../api-client";
+import { Col, ListGroup, ListGroupItem, Row, Spinner } from "react-bootstrap";
+import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
 import formatAddress from "../../utils/formatAddress.ts";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import "../map.css";
 import "leaflet/dist/leaflet.css";
-
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import L from "leaflet";
 import { MapRef } from "react-leaflet/MapContainer";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { isShoppingCartEmpty } from "../utils/isShoppingCartEmpty.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -22,6 +23,9 @@ interface BestellWizardPickupLocationProps {
   setSelectedPickupLocation: (
     selectedPickupLocation: PublicPickupLocation,
   ) => void;
+  shoppingCart: ShoppingCart;
+  waitingListModeEnabled: boolean;
+  csrfToken: string;
 }
 
 const BestellWizardPickupLocation: React.FC<
@@ -31,7 +35,17 @@ const BestellWizardPickupLocation: React.FC<
   pickupLocations,
   selectedPickupLocation,
   setSelectedPickupLocation,
+  shoppingCart,
+  waitingListModeEnabled,
+  csrfToken,
 }) => {
+  const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
+  const [
+    pickupLocationsWithCapacityCheckLoading,
+    setPickupLocationsWithCapacityCheckLoading,
+  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
+    useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [map, setMap] = useState<MapRef>(null);
 
   useEffect(() => {
@@ -46,6 +60,53 @@ const BestellWizardPickupLocation: React.FC<
       { animate: true },
     );
   }, [selectedPickupLocation]);
+
+  useEffect(() => {
+    if (pickupLocations.length === 0 || isShoppingCartEmpty(shoppingCart)) {
+      return;
+    }
+
+    setPickupLocationsWithCapacityCheckLoading(new Set(pickupLocations));
+
+    for (const pickupLocation of pickupLocations) {
+      pickupLocationApi
+        .pickupLocationsApiPickupLocationCapacityCheckCreate({
+          pickupLocationCapacityCheckRequestRequest: {
+            pickupLocationId: pickupLocation.id!,
+            shoppingCart: shoppingCart,
+          },
+        })
+        .then((response) => {
+          setPickupLocationsWithCapacityFull((set) => {
+            if (response.enoughCapacityForOrder) {
+              set.delete(pickupLocation);
+            } else {
+              set.add(pickupLocation);
+            }
+            return new Set(set);
+          });
+        })
+        .catch(handleRequestError)
+        .finally(() => {
+          setPickupLocationsWithCapacityCheckLoading((set) => {
+            set.delete(pickupLocation);
+            return new Set(set);
+          });
+        });
+    }
+  }, [pickupLocations, shoppingCart]);
+
+  function buildCapacityIndicator(pickupLocation: PublicPickupLocation) {
+    if (pickupLocationsWithCapacityCheckLoading.has(pickupLocation)) {
+      return <Spinner size={"sm"} />;
+    }
+
+    if (pickupLocationsWithCapacityFull.has(pickupLocation)) {
+      return <span className={"text-danger"}>Ausgelastet</span>;
+    }
+
+    return <span className={"text-success"}>Kapazität frei</span>;
+  }
 
   return (
     <>
@@ -77,7 +138,8 @@ const BestellWizardPickupLocation: React.FC<
                   selectedPickupLocation === pickupLocation ? "active" : ""
                 }
               >
-                <strong>{pickupLocation.name}</strong>
+                <strong>{pickupLocation.name}</strong>{" "}
+                {buildCapacityIndicator(pickupLocation)}
                 <br />
                 <small>
                   {formatAddress(
@@ -113,7 +175,10 @@ const BestellWizardPickupLocation: React.FC<
                   parseFloat(pickupLocation.coordsLon),
                   parseFloat(pickupLocation.coordsLat),
                 ]}
-                icon={L.icon({ iconUrl: icon, shadowUrl: iconShadow })}
+                icon={L.icon({
+                  iconUrl: "/static/subscriptions/marker-icon.png",
+                  shadowUrl: "/static/subscriptions/marker-shadow.png",
+                })}
                 key={pickupLocation.id}
               >
                 <Popup>

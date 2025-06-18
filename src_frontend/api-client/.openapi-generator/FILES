@@ -93,6 +93,8 @@ models/PickupLocationCapacityByBasketSizeRequest.ts
 models/PickupLocationCapacityByShare.ts
 models/PickupLocationCapacityByShareRequest.ts
 models/PickupLocationCapacityChangePoint.ts
+models/PickupLocationCapacityCheckRequestRequest.ts
+models/PickupLocationCapacityCheckResponse.ts
 models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
 models/PreferredLanguageEnum.ts

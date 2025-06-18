@@ -85,6 +85,8 @@ export * from './PickupLocationCapacityByBasketSizeRequest';
 export * from './PickupLocationCapacityByShare';
 export * from './PickupLocationCapacityByShareRequest';
 export * from './PickupLocationCapacityChangePoint';
+export * from './PickupLocationCapacityCheckRequestRequest';
+export * from './PickupLocationCapacityCheckResponse';
 export * from './PickupLocationCapacityEvolution';
 export * from './PickupLocationOpeningTime';
 export * from './PreferredLanguageEnum';

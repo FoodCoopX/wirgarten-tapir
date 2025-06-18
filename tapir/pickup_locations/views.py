@@ -3,6 +3,7 @@ import locale
 from typing import Dict
 
 from django.core.exceptions import ImproperlyConfigured
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, permissions
@@ -19,12 +20,17 @@ from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
     PublicPickupLocationSerializer,
+    PickupLocationCapacityCheckResponseSerializer,
+    PickupLocationCapacityCheckRequestSerializer,
 )
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
 from tapir.pickup_locations.services.highest_usage_after_date_service import (
     HighestUsageAfterDateService,
+)
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
     PickupLocationCapacityModeBasketChecker,
@@ -35,6 +41,8 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.subscriptions.types import TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
@@ -43,6 +51,7 @@ from tapir.wirgarten.models import (
     ProductType,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 
@@ -313,3 +322,58 @@ class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
     queryset = PickupLocation.objects.all()
     serializer_class = PublicPickupLocationSerializer
+
+
+class PickupLocationCapacityCheckApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: PickupLocationCapacityCheckResponseSerializer()},
+        request=PickupLocationCapacityCheckRequestSerializer,
+    )
+    def post(self, request):
+        serializer = PickupLocationCapacityCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache,
+            pickup_location_id=serializer.validated_data["pickup_location_id"],
+        )
+        if pickup_location is None:
+            raise Http404(
+                f"Unknown pickup location, id: '{serializer.validated_data["pickup_location_id"]}'"
+            )
+
+        for product_id in serializer.validated_data["shopping_cart"].keys():
+            if (
+                TapirCache.get_product_by_id(cache=self.cache, product_id=product_id)
+                is None
+            ):
+                raise Http404(f"Unknown product, id: '{product_id}'")
+
+        order: TapirOrder = {
+            TapirCache.get_product_by_id(
+                cache=self.cache, product_id=product_id
+            ): quantity
+            for product_id, quantity in serializer.validated_data[
+                "shopping_cart"
+            ].items()
+        }
+
+        response_data = {
+            "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location,
+                ordered_products_to_quantity_map=order,
+                already_registered_member=None,
+                subscription_start=get_next_contract_start_date(cache=self.cache),
+                cache=self.cache,
+            )
+        }
+
+        return Response(
+            PickupLocationCapacityCheckResponseSerializer(response_data).data
+        )
