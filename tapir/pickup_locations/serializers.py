@@ -97,3 +97,12 @@ class PublicPickupLocationSerializer(serializers.ModelSerializer):
             PickupLocationOpeningTime.objects.filter(pickup_location=pickup_location),
             many=True,
         ).data
+
+
+class PickupLocationCapacityCheckResponseSerializer(serializers.Serializer):
+    enough_capacity_for_order = serializers.BooleanField()
+
+
+class PickupLocationCapacityCheckRequestSerializer(serializers.Serializer):
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    pickup_location_id = serializers.CharField()

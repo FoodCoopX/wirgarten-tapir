@@ -15,6 +15,11 @@ urlpatterns = [
         views.PickupLocationCapacityEvolutionView.as_view(),
         name="pickup_location_capacity_evolution",
     ),
+    path(
+        "api/pickup_location_capacity_check",
+        views.PickupLocationCapacityCheckApiView.as_view(),
+        name="pickup_location_capacity_check",
+    ),
 ]
 
 router = DefaultRouter()

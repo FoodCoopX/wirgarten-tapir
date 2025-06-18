@@ -227,7 +227,20 @@ class TapirCache:
         pickup_location_by_id_cache = get_from_cache_or_compute(
             cache, "pickup_location_by_id", lambda: compute()
         )
-        return pickup_location_by_id_cache[pickup_location_id]
+        return pickup_location_by_id_cache.get(pickup_location_id, None)
+
+    @classmethod
+    def get_product_by_id(cls, cache: Dict, product_id):
+        if product_id is None:
+            return None
+
+        def compute():
+            return {product.id: product for product in Product.objects.all()}
+
+        product_by_id_cache = get_from_cache_or_compute(
+            cache, "product_by_id", lambda: compute()
+        )
+        return product_by_id_cache.get(product_id, None)
 
     @classmethod
     def get_opening_times_by_pickup_location_id(cls, cache: Dict, pickup_location_id):

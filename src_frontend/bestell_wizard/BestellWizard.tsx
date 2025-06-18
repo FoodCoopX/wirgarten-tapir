@@ -13,7 +13,7 @@ import {
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi,
+  SubscriptionsApi
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -33,11 +33,12 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
 import { NextButtonParameters } from "./types/NextButtonParameters.ts";
+import { isShoppingCartEmpty } from "./utils/isShoppingCartEmpty.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -114,7 +115,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
     pickupLocationApi
       .pickupLocationsPublicPickupLocationsList()
-      .then(setPickupLocations)
+      .then((pickupLocations) => {
+        pickupLocations.sort((a, b) => {
+          return a.name.localeCompare(b.name);
+        });
+        setPickupLocations(pickupLocations);
+      })
       .catch(handleRequestError);
   }, []);
 
@@ -147,11 +153,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [selectedProductTypes]);
 
   useEffect(() => {
-    const totalQuantityOrdered = Object.values(shoppingCart).reduce(
-      (sum, quantity) => sum + quantity,
-      0,
-    );
-    if (totalQuantityOrdered === 0) {
+    if (isShoppingCartEmpty(shoppingCart)) {
       return;
     }
 
@@ -254,6 +256,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocations={pickupLocations}
             selectedPickupLocation={selectedPickupLocation}
             setSelectedPickupLocation={setSelectedPickupLocation}
+            shoppingCart={shoppingCart}
+            waitingListModeEnabled={waitingListModeEnabled}
+            csrfToken={csrfToken}
           />
         );
       case "coop_shares":

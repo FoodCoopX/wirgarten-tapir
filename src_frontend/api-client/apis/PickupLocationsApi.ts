@@ -18,6 +18,8 @@ import type {
   PatchedPickupLocationCapacitiesRequest,
   PickupLocation,
   PickupLocationCapacities,
+  PickupLocationCapacityCheckRequestRequest,
+  PickupLocationCapacityCheckResponse,
   PickupLocationCapacityEvolution,
   PublicPickupLocation,
 } from '../models/index';
@@ -28,6 +30,10 @@ import {
     PickupLocationToJSON,
     PickupLocationCapacitiesFromJSON,
     PickupLocationCapacitiesToJSON,
+    PickupLocationCapacityCheckRequestRequestFromJSON,
+    PickupLocationCapacityCheckRequestRequestToJSON,
+    PickupLocationCapacityCheckResponseFromJSON,
+    PickupLocationCapacityCheckResponseToJSON,
     PickupLocationCapacityEvolutionFromJSON,
     PickupLocationCapacityEvolutionToJSON,
     PublicPickupLocationFromJSON,
@@ -40,6 +46,10 @@ export interface PickupLocationsApiPickupLocationCapacitiesPartialUpdateRequest 
 
 export interface PickupLocationsApiPickupLocationCapacitiesRetrieveRequest {
     pickupLocationId?: string;
+}
+
+export interface PickupLocationsApiPickupLocationCapacityCheckCreateRequest {
+    pickupLocationCapacityCheckRequestRequest: PickupLocationCapacityCheckRequestRequest;
 }
 
 export interface PickupLocationsApiPickupLocationCapacityEvolutionRetrieveRequest {
@@ -121,6 +131,43 @@ export class PickupLocationsApi extends runtime.BaseAPI {
      */
     async pickupLocationsApiPickupLocationCapacitiesRetrieve(requestParameters: PickupLocationsApiPickupLocationCapacitiesRetrieveRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocationCapacities> {
         const response = await this.pickupLocationsApiPickupLocationCapacitiesRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacityCheckCreateRaw(requestParameters: PickupLocationsApiPickupLocationCapacityCheckCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PickupLocationCapacityCheckResponse>> {
+        if (requestParameters['pickupLocationCapacityCheckRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'pickupLocationCapacityCheckRequestRequest',
+                'Required parameter "pickupLocationCapacityCheckRequestRequest" was null or undefined when calling pickupLocationsApiPickupLocationCapacityCheckCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
+            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
+        }
+        const response = await this.request({
+            path: `/pickup_locations/api/pickup_location_capacity_check`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PickupLocationCapacityCheckRequestRequestToJSON(requestParameters['pickupLocationCapacityCheckRequestRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PickupLocationCapacityCheckResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async pickupLocationsApiPickupLocationCapacityCheckCreate(requestParameters: PickupLocationsApiPickupLocationCapacityCheckCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PickupLocationCapacityCheckResponse> {
+        const response = await this.pickupLocationsApiPickupLocationCapacityCheckCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
