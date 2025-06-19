@@ -30,6 +30,11 @@ urlpatterns = [
         views.WaitingListShowsCoopContentView.as_view(),
         name="show_coop_content",
     ),
+    path(
+        "api/public_waiting_list_create_entry",
+        views.PublicWaitingListCreateEntryView.as_view(),
+        name="public_waiting_list_create_entry",
+    ),
 ]
 
 router = DefaultRouter()
