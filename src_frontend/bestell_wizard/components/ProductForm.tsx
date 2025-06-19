@@ -48,15 +48,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <strong>{product.name}</strong>
               </div>
               <div>
-                <Form.Control
-                  type={"number"}
-                  min={0}
-                  value={shoppingCart[product.id!]}
-                  onChange={(event) => {
-                    shoppingCart[product.id!] = parseInt(event.target.value);
-                    setShoppingCart(Object.assign({}, shoppingCart));
-                  }}
-                ></Form.Control>
+                {productType.singleSubscriptionOnly ? (
+                  <Form.Check
+                    checked={shoppingCart[product.id!] > 0}
+                    onChange={(event) => {
+                      shoppingCart[product.id!] = event.target.checked ? 1 : 0;
+                      setShoppingCart(Object.assign({}, shoppingCart));
+                    }}
+                  />
+                ) : (
+                  <Form.Control
+                    type={"number"}
+                    min={0}
+                    value={shoppingCart[product.id!]}
+                    onChange={(event) => {
+                      shoppingCart[product.id!] = parseInt(event.target.value);
+                      setShoppingCart(Object.assign({}, shoppingCart));
+                    }}
+                  />
+                )}
               </div>
               <div>
                 <Form.Text className={"text-center"} as={"p"}>

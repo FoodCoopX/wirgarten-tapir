@@ -120,6 +120,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "order_in_bestellwizard",
             "must_be_subscribed_to",
             "no_delivery",
+            "single_subscription_only",
         ]
 
     products = SerializerMethodField()

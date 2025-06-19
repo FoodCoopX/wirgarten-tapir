@@ -6313,6 +6313,9 @@ components:
         no_delivery:
           type: boolean
           readOnly: true
+        single_subscription_only:
+          type: boolean
+          title: Nur Einzelabonnement erlaubt
       required:
       - name
       - no_delivery
