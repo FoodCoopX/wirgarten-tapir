@@ -18,6 +18,7 @@ interface BestellWizardPersonalDataProps {
   setSepaAllowed: (sepaAllowed: boolean) => void;
   contractAccepted: boolean;
   setContractAccepted: (contractRead: boolean) => void;
+  waitingListModeEnabled: boolean;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -28,6 +29,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   setSepaAllowed,
   contractAccepted,
   setContractAccepted,
+  waitingListModeEnabled,
 }) => {
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
@@ -216,42 +218,46 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row className={"mt-4"}>
-        <Col>
-          <Row>
-            <Col>
-              <BestellWizardCardSubtitle text={"Erteilung SEPA-Mandat"} />
-            </Col>
-          </Row>
-          <Row className={"mt-2"}>
-            <Col>
-              <Form.Check
-                id={"sepa-mandat"}
-                label={
-                  "Ich ermächtige die Biotop Oberland eG die gezeichneten Geschäftsanteile sowie ggf. die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
-                }
-                checked={sepaAllowed}
-                onChange={(event) => setSepaAllowed(event.target.checked)}
-              />
-            </Col>
-            <Col>
-              <Form.Check
-                id={"contract"}
-                label={
-                  "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
-                }
-                checked={contractAccepted}
-                onChange={(event) => setContractAccepted(event.target.checked)}
-              />
-              <Form.Text>
-                <a href="https://biotop-oberland.de/gebuehrenordnung">
-                  https://biotop-oberland.de/gebuehrenordnung
-                </a>
-              </Form.Text>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
+      {!waitingListModeEnabled && (
+        <Row className={"mt-4"}>
+          <Col>
+            <Row>
+              <Col>
+                <BestellWizardCardSubtitle text={"Erteilung SEPA-Mandat"} />
+              </Col>
+            </Row>
+            <Row className={"mt-2"}>
+              <Col>
+                <Form.Check
+                  id={"sepa-mandat"}
+                  label={
+                    "Ich ermächtige die Biotop Oberland eG die gezeichneten Geschäftsanteile sowie ggf. die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
+                  }
+                  checked={sepaAllowed}
+                  onChange={(event) => setSepaAllowed(event.target.checked)}
+                />
+              </Col>
+              <Col>
+                <Form.Check
+                  id={"contract"}
+                  label={
+                    "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
+                  }
+                  checked={contractAccepted}
+                  onChange={(event) =>
+                    setContractAccepted(event.target.checked)
+                  }
+                />
+                <Form.Text>
+                  <a href="https://biotop-oberland.de/gebuehrenordnung">
+                    https://biotop-oberland.de/gebuehrenordnung
+                  </a>
+                </Form.Text>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      )}
     </>
   );
 };

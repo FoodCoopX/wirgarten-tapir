@@ -103,9 +103,10 @@ export function buildNextButtonParametersForCoopShares(
   statuteAccepted: boolean,
   selectedNumberOfCoopShares: number,
   minimumNumberOfShares: number,
+  waitingListModeEnabled: boolean,
 ): NextButtonParameters {
   let text = undefined;
-  if (!statuteAccepted) {
+  if (!statuteAccepted && !waitingListModeEnabled) {
     text = "Akzeptiere die Satzung um weiter zu gehen";
   }
   if (minimumNumberOfShares > selectedNumberOfCoopShares) {
@@ -115,7 +116,8 @@ export function buildNextButtonParametersForCoopShares(
 
   return {
     disabled:
-      !statuteAccepted || minimumNumberOfShares > selectedNumberOfCoopShares,
+      (!statuteAccepted && !waitingListModeEnabled) ||
+      minimumNumberOfShares > selectedNumberOfCoopShares,
     icon: undefined,
     loading: false,
     text: text,

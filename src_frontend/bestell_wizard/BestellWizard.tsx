@@ -353,6 +353,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setStatuteAccepted={setStatuteAccepted}
             minimumNumberOfShares={minimumNumberOfShares}
             priceOfAShare={priceOfAShare}
+            waitingListModeEnabled={waitingListModeEnabled}
           />
         );
       case "personal_data":
@@ -365,6 +366,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setSepaAllowed={setSepaAllowed}
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
+            waitingListModeEnabled={waitingListModeEnabled}
           />
         );
       case "summary":
@@ -375,10 +377,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             personalData={personalData}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             productTypes={publicProductTypes}
-            pickupLocation={selectedPickupLocations[0]}
+            selectedPickupLocations={selectedPickupLocations}
             priceOfAShare={priceOfAShare}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
             updateOrderFromSummary={updateOrderFromSummary}
+            waitingListModeEnabled={waitingListModeEnabled}
           />
         );
       case "end":
@@ -464,6 +467,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           statuteAccepted,
           selectedNumberOfCoopShares,
           minimumNumberOfShares,
+          waitingListModeEnabled,
         );
         break;
       case "personal_data":

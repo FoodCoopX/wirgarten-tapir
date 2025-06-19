@@ -13,6 +13,7 @@ interface BestellWizardCoopSharesProps {
   setStatuteAccepted: (statuteRead: boolean) => void;
   minimumNumberOfShares: number;
   priceOfAShare: number;
+  waitingListModeEnabled: boolean;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -23,6 +24,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   setStatuteAccepted,
   minimumNumberOfShares,
   priceOfAShare,
+  waitingListModeEnabled,
 }) => {
   return (
     <>
@@ -85,33 +87,37 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
           </div>
         </Col>
       </Row>
-      <Row className={"mt-2"}>
-        <Col>
-          <Form.Check
-            id={"statute"}
-            checked={statuteAccepted}
-            onChange={(event) => setStatuteAccepted(event.target.checked)}
-            label={
-              "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
-            }
-          />
-          <Form.Text>
-            <a href={"https://biotop-oberland.de/satzung"}>
-              https://biotop-oberland.de/satzung
-            </a>
-          </Form.Text>
-        </Col>
-      </Row>
-      <Row className={"mt-2"}>
-        <Col>
-          <p>
-            Bitte beachte, dass Deine Genossenschaftsanteile erst bei Austritt
-            aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses
-            im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10
-            und § 37.
-          </p>
-        </Col>
-      </Row>
+      {!waitingListModeEnabled && (
+        <>
+          <Row className={"mt-2"}>
+            <Col>
+              <Form.Check
+                id={"statute"}
+                checked={statuteAccepted}
+                onChange={(event) => setStatuteAccepted(event.target.checked)}
+                label={
+                  "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
+                }
+              />
+              <Form.Text>
+                <a href={"https://biotop-oberland.de/satzung"}>
+                  https://biotop-oberland.de/satzung
+                </a>
+              </Form.Text>
+            </Col>
+          </Row>
+          <Row className={"mt-2"}>
+            <Col>
+              <p>
+                Bitte beachte, dass Deine Genossenschaftsanteile erst bei
+                Austritt aus der Genossenschaft und nach Verabschiedung des
+                Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen.
+                Siehe dazu Satzung § 10 und § 37.
+              </p>
+            </Col>
+          </Row>
+        </>
+      )}
     </>
   );
 };
