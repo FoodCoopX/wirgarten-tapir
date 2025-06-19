@@ -6,6 +6,7 @@ import { Form, Spinner } from "react-bootstrap";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { buildEmptyShoppingCart } from "../types/buildEmptyShoppingCart.ts";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;
@@ -35,7 +36,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   useEffect(() => {
     if (investingMembership) {
       setSelectedProductTypes([]);
-      setShoppingCart({});
+      setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
     }
   }, [investingMembership]);
 
