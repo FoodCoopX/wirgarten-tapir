@@ -50,7 +50,7 @@ const BestellWizardProgressIndicator: React.FC<
       style={{ height: "100%" }}
     >
       {steps.map((step, index) => (
-        <>
+        <div key={step}>
           {index > 0 && (
             <div
               className={"d-flex flex-row justify-content-center"}
@@ -77,7 +77,7 @@ const BestellWizardProgressIndicator: React.FC<
               {getText(step)}
             </span>
           </div>
-        </>
+        </div>
       ))}
     </div>
   );

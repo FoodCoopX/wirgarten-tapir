@@ -7,6 +7,7 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../types/buildEmptyShoppingCart.ts";
+import { selectedAllRequiredProductTypes } from "../utils/selectedAllRequiredProductTypes.ts";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;
@@ -37,6 +38,12 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
     if (investingMembership) {
       setSelectedProductTypes([]);
       setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
+    } else {
+      selectedAllRequiredProductTypes(
+        publicProductTypes,
+        selectedProductTypes,
+        setSelectedProductTypes,
+      );
     }
   }, [investingMembership]);
 
@@ -95,7 +102,10 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
                   )
                 }
                 checked={selectedProductTypes.includes(publicProductType)}
-                disabled={publicProductType.mustBeSubscribedTo}
+                disabled={
+                  publicProductType.mustBeSubscribedTo &&
+                  selectedProductTypes.includes(publicProductType)
+                }
               />
               <span>
                 {!publicProductType.descriptionBestellwizardShort ? (
