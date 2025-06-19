@@ -22,6 +22,7 @@ interface BestellWizardSummaryProps {
   pickupLocation: PublicPickupLocation | undefined;
   priceOfAShare: number;
   firstDeliveryDatesByProductType: { [key: string]: Date };
+  updateOrderFromSummary: (productType: PublicProductType) => void;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -33,6 +34,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   pickupLocation,
   priceOfAShare,
   firstDeliveryDatesByProductType,
+  updateOrderFromSummary,
 }) => {
   function getProductIdsOfProductType(productType: PublicProductType) {
     return productType.products.map((product) => product.id);
@@ -108,6 +110,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             text={"Bestellung anpassen"}
             variant={"outline-primary"}
             size={"sm"}
+            onClick={() => updateOrderFromSummary(productType)}
           />
         </div>
       ))}

@@ -6310,8 +6310,12 @@ components:
           type: boolean
           title: Muss gezeichnet werden
           description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+        no_delivery:
+          type: boolean
+          readOnly: true
       required:
       - name
+      - no_delivery
       - products
     RecipientRequest:
       type: object

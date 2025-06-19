@@ -43,6 +43,7 @@ import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapaci
 import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
 import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -118,6 +119,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     useState(false);
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
+  const [investingMembership, setInvestingMembership] = useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -173,10 +175,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [selectedProductTypes]);
 
   useEffect(() => {
-    if (isShoppingCartEmpty(shoppingCart)) {
-      return;
-    }
-
     updateProductsAndProductTypesOverCapacity(
       shoppingCart,
       setProductIdsOverCapacity,
@@ -293,11 +291,32 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }
 
   function goToNextStep() {
-    setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
+    let nextStep = steps[steps.indexOf(currentStep) + 1];
+    console.log(nextStep);
+    console.log(nextStep === "pickup_location");
+    console.log(
+      isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes),
+    );
+    if (
+      nextStep === "pickup_location" &&
+      !isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes)
+    ) {
+      nextStep = steps[steps.indexOf("pickup_location") + 1];
+      console.log("SKIPPING");
+      console.log(nextStep);
+    }
+    setCurrentStep(nextStep);
   }
 
   function onBackClicked() {
     setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
+  }
+
+  function updateOrderFromSummary(productType: PublicProductType) {
+    if (!selectedProductTypes.includes(productType)) {
+      setSelectedProductTypes([...selectedProductTypes, productType]);
+    }
+    setCurrentStep(productType.id!);
   }
 
   function buildCurrentStepComponent() {
@@ -320,6 +339,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setSelectedProductTypes={setSelectedProductTypes}
             publicProductTypes={publicProductTypes}
             allowInvestingMembership={allowInvestingMembership}
+            investingMembership={investingMembership}
+            setInvestingMembership={setInvestingMembership}
           />
         );
       case "pickup_location":
@@ -372,6 +393,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocation={selectedPickupLocations[0]}
             priceOfAShare={priceOfAShare}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+            updateOrderFromSummary={updateOrderFromSummary}
           />
         );
       case "end":
@@ -439,7 +461,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
     switch (currentStep) {
       case "intro":
-        params = buildNextButtonParametersForIntro(selectedProductTypes);
+        params = buildNextButtonParametersForIntro(
+          selectedProductTypes,
+          investingMembership,
+        );
         break;
       case "pickup_location":
         params = buildNextButtonParametersForPickupLocation(

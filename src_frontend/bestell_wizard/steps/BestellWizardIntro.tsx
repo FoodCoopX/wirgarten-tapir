@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
@@ -12,6 +12,8 @@ interface BestellWizardIntroProps {
   setSelectedProductTypes: (selectedProductTypes: PublicProductType[]) => void;
   publicProductTypes: PublicProductType[];
   allowInvestingMembership: boolean;
+  investingMembership: boolean;
+  setInvestingMembership: (investing: boolean) => void;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -20,9 +22,9 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   setSelectedProductTypes,
   publicProductTypes,
   allowInvestingMembership,
+  investingMembership,
+  setInvestingMembership,
 }) => {
-  const [investingMembership, setInvestingMembership] = useState(false);
-
   function getHtmlDescription(description: string) {
     return { __html: description };
   }
