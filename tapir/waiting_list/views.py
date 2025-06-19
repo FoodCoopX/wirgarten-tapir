@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -13,11 +14,21 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.coop.services.minimum_number_of_shares_validator import (
+    MinimumNumberOfSharesValidator,
+)
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.services.required_product_types_validator import (
+    RequiredProductTypesValidator,
+)
+from tapir.subscriptions.services.single_subscription_validator import (
+    SingleSubscriptionValidator,
+)
+from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
@@ -309,5 +320,32 @@ class PublicWaitingListCreateEntryView(APIView):
         WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
             waiting_list_entry, serializer.validated_data
         )
+
+        shopping_cart = {}
+        for index, product_id in enumerate(serializer.validated_data["product_ids"]):
+            shopping_cart[product_id] = serializer.validated_data["product_quantities"][
+                index
+            ]
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=shopping_cart, cache=self.cache
+        )
+        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
+            order=order
+        ):
+            raise ValidationError("Some required products have not been selected")
+
+        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
+            order=order, cache=self.cache
+        ):
+            raise ValidationError("Single subscription product ordered more than once")
+
+        if serializer.validated_data[
+            "number_of_coop_shares"
+        ] < MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
+            ordered_products_id_to_quantity_map=order, cache=self.cache
+        ):
+            raise ValidationError(
+                "The given number of coop shares is less than the required minimum."
+            )
 
         return Response("OK")

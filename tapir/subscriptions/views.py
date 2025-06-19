@@ -722,7 +722,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         ):
             self.add_error("TODO", "Missing some required products")
 
-        if not SingleSubscriptionValidator.validate_single_subscription_products_are_ordered_at_most_once(
+        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
             order=order, cache=self.cache
         ):
             self.add_error("TODO", "Single subscription product ordered more than once")
