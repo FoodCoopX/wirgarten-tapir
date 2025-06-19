@@ -23,6 +23,7 @@ from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
     WaitingListEntryUpdateSerializer,
+    PublicWaitingListEntryCreateSerializer,
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
@@ -35,7 +36,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, get_now
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -183,14 +184,10 @@ class WaitingListEntryUpdateView(APIView):
         waiting_list_entry = get_object_or_404(
             WaitingListEntry, pk=serializer.validated_data["id"]
         )
-        waiting_list_entry.first_name = serializer.validated_data["first_name"]
-        waiting_list_entry.last_name = serializer.validated_data["last_name"]
-        waiting_list_entry.email = serializer.validated_data["email"]
-        waiting_list_entry.phone_number = serializer.validated_data["phone_number"]
-        waiting_list_entry.street = serializer.validated_data["street"]
-        waiting_list_entry.street_2 = serializer.validated_data["street_2"]
-        waiting_list_entry.postcode = serializer.validated_data["postcode"]
-        waiting_list_entry.city = serializer.validated_data["city"]
+        self.set_personal_data_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+
         waiting_list_entry.desired_start_date = serializer.validated_data.get(
             "desired_start_date", None
         )
@@ -199,21 +196,52 @@ class WaitingListEntryUpdateView(APIView):
         waiting_list_entry.save()
 
         waiting_list_entry.product_wishes.all().delete()
+        self.create_product_wishes_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+
+        waiting_list_entry.pickup_location_wishes.all().delete()
+        self.create_pickup_location_wishes_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+    @classmethod
+    def set_personal_data_from_validated_data(
+        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
+    ):
+        waiting_list_entry.first_name = validated_data["first_name"]
+        waiting_list_entry.last_name = validated_data["last_name"]
+        waiting_list_entry.email = validated_data["email"]
+        waiting_list_entry.phone_number = validated_data["phone_number"]
+        waiting_list_entry.street = validated_data["street"]
+        waiting_list_entry.street_2 = validated_data["street_2"]
+        waiting_list_entry.postcode = validated_data["postcode"]
+        waiting_list_entry.city = validated_data["city"]
+
+    @classmethod
+    def create_product_wishes_from_validated_data(
+        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
+    ):
         product_wishes = []
-        for index, product_id in enumerate(serializer.validated_data["product_ids"]):
+        for index, product_id in enumerate(validated_data["product_ids"]):
             product_wishes.append(
                 WaitingListProductWish(
                     waiting_list_entry=waiting_list_entry,
                     product_id=product_id,
-                    quantity=serializer.validated_data["product_quantities"][index],
+                    quantity=validated_data["product_quantities"][index],
                 )
             )
         WaitingListProductWish.objects.bulk_create(product_wishes)
 
-        waiting_list_entry.pickup_location_wishes.all().delete()
+    @classmethod
+    def create_pickup_location_wishes_from_validated_data(
+        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
+    ):
         pickup_location_wishes = []
         for index, pickup_location_id in enumerate(
-            serializer.validated_data["pickup_location_ids"]
+            validated_data["pickup_location_ids"]
         ):
             pickup_location_wishes.append(
                 WaitingListPickupLocationWish(
@@ -223,8 +251,6 @@ class WaitingListEntryUpdateView(APIView):
                 )
             )
         WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
-
-        return Response("OK", status=status.HTTP_200_OK)
 
 
 class WaitingListCategoriesView(APIView):
@@ -254,3 +280,34 @@ class WaitingListShowsCoopContentView(APIView):
             ),
             status=status.HTTP_200_OK,
         )
+
+
+class PublicWaitingListCreateEntryView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(request=PublicWaitingListEntryCreateSerializer, responses={200: str})
+    def post(self, request):
+        serializer = PublicWaitingListEntryCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        waiting_list_entry = WaitingListEntry(
+            privacy_consent=get_now(cache=self.cache),
+            number_of_coop_shares=serializer.validated_data["number_of_coop_shares"],
+        )
+        WaitingListEntryUpdateView.set_personal_data_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+        waiting_list_entry.save()
+
+        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
+            waiting_list_entry, serializer.validated_data
+        )
+
+        return Response("OK")

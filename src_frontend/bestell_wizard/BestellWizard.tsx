@@ -12,6 +12,7 @@ import {
   PublicPickupLocation,
   type PublicProductType,
   SubscriptionsApi,
+  WaitingListApi,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -48,6 +49,7 @@ import BestellWizardProgressIndicator from "./components/BestellWizardProgressIn
 import { BestellWizardStep } from "./types/BestellWizardStep.ts";
 import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
 import { selectedAllRequiredProductTypes } from "./utils/selectedAllRequiredProductTypes.ts";
+import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSummary.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -57,6 +59,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
+  const waitingListApi = useApi(WaitingListApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
@@ -116,6 +119,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
   const [investingMembership, setInvestingMembership] = useState(false);
+  const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
+  const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -382,6 +387,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
             updateOrderFromSummary={updateOrderFromSummary}
             waitingListModeEnabled={waitingListModeEnabled}
+            cancellationPolicyRead={cancellationPolicyRead}
+            setCancellationPolicyRead={setCancellationPolicyRead}
+            privacyPolicyRead={privacyPolicyRead}
+            setPrivacyPolicyRead={setPrivacyPolicyRead}
           />
         );
       case "end":
@@ -409,41 +418,61 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
-    subscriptionsApi
-      .subscriptionsBestellWizardConfirmOrderCreate({
-        bestellWizardConfirmOrderRequestRequest: {
-          personalData: "WIP",
-          sepaAllowed: sepaAllowed,
-          contractAccepted: contractAccepted,
-          statuteAccepted: statuteAccepted,
-          nbShares: selectedNumberOfCoopShares,
-          pickupLocationId: selectedPickupLocations[0].id!,
-          shoppingCart: shoppingCart,
-        },
-      })
-      .then((response) => {
-        setCurrentStep("end");
-        setConfirmOrderResponse(response);
-      })
-      .catch(handleRequestError)
-      .finally(() => setConfirmOrderLoading(false));
+    if (waitingListModeEnabled) {
+      waitingListApi
+        .waitingListApiPublicWaitingListCreateEntryCreate({
+          publicWaitingListEntryCreateRequest: {
+            firstName: personalData.firstName,
+            lastName: personalData.lastName,
+            email: personalData.email,
+            phoneNumber: personalData.phoneNumber,
+            street: personalData.street,
+            street2: personalData.street2,
+            postcode: personalData.postCode,
+            city: personalData.city,
+            productIds: Object.keys(shoppingCart),
+            productQuantities: Object.values(shoppingCart),
+            pickupLocationIds: selectedPickupLocations.map(
+              (pickupLocations) => pickupLocations.id!,
+            ),
+            numberOfCoopShares: selectedNumberOfCoopShares,
+          },
+        })
+        .then(() => {
+          setCurrentStep("end");
+        })
+        .catch(handleRequestError)
+        .finally(() => setConfirmOrderLoading(false));
+    } else {
+      subscriptionsApi
+        .subscriptionsBestellWizardConfirmOrderCreate({
+          bestellWizardConfirmOrderRequestRequest: {
+            personalData: "WIP",
+            sepaAllowed: sepaAllowed,
+            contractAccepted: contractAccepted,
+            statuteAccepted: statuteAccepted,
+            nbShares: selectedNumberOfCoopShares,
+            pickupLocationId: selectedPickupLocations[0].id!,
+            shoppingCart: shoppingCart,
+          },
+        })
+        .then((response) => {
+          setCurrentStep("end");
+          setConfirmOrderResponse(response);
+        })
+        .catch(handleRequestError)
+        .finally(() => setConfirmOrderLoading(false));
+    }
   }
 
   function getNextButton() {
     if (currentStep === "summary") {
-      const params = {
-        disabled: false,
-        loading: confirmOrderLoading,
-        text: waitingListModeEnabled
-          ? "Warteliste-Eintrag bestätigen"
-          : "Bestellung abschließen",
-        icon: "check",
-      };
-      return (
-        <BestellWizardNextButton
-          params={params}
-          onNextClicked={onConfirmOrder}
-        />
+      return buildNextButtonForStepSummary(
+        privacyPolicyRead,
+        waitingListModeEnabled,
+        cancellationPolicyRead,
+        confirmOrderLoading,
+        onConfirmOrder,
       );
     }
 
@@ -513,6 +542,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     setSepaAllowed(true);
     setContractAccepted(true);
     setStatuteAccepted(true);
+    setCancellationPolicyRead(true);
+    setPrivacyPolicyRead(true);
   }
 
   function confirmEnableProductWaitingListMode() {
