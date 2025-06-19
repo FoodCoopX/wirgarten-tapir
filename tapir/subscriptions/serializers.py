@@ -12,6 +12,7 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType, Product
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import get_today
@@ -118,15 +119,20 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "products",
             "order_in_bestellwizard",
             "must_be_subscribed_to",
+            "no_delivery",
         ]
 
     products = SerializerMethodField()
+    no_delivery = SerializerMethodField()
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
         return PublicProductSerializer(
             Product.objects.filter(type=product_type), many=True
         ).data
+
+    def get_no_delivery(self, product_type: ProductType) -> bool:
+        return product_type.delivery_cycle == NO_DELIVERY[0]
 
 
 class PersonalDataSerializer(serializers.Serializer):

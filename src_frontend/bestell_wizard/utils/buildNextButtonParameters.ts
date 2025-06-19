@@ -61,15 +61,24 @@ export function buildNextButtonParametersForProductType(
 
 export function buildNextButtonParametersForIntro(
   selectedProductTypes: PublicProductType[],
+  investingMembership: boolean,
 ): NextButtonParameters {
   const atLeastOneProductSelected = selectedProductTypes.length > 0;
+
+  let text = undefined;
+  if (atLeastOneProductSelected) {
+    text = "Weiter als aktives Mitglied";
+  } else if (investingMembership) {
+    text = "Weiter als Fördermitglied";
+  } else if (!atLeastOneProductSelected && !investingMembership) {
+    text = "Wähle mindestens eine Mitgliedschaft um weiter zu gehen";
+  }
+
   return {
-    disabled: !atLeastOneProductSelected,
+    disabled: !atLeastOneProductSelected && !investingMembership,
     loading: false,
     icon: undefined,
-    text: atLeastOneProductSelected
-      ? undefined
-      : "Wähle mindestens eine Mitgliedschaft um weiter zu gehen",
+    text: text,
   };
 }
 

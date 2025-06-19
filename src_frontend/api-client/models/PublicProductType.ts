@@ -69,6 +69,12 @@ export interface PublicProductType {
      * @memberof PublicProductType
      */
     mustBeSubscribedTo?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PublicProductType
+     */
+    readonly noDelivery: boolean;
 }
 
 /**
@@ -77,6 +83,7 @@ export interface PublicProductType {
 export function instanceOfPublicProductType(value: object): value is PublicProductType {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('products' in value) || value['products'] === undefined) return false;
+    if (!('noDelivery' in value) || value['noDelivery'] === undefined) return false;
     return true;
 }
 
@@ -97,6 +104,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'products': ((json['products'] as Array<any>).map(PublicProductFromJSON)),
         'orderInBestellwizard': json['order_in_bestellwizard'] == null ? undefined : json['order_in_bestellwizard'],
         'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
+        'noDelivery': json['no_delivery'],
     };
 }
 
@@ -104,7 +112,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
       return PublicProductTypeToJSONTyped(json, false);
   }
 
-  export function PublicProductTypeToJSONTyped(value?: Omit<PublicProductType, 'products'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PublicProductTypeToJSONTyped(value?: Omit<PublicProductType, 'products'|'no_delivery'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
