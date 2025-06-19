@@ -11,7 +11,7 @@ import {
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
-  SubscriptionsApi
+  SubscriptionsApi,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -30,7 +30,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -44,18 +44,12 @@ import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
 import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
+import { BestellWizardStep } from "./types/BestellWizardStep.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
 }
-
-type BestellWizardStep =
-  | "intro"
-  | "pickup_location"
-  | "coop_shares"
-  | "personal_data"
-  | "summary"
-  | "end";
 
 const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [theme, setTheme] = useState<TapirTheme>();
@@ -163,7 +157,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [publicProductTypes]);
 
   useEffect(() => {
-    setSteps([
+    let steps = [
       "intro",
       ...selectedProductTypes.map((productType) => productType.id!),
       "pickup_location",
@@ -171,8 +165,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       "personal_data",
       "summary",
       "end",
-    ]);
-  }, [selectedProductTypes]);
+    ];
+
+    if (
+      !isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes)
+    ) {
+      steps = steps.filter((step) => step !== "pickup_location");
+    }
+
+    setSteps(steps);
+  }, [selectedProductTypes, shoppingCart]);
 
   useEffect(() => {
     updateProductsAndProductTypesOverCapacity(
@@ -291,21 +293,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }
 
   function goToNextStep() {
-    let nextStep = steps[steps.indexOf(currentStep) + 1];
-    console.log(nextStep);
-    console.log(nextStep === "pickup_location");
-    console.log(
-      isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes),
-    );
-    if (
-      nextStep === "pickup_location" &&
-      !isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes)
-    ) {
-      nextStep = steps[steps.indexOf("pickup_location") + 1];
-      console.log("SKIPPING");
-      console.log(nextStep);
-    }
-    setCurrentStep(nextStep);
+    setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
   }
 
   function onBackClicked() {
@@ -341,6 +329,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             allowInvestingMembership={allowInvestingMembership}
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
+            setShoppingCart={setShoppingCart}
           />
         );
       case "pickup_location":
@@ -633,6 +622,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               </div>
             </Card.Footer>
           </Card>
+        </Col>
+        <Col style={{ width: "50px", flexGrow: 0.1 }}>
+          <BestellWizardProgressIndicator
+            currentStep={currentStep}
+            steps={steps}
+            productTypes={publicProductTypes}
+          />
         </Col>
       </Row>
       <ProductWaitingListModal

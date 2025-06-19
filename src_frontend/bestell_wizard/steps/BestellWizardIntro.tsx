@@ -5,6 +5,7 @@ import { sortProductTypes } from "../utils/sortProductTypes.ts";
 import { Form, Spinner } from "react-bootstrap";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;
@@ -14,6 +15,7 @@ interface BestellWizardIntroProps {
   allowInvestingMembership: boolean;
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
+  setShoppingCart: (cart: ShoppingCart) => void;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -24,6 +26,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   allowInvestingMembership,
   investingMembership,
   setInvestingMembership,
+  setShoppingCart,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -32,6 +35,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   useEffect(() => {
     if (investingMembership) {
       setSelectedProductTypes([]);
+      setShoppingCart({});
     }
   }, [investingMembership]);
 
