@@ -552,7 +552,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             <ListGroup
               variant={"flush"}
               style={{
-                overflowX: "visible",
+                overflowX: "hidden",
                 height: "100%",
               }}
             >
@@ -565,7 +565,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 style={{
                   height: "100%",
                   overflowY: "scroll",
-                  overflowX: "visible",
+                  overflowX: "hidden",
                 }}
               >
                 {baseDataLoading ? (
@@ -583,7 +583,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                       width: "100%",
                       height: "100%",
                       overflowY: "scroll",
-                      overflowX: "visible",
+                      overflowX: "hidden",
                     }}
                   >
                     {buildCurrentStepComponent()}
