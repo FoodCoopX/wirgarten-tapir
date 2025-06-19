@@ -5,6 +5,7 @@ from django.db.models import Model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, permissions, viewsets
 from rest_framework.request import Request
@@ -20,6 +21,7 @@ from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
 from tapir.deliveries.serializers import ProductSerializer
+from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
@@ -27,19 +29,45 @@ from tapir.pickup_locations.services.basket_size_capacities_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
+from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
     ExtendedProductSerializer,
     MemberDataToConfirmSerializer,
+    PublicProductTypeSerializer,
+    BestellWizardConfirmOrderRequestSerializer,
+    BestellWizardConfirmOrderResponseSerializer,
+    BestellWizardCapacityCheckRequestSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
+    BestellWizardBaseDataResponseSerializer,
+    BestellWizardDeliveryDatesForOrderRequestSerializer,
+    BestellWizardDeliveryDatesForOrderResponseSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
+    EarliestPossibleContractStartDateCalculator,
+)
 from tapir.subscriptions.services.product_updater import ProductUpdater
+from tapir.subscriptions.services.required_product_types_validator import (
+    RequiredProductTypesValidator,
+)
+from tapir.subscriptions.services.single_subscription_validator import (
+    SingleSubscriptionValidator,
+)
+from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
+from tapir.subscriptions.services.subscription_change_validator_new import (
+    SubscriptionChangeValidatorNew,
+)
+from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
@@ -48,8 +76,11 @@ from tapir.wirgarten.models import (
     Product,
     Subscription,
     CoopShareTransaction,
+    ProductType,
+    PickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -276,7 +307,14 @@ class ExtendedProductView(APIView):
 
         data = {
             attribute: getattr(product, attribute)
-            for attribute in ["id", "name", "deleted", "base"]
+            for attribute in [
+                "id",
+                "name",
+                "deleted",
+                "base",
+                "description_in_bestellwizard",
+                "url_of_image_in_bestellwizard",
+            ]
         }
 
         cache = {}
@@ -330,6 +368,12 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
     queryset = Product.objects.select_related("type")
     serializer_class = ProductSerializer
+
+
+class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = []
+    queryset = ProductType.objects.all()
+    serializer_class = PublicProductTypeSerializer
 
 
 class MemberDataToConfirmApiView(APIView):
@@ -588,3 +632,218 @@ class ConfirmSubscriptionChangesView(APIView):
             )
 
         subscriptions_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
+
+
+class BestellWizardView(TemplateView):
+    template_name = "subscriptions/bestell_wizard.html"
+
+
+class BestellWizardConfirmOrderApiView(APIView):
+    permission_classes = []
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+        self.errors = {}
+
+    @extend_schema(
+        responses={200: BestellWizardConfirmOrderResponseSerializer},
+        request=BestellWizardConfirmOrderRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if not serializer.validated_data["sepa_allowed"]:
+            self.add_error("sepa_allowed", "SEPA-Mandat muss erlaubt sein")
+
+        if not serializer.validated_data["contract_accepted"]:
+            self.add_error(
+                "contract_accepted", "Vertragsgrundsätze müssen akzeptiert sein"
+            )
+
+        if not serializer.validated_data["statute_accepted"]:
+            self.add_error("statute_accepted", "Satzung müss akzeptiert sein")
+
+        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+
+        pickup_location = get_object_or_404(
+            PickupLocation, id=serializer.validated_data["pickup_location_id"]
+        )
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+            pickup_location=pickup_location,
+            ordered_products_to_quantity_map=order,
+            already_registered_member=None,
+            subscription_start=subscription_start_date,
+            cache=self.cache,
+        ):
+            self.add_error(
+                "pickup_location",
+                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus.",
+            )
+
+        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
+            ordered_solidarity_factor=0,  # TODO
+            order=order,
+            start_date=subscription_start_date,
+            cache=self.cache,
+        ):
+            self.add_error("TODO", "TODO")
+
+        product_type_ids_without_enough_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=None,
+            subscription_start_date=subscription_start_date,
+            cache=self.cache,
+        )
+        if len(product_type_ids_without_enough_capacity) > 0:
+            self.add_error("TODO", "Not enough capacity")
+
+        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
+            order=order
+        ):
+            self.add_error("TODO", "Missing some required products")
+
+        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
+            order=order, cache=self.cache
+        ):
+            self.add_error("TODO", "Single subscription product ordered more than once")
+
+        data = {
+            "order_confirmed": len(self.errors) == 0,
+            "errors": self.errors,
+        }
+
+        return Response(BestellWizardConfirmOrderResponseSerializer(data).data)
+
+        # validate stuff from the BPF and APF
+        # validate enough shares
+        # validate personal data: all fields set, email address unique, phone number valid, birthdate valid, iban valid
+
+    def add_error(self, field: str, message: str):
+        if field not in self.errors.keys():
+            self.errors[field] = []
+
+        self.errors[field].append(message)
+
+
+class BestellWizardCapacityCheckApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardCapacityCheckResponseSerializer},
+        request=BestellWizardCapacityCheckRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardCapacityCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+
+        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+
+        ids_of_product_types_over_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=None,
+            subscription_start_date=subscription_start_date,
+            cache=self.cache,
+        )
+
+        response_data = {
+            "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
+            "ids_of_products_over_capacity": [],
+        }
+        return Response(
+            BestellWizardCapacityCheckResponseSerializer(response_data).data
+        )
+
+
+class BestellWizardBaseDataApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardBaseDataResponseSerializer},
+    )
+    def get(self, request):
+        response_data = {
+            "price_of_a_share": COOP_SHARE_PRICE,
+            "theme": get_parameter_value(
+                ParameterKeys.ORGANISATION_THEME, cache=self.cache
+            ),
+            "allow_investing_membership": get_parameter_value(
+                ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
+                cache=self.cache,
+            ),
+            "product_types": ProductType.objects.all(),
+            "force_waiting_list": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
+            ),
+        }
+
+        return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+
+
+class BestellWizardDeliveryDatesForOrderApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardDeliveryDatesForOrderResponseSerializer},
+        request=BestellWizardDeliveryDatesForOrderRequestSerializer,
+    )
+    def post(self, request):
+        serializer = BestellWizardDeliveryDatesForOrderRequestSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        product_type_ids = {product.type_id for product in order.keys()}
+        pickup_location_id = serializer.validated_data["pickup_location_id"]
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache,
+            pickup_location_id=pickup_location_id,
+        )
+        if pickup_location is None:
+            raise Http404(f"Unknown pickup location")
+
+        contract_start_date = EarliestPossibleContractStartDateCalculator.get_earliest_possible_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            pickup_location_id=pickup_location_id,
+            cache=self.cache,
+        )
+        response_data = {
+            "product_type_id_to_next_delivery_date_map": {
+                product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+                    reference_date=contract_start_date,
+                    pickup_location_id=pickup_location_id,
+                    delivery_cycle=TapirCache.get_product_type_by_id(
+                        cache=self.cache, product_type_id=product_type_id
+                    ).delivery_cycle,
+                    cache=self.cache,
+                )
+                for product_type_id in product_type_ids
+            },
+        }
+
+        return Response(
+            BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
+        )

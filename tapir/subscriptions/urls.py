@@ -30,6 +30,31 @@ urlpatterns = [
         views.MemberDataToConfirmApiView.as_view(),
         name="member_data_to_confirm",
     ),
+    path(
+        "api/bestell_wizard_capacity_check",
+        views.BestellWizardCapacityCheckApiView.as_view(),
+        name="bestell_wizard_capacity_check",
+    ),
+    path(
+        "api/bestell_wizard_base_data",
+        views.BestellWizardBaseDataApiView.as_view(),
+        name="bestell_wizard_base_data",
+    ),
+    path(
+        "api/bestell_wizard_delivery_dates",
+        views.BestellWizardDeliveryDatesForOrderApiView.as_view(),
+        name="bestell_wizard_delivery_dates",
+    ),
+    path(
+        "bestell_wizard",
+        views.BestellWizardView.as_view(),
+        name="bestell_wizard",
+    ),
+    path(
+        "bestell_wizard_confirm_order",
+        views.BestellWizardConfirmOrderApiView.as_view(),
+        name="bestell_wizard_confirm_order",
+    ),
 ]
 
 router = DefaultRouter()
@@ -37,5 +62,10 @@ router.register(
     r"products",
     views.ProductViewSet,
     basename="products",
+)
+router.register(
+    r"public_product_types",
+    views.PublicProductTypeViewSet,
+    basename="public_product_types",
 )
 urlpatterns += router.urls

@@ -93,3 +93,4 @@ class ParameterKeys:
     HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE = (
         f"{PREFIX}.harvest.members_are_allowed_to_change_soliprice"
     )
+    BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"

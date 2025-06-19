@@ -16,6 +16,7 @@ import * as runtime from "../runtime";
 import type {
   PaginatedWaitingListEntryDetailsList,
   PatchedWaitingListEntryRequest,
+  PublicWaitingListEntryCreateRequest,
   WaitingListEntry,
   WaitingListEntryRequest,
   WaitingListEntryUpdateRequest,
@@ -23,6 +24,7 @@ import type {
 import {
   PaginatedWaitingListEntryDetailsListFromJSON,
   PatchedWaitingListEntryRequestToJSON,
+  PublicWaitingListEntryCreateRequestToJSON,
   WaitingListEntryFromJSON,
   WaitingListEntryRequestToJSON,
   WaitingListEntryUpdateRequestToJSON,
@@ -31,6 +33,10 @@ import {
 export interface WaitingListApiListListRequest {
   limit: number;
   offset: number;
+}
+
+export interface WaitingListApiPublicWaitingListCreateEntryCreateRequest {
+  publicWaitingListEntryCreateRequest: PublicWaitingListEntryCreateRequest;
 }
 
 export interface WaitingListApiUpdateEntryCreateRequest {
@@ -170,6 +176,68 @@ export class WaitingListApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async waitingListApiPublicWaitingListCreateEntryCreateRaw(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["publicWaitingListEntryCreateRequest"] == null) {
+      throw new runtime.RequiredError(
+        "publicWaitingListEntryCreateRequest",
+        'Required parameter "publicWaitingListEntryCreateRequest" was null or undefined when calling waitingListApiPublicWaitingListCreateEntryCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/waiting_list/api/public_waiting_list_create_entry`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PublicWaitingListEntryCreateRequestToJSON(
+          requestParameters["publicWaitingListEntryCreateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async waitingListApiPublicWaitingListCreateEntryCreate(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response =
+      await this.waitingListApiPublicWaitingListCreateEntryCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

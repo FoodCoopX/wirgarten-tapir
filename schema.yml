@@ -3,6 +3,52 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /coop/api/minimum_number_of_shares:
+    get:
+      operationId: coop_api_minimum_number_of_shares_retrieve
+      parameters:
+      - in: query
+        name: product_ids
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: quantities
+        schema:
+          type: array
+          items:
+            type: integer
+      tags:
+      - coop
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumNumberOfSharesResponse'
+          description: ''
+  /core/api/get_theme:
+    get:
+      operationId: core_api_get_theme_retrieve
+      tags:
+      - core
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                enum:
+                - l2g
+                - biotop
+                - wirgarten
+                - mm
+                type: string
+          description: ''
   /deliveries/api/cancel_joker:
     post:
       operationId: deliveries_api_cancel_joker_create
@@ -671,6 +717,32 @@ paths:
               schema:
                 type: string
           description: ''
+  /pickup_locations/api/pickup_location_capacity_check:
+    post:
+      operationId: pickup_locations_api_pickup_location_capacity_check_create
+      tags:
+      - pickup_locations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PickupLocationCapacityCheckRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupLocationCapacityCheckResponse'
+          description: ''
   /pickup_locations/api/pickup_location_capacity_evolution:
     get:
       operationId: pickup_locations_api_pickup_location_capacity_evolution_retrieve
@@ -726,6 +798,109 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickupLocation'
+          description: ''
+  /pickup_locations/public_pickup_locations/:
+    get:
+      operationId: pickup_locations_public_pickup_locations_list
+      tags:
+      - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicPickupLocation'
+          description: ''
+  /pickup_locations/public_pickup_locations/{id}/:
+    get:
+      operationId: pickup_locations_public_pickup_locations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pickup location.
+        required: true
+      tags:
+      - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicPickupLocation'
+          description: ''
+  /subscriptions/api/bestell_wizard_base_data:
+    get:
+      operationId: subscriptions_api_bestell_wizard_base_data_retrieve
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardBaseDataResponse'
+          description: ''
+  /subscriptions/api/bestell_wizard_capacity_check:
+    post:
+      operationId: subscriptions_api_bestell_wizard_capacity_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
+          description: ''
+  /subscriptions/api/bestell_wizard_delivery_dates:
+    post:
+      operationId: subscriptions_api_bestell_wizard_delivery_dates_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
           description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
@@ -822,6 +997,32 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberDataToConfirm'
           description: ''
+  /subscriptions/bestell_wizard_confirm_order:
+    post:
+      operationId: subscriptions_bestell_wizard_confirm_order_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardConfirmOrderResponse'
+          description: ''
   /subscriptions/cancel_subscriptions:
     post:
       operationId: subscriptions_cancel_subscriptions_create
@@ -906,6 +1107,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+          description: ''
+  /subscriptions/public_product_types/:
+    get:
+      operationId: subscriptions_public_product_types_list
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicProductType'
+          description: ''
+  /subscriptions/public_product_types/{id}/:
+    get:
+      operationId: subscriptions_public_product_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this product type.
+        required: true
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProductType'
           description: ''
   /tapirmail/api/create_missing_trigger:
     post:
@@ -2958,6 +3196,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
+  /waiting_list/api/public_waiting_list_create_entry:
+    post:
+      operationId: waiting_list_api_public_waiting_list_create_entry_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /waiting_list/api/show_coop_content:
     get:
       operationId: waiting_list_api_show_coop_content_retrieve
@@ -3155,6 +3419,117 @@ components:
         * `weekly` - Wöchentlich
         * `daily` - Täglich
         * `never` - Nie
+    BestellWizardBaseDataResponse:
+      type: object
+      properties:
+        price_of_a_share:
+          type: number
+          format: double
+        theme:
+          type: string
+        allow_investing_membership:
+          type: boolean
+        product_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProductType'
+        force_waiting_list:
+          type: boolean
+      required:
+      - allow_investing_membership
+      - force_waiting_list
+      - price_of_a_share
+      - product_types
+      - theme
+    BestellWizardCapacityCheckRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+      - shopping_cart
+    BestellWizardCapacityCheckResponse:
+      type: object
+      properties:
+        ids_of_products_over_capacity:
+          type: array
+          items:
+            type: string
+        ids_of_product_types_over_capacity:
+          type: array
+          items:
+            type: string
+      required:
+      - ids_of_product_types_over_capacity
+      - ids_of_products_over_capacity
+    BestellWizardConfirmOrderRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        personal_data:
+          type: string
+          minLength: 1
+        sepa_allowed:
+          type: boolean
+        contract_accepted:
+          type: boolean
+        statute_accepted:
+          type: boolean
+        nb_shares:
+          type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - contract_accepted
+      - nb_shares
+      - personal_data
+      - pickup_location_id
+      - sepa_allowed
+      - shopping_cart
+      - statute_accepted
+    BestellWizardConfirmOrderResponse:
+      type: object
+      properties:
+        order_confirmed:
+          type: boolean
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+      - errors
+      - order_confirmed
+    BestellWizardDeliveryDatesForOrderRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - pickup_location_id
+      - shopping_cart
+    BestellWizardDeliveryDatesForOrderResponse:
+      type: object
+      properties:
+        product_type_id_to_next_delivery_date_map:
+          type: object
+          additionalProperties:
+            type: string
+            format: date
+      required:
+      - product_type_id_to_next_delivery_date_map
     BlankEnum:
       enum:
       - ''
@@ -3988,9 +4363,9 @@ components:
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
         * `weekly` - 1x pro Woche
-        * `odd_weeks` - 2x pro Monat (ungerade KW)
-        * `even_weeks` - 2x pro Monat (gerade KW)
-        * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
+        * `odd_weeks` - Jede 2. Woche (ungerade KW)
+        * `even_weeks` - Jede 2. Woche (gerade KW)
+        * `every_four_weeks` - Jede 4. Woche
     DeliveryDayAdjustment:
       type: object
       properties:
@@ -4445,15 +4820,22 @@ components:
           allOf:
           - $ref: '#/components/schemas/PickingModeEnum'
           readOnly: true
+        description_in_bestellwizard:
+          type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
       required:
       - base
       - basket_size_equivalences
       - deleted
+      - description_in_bestellwizard
       - id
       - name
       - picking_mode
       - price
       - size
+      - url_of_image_in_bestellwizard
     GroupedEmailDispatch:
       type: object
       properties:
@@ -4805,6 +5187,13 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MinimumNumberOfSharesResponse:
+      type: object
+      properties:
+        minimum_number_of_shares:
+          type: integer
+      required:
+      - minimum_number_of_shares
     MissingTrigger:
       type: object
       properties:
@@ -5151,6 +5540,13 @@ components:
             $ref: '#/components/schemas/ProductBasketSizeEquivalenceRequest'
         growing_period_id:
           type: string
+          minLength: 1
+        description_in_bestellwizard:
+          type: string
+          minLength: 1
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
           minLength: 1
     PatchedGrowingPeriodRequest:
       type: object
@@ -5654,6 +6050,26 @@ components:
       required:
       - date
       - values
+    PickupLocationCapacityCheckRequestRequest:
+      type: object
+      properties:
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        pickup_location_id:
+          type: string
+          minLength: 1
+      required:
+      - pickup_location_id
+      - shopping_cart
+    PickupLocationCapacityCheckResponse:
+      type: object
+      properties:
+        enough_capacity_for_order:
+          type: boolean
+      required:
+      - enough_capacity_for_order
     PickupLocationCapacityEvolution:
       type: object
       properties:
@@ -5674,6 +6090,9 @@ components:
         id:
           type: string
           maxLength: 10
+        day_of_week_string:
+          type: string
+          readOnly: true
         day_of_week:
           allOf:
           - $ref: '#/components/schemas/DayOfWeekEnum'
@@ -5690,6 +6109,7 @@ components:
       required:
       - close_time
       - day_of_week
+      - day_of_week_string
       - open_time
       - pickup_location
     PreferredLanguageEnum:
@@ -5716,6 +6136,12 @@ components:
         base:
           type: boolean
           nullable: true
+        description_in_bestellwizard:
+          type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
+          maxLength: 200
       required:
       - name
       - type
@@ -5799,8 +6225,183 @@ components:
         is_association_membership:
           type: boolean
           title: Repräsentiert Vereinsmitgliedschaften
+        description_bestellwizard_short:
+          type: string
+          title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
+        description_bestellwizard_long:
+          type: string
+          title: Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite
+        order_in_bestellwizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          title: Reihenfolge im BestellWizard (kleiner ist früher)
       required:
       - name
+    PublicPickupLocation:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 150
+        coords_lon:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Longitude
+        coords_lat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,10})?$
+          title: Coordinates Latitude
+        street:
+          type: string
+          title: Street and house number
+          maxLength: 150
+        street_2:
+          type: string
+          title: Extra address line
+          maxLength: 150
+        postcode:
+          type: string
+          maxLength: 32
+        city:
+          type: string
+          maxLength: 50
+        opening_times:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupLocationOpeningTime'
+          readOnly: true
+      required:
+      - city
+      - coords_lat
+      - coords_lon
+      - name
+      - opening_times
+      - postcode
+      - street
+    PublicProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 128
+        price:
+          type: number
+          format: float
+          readOnly: true
+        description_in_bestellwizard:
+          type: string
+        url_of_image_in_bestellwizard:
+          type: string
+          format: uri
+          maxLength: 200
+      required:
+      - name
+      - price
+    PublicProductType:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          title: Produkt Name
+          maxLength: 128
+        description_bestellwizard_short:
+          type: string
+          title: Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)
+        description_bestellwizard_long:
+          type: string
+          title: Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicProduct'
+          readOnly: true
+        order_in_bestellwizard:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          title: Reihenfolge im BestellWizard (kleiner ist früher)
+        must_be_subscribed_to:
+          type: boolean
+          title: Muss gezeichnet werden
+          description: Ob es Pflicht ist, ein Abonnement an dieses Produkt zu zu zeichnen.
+        no_delivery:
+          type: boolean
+          readOnly: true
+        single_subscription_only:
+          type: boolean
+          title: Nur Einzelabonnement erlaubt
+      required:
+      - name
+      - no_delivery
+      - products
+    PublicWaitingListEntryCreateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_quantities:
+          type: array
+          items:
+            type: integer
+        number_of_coop_shares:
+          type: integer
+      required:
+      - city
+      - email
+      - first_name
+      - last_name
+      - number_of_coop_shares
+      - phone_number
+      - pickup_location_ids
+      - postcode
+      - product_ids
+      - product_quantities
+      - street
+      - street_2
     RecipientRequest:
       type: object
       properties:

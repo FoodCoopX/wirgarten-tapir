@@ -1,4 +1,7 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
@@ -9,7 +12,10 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
-from tapir.wirgarten.models import Member, CoopShareTransaction
+from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType, Product
+from tapir.wirgarten.service.products import get_product_price
+from tapir.wirgarten.utils import get_today
 
 
 class ProductForCancellationSerializer(serializers.Serializer):
@@ -39,6 +45,8 @@ class ExtendedProductSerializer(serializers.Serializer):
     basket_size_equivalences = ProductBasketSizeEquivalenceSerializer(many=True)
     growing_period_id = serializers.CharField(required=False)
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
+    description_in_bestellwizard = serializers.CharField()
+    url_of_image_in_bestellwizard = serializers.URLField()
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -77,3 +85,116 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
     show_warning = serializers.BooleanField()
     cancellation_types = serializers.ListField(child=serializers.CharField())
     share_purchases = CoopShareTransactionSerializer(many=True)
+
+
+class PublicProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "price",
+            "description_in_bestellwizard",
+            "url_of_image_in_bestellwizard",
+        ]
+
+    price = SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.FLOAT)
+    def get_price(self, product: Product):
+        cache = {}
+        return get_product_price(
+            product=product, reference_date=get_today(cache=cache), cache=cache
+        ).price
+
+
+class PublicProductTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductType
+        fields = [
+            "id",
+            "name",
+            "description_bestellwizard_short",
+            "description_bestellwizard_long",
+            "products",
+            "order_in_bestellwizard",
+            "must_be_subscribed_to",
+            "no_delivery",
+            "single_subscription_only",
+        ]
+
+    products = SerializerMethodField()
+    no_delivery = SerializerMethodField()
+
+    @extend_schema_field(PublicProductSerializer(many=True))
+    def get_products(self, product_type: ProductType):
+        return PublicProductSerializer(
+            Product.objects.filter(type=product_type), many=True
+        ).data
+
+    def get_no_delivery(self, product_type: ProductType) -> bool:
+        return product_type.delivery_cycle == NO_DELIVERY[0]
+
+
+class PersonalDataSerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.EmailField()
+    phone_number = serializers.CharField()
+    street = serializers.CharField()
+    street_2 = serializers.CharField()
+    postcode = serializers.CharField()
+    city = serializers.CharField()
+    country = serializers.CharField()
+    birthdate = serializers.DateField()
+    account_owner = serializers.CharField()
+    iban = serializers.CharField()
+
+
+class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
+    # map of productId -> quantity ordered
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    personal_data = serializers.CharField()
+    sepa_allowed = serializers.BooleanField()
+    contract_accepted = serializers.BooleanField()
+    statute_accepted = serializers.BooleanField()
+    nb_shares = serializers.IntegerField()
+    pickup_location_id = serializers.CharField()
+
+
+class BestellWizardConfirmOrderResponseSerializer(serializers.Serializer):
+    order_confirmed = serializers.BooleanField()
+    errors = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
+
+
+class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
+    # map of productId -> quantity ordered
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+
+
+class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):
+    ids_of_products_over_capacity = serializers.ListField(child=serializers.CharField())
+    ids_of_product_types_over_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
+
+
+class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
+    price_of_a_share = serializers.FloatField()
+    theme = serializers.CharField()
+    allow_investing_membership = serializers.BooleanField()
+    product_types = PublicProductTypeSerializer(many=True)
+    force_waiting_list = serializers.BooleanField()
+
+
+class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    pickup_location_id = serializers.CharField()
+
+
+class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serializer):
+    product_type_id_to_next_delivery_date_map = serializers.DictField(
+        child=serializers.DateField()
+    )
