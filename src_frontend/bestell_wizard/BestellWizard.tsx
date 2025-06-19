@@ -47,6 +47,7 @@ import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrde
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
 import { BestellWizardStep } from "./types/BestellWizardStep.ts";
 import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
+import { selectedAllRequiredProductTypes } from "./utils/selectedAllRequiredProductTypes.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -144,10 +145,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   useEffect(() => {
     setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
 
-    setSelectedProductTypes(
-      publicProductTypes.filter(
-        (productType) => productType.mustBeSubscribedTo,
-      ),
+    selectedAllRequiredProductTypes(
+      publicProductTypes,
+      selectedProductTypes,
+      setSelectedProductTypes,
     );
   }, [publicProductTypes]);
 
@@ -430,7 +431,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       const params = {
         disabled: false,
         loading: confirmOrderLoading,
-        text: "Bestellung abschließen",
+        text: waitingListModeEnabled
+          ? "Warteliste-Eintrag bestätigen"
+          : "Bestellung abschließen",
         icon: "check",
       };
       return (
@@ -549,7 +552,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             <ListGroup
               variant={"flush"}
               style={{
-                overflowX: "hidden",
+                overflowX: "visible",
                 height: "100%",
               }}
             >
@@ -562,7 +565,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 style={{
                   height: "100%",
                   overflowY: "scroll",
-                  overflowX: "hidden",
+                  overflowX: "visible",
                 }}
               >
                 {baseDataLoading ? (
@@ -580,7 +583,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                       width: "100%",
                       height: "100%",
                       overflowY: "scroll",
-                      overflowX: "hidden",
+                      overflowX: "visible",
                     }}
                   >
                     {buildCurrentStepComponent()}

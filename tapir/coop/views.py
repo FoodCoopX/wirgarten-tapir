@@ -29,7 +29,7 @@ class MinimumNumberOfSharesApiView(APIView):
             raise BadRequest("Different number of product ids and quantities")
 
         ordered_products_id_to_quantity_map = {
-            product_id: int(quantities[index])
+            product_id: int(quantities[index] or 0)
             for index, product_id in enumerate(product_ids)
         }
 
