@@ -46,6 +46,7 @@ import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
 import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
 import { BestellWizardStep } from "./types/BestellWizardStep.ts";
+import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -141,13 +142,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, []);
 
   useEffect(() => {
-    const newShoppingCart: ShoppingCart = {};
-    for (const productType of publicProductTypes) {
-      for (const product of productType.products) {
-        newShoppingCart[product.id!] = 0;
-      }
-    }
-    setShoppingCart(newShoppingCart);
+    setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
 
     setSelectedProductTypes(
       publicProductTypes.filter(
