@@ -28,6 +28,8 @@
                         style="
                                 {% if "organisation.theme"|parameter == "l2g" %}
                                     background-image: url({% static 'l2g/registration/confirmation.jpg' %});
+                                    {% elif  "organisation.theme"|parameter == "mm" %}
+                                    background-image: url({% static 'mm/registration/confirmation.jpg' %});
                                 {% else %}
                                     background-image: url({% static 'lueneburg/registration/confirmation.jpg' %});
                                 {% endif %}
