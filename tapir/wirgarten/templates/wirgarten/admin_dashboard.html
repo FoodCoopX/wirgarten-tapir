@@ -140,7 +140,7 @@
 
   <div class="dashboard-tile card harvest-share-variants-tile" style="grid-area: span 2 / span 4">
     <div class="card-body">
-      <h4>Gekündigtes Geschäftsguthaben</h4>
+      <h4>Auszuzahlendes Auseinandersetzungsguthaben pro Jahr</h4>
       <canvas style="max-height:20em" id="cancellation-coop-shares"></canvas>
     </div>
   </div>
@@ -465,7 +465,7 @@
     data: {
       labels: {{ cancelled_coop_shares_labels | safe}},
     datasets: [{
-      label: "Gekündigtes Geschäftsguthaben",
+      label: "Auszuzahlendes Auseinandersetzungsguthaben pro Jahr",
       data: {{ cancelled_coop_shares_data | safe}},
     backgroundColor: COLORS.reverse()
       }]
