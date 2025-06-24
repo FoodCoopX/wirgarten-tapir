@@ -159,12 +159,15 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         return context
 
     def add_cancelled_coop_shares_context(self, context):
+        # A year's entry should show the amount to be paid back in that year.
+        # For example, 2025 should show all the cancellations that are valid in 2024, since the valid_at date
+        # is usually the 31.12., thus cancellations valid in 2024 are paid in 2025.
         cancellations = {
-            c["year"]: -c["total_quantity"] * settings.COOP_SHARE_PRICE
+            c["year"] + 1: -c["total_quantity"] * settings.COOP_SHARE_PRICE
             for c in (
                 CoopShareTransaction.objects.filter(
                     transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
-                    valid_at__gte=get_today(),
+                    valid_at__year__gte=get_today().year - 1,
                 )
                 .annotate(year=ExtractYear("valid_at"))
                 .values("year")
