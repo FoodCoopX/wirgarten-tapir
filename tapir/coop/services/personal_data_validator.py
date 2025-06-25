@@ -37,6 +37,8 @@ class PersonalDataValidator:
         except ValidationError:
             errors["iban"] = "Invalid IBAN"
 
+        return errors
+
     @classmethod
     def is_email_already_used(cls, email: str):
         duplicate_email_query = Member.objects.filter(
