@@ -3475,8 +3475,7 @@ components:
           additionalProperties:
             type: integer
         personal_data:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/PersonalDataRequest'
         sepa_allowed:
           type: boolean
         contract_accepted:
@@ -5909,6 +5908,59 @@ components:
       - generate_one_file_for_every_segment_entry
       - name
       - template
+    PersonalDataRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone_number:
+          type: string
+          minLength: 1
+        street:
+          type: string
+          minLength: 1
+        street_2:
+          type: string
+          minLength: 1
+        postcode:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        country:
+          type: string
+          minLength: 1
+        birthdate:
+          type: string
+          format: date
+        account_owner:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+          minLength: 1
+      required:
+      - account_owner
+      - birthdate
+      - city
+      - country
+      - email
+      - first_name
+      - iban
+      - last_name
+      - phone_number
+      - postcode
+      - street
+      - street_2
     PickingModeEnum:
       enum:
       - picking_mode_basket

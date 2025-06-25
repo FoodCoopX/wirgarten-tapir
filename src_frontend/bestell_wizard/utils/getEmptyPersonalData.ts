@@ -8,11 +8,11 @@ export function getEmptyPersonalData(): PersonalData {
     phoneNumber: "",
     street: "",
     street2: "",
-    postCode: "",
+    postcode: "",
     city: "",
     country: "DE",
     birthdate: new Date(),
-    account_owner: "",
+    accountOwner: "",
     iban: "",
   };
 }

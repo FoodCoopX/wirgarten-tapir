@@ -88,6 +88,7 @@ models/PatchedTemporaryUploadRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
+models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
 models/PickupLocation.ts
 models/PickupLocationCapacities.ts

@@ -80,6 +80,7 @@ export * from './PatchedTemporaryUploadRequest';
 export * from './PatchedWaitingListEntryRequest';
 export * from './PdfExportModel';
 export * from './PdfExportModelRequest';
+export * from './PersonalDataRequest';
 export * from './PickingModeEnum';
 export * from './PickupLocation';
 export * from './PickupLocationCapacities';

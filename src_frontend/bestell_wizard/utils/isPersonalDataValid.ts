@@ -10,11 +10,11 @@ export function isPersonalDataValid(personalData: PersonalData): boolean {
   if (!personalData.email) return false;
   if (!personalData.phoneNumber) return false;
   if (!personalData.street) return false;
-  if (!personalData.postCode) return false;
+  if (!personalData.postcode) return false;
   if (!personalData.city) return false;
   if (!personalData.country) return false;
   if (!personalData.birthdate) return false;
-  if (!personalData.account_owner) return false;
+  if (!personalData.accountOwner) return false;
   if (!personalData.iban) return false;
 
   if (!isPhoneNumberValid(personalData.phoneNumber)) {

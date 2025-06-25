@@ -441,7 +441,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             phoneNumber: personalData.phoneNumber,
             street: personalData.street,
             street2: personalData.street2,
-            postcode: personalData.postCode,
+            postcode: personalData.postcode,
             city: personalData.city,
             productIds: Object.keys(shoppingCart),
             productQuantities: Object.values(shoppingCart),
@@ -460,7 +460,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       subscriptionsApi
         .subscriptionsBestellWizardConfirmOrderCreate({
           bestellWizardConfirmOrderRequestRequest: {
-            personalData: "WIP",
+            personalData: personalData,
             sepaAllowed: sepaAllowed,
             contractAccepted: contractAccepted,
             statuteAccepted: statuteAccepted,
