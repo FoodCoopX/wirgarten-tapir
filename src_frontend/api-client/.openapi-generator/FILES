@@ -110,6 +110,7 @@ models/ProductType.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
 models/PublicProductType.ts
+models/PublicSubscription.ts
 models/PublicWaitingListEntryCreateRequest.ts
 models/RecipientRequest.ts
 models/SegmentData.ts

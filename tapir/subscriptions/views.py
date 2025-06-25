@@ -51,6 +51,7 @@ from tapir.subscriptions.serializers import (
     BestellWizardBaseDataResponseSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
+    PublicSubscriptionSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -1033,3 +1034,19 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         return Response(
             BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
         )
+
+
+class GetMemberSubscriptionsApiView(APIView):
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={200: PublicSubscriptionSerializer(many=True)},
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+        subscriptions = (
+            get_active_and_future_subscriptions()
+            .filter(member_id=member_id)
+            .select_related("product", "product__type")
+        )
+        return Response(PublicSubscriptionSerializer(subscriptions, many=True).data)
