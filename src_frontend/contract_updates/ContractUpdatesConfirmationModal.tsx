@@ -107,8 +107,6 @@ const ContractUpdatesConfirmationModal: React.FC<
       purchasesByDate[dateAsText].push(purchase);
     }
 
-    console.log(purchasesByDate);
-
     return (
       <ul>
         {Object.entries(purchasesByDate).map(([date, purchases]) => (

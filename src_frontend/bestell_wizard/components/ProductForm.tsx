@@ -62,7 +62,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     min={0}
                     value={shoppingCart[product.id!]}
                     onChange={(event) => {
-                      shoppingCart[product.id!] = parseInt(event.target.value);
+                      let newValue = parseInt(event.target.value);
+                      if (Number.isNaN(newValue)) {
+                        newValue = 0;
+                      }
+                      shoppingCart[product.id!] = newValue;
                       setShoppingCart(Object.assign({}, shoppingCart));
                     }}
                   />
