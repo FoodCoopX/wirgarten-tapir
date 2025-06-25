@@ -3435,9 +3435,12 @@ components:
             $ref: '#/components/schemas/PublicProductType'
         force_waiting_list:
           type: boolean
+        intro_enabled:
+          type: boolean
       required:
       - allow_investing_membership
       - force_waiting_list
+      - intro_enabled
       - price_of_a_share
       - product_types
       - theme

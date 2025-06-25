@@ -654,6 +654,11 @@ class BestellWizardConfirmOrderApiView(APIView):
         serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        if get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
+        ):
+            self.add_error("TODO", "Nur Warteliste-Einträge sind erlaubt.")
+
         if not serializer.validated_data["sepa_allowed"]:
             self.add_error("sepa_allowed", "SEPA-Mandat muss erlaubt sein")
 
@@ -790,6 +795,9 @@ class BestellWizardBaseDataApiView(APIView):
             "product_types": ProductType.objects.all(),
             "force_waiting_list": get_parameter_value(
                 ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
+            ),
+            "intro_enabled": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_SHOW_INTRO, cache=self.cache
             ),
         }
 
