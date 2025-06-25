@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
+import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -36,4 +37,18 @@ if (domNodeSubscriptionCancellationCard) {
       csrfToken={getCsrfToken()}
     />,
   );
+}
+
+const subscriptionCards = document.getElementById("subscription_cards");
+if (subscriptionCards) {
+  const root = createRoot(subscriptionCards);
+
+  root.render(
+    <SubscriptionCards
+      memberId={subscriptionCards.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
+} else {
+  console.error("Failed to render subscription cards from React");
 }

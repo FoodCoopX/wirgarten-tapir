@@ -12,8 +12,17 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
+from tapir.subscriptions.services.subscription_price_manager import (
+    SubscriptionPriceManager,
+)
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.models import Member, CoopShareTransaction, ProductType, Product
+from tapir.wirgarten.models import (
+    Member,
+    CoopShareTransaction,
+    ProductType,
+    Product,
+    Subscription,
+)
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import get_today
 
@@ -201,3 +210,64 @@ class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serialize
     product_type_id_to_next_delivery_date_map = serializers.DictField(
         child=serializers.DateField()
     )
+
+
+class PublicSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = [
+            "product_name",
+            "product_id",
+            "product_type_name",
+            "product_type_id",
+            "quantity",
+            "start_date",
+            "end_date",
+            "monthly_price",
+            "solidarity_display",
+        ]
+
+    monthly_price = serializers.SerializerMethodField()
+    product_name = serializers.SerializerMethodField()
+    product_type_name = serializers.SerializerMethodField()
+    product_type_id = serializers.SerializerMethodField()
+    solidarity_display = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_monthly_price(subscription: Subscription):
+        return SubscriptionPriceManager.get_monthly_price_of_subscription_without_solidarity(
+            subscription=subscription, reference_date=None, cache={}
+        )
+
+    @staticmethod
+    def get_product_name(subscription: Subscription) -> str:
+        return subscription.product.name
+
+    @staticmethod
+    def get_product_type_name(subscription: Subscription) -> str:
+        return subscription.product.type.name
+
+    @staticmethod
+    def get_product_type_id(subscription: Subscription) -> str:
+        return subscription.product.type_id
+
+    @staticmethod
+    def get_solidarity_display(subscription: Subscription) -> str | None:
+        prefix = ""
+
+        if (
+            subscription.solidarity_price_percentage is not None
+            and subscription.solidarity_price_percentage != 0
+        ):
+            if subscription.solidarity_price_percentage > 0:
+                prefix = "+"
+            return f"{prefix}{subscription.solidarity_price_percentage}%"
+
+        if (
+            subscription.solidarity_price_absolute is not None
+            and subscription.solidarity_price_absolute != 0
+        ):
+            if subscription.solidarity_price_absolute > 0:
+                prefix = "+"
+            return f"{prefix}{subscription.solidarity_price_absolute}€"
+        return None

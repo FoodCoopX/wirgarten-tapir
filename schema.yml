@@ -997,6 +997,27 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberDataToConfirm'
           description: ''
+  /subscriptions/api/member_subscriptions:
+    get:
+      operationId: subscriptions_api_member_subscriptions_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicSubscription'
+          description: ''
   /subscriptions/bestell_wizard_confirm_order:
     post:
       operationId: subscriptions_bestell_wizard_confirm_order_create
@@ -6406,6 +6427,48 @@ components:
       - name
       - no_delivery
       - products
+    PublicSubscription:
+      type: object
+      properties:
+        product_name:
+          type: string
+          readOnly: true
+        product_id:
+          type: string
+          readOnly: true
+        product_type_name:
+          type: string
+          readOnly: true
+        product_type_id:
+          type: string
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        monthly_price:
+          type: string
+          readOnly: true
+        solidarity_display:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - monthly_price
+      - product_id
+      - product_name
+      - product_type_id
+      - product_type_name
+      - quantity
+      - solidarity_display
+      - start_date
     PublicWaitingListEntryCreateRequest:
       type: object
       properties:

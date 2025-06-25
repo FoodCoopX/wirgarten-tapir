@@ -102,6 +102,7 @@ export * from './ProductType';
 export * from './PublicPickupLocation';
 export * from './PublicProduct';
 export * from './PublicProductType';
+export * from './PublicSubscription';
 export * from './PublicWaitingListEntryCreateRequest';
 export * from './RecipientRequest';
 export * from './SegmentData';
