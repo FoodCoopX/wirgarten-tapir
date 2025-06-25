@@ -87,10 +87,6 @@ const ProductWishesEditor: React.FC<ProductWishesEditorProps> = ({
     return productTypes;
   }
 
-  useEffect(() => {
-    console.log(selectedProductTypeId);
-  }, [selectedProductTypeId]);
-
   return (
     <>
       <Row>
