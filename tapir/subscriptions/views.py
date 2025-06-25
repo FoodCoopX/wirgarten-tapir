@@ -20,6 +20,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.coop.services.minimum_number_of_shares_validator import (
+    MinimumNumberOfSharesValidator,
+)
 from tapir.deliveries.serializers import ProductSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -669,29 +672,49 @@ class BestellWizardConfirmOrderApiView(APIView):
         serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        self.validate_order(validated_data=serializer.validated_data)
+
+        if len(self.errors) > 0:
+            self.apply_order(serializer.validated_data)
+
+        data = {
+            "order_confirmed": len(self.errors) == 0,
+            "errors": self.errors,
+        }
+
+        return Response(BestellWizardConfirmOrderResponseSerializer(data).data)
+
+    def apply_order(self, validated_data):
+        pass
+
+    def validate_order(self, validated_data):
+        # validate stuff from the BPF and APF
+        # validate enough shares
+        # validate personal data: all fields set, email address unique, phone number valid, birthdate valid, iban valid
+
         if get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
         ):
             self.add_error("TODO", "Nur Warteliste-Einträge sind erlaubt.")
 
-        if not serializer.validated_data["sepa_allowed"]:
+        if not validated_data["sepa_allowed"]:
             self.add_error("sepa_allowed", "SEPA-Mandat muss erlaubt sein")
 
-        if not serializer.validated_data["contract_accepted"]:
+        if not validated_data["contract_accepted"]:
             self.add_error(
                 "contract_accepted", "Vertragsgrundsätze müssen akzeptiert sein"
             )
 
-        if not serializer.validated_data["statute_accepted"]:
+        if not validated_data["statute_accepted"]:
             self.add_error("statute_accepted", "Satzung müss akzeptiert sein")
 
         subscription_start_date = get_next_contract_start_date(cache=self.cache)
 
         pickup_location = get_object_or_404(
-            PickupLocation, id=serializer.validated_data["pickup_location_id"]
+            PickupLocation, id=validated_data["pickup_location_id"]
         )
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+            shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
@@ -732,16 +755,16 @@ class BestellWizardConfirmOrderApiView(APIView):
         ):
             self.add_error("TODO", "Single subscription product ordered more than once")
 
-        data = {
-            "order_confirmed": len(self.errors) == 0,
-            "errors": self.errors,
-        }
-
-        return Response(BestellWizardConfirmOrderResponseSerializer(data).data)
-
-        # validate stuff from the BPF and APF
-        # validate enough shares
-        # validate personal data: all fields set, email address unique, phone number valid, birthdate valid, iban valid
+        minimum_number_of_shares = (
+            MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
+                order, cache=self.cache
+            )
+        )
+        if validated_data["nb_shares"] < minimum_number_of_shares:
+            self.add_error(
+                "TODO",
+                f"Shares ordered: {validated_data["nb_shares"]}, minimum shares: {minimum_number_of_shares}",
+            )
 
     def add_error(self, field: str, message: str):
         if field not in self.errors.keys():
