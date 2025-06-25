@@ -62,10 +62,10 @@ export interface PublicSubscription {
   endDate?: Date | null;
   /**
    *
-   * @type {string}
+   * @type {number}
    * @memberof PublicSubscription
    */
-  readonly monthlyPrice: string;
+  readonly monthlyPrice: number;
   /**
    *
    * @type {string}
