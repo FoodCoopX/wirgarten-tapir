@@ -16,6 +16,7 @@ class TapirOrderBuilder:
         order: TapirOrder = {
             TapirCache.get_product_by_id(cache=cache, product_id=product_id): quantity
             for product_id, quantity in shopping_cart.items()
+            if quantity > 0
         }
 
         return order
