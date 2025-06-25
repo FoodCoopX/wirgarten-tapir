@@ -23,6 +23,7 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.serializers import ProductSerializer
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.generic_exports.permissions import HasCoopManagePermission
@@ -688,10 +689,9 @@ class BestellWizardConfirmOrderApiView(APIView):
         pass
 
     def validate_order(self, validated_data):
-        # validate stuff from the BPF and APF
-        # validate enough shares
-        # validate personal data: all fields set, email address unique, phone number valid, birthdate valid, iban valid
-
+        PersonalDataValidator.validate_personal_data(
+            personal_data=validated_data["personal_data"], cache=self.cache
+        )
         if get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
         ):

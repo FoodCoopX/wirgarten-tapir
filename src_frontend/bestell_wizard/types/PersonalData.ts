@@ -5,10 +5,10 @@ export type PersonalData = {
   phoneNumber: string;
   street: string;
   street2: string;
-  postCode: string;
+  postcode: string;
   city: string;
   country: string;
   birthdate: Date;
-  account_owner: string;
+  accountOwner: string;
   iban: string;
 };

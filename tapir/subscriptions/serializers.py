@@ -142,7 +142,7 @@ class PersonalDataSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone_number = serializers.CharField()
     street = serializers.CharField()
-    street_2 = serializers.CharField()
+    street_2 = serializers.CharField(allow_blank=True)
     postcode = serializers.CharField()
     city = serializers.CharField()
     country = serializers.CharField()
@@ -154,7 +154,7 @@ class PersonalDataSerializer(serializers.Serializer):
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     # map of productId -> quantity ordered
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    personal_data = serializers.CharField()
+    personal_data = PersonalDataSerializer()
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
     statute_accepted = serializers.BooleanField()

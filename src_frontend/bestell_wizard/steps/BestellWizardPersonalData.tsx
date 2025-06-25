@@ -140,9 +140,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           <Form.Group>
             <Form.Label>Postleitzahl</Form.Label>
             <Form.Control
-              value={personalData.postCode}
+              value={personalData.postcode}
               onChange={(event) => {
-                personalData.postCode = event.target.value;
+                personalData.postcode = event.target.value;
                 updatePersonalData();
               }}
               placeholder={"Postleitzahl"}
@@ -193,9 +193,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
         <Col>
           <Form.Label>Kontoinhaber*in</Form.Label>
           <Form.Control
-            value={personalData.account_owner}
+            value={personalData.accountOwner}
             onChange={(event) => {
-              personalData.account_owner = event.target.value;
+              personalData.accountOwner = event.target.value;
               updatePersonalData();
             }}
             placeholder={"Kontoinhaber*in"}
