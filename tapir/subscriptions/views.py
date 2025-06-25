@@ -57,6 +57,7 @@ from tapir.subscriptions.services.base_product_type_service import (
 from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
     EarliestPossibleContractStartDateCalculator,
 )
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
@@ -82,9 +83,14 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     ProductType,
     PickupLocation,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_next_contract_start_date
+from tapir.wirgarten.service.member import (
+    get_next_contract_start_date,
+    get_or_create_mandate_ref,
+    send_order_confirmation,
+)
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
@@ -675,8 +681,17 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         self.validate_order(validated_data=serializer.validated_data)
 
-        if len(self.errors) > 0:
-            self.apply_order(serializer.validated_data)
+        if len(self.errors) == 0:
+            member = self.create_member(
+                personal_data=serializer.validated_data["personal_data"]
+            )
+            subscriptions = self.create_subscriptions(
+                validated_data=serializer.validated_data, member=member
+            )
+            self.link_member_to_pickup_location(
+                serializer.validated_data["pickup_location_id"], member=member
+            )
+            send_order_confirmation(member, subscriptions, cache=self.cache)
 
         data = {
             "order_confirmed": len(self.errors) == 0,
@@ -685,13 +700,83 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         return Response(BestellWizardConfirmOrderResponseSerializer(data).data)
 
-    def apply_order(self, validated_data):
-        pass
+    def create_member(self, personal_data):
+        now = get_now(cache=self.cache)
+        contracts_signed = {
+            contract: now
+            for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
+        }
+
+        return Member.objects.create(**personal_data, **contracts_signed)
+
+    def link_member_to_pickup_location(self, pickup_location_id, member: Member):
+        contract_start_date = get_next_contract_start_date(cache=self.cache)
+        MemberPickupLocation.objects.create(
+            member_id=member.id,
+            pickup_location_id=pickup_location_id,
+            valid_from=contract_start_date,
+        )
+
+    def create_subscriptions(self, validated_data, member: Member):
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=validated_data["shopping_cart"], cache=self.cache
+        )
+        contract_start_date = get_next_contract_start_date(cache=self.cache)
+        growing_period = get_current_growing_period(
+            reference_date=contract_start_date, cache=self.cache
+        )
+        mandate_ref = get_or_create_mandate_ref(member.id, cache=self.cache)
+        now = get_now(cache=self.cache)
+
+        subscriptions = []
+        for product, quantity in order.items():
+            product_type = TapirCache.get_product_type_by_id(
+                cache=self.cache, product_type_id=product.type_id
+            )
+            notice_period_duration = None
+            if get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
+            ):
+                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                    product_type=product_type,
+                    growing_period=growing_period,
+                    cache=self.cache,
+                )
+
+            end_date = None
+            if product_type.subscriptions_have_end_dates:
+                end_date = growing_period.end_date
+
+            subscriptions.append(
+                Subscription(
+                    member_id=member.id,
+                    product=product,
+                    quantity=quantity,
+                    period=growing_period,
+                    start_date=contract_start_date,
+                    end_date=end_date,
+                    mandate_ref=mandate_ref,
+                    consent_ts=now if product_type.contract_link else None,
+                    withdrawal_consent_ts=now,
+                    trial_disabled=not get_parameter_value(
+                        ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+                    ),
+                    trial_end_date_override=None,
+                    notice_period_duration=notice_period_duration,
+                )
+            )
+
+        subscriptions = Subscription.objects.bulk_create(subscriptions)
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
+
+        return subscriptions
 
     def validate_order(self, validated_data):
-        PersonalDataValidator.validate_personal_data(
+        for field, message in PersonalDataValidator.validate_personal_data(
             personal_data=validated_data["personal_data"], cache=self.cache
-        )
+        ).items():
+            self.add_error(field, message)
+
         if get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
         ):
