@@ -767,6 +767,8 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         subscriptions = []
         for product, quantity in order.items():
+            if quantity == 0:
+                continue
             product_type = TapirCache.get_product_type_by_id(
                 cache=self.cache, product_type_id=product.type_id
             )
