@@ -234,7 +234,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
     solidarity_display = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_monthly_price(subscription: Subscription):
+    def get_monthly_price(subscription: Subscription) -> float:
         return SubscriptionPriceManager.get_monthly_price_of_subscription_without_solidarity(
             subscription=subscription, reference_date=None, cache={}
         )

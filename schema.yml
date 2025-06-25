@@ -6454,7 +6454,8 @@ components:
           format: date
           nullable: true
         monthly_price:
-          type: string
+          type: number
+          format: double
           readOnly: true
         solidarity_display:
           type: string
