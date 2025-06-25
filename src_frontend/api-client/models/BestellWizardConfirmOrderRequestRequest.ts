@@ -66,6 +66,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
    * @memberof BestellWizardConfirmOrderRequestRequest
    */
   pickupLocationId: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardConfirmOrderRequestRequest
+   */
+  studentStatusEnabled: boolean;
 }
 
 /**
@@ -86,6 +92,11 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(
     return false;
   if (!("nbShares" in value) || value["nbShares"] === undefined) return false;
   if (!("pickupLocationId" in value) || value["pickupLocationId"] === undefined)
+    return false;
+  if (
+    !("studentStatusEnabled" in value) ||
+    value["studentStatusEnabled"] === undefined
+  )
     return false;
   return true;
 }
@@ -111,6 +122,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(
     statuteAccepted: json["statute_accepted"],
     nbShares: json["nb_shares"],
     pickupLocationId: json["pickup_location_id"],
+    studentStatusEnabled: json["student_status_enabled"],
   };
 }
 
@@ -136,5 +148,6 @@ export function BestellWizardConfirmOrderRequestRequestToJSONTyped(
     statute_accepted: value["statuteAccepted"],
     nb_shares: value["nbShares"],
     pickup_location_id: value["pickupLocationId"],
+    student_status_enabled: value["studentStatusEnabled"],
   };
 }

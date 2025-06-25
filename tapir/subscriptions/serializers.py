@@ -160,6 +160,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     statute_accepted = serializers.BooleanField()
     nb_shares = serializers.IntegerField()
     pickup_location_id = serializers.CharField()
+    student_status_enabled = serializers.BooleanField()
 
 
 class BestellWizardConfirmOrderResponseSerializer(serializers.Serializer):
@@ -188,6 +189,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     product_types = PublicProductTypeSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
+    student_status_allowed = serializers.BooleanField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

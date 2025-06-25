@@ -104,20 +104,33 @@ export function buildNextButtonParametersForCoopShares(
   selectedNumberOfCoopShares: number,
   minimumNumberOfShares: number,
   waitingListModeEnabled: boolean,
+  studentStatusEnabled: boolean,
 ): NextButtonParameters {
   let text = undefined;
-  if (!statuteAccepted && !waitingListModeEnabled) {
-    text = "Akzeptiere die Satzung um weiter zu gehen";
+
+  if (studentStatusEnabled) {
+    text = "Weiter als Student*in";
   }
-  if (minimumNumberOfShares > selectedNumberOfCoopShares) {
-    text =
-      "Du muss mindestens " + minimumNumberOfShares + " Geno-Anteile zeichnen";
+
+  let disabled = false;
+  if (!studentStatusEnabled) {
+    disabled =
+      (!statuteAccepted && !waitingListModeEnabled) ||
+      minimumNumberOfShares > selectedNumberOfCoopShares;
+
+    if (!statuteAccepted && !waitingListModeEnabled) {
+      text = "Akzeptiere die Satzung um weiter zu gehen";
+    }
+    if (minimumNumberOfShares > selectedNumberOfCoopShares) {
+      text =
+        "Du muss mindestens " +
+        minimumNumberOfShares +
+        " Geno-Anteile zeichnen";
+    }
   }
 
   return {
-    disabled:
-      (!statuteAccepted && !waitingListModeEnabled) ||
-      minimumNumberOfShares > selectedNumberOfCoopShares,
+    disabled: disabled,
     icon: undefined,
     loading: false,
     text: text,

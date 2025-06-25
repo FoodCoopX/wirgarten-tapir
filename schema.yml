@@ -3437,12 +3437,15 @@ components:
           type: boolean
         intro_enabled:
           type: boolean
+        student_status_allowed:
+          type: boolean
       required:
       - allow_investing_membership
       - force_waiting_list
       - intro_enabled
       - price_of_a_share
       - product_types
+      - student_status_allowed
       - theme
     BestellWizardCapacityCheckRequestRequest:
       type: object
@@ -3487,6 +3490,8 @@ components:
         pickup_location_id:
           type: string
           minLength: 1
+        student_status_enabled:
+          type: boolean
       required:
       - contract_accepted
       - nb_shares
@@ -3495,6 +3500,7 @@ components:
       - sepa_allowed
       - shopping_cart
       - statute_accepted
+      - student_status_enabled
     BestellWizardConfirmOrderResponse:
       type: object
       properties:
@@ -5929,7 +5935,6 @@ components:
           minLength: 1
         street_2:
           type: string
-          minLength: 1
         postcode:
           type: string
           minLength: 1

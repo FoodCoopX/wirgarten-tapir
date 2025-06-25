@@ -716,6 +716,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.import_definitions_solidarity()
         self.import_definitions_organization()
+        self.import_definitions_bestellwizard()
 
     @classmethod
     def import_definitions_organization(cls):
@@ -750,6 +751,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Welche Kanäle zur Auswahl stehen am Ende der BestellWizard, als Komma-getrennte Liste. Beispiel: 'Social Media, Zeitung, Suchmaschine'",
             category=ParameterCategory.ORGANIZATION,
             order_priority=3,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            label="Studenten dürfen ohne Genossenschaft-Anteile Produkte bestellen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiviert kommt ein extra Checkbox im Bestellwizard, die wenn angekreuzt erlaubt Studentinnen eine Bestellung abzuschliessen ohne Genossenschaft-Anteile.",
+            category=ParameterCategory.ORGANIZATION,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
     @classmethod
@@ -803,6 +814,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.HARVEST,
         )
 
+    @classmethod
+    def import_definitions_bestellwizard(cls):
         parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             label="BestellWizard in Warteiste-Modus",

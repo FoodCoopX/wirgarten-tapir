@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
@@ -14,6 +14,9 @@ interface BestellWizardCoopSharesProps {
   minimumNumberOfShares: number;
   priceOfAShare: number;
   waitingListModeEnabled: boolean;
+  studentStatusAllowed: boolean;
+  studentStatusEnabled: boolean;
+  setStudentStatusEnabled: (status: boolean) => void;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -25,7 +28,19 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   minimumNumberOfShares,
   priceOfAShare,
   waitingListModeEnabled,
+  studentStatusAllowed,
+  studentStatusEnabled,
+  setStudentStatusEnabled,
 }) => {
+  useEffect(() => {
+    if (!studentStatusEnabled) {
+      return;
+    }
+
+    setSelectedNumberOfCoopShares(0);
+    setStatuteAccepted(false);
+  }, [studentStatusEnabled]);
+
   return (
     <>
       <Row>
@@ -76,6 +91,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 onChange={(event) =>
                   setSelectedNumberOfCoopShares(parseInt(event.target.value))
                 }
+                disabled={studentStatusEnabled}
               />
             </Form.Group>
             <span>
@@ -98,24 +114,43 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 label={
                   "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
                 }
+                disabled={studentStatusEnabled}
               />
               <Form.Text>
                 <a href={"https://biotop-oberland.de/satzung"}>
                   https://biotop-oberland.de/satzung
                 </a>
-              </Form.Text>
-            </Col>
-          </Row>
-          <Row className={"mt-2"}>
-            <Col>
-              <p>
-                Bitte beachte, dass Deine Genossenschaftsanteile erst bei
+                <br />
+                Bitte beachte, dass deine Genossenschaftsanteile erst bei
                 Austritt aus der Genossenschaft und nach Verabschiedung des
                 Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen.
                 Siehe dazu Satzung § 10 und § 37.
-              </p>
+              </Form.Text>
+              <Form.Text></Form.Text>
             </Col>
           </Row>
+          {studentStatusAllowed && (
+            <Row>
+              <Col>
+                <Form.Check
+                  label={
+                    "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
+                  }
+                  checked={studentStatusEnabled}
+                  onChange={(event) =>
+                    setStudentStatusEnabled(event.target.checked)
+                  }
+                />
+                <Form.Text>
+                  Die Immatrikulationsbescheinigung muss per Mail an{" "}
+                  <a href="mailto:lueneburg@wirgarten.com">
+                    lueneburg@wirgarten.com
+                  </a>{" "}
+                  gesendet werden.
+                </Form.Text>
+              </Col>
+            </Row>
+          )}
         </>
       )}
     </>
