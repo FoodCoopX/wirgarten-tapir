@@ -122,6 +122,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [introEnabled, setIntroEnabled] = useState(true);
+  const [studentStatusAllowed, setStudentStatusAllowed] = useState(false);
+  const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -134,6 +136,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setAllowInvestingMembership(data.allowInvestingMembership);
         setForceWaitingList(data.forceWaitingList);
         setIntroEnabled(data.introEnabled);
+        setStudentStatusAllowed(data.studentStatusAllowed);
       })
       .catch(handleRequestError)
       .finally(() => setBaseDataLoading(false));
@@ -372,6 +375,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             minimumNumberOfShares={minimumNumberOfShares}
             priceOfAShare={priceOfAShare}
             waitingListModeEnabled={waitingListModeEnabled}
+            studentStatusAllowed={studentStatusAllowed}
+            studentStatusEnabled={studentStatusEnabled}
+            setStudentStatusEnabled={setStudentStatusEnabled}
           />
         );
       case "personal_data":
@@ -467,6 +473,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             nbShares: selectedNumberOfCoopShares,
             pickupLocationId: selectedPickupLocations[0].id!,
             shoppingCart: shoppingCart,
+            studentStatusEnabled: studentStatusEnabled,
           },
         })
         .then((response) => {
@@ -510,6 +517,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           selectedNumberOfCoopShares,
           minimumNumberOfShares,
           waitingListModeEnabled,
+          studentStatusEnabled,
         );
         break;
       case "personal_data":

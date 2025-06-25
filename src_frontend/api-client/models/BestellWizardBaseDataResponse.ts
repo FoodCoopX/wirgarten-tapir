@@ -60,6 +60,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   introEnabled: boolean;
+  /**
+   *
+   * @type {boolean}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  studentStatusAllowed: boolean;
 }
 
 /**
@@ -81,6 +87,11 @@ export function instanceOfBestellWizardBaseDataResponse(
   if (!("forceWaitingList" in value) || value["forceWaitingList"] === undefined)
     return false;
   if (!("introEnabled" in value) || value["introEnabled"] === undefined)
+    return false;
+  if (
+    !("studentStatusAllowed" in value) ||
+    value["studentStatusAllowed"] === undefined
+  )
     return false;
   return true;
 }
@@ -107,6 +118,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     ),
     forceWaitingList: json["force_waiting_list"],
     introEnabled: json["intro_enabled"],
+    studentStatusAllowed: json["student_status_allowed"],
   };
 }
 
@@ -133,5 +145,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     ),
     force_waiting_list: value["forceWaitingList"],
     intro_enabled: value["introEnabled"],
+    student_status_allowed: value["studentStatusAllowed"],
   };
 }
