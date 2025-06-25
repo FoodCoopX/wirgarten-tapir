@@ -148,6 +148,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           return a.name.localeCompare(b.name);
         });
         setPickupLocations(pickupLocations);
+        if (pickupLocations.length === 1) {
+          setSelectedPickupLocations([pickupLocations[0]]);
+        }
       })
       .catch(handleRequestError);
   }, []);
@@ -186,12 +189,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       steps = steps.filter((step) => step !== "pickup_location");
     }
 
+    if (pickupLocations.length === 1) {
+      steps = steps.filter((step) => step !== "pickup_location");
+    }
+
     if (!steps.includes(currentStep)) {
       setCurrentStep(steps[0]);
     }
 
     setSteps(steps);
-  }, [selectedProductTypes, shoppingCart, introEnabled]);
+  }, [selectedProductTypes, shoppingCart, introEnabled, pickupLocations]);
 
   useEffect(() => {
     updateProductsAndProductTypesOverCapacity(
