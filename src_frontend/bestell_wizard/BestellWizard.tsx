@@ -121,6 +121,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [investingMembership, setInvestingMembership] = useState(false);
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
+  const [introEnabled, setIntroEnabled] = useState(true);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -132,6 +133,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setPriceOfAShare(data.priceOfAShare);
         setAllowInvestingMembership(data.allowInvestingMembership);
         setForceWaitingList(data.forceWaitingList);
+        setIntroEnabled(data.introEnabled);
       })
       .catch(handleRequestError)
       .finally(() => setBaseDataLoading(false));
@@ -158,9 +160,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [publicProductTypes]);
 
   useEffect(() => {
+    const productSteps = introEnabled
+      ? selectedProductTypes
+      : publicProductTypes;
     let steps = [
       "intro",
-      ...selectedProductTypes.map((productType) => productType.id!),
+      ...productSteps.map((productType) => productType.id!),
       "pickup_location",
       "coop_shares",
       "personal_data",
@@ -168,14 +173,22 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       "end",
     ];
 
+    if (!introEnabled) {
+      steps = steps.filter((step) => step !== "intro");
+    }
+
     if (
       !isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes)
     ) {
       steps = steps.filter((step) => step !== "pickup_location");
     }
 
+    if (!steps.includes(currentStep)) {
+      setCurrentStep(steps[0]);
+    }
+
     setSteps(steps);
-  }, [selectedProductTypes, shoppingCart]);
+  }, [selectedProductTypes, shoppingCart, introEnabled]);
 
   useEffect(() => {
     updateProductsAndProductTypesOverCapacity(
@@ -633,16 +646,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                     icon={"first_page"}
                     variant={"outline-primary"}
                     onClick={() => {
-                      setCurrentStep("intro");
+                      setCurrentStep(steps[0]);
                     }}
-                    disabled={currentStep === "intro"}
+                    disabled={currentStep === steps[0]}
                   />
                   <TapirButton
                     icon={"chevron_left"}
                     variant={"outline-primary"}
                     text={"Zurück"}
                     onClick={onBackClicked}
-                    disabled={currentStep === "intro"}
+                    disabled={currentStep === steps[0]}
                   />
                 </div>
                 <TapirButton

@@ -187,6 +187,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
+    intro_enabled = serializers.BooleanField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

@@ -812,3 +812,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             "Wenn ausgeschaltet, Produkt-Anteile können gebucht werden wenn es genug Kapazitäten gibt.",
             category=ParameterCategory.BESTELLWIZARD,
         )
+
+        parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
+            label="Intro-Seite zeigen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert ist die erste Seite des BestellWizards eine Intro-Seite wo der Benutzer auswählen kann welche Produkte ihn interessieren."
+            "Wenn ausgeschaltet ist diese Seite nicht angezeigt. Der BestellWizard verhält sich wie der Benutzer alle Produkte bei der Intro-Seite ausgewählte hätte.",
+            category=ParameterCategory.BESTELLWIZARD,
+        )
