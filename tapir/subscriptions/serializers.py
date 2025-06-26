@@ -173,11 +173,9 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     student_status_enabled = serializers.BooleanField()
 
 
-class BestellWizardConfirmOrderResponseSerializer(serializers.Serializer):
+class OrderConfirmationResponseSerializer(serializers.Serializer):
     order_confirmed = serializers.BooleanField()
-    errors = serializers.DictField(
-        child=serializers.ListField(child=serializers.CharField())
-    )
+    error = serializers.CharField(allow_null=True)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):
@@ -271,3 +269,9 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
                 prefix = "+"
             return f"{prefix}{subscription.solidarity_price_absolute}€"
         return None
+
+
+class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    product_type_id = serializers.CharField()
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())

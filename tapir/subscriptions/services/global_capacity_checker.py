@@ -10,22 +10,7 @@ from tapir.wirgarten.service.products import (
 )
 
 
-class SubscriptionChangeValidatorNew:
-    @classmethod
-    def calculate_global_capacity_used_by_the_ordered_products(
-        cls,
-        order_for_a_single_product_type: TapirOrder,
-        reference_date: datetime.date,
-        cache: dict = None,
-    ):
-        total = 0.0
-        for product, quantity in order_for_a_single_product_type.items():
-            product_price_object = get_product_price(
-                product=product, reference_date=reference_date, cache=cache
-            )
-            total += float(product_price_object.size) * quantity
-        return total
-
+class GlobalCapacityChecker:
     @classmethod
     def get_product_type_ids_without_enough_capacity_for_order(
         cls,
@@ -54,6 +39,21 @@ class SubscriptionChangeValidatorNew:
                 product_type_ids_without_enough_capacity.append(product_type_id)
 
         return product_type_ids_without_enough_capacity
+
+    @classmethod
+    def calculate_global_capacity_used_by_the_ordered_products(
+        cls,
+        order_for_a_single_product_type: TapirOrder,
+        reference_date: datetime.date,
+        cache: dict = None,
+    ):
+        total = 0.0
+        for product, quantity in order_for_a_single_product_type.items():
+            product_price_object = get_product_price(
+                product=product, reference_date=reference_date, cache=cache
+            )
+            total += float(product_price_object.size) * quantity
+        return total
 
     @classmethod
     def is_there_enough_free_global_capacity_for_single_product_type(

@@ -16,47 +16,48 @@ class PersonalDataValidator:
     def validate_personal_data(cls, personal_data: dict, cache: dict):
         # format of the data defined by tapir.subscriptions.serializers.PersonalDataSerializer
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
-        errors = {}
-        if cls.is_email_already_used(personal_data["email"]):
-            errors["email"] = "Email already in use"
 
+        cls.validate_email_address_not_in_use(personal_data["email"])
+        cls.validate_phone_number_is_valid(personal_data["phone_number"])
+        cls.validate_birthdate(personal_data["birthdate"], cache=cache)
+        IBANValidator(personal_data["iban"])
+
+    @classmethod
+    def validate_phone_number_is_valid(cls, phone_number: str):
         try:
-            phone_number = phonenumbers.parse(personal_data["phone_number"], "DE")
+            phone_number = phonenumbers.parse(phone_number, "DE")
             if not phonenumbers.is_possible_number(
                 phone_number
             ) or not phonenumbers.is_valid_number(phone_number):
-                errors["phone_number"] = "Invalid phone number"
+                raise ValidationError("Ungültiges Telefonnummer")
         except phonenumbers.phonenumberutil.NumberParseException:
-            errors["phone_number"] = "Invalid phone number"
-
-        if not cls.is_birthdate_valid(personal_data["birthdate"], cache=cache):
-            errors["birthdate"] = "Invalid birthdate"
-
-        try:
-            IBANValidator(personal_data["iban"])
-        except ValidationError:
-            errors["iban"] = "Invalid IBAN"
-
-        return errors
+            raise ValidationError("Ungültiges Telefonnummer")
 
     @classmethod
-    def is_email_already_used(cls, email: str):
+    def validate_email_address_not_in_use(cls, email: str):
         duplicate_email_query = Member.objects.filter(
             Q(email=email) | Q(username=email)
         )
 
         if duplicate_email_query.exists():
-            return True
+            raise ValidationError(
+                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+            )
 
         kc = KeycloakUser.get_keycloak_client()
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
-            return True
-
-        return False
+            raise ValidationError(
+                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+            )
 
     @classmethod
-    def is_birthdate_valid(cls, birthdate: datetime.date, cache: dict):
+    def validate_birthdate(cls, birthdate: datetime.date, cache: dict):
         today = get_today(cache=cache)
         age = relativedelta(today, birthdate).years
-        return 18 < age < 150
+        if age < 18:
+            raise ValidationError(
+                "Ungültiges geburtsdatum, Mitglied muss volljährig sein"
+            )
+        if age > 150:
+            raise ValidationError("Ungültiges geburtsdatum")

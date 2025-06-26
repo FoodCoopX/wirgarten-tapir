@@ -1,5 +1,6 @@
 import datetime
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -14,13 +15,10 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
-    PickupLocationCapacityGeneralChecker,
-)
 from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
-    BestellWizardConfirmOrderResponseSerializer,
+    OrderConfirmationResponseSerializer,
     BestellWizardCapacityCheckRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
     BestellWizardBaseDataResponseSerializer,
@@ -30,17 +28,15 @@ from tapir.subscriptions.serializers import (
 from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
     EarliestPossibleContractStartDateCalculator,
 )
+from tapir.subscriptions.services.global_capacity_checker import (
+    GlobalCapacityChecker,
+)
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
-from tapir.subscriptions.services.single_subscription_validator import (
-    SingleSubscriptionValidator,
-)
 from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
-from tapir.subscriptions.services.subscription_change_validator_new import (
-    SubscriptionChangeValidatorNew,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
@@ -77,10 +73,9 @@ class BestellWizardConfirmOrderApiView(APIView):
     def __init__(self):
         super().__init__()
         self.cache = {}
-        self.errors = {}
 
     @extend_schema(
-        responses={200: BestellWizardConfirmOrderResponseSerializer},
+        responses={200: OrderConfirmationResponseSerializer},
         request=BestellWizardConfirmOrderRequestSerializer,
     )
     def post(self, request):
@@ -88,39 +83,45 @@ class BestellWizardConfirmOrderApiView(APIView):
         serializer.is_valid(raise_exception=True)
 
         contract_start_date = get_next_contract_start_date(cache=self.cache)
-        self.validate_order(
-            validated_data=serializer.validated_data,
-            contract_start_date=contract_start_date,
-        )
 
-        if len(self.errors) == 0:
-            with transaction.atomic():
-                member = self.create_member(
-                    personal_data=serializer.validated_data["personal_data"]
-                )
-                subscriptions = self.create_subscriptions(
-                    validated_data=serializer.validated_data,
-                    member=member,
-                    contract_start_date=contract_start_date,
-                )
-                self.link_member_to_pickup_location(
-                    serializer.validated_data["pickup_location_id"],
-                    member=member,
-                    contract_start_date=contract_start_date,
-                )
-                self.create_coop_shares(
-                    number_of_shares=serializer.validated_data["nb_shares"],
-                    member=member,
-                    subscriptions=subscriptions,
-                )
-                send_order_confirmation(member, subscriptions, cache=self.cache)
+        try:
+            self.validate_everything(
+                validated_data=serializer.validated_data,
+                contract_start_date=contract_start_date,
+            )
+        except ValidationError as error:
+            data = {
+                "order_confirmed": False,
+                "error": error.message,
+            }
+            return Response(OrderConfirmationResponseSerializer(data).data)
+
+        with transaction.atomic():
+            member = self.create_member(
+                personal_data=serializer.validated_data["personal_data"]
+            )
+            subscriptions = self.create_subscriptions(
+                validated_data=serializer.validated_data,
+                member=member,
+                contract_start_date=contract_start_date,
+            )
+            self.link_member_to_pickup_location(
+                serializer.validated_data["pickup_location_id"],
+                member=member,
+                contract_start_date=contract_start_date,
+            )
+            self.create_coop_shares(
+                number_of_shares=serializer.validated_data["nb_shares"],
+                member=member,
+                subscriptions=subscriptions,
+            )
+            send_order_confirmation(member, subscriptions, cache=self.cache)
 
         data = {
-            "order_confirmed": len(self.errors) == 0,
-            "errors": self.errors,
+            "order_confirmed": True,
+            "error": None,
         }
-
-        return Response(BestellWizardConfirmOrderResponseSerializer(data).data)
+        return Response(OrderConfirmationResponseSerializer(data).data)
 
     def create_member(self, personal_data):
         now = get_now(cache=self.cache)
@@ -217,24 +218,23 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         return subscriptions
 
-    def validate_order(self, validated_data: dict, contract_start_date: datetime.date):
-        for field, message in PersonalDataValidator.validate_personal_data(
+    def validate_everything(
+        self, validated_data: dict, contract_start_date: datetime.date
+    ):
+        PersonalDataValidator.validate_personal_data(
             personal_data=validated_data["personal_data"], cache=self.cache
-        ).items():
-            self.add_error(field, message)
+        )
 
         if get_parameter_value(
             ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
         ):
-            self.add_error("TODO", "Nur Warteliste-Einträge sind erlaubt.")
+            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
 
         if not validated_data["sepa_allowed"]:
-            self.add_error("sepa_allowed", "SEPA-Mandat muss erlaubt sein")
+            raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
         if not validated_data["contract_accepted"]:
-            self.add_error(
-                "contract_accepted", "Vertragsgrundsätze müssen akzeptiert sein"
-            )
+            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         pickup_location = get_object_or_404(
             PickupLocation, id=validated_data["pickup_location_id"]
@@ -242,17 +242,19 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
-        if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
-            pickup_location=pickup_location,
-            ordered_products_to_quantity_map=order,
-            already_registered_member=None,
-            subscription_start=contract_start_date,
+
+        OrderValidator.validate_order_general(
+            order=order,
+            contract_start_date=contract_start_date,
             cache=self.cache,
+            member=None,
+            pickup_location=pickup_location,
+        )
+
+        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
+            order=order
         ):
-            self.add_error(
-                "pickup_location",
-                "Dein Abholort ist leider voll. Bitte wähle einen anderen Abholort aus.",
-            )
+            raise ValidationError("Manche Pflichtprodukte fehlen in der Bestellung")
 
         if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
             ordered_solidarity_factor=0,  # TODO
@@ -260,43 +262,23 @@ class BestellWizardConfirmOrderApiView(APIView):
             start_date=contract_start_date,
             cache=self.cache,
         ):
-            self.add_error("TODO", "TODO")
-
-        product_type_ids_without_enough_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
-            order_with_all_product_types=order,
-            member_id=None,
-            subscription_start_date=contract_start_date,
-            cache=self.cache,
-        )
-        if len(product_type_ids_without_enough_capacity) > 0:
-            self.add_error("TODO", "Not enough capacity")
-
-        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
-        ):
-            self.add_error("TODO", "Missing some required products")
-
-        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
-            order=order, cache=self.cache
-        ):
-            self.add_error("TODO", "Single subscription product ordered more than once")
+            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
 
         student_status_enabled = validated_data["student_status_enabled"]
         if student_status_enabled and not get_parameter_value(
             ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache=self.cache
         ):
-            self.add_error("TODO", "Student status is not allowed")
+            raise ValidationError("Studenten-Status ist nicht erlaubt")
 
         nb_ordered_coop_shares = validated_data["nb_shares"]
         if student_status_enabled:
             if nb_ordered_coop_shares > 0:
-                self.add_error(
-                    "TODO",
-                    f"Student status enabled, no coop shares should be ordered (ordered: {nb_ordered_coop_shares})",
+                raise ValidationError(
+                    "Studenten-Status aktiviert, es sollen keine Genossenschaftsanteilen bestellt werden."
                 )
         else:
             if not validated_data["statute_accepted"]:
-                self.add_error("statute_accepted", "Satzung müss akzeptiert sein")
+                raise ValidationError("Die Satzung muss akzeptiert werden.")
 
             minimum_number_of_shares = (
                 MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
@@ -304,16 +286,9 @@ class BestellWizardConfirmOrderApiView(APIView):
                 )
             )
             if nb_ordered_coop_shares < minimum_number_of_shares:
-                self.add_error(
-                    "TODO",
-                    f"Shares ordered: {nb_ordered_coop_shares}, minimum shares: {minimum_number_of_shares}",
+                raise ValidationError(
+                    f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
                 )
-
-    def add_error(self, field: str, message: str):
-        if field not in self.errors.keys():
-            self.errors[field] = []
-
-        self.errors[field].append(message)
 
 
 class BestellWizardCapacityCheckApiView(APIView):
@@ -337,7 +312,7 @@ class BestellWizardCapacityCheckApiView(APIView):
 
         subscription_start_date = get_next_contract_start_date(cache=self.cache)
 
-        ids_of_product_types_over_capacity = SubscriptionChangeValidatorNew.get_product_type_ids_without_enough_capacity_for_order(
+        ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
             member_id=None,
             subscription_start_date=subscription_start_date,
