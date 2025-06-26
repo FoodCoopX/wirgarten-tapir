@@ -149,9 +149,9 @@ class UpdateSubscriptionsApiView(APIView):
     def validate_all_products_belong_to_product_type(
         self, order: TapirOrder, product_type_id
     ):
-        for product_id in order.keys():
+        for product in order.keys():
             product = TapirCache.get_product_by_id(
-                cache=self.cache, product_id=product_id
+                cache=self.cache, product_id=product.id
             )
             if product.type_id != product_type_id:
                 raise ValidationError(
