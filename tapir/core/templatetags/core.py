@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from tapir.core.models import SidebarLinkGroup
-from tapir.subscriptions.views import (
+from tapir.subscriptions.views.confirmations import (
     MemberDataToConfirmApiView,
 )
 from tapir.wirgarten.constants import Permission  # FIXME: circular dependency :(
