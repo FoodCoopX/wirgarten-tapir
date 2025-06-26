@@ -24,31 +24,32 @@ if (domNodeDeliveryListCard) {
   console.error("Failed to render delivery list card from React");
 }
 
-const domNodeSubscriptionCancellationCard = document.getElementById(
-  "subscription_cancellation_card",
-);
-if (domNodeSubscriptionCancellationCard) {
-  // Element is absent if Parameter.SUBSCRIPTION_AUTOMATIC_RENEWAL is turned off.
-  const root = createRoot(domNodeSubscriptionCancellationCard);
-
-  root.render(
-    <SubscriptionCancellationCard
-      memberId={domNodeSubscriptionCancellationCard.dataset.memberId!}
-      csrfToken={getCsrfToken()}
-    />,
-  );
-}
-
-const subscriptionCards = document.getElementById("subscription_cards");
-if (subscriptionCards) {
-  const root = createRoot(subscriptionCards);
-
-  root.render(
-    <SubscriptionCards
-      memberId={subscriptionCards.dataset.memberId!}
-      csrfToken={getCsrfToken()}
-    />,
-  );
-} else {
-  console.error("Failed to render subscription cards from React");
+const contractTilesElement = document.getElementById("contract-tiles");
+if (contractTilesElement) {
+  const root = createRoot(contractTilesElement);
+  const showCancellationCard =
+    contractTilesElement.dataset.showCancellationCard;
+  if (showCancellationCard) {
+    root.render(
+      <>
+        <SubscriptionCards
+          memberId={contractTilesElement.dataset.memberId!}
+          csrfToken={getCsrfToken()}
+        />
+        <SubscriptionCancellationCard
+          memberId={contractTilesElement.dataset.memberId!}
+          csrfToken={getCsrfToken()}
+        />
+      </>,
+    );
+  } else {
+    root.render(
+      <>
+        <SubscriptionCards
+          memberId={contractTilesElement.dataset.memberId!}
+          csrfToken={getCsrfToken()}
+        />
+      </>,
+    );
+  }
 }

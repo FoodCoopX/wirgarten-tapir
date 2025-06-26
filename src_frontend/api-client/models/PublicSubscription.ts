@@ -12,6 +12,9 @@
  * Do not edit the class manually.
  */
 
+import type { PublicProductType } from "./PublicProductType";
+import { PublicProductTypeFromJSON } from "./PublicProductType";
+
 /**
  *
  * @export
@@ -32,16 +35,10 @@ export interface PublicSubscription {
   readonly productId: string;
   /**
    *
-   * @type {string}
+   * @type {PublicProductType}
    * @memberof PublicSubscription
    */
-  readonly productTypeName: string;
-  /**
-   *
-   * @type {string}
-   * @memberof PublicSubscription
-   */
-  readonly productTypeId: string;
+  readonly productType: PublicProductType;
   /**
    *
    * @type {number}
@@ -83,9 +80,7 @@ export function instanceOfPublicSubscription(
   if (!("productName" in value) || value["productName"] === undefined)
     return false;
   if (!("productId" in value) || value["productId"] === undefined) return false;
-  if (!("productTypeName" in value) || value["productTypeName"] === undefined)
-    return false;
-  if (!("productTypeId" in value) || value["productTypeId"] === undefined)
+  if (!("productType" in value) || value["productType"] === undefined)
     return false;
   if (!("quantity" in value) || value["quantity"] === undefined) return false;
   if (!("startDate" in value) || value["startDate"] === undefined) return false;
@@ -113,8 +108,7 @@ export function PublicSubscriptionFromJSONTyped(
   return {
     productName: json["product_name"],
     productId: json["product_id"],
-    productTypeName: json["product_type_name"],
-    productTypeId: json["product_type_id"],
+    productType: PublicProductTypeFromJSON(json["product_type"]),
     quantity: json["quantity"],
     startDate: new Date(json["start_date"]),
     endDate: json["end_date"] == null ? undefined : new Date(json["end_date"]),
@@ -132,8 +126,7 @@ export function PublicSubscriptionToJSONTyped(
     PublicSubscription,
     | "product_name"
     | "product_id"
-    | "product_type_name"
-    | "product_type_id"
+    | "product_type"
     | "monthly_price"
     | "solidarity_display"
   > | null,
