@@ -14,7 +14,6 @@ from tapir.pickup_locations.services.basket_size_capacities_service import (
 from tapir.subscriptions.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
-    PublicSubscriptionSerializer,
 )
 from tapir.subscriptions.services.product_updater import ProductUpdater
 from tapir.wirgarten.constants import Permission
@@ -24,11 +23,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
-    get_active_and_future_subscriptions,
     get_product_price,
-)
-from tapir.wirgarten.utils import (
-    check_permission_or_self,
 )
 
 
@@ -112,19 +107,3 @@ class PublicProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = []
     queryset = ProductType.objects.all()
     serializer_class = PublicProductTypeSerializer
-
-
-class GetMemberSubscriptionsApiView(APIView):
-    @extend_schema(
-        parameters=[OpenApiParameter(name="member_id", type=str)],
-        responses={200: PublicSubscriptionSerializer(many=True)},
-    )
-    def get(self, request):
-        member_id = request.query_params.get("member_id")
-        check_permission_or_self(member_id, request)
-        subscriptions = (
-            get_active_and_future_subscriptions()
-            .filter(member_id=member_id)
-            .select_related("product", "product__type")
-        )
-        return Response(PublicSubscriptionSerializer(subscriptions, many=True).data)
