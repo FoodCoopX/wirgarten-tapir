@@ -10,11 +10,13 @@ import SubscriptionEditModal from "./SubscriptionEditModal.tsx";
 interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
+  memberId: string;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   subscriptions,
   productType,
+  memberId,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -90,6 +92,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         onHide={() => setShowEditModal(false)}
         subscriptions={subscriptions}
         productType={productType}
+        memberId={memberId}
       />
     </>
   );

@@ -1018,6 +1018,32 @@ paths:
                 items:
                   $ref: '#/components/schemas/PublicSubscription'
           description: ''
+  /subscriptions/api/update_subscription:
+    post:
+      operationId: subscriptions_api_update_subscription_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionsRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionsRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionsRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /subscriptions/bestell_wizard_confirm_order:
     post:
       operationId: subscriptions_bestell_wizard_confirm_order_create
@@ -1042,7 +1068,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BestellWizardConfirmOrderResponse'
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /subscriptions/cancel_subscriptions:
     post:
@@ -3522,20 +3548,6 @@ components:
       - shopping_cart
       - statute_accepted
       - student_status_enabled
-    BestellWizardConfirmOrderResponse:
-      type: object
-      properties:
-        order_confirmed:
-          type: boolean
-        errors:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: string
-      required:
-      - errors
-      - order_confirmed
     BestellWizardDeliveryDatesForOrderRequestRequest:
       type: object
       properties:
@@ -5236,6 +5248,17 @@ components:
       - draft_version_exists
       - key
       - name
+    OrderConfirmationResponse:
+      type: object
+      properties:
+        order_confirmed:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+      required:
+      - error
+      - order_confirmed
     PaginatedEmailConfigurationDispatchList:
       type: object
       required:
@@ -7003,6 +7026,26 @@ components:
       - field_name
       - label
       - type
+    UpdateSubscriptionsRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        product_type_id:
+          type: string
+          minLength: 1
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        sepa_allowed:
+          type: boolean
+      required:
+      - member_id
+      - product_type_id
+      - sepa_allowed
+      - shopping_cart
     UploadTypeEnum:
       enum:
       - F

@@ -9,6 +9,7 @@ import { isIbanValid } from "../utils/isIbanValid.ts";
 import { isEmailValid } from "../utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
+import { getTextSepaCheckbox } from "../utils/getTextSepaCheckbox.ts";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -230,9 +231,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               <Col>
                 <Form.Check
                   id={"sepa-mandat"}
-                  label={
-                    "Ich ermächtige die Biotop Oberland eG die gezeichneten Geschäftsanteile sowie ggf. die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen."
-                  }
+                  label={getTextSepaCheckbox()}
                   checked={sepaAllowed}
                   onChange={(event) => setSepaAllowed(event.target.checked)}
                 />

@@ -30,11 +30,18 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
       .subscriptionsApiMemberSubscriptionsList({ memberId: memberId })
       .then((subscriptions) => {
         setSubscriptions(subscriptions);
-        setProductTypes([
-          ...new Set(
-            subscriptions.map((subscription) => subscription.productType),
-          ),
-        ]);
+        let productTypes = subscriptions.map(
+          (subscription) => subscription.productType,
+        );
+        productTypes = productTypes.filter(
+          (productTypeOutside, index) =>
+            index ==
+            productTypes.findIndex(
+              (productTypeInside) =>
+                productTypeOutside.id === productTypeInside.id,
+            ),
+        );
+        setProductTypes(productTypes);
       })
       .catch(handleRequestError)
       .finally(() => setSubscriptionsLoading(false));
@@ -49,9 +56,10 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
           <SubscriptionCard
             key={productType.id}
             subscriptions={subscriptions.filter(
-              (subscription) => subscription.productType === productType,
+              (subscription) => subscription.productType.id === productType.id,
             )}
             productType={productType}
+            memberId={memberId}
           />
         ))
       )}

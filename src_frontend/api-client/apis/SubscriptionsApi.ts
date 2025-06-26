@@ -18,34 +18,36 @@ import type {
   BestellWizardCapacityCheckRequestRequest,
   BestellWizardCapacityCheckResponse,
   BestellWizardConfirmOrderRequestRequest,
-  BestellWizardConfirmOrderResponse,
   BestellWizardDeliveryDatesForOrderRequestRequest,
   BestellWizardDeliveryDatesForOrderResponse,
   CancellationData,
   CancelSubscriptionsViewResponse,
   ExtendedProduct,
   MemberDataToConfirm,
+  OrderConfirmationResponse,
   PatchedExtendedProductRequest,
   Product,
   PublicProductType,
   PublicSubscription,
+  UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
   BestellWizardBaseDataResponseFromJSON,
   BestellWizardCapacityCheckRequestRequestToJSON,
   BestellWizardCapacityCheckResponseFromJSON,
   BestellWizardConfirmOrderRequestRequestToJSON,
-  BestellWizardConfirmOrderResponseFromJSON,
   BestellWizardDeliveryDatesForOrderRequestRequestToJSON,
   BestellWizardDeliveryDatesForOrderResponseFromJSON,
   CancellationDataFromJSON,
   CancelSubscriptionsViewResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
+  OrderConfirmationResponseFromJSON,
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
   PublicProductTypeFromJSON,
   PublicSubscriptionFromJSON,
+  UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
 
 export interface SubscriptionsApiBestellWizardCapacityCheckCreateRequest {
@@ -72,6 +74,10 @@ export interface SubscriptionsApiExtendedProductRetrieveRequest {
 
 export interface SubscriptionsApiMemberSubscriptionsListRequest {
   memberId?: string;
+}
+
+export interface SubscriptionsApiUpdateSubscriptionCreateRequest {
+  updateSubscriptionsRequestRequest: UpdateSubscriptionsRequestRequest;
 }
 
 export interface SubscriptionsBestellWizardConfirmOrderCreateRequest {
@@ -555,10 +561,71 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
+  async subscriptionsApiUpdateSubscriptionCreateRaw(
+    requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["updateSubscriptionsRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateSubscriptionsRequestRequest",
+        'Required parameter "updateSubscriptionsRequestRequest" was null or undefined when calling subscriptionsApiUpdateSubscriptionCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/update_subscription`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: UpdateSubscriptionsRequestRequestToJSON(
+          requestParameters["updateSubscriptionsRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async subscriptionsApiUpdateSubscriptionCreate(
+    requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.subscriptionsApiUpdateSubscriptionCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
   async subscriptionsBestellWizardConfirmOrderCreateRaw(
     requestParameters: SubscriptionsBestellWizardConfirmOrderCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<BestellWizardConfirmOrderResponse>> {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
     if (requestParameters["bestellWizardConfirmOrderRequestRequest"] == null) {
       throw new runtime.RequiredError(
         "bestellWizardConfirmOrderRequestRequest",
@@ -595,7 +662,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      BestellWizardConfirmOrderResponseFromJSON(jsonValue),
+      OrderConfirmationResponseFromJSON(jsonValue),
     );
   }
 
@@ -604,7 +671,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsBestellWizardConfirmOrderCreate(
     requestParameters: SubscriptionsBestellWizardConfirmOrderCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<BestellWizardConfirmOrderResponse> {
+  ): Promise<OrderConfirmationResponse> {
     const response = await this.subscriptionsBestellWizardConfirmOrderCreateRaw(
       requestParameters,
       initOverrides,

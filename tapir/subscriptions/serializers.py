@@ -275,3 +275,4 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     product_type_id = serializers.CharField()
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    sepa_allowed = serializers.BooleanField()

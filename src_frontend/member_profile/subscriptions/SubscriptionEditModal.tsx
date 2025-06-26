@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Card, Modal } from "react-bootstrap";
+import { Card, Col, Form, Modal, Row } from "react-bootstrap";
 import "dayjs/locale/de";
-import { PublicProductType, PublicSubscription } from "../../api-client";
+import {
+  PublicProductType,
+  PublicSubscription,
+  SubscriptionsApi,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import ProductForm from "../../bestell_wizard/components/ProductForm.tsx";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { getTextSepaCheckbox } from "../../bestell_wizard/utils/getTextSepaCheckbox.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface SubscriptionEditModalProps {
   show: boolean;
   onHide: () => void;
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
+  memberId: string;
 }
 
 const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
@@ -18,8 +27,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   onHide,
   subscriptions,
   productType,
+  memberId,
 }) => {
+  const api = useApi(SubscriptionsApi, getCsrfToken());
+
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
+  const [sepaAllowed, setSepaAllowed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const shoppingCart: ShoppingCart = Object.fromEntries(
@@ -31,17 +45,48 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
     setShoppingCart(shoppingCart);
   }, [subscriptions]);
 
+  function onConfirm() {
+    setLoading(true);
+
+    api
+      .subscriptionsApiUpdateSubscriptionCreate({
+        updateSubscriptionsRequestRequest: {
+          memberId: memberId,
+          shoppingCart: shoppingCart,
+          sepaAllowed: sepaAllowed,
+          productTypeId: productType.id!,
+        },
+      })
+      .then(() => alert("WIP"))
+      .catch(handleRequestError)
+      .finally(() => setLoading(false));
+  }
+
   return (
     <Modal show={show} onHide={onHide} centered={true} size={"lg"}>
       <Modal.Header closeButton>
         <h5 className={"mb-0"}>{productType.name} bearbeiten</h5>
       </Modal.Header>
       <Modal.Body style={{ maxHeight: "65vh", overflowY: "scroll" }}>
-        <ProductForm
-          productType={productType}
-          shoppingCart={shoppingCart}
-          setShoppingCart={setShoppingCart}
-        />
+        <Row>
+          <Col>
+            <ProductForm
+              productType={productType}
+              shoppingCart={shoppingCart}
+              setShoppingCart={setShoppingCart}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Form.Check
+              id={"sepa-mandat"}
+              label={getTextSepaCheckbox()}
+              checked={sepaAllowed}
+              onChange={(event) => setSepaAllowed(event.target.checked)}
+            />
+          </Col>
+        </Row>
       </Modal.Body>
       <Card.Footer>
         <div
@@ -59,8 +104,15 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           <TapirButton
             variant={"primary"}
             icon={"contract_edit"}
-            text={"Vertrag anpassen"}
+            text={
+              sepaAllowed
+                ? "Vertrag anpassen"
+                : "Ermächtige das SEPA-Mandat um weiter zu gehen"
+            }
             iconPosition={"right"}
+            disabled={!sepaAllowed}
+            loading={loading}
+            onClick={onConfirm}
           />
         </div>
       </Card.Footer>

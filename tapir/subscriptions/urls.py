@@ -1,8 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-import tapir.subscriptions.views.member_profile
-from tapir.subscriptions.views import bestell_wizard
+from tapir.subscriptions.views import bestell_wizard, member_profile
 from tapir.subscriptions.views import cancellations
 from tapir.subscriptions.views import confirmations
 from tapir.subscriptions.views import other
@@ -61,8 +60,13 @@ urlpatterns = [
     ),
     path(
         "api/member_subscriptions",
-        tapir.subscriptions.views.member_profile.GetMemberSubscriptionsApiView.as_view(),
+        member_profile.GetMemberSubscriptionsApiView.as_view(),
         name="member_subscriptions",
+    ),
+    path(
+        "api/update_subscription",
+        member_profile.UpdateSubscriptionsApiView.as_view(),
+        name="update_subscription",
     ),
 ]
 
