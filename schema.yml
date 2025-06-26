@@ -6436,11 +6436,9 @@ components:
         product_id:
           type: string
           readOnly: true
-        product_type_name:
-          type: string
-          readOnly: true
-        product_type_id:
-          type: string
+        product_type:
+          allOf:
+          - $ref: '#/components/schemas/PublicProductType'
           readOnly: true
         quantity:
           type: integer
@@ -6465,8 +6463,7 @@ components:
       - monthly_price
       - product_id
       - product_name
-      - product_type_id
-      - product_type_name
+      - product_type
       - quantity
       - solidarity_display
       - start_date

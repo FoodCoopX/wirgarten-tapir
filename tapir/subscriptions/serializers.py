@@ -141,7 +141,8 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             Product.objects.filter(type=product_type), many=True
         ).data
 
-    def get_no_delivery(self, product_type: ProductType) -> bool:
+    @staticmethod
+    def get_no_delivery(product_type: ProductType) -> bool:
         return product_type.delivery_cycle == NO_DELIVERY[0]
 
 
@@ -218,8 +219,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
         fields = [
             "product_name",
             "product_id",
-            "product_type_name",
-            "product_type_id",
+            "product_type",
             "quantity",
             "start_date",
             "end_date",
@@ -229,8 +229,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
 
     monthly_price = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
-    product_type_name = serializers.SerializerMethodField()
-    product_type_id = serializers.SerializerMethodField()
+    product_type = serializers.SerializerMethodField()
     solidarity_display = serializers.SerializerMethodField()
 
     @staticmethod
@@ -248,8 +247,9 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
         return subscription.product.type.name
 
     @staticmethod
-    def get_product_type_id(subscription: Subscription) -> str:
-        return subscription.product.type_id
+    @extend_schema_field(PublicProductTypeSerializer)
+    def get_product_type(subscription: Subscription):
+        return PublicProductTypeSerializer(subscription.product.type).data
 
     @staticmethod
     def get_solidarity_display(subscription: Subscription) -> str | None:
