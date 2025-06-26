@@ -54,11 +54,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
             icon={"cancel"}
             iconPosition={"left"}
             text={"Abbrechen"}
+            onClick={onHide}
           />
           <TapirButton
             variant={"primary"}
             icon={"contract_edit"}
             text={"Vertrag anpassen"}
+            iconPosition={"right"}
           />
         </div>
       </Card.Footer>
