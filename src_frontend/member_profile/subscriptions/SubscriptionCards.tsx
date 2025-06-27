@@ -23,33 +23,33 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
   const [productTypes, setProductTypes] = useState<PublicProductType[]>([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
+  const [productTypesLoading, setProductTypesLoading] = useState(true);
 
   useEffect(() => {
+    setProductTypesLoading(true);
+    api
+      .subscriptionsPublicProductTypesList()
+      .then(setProductTypes)
+      .catch(handleRequestError)
+      .finally(() => setProductTypesLoading(false));
+
+    loadSubscriptions();
+  }, []);
+
+  function loadSubscriptions() {
     setSubscriptionsLoading(true);
     api
       .subscriptionsApiMemberSubscriptionsList({ memberId: memberId })
       .then((subscriptions) => {
         setSubscriptions(subscriptions);
-        let productTypes = subscriptions.map(
-          (subscription) => subscription.productType,
-        );
-        productTypes = productTypes.filter(
-          (productTypeOutside, index) =>
-            index ==
-            productTypes.findIndex(
-              (productTypeInside) =>
-                productTypeOutside.id === productTypeInside.id,
-            ),
-        );
-        setProductTypes(productTypes);
       })
       .catch(handleRequestError)
       .finally(() => setSubscriptionsLoading(false));
-  }, []);
+  }
 
   return (
     <>
-      {subscriptionsLoading ? (
+      {subscriptionsLoading || productTypesLoading ? (
         <Spinner />
       ) : (
         productTypes.map((productType) => (
@@ -60,6 +60,7 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
             )}
             productType={productType}
             memberId={memberId}
+            reloadSubscriptions={loadSubscriptions}
           />
         ))
       )}

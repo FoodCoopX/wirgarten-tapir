@@ -564,7 +564,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiUpdateSubscriptionCreateRaw(
     requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<string>> {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
     if (requestParameters["updateSubscriptionsRequestRequest"] == null) {
       throw new runtime.RequiredError(
         "updateSubscriptionsRequestRequest",
@@ -600,11 +600,9 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       initOverrides,
     );
 
-    if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<string>(response);
-    } else {
-      return new runtime.TextApiResponse(response) as any;
-    }
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
   }
 
   /**
@@ -612,7 +610,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   async subscriptionsApiUpdateSubscriptionCreate(
     requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<string> {
+  ): Promise<OrderConfirmationResponse> {
     const response = await this.subscriptionsApiUpdateSubscriptionCreateRaw(
       requestParameters,
       initOverrides,

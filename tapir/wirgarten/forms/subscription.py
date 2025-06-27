@@ -50,12 +50,12 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_active_subscriptions,
     get_current_growing_period,
     get_free_product_capacity,
     get_product_price,
     get_total_price_for_subs,
     get_next_growing_period,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import format_date, get_now, get_today
 
@@ -380,7 +380,7 @@ class BaseProductForm(forms.Form):
         now = get_now(cache=self.cache)
 
         self.subscriptions = []
-        existing_trial_end_date = cancel_subs_for_edit(
+        existing_trial_end_date = cancel_or_delete_subscriptions(
             member_id, self.start_date, self.product_type, cache=self.cache
         )
 
@@ -806,7 +806,7 @@ class AdditionalProductForm(forms.Form):
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
-        existing_trial_end_date = cancel_subs_for_edit(
+        existing_trial_end_date = cancel_or_delete_subscriptions(
             member_id, self.start_date, self.product_type, cache=self.cache
         )
 
@@ -1004,7 +1004,7 @@ class AdditionalProductForm(forms.Form):
         return super().clean()
 
 
-def cancel_subs_for_edit(
+def cancel_or_delete_subscriptions(
     member_id: str, start_date: date, product_type: ProductType, cache: Dict
 ) -> date:
     """
@@ -1013,24 +1013,25 @@ def cancel_subs_for_edit(
     :return: The trial end date of the last subscription that was canceled
     """
 
-    subscriptions = get_active_subscriptions(start_date, cache=cache).filter(
-        member_id=member_id, product__type=product_type
-    )
+    subscriptions = get_active_and_future_subscriptions(
+        reference_date=start_date, cache=cache
+    ).filter(member_id=member_id, product__type=product_type)
 
     existing_trial_end_date = None
 
     for subscription in subscriptions:
         subscription.end_date = start_date - relativedelta(days=1)
-        subscription.cancellation_ts = get_now(cache=cache)
         if (
             subscription.start_date > subscription.end_date
         ):  # change was done before the contract started, so we can delete the subscription
             subscription.delete()
-        else:
-            existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
-                subscription, cache=cache
-            )
-            subscription.save()
+            continue
+
+        subscription.cancellation_ts = get_now(cache=cache)
+        existing_trial_end_date = TrialPeriodManager.get_end_of_trial_period(
+            subscription, cache=cache
+        )
+        subscription.save()
 
     return existing_trial_end_date
 
