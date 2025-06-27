@@ -105,11 +105,17 @@ class BestellWizardConfirmOrderApiView(APIView):
                 member=member,
                 contract_start_date=contract_start_date,
             )
-            self.link_member_to_pickup_location(
-                serializer.validated_data["pickup_location_id"],
-                member=member,
-                contract_start_date=contract_start_date,
+            order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                serializer.validated_data["shopping_cart"], cache=self.cache
             )
+            if OrderValidator.does_order_need_a_pickup_location(
+                order=order, cache=self.cache
+            ):
+                self.link_member_to_pickup_location(
+                    serializer.validated_data["pickup_location_id"],
+                    member=member,
+                    contract_start_date=contract_start_date,
+                )
             self.create_coop_shares(
                 number_of_shares=serializer.validated_data["nb_shares"],
                 member=member,
@@ -236,12 +242,21 @@ class BestellWizardConfirmOrderApiView(APIView):
         if not validated_data["contract_accepted"]:
             raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
-        pickup_location = get_object_or_404(
-            PickupLocation, id=validated_data["pickup_location_id"]
-        )
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
+
+        pickup_location = None
+        if OrderValidator.does_order_need_a_pickup_location(
+            order=order, cache=self.cache
+        ):
+            if "pickup_location_id" not in validated_data:
+                raise ValidationError(
+                    "Diese Bestellung braucht eine Verteilstation, bitte wählt eine aus."
+                )
+            pickup_location = get_object_or_404(
+                PickupLocation, id=validated_data["pickup_location_id"]
+            )
 
         OrderValidator.validate_order_general(
             order=order,
