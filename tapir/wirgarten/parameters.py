@@ -67,6 +67,7 @@ class ParameterCategory:
     ORGANIZATION = "Organisation"
     TRIAL_PERIOD = "Probezeit"
     SOLIDARITY = "Solidarbeitrag"
+    BESTELLWIZARD = "BestellWizard"
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
@@ -715,6 +716,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.import_definitions_solidarity()
         self.import_definitions_organization()
+        self.import_definitions_bestellwizard()
 
     @classmethod
     def import_definitions_organization(cls):
@@ -749,6 +751,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Welche Kanäle zur Auswahl stehen am Ende der BestellWizard, als Komma-getrennte Liste. Beispiel: 'Social Media, Zeitung, Suchmaschine'",
             category=ParameterCategory.ORGANIZATION,
             order_priority=3,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            label="Studenten dürfen ohne Genossenschaft-Anteile Produkte bestellen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Wenn aktiviert kommt ein extra Checkbox im Bestellwizard, die wenn angekreuzt erlaubt Studentinnen eine Bestellung abzuschliessen ohne Genossenschaft-Anteile.",
+            category=ParameterCategory.ORGANIZATION,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
     @classmethod
@@ -800,4 +812,26 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, Mitglieder dürfen deren Solibeitrag ändern auch während ein Vertrag läuft. "
             "Wenn ausgeschaltet, Mitglieder dürfen deren Solibeitrag nur ändern wenn sie einen neuen Vertrag abschliessen.",
             category=ParameterCategory.HARVEST,
+        )
+
+    @classmethod
+    def import_definitions_bestellwizard(cls):
+        parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
+            label="BestellWizard in Warteiste-Modus",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert, bestehende und neue Mitglieder können keine neue Produkt-Anteile buchen, egal ob es Kapazitäten gibt."
+            "Wenn ausgeschaltet, Produkt-Anteile können gebucht werden wenn es genug Kapazitäten gibt.",
+            category=ParameterCategory.BESTELLWIZARD,
+        )
+
+        parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
+            label="Intro-Seite zeigen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert ist die erste Seite des BestellWizards eine Intro-Seite wo der Benutzer auswählen kann welche Produkte ihn interessieren."
+            "Wenn ausgeschaltet ist diese Seite nicht angezeigt. Der BestellWizard verhält sich wie der Benutzer alle Produkte bei der Intro-Seite ausgewählte hätte.",
+            category=ParameterCategory.BESTELLWIZARD,
         )

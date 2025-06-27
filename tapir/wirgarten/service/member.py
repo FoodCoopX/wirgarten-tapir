@@ -197,17 +197,16 @@ def get_or_create_mandate_ref(
     return mandate_ref
 
 
-def get_next_contract_start_date(ref_date: datetime.date = None, cache: Dict = None):
+def get_next_contract_start_date(
+    reference_date: datetime.date = None, cache: Dict = None
+):
     """
-    Gets the next start date for a contract. Usually the first of the next month.
-
-    :param ref_date: the reference date
-    :return: the next contract start date
+    Gets the earliest possible start date for a contract
     """
-    if ref_date is None:
-        ref_date = get_today(cache=cache)
+    if reference_date is None:
+        reference_date = get_today(cache=cache)
 
-    now = ref_date
+    now = reference_date
     y, m = divmod(now.year * 12 + now.month, 12)
     return datetime.date(y, m + 1, 1)
 
