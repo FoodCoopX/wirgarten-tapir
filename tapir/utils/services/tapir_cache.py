@@ -307,4 +307,5 @@ class TapirCache:
         if category not in cache["categories"].keys():
             return
         for key in cache["categories"][category]:
-            del cache[key]
+            if key in cache.keys():
+                del cache[key]

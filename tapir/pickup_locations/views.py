@@ -5,8 +5,8 @@ from typing import Dict
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, viewsets, permissions
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from rest_framework import status, viewsets, permissions, serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,6 +29,9 @@ from tapir.pickup_locations.services.basket_size_capacities_service import (
 from tapir.pickup_locations.services.highest_usage_after_date_service import (
     HighestUsageAfterDateService,
 )
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
@@ -49,11 +52,12 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
     ProductType,
+    Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.utils import get_today, check_permission_or_self
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -222,8 +226,9 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         return Response(PickupLocationCapacityEvolutionSerializer(data).data)
 
+    @staticmethod
     def build_data_for_picking_mode_shares(
-        self, pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: Dict
     ):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())
@@ -270,8 +275,9 @@ class PickupLocationCapacityEvolutionView(APIView):
             "data_points": data_points,
         }
 
+    @staticmethod
     def build_data_for_picking_mode_basket(
-        self, pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: Dict
     ):
         data_points = []
         capacities_by_basket_size = (
@@ -364,4 +370,45 @@ class PickupLocationCapacityCheckApiView(APIView):
 
         return Response(
             PickupLocationCapacityCheckResponseSerializer(response_data).data
+        )
+
+
+class GetMemberPickupLocationApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={
+            200: inline_serializer(
+                name="mpl",
+                fields={
+                    "has_location": serializers.BooleanField(),
+                    "location": PublicPickupLocationSerializer(required=False),
+                },
+            )
+        },
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+
+        member = get_object_or_404(Member, id=member_id)
+        reference_date = get_next_contract_start_date(cache=self.cache)
+        pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
+            member=member, reference_date=reference_date
+        )
+
+        if pickup_location_id is None:
+            return Response({"has_location": False})
+
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache, pickup_location_id=pickup_location_id
+        )
+        return Response(
+            {
+                "has_location": False,
+                "location": PublicPickupLocationSerializer(pickup_location).data,
+            }
         )

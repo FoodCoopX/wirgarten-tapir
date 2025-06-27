@@ -83,7 +83,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </span>
             <TapirButton
               variant={"outline-primary"}
-              icon={"edit"}
+              icon={"contract_edit"}
               onClick={() => setShowEditModal(true)}
             />
           </div>

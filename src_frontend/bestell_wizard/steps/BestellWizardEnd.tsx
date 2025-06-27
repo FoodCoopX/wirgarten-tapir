@@ -1,11 +1,11 @@
 import React from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
-import { BestellWizardConfirmOrderResponse } from "../../api-client";
+import { OrderConfirmationResponse } from "../../api-client";
 
 interface BestellWizardEndProps {
   theme: TapirTheme;
-  response: BestellWizardConfirmOrderResponse;
+  response: OrderConfirmationResponse;
 }
 
 const BestellWizardEnd: React.FC<BestellWizardEndProps> = ({
@@ -19,20 +19,8 @@ const BestellWizardEnd: React.FC<BestellWizardEndProps> = ({
       />
       {response && (
         <>
-          {" "}
           <p>Bestellung bestätigt: {response.orderConfirmed ? "Ja" : "Nein"}</p>
-          <ul>
-            {Object.entries(response.errors).map(([field, messages]) => (
-              <li key={field}>
-                {field}
-                <ul>
-                  {messages.map((message) => (
-                    <li>{message}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
+          {response.error && <p>{response.error}</p>}
         </>
       )}
     </>

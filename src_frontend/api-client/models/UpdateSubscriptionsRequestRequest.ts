@@ -42,6 +42,12 @@ export interface UpdateSubscriptionsRequestRequest {
    * @memberof UpdateSubscriptionsRequestRequest
    */
   sepaAllowed: boolean;
+  /**
+   *
+   * @type {string}
+   * @memberof UpdateSubscriptionsRequestRequest
+   */
+  pickupLocationId?: string;
 }
 
 /**
@@ -78,6 +84,10 @@ export function UpdateSubscriptionsRequestRequestFromJSONTyped(
     productTypeId: json["product_type_id"],
     shoppingCart: json["shopping_cart"],
     sepaAllowed: json["sepa_allowed"],
+    pickupLocationId:
+      json["pickup_location_id"] == null
+        ? undefined
+        : json["pickup_location_id"],
   };
 }
 
@@ -100,5 +110,6 @@ export function UpdateSubscriptionsRequestRequestToJSONTyped(
     product_type_id: value["productTypeId"],
     shopping_cart: value["shoppingCart"],
     sepa_allowed: value["sepaAllowed"],
+    pickup_location_id: value["pickupLocationId"],
   };
 }

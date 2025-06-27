@@ -7,7 +7,7 @@ import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
-  BestellWizardConfirmOrderResponse,
+  OrderConfirmationResponse,
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
@@ -93,7 +93,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [statuteAccepted, setStatuteAccepted] = useState(false);
   const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const [confirmOrderResponse, setConfirmOrderResponse] =
-    useState<BestellWizardConfirmOrderResponse>();
+    useState<OrderConfirmationResponse>();
   const [checkingCapacities, setCheckingCapacities] = useState(false);
   const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
     string[]
@@ -446,8 +446,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
     if (waitingListModeEnabled) {
       waitingListApi
-        .waitingListApiPublicWaitingListCreateEntryCreate({
-          publicWaitingListEntryCreateRequest: {
+        .waitingListApiPublicWaitingListCreateEntryNewMemberCreate({
+          publicWaitingListEntryNewMemberCreateRequest: {
             firstName: personalData.firstName,
             lastName: personalData.lastName,
             email: personalData.email,
@@ -464,8 +464,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             numberOfCoopShares: selectedNumberOfCoopShares,
           },
         })
-        .then(() => {
+        .then((response) => {
           setCurrentStep("end");
+          setConfirmOrderResponse(response);
         })
         .catch(handleRequestError)
         .finally(() => setConfirmOrderLoading(false));

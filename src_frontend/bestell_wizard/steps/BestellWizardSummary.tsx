@@ -8,10 +8,9 @@ import { Col, Form, Row, Table } from "react-bootstrap";
 import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
-import formatAddress from "../../utils/formatAddress.ts";
-import { formatOpeningTimes } from "../utils/formatOpeningTimes.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
-import { formatDateText } from "../../utils/formatDateText.ts";
+import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
+import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
@@ -54,42 +53,6 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     return productType.products.find((product) => product.id === productId);
   }
 
-  function buildProductTypeTable(productType: PublicProductType) {
-    return (
-      <Table bordered={true}>
-        <tbody>
-          {!waitingListModeEnabled && (
-            <tr>
-              <td>Erste Lieferung</td>
-              <td>
-                {formatDateText(
-                  firstDeliveryDatesByProductType[productType.id!],
-                )}
-              </td>
-            </tr>
-          )}
-          {Object.entries(shoppingCart)
-            .filter(
-              ([productId, quantity]) =>
-                getProductIdsOfProductType(productType).includes(productId) &&
-                quantity > 0,
-            )
-            .map(([productId, quantity]) => (
-              <tr key={productId}>
-                <td>{getProductById(productType, productId)?.name}</td>
-                <td>
-                  {quantity} x{" "}
-                  {formatCurrency(
-                    getProductById(productType, productId)!.price,
-                  )}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </Table>
-    );
-  }
-
   return (
     <>
       <Row>
@@ -119,7 +82,14 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             <div className={"mt-4"} key={productType.id}>
               <BestellWizardCardSubtitle text={productType.name} />
               {isProductTypeOrdered(productType, shoppingCart) ? (
-                buildProductTypeTable(productType)
+                <SummaryProductTypeTable
+                  productType={productType}
+                  firstDeliveryDatesByProductType={
+                    firstDeliveryDatesByProductType
+                  }
+                  shoppingCart={shoppingCart}
+                  waitingListModeEnabled={waitingListModeEnabled}
+                />
               ) : (
                 <span>Dieses Produkt ist nicht bestellt worden</span>
               )}
@@ -133,44 +103,10 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             </div>
           ))}
           {selectedPickupLocations.length > 0 && (
-            <div className={"mt-4"}>
-              {waitingListModeEnabled ? (
-                <BestellWizardCardSubtitle
-                  text={"Deine Verteilstationswünsche"}
-                />
-              ) : (
-                <BestellWizardCardSubtitle text={"Deine Verteilstation"} />
-              )}
-              <Table bordered={true}>
-                <tbody>
-                  {selectedPickupLocations.map((pickupLocation, index) => (
-                    <Fragment key={pickupLocation.id!}>
-                      {waitingListModeEnabled && (
-                        <tr>
-                          <th colSpan={2}>{index + 1}. Wunsch</th>
-                        </tr>
-                      )}
-                      <tr>
-                        <td>Adresse</td>
-                        <td>
-                          {pickupLocation.name} <br />
-                          {formatAddress(
-                            pickupLocation.street,
-                            pickupLocation.street2,
-                            pickupLocation.postcode,
-                            pickupLocation.city,
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Öffnungszeiten</td>
-                        <td>{formatOpeningTimes(pickupLocation)}</td>
-                      </tr>
-                    </Fragment>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
+            <SummaryPickupLocations
+              selectedPickupLocations={selectedPickupLocations}
+              waitingListModeEnabled={waitingListModeEnabled}
+            />
           )}
         </Col>
       </Row>
