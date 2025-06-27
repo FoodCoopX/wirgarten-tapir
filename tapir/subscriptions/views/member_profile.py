@@ -133,13 +133,19 @@ class UpdateSubscriptionsApiView(APIView):
             order=order, product_type_id=product_type_id
         )
 
-        pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
-            member=member, reference_date=contract_start_date
-        )
-        if pickup_location_id is None:
-            raise ValidationError("Bitte wähle einen Abholort aus!")
+        pickup_location = None
+        if OrderValidator.does_order_need_a_pickup_location(
+            order=order, cache=self.cache
+        ):
+            pickup_location_id = (
+                MemberPickupLocationService.get_member_pickup_location_id(
+                    member=member, reference_date=contract_start_date
+                )
+            )
+            if pickup_location_id is None:
+                raise ValidationError("Bitte wähle einen Abholort aus!")
+            pickup_location = PickupLocation.objects.get(id=pickup_location_id)
 
-        pickup_location = PickupLocation.objects.get(id=pickup_location_id)
         OrderValidator.validate_order_general(
             order=order,
             pickup_location=pickup_location,

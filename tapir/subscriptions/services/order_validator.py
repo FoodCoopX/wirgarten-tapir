@@ -16,6 +16,8 @@ from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
 from tapir.subscriptions.types import TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.service.products import get_active_subscriptions
 
@@ -28,9 +30,11 @@ class OrderValidator:
         contract_start_date: datetime.date,
         cache: dict,
         member: Member | None,
-        pickup_location: PickupLocation,
+        pickup_location: PickupLocation | None,
     ):
-        if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+        if cls.does_order_need_a_pickup_location(
+            order=order, cache=cache
+        ) and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
             ordered_products_to_quantity_map=order,
             already_registered_member=member,
@@ -126,3 +130,13 @@ class OrderValidator:
             raise ValidationError(
                 "Die Bestellung muss mindestens eine Änderung zum bisherigen Vertrag haben."
             )
+
+    @classmethod
+    def does_order_need_a_pickup_location(cls, order: TapirOrder, cache: dict) -> bool:
+        for product, quantity in order.items():
+            product_type = TapirCache.get_product_type_by_id(
+                cache=cache, product_type_id=product.type_id
+            )
+            if product_type.delivery_cycle != NO_DELIVERY[0]:
+                return True
+        return False
