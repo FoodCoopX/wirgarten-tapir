@@ -142,3 +142,19 @@ class TrialPeriodManager:
                 subscriptions,
             )
         )
+
+    @classmethod
+    def get_earliest_trial_period_end_date_for_product_type(
+        cls, member_id: str, product_type_id: str, cache: dict
+    ):
+        subscriptions = get_active_subscriptions(cache=cache).filter(
+            member_id=member_id, product__type_id=product_type_id
+        )
+        trial_end_dates = [
+            cls.get_end_of_trial_period(subscription, cache)
+            for subscription in subscriptions
+        ]
+        if None in trial_end_dates:
+            return None
+
+        return min(trial_end_dates)

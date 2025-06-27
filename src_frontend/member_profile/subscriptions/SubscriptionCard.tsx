@@ -11,12 +11,14 @@ interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
   memberId: string;
+  reloadSubscriptions: () => void;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   subscriptions,
   productType,
   memberId,
+  reloadSubscriptions,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -93,6 +95,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         subscriptions={subscriptions}
         productType={productType}
         memberId={memberId}
+        reloadSubscriptions={reloadSubscriptions}
       />
     </>
   );

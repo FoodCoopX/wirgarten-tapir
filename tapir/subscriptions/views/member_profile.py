@@ -20,16 +20,27 @@ from tapir.subscriptions.serializers import (
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
-from tapir.wirgarten.models import Member, PickupLocation, ProductType
+from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
+from tapir.wirgarten.models import Member, PickupLocation, ProductType, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_next_contract_start_date
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import check_permission_or_self
+from tapir.wirgarten.service.member import (
+    get_next_contract_start_date,
+    get_or_create_mandate_ref,
+    send_contract_change_confirmation,
+    send_order_confirmation,
+)
+from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+    get_current_growing_period,
+)
+from tapir.wirgarten.utils import check_permission_or_self, get_now
 
 
 class GetMemberSubscriptionsApiView(APIView):
@@ -53,7 +64,10 @@ class UpdateSubscriptionsApiView(APIView):
         super().__init__()
         self.cache = {}
 
-    @extend_schema(request=UpdateSubscriptionsRequestSerializer, responses={200: str})
+    @extend_schema(
+        request=UpdateSubscriptionsRequestSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
     def post(self, request):
         serializer = UpdateSubscriptionsRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -79,7 +93,15 @@ class UpdateSubscriptionsApiView(APIView):
             return Response(OrderConfirmationResponseSerializer(data).data)
 
         with transaction.atomic():
-            self.apply()
+            self.apply_changes(
+                member=member,
+                product_type=TapirCache.get_product_type_by_id(
+                    cache=self.cache,
+                    product_type_id=serializer.validated_data["product_type_id"],
+                ),
+                contract_start_date=contract_start_date,
+                validated_data=serializer.validated_data,
+            )
 
         data = {
             "order_confirmed": True,
@@ -94,6 +116,9 @@ class UpdateSubscriptionsApiView(APIView):
         member: Member,
         logged_in_user_is_admin: bool,
     ):
+        if not validated_data["sepa_allowed"]:
+            raise ValidationError("Das SEPA-Mandat muss ermächtigt sein.")
+
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
@@ -192,5 +217,94 @@ class UpdateSubscriptionsApiView(APIView):
             "musst du Anteile von der Basis-Produkt an der gleiche Vertragsperiode haben."
         )
 
-    def apply(self):
-        pass
+    def apply_changes(
+        self,
+        member: Member,
+        product_type: ProductType,
+        contract_start_date: datetime.date,
+        validated_data: dict,
+    ):
+        earliest_trial_period_end_date = (
+            TrialPeriodManager.get_earliest_trial_period_end_date_for_product_type(
+                member_id=member.id, product_type_id=product_type.id, cache=self.cache
+            )
+        )
+        subscriptions_existed_before_changes = (
+            get_active_and_future_subscriptions(
+                reference_date=contract_start_date, cache=self.cache
+            )
+            .filter(member=member, product_type=product_type)
+            .exists()
+        )
+        cancel_or_delete_subscriptions(
+            member_id=member.id,
+            product_type=product_type,
+            start_date=contract_start_date,
+            cache=self.cache,
+        )
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
+
+        growing_period = get_current_growing_period(
+            reference_date=contract_start_date, cache=self.cache
+        )
+
+        notice_period_duration = None
+        if get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
+        ):
+            notice_period_duration = NoticePeriodManager.get_notice_period_duration(
+                product_type=product_type,
+                growing_period=growing_period,
+                cache=self.cache,
+            )
+
+        contract_end_date = None
+        if product_type.subscriptions_have_end_dates:
+            contract_end_date = growing_period.end_date
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=validated_data["shopping_cart"], cache=self.cache
+        )
+
+        now = get_now(cache=self.cache)
+        trial_disabled = (
+            earliest_trial_period_end_date is None
+            or not get_parameter_value(
+                ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+            )
+        )
+        subscriptions = []
+        for product, quantity in order:
+            subscriptions.append(
+                Subscription(
+                    member=member,
+                    product=product,
+                    period=growing_period,
+                    quantity=quantity,
+                    start_date=contract_start_date,
+                    end_date=contract_end_date,
+                    cancellation_ts=None,
+                    solidarity_price_percentage=None,
+                    solidarity_price_absolute=None,
+                    mandate_ref=get_or_create_mandate_ref(
+                        member=member, cache=self.cache
+                    ),
+                    consent_ts=now,
+                    withdrawal_consent_ts=now,
+                    trial_disabled=trial_disabled,
+                    trial_end_date_override=earliest_trial_period_end_date,
+                    notice_period_duration=notice_period_duration,
+                )
+            )
+
+        new_subscriptions = Subscription.objects.bulk_create(subscriptions)
+        TapirCache.clear_category(cache=self.cache, category="subscriptions")
+
+        if subscriptions_existed_before_changes:
+            send_contract_change_confirmation(
+                member=member, subs=new_subscriptions, cache=self.cache
+            )
+        else:
+            send_order_confirmation(
+                member=member, subs=new_subscriptions, cache=self.cache
+            )

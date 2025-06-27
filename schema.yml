@@ -1042,7 +1042,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /subscriptions/bestell_wizard_confirm_order:
     post:
