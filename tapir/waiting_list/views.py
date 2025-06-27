@@ -22,6 +22,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
@@ -34,7 +35,8 @@ from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
     WaitingListEntryUpdateSerializer,
-    PublicWaitingListEntryCreateSerializer,
+    PublicWaitingListEntryNewMemberCreateSerializer,
+    PublicWaitingListEntryExistingMemberCreateSerializer,
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
@@ -44,10 +46,11 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,
     WaitingListPickupLocationWish,
+    Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.utils import get_today, get_now
+from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -293,39 +296,36 @@ class WaitingListShowsCoopContentView(APIView):
         )
 
 
-class PublicWaitingListCreateEntryView(APIView):
+class PublicWaitingListCreateEntryNewMemberView(APIView):
     permission_classes = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cache = {}
 
-    @extend_schema(request=PublicWaitingListEntryCreateSerializer, responses={200: str})
+    @extend_schema(
+        request=PublicWaitingListEntryNewMemberCreateSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
     def post(self, request):
-        serializer = PublicWaitingListEntryCreateSerializer(data=request.data)
+        serializer = PublicWaitingListEntryNewMemberCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        waiting_list_entry = WaitingListEntry(
-            privacy_consent=get_now(cache=self.cache),
-            number_of_coop_shares=serializer.validated_data["number_of_coop_shares"],
-        )
-        WaitingListEntryUpdateView.set_personal_data_from_validated_data(
-            waiting_list_entry, serializer.validated_data
-        )
-        waiting_list_entry.save()
+        data = {"order_confirmed": True, "error": ""}
+        try:
+            self.validate(serializer.validated_data)
+            with transaction.atomic():
+                self.create_entry(serializer.validated_data)
+        except ValidationError as error:
+            data["order_confirmed"] = False
+            data["error"] = error.message
 
-        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
-            waiting_list_entry, serializer.validated_data
-        )
-        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
-            waiting_list_entry, serializer.validated_data
-        )
+        return Response(OrderConfirmationResponseSerializer(data).data)
 
+    def validate(self, validated_data: dict):
         shopping_cart = {}
-        for index, product_id in enumerate(serializer.validated_data["product_ids"]):
-            shopping_cart[product_id] = serializer.validated_data["product_quantities"][
-                index
-            ]
+        for index, product_id in enumerate(validated_data["product_ids"]):
+            shopping_cart[product_id] = validated_data["product_quantities"][index]
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=shopping_cart, cache=self.cache
         )
@@ -339,7 +339,7 @@ class PublicWaitingListCreateEntryView(APIView):
         ):
             raise ValidationError("Single subscription product ordered more than once")
 
-        if serializer.validated_data[
+        if validated_data[
             "number_of_coop_shares"
         ] < MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
             ordered_products_id_to_quantity_map=order, cache=self.cache
@@ -348,4 +348,93 @@ class PublicWaitingListCreateEntryView(APIView):
                 "The given number of coop shares is less than the required minimum."
             )
 
-        return Response("OK")
+        if WaitingListEntry.objects.filter(email=validated_data["email"]).exists():
+            raise ValidationError(
+                "Es gibt schon einen Warteliste-Eintrag mit dieser E-Mail-Adresse"
+            )
+        if Member.objects.filter(member__email=validated_data["email"]).exists():
+            raise ValidationError(
+                "Es gibt schon einen Konto mit dieser E-Mail-Adresse. Wenn du deine Verträge anpassen möchtest, nutzt die Funktionen im Mitgliederbereich."
+            )
+
+    def create_entry(self, validated_data: dict):
+        waiting_list_entry = WaitingListEntry(
+            privacy_consent=get_now(cache=self.cache),
+            number_of_coop_shares=validated_data["number_of_coop_shares"],
+        )
+        WaitingListEntryUpdateView.set_personal_data_from_validated_data(
+            waiting_list_entry, validated_data
+        )
+        waiting_list_entry.save()
+
+        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
+            waiting_list_entry, validated_data
+        )
+        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
+            waiting_list_entry, validated_data
+        )
+
+
+class PublicWaitingListCreateEntryExistingMemberView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        request=PublicWaitingListEntryExistingMemberCreateSerializer,
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def post(self, request):
+        serializer = PublicWaitingListEntryExistingMemberCreateSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        check_permission_or_self(serializer.validated_data["member_id"], request)
+
+        data = {"order_confirmed": True, "error": ""}
+        try:
+            self.validate(serializer.validated_data)
+            with transaction.atomic():
+                self.create_entry(serializer.validated_data)
+        except ValidationError as error:
+            data["order_confirmed"] = False
+            data["error"] = error.message
+
+        return Response(OrderConfirmationResponseSerializer(data).data)
+
+    def validate(self, validated_data: dict):
+        shopping_cart = {}
+        for index, product_id in enumerate(validated_data["product_ids"]):
+            shopping_cart[product_id] = validated_data["product_quantities"][index]
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=shopping_cart, cache=self.cache
+        )
+        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
+            order=order, cache=self.cache
+        ):
+            raise ValidationError("Single subscription product ordered more than once")
+
+        if WaitingListEntry.objects.filter(
+            member_id=validated_data["member_id"]
+        ).exists():
+            raise ValidationError(
+                "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied."
+            )
+
+    def create_entry(self, validated_data: dict):
+        waiting_list_entry = WaitingListEntry(
+            privacy_consent=get_now(cache=self.cache),
+            number_of_coop_shares=0,
+        )
+        waiting_list_entry.member_id = validated_data["member_id"]
+        waiting_list_entry.save()
+
+        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
+            waiting_list_entry, validated_data
+        )
+        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
+            waiting_list_entry, validated_data
+        )

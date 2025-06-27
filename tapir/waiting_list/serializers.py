@@ -81,7 +81,7 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     category = serializers.CharField(required=False, allow_blank=True)
 
 
-class PublicWaitingListEntryCreateSerializer(serializers.Serializer):
+class PublicWaitingListEntryNewMemberCreateSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.EmailField()
@@ -94,3 +94,10 @@ class PublicWaitingListEntryCreateSerializer(serializers.Serializer):
     product_ids = serializers.ListField(child=serializers.CharField())
     product_quantities = serializers.ListField(child=serializers.IntegerField())
     number_of_coop_shares = serializers.IntegerField()
+
+
+class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serializer):
+    pickup_location_ids = serializers.ListField(child=serializers.CharField())
+    product_ids = serializers.ListField(child=serializers.CharField())
+    product_quantities = serializers.ListField(child=serializers.IntegerField())
+    member_id = serializers.CharField()

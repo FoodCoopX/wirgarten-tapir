@@ -62,6 +62,7 @@ models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
+models/Mpl.ts
 models/OrderConfirmationResponse.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
@@ -111,7 +112,8 @@ models/PublicPickupLocation.ts
 models/PublicProduct.ts
 models/PublicProductType.ts
 models/PublicSubscription.ts
-models/PublicWaitingListEntryCreateRequest.ts
+models/PublicWaitingListEntryExistingMemberCreateRequest.ts
+models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts

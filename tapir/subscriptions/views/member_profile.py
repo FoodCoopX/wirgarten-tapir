@@ -25,6 +25,7 @@ from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
+from tapir.subscriptions.views.bestell_wizard import BestellWizardConfirmOrderApiView
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
@@ -39,6 +40,7 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_current_growing_period,
+    get_active_subscriptions,
 )
 from tapir.wirgarten.utils import check_permission_or_self, get_now
 
@@ -133,18 +135,12 @@ class UpdateSubscriptionsApiView(APIView):
             order=order, product_type_id=product_type_id
         )
 
-        pickup_location = None
-        if OrderValidator.does_order_need_a_pickup_location(
-            order=order, cache=self.cache
-        ):
-            pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id(
-                    member=member, reference_date=contract_start_date
-                )
-            )
-            if pickup_location_id is None:
-                raise ValidationError("Bitte wähle einen Abholort aus!")
-            pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+        pickup_location = self.validate_pickup_location(
+            order=order,
+            validated_data=validated_data,
+            contract_start_date=contract_start_date,
+            member=member,
+        )
 
         OrderValidator.validate_order_general(
             order=order,
@@ -176,6 +172,41 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
             contract_start_date=contract_start_date,
         )
+
+    def validate_pickup_location(
+        self,
+        order: TapirOrder,
+        member: Member,
+        contract_start_date: datetime.date,
+        validated_data: dict,
+    ):
+        if not OrderValidator.does_order_need_a_pickup_location(
+            order=order, cache=self.cache
+        ):
+            return None
+
+        current_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=contract_start_date
+            )
+        )
+        desired_pickup_location_id = validated_data.get("pickup_location_id", None)
+        if (
+            current_pickup_location_id is not None
+            and desired_pickup_location_id is not None
+            and current_pickup_location_id != desired_pickup_location_id
+        ):
+            raise ValidationError("Du hast schon eine Verteilstation")
+
+        pickup_location_id = None
+        if current_pickup_location_id is not None:
+            pickup_location_id = current_pickup_location_id
+        if desired_pickup_location_id is not None:
+            pickup_location_id = desired_pickup_location_id
+        if pickup_location_id is None:
+            raise ValidationError("Bitte wähle einen Abholort aus!")
+
+        return PickupLocation.objects.get(id=pickup_location_id)
 
     def validate_all_products_belong_to_product_type(
         self, order: TapirOrder, product_type_id
@@ -230,18 +261,24 @@ class UpdateSubscriptionsApiView(APIView):
         contract_start_date: datetime.date,
         validated_data: dict,
     ):
-        earliest_trial_period_end_date = (
-            TrialPeriodManager.get_earliest_trial_period_end_date_for_product_type(
-                member_id=member.id, product_type_id=product_type.id, cache=self.cache
+        active_and_future_subscriptions = get_active_and_future_subscriptions(
+            reference_date=contract_start_date, cache=self.cache
+        ).filter(member=member, product__type_id=product_type.id)
+        subscriptions_existed_before_changes = active_and_future_subscriptions.exists()
+
+        earliest_trial_period_end_date = None
+        active_subscriptions_exists = get_active_subscriptions(
+            reference_date=contract_start_date, cache=self.cache
+        ).filter(id__in=active_and_future_subscriptions.values_list("id", flat=True))
+        if active_subscriptions_exists:
+            earliest_trial_period_end_date = (
+                TrialPeriodManager.get_earliest_trial_period_end_date_for_product_type(
+                    member_id=member.id,
+                    product_type_id=product_type.id,
+                    reference_date=contract_start_date,
+                    cache=self.cache,
+                )
             )
-        )
-        subscriptions_existed_before_changes = (
-            get_active_and_future_subscriptions(
-                reference_date=contract_start_date, cache=self.cache
-            )
-            .filter(member=member, product_type=product_type)
-            .exists()
-        )
         cancel_or_delete_subscriptions(
             member_id=member.id,
             product_type=product_type,
@@ -274,13 +311,14 @@ class UpdateSubscriptionsApiView(APIView):
 
         now = get_now(cache=self.cache)
         trial_disabled = (
-            earliest_trial_period_end_date is None
+            active_subscriptions_exists
+            and earliest_trial_period_end_date is None
             or not get_parameter_value(
                 ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
             )
         )
         subscriptions = []
-        for product, quantity in order:
+        for product, quantity in order.items():
             subscriptions.append(
                 Subscription(
                     member=member,
@@ -305,6 +343,17 @@ class UpdateSubscriptionsApiView(APIView):
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
         TapirCache.clear_category(cache=self.cache, category="subscriptions")
+
+        if validated_data[
+            "pickup_location_id"
+        ] != MemberPickupLocationService.get_member_pickup_location_id(
+            member=member, reference_date=contract_start_date
+        ):
+            BestellWizardConfirmOrderApiView.link_member_to_pickup_location(
+                member=member,
+                contract_start_date=contract_start_date,
+                pickup_location_id=validated_data["pickup_location_id"],
+            )
 
         if subscriptions_existed_before_changes:
             send_contract_change_confirmation(

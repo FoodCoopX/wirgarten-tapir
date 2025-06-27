@@ -674,6 +674,25 @@ paths:
       responses:
         '204':
           description: No response body
+  /pickup_locations/api/get_member_pickup_location:
+    get:
+      operationId: pickup_locations_api_get_member_pickup_location_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mpl'
+          description: ''
   /pickup_locations/api/pickup_location_capacities:
     get:
       operationId: pickup_locations_api_pickup_location_capacities_retrieve
@@ -3243,22 +3262,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
-  /waiting_list/api/public_waiting_list_create_entry:
+  /waiting_list/api/public_waiting_list_create_entry_existing_member:
     post:
-      operationId: waiting_list_api_public_waiting_list_create_entry_create
+      operationId: waiting_list_api_public_waiting_list_create_entry_existing_member_create
       tags:
       - waiting_list
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryCreateRequest'
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
         required: true
       security:
       - DrfForwardAuthentication: []
@@ -3267,7 +3286,33 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /waiting_list/api/public_waiting_list_create_entry_new_member:
+    post:
+      operationId: waiting_list_api_public_waiting_list_create_entry_new_member_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryNewMemberCreateRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /waiting_list/api/show_coop_content:
     get:
@@ -6490,7 +6535,32 @@ components:
       - quantity
       - solidarity_display
       - start_date
-    PublicWaitingListEntryCreateRequest:
+    PublicWaitingListEntryExistingMemberCreateRequest:
+      type: object
+      properties:
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        product_quantities:
+          type: array
+          items:
+            type: integer
+        member_id:
+          type: string
+          minLength: 1
+      required:
+      - member_id
+      - pickup_location_ids
+      - product_ids
+      - product_quantities
+    PublicWaitingListEntryNewMemberCreateRequest:
       type: object
       properties:
         first_name:
@@ -7041,6 +7111,9 @@ components:
             type: integer
         sepa_allowed:
           type: boolean
+        pickup_location_id:
+          type: string
+          minLength: 1
       required:
       - member_id
       - product_type_id
@@ -7397,6 +7470,15 @@ components:
       - product
       - quantity
       - waiting_list_entry
+    mpl:
+      type: object
+      properties:
+        has_location:
+          type: boolean
+        location:
+          $ref: '#/components/schemas/PublicPickupLocation'
+      required:
+      - has_location
   securitySchemes:
     DrfForwardAuthentication:
       type: http

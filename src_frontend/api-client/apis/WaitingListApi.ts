@@ -14,17 +14,21 @@
 
 import * as runtime from "../runtime";
 import type {
+  OrderConfirmationResponse,
   PaginatedWaitingListEntryDetailsList,
   PatchedWaitingListEntryRequest,
-  PublicWaitingListEntryCreateRequest,
+  PublicWaitingListEntryExistingMemberCreateRequest,
+  PublicWaitingListEntryNewMemberCreateRequest,
   WaitingListEntry,
   WaitingListEntryRequest,
   WaitingListEntryUpdateRequest,
 } from "../models/index";
 import {
+  OrderConfirmationResponseFromJSON,
   PaginatedWaitingListEntryDetailsListFromJSON,
   PatchedWaitingListEntryRequestToJSON,
-  PublicWaitingListEntryCreateRequestToJSON,
+  PublicWaitingListEntryExistingMemberCreateRequestToJSON,
+  PublicWaitingListEntryNewMemberCreateRequestToJSON,
   WaitingListEntryFromJSON,
   WaitingListEntryRequestToJSON,
   WaitingListEntryUpdateRequestToJSON,
@@ -35,8 +39,12 @@ export interface WaitingListApiListListRequest {
   offset: number;
 }
 
-export interface WaitingListApiPublicWaitingListCreateEntryCreateRequest {
-  publicWaitingListEntryCreateRequest: PublicWaitingListEntryCreateRequest;
+export interface WaitingListApiPublicWaitingListCreateEntryExistingMemberCreateRequest {
+  publicWaitingListEntryExistingMemberCreateRequest: PublicWaitingListEntryExistingMemberCreateRequest;
+}
+
+export interface WaitingListApiPublicWaitingListCreateEntryNewMemberCreateRequest {
+  publicWaitingListEntryNewMemberCreateRequest: PublicWaitingListEntryNewMemberCreateRequest;
 }
 
 export interface WaitingListApiUpdateEntryCreateRequest {
@@ -181,14 +189,17 @@ export class WaitingListApi extends runtime.BaseAPI {
 
   /**
    */
-  async waitingListApiPublicWaitingListCreateEntryCreateRaw(
-    requestParameters: WaitingListApiPublicWaitingListCreateEntryCreateRequest,
+  async waitingListApiPublicWaitingListCreateEntryExistingMemberCreateRaw(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryExistingMemberCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<string>> {
-    if (requestParameters["publicWaitingListEntryCreateRequest"] == null) {
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["publicWaitingListEntryExistingMemberCreateRequest"] ==
+      null
+    ) {
       throw new runtime.RequiredError(
-        "publicWaitingListEntryCreateRequest",
-        'Required parameter "publicWaitingListEntryCreateRequest" was null or undefined when calling waitingListApiPublicWaitingListCreateEntryCreate().',
+        "publicWaitingListEntryExistingMemberCreateRequest",
+        'Required parameter "publicWaitingListEntryExistingMemberCreateRequest" was null or undefined when calling waitingListApiPublicWaitingListCreateEntryExistingMemberCreate().',
       );
     }
 
@@ -209,32 +220,94 @@ export class WaitingListApi extends runtime.BaseAPI {
     }
     const response = await this.request(
       {
-        path: `/waiting_list/api/public_waiting_list_create_entry`,
+        path: `/waiting_list/api/public_waiting_list_create_entry_existing_member`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: PublicWaitingListEntryCreateRequestToJSON(
-          requestParameters["publicWaitingListEntryCreateRequest"],
+        body: PublicWaitingListEntryExistingMemberCreateRequestToJSON(
+          requestParameters[
+            "publicWaitingListEntryExistingMemberCreateRequest"
+          ],
         ),
       },
       initOverrides,
     );
 
-    if (this.isJsonMime(response.headers.get("content-type"))) {
-      return new runtime.JSONApiResponse<string>(response);
-    } else {
-      return new runtime.TextApiResponse(response) as any;
-    }
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
   }
 
   /**
    */
-  async waitingListApiPublicWaitingListCreateEntryCreate(
-    requestParameters: WaitingListApiPublicWaitingListCreateEntryCreateRequest,
+  async waitingListApiPublicWaitingListCreateEntryExistingMemberCreate(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryExistingMemberCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<string> {
+  ): Promise<OrderConfirmationResponse> {
     const response =
-      await this.waitingListApiPublicWaitingListCreateEntryCreateRaw(
+      await this.waitingListApiPublicWaitingListCreateEntryExistingMemberCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async waitingListApiPublicWaitingListCreateEntryNewMemberCreateRaw(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryNewMemberCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["publicWaitingListEntryNewMemberCreateRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "publicWaitingListEntryNewMemberCreateRequest",
+        'Required parameter "publicWaitingListEntryNewMemberCreateRequest" was null or undefined when calling waitingListApiPublicWaitingListCreateEntryNewMemberCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/waiting_list/api/public_waiting_list_create_entry_new_member`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PublicWaitingListEntryNewMemberCreateRequestToJSON(
+          requestParameters["publicWaitingListEntryNewMemberCreateRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async waitingListApiPublicWaitingListCreateEntryNewMemberCreate(
+    requestParameters: WaitingListApiPublicWaitingListCreateEntryNewMemberCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.waitingListApiPublicWaitingListCreateEntryNewMemberCreateRaw(
         requestParameters,
         initOverrides,
       );
