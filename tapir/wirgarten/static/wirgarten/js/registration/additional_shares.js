@@ -46,7 +46,7 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total, addit
     if (event) {
       const value = parseInt(event.target.value);
       const max = parseInt(event.target.max || 100);
-      console.log(value)
+
       if (isNaN(value)) {
         event.target.value = event.target.checked ? 1 : 0;
       } else if (value < 0) {
