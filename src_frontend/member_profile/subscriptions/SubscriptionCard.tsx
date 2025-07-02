@@ -6,6 +6,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import SubscriptionEditModal from "./SubscriptionEditModal.tsx";
+import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
@@ -29,7 +30,10 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           <div className={"contract-tile-number"}>
             <strong>
               {subscriptions.reduce(
-                (sum, subscription) => sum + subscription.quantity,
+                (sum, subscription) =>
+                  isSubscriptionActive(subscription)
+                    ? sum + subscription.quantity
+                    : sum,
                 0,
               )}
             </strong>
@@ -74,7 +78,10 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
               <strong>
                 {formatCurrency(
                   subscriptions.reduce(
-                    (sum, subscription) => sum + subscription.monthlyPrice,
+                    (sum, subscription) =>
+                      isSubscriptionActive(subscription)
+                        ? sum + subscription.monthlyPrice
+                        : sum,
                     0,
                   ),
                 )}

@@ -1,5 +1,3 @@
-from icecream import ic
-
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 
@@ -23,7 +21,6 @@ class SingleSubscriptionValidator:
                     total_quantity += quantity
 
             if total_quantity > 1:
-                ic(product_type, order)
                 return False
 
         return True

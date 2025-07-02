@@ -23,6 +23,7 @@ import ProductWaitingListModal from "../../bestell_wizard/components/ProductWait
 import SubscriptionEditStepSummary from "./steps/SubscriptionEditStepSummary.tsx";
 import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import SubscriptionEditStepConfirmation from "./steps/SubscriptionEditStepConfirmation.tsx";
+import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
 
 interface SubscriptionEditModalProps {
   show: boolean;
@@ -115,7 +116,9 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       productType.products.map((product) => [product.id, 0]),
     );
     for (const subscription of subscriptions) {
-      shoppingCart[subscription.productId] = subscription.quantity;
+      if (isSubscriptionActive(subscription)) {
+        shoppingCart[subscription.productId] = subscription.quantity;
+      }
     }
     setShoppingCart(shoppingCart);
   }, [subscriptions, show]);

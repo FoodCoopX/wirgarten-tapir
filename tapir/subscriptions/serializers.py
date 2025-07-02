@@ -259,7 +259,7 @@ class PublicSubscriptionSerializer(serializers.ModelSerializer):
         ):
             if subscription.solidarity_price_percentage > 0:
                 prefix = "+"
-            return f"{prefix}{subscription.solidarity_price_percentage}%"
+            return f"{prefix}{subscription.solidarity_price_percentage * 100}%"
 
         if (
             subscription.solidarity_price_absolute is not None
