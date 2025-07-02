@@ -44,7 +44,12 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           <small className={"d-flex flex-column"}>
             {subscriptions.map((subscription) => (
               <span
-                className={"d-flex flex-column"}
+                className={
+                  "d-flex flex-column " +
+                  (isSubscriptionActive(subscription)
+                    ? ""
+                    : "fw-light text-secondary")
+                }
                 key={subscription.productId}
               >
                 <span>
