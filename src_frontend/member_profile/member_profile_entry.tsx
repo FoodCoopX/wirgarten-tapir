@@ -15,9 +15,6 @@ if (domNodeDeliveryListCard) {
         domNodeDeliveryListCard.dataset.jokersEnabled! == "true"
       }
       csrfToken={getCsrfToken()}
-      pickupLocationModalUrl={
-        domNodeDeliveryListCard.dataset.pickupLocationModalUrl!
-      }
     />,
   );
 } else {

@@ -5,6 +5,7 @@ import { PublicProductType } from "../../../api-client";
 import { ShoppingCart } from "../../../bestell_wizard/types/ShoppingCart.ts";
 import { getTextSepaCheckbox } from "../../../bestell_wizard/utils/getTextSepaCheckbox.ts";
 import TapirButton from "../../../components/TapirButton.tsx";
+import { isShoppingCartEmpty } from "../../../bestell_wizard/utils/isShoppingCartEmpty.ts";
 
 interface SubscriptionEditStepProductTypeProps {
   productType: PublicProductType;
@@ -77,7 +78,7 @@ const SubscriptionEditStepProductType: React.FC<
                 : "Ermächtige das SEPA-Mandat um weiter zu gehen"
             }
             iconPosition={"right"}
-            disabled={!sepaAllowed}
+            disabled={!sepaAllowed || isShoppingCartEmpty(shoppingCart)}
             loading={loading || checkingCapacities}
             onClick={onNextClicked}
           />

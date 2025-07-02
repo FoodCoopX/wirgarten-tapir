@@ -40,38 +40,42 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             {" ×"}
           </div>
           <strong>{productType.name}</strong>
-          <hr />
-          <small className={"d-flex flex-column"}>
-            {subscriptions.map((subscription) => (
-              <span
-                className={
-                  "d-flex flex-column " +
-                  (isSubscriptionActive(subscription)
-                    ? ""
-                    : "fw-light text-secondary")
-                }
-                key={subscription.productId}
-              >
-                <span>
-                  <strong>{subscription.quantity}</strong>
-                  {" × "}
-                  {subscription.productName}{" "}
-                  {subscription.solidarityDisplay && (
-                    <>({subscription.solidarityDisplay})</>
-                  )}
-                </span>
-                <span>
-                  {formatDateNumeric(subscription.startDate)}
-                  {subscription.endDate && (
-                    <>
-                      {" - "}
-                      {formatDateNumeric(subscription.endDate)}
-                    </>
-                  )}
-                </span>
-              </span>
-            ))}
-          </small>
+          {subscriptions.length > 0 && (
+            <>
+              <hr />
+              <small className={"d-flex flex-column"}>
+                {subscriptions.map((subscription) => (
+                  <span
+                    className={
+                      "d-flex flex-column " +
+                      (isSubscriptionActive(subscription)
+                        ? ""
+                        : "fw-light text-secondary")
+                    }
+                    key={subscription.productId}
+                  >
+                    <span>
+                      <strong>{subscription.quantity}</strong>
+                      {" × "}
+                      {subscription.productName}{" "}
+                      {subscription.solidarityDisplay && (
+                        <>({subscription.solidarityDisplay})</>
+                      )}
+                    </span>
+                    <span>
+                      {formatDateNumeric(subscription.startDate)}
+                      {subscription.endDate && (
+                        <>
+                          {" - "}
+                          {formatDateNumeric(subscription.endDate)}
+                        </>
+                      )}
+                    </span>
+                  </span>
+                ))}
+              </small>
+            </>
+          )}
         </Card.Body>
         <Card.Footer>
           <div

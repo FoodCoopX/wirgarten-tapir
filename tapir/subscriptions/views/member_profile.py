@@ -52,6 +52,7 @@ class GetMemberSubscriptionsApiView(APIView):
     )
     def get(self, request):
         member_id = request.query_params.get("member_id")
+        get_object_or_404(Member, id=member_id)
         check_permission_or_self(member_id, request)
         subscriptions = (
             get_active_and_future_subscriptions()

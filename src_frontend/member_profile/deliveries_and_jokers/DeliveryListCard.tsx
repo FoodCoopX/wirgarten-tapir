@@ -12,26 +12,23 @@ import { formatDateText } from "../../utils/formatDateText.ts";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
-import PickupLocationModal from "./PickupLocationModal.tsx";
+import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
-
-declare let FormModal: { load: (url: string, title: string) => void };
+import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
 
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   csrfToken: string;
-  pickupLocationModalUrl: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
   csrfToken,
-  pickupLocationModalUrl,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -43,6 +40,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     setSelectedPickupLocationOpeningTimes,
   ] = useState<PickupLocationOpeningTime[]>([]);
   const [showManageJokersModal, setShowManageJokersModal] = useState(false);
+  const [showPickupLocationChangeModal, setShowPickupLocationChangeModal] =
+    useState(false);
 
   dayjs.extend(RelativeTime);
   dayjs.extend(WeekOfYear);
@@ -160,9 +159,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           text={"Verteilstation ändern"}
           icon={"edit"}
           variant={"outline-primary"}
-          onClick={() =>
-            FormModal.load(pickupLocationModalUrl, "Verteilstation ändern")
-          }
+          onClick={() => setShowPickupLocationChangeModal(true)}
         />
       </span>
     );
@@ -211,7 +208,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         </Card.Body>
       </Card>
       {selectedPickupLocation && (
-        <PickupLocationModal
+        <PickupLocationDeliveryDetailsModal
           pickupLocation={selectedPickupLocation}
           openingTimes={selectedPickupLocationOpeningTimes}
           onHide={() => setSelectedPickupLocation(undefined)}
@@ -228,6 +225,13 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           csrfToken={csrfToken}
         />
       )}
+      <PickupLocationChangeModal
+        onHide={() => setShowPickupLocationChangeModal(false)}
+        show={showPickupLocationChangeModal}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        reloadDeliveries={loadDeliveries}
+      />
     </>
   );
 };

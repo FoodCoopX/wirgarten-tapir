@@ -1,13 +1,13 @@
 import React from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { Col, Form, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { PublicPickupLocation } from "../../api-client";
 
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
-import TapirButton from "../../components/TapirButton.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import PickupLocationSelector from "../components/PickupLocationSelector.tsx";
+import PickupLocationWaitingListSelector from "../components/PickupLocationWaitingListSelector.tsx";
 
 interface BestellWizardPickupLocationProps {
   theme: TapirTheme;
@@ -34,14 +34,6 @@ const BestellWizardPickupLocation: React.FC<
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByProductType,
 }) => {
-  function setPickupLocationAtIndex(
-    pickupLocation: PublicPickupLocation,
-    index: number,
-  ) {
-    selectedPickupLocations[index] = pickupLocation;
-    setSelectedPickupLocations([...selectedPickupLocations]);
-  }
-
   function getEarliestDeliveryDate() {
     return Object.values(firstDeliveryDatesByProductType).sort(
       (a, b) => a.getTime() - b.getTime(),
@@ -67,50 +59,11 @@ const BestellWizardPickupLocation: React.FC<
         </Col>
       </Row>
       {waitingListModeEnabled && (
-        <Row className={"mb-2"}>
-          <Col>
-            <div className={"d-flex flex-row gap-2"}>
-              {selectedPickupLocations.map((selectedPickupLocation, index) => (
-                <Form.Group key={index}>
-                  <Form.Label>{index + 1}. Wunsch</Form.Label>
-                  <Form.Select
-                    style={{ maxWidth: "200px" }}
-                    onChange={(event) =>
-                      setPickupLocationAtIndex(
-                        pickupLocations.find(
-                          (pickupLocation) =>
-                            pickupLocation.id === event.target.value,
-                        )!,
-                        index,
-                      )
-                    }
-                    value={selectedPickupLocation.id}
-                  >
-                    {pickupLocations.map((pickupLocation) => (
-                      <option key={pickupLocation.id} value={pickupLocation.id}>
-                        {pickupLocation.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              ))}
-
-              <div className={"d-flex flex-column justify-content-end"}>
-                <TapirButton
-                  variant={"outline-primary"}
-                  text={"Weitere Wunsch hinzufügen"}
-                  icon={"add_circle"}
-                  onClick={() =>
-                    setSelectedPickupLocations([
-                      ...selectedPickupLocations,
-                      pickupLocations[0],
-                    ])
-                  }
-                />
-              </div>
-            </div>
-          </Col>
-        </Row>
+        <PickupLocationWaitingListSelector
+          selectedPickupLocations={selectedPickupLocations}
+          setSelectedPickupLocations={setSelectedPickupLocations}
+          pickupLocations={pickupLocations}
+        />
       )}
       <PickupLocationSelector
         pickupLocations={pickupLocations}

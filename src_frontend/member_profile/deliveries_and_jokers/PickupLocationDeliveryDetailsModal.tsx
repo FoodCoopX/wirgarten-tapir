@@ -3,17 +3,15 @@ import { Modal } from "react-bootstrap";
 import { PickupLocation, PickupLocationOpeningTime } from "../../api-client";
 import dayjs from "dayjs";
 
-interface PickupLocationModalProps {
+interface PickupLocationDeliveryDetailsModalProps {
   pickupLocation: PickupLocation;
   openingTimes: PickupLocationOpeningTime[];
   onHide: () => void;
 }
 
-const PickupLocationModal: React.FC<PickupLocationModalProps> = ({
-  pickupLocation,
-  openingTimes,
-  onHide,
-}) => {
+const PickupLocationDeliveryDetailsModal: React.FC<
+  PickupLocationDeliveryDetailsModalProps
+> = ({ pickupLocation, openingTimes, onHide }) => {
   return (
     <Modal onHide={onHide} show={true} centered={true}>
       <Modal.Header closeButton>
@@ -84,4 +82,4 @@ const PickupLocationModal: React.FC<PickupLocationModalProps> = ({
   );
 };
 
-export default PickupLocationModal;
+export default PickupLocationDeliveryDetailsModal;

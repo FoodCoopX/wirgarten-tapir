@@ -15,6 +15,7 @@
 import * as runtime from "../runtime";
 import type {
   Mpl,
+  OrderConfirmationResponse,
   PatchedPickupLocationCapacitiesRequest,
   PickupLocation,
   PickupLocationCapacities,
@@ -25,6 +26,7 @@ import type {
 } from "../models/index";
 import {
   MplFromJSON,
+  OrderConfirmationResponseFromJSON,
   PatchedPickupLocationCapacitiesRequestToJSON,
   PickupLocationCapacitiesFromJSON,
   PickupLocationCapacityCheckRequestRequestToJSON,
@@ -33,6 +35,11 @@ import {
   PickupLocationFromJSON,
   PublicPickupLocationFromJSON,
 } from "../models/index";
+
+export interface PickupLocationsApiChangeMemberPickupLocationCreateRequest {
+  memberId?: string;
+  pickupLocationId?: string;
+}
 
 export interface PickupLocationsApiGetMemberPickupLocationRetrieveRequest {
   memberId?: string;
@@ -66,6 +73,63 @@ export interface PickupLocationsPublicPickupLocationsRetrieveRequest {
  *
  */
 export class PickupLocationsApi extends runtime.BaseAPI {
+  /**
+   */
+  async pickupLocationsApiChangeMemberPickupLocationCreateRaw(
+    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    if (requestParameters["pickupLocationId"] != null) {
+      queryParameters["pickup_location_id"] =
+        requestParameters["pickupLocationId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/pickup_locations/api/change_member_pickup_location`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async pickupLocationsApiChangeMemberPickupLocationCreate(
+    requestParameters: PickupLocationsApiChangeMemberPickupLocationCreateRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.pickupLocationsApiChangeMemberPickupLocationCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
   /**
    */
   async pickupLocationsApiGetMemberPickupLocationRetrieveRaw(

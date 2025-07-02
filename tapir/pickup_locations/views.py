@@ -2,18 +2,23 @@ import datetime
 import locale
 from typing import Dict
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import status, viewsets, permissions, serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.log.models import TextLogEntry
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import (
@@ -44,6 +49,8 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
@@ -53,11 +60,15 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
     ProductType,
     Member,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
-from tapir.wirgarten.utils import get_today, check_permission_or_self
+from tapir.wirgarten.service.products import get_active_and_future_subscriptions
+from tapir.wirgarten.tapirmail import Events
+from tapir.wirgarten.utils import get_today, check_permission_or_self, format_date
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -411,4 +422,135 @@ class GetMemberPickupLocationApiView(APIView):
                 "has_location": True,
                 "location": PublicPickupLocationSerializer(pickup_location).data,
             }
+        )
+
+
+class ChangeMemberPickupLocationApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="pickup_location_id", type=str),
+        ],
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def post(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+        member = get_object_or_404(Member, id=member_id)
+        new_pickup_location_id = request.query_params.get("pickup_location_id")
+        new_pickup_location = get_object_or_404(
+            PickupLocation, id=new_pickup_location_id
+        )
+
+        try:
+            self.validate(member=member, new_pickup_location=new_pickup_location)
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        with transaction.atomic():
+            self.apply_changes(
+                member=member,
+                new_pickup_location_id=new_pickup_location_id,
+                actor=request.user,
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    def validate(self, member: Member, new_pickup_location: PickupLocation):
+        old_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=get_today(cache=self.cache)
+            )
+        )
+        if old_pickup_location_id == new_pickup_location.id:
+            raise ValidationError("Du bist schon für diese Verteilstation eingetragen.")
+
+        subscriptions = (
+            get_active_and_future_subscriptions(cache=self.cache)
+            .filter(member=member)
+            .select_related("product")
+        )
+        order = {
+            subscription.product: subscription.quantity
+            for subscription in subscriptions
+        }
+        if not OrderValidator.does_order_need_a_pickup_location(
+            order=order, cache=self.cache
+        ):
+            raise ValidationError("Deine Verträge brauchen keine Verteilstation.")
+
+        change_date = (
+            calculate_pickup_location_change_date(cache=self.cache)
+            if old_pickup_location_id is not None
+            else get_today(cache=self.cache)
+        )
+
+        if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+            pickup_location=new_pickup_location,
+            ordered_products_to_quantity_map=order,
+            already_registered_member=member,
+            subscription_start=change_date,
+            cache=self.cache,
+        ):
+            raise ValidationError(
+                "Diese Abholort hat nicht Kapazitäten für deine Verträge."
+            )
+
+    def apply_changes(self, member: Member, new_pickup_location_id, actor):
+        old_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=get_today(cache=self.cache)
+            )
+        )
+        change_date = (
+            calculate_pickup_location_change_date(cache=self.cache)
+            if old_pickup_location_id is not None
+            else get_today(cache=self.cache)
+        )
+        old_pickup_location = None
+        if old_pickup_location_id is not None:
+            old_pickup_location = TapirCache.get_pickup_location_by_id(
+                cache=self.cache, pickup_location_id=old_pickup_location_id
+            )
+
+        MemberPickupLocation.objects.filter(
+            member=member, valid_from__gte=change_date
+        ).delete()
+        MemberPickupLocation.objects.create(
+            member=member,
+            pickup_location_id=new_pickup_location_id,
+            valid_from=change_date,
+        )
+
+        new_pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache, pickup_location_id=new_pickup_location_id
+        )
+        change_date_str = format_date(change_date)
+        TextLogEntry().populate(
+            actor=actor,
+            user=member,
+            text=f"Abholort geändert zum {change_date_str}: {old_pickup_location} -> {new_pickup_location}",
+        ).save()
+
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "pickup_location": new_pickup_location.name,
+                    "pickup_location_start_date": change_date_str,
+                },
+            ),
         )

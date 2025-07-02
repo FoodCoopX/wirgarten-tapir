@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import PickupLocationSelector from "../../../bestell_wizard/components/PickupLocationSelector";
 import { PublicPickupLocation } from "../../../api-client";
 import TapirButton from "../../../components/TapirButton.tsx";
+import PickupLocationWaitingListSelector from "../../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
 
 interface SubscriptionEditStepPickupLocationProps {
   pickupLocations: PublicPickupLocation[];
@@ -30,6 +31,13 @@ const SubscriptionEditStepPickupLocation: React.FC<
   return (
     <>
       <Modal.Body style={{ maxHeight: "65vh", overflowY: "scroll" }}>
+        {waitingListModeEnabled && (
+          <PickupLocationWaitingListSelector
+            pickupLocations={pickupLocations}
+            selectedPickupLocations={selectedPickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
+          />
+        )}
         <PickupLocationSelector
           pickupLocations={pickupLocations}
           selectedPickupLocations={selectedPickupLocations}

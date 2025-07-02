@@ -674,6 +674,29 @@ paths:
       responses:
         '204':
           description: No response body
+  /pickup_locations/api/change_member_pickup_location:
+    post:
+      operationId: pickup_locations_api_change_member_pickup_location_create
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      - in: query
+        name: pickup_location_id
+        schema:
+          type: string
+      tags:
+      - pickup_locations
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /pickup_locations/api/get_member_pickup_location:
     get:
       operationId: pickup_locations_api_get_member_pickup_location_retrieve
