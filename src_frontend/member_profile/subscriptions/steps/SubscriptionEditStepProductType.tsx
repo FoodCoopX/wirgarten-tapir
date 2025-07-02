@@ -13,7 +13,6 @@ interface SubscriptionEditStepProductTypeProps {
   sepaAllowed: boolean;
   setSepaAllowed: (allowed: boolean) => void;
   onCancelClicked: () => void;
-  needPickupLocation: boolean;
   loading: boolean;
   checkingCapacities: boolean;
   onNextClicked: () => void;
@@ -28,7 +27,6 @@ const SubscriptionEditStepProductType: React.FC<
   sepaAllowed,
   setSepaAllowed,
   onCancelClicked,
-  needPickupLocation,
   loading,
   checkingCapacities,
   onNextClicked,

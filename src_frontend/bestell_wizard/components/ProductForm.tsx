@@ -38,11 +38,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
               className={"d-flex align-items-center flex-column"}
             >
               <div className={"d-flex justify-content-center"}>
-                <img
-                  src={product.urlOfImageInBestellwizard}
-                  style={{ maxWidth: "75%" }}
-                  alt={"Photo von " + productType.name + " " + product.name}
-                />
+                {product.urlOfImageInBestellwizard !== "" && (
+                  <img
+                    src={product.urlOfImageInBestellwizard}
+                    style={{ maxWidth: "75%" }}
+                    alt={"Photo von " + productType.name + " " + product.name}
+                  />
+                )}
               </div>
               <div>
                 <strong>{product.name}</strong>

@@ -111,7 +111,7 @@ class RegistrationWizardViewBase(CookieWizardView):
         )
 
         self.start_date = get_next_contract_start_date(today, cache=self.cache)
-        self.end_date = self.growing_period.end_date
+        self.end_date = self.growing_period.end_date if self.growing_period else None
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
 
@@ -409,9 +409,10 @@ class RegistrationWizardViewBase(CookieWizardView):
                 if hasattr(self, "start_date")
                 else get_next_contract_start_date(cache=self.cache)
             )
-            self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
-                "growing_period", get_current_growing_period(cache=self.cache)
-            )
+            if STEP_BASE_PRODUCT in form_dict:
+                self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
+                    "growing_period", get_current_growing_period(cache=self.cache)
+                )
             if self.growing_period and self.growing_period.start_date > get_today():
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month

@@ -169,6 +169,11 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   }, [pickupLocations, show, needPickupLocation, shoppingCart]);
 
   useEffect(() => {
+    if (forceWaitingList) {
+      setWaitingListModeEnabled(true);
+      return;
+    }
+
     if (
       productIdsOverCapacity.length === 0 &&
       productTypeIdsOverCapacity.length === 0 &&
@@ -263,8 +268,6 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       productIdsOverCapacity.length > 0 ||
       productTypeIdsOverCapacity.length > 0
     ) {
-      console.log(productTypeIdsOverCapacity);
-      console.log(productIdsOverCapacity);
       setShowWaitingListConfirmModal(true);
       return;
     }
@@ -273,8 +276,6 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       selectedPickupLocations.length > 0 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
     ) {
-      console.log(selectedPickupLocations);
-      console.log(pickupLocationsWithCapacityFull);
       setShowWaitingListConfirmModal(true);
       return;
     }
@@ -302,7 +303,6 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
             loading={loading}
             sepaAllowed={sepaAllowed}
             setSepaAllowed={setSepaAllowed}
-            needPickupLocation={needPickupLocation}
             onCancelClicked={onHide}
             onNextClicked={onNextClicked}
           />
@@ -342,6 +342,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
               reloadSubscriptions();
               onHide();
             }}
+            waitingListModeEnabled={waitingListModeEnabled}
           />
         )}
       </Modal>

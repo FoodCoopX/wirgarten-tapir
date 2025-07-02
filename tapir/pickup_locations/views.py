@@ -408,7 +408,7 @@ class GetMemberPickupLocationApiView(APIView):
         )
         return Response(
             {
-                "has_location": False,
+                "has_location": True,
                 "location": PublicPickupLocationSerializer(pickup_location).data,
             }
         )
