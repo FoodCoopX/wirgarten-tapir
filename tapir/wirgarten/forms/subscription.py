@@ -695,6 +695,11 @@ class AdditionalProductForm(forms.Form):
             for prod in products_queryset
         }
 
+        sizes = {
+            product.id: get_product_price(product, self.start_date).size
+            for product in products_queryset
+        }
+
         # Sort products by their prices in ascending order
         sorted_products = sorted(products_queryset, key=lambda x: prices[x.id])
 
@@ -819,6 +824,12 @@ class AdditionalProductForm(forms.Form):
         self.prices = ",".join(
             map(
                 lambda k: k + ":" + str(prices[self.products[k].id]),
+                self.products.keys(),
+            )
+        )
+        self.sizes = ",".join(
+            map(
+                lambda k: k + ":" + str(sizes[self.products[k].id]),
                 self.products.keys(),
             )
         )

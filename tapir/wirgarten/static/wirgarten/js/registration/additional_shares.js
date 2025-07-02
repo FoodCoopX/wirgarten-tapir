@@ -1,11 +1,10 @@
-var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
-  console.log(additional_share_prices)
+var initAdditionalShareSummary = (additional_share_prices, capacity_total, additional_share_sizes) => {
+
   const calculatePrice = (chicken_share) => {
     const [key, price] = chicken_share.split(":");
     const elem = document.querySelector(
       `[name$='${key}']`
     );
-    console.log(key, price, elem)
 
     if (!elem) return 0;
     let value = 0;
@@ -17,10 +16,30 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
     return value * price;
   };
 
+  const calculateCapacity = (chicken_share) => {
+    const [key, size] = chicken_share.split(":");
+    const elem = document.querySelector(
+        `[name$='${key}']`
+    );
+
+    if (!elem) return 0;
+    let value;
+    if (elem.type == "checkbox") {
+      value = elem.checked ? 1 : 0;
+    } else {
+      value = elem.value;
+    }
+    return value * size;
+  };
+
   const resultElem = document.getElementById("additional_shares_total");
 
-  const calculateTotal = () => {
+  const calculateTotalPrice = () => {
     return additional_share_prices.map(calculatePrice).reduce((a, b) => a + b);
+  };
+
+  const calculateTotalCapacity = () => {
+    return additional_share_sizes.map(calculateCapacity).reduce((a, b) => a + b);
   };
 
   const handleChange = (event) => {
@@ -37,11 +56,11 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
       }
     }
 
-    while (calculateTotal() > capacity_total) {
+    while (calculateTotalCapacity() > capacity_total) {
       event.target.value--;
     }
 
-    resultElem.innerText = calculateTotal().toFixed(2);
+    resultElem.innerText = calculateTotalPrice().toFixed(2);
   };
 
   additional_share_prices.forEach((share) => {
