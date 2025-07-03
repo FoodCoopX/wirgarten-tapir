@@ -88,6 +88,29 @@ class TestMemberDataToConfirmView(TapirIntegrationTest):
             member_data["share_purchases"][0]["id"],
         )
 
+    def test_get_memberHasOnlySharePurchasesToConfirm_memberIsInTheReturnedData(self):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+
+        member = MemberFactory.create()
+        purchase = CoopShareTransactionFactory.create(
+            member=member, quantity=3, admin_confirmed=None
+        )
+
+        response = self.client.get(reverse("subscriptions:member_data_to_confirm"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        response_content = response.json()
+        self.assertEqual(1, len(response_content))
+
+        member_data = response_content[0]
+
+        self.assertEqual(1, len(member_data["share_purchases"]))
+        self.assertEqual(
+            purchase.id,
+            member_data["share_purchases"][0]["id"],
+        )
+
     @staticmethod
     def create_unconfirmed_creation(**kwargs):
         return SubscriptionFactory.create(admin_confirmed=None, **kwargs)

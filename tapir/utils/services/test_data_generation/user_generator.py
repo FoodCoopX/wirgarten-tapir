@@ -28,6 +28,7 @@ from tapir.wirgarten.models import (
     MemberPickupLocation,
     Product,
     HarvestShareProduct,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -121,6 +122,9 @@ class UserGenerator:
                 members_that_need_a_pickup_location=members_that_need_a_pickup_location,
                 required_products=required_products,
             )
+            CoopShareTransaction.objects.filter(
+                valid_at__lte=get_today(cache=cache) - datetime.timedelta(days=60)
+            ).update(admin_confirmed=get_today(cache=cache))
 
         cls.link_members_to_pickup_location(
             members_that_need_a_pickup_location, organization=organization

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Card, Col, Form, Row, Table } from "react-bootstrap";
+import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   CoopShareTransaction,
@@ -17,6 +17,8 @@ interface ContractUpdatesCardProps {
   csrfToken: string;
 }
 
+type ContractFilter = "all" | "creations_only" | "cancellations_only";
+
 const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   csrfToken,
 }) => {
@@ -31,12 +33,17 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   const [confirmedChanges, setConfirmedChanges] = useState<
     Set<MemberDataToConfirm>
   >(new Set());
+  const [selectedFilter, setSelectedFilter] = useState<ContractFilter>("all");
 
   useEffect(() => {
     setLoading(true);
 
     loadList();
   }, []);
+
+  useEffect(() => {
+    setSelectedChanges(new Set());
+  }, [selectedFilter]);
 
   function loadList() {
     subscriptionsApi
@@ -207,6 +214,40 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       .finally(() => setLoading(false));
   }
 
+  function getFilteredChanges(filter?: ContractFilter) {
+    if (filter === undefined) {
+      filter = selectedFilter;
+    }
+    switch (filter) {
+      case "all":
+        return changesToConfirm;
+      case "cancellations_only":
+        return changesToConfirm.filter(
+          (change) => !doesChangeHaveCreations(change),
+        );
+      case "creations_only":
+        return changesToConfirm.filter(
+          (change) => !doesChangeHaveOnlyCancellations(change),
+        );
+    }
+  }
+
+  function doesChangeHaveCreations(change: MemberDataToConfirm) {
+    return (
+      change.subscriptionCreations.length > 0 ||
+      change.subscriptionChanges.length > 0 ||
+      change.sharePurchases.length > 0
+    );
+  }
+
+  function doesChangeHaveOnlyCancellations(change: MemberDataToConfirm) {
+    return (
+      change.subscriptionCreations.length === 0 &&
+      change.subscriptionChanges.length === 0 &&
+      change.subscriptionCancellations.length > 0
+    );
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -232,79 +273,116 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                 />
               </div>
             </Card.Header>
-            <Card.Body className={"p-0"}>
-              <Table striped hover responsive className={"mb-0"}>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Mitglied</th>
-                    <th>Verteilort</th>
-                    <th>Änderungen</th>
-                    <th>Datum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <PlaceholderTableRows
-                      nbRows={DEFAULT_PAGE_SIZE}
-                      nbColumns={6}
-                      size={"lg"}
-                    />
-                  ) : (
-                    changesToConfirm.map((change) => {
-                      if (confirmedChanges.has(change)) {
-                        return (
-                          <PlaceholderTableRows
-                            nbRows={1}
-                            nbColumns={6}
-                            size={"lg"}
-                          />
-                        );
-                      }
-
-                      return (
-                        <tr
-                          key={change.member.id}
-                          onClick={() =>
-                            setSelectedChanges((selected) => {
-                              if (selected.has(change)) {
-                                selected.delete(change);
-                              } else {
-                                selected.add(change);
-                              }
-
-                              return new Set(selected);
-                            })
-                          }
-                          style={{ cursor: "pointer" }}
-                          className={
-                            selectedChanges.has(change) ? "table-primary" : ""
-                          }
-                        >
-                          <td>
-                            <Form.Check
-                              checked={selectedChanges.has(change)}
-                              readOnly={true}
-                            />
-                          </td>
-                          <td>
-                            <a href={change.memberProfileUrl}>
-                              {change.member.firstName} {change.member.lastName}{" "}
-                              #{change.member.memberNo}
-                            </a>
-                          </td>
-                          <td>{change.pickupLocation?.name}</td>
-                          <td>{buildChanges(change)}</td>
-                          <td>
-                            {formatDateNumeric(getEarliestChange(change))}
-                          </td>
-                        </tr>
-                      );
-                    })
+            <ListGroup>
+              <ListGroup.Item>
+                <div>
+                  {["all", "creations_only", "cancellations_only"].map(
+                    (filter) => (
+                      <Form.Check id={filter} name={"filter"} key={filter}>
+                        <Form.Check.Input
+                          type={"radio"}
+                          checked={filter === selectedFilter}
+                          onChange={(event) => {
+                            if (event.target.checked) {
+                              setSelectedFilter(filter as ContractFilter);
+                            }
+                          }}
+                        />
+                        <Form.Check.Label>
+                          <span>
+                            {filter === "all"
+                              ? "Alles Anzeigen"
+                              : filter === "creations_only"
+                                ? "Nur Zeichnungen anzeigen"
+                                : "Nur Kündigungen Anzeigen"}{" "}
+                          </span>
+                          <Badge>
+                            {
+                              getFilteredChanges(filter as ContractFilter)
+                                .length
+                            }
+                          </Badge>
+                        </Form.Check.Label>
+                      </Form.Check>
+                    ),
                   )}
-                </tbody>
-              </Table>
-            </Card.Body>
+                </div>
+              </ListGroup.Item>
+              <ListGroup.Item className={"p-0"}>
+                <Table striped hover responsive className={"mb-0"}>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Mitglied</th>
+                      <th>Verteilort</th>
+                      <th>Änderungen</th>
+                      <th>Datum</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <PlaceholderTableRows
+                        nbRows={DEFAULT_PAGE_SIZE}
+                        nbColumns={6}
+                        size={"lg"}
+                      />
+                    ) : (
+                      getFilteredChanges().map((change) => {
+                        if (confirmedChanges.has(change)) {
+                          return (
+                            <PlaceholderTableRows
+                              nbRows={1}
+                              nbColumns={6}
+                              size={"lg"}
+                            />
+                          );
+                        }
+
+                        return (
+                          <tr
+                            key={change.member.id}
+                            onClick={() =>
+                              setSelectedChanges((selected) => {
+                                if (selected.has(change)) {
+                                  selected.delete(change);
+                                } else {
+                                  selected.add(change);
+                                }
+
+                                return new Set(selected);
+                              })
+                            }
+                            style={{ cursor: "pointer" }}
+                            className={
+                              selectedChanges.has(change) ? "table-primary" : ""
+                            }
+                          >
+                            <td>
+                              <Form.Check
+                                checked={selectedChanges.has(change)}
+                                readOnly={true}
+                              />
+                            </td>
+                            <td>
+                              <a href={change.memberProfileUrl}>
+                                {change.member.firstName}{" "}
+                                {change.member.lastName} #
+                                {change.member.memberNo}
+                              </a>
+                            </td>
+                            <td>{change.pickupLocation?.name}</td>
+                            <td>{buildChanges(change)}</td>
+                            <td>
+                              {formatDateNumeric(getEarliestChange(change))}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </Table>
+              </ListGroup.Item>
+            </ListGroup>
           </Card>
         </Col>
       </Row>

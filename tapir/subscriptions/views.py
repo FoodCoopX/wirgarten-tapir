@@ -361,6 +361,19 @@ class MemberDataToConfirmApiView(APIView):
         )
 
         cache = {}
+
+        for member in Member.objects.all():
+            if member in changes_by_member.keys():
+                continue
+            unconfirmed_share_purchases = (
+                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                    cache=cache
+                ).get(member.id, [])
+            )
+            if len(unconfirmed_share_purchases) == 0:
+                continue
+            changes_by_member[member] = {}
+
         data = MemberDataToConfirmSerializer(
             [
                 self.build_data_to_confirm_for_member(
@@ -438,6 +451,8 @@ class MemberDataToConfirmApiView(APIView):
             product_type,
             changes_for_this_product_type,
         ) in changes_by_product_type.items():
+            if product_type is None:
+                continue
             creations_for_this_product_type = changes_for_this_product_type["creations"]
             cancellations_for_this_product_type = changes_for_this_product_type[
                 "cancellations"
