@@ -16,9 +16,9 @@
 /**
  * * `no_delivery` - Keine Lieferung/Abholung
  * * `weekly` - 1x pro Woche
- * * `odd_weeks` - 2x pro Monat (ungerade KW)
- * * `even_weeks` - 2x pro Monat (gerade KW)
- * * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
+ * * `odd_weeks` - Jede 2. Woche (ungerade KW)
+ * * `even_weeks` - Jede 2. Woche (gerade KW)
+ * * `every_four_weeks` - Jede 4. Woche
  * @export
  */
 export const DeliveryCycleEnum = {

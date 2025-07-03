@@ -112,3 +112,5 @@ geckodriver.log
 /real_data_lueneburg/
 /error_logs
 /node_modules/
+tapir/filepond_stored_uploads
+tapir/filepond_temp_uploads

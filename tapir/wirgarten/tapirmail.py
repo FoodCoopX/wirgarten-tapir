@@ -66,6 +66,10 @@ class Events:
 
     CONTRACT_CANCELLED = "contract_canceled"
 
+    CONFIRMATION_REGISTRATION_IN_WAITING_LIST = (
+        "confirmation_registration_in_waiting_list"
+    )
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -321,6 +325,17 @@ def _register_triggers():
     )
 
     register_trigger(OnboardingTrigger)
+
+    register_transactional_trigger(
+        name="Bestätigung Eintrag Warteliste",
+        key=Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Verteilstation Wünsche": "pickup_location_list",
+            "Gewünschtes Startdatum": "desired_start_date",
+        },
+        required=False,
+    )
 
 
 def register_transactional_trigger(

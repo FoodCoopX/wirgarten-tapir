@@ -78,7 +78,9 @@ class SegmentTest(TapirIntegrationTest):
         self,
     ):
         expected_member_ids = [self.member_with_subscription.id]
-        start_date_next_month = get_next_contract_start_date(ref_date=self.NOW.date())
+        start_date_next_month = get_next_contract_start_date(
+            reference_date=self.NOW.date()
+        )
 
         edge_case_member = MemberFactory.create()
         SubscriptionFactory.create(

@@ -13,6 +13,7 @@ interface TapirButtonProps {
   type?: "submit" | "reset" | "button";
   fontSize?: number;
   tooltip?: string;
+  iconPosition?: "left" | "right";
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -32,6 +33,20 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
     return "";
   }
 
+  function buildIcon() {
+    if (!props.icon) return;
+
+    if (props.loading) {
+      return <Spinner size="sm" />;
+    }
+
+    return (
+      <span className={"material-icons"} style={{ fontSize: fontSize() }}>
+        {props.icon}
+      </span>
+    );
+  }
+
   return (
     <Button
       variant={props.variant ?? "undefined"}
@@ -47,20 +62,14 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       type={props.type ?? "button"}
       title={props.tooltip}
     >
-      {props.icon &&
-        (props.loading ? (
-          <Spinner size="sm" />
-        ) : (
-          <span className={"material-icons"} style={{ fontSize: fontSize() }}>
-            {props.icon}
-          </span>
-        ))}
+      {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}
       {props.text &&
         (props.size == "sm" ? (
           <span>{textContent()}</span>
         ) : (
           <h5 className={"mb-0"}>{textContent()}</h5>
         ))}
+      {props.iconPosition === "right" && buildIcon()}
     </Button>
   );
 };

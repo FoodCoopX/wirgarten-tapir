@@ -1,0 +1,374 @@
+import React, { useEffect, useState } from "react";
+import { Modal } from "react-bootstrap";
+import "dayjs/locale/de";
+import {
+  PickupLocationsApi,
+  PublicPickupLocation,
+  PublicProductType,
+  PublicSubscription,
+  SubscriptionsApi,
+  WaitingListApi,
+} from "../../api-client";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
+import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import SubscriptionEditStepPickupLocation from "./steps/SubscriptionEditStepPickupLocation.tsx";
+import SubscriptionEditStepProductType from "./steps/SubscriptionEditStepProductType.tsx";
+import PickupLocationWaitingListModal from "../../bestell_wizard/components/PickupLocationWaitingListModal.tsx";
+import ProductWaitingListModal from "../../bestell_wizard/components/ProductWaitingListModal.tsx";
+import SubscriptionEditStepSummary from "./steps/SubscriptionEditStepSummary.tsx";
+import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import SubscriptionEditStepConfirmation from "./steps/SubscriptionEditStepConfirmation.tsx";
+import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
+
+interface SubscriptionEditModalProps {
+  show: boolean;
+  onHide: () => void;
+  subscriptions: PublicSubscription[];
+  productType: PublicProductType;
+  memberId: string;
+  reloadSubscriptions: () => void;
+}
+
+export type SubscriptionEditStep =
+  | "product_type"
+  | "pickup_location"
+  | "summary"
+  | "confirmation";
+
+const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
+  show,
+  onHide,
+  subscriptions,
+  productType,
+  memberId,
+  reloadSubscriptions,
+}) => {
+  const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
+  const pickupLocationsApi = useApi(PickupLocationsApi, "unused");
+  const waitingListApi = useApi(WaitingListApi, getCsrfToken());
+
+  const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
+  const [sepaAllowed, setSepaAllowed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [checkingCapacities, setCheckingCapacities] = useState(false);
+  const [productIdsOverCapacity, setProductIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [productTypeIdsOverCapacity, setProductTypeIdsOverCapacity] = useState<
+    string[]
+  >([]);
+  const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
+  const [currentStep, setCurrentStep] =
+    useState<SubscriptionEditStep>("product_type");
+  const [memberHasPickupLocation, setMemberHasPickupLocation] = useState(false);
+  const [pickupLocations, setPickupLocations] = useState<
+    PublicPickupLocation[]
+  >([]);
+  const [needPickupLocation, setNeedPickupLocation] = useState(false);
+  const [selectedPickupLocations, setSelectedPickupLocations] = useState<
+    PublicPickupLocation[]
+  >([]);
+  const [
+    pickupLocationsWithCapacityCheckLoading,
+    setPickupLocationsWithCapacityCheckLoading,
+  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
+    useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [forceWaitingList, setForceWaitingList] = useState(false);
+  const [showWaitingListConfirmModal, setShowWaitingListConfirmModal] =
+    useState(false);
+  const [steps, setSteps] = useState<SubscriptionEditStep[]>([]);
+  const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
+    useState<{ [key: string]: Date }>({});
+
+  useEffect(() => {
+    if (!show) return;
+
+    pickupLocationsApi
+      .pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId: memberId })
+      .then((response) => {
+        setMemberHasPickupLocation(response.hasLocation);
+        if (response.hasLocation) {
+          setSelectedPickupLocations([response.location!]);
+        }
+      })
+      .catch(handleRequestError);
+
+    subscriptionsApi
+      .subscriptionsApiBestellWizardBaseDataRetrieve()
+      .then((response) => {
+        setForceWaitingList(response.forceWaitingList);
+      })
+      .catch(handleRequestError);
+  }, [show]);
+
+  useEffect(() => {
+    if (!show) return;
+
+    const shoppingCart: ShoppingCart = Object.fromEntries(
+      productType.products.map((product) => [product.id, 0]),
+    );
+    for (const subscription of subscriptions) {
+      if (isSubscriptionActive(subscription)) {
+        shoppingCart[subscription.productId] = subscription.quantity;
+      }
+    }
+    setShoppingCart(shoppingCart);
+  }, [subscriptions, show]);
+
+  useEffect(() => {
+    if (!show) return;
+
+    updateProductsAndProductTypesOverCapacity(
+      shoppingCart,
+      setProductIdsOverCapacity,
+      setProductTypeIdsOverCapacity,
+      setCheckingCapacities,
+    );
+  }, [shoppingCart, show]);
+
+  useEffect(() => {
+    setNeedPickupLocation(!memberHasPickupLocation && !productType.noDelivery);
+  }, [productType, memberHasPickupLocation, show]);
+
+  useEffect(() => {
+    if (!show) return;
+
+    pickupLocationsApi
+      .pickupLocationsPublicPickupLocationsList()
+      .then(setPickupLocations)
+      .catch(handleRequestError);
+
+    let steps: SubscriptionEditStep[] = [
+      "product_type",
+      "pickup_location",
+      "summary",
+      "confirmation",
+    ];
+    if (!needPickupLocation) {
+      steps = steps.filter((step) => step !== "pickup_location");
+    }
+    setSteps(steps);
+  }, [show, needPickupLocation]);
+
+  useEffect(() => {
+    if (isShoppingCartEmpty(shoppingCart) || !show || !needPickupLocation) {
+      return;
+    }
+
+    checkPickupLocationCapacities(
+      pickupLocations,
+      shoppingCart,
+      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsWithCapacityFull,
+    );
+  }, [pickupLocations, show, needPickupLocation, shoppingCart]);
+
+  useEffect(() => {
+    if (forceWaitingList) {
+      setWaitingListModeEnabled(true);
+      return;
+    }
+
+    if (
+      productIdsOverCapacity.length === 0 &&
+      productTypeIdsOverCapacity.length === 0 &&
+      selectedPickupLocations.length > 0 &&
+      pickupLocationsWithCapacityCheckLoading.size === 0 &&
+      !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+    ) {
+      setWaitingListModeEnabled(false);
+    }
+  }, [
+    forceWaitingList,
+    productIdsOverCapacity,
+    productTypeIdsOverCapacity,
+    selectedPickupLocations,
+    pickupLocationsWithCapacityCheckLoading,
+    pickupLocationsWithCapacityFull,
+  ]);
+
+  useEffect(() => {
+    fetchFirstDeliveryDates(
+      selectedPickupLocations,
+      shoppingCart,
+      setFirstDeliveryDatesByProductType,
+    );
+  }, [selectedPickupLocations, shoppingCart]);
+
+  function onConfirmOrder() {
+    setLoading(true);
+
+    if (waitingListModeEnabled) {
+      waitingListApi
+        .waitingListApiPublicWaitingListCreateEntryExistingMemberCreate({
+          publicWaitingListEntryExistingMemberCreateRequest: {
+            productIds: Object.keys(shoppingCart),
+            productQuantities: Object.values(shoppingCart),
+            pickupLocationIds: selectedPickupLocations.map(
+              (pickupLocations) => pickupLocations.id!,
+            ),
+            memberId: memberId,
+          },
+        })
+        .then((response) => {
+          setOrderConfirmed(response.orderConfirmed);
+          if (!response.orderConfirmed) {
+            setOrderError(response.error!);
+          }
+          setCurrentStep("confirmation");
+        })
+        .catch(handleRequestError)
+        .finally(() => setLoading(false));
+    } else {
+      subscriptionsApi
+        .subscriptionsApiUpdateSubscriptionCreate({
+          updateSubscriptionsRequestRequest: {
+            memberId: memberId,
+            shoppingCart: shoppingCart,
+            sepaAllowed: sepaAllowed,
+            productTypeId: productType.id!,
+            pickupLocationId:
+              selectedPickupLocations.length > 0
+                ? selectedPickupLocations[0].id
+                : undefined,
+          },
+        })
+        .then((response) => {
+          setOrderConfirmed(response.orderConfirmed);
+          if (!response.orderConfirmed) {
+            setOrderError(response.error!);
+          }
+          setCurrentStep("confirmation");
+        })
+        .catch(handleRequestError)
+        .finally(() => setLoading(false));
+    }
+  }
+
+  function goToNextStep() {
+    setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
+  }
+
+  function goToPreviousStep() {
+    setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
+  }
+
+  function onNextClicked() {
+    if (waitingListModeEnabled) {
+      goToNextStep();
+      return;
+    }
+
+    if (
+      productIdsOverCapacity.length > 0 ||
+      productTypeIdsOverCapacity.length > 0
+    ) {
+      setShowWaitingListConfirmModal(true);
+      return;
+    }
+
+    if (
+      selectedPickupLocations.length > 0 &&
+      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+    ) {
+      setShowWaitingListConfirmModal(true);
+      return;
+    }
+
+    goToNextStep();
+  }
+
+  return (
+    <>
+      <Modal
+        show={show && !showWaitingListConfirmModal}
+        onHide={onHide}
+        centered={true}
+        size={"lg"}
+      >
+        <Modal.Header closeButton>
+          <h5 className={"mb-0"}>{productType.name} bearbeiten</h5>
+        </Modal.Header>
+        {currentStep == "product_type" && (
+          <SubscriptionEditStepProductType
+            productType={productType}
+            shoppingCart={shoppingCart}
+            setShoppingCart={setShoppingCart}
+            checkingCapacities={checkingCapacities}
+            loading={loading}
+            sepaAllowed={sepaAllowed}
+            setSepaAllowed={setSepaAllowed}
+            onCancelClicked={onHide}
+            onNextClicked={onNextClicked}
+          />
+        )}
+        {currentStep == "pickup_location" && (
+          <SubscriptionEditStepPickupLocation
+            pickupLocations={pickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
+            selectedPickupLocations={selectedPickupLocations}
+            pickupLocationsWithCapacityCheckLoading={
+              pickupLocationsWithCapacityCheckLoading
+            }
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            waitingListModeEnabled={waitingListModeEnabled}
+            onBackClicked={goToPreviousStep}
+            onNextClicked={onNextClicked}
+          />
+        )}
+        {currentStep === "summary" && (
+          <SubscriptionEditStepSummary
+            waitingListModeEnabled={waitingListModeEnabled}
+            selectedPickupLocations={selectedPickupLocations}
+            shoppingCart={shoppingCart}
+            productType={productType}
+            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+            onBackClicked={goToPreviousStep}
+            onConfirmClicked={onConfirmOrder}
+            loading={loading}
+          />
+        )}
+        {currentStep === "confirmation" && (
+          <SubscriptionEditStepConfirmation
+            orderConfirmed={orderConfirmed}
+            error={orderError}
+            onBackClicked={() => setCurrentStep("product_type")}
+            onFinishedClicked={() => {
+              reloadSubscriptions();
+              onHide();
+            }}
+            waitingListModeEnabled={waitingListModeEnabled}
+          />
+        )}
+      </Modal>
+      <PickupLocationWaitingListModal
+        show={showWaitingListConfirmModal && currentStep === "pickup_location"}
+        onHide={() => setShowWaitingListConfirmModal(false)}
+        confirmEnableWaitingListMode={() => {
+          setWaitingListModeEnabled(true);
+          goToNextStep();
+          setShowWaitingListConfirmModal(false);
+        }}
+      />
+      <ProductWaitingListModal
+        show={showWaitingListConfirmModal && currentStep === "product_type"}
+        onHide={() => setShowWaitingListConfirmModal(false)}
+        confirmEnableWaitingListMode={() => {
+          setWaitingListModeEnabled(true);
+          goToNextStep();
+          setShowWaitingListConfirmModal(false);
+        }}
+      />
+    </>
+  );
+};
+
+export default SubscriptionEditModal;

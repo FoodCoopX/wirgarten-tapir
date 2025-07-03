@@ -20,7 +20,7 @@ interface ContractUpdatesConfirmationCardProps {
   onConfirmed: () => void;
 }
 
-const ContractUpdatesConfirmationCard: React.FC<
+const ContractUpdatesConfirmationModal: React.FC<
   ContractUpdatesConfirmationCardProps
 > = ({ csrfToken, changes, show, onHide, onConfirmed }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
@@ -106,8 +106,6 @@ const ContractUpdatesConfirmationCard: React.FC<
       }
       purchasesByDate[dateAsText].push(purchase);
     }
-
-    console.log(purchasesByDate);
 
     return (
       <ul>
@@ -195,4 +193,4 @@ const ContractUpdatesConfirmationCard: React.FC<
   );
 };
 
-export default ContractUpdatesConfirmationCard;
+export default ContractUpdatesConfirmationModal;

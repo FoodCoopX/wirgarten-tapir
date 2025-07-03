@@ -10,6 +10,7 @@ from tapir.wirgarten.models import (
     ProductType,
     GrowingPeriod,
 )
+from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
@@ -44,6 +45,12 @@ class PickupLocationOpeningTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PickupLocationOpeningTime
         fields = "__all__"
+
+    day_of_week_string = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_day_of_week_string(opening_time: PickupLocationOpeningTime):
+        return OPTIONS_WEEKDAYS[opening_time.day_of_week][1]
 
 
 class DeliverySerializer(serializers.Serializer):

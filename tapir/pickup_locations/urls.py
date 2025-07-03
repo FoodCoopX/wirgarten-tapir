@@ -15,10 +15,30 @@ urlpatterns = [
         views.PickupLocationCapacityEvolutionView.as_view(),
         name="pickup_location_capacity_evolution",
     ),
+    path(
+        "api/pickup_location_capacity_check",
+        views.PickupLocationCapacityCheckApiView.as_view(),
+        name="pickup_location_capacity_check",
+    ),
+    path(
+        "api/get_member_pickup_location",
+        views.GetMemberPickupLocationApiView.as_view(),
+        name="get_member_pickup_location",
+    ),
+    path(
+        "api/change_member_pickup_location",
+        views.ChangeMemberPickupLocationApiView.as_view(),
+        name="change_member_pickup_location",
+    ),
 ]
 
 router = DefaultRouter()
 router.register(
     r"pickup_locations", views.PickupLocationViewSet, basename="pickup_locations"
+)
+router.register(
+    r"public_pickup_locations",
+    views.PublicPickupLocationViewSet,
+    basename="public_pickup_locations",
 )
 urlpatterns += router.urls

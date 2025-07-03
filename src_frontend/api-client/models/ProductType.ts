@@ -87,6 +87,24 @@ export interface ProductType {
      * @memberof ProductType
      */
     isAssociationMembership?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProductType
+     */
+    descriptionBestellwizardShort?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProductType
+     */
+    descriptionBestellwizardLong?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProductType
+     */
+    orderInBestellwizard?: number;
 }
 
 
@@ -119,6 +137,9 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'subscriptionsHaveEndDates': json['subscriptions_have_end_dates'] == null ? undefined : json['subscriptions_have_end_dates'],
         'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
         'isAssociationMembership': json['is_association_membership'] == null ? undefined : json['is_association_membership'],
+        'descriptionBestellwizardShort': json['description_bestellwizard_short'] == null ? undefined : json['description_bestellwizard_short'],
+        'descriptionBestellwizardLong': json['description_bestellwizard_long'] == null ? undefined : json['description_bestellwizard_long'],
+        'orderInBestellwizard': json['order_in_bestellwizard'] == null ? undefined : json['order_in_bestellwizard'],
     };
 }
 
@@ -143,6 +164,9 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'subscriptions_have_end_dates': value['subscriptionsHaveEndDates'],
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'is_association_membership': value['isAssociationMembership'],
+        'description_bestellwizard_short': value['descriptionBestellwizardShort'],
+        'description_bestellwizard_long': value['descriptionBestellwizardLong'],
+        'order_in_bestellwizard': value['orderInBestellwizard'],
     };
 }
 
