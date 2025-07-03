@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Card, Col, Row, Table } from "react-bootstrap";
+import { Badge, Card, Col, Form, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   CoopShareTransaction,
@@ -11,7 +11,7 @@ import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import ContractUpdatesConfirmationModal from "./ContractUpdatesConfirmationCard.tsx";
+import TapirButton from "../components/TapirButton.tsx";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
@@ -25,8 +25,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   const [changesToConfirm, setChangesToConfirm] = useState<
     MemberDataToConfirm[]
   >([]);
-  const [selectedChange, setSelectedChange] = useState<MemberDataToConfirm>();
-  const [confirmedChange, setConfirmedChange] = useState<MemberDataToConfirm>();
+  const [selectedChanges, setSelectedChanges] = useState<
+    Set<MemberDataToConfirm>
+  >(new Set());
+  const [confirmedChanges, setConfirmedChanges] = useState<
+    Set<MemberDataToConfirm>
+  >(new Set());
 
   useEffect(() => {
     setLoading(true);
@@ -53,12 +57,6 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       .finally(() => setLoading(false));
   }
 
-  function onConfirmed() {
-    setConfirmedChange(selectedChange);
-    setSelectedChange(undefined);
-    loadList();
-  }
-
   function buildChanges(memberDataToConfirm: MemberDataToConfirm) {
     return (
       <>
@@ -71,7 +69,8 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={creation.id}>
                 Zeichnung: {creation.quantity}
                 {" × "}
-                {creation.product.name} {creation.product.type.name}
+                {creation.product.name} {creation.product.type.name} am{" "}
+                {formatDateNumeric(creation.startDate)}
               </li>
             );
           })}
@@ -80,7 +79,8 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
-                {cancellation.product.name} {cancellation.product.type.name}
+                {cancellation.product.name} {cancellation.product.type.name}am{" "}
+                {formatDateNumeric(cancellation.endDate)}
               </li>
             );
           })}
@@ -106,12 +106,18 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
             );
           })}
           {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) ===
-            1 && <li>1 Genossenschaftsanteil</li>}
+            1 && (
+            <li>
+              1 Genossenschaftsanteil gültig am{" "}
+              {formatDateNumeric(memberDataToConfirm.sharePurchases[0].validAt)}
+            </li>
+          )}
           {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) >
             1 && (
             <li>
               {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases)}{" "}
-              Genossenschaftsanteile
+              Genossenschaftsanteile gültig am{" "}
+              {formatDateNumeric(memberDataToConfirm.sharePurchases[0].validAt)}
             </li>
           )}
         </ul>
@@ -139,24 +145,99 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     }, new Date());
   }
 
+  function getCreationIdsToConfirm() {
+    const ids = [];
+    for (const change of selectedChanges) {
+      ids.push(
+        ...change.subscriptionCreations.map(
+          (subscriptions) => subscriptions.id!,
+        ),
+      );
+      for (const temp of change.subscriptionChanges) {
+        ids.push(
+          ...temp.subscriptionCreations.map((subscription) => subscription.id!),
+        );
+      }
+    }
+    return ids;
+  }
+
+  function getCancellationIdsToConfirm() {
+    const ids = [];
+    for (const change of selectedChanges) {
+      ids.push(
+        ...change.subscriptionCancellations.map(
+          (subscriptions) => subscriptions.id!,
+        ),
+      );
+      for (const temp of change.subscriptionChanges) {
+        ids.push(
+          ...temp.subscriptionCancellations.map(
+            (subscription) => subscription.id!,
+          ),
+        );
+      }
+    }
+    return ids;
+  }
+
+  function getSharePurchaseIdsToConfirm() {
+    const ids = [];
+    for (const change of selectedChanges) {
+      ids.push(...change.sharePurchases.map((purchase) => purchase.id!));
+    }
+    return ids;
+  }
+
+  function onConfirm() {
+    setLoading(true);
+
+    subscriptionsApi
+      .subscriptionsApiConfirmSubscriptionChangesCreate({
+        confirmCreationIds: getCreationIdsToConfirm(),
+        confirmCancellationIds: getCancellationIdsToConfirm(),
+        confirmPurchaseIds: getSharePurchaseIdsToConfirm(),
+      })
+      .then(() => {
+        setConfirmedChanges(new Set(selectedChanges));
+        setSelectedChanges(new Set());
+        loadList();
+      })
+      .catch(handleRequestError)
+      .finally(() => setLoading(false));
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
         <Col>
           <Card>
             <Card.Header>
-              <h5 className={"mb-0"}>
-                Zeichnungen und Kündigungen{" "}
-                <Badge>{changesToConfirm.length}</Badge>
-              </h5>
+              <div
+                className={
+                  "d-flex flex-row align-items-center justify-content-between"
+                }
+              >
+                <h5 className={"mb-0"}>
+                  Zeichnungen und Kündigungen{" "}
+                  <Badge>{changesToConfirm.length}</Badge>
+                </h5>
+                <TapirButton
+                  text={"Auswahl bestätigen"}
+                  disabled={selectedChanges.size === 0}
+                  icon={"check"}
+                  variant={"primary"}
+                  onClick={onConfirm}
+                  loading={loading}
+                />
+              </div>
             </Card.Header>
             <Card.Body className={"p-0"}>
               <Table striped hover responsive className={"mb-0"}>
                 <thead>
                   <tr>
-                    <th>Mitgliedsnummer</th>
-                    <th>Vorname</th>
-                    <th>Nachname</th>
+                    <th></th>
+                    <th>Mitglied</th>
                     <th>Verteilort</th>
                     <th>Änderungen</th>
                     <th>Datum</th>
@@ -171,7 +252,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                     />
                   ) : (
                     changesToConfirm.map((change) => {
-                      if (change == confirmedChange) {
+                      if (confirmedChanges.has(change)) {
                         return (
                           <PlaceholderTableRows
                             nbRows={1}
@@ -184,12 +265,34 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                       return (
                         <tr
                           key={change.member.id}
-                          onClick={() => setSelectedChange(change)}
+                          onClick={() =>
+                            setSelectedChanges((selected) => {
+                              if (selected.has(change)) {
+                                selected.delete(change);
+                              } else {
+                                selected.add(change);
+                              }
+
+                              return new Set(selected);
+                            })
+                          }
                           style={{ cursor: "pointer" }}
+                          className={
+                            selectedChanges.has(change) ? "table-primary" : ""
+                          }
                         >
-                          <td>{change.member.memberNo}</td>
-                          <td>{change.member.firstName}</td>
-                          <td>{change.member.lastName}</td>
+                          <td>
+                            <Form.Check
+                              checked={selectedChanges.has(change)}
+                              readOnly={true}
+                            />
+                          </td>
+                          <td>
+                            <a href={change.memberProfileUrl}>
+                              {change.member.firstName} {change.member.lastName}{" "}
+                              #{change.member.memberNo}
+                            </a>
+                          </td>
                           <td>{change.pickupLocation?.name}</td>
                           <td>{buildChanges(change)}</td>
                           <td>
@@ -205,15 +308,6 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           </Card>
         </Col>
       </Row>
-      {selectedChange && (
-        <ContractUpdatesConfirmationModal
-          csrfToken={csrfToken}
-          changes={selectedChange}
-          show={true}
-          onHide={() => setSelectedChange(undefined)}
-          onConfirmed={onConfirmed}
-        />
-      )}
     </>
   );
 };

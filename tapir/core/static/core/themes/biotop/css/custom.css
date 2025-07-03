@@ -109,7 +109,6 @@
 }
 
 :root {
-    --primary: #32822d;
     --secondary: #f49633;
     --platinum: #e9e7e5;
     --white: #ffffff;
@@ -160,26 +159,9 @@ body {
     color: var(--black);
 }
 
-.btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
 .btn-secondary {
     background-color: var(--secondary);
     border-color: var(--secondary);
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    filter: brightness(90%);
 }
 
 .btn-secondary:hover,
@@ -189,25 +171,11 @@ body {
     filter: brightness(90%);
 }
 
-.btn-primary:disabled,
-.btn-primary.disabled {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    opacity: 0.65;
-}
-
 .btn-secondary:disabled,
 .btn-secondary.disabled {
     background-color: var(--secondary);
     border-color: var(--secondary);
     opacity: 0.65;
-}
-
-.btn-primary:not(:disabled):not(.disabled):active,
-.btn-primary:not(:disabled):not(.disabled).active {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    filter: brightness(75%);
 }
 
 .btn-secondary:not(:disabled):not(.disabled):active,
@@ -287,11 +255,6 @@ tr.tr-clickable:hover:not(.active) {
     background-color: gray;
     border-radius: 10px;
     border: 2px solid #ffffff;
-}
-
-.btn:disabled {
-    color: grey;
-    border-color: grey;
 }
 
 .tapir-btn:disabled {
