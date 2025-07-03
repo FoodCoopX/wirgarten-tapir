@@ -533,6 +533,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           personalData,
           sepaAllowed,
           contractAccepted,
+          waitingListModeEnabled,
         );
         break;
       default:

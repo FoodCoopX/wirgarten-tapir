@@ -29,6 +29,7 @@ export function buildNextButtonForStepSummary(
     loading: confirmOrderLoading,
     text: text,
     icon: "check",
+    variant: "primary",
   };
   return (
     <BestellWizardNextButton params={params} onNextClicked={onConfirmOrder} />

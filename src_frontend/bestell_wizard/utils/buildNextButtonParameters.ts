@@ -141,19 +141,31 @@ export function buildNextButtonParametersForPersonalData(
   personalData: PersonalData,
   sepaAllowed: boolean,
   contractAccepted: boolean,
+  waitingListModeEnabled: boolean,
 ): NextButtonParameters {
   let text = undefined;
   if (!isPersonalDataValid(personalData)) {
     text = "Vervollständige deine Daten um weiter zu gehen";
-  } else if (!sepaAllowed) {
-    text = "Ermächtige das SEPA-Mandat um weiter zu gehen";
-  } else if (!contractAccepted) {
-    text = "Akzeptiere die Vertragsgrundsätze um weiter zu gehen";
+  }
+
+  if (!waitingListModeEnabled) {
+    if (!sepaAllowed) {
+      text = "Ermächtige das SEPA-Mandat um weiter zu gehen";
+    } else if (!contractAccepted) {
+      text = "Akzeptiere die Vertragsgrundsätze um weiter zu gehen";
+    }
+  }
+
+  let disabled;
+  if (waitingListModeEnabled) {
+    disabled = !isPersonalDataValid(personalData);
+  } else {
+    disabled =
+      !isPersonalDataValid(personalData) || !sepaAllowed || !contractAccepted;
   }
 
   return {
-    disabled:
-      !isPersonalDataValid(personalData) || !sepaAllowed || !contractAccepted,
+    disabled: disabled,
     icon: undefined,
     loading: false,
     text: text,

@@ -13,7 +13,7 @@ const BestellWizardNextButton: React.FC<BestellWizardNextButtonProps> = ({
   return (
     <TapirButton
       icon={params.icon}
-      variant={"outline-primary"}
+      variant={params.variant ?? "outline-primary"}
       text={params.text}
       onClick={onNextClicked}
       iconPosition={"right"}
