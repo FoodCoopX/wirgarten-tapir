@@ -9,6 +9,10 @@ from rest_framework import permissions, viewsets, status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
@@ -50,6 +54,7 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
+from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
 
@@ -315,7 +320,15 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
         try:
             self.validate(serializer.validated_data)
             with transaction.atomic():
-                self.create_entry(serializer.validated_data)
+                entry = self.create_entry(serializer.validated_data)
+                PublicWaitingListCreateEntryExistingMemberView.send_confirmation_mail(
+                    entry=entry,
+                    future_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                        email=serializer.validated_data["email"],
+                        first_name=serializer.validated_data["first_name"],
+                        last_name=serializer.validated_data["last_name"],
+                    ),
+                )
         except ValidationError as error:
             data["order_confirmed"] = False
             data["error"] = error.message
@@ -352,7 +365,7 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
             raise ValidationError(
                 "Es gibt schon einen Warteliste-Eintrag mit dieser E-Mail-Adresse"
             )
-        if Member.objects.filter(member__email=validated_data["email"]).exists():
+        if Member.objects.filter(email=validated_data["email"]).exists():
             raise ValidationError(
                 "Es gibt schon einen Konto mit dieser E-Mail-Adresse. Wenn du deine Verträge anpassen möchtest, nutzt die Funktionen im Mitgliederbereich."
             )
@@ -373,6 +386,8 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
         WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
             waiting_list_entry, validated_data
         )
+
+        return waiting_list_entry
 
 
 class PublicWaitingListCreateEntryExistingMemberView(APIView):
@@ -398,7 +413,11 @@ class PublicWaitingListCreateEntryExistingMemberView(APIView):
         try:
             self.validate(serializer.validated_data)
             with transaction.atomic():
-                self.create_entry(serializer.validated_data)
+                entry = self.create_entry(serializer.validated_data)
+                self.send_confirmation_mail(
+                    existing_member_id=serializer.validated_data["member_id"],
+                    entry=entry,
+                )
         except ValidationError as error:
             data["order_confirmed"] = False
             data["error"] = error.message
@@ -437,4 +456,60 @@ class PublicWaitingListCreateEntryExistingMemberView(APIView):
         )
         WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
             waiting_list_entry, validated_data
+        )
+
+        return waiting_list_entry
+
+    @staticmethod
+    def send_confirmation_mail(
+        entry: WaitingListEntry,
+        existing_member_id: str | None = None,
+        future_member_info: (
+            TransactionalTriggerData.RecipientOutsideOfBaseQueryset | None
+        ) = None,
+    ):
+        if (
+            existing_member_id is None
+            and future_member_info is None
+            or existing_member_id is not None
+            and future_member_info is not None
+        ):
+            raise ValueError(
+                f"Exactly one of `existing_member_id` or `future_member_info` must be provided. "
+                f"existing_member_id:{existing_member_id}, future_member_info:{future_member_info}"
+            )
+
+        contract_list = "</li><li>".join(
+            [
+                f"{product_wish.product.name} x {product_wish.quantity}"
+                for product_wish in entry.product_wishes.all().select_related("product")
+            ]
+        )
+        contract_list = f"<ul><li>{contract_list}</li></ul>"
+
+        pickup_location_list = "</li><li>".join(
+            [
+                f"{pickup_location_wish.pickup_location.name}"
+                for pickup_location_wish in entry.pickup_location_wishes.all()
+                .select_related("pickup_location")
+                .order_by("priority")
+            ]
+        )
+        pickup_location_list = f"<ol><li>{pickup_location_list}</li></ol>"
+
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST,
+                recipient_id_in_base_queryset=existing_member_id,
+                recipient_outside_of_base_queryset=future_member_info,
+                token_data={
+                    "contract_list": contract_list,
+                    "pickup_location_list": pickup_location_list,
+                    "desired_start_date": (
+                        entry.desired_start_date.strftime("%d.%m.%Y")
+                        if entry.desired_start_date is not None
+                        else "so früh wie möglich"
+                    ),
+                },
+            ),
         )
