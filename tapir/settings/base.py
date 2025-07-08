@@ -64,6 +64,7 @@ if ENABLE_SILK_PROFILING:
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -181,5 +182,11 @@ BOOTSTRAP_DATEPICKER_PLUS = {
         "datetime": {
             "format": "DD.MM.YYYY HH:mm",
         },
+    },
+}
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }

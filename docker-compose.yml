@@ -34,7 +34,6 @@ services:
       - ./docker/nginx/certs:/etc/nginx/certs:ro
       - ./docker/nginx/vhost.d:/etc/nginx/vhost.d:ro
       - ./docker/nginx/client_auth_certs:/etc/nginx/client_auth_certs:ro
-      - ./static:/usr/src/app/static 
     ports:
       - "8000:80"
       - "8001:443"
