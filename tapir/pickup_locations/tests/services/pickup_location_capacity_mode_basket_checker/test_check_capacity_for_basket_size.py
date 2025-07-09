@@ -166,3 +166,46 @@ class TestCheckCapacityForBasketSize(SimpleTestCase):
             basket_size="test_size",
             cache=cache,
         )
+
+    @patch.object(
+        PickupLocationCapacityModeBasketChecker,
+        "calculate_capacity_used_by_the_ordered_products",
+    )
+    @patch.object(
+        PickupLocationCapacityModeBasketChecker,
+        "get_capacity_used_by_member_before_changes",
+    )
+    @patch.object(PickupLocationCapacityModeBasketChecker, "get_free_capacity_at_date")
+    def test_checkCapacityForBasketSize_basketSizeIsNotOrdered_returnsTrueAndDontCheckCapacity(
+        self,
+        mock_get_free_capacity_at_date: Mock,
+        mock_get_capacity_used_by_member_before_changes: Mock,
+        mock_calculate_capacity_used_by_the_ordered_products: Mock,
+    ):
+        mock_get_free_capacity_at_date.return_value = -3
+        mock_get_capacity_used_by_member_before_changes.return_value = 0
+        mock_calculate_capacity_used_by_the_ordered_products.return_value = 0
+        member = Mock()
+        pickup_location = Mock()
+        subscription_start = Mock()
+        ordered_product_to_quantity_map = Mock()
+        cache = {}
+
+        result = PickupLocationCapacityModeBasketChecker.check_capacity_for_basket_size(
+            basket_size="test_size",
+            member=member,
+            pickup_location=pickup_location,
+            subscription_start=subscription_start,
+            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            cache=cache,
+        )
+
+        self.assertTrue(result)
+
+        mock_get_free_capacity_at_date.assert_not_called()
+        mock_get_capacity_used_by_member_before_changes.assert_not_called()
+        mock_calculate_capacity_used_by_the_ordered_products.assert_called_once_with(
+            ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            basket_size="test_size",
+            cache=cache,
+        )

@@ -505,7 +505,7 @@ class ChangeMemberPickupLocationApiView(APIView):
             cache=self.cache,
         ):
             raise ValidationError(
-                "Diese Abholort hat nicht Kapazitäten für deine Verträge."
+                "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
 
     def apply_changes(self, member: Member, new_pickup_location_id, actor):

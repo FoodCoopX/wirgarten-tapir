@@ -71,6 +71,17 @@ class PickupLocationCapacityModeShareChecker:
         ordered_product_to_quantity_map: Dict[Product, int],
         cache: Dict,
     ):
+        capacity_used_by_the_order = (
+            cls.calculate_capacity_used_by_the_ordered_products(
+                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                product_type=product_type,
+                reference_date=subscription_start,
+                cache=cache,
+            )
+        )
+        if capacity_used_by_the_order == 0:
+            return True
+
         free_capacity = cls.get_free_capacity_at_date(
             product_type=product_type,
             pickup_location=pickup_location,
@@ -83,14 +94,6 @@ class PickupLocationCapacityModeShareChecker:
                 member=member,
                 subscription_start=subscription_start,
                 product_type=product_type,
-                cache=cache,
-            )
-        )
-        capacity_used_by_the_order = (
-            cls.calculate_capacity_used_by_the_ordered_products(
-                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-                product_type=product_type,
-                reference_date=subscription_start,
                 cache=cache,
             )
         )

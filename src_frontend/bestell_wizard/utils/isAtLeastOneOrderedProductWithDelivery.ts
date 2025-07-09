@@ -16,9 +16,6 @@ export function isAtLeastOneOrderedProductWithDelivery(
       }
       for (const product of productType.products) {
         if (product.id === orderedProductId) {
-          console.log(orderedProductId);
-          console.log(productType);
-          console.log(shoppingCart);
           return true;
         }
       }
