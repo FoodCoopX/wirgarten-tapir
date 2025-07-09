@@ -51,18 +51,19 @@ from tapir.wirgarten.utils import (
 
 @require_GET
 def get_cashflow_chart_data(request):
+    cache = {}
     last_contract_end = Subscription.objects.aggregate(max_date=Max("end_date"))[
         "max_date"
     ]
 
-    payment_dates = [get_next_payment_date()]
+    payment_dates = [get_next_payment_date(cache=cache)]
     while payment_dates[-1] < last_contract_end:
         payment_dates.append(payment_dates[-1] + relativedelta(months=1))
 
     return JsonResponse(
         {
             "labels": [format_date(x) for x in payment_dates],
-            "data": [get_total_payment_amount(x) for x in payment_dates],
+            "data": [get_total_payment_amount(x, cache=cache) for x in payment_dates],
         },
         safe=True,
     )
