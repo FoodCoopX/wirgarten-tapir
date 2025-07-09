@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from datetime import date
+from math import floor, ceil
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
@@ -130,8 +131,8 @@ class BaseProductForm(forms.Form):
         self.field_order = list(self.products.keys()) + ["solidarity_price_choice"]
         self.colspans = {
             "growing_period": self.n_columns,
-            "solidarity_price_choice": self.n_columns - 1,
-            "solidarity_price_custom": 1,
+            "solidarity_price_choice": floor(self.n_columns / 2),
+            "solidarity_price_custom": ceil(self.n_columns / 2),
             "consent_harvest_shares": self.n_columns,
             "pickup_location": self.n_columns,
             "pickup_location_change_date": self.n_columns,
