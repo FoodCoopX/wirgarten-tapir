@@ -339,13 +339,31 @@ class MemberDataToConfirmApiView(APIView):
         responses={200: MemberDataToConfirmSerializer(many=True)},
     )
     def get(self, request):
-        changes_by_member = {}
+        cache = {}
+        changes_by_member = self.get_changes_by_member()
 
+        data = MemberDataToConfirmSerializer(
+            [
+                self.build_data_to_confirm_for_member(
+                    member=member,
+                    changes_by_product_type=changes_by_product_type,
+                    cache=cache,
+                )
+                for member, changes_by_product_type in changes_by_member.items()
+            ],
+            many=True,
+        ).data
+
+        return Response(data)
+
+    @classmethod
+    def get_changes_by_member(cls):
+        changes_by_member = {}
         unconfirmed_cancellations = Subscription.objects.filter(
             cancellation_ts__isnull=False,
             cancellation_admin_confirmed__isnull=True,
         ).select_related("member", "product__type")
-        self.group_changes_by_member_and_product_type(
+        cls.group_changes_by_member_and_product_type(
             subscriptions=unconfirmed_cancellations,
             key="cancellations",
             changes_by_member=changes_by_member,
@@ -354,7 +372,7 @@ class MemberDataToConfirmApiView(APIView):
         unconfirmed_creations = Subscription.objects.filter(
             admin_confirmed__isnull=True
         ).select_related("member", "product__type")
-        self.group_changes_by_member_and_product_type(
+        cls.group_changes_by_member_and_product_type(
             subscriptions=unconfirmed_creations,
             key="creations",
             changes_by_member=changes_by_member,
@@ -374,35 +392,11 @@ class MemberDataToConfirmApiView(APIView):
                 continue
             changes_by_member[member] = {}
 
-        data = MemberDataToConfirmSerializer(
-            [
-                self.build_data_to_confirm_for_member(
-                    member=member,
-                    changes_by_product_type=changes_by_product_type,
-                    cache=cache,
-                )
-                for member, changes_by_product_type in changes_by_member.items()
-            ],
-            many=True,
-        ).data
+        return changes_by_member
 
-        return Response(data)
-
-    @staticmethod
-    def get_number_of_unconfirmed_changes(cache: dict):
-
-        return (
-            Subscription.objects.filter(
-                cancellation_ts__isnull=False,
-                cancellation_admin_confirmed__isnull=True,
-            ).count()
-            + Subscription.objects.filter(admin_confirmed__isnull=True).count()
-            + len(
-                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
-                    cache=cache
-                ).keys()
-            )
-        )
+    @classmethod
+    def get_number_of_unconfirmed_changes(cls, cache: dict):
+        return len(cls.get_changes_by_member())
 
     @classmethod
     def group_changes_by_member_and_product_type(
@@ -583,7 +577,9 @@ class ConfirmSubscriptionChangesView(APIView):
         cache: dict,
     ):
         subscription_ids_to_confirm = [
-            id.strip() for id in ids_to_confirm if id.strip() != ""
+            subscription_id.strip()
+            for subscription_id in ids_to_confirm
+            if subscription_id.strip() != ""
         ]
 
         subscriptions_to_confirm = model.objects.filter(
