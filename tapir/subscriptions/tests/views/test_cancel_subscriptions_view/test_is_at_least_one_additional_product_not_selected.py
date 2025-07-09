@@ -5,7 +5,7 @@ from django.test import SimpleTestCase
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
-from tapir.subscriptions.views import CancelSubscriptionsView
+from tapir.subscriptions.views.cancellations import CancelSubscriptionsView
 from tapir.wirgarten.tests.factories import ProductFactory, ProductTypeFactory
 
 

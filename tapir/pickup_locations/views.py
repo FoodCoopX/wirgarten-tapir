@@ -140,7 +140,7 @@ class PickupLocationCapacitiesView(APIView):
         ]
 
     @extend_schema(
-        responses={200: str},
+        responses={200: str, 400: str},
         request=PickupLocationCapacitiesSerializer(),
     )
     def patch(self, request):
@@ -157,7 +157,7 @@ class PickupLocationCapacitiesView(APIView):
         cache = {}
         picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
         if request_serializer.validated_data["picking_mode"] != picking_mode:
-            raise ValidationError("Invalid picking mode")
+            raise serializers.ValidationError("Invalid picking mode")
 
         if picking_mode == PICKING_MODE_BASKET:
             self.save_capacities_by_basket_size(

@@ -7,7 +7,7 @@ from rest_framework import status
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
-from tapir.subscriptions.views import GetCancellationDataView
+from tapir.subscriptions.views.cancellations import GetCancellationDataView
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import MemberFactory, SubscriptionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone

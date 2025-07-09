@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
@@ -9,6 +11,7 @@ from tapir.pickup_locations.services.basket_size_capacities_service import (
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.pickup_locations.views import PickupLocationCapacitiesView
 from tapir.wirgarten.constants import WEEKLY, EVEN_WEEKS, ODD_WEEKS
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -107,7 +110,9 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         )
         return response
 
-    def test_patch_sendPickingModeDifferentFromSettings_returnsError(self):
+    @patch.object(PickupLocationCapacitiesView, "save_capacities_by_basket_size")
+    @patch.object(PickupLocationCapacitiesView, "save_capacities_by_share")
+    def test_patch_sendPickingModeDifferentFromSettings_returnsError(self, *mocks):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_MODE).update(
@@ -118,9 +123,13 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         response = self.do_patch_call(data)
 
         self.assertStatusCode(response, 400)
+        for mock in mocks:
+            mock.assert_not_called()
 
+    @patch.object(PickupLocationCapacitiesView, "save_capacities_by_basket_size")
+    @patch.object(PickupLocationCapacitiesView, "save_capacities_by_share")
     def test_patch_sendDataForPickingModeBasketButSettingsIsModeShare_returnsError(
-        self,
+        self, *mocks
     ):
         member = MemberFactory.create(is_superuser=True)
         self.client.force_login(member)
@@ -133,6 +142,8 @@ class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
         response = self.do_patch_call(data)
 
         self.assertStatusCode(response, 400)
+        for mock in mocks:
+            mock.assert_not_called()
 
     def test_patch_sendDataForPickingModeSharesButSettingsIsModeBasket_returnsError(
         self,

@@ -7,7 +7,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.subscriptions.views import GetCancellationDataView
+from tapir.subscriptions.views.cancellations import GetCancellationDataView
 
 
 class TestBuildSubscribedProductsData(SimpleTestCase):
