@@ -246,6 +246,7 @@
   fetch("{% url 'wirgarten:admin_dashboard_cashflow_data' %}")
     .then(response => {
       if (!response.ok) {
+        document.getElementById("cashflow-loading").innerText = "Fehler beim Laden der Daten";
         throw new Error("HTTP error " + response.status);
       }
       return response.json();
