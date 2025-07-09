@@ -6,32 +6,29 @@ import {
   PickupLocationOpeningTime,
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
-import { Card, Placeholder, Table } from "react-bootstrap";
+import { Card, Placeholder, Spinner, Table } from "react-bootstrap";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import "dayjs/locale/de";
-import PickupLocationModal from "./PickupLocationModal.tsx";
+import PickupLocationDeliveryDetailsModal from "./PickupLocationDeliveryDetailsModal.tsx";
 import ManageJokersModal from "./ManageJokersModal.tsx";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
-
-declare let FormModal: { load: (url: string, title: string) => void };
+import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
 
 interface DeliveryListCardProps {
   memberId: string;
   areJokersEnabled: boolean;
   csrfToken: string;
-  pickupLocationModalUrl: string;
 }
 
 const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   memberId,
   areJokersEnabled,
   csrfToken,
-  pickupLocationModalUrl,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -43,6 +40,8 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     setSelectedPickupLocationOpeningTimes,
   ] = useState<PickupLocationOpeningTime[]>([]);
   const [showManageJokersModal, setShowManageJokersModal] = useState(false);
+  const [showPickupLocationChangeModal, setShowPickupLocationChangeModal] =
+    useState(false);
 
   dayjs.extend(RelativeTime);
   dayjs.extend(WeekOfYear);
@@ -135,6 +134,37 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     );
   }
 
+  function getHeaderButtons() {
+    if (deliveriesLoading) {
+      return <Spinner />;
+    }
+
+    if (deliveries.length === 0) {
+      return null;
+    }
+
+    return (
+      <span className={"d-flex gap-2"}>
+        {areJokersEnabled && (
+          <TapirButton
+            text={"Joker verwalten"}
+            icon={"free_cancellation"}
+            variant={"outline-primary"}
+            onClick={() => {
+              setShowManageJokersModal(true);
+            }}
+          />
+        )}
+        <TapirButton
+          text={"Verteilstation ändern"}
+          icon={"edit"}
+          variant={"outline-primary"}
+          onClick={() => setShowPickupLocationChangeModal(true)}
+        />
+      </span>
+    );
+  }
+
   return (
     <>
       <Card style={{ marginBottom: "1rem" }}>
@@ -143,60 +173,42 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
             className={"d-flex justify-content-between align-items-center mb-0"}
           >
             <h5 className={"mb-0"}>Abholung</h5>
-            <span className={"d-flex gap-2"}>
-              {areJokersEnabled && (
-                <TapirButton
-                  text={"Joker verwalten"}
-                  icon={"free_cancellation"}
-                  variant={"outline-primary"}
-                  onClick={() => {
-                    setShowManageJokersModal(true);
-                  }}
-                />
-              )}
-              <TapirButton
-                text={"Verteilstation ändern"}
-                icon={"edit"}
-                variant={"outline-primary"}
-                onClick={() =>
-                  FormModal.load(
-                    pickupLocationModalUrl,
-                    "Verteilstation ändern",
-                  )
-                }
-              />
-            </span>
+            {getHeaderButtons()}
           </div>
         </Card.Header>
-        <Card.Body className={"p-0"}>
+        <Card.Body className={deliveries.length > 0 ? "p-0" : ""}>
           <div style={{ overflowY: "scroll", maxHeight: "30em" }}>
-            <Table striped hover responsive className={"text-center"}>
-              <thead>
-                <tr>
-                  <th>Datum</th>
-                  <th>Produkte</th>
-                  <th>Abholort</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deliveriesLoading
-                  ? loadingPlaceholder()
-                  : deliveries.map((delivery) => {
-                      return (
-                        <tr key={formatDateNumeric(delivery.deliveryDate)}>
-                          <td>{dateCell(delivery)}</td>
-                          <td>{productCell(delivery)}</td>
-                          <td>{pickupLocationCell(delivery)}</td>
-                        </tr>
-                      );
-                    })}
-              </tbody>
-            </Table>
+            {!deliveriesLoading && deliveries.length === 0 ? (
+              <p className={"text-center mb-0"}>Keine Abholungen</p>
+            ) : (
+              <Table striped hover responsive className={"text-center"}>
+                <thead>
+                  <tr>
+                    <th>Datum</th>
+                    <th>Produkte</th>
+                    <th>Abholort</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deliveriesLoading
+                    ? loadingPlaceholder()
+                    : deliveries.map((delivery) => {
+                        return (
+                          <tr key={formatDateNumeric(delivery.deliveryDate)}>
+                            <td>{dateCell(delivery)}</td>
+                            <td>{productCell(delivery)}</td>
+                            <td>{pickupLocationCell(delivery)}</td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </Table>
+            )}
           </div>
         </Card.Body>
       </Card>
       {selectedPickupLocation && (
-        <PickupLocationModal
+        <PickupLocationDeliveryDetailsModal
           pickupLocation={selectedPickupLocation}
           openingTimes={selectedPickupLocationOpeningTimes}
           onHide={() => setSelectedPickupLocation(undefined)}
@@ -213,6 +225,13 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           csrfToken={csrfToken}
         />
       )}
+      <PickupLocationChangeModal
+        onHide={() => setShowPickupLocationChangeModal(false)}
+        show={showPickupLocationChangeModal}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        reloadDeliveries={loadDeliveries}
+      />
     </>
   );
 };

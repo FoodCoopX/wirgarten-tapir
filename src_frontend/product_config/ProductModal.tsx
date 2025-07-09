@@ -38,6 +38,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [deleted, setDeleted] = useState(false);
   const [price, setPrice] = useState(0);
   const [size, setSize] = useState(0);
+  const [descriptionInBestellWizard, setDescriptionInBestellWizard] =
+    useState("");
+  const [urlOfImageInBestellWizard, setUrlOfImageInBestellWizard] =
+    useState("");
   const [equivalences, setEquivalences] = useState<
     ProductBasketSizeEquivalence[]
   >([]);
@@ -66,6 +70,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setSize(extendedProduct.size);
         setEquivalences(extendedProduct.basketSizeEquivalences);
         setPickingMode(extendedProduct.pickingMode);
+        setDescriptionInBestellWizard(
+          extendedProduct.descriptionInBestellwizard,
+        );
+        setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -88,6 +96,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
           basketSizeEquivalences: equivalences,
           deleted: deleted,
           growingPeriodId: getPeriodIdFromUrl(),
+          descriptionInBestellwizard: descriptionInBestellWizard,
+          urlOfImageInBestellwizard: urlOfImageInBestellWizard,
         },
       })
       .then(() => location.reload())
@@ -136,9 +146,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </Form.Group>
               </Col>
             </Row>
-          </ListGroup.Item>
-          <ListGroup.Item>
-            <Row>
+            <Row className={"mt-2"}>
               <Col>
                 <Form.Group>
                   <Form.Label>Preis (monatlich, €)</Form.Label>
@@ -161,6 +169,38 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     min={0}
                     onChange={(e) => setSize(parseFloat(e.target.value))}
                   />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Form.Group controlId={"photo"}>
+                  <Form.Label>Beschreibung im BestellWizard</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    as={"textarea"}
+                    value={descriptionInBestellWizard}
+                    onChange={(e) =>
+                      setDescriptionInBestellWizard(e.target.value)
+                    }
+                  />
+                  <Form.Text>Beispiel: "für ca. eine Person"</Form.Text>
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group controlId={"photo"}>
+                  <Form.Label>URL zu Bild im BestellWizard</Form.Label>
+                  <Form.Control
+                    type={"text"}
+                    value={urlOfImageInBestellWizard}
+                    onChange={(e) =>
+                      setUrlOfImageInBestellWizard(e.target.value)
+                    }
+                  />
+                  <Form.Text>
+                    Bilder können z.B. im Mail-Modul unter "Medien Verwalten"
+                    hochgeladen werden
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>

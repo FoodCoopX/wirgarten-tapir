@@ -34,6 +34,8 @@ class ProductTypeForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ProductTypeForm, self).__init__(*args)
         initial_name = ""
+        initial_description_bestellwizard_short = ""
+        initial_description_bestellwizard_long = ""
         initial_delivery_cycle = NO_DELIVERY
         initial_tax_rate = 0
         initial_capacity = 0.0
@@ -42,6 +44,7 @@ class ProductTypeForm(forms.Form):
         initial_notice_period = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
         )
+        initial_order_in_bestellwizard = 1
 
         if KW_PERIOD_ID in kwargs:
             initial_period_id = kwargs[KW_PERIOD_ID]
@@ -60,6 +63,13 @@ class ProductTypeForm(forms.Form):
                     initial_tax_rate = 0.19
 
                 initial_name = product_type.name
+                initial_description_bestellwizard_short = (
+                    product_type.description_bestellwizard_short
+                )
+                initial_description_bestellwizard_long = (
+                    product_type.description_bestellwizard_long
+                )
+                initial_order_in_bestellwizard = product_type.order_in_bestellwizard
                 initial_delivery_cycle = product_type.delivery_cycle
                 initial_notice_period = NoticePeriodManager.get_notice_period_duration(
                     product_type=product_type,
@@ -87,7 +97,28 @@ class ProductTypeForm(forms.Form):
                 )
 
         self.fields["name"] = forms.CharField(
-            initial=initial_name, required=False, label=_("Produkt Name")
+            initial=initial_name, required=False, label=_("Produkt-Typ Name")
+        )
+        self.fields["description_bestellwizard_short"] = forms.CharField(
+            initial=initial_description_bestellwizard_short,
+            required=True,
+            label=ProductType._meta.get_field(
+                "description_bestellwizard_short"
+            ).verbose_name,
+            widget=forms.Textarea(),
+        )
+        self.fields["description_bestellwizard_long"] = forms.CharField(
+            initial=initial_description_bestellwizard_long,
+            required=True,
+            label=ProductType._meta.get_field(
+                "description_bestellwizard_long"
+            ).verbose_name,
+            widget=forms.Textarea(),
+        )
+        self.fields["order_in_bestellwizard"] = forms.IntegerField(
+            initial=initial_order_in_bestellwizard,
+            required=True,
+            label=ProductType._meta.get_field("order_in_bestellwizard").verbose_name,
         )
         self.fields["icon_link"] = forms.CharField(
             required=False,
@@ -192,6 +223,7 @@ class ProductForm(forms.Form):
                 "-valid_from"
             )
             initial_name = product.name
+
             period = GrowingPeriod.objects.get(id=kwargs[KW_PERIOD_ID])
             for price in prices:
                 if price.valid_from < period.end_date:
@@ -252,7 +284,7 @@ class GrowingPeriodForm(forms.Form):
                     new_start_date = period.end_date + relativedelta(days=1)
                 else:
                     new_start_date = get_next_contract_start_date(
-                        ref_date=today, cache=self.cache
+                        reference_date=today, cache=self.cache
                     )
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:

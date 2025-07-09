@@ -71,6 +71,16 @@ class PickupLocationCapacityModeBasketChecker:
         ordered_product_to_quantity_map: Dict[Product, int],
         cache: Dict,
     ):
+        capacity_used_by_the_order = (
+            cls.calculate_capacity_used_by_the_ordered_products(
+                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                basket_size=basket_size,
+                cache=cache,
+            )
+        )
+        if capacity_used_by_the_order == 0:
+            return True
+
         free_capacity = cls.get_free_capacity_at_date(
             pickup_location=pickup_location,
             basket_size=basket_size,
@@ -85,13 +95,7 @@ class PickupLocationCapacityModeBasketChecker:
                 cache=cache,
             )
         )
-        capacity_used_by_the_order = (
-            cls.calculate_capacity_used_by_the_ordered_products(
-                ordered_product_to_quantity_map=ordered_product_to_quantity_map,
-                basket_size=basket_size,
-                cache=cache,
-            )
-        )
+
         return (
             free_capacity
             + amount_used_by_member_before_changes

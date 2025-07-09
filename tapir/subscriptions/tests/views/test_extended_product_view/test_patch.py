@@ -40,6 +40,8 @@ class TestExtendedProductViewPath(TapirIntegrationTest):
             "price": 0,
             "size": 0,
             "basket_size_equivalences": [],
+            "description_in_bestellwizard": "test description",
+            "url_of_image_in_bestellwizard": "https://test.url.com",
         }
 
         url = reverse("subscriptions:extended_product")

@@ -1,3 +1,5 @@
+apis/CoopApi.ts
+apis/CoreApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PickupLocationsApi.ts
@@ -7,6 +9,12 @@ apis/WaitingListApi.ts
 apis/index.ts
 index.ts
 models/AutomatedExportCycleEnum.ts
+models/BestellWizardBaseDataResponse.ts
+models/BestellWizardCapacityCheckRequestRequest.ts
+models/BestellWizardCapacityCheckResponse.ts
+models/BestellWizardConfirmOrderRequestRequest.ts
+models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
+models/BestellWizardDeliveryDatesForOrderResponse.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts
 models/BuildCsvExportResponse.ts
@@ -52,7 +60,10 @@ models/Member.ts
 models/MemberCountry.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
+models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
+models/Mpl.ts
+models/OrderConfirmationResponse.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts
 models/PaginatedEmailConfigurationVersionList.ts
@@ -78,6 +89,7 @@ models/PatchedTemporaryUploadRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
+models/PersonalDataRequest.ts
 models/PickingModeEnum.ts
 models/PickupLocation.ts
 models/PickupLocationCapacities.ts
@@ -86,6 +98,8 @@ models/PickupLocationCapacityByBasketSizeRequest.ts
 models/PickupLocationCapacityByShare.ts
 models/PickupLocationCapacityByShareRequest.ts
 models/PickupLocationCapacityChangePoint.ts
+models/PickupLocationCapacityCheckRequestRequest.ts
+models/PickupLocationCapacityCheckResponse.ts
 models/PickupLocationCapacityEvolution.ts
 models/PickupLocationOpeningTime.ts
 models/PreferredLanguageEnum.ts
@@ -94,6 +108,12 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
+models/PublicPickupLocation.ts
+models/PublicProduct.ts
+models/PublicProductType.ts
+models/PublicSubscription.ts
+models/PublicWaitingListEntryExistingMemberCreateRequest.ts
+models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/RecipientRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
@@ -117,6 +137,7 @@ models/TriggerData.ts
 models/TriggerDataRequest.ts
 models/TriggerDefinition.ts
 models/TriggerFieldDefinition.ts
+models/UpdateSubscriptionsRequestRequest.ts
 models/UploadTypeEnum.ts
 models/UsedJokerInGrowingPeriod.ts
 models/WaitingListEntry.ts

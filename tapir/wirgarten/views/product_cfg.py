@@ -190,6 +190,13 @@ def get_product_type_capacity_edit_form(request, **kwargs):
         handler=lambda form: update_product_type_capacity(
             id_=kwargs[KW_CAPACITY_ID],
             name=form.cleaned_data["name"],
+            description_bestellwizard_short=form.cleaned_data[
+                "description_bestellwizard_short"
+            ],
+            description_bestellwizard_long=form.cleaned_data[
+                "description_bestellwizard_long"
+            ],
+            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
             contract_link=form.cleaned_data["contract_link"],
             icon_link=form.cleaned_data["icon_link"],
             single_subscription_only=form.cleaned_data["single_subscription_only"],
@@ -216,6 +223,13 @@ def get_product_type_capacity_add_form(request, **kwargs):
     def handler(form):
         return create_product_type_capacity(
             name=form.cleaned_data["name"],
+            description_bestellwizard_short=form.cleaned_data[
+                "description_bestellwizard_short"
+            ],
+            description_bestellwizard_long=form.cleaned_data[
+                "description_bestellwizard_long"
+            ],
+            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
             contract_link=form.cleaned_data["contract_link"],
             icon_link=form.cleaned_data["icon_link"],
             single_subscription_only=form.cleaned_data["single_subscription_only"],
@@ -234,7 +248,9 @@ def get_product_type_capacity_add_form(request, **kwargs):
 
     def redirect_url(data):
         new_query_string = (
-            re.sub(f"{KW_CAPACITY_ID}=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
+            re.sub(
+                KW_CAPACITY_ID + r"=([\d\w]*)&?", "", request.environ["QUERY_STRING"]
+            )
             + f"&{KW_CAPACITY_ID}={data.id}"
         )
         return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"
@@ -285,7 +301,7 @@ def get_product_edit_form(request, **kwargs):
 def get_product_add_form(request, **kwargs):
     def redirect_url(data):
         new_query_string = (
-            re.sub(f"{KW_PROD_ID}=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
+            re.sub(KW_PROD_ID + r"=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
             + f"&{KW_PROD_ID}={data.id}"
         )
         return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"

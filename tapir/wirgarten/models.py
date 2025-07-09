@@ -204,6 +204,22 @@ class ProductType(TapirModel):
     is_association_membership = models.BooleanField(
         default=False, verbose_name=_("Repräsentiert Vereinsmitgliedschaften")
     )
+    description_bestellwizard_short = models.TextField(
+        default="",
+        verbose_name=_(
+            "Beschreibung im Bestellwizard bei der erste Seite (Produkt-Typ Auswahl)"
+        ),
+    )
+    description_bestellwizard_long = models.TextField(
+        default="",
+        verbose_name=_(
+            "Beschreibung im Bestellwizard bei der Produkt-Spezifische Seite"
+        ),
+    )
+    order_in_bestellwizard = models.IntegerField(
+        default=1,
+        verbose_name=_("Reihenfolge im BestellWizard (kleiner ist früher)"),
+    )
 
     def base_price(self, reference_date=None):
         if reference_date is None:
@@ -533,6 +549,8 @@ class Product(TapirModel):
     name = models.CharField(max_length=128, editable=True, null=False)
     deleted = models.BooleanField(default=False)
     base = models.BooleanField(default=False, null=True)
+    description_in_bestellwizard = models.TextField(default="", blank=True)
+    url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType

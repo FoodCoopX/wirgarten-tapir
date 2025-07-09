@@ -83,3 +83,7 @@ class ConfigurationGenerator:
             TapirParameter.objects.filter(
                 key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
             ).update(value=True)
+
+        TapirParameter.objects.filter(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
+        ).update(value=organization == Organization.WIRGARTEN)

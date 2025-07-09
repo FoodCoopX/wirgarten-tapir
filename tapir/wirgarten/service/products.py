@@ -322,7 +322,7 @@ def get_product_price(
     product: str | Product,
     reference_date: datetime.date = None,
     cache: Dict | None = None,
-):
+) -> ProductPrice | None:
     """
     Returns the currently active product price.
 
@@ -361,6 +361,8 @@ def update_product(
     price: Decimal,
     size: Decimal,
     growing_period_id: str,
+    description_in_bestellwizard: str,
+    url_of_image_in_bestellwizard: str,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -368,12 +370,6 @@ def update_product(
     If the provided growing period starts in the future, the price change gets active at the start of the growing period.
     If it is the currently active growing period, the price change happens at the start of the next month.
 
-    :param id_: the id of the product to update
-    :param name: the name of the product
-    :param base: whether the product is the base product
-    :param price: the price of the product
-    :param growing_period_id: the growing period id
-    :return:
     """
     product = Product.objects.get(id=id_)
 
@@ -383,6 +379,8 @@ def update_product(
 
     product.name = name
     product.deleted = False
+    product.description_in_bestellwizard = description_in_bestellwizard
+    product.url_of_image_in_bestellwizard = url_of_image_in_bestellwizard
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)
@@ -444,6 +442,9 @@ def delete_product(id_: str):
 @transaction.atomic
 def create_product_type_capacity(
     name: str,
+    description_bestellwizard_short: str,
+    description_bestellwizard_long: str,
+    order_in_bestellwizard: int,
     contract_link: str,
     icon_link: str,
     single_subscription_only: bool,
@@ -457,32 +458,28 @@ def create_product_type_capacity(
     must_be_subscribed_to: bool,
     product_type_id: str = "",
 ):
-    """
-    Creates or updates the product type and creates the capacity and default tax rate for the given period.
-
-    :param name: the name of the product type
-    :param delivery_cycle: the delivery cycle of the product type
-    :param default_tax_rate: the default tax rate percent
-    :param capacity: the capacity of this product type for the given growing period
-    :param period_id: the id of the growing period
-    :param product_type_id: if set, the product type is updated, else a new product type is created
-    :return: the newly created product capacity
-    """
 
     # update or create product type
     if product_type_id is not None and len(product_type_id.strip()) > 0:
-        pt = ProductType.objects.get(id=product_type_id)
-        pt.delivery_cycle = delivery_cycle
-        pt.contract_link = contract_link
-        pt.icon_link = icon_link
-        pt.single_subscription_only = single_subscription_only
-        pt.is_affected_by_jokers = is_affected_by_jokers
-        pt.is_association_membership = is_association_membership
-        pt.must_be_subscribed_to = must_be_subscribed_to
-        pt.save()
+        product_type = ProductType.objects.get(id=product_type_id)
+        product_type.name = name
+        product_type.description_bestellwizard_short = description_bestellwizard_short
+        product_type.description_bestellwizard_long = description_bestellwizard_long
+        product_type.order_in_bestellwizard = order_in_bestellwizard
+        product_type.delivery_cycle = delivery_cycle
+        product_type.contract_link = contract_link
+        product_type.icon_link = icon_link
+        product_type.single_subscription_only = single_subscription_only
+        product_type.is_affected_by_jokers = is_affected_by_jokers
+        product_type.is_association_membership = is_association_membership
+        product_type.must_be_subscribed_to = must_be_subscribed_to
+        product_type.save()
     else:
-        pt = ProductType.objects.create(
+        product_type = ProductType.objects.create(
             name=name,
+            description_bestellwizard_short=description_bestellwizard_short,
+            description_bestellwizard_long=description_bestellwizard_long,
+            order_in_bestellwizard=order_in_bestellwizard,
             delivery_cycle=delivery_cycle,
             contract_link=contract_link,
             icon_link=icon_link,
@@ -491,22 +488,22 @@ def create_product_type_capacity(
             is_association_membership=is_association_membership,
             must_be_subscribed_to=must_be_subscribed_to,
         )
-        if not ProductType.objects.exclude(id=pt.id).exists():
+        if not ProductType.objects.exclude(id=product_type.id).exists():
             TapirParameter.objects.filter(
                 key=ParameterKeys.COOP_BASE_PRODUCT_TYPE
-            ).update(value=pt.id)
+            ).update(value=product_type.id)
 
     # tax rate
     period = GrowingPeriod.objects.get(id=period_id)
     today = get_today()
     create_or_update_default_tax_rate(
-        product_type_id=pt.id,
+        product_type_id=product_type.id,
         tax_rate=default_tax_rate,
         tax_rate_change_date=today if period.start_date < today else period.start_date,
     )
 
     NoticePeriodManager.set_notice_period_duration(
-        product_type=pt,
+        product_type=product_type,
         growing_period=period,
         notice_period_duration=notice_period_duration,
     )
@@ -514,7 +511,7 @@ def create_product_type_capacity(
     # capacity
     return ProductCapacity.objects.create(
         period_id=period_id,
-        product_type=pt,
+        product_type=product_type,
         capacity=capacity,
     )
 
@@ -523,6 +520,9 @@ def create_product_type_capacity(
 def update_product_type_capacity(
     id_: str,
     name: str,
+    description_bestellwizard_short: str,
+    description_bestellwizard_long: str,
+    order_in_bestellwizard: int,
     contract_link: str,
     icon_link: str,
     single_subscription_only: bool,
@@ -535,16 +535,6 @@ def update_product_type_capacity(
     must_be_subscribed_to: bool,
     is_association_membership: bool,
 ):
-    """
-    Updates the product type and the capacity for the given period.
-
-    :param id_: the id of the product capacity to update
-    :param name: the new name of the product type
-    :param delivery_cycle: the new delivery cycle of the product type
-    :param default_tax_rate: the new default tax rate percent
-    :param capacity: the new capacity in EUR
-    :param tax_rate_change_date: the date at which the new default tax rate becomes active
-    """
 
     # capacity
     product_capacity = ProductCapacity.objects.get(id=id_)
@@ -552,6 +542,13 @@ def update_product_type_capacity(
     product_capacity.save()
 
     product_capacity.product_type.name = name
+    product_capacity.product_type.description_bestellwizard_short = (
+        description_bestellwizard_short
+    )
+    product_capacity.product_type.description_bestellwizard_long = (
+        description_bestellwizard_long
+    )
+    product_capacity.product_type.order_in_bestellwizard = order_in_bestellwizard
     product_capacity.product_type.contract_link = contract_link
     product_capacity.product_type.icon_link = icon_link
     product_capacity.product_type.single_subscription_only = single_subscription_only
@@ -636,10 +633,11 @@ def get_free_product_capacity(
         reference_date, cache=cache
     ).filter(product_type_id=product_type_id)
 
-    if not active_product_capacities.exists():
+    capacity_object: ProductCapacity | None = active_product_capacities.first()
+    if capacity_object is None:
         return 0
 
-    total_capacity = float(active_product_capacities.first().capacity)
+    total_capacity = float(capacity_object.capacity)
     used_capacity = sum(
         map(
             lambda sub: float(

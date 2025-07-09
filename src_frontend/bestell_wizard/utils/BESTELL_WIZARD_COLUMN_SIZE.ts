@@ -1,0 +1,1 @@
+export const BESTELL_WIZARD_COLUMN_SIZE = 7;

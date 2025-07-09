@@ -2,28 +2,43 @@ import datetime
 import locale
 from typing import Dict
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status, viewsets, permissions
-from rest_framework.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from rest_framework import status, viewsets, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.log.models import TextLogEntry
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import (
     PickupLocationCapacitiesSerializer,
     PickupLocationCapacityEvolutionSerializer,
+    PublicPickupLocationSerializer,
+    PickupLocationCapacityCheckResponseSerializer,
+    PickupLocationCapacityCheckRequestSerializer,
 )
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
 from tapir.pickup_locations.services.highest_usage_after_date_service import (
     HighestUsageAfterDateService,
+)
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
     PickupLocationCapacityModeBasketChecker,
@@ -34,16 +49,26 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
+from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.order_validator import OrderValidator
+from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_monday
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationCapability,
     ProductType,
+    Member,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
-from tapir.wirgarten.utils import get_today
+from tapir.wirgarten.service.products import get_active_and_future_subscriptions
+from tapir.wirgarten.tapirmail import Events
+from tapir.wirgarten.utils import get_today, check_permission_or_self, format_date
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -115,7 +140,7 @@ class PickupLocationCapacitiesView(APIView):
         ]
 
     @extend_schema(
-        responses={200: str},
+        responses={200: str, 400: str},
         request=PickupLocationCapacitiesSerializer(),
     )
     def patch(self, request):
@@ -132,7 +157,7 @@ class PickupLocationCapacitiesView(APIView):
         cache = {}
         picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
         if request_serializer.validated_data["picking_mode"] != picking_mode:
-            raise ValidationError("Invalid picking mode")
+            raise serializers.ValidationError("Invalid picking mode")
 
         if picking_mode == PICKING_MODE_BASKET:
             self.save_capacities_by_basket_size(
@@ -212,8 +237,9 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         return Response(PickupLocationCapacityEvolutionSerializer(data).data)
 
+    @staticmethod
     def build_data_for_picking_mode_shares(
-        self, pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: Dict
     ):
         data_points = []
         product_types = ProductType.objects.order_by(*product_type_order_by())
@@ -260,8 +286,9 @@ class PickupLocationCapacityEvolutionView(APIView):
             "data_points": data_points,
         }
 
+    @staticmethod
     def build_data_for_picking_mode_basket(
-        self, pickup_location: PickupLocation, cache: Dict
+        pickup_location: PickupLocation, cache: Dict
     ):
         data_points = []
         capacities_by_basket_size = (
@@ -306,3 +333,224 @@ class PickupLocationCapacityEvolutionView(APIView):
             "table_headers": capacities_by_basket_size.keys(),
             "data_points": data_points,
         }
+
+
+class PublicPickupLocationViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = []
+    queryset = PickupLocation.objects.all()
+    serializer_class = PublicPickupLocationSerializer
+
+
+class PickupLocationCapacityCheckApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: PickupLocationCapacityCheckResponseSerializer()},
+        request=PickupLocationCapacityCheckRequestSerializer,
+    )
+    def post(self, request):
+        serializer = PickupLocationCapacityCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache,
+            pickup_location_id=serializer.validated_data["pickup_location_id"],
+        )
+        if pickup_location is None:
+            raise Http404(
+                f"Unknown pickup location, id: '{serializer.validated_data["pickup_location_id"]}'"
+            )
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+
+        response_data = {
+            "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                pickup_location=pickup_location,
+                ordered_products_to_quantity_map=order,
+                already_registered_member=None,
+                subscription_start=get_next_contract_start_date(cache=self.cache),
+                cache=self.cache,
+            )
+        }
+
+        return Response(
+            PickupLocationCapacityCheckResponseSerializer(response_data).data
+        )
+
+
+class GetMemberPickupLocationApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+        responses={
+            200: inline_serializer(
+                name="mpl",
+                fields={
+                    "has_location": serializers.BooleanField(),
+                    "location": PublicPickupLocationSerializer(required=False),
+                },
+            )
+        },
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+
+        member = get_object_or_404(Member, id=member_id)
+        reference_date = get_next_contract_start_date(cache=self.cache)
+        pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
+            member=member, reference_date=reference_date
+        )
+
+        if pickup_location_id is None:
+            return Response({"has_location": False})
+
+        pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache, pickup_location_id=pickup_location_id
+        )
+        return Response(
+            {
+                "has_location": True,
+                "location": PublicPickupLocationSerializer(pickup_location).data,
+            }
+        )
+
+
+class ChangeMemberPickupLocationApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="member_id", type=str),
+            OpenApiParameter(name="pickup_location_id", type=str),
+        ],
+        responses={200: OrderConfirmationResponseSerializer},
+    )
+    def post(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+        member = get_object_or_404(Member, id=member_id)
+        new_pickup_location_id = request.query_params.get("pickup_location_id")
+        new_pickup_location = get_object_or_404(
+            PickupLocation, id=new_pickup_location_id
+        )
+
+        try:
+            self.validate(member=member, new_pickup_location=new_pickup_location)
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        with transaction.atomic():
+            self.apply_changes(
+                member=member,
+                new_pickup_location_id=new_pickup_location_id,
+                actor=request.user,
+            )
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    def validate(self, member: Member, new_pickup_location: PickupLocation):
+        old_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=get_today(cache=self.cache)
+            )
+        )
+        if old_pickup_location_id == new_pickup_location.id:
+            raise ValidationError("Du bist schon für diese Verteilstation eingetragen.")
+
+        subscriptions = (
+            get_active_and_future_subscriptions(cache=self.cache)
+            .filter(member=member)
+            .select_related("product")
+        )
+        order = {
+            subscription.product: subscription.quantity
+            for subscription in subscriptions
+        }
+        if not OrderValidator.does_order_need_a_pickup_location(
+            order=order, cache=self.cache
+        ):
+            raise ValidationError("Deine Verträge brauchen keine Verteilstation.")
+
+        change_date = (
+            calculate_pickup_location_change_date(cache=self.cache)
+            if old_pickup_location_id is not None
+            else get_today(cache=self.cache)
+        )
+
+        if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+            pickup_location=new_pickup_location,
+            ordered_products_to_quantity_map=order,
+            already_registered_member=member,
+            subscription_start=change_date,
+            cache=self.cache,
+        ):
+            raise ValidationError(
+                "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
+            )
+
+    def apply_changes(self, member: Member, new_pickup_location_id, actor):
+        old_pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=get_today(cache=self.cache)
+            )
+        )
+        change_date = (
+            calculate_pickup_location_change_date(cache=self.cache)
+            if old_pickup_location_id is not None
+            else get_today(cache=self.cache)
+        )
+        old_pickup_location = None
+        if old_pickup_location_id is not None:
+            old_pickup_location = TapirCache.get_pickup_location_by_id(
+                cache=self.cache, pickup_location_id=old_pickup_location_id
+            )
+
+        MemberPickupLocation.objects.filter(
+            member=member, valid_from__gte=change_date
+        ).delete()
+        MemberPickupLocation.objects.create(
+            member=member,
+            pickup_location_id=new_pickup_location_id,
+            valid_from=change_date,
+        )
+
+        new_pickup_location = TapirCache.get_pickup_location_by_id(
+            cache=self.cache, pickup_location_id=new_pickup_location_id
+        )
+        change_date_str = format_date(change_date)
+        TextLogEntry().populate(
+            actor=actor,
+            user=member,
+            text=f"Abholort geändert zum {change_date_str}: {old_pickup_location} -> {new_pickup_location}",
+        ).save()
+
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "pickup_location": new_pickup_location.name,
+                    "pickup_location_start_date": change_date_str,
+                },
+            ),
+        )

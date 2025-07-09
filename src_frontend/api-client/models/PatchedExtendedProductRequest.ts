@@ -75,6 +75,18 @@ export interface PatchedExtendedProductRequest {
      * @memberof PatchedExtendedProductRequest
      */
     growingPeriodId?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchedExtendedProductRequest
+     */
+    descriptionInBestellwizard?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PatchedExtendedProductRequest
+     */
+    urlOfImageInBestellwizard?: string;
 }
 
 /**
@@ -102,6 +114,8 @@ export function PatchedExtendedProductRequestFromJSONTyped(json: any, ignoreDisc
         'size': json['size'] == null ? undefined : json['size'],
         'basketSizeEquivalences': json['basket_size_equivalences'] == null ? undefined : ((json['basket_size_equivalences'] as Array<any>).map(ProductBasketSizeEquivalenceRequestFromJSON)),
         'growingPeriodId': json['growing_period_id'] == null ? undefined : json['growing_period_id'],
+        'descriptionInBestellwizard': json['description_in_bestellwizard'] == null ? undefined : json['description_in_bestellwizard'],
+        'urlOfImageInBestellwizard': json['url_of_image_in_bestellwizard'] == null ? undefined : json['url_of_image_in_bestellwizard'],
     };
 }
 
@@ -124,6 +138,8 @@ export function PatchedExtendedProductRequestFromJSONTyped(json: any, ignoreDisc
         'size': value['size'],
         'basket_size_equivalences': value['basketSizeEquivalences'] == null ? undefined : ((value['basketSizeEquivalences'] as Array<any>).map(ProductBasketSizeEquivalenceRequestToJSON)),
         'growing_period_id': value['growingPeriodId'],
+        'description_in_bestellwizard': value['descriptionInBestellwizard'],
+        'url_of_image_in_bestellwizard': value['urlOfImageInBestellwizard'],
     };
 }
 

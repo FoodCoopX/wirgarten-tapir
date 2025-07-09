@@ -57,6 +57,18 @@ export interface Product {
      * @memberof Product
      */
     base?: boolean | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Product
+     */
+    descriptionInBestellwizard?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Product
+     */
+    urlOfImageInBestellwizard?: string;
 }
 
 /**
@@ -83,6 +95,8 @@ export function ProductFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'name': json['name'],
         'deleted': json['deleted'] == null ? undefined : json['deleted'],
         'base': json['base'] == null ? undefined : json['base'],
+        'descriptionInBestellwizard': json['description_in_bestellwizard'] == null ? undefined : json['description_in_bestellwizard'],
+        'urlOfImageInBestellwizard': json['url_of_image_in_bestellwizard'] == null ? undefined : json['url_of_image_in_bestellwizard'],
     };
 }
 
@@ -102,6 +116,8 @@ export function ProductFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'name': value['name'],
         'deleted': value['deleted'],
         'base': value['base'],
+        'description_in_bestellwizard': value['descriptionInBestellwizard'],
+        'url_of_image_in_bestellwizard': value['urlOfImageInBestellwizard'],
     };
 }
 

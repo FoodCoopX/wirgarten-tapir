@@ -35,6 +35,12 @@ export interface PickupLocationOpeningTime {
     id?: string;
     /**
      * 
+     * @type {string}
+     * @memberof PickupLocationOpeningTime
+     */
+    readonly dayOfWeekString: string;
+    /**
+     * 
      * @type {DayOfWeekEnum}
      * @memberof PickupLocationOpeningTime
      */
@@ -65,6 +71,7 @@ export interface PickupLocationOpeningTime {
  * Check if a given object implements the PickupLocationOpeningTime interface.
  */
 export function instanceOfPickupLocationOpeningTime(value: object): value is PickupLocationOpeningTime {
+    if (!('dayOfWeekString' in value) || value['dayOfWeekString'] === undefined) return false;
     if (!('dayOfWeek' in value) || value['dayOfWeek'] === undefined) return false;
     if (!('openTime' in value) || value['openTime'] === undefined) return false;
     if (!('closeTime' in value) || value['closeTime'] === undefined) return false;
@@ -83,6 +90,7 @@ export function PickupLocationOpeningTimeFromJSONTyped(json: any, ignoreDiscrimi
     return {
         
         'id': json['id'] == null ? undefined : json['id'],
+        'dayOfWeekString': json['day_of_week_string'],
         'dayOfWeek': DayOfWeekEnumFromJSON(json['day_of_week']),
         'openTime': json['open_time'],
         'closeTime': json['close_time'],
@@ -94,7 +102,7 @@ export function PickupLocationOpeningTimeFromJSONTyped(json: any, ignoreDiscrimi
       return PickupLocationOpeningTimeToJSONTyped(json, false);
   }
 
-  export function PickupLocationOpeningTimeToJSONTyped(value?: PickupLocationOpeningTime | null, ignoreDiscriminator: boolean = false): any {
+  export function PickupLocationOpeningTimeToJSONTyped(value?: Omit<PickupLocationOpeningTime, 'day_of_week_string'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -14,21 +14,49 @@
 
 import * as runtime from "../runtime";
 import type {
+  BestellWizardBaseDataResponse,
+  BestellWizardCapacityCheckRequestRequest,
+  BestellWizardCapacityCheckResponse,
+  BestellWizardConfirmOrderRequestRequest,
+  BestellWizardDeliveryDatesForOrderRequestRequest,
+  BestellWizardDeliveryDatesForOrderResponse,
   CancellationData,
   CancelSubscriptionsViewResponse,
   ExtendedProduct,
   MemberDataToConfirm,
+  OrderConfirmationResponse,
   PatchedExtendedProductRequest,
   Product,
+  PublicProductType,
+  PublicSubscription,
+  UpdateSubscriptionsRequestRequest,
 } from "../models/index";
 import {
+  BestellWizardBaseDataResponseFromJSON,
+  BestellWizardCapacityCheckRequestRequestToJSON,
+  BestellWizardCapacityCheckResponseFromJSON,
+  BestellWizardConfirmOrderRequestRequestToJSON,
+  BestellWizardDeliveryDatesForOrderRequestRequestToJSON,
+  BestellWizardDeliveryDatesForOrderResponseFromJSON,
   CancellationDataFromJSON,
   CancelSubscriptionsViewResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
+  OrderConfirmationResponseFromJSON,
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
+  PublicProductTypeFromJSON,
+  PublicSubscriptionFromJSON,
+  UpdateSubscriptionsRequestRequestToJSON,
 } from "../models/index";
+
+export interface SubscriptionsApiBestellWizardCapacityCheckCreateRequest {
+  bestellWizardCapacityCheckRequestRequest: BestellWizardCapacityCheckRequestRequest;
+}
+
+export interface SubscriptionsApiBestellWizardDeliveryDatesCreateRequest {
+  bestellWizardDeliveryDatesForOrderRequestRequest: BestellWizardDeliveryDatesForOrderRequestRequest;
+}
 
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmCancellationIds: Array<string>;
@@ -42,6 +70,18 @@ export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
 
 export interface SubscriptionsApiExtendedProductRetrieveRequest {
   productId?: string;
+}
+
+export interface SubscriptionsApiMemberSubscriptionsListRequest {
+  memberId?: string;
+}
+
+export interface SubscriptionsApiUpdateSubscriptionCreateRequest {
+  updateSubscriptionsRequestRequest: UpdateSubscriptionsRequestRequest;
+}
+
+export interface SubscriptionsBestellWizardConfirmOrderCreateRequest {
+  bestellWizardConfirmOrderRequestRequest: BestellWizardConfirmOrderRequestRequest;
 }
 
 export interface SubscriptionsCancelSubscriptionsCreateRequest {
@@ -58,10 +98,182 @@ export interface SubscriptionsProductsRetrieveRequest {
   id: string;
 }
 
+export interface SubscriptionsPublicProductTypesRetrieveRequest {
+  id: string;
+}
+
 /**
  *
  */
 export class SubscriptionsApi extends runtime.BaseAPI {
+  /**
+   */
+  async subscriptionsApiBestellWizardBaseDataRetrieveRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BestellWizardBaseDataResponse>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/bestell_wizard_base_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BestellWizardBaseDataResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiBestellWizardBaseDataRetrieve(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BestellWizardBaseDataResponse> {
+    const response =
+      await this.subscriptionsApiBestellWizardBaseDataRetrieveRaw(
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiBestellWizardCapacityCheckCreateRaw(
+    requestParameters: SubscriptionsApiBestellWizardCapacityCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BestellWizardCapacityCheckResponse>> {
+    if (requestParameters["bestellWizardCapacityCheckRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "bestellWizardCapacityCheckRequestRequest",
+        'Required parameter "bestellWizardCapacityCheckRequestRequest" was null or undefined when calling subscriptionsApiBestellWizardCapacityCheckCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/bestell_wizard_capacity_check`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: BestellWizardCapacityCheckRequestRequestToJSON(
+          requestParameters["bestellWizardCapacityCheckRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BestellWizardCapacityCheckResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiBestellWizardCapacityCheckCreate(
+    requestParameters: SubscriptionsApiBestellWizardCapacityCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BestellWizardCapacityCheckResponse> {
+    const response =
+      await this.subscriptionsApiBestellWizardCapacityCheckCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiBestellWizardDeliveryDatesCreateRaw(
+    requestParameters: SubscriptionsApiBestellWizardDeliveryDatesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BestellWizardDeliveryDatesForOrderResponse>> {
+    if (
+      requestParameters["bestellWizardDeliveryDatesForOrderRequestRequest"] ==
+      null
+    ) {
+      throw new runtime.RequiredError(
+        "bestellWizardDeliveryDatesForOrderRequestRequest",
+        'Required parameter "bestellWizardDeliveryDatesForOrderRequestRequest" was null or undefined when calling subscriptionsApiBestellWizardDeliveryDatesCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/bestell_wizard_delivery_dates`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: BestellWizardDeliveryDatesForOrderRequestRequestToJSON(
+          requestParameters["bestellWizardDeliveryDatesForOrderRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BestellWizardDeliveryDatesForOrderResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiBestellWizardDeliveryDatesCreate(
+    requestParameters: SubscriptionsApiBestellWizardDeliveryDatesCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BestellWizardDeliveryDatesForOrderResponse> {
+    const response =
+      await this.subscriptionsApiBestellWizardDeliveryDatesCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
+    return await response.value();
+  }
+
   /**
    */
   async subscriptionsApiConfirmSubscriptionChangesCreateRaw(
@@ -298,6 +510,175 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
   /**
    */
+  async subscriptionsApiMemberSubscriptionsListRaw(
+    requestParameters: SubscriptionsApiMemberSubscriptionsListRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PublicSubscription>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/member_subscriptions`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PublicSubscriptionFromJSON),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiMemberSubscriptionsList(
+    requestParameters: SubscriptionsApiMemberSubscriptionsListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PublicSubscription>> {
+    const response = await this.subscriptionsApiMemberSubscriptionsListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiUpdateSubscriptionCreateRaw(
+    requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["updateSubscriptionsRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateSubscriptionsRequestRequest",
+        'Required parameter "updateSubscriptionsRequestRequest" was null or undefined when calling subscriptionsApiUpdateSubscriptionCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/update_subscription`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: UpdateSubscriptionsRequestRequestToJSON(
+          requestParameters["updateSubscriptionsRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiUpdateSubscriptionCreate(
+    requestParameters: SubscriptionsApiUpdateSubscriptionCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.subscriptionsApiUpdateSubscriptionCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsBestellWizardConfirmOrderCreateRaw(
+    requestParameters: SubscriptionsBestellWizardConfirmOrderCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (requestParameters["bestellWizardConfirmOrderRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "bestellWizardConfirmOrderRequestRequest",
+        'Required parameter "bestellWizardConfirmOrderRequestRequest" was null or undefined when calling subscriptionsBestellWizardConfirmOrderCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/bestell_wizard_confirm_order`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: BestellWizardConfirmOrderRequestRequestToJSON(
+          requestParameters["bestellWizardConfirmOrderRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsBestellWizardConfirmOrderCreate(
+    requestParameters: SubscriptionsBestellWizardConfirmOrderCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response = await this.subscriptionsBestellWizardConfirmOrderCreateRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
   async subscriptionsCancelSubscriptionsCreateRaw(
     requestParameters: SubscriptionsCancelSubscriptionsCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -500,6 +881,106 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Product> {
     const response = await this.subscriptionsProductsRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<PublicProductType>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/public_product_types/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(PublicProductTypeFromJSON),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<PublicProductType>> {
+    const response =
+      await this.subscriptionsPublicProductTypesListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesRetrieveRaw(
+    requestParameters: SubscriptionsPublicProductTypesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<PublicProductType>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling subscriptionsPublicProductTypesRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/public_product_types/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      PublicProductTypeFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsPublicProductTypesRetrieve(
+    requestParameters: SubscriptionsPublicProductTypesRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<PublicProductType> {
+    const response = await this.subscriptionsPublicProductTypesRetrieveRaw(
       requestParameters,
       initOverrides,
     );

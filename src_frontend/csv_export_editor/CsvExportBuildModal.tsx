@@ -71,8 +71,6 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
             <Form.Control
               type={"datetime-local"}
               onChange={(event) => {
-                console.log(event.target.value);
-                console.log(new Date(event.target.value));
                 setDatetime(new Date(event.target.value));
               }}
               required={true}
