@@ -14,6 +14,7 @@ import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkP
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import ConfirmModal from "../../components/ConfirmModal.tsx";
 
 interface PickupLocationChangeModalProps {
   show: boolean;
@@ -49,6 +50,10 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   const [subscriptions, setSubscriptions] = useState<PublicSubscription[]>([]);
   const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [
+    showWaitingListConfirmationModal,
+    setShowWaitingListConfirmationModal,
+  ] = useState(false);
 
   useEffect(() => {
     pickupLocationsApi
@@ -104,10 +109,12 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     }
 
     if (
-      selectedPickupLocations.length > 1 ||
-      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+      !waitingListModeEnabled &&
+      selectedPickupLocations.length === 1 &&
+      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
+      !pickupLocationsWithCapacityCheckLoading.has(selectedPickupLocations[0])
     ) {
-      setWaitingListModeEnabled(true);
+      setShowWaitingListConfirmationModal(true);
     }
   }, [
     selectedPickupLocations,
@@ -150,50 +157,80 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   }
 
   return (
-    <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          <h4>Verteilstation ändern</h4>
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {waitingListModeEnabled && (
-          <PickupLocationWaitingListSelector
-            setSelectedPickupLocations={setSelectedPickupLocations}
-            pickupLocations={pickupLocations}
-            selectedPickupLocations={selectedPickupLocations}
-          />
-        )}
-        {pickupLocations.length === 0 ? (
-          <Spinner />
-        ) : (
-          <PickupLocationSelector
-            pickupLocations={pickupLocations}
-            selectedPickupLocations={selectedPickupLocations}
-            setSelectedPickupLocations={setSelectedPickupLocations}
-            waitingListModeEnabled={waitingListModeEnabled}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
+    <>
+      <Modal
+        onHide={onHide}
+        show={show && !showWaitingListConfirmationModal}
+        centered={true}
+        size={"lg"}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <h4>Verteilstation ändern</h4>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {waitingListModeEnabled && (
+            <PickupLocationWaitingListSelector
+              setSelectedPickupLocations={setSelectedPickupLocations}
+              pickupLocations={pickupLocations}
+              selectedPickupLocations={selectedPickupLocations}
+            />
+          )}
+          {pickupLocations.length === 0 ? (
+            <Spinner />
+          ) : (
+            <PickupLocationSelector
+              pickupLocations={pickupLocations}
+              selectedPickupLocations={selectedPickupLocations}
+              setSelectedPickupLocations={setSelectedPickupLocations}
+              waitingListModeEnabled={waitingListModeEnabled}
+              pickupLocationsWithCapacityCheckLoading={
+                pickupLocationsWithCapacityCheckLoading
+              }
+              pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            />
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <TapirButton
+            text={
+              waitingListModeEnabled
+                ? "Warteliste-Eintrag bestätigen"
+                : "Wechsel bestätigen"
             }
-            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            variant={"primary"}
+            icon={waitingListModeEnabled ? "pending_actions" : "check"}
+            disabled={selectedPickupLocations.length === 0}
+            onClick={onConfirm}
+            loading={confirmLoading}
           />
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <TapirButton
-          text={
-            waitingListModeEnabled
-              ? "Warteliste-Eintrag bestätigen"
-              : "Wechsel bestätigen"
-          }
-          variant={"primary"}
-          icon={waitingListModeEnabled ? "pending_actions" : "check"}
-          disabled={selectedPickupLocations.length === 0}
-          onClick={onConfirm}
-          loading={confirmLoading}
-        />
-      </Modal.Footer>
-    </Modal>
+        </Modal.Footer>
+      </Modal>
+      <ConfirmModal
+        message={
+          "Die ausgewählte Verteilstation ist derzeit ausgelastet (" +
+          (selectedPickupLocations.length > 0
+            ? selectedPickupLocations[0].name
+            : "") +
+          "). Du kannst eine andere Station wählen, oder dich auf die Warteliste setzen lassen. " +
+          "In dem Fall kannst du mehrere Wünsche eintragen, um vielleicht früher einsteigen zu dürfen."
+        }
+        title={"Verteilstation ausgelastet"}
+        open={showWaitingListConfirmationModal}
+        confirmButtonText={"Weiter mit Warteliste-Eintrag"}
+        confirmButtonVariant={"outline-primary"}
+        confirmButtonIcon={"pending_actions"}
+        onConfirm={() => {
+          setShowWaitingListConfirmationModal(false);
+          setWaitingListModeEnabled(true);
+        }}
+        onCancel={() => {
+          setShowWaitingListConfirmationModal(false);
+          setSelectedPickupLocations([]);
+        }}
+      />
+    </>
   );
 };
 
