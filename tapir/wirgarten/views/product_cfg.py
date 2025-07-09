@@ -248,7 +248,9 @@ def get_product_type_capacity_add_form(request, **kwargs):
 
     def redirect_url(data):
         new_query_string = (
-            re.sub(f"{KW_CAPACITY_ID}=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
+            re.sub(
+                KW_CAPACITY_ID + r"=([\d\w]*)&?", "", request.environ["QUERY_STRING"]
+            )
             + f"&{KW_CAPACITY_ID}={data.id}"
         )
         return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"
@@ -299,7 +301,7 @@ def get_product_edit_form(request, **kwargs):
 def get_product_add_form(request, **kwargs):
     def redirect_url(data):
         new_query_string = (
-            re.sub(f"{KW_PROD_ID}=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
+            re.sub(KW_PROD_ID + r"=([\d\w]*)&?", "", request.environ["QUERY_STRING"])
             + f"&{KW_PROD_ID}={data.id}"
         )
         return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"
