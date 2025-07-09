@@ -4,6 +4,7 @@ import re
 
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import generic
@@ -34,6 +35,7 @@ from tapir.wirgarten.service.products import (
     copy_growing_period,
     create_growing_period,
     update_product,
+    get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.views.modal import get_form_modal
@@ -48,9 +50,12 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
     template_name = "wirgarten/product/period_product_cfg_view.html"
     permission_required = Permission.Products.VIEW
 
-    @staticmethod
-    def get_growing_period_status(period) -> str:
-        today = get_today()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache = {}
+
+    def get_growing_period_status(self, period) -> str:
+        today = get_today(cache=self.cache)
         if period.end_date < today:
             return "old"
         elif period.start_date <= today <= period.end_date:
@@ -60,23 +65,8 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         else:
             return ""
 
-    @staticmethod
-    def get_current_product_price(product_prices: list[ProductPrice]) -> ProductPrice:
-        if len(product_prices) == 1:
-            return product_prices[0]
-
-        valid_product_prices = [
-            product_price
-            for product_price in product_prices
-            if product_price.valid_from <= get_today()
-        ]
-        return sorted(
-            valid_product_prices, key=lambda product_price: product_price.valid_from
-        )[-1]
-
     @classmethod
     def build_product_object_for_context(cls, product, product_prices):
-
         return {
             "id": product.id,
             "name": product.name,
@@ -110,12 +100,19 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
             for product_id, product_prices in product_prices_by_product_id
         }
 
+        products_ids_with_active_subscriptions = (
+            get_active_and_future_subscriptions(cache=self.cache)
+            .values_list("product_id", flat=True)
+            .distinct()
+        )
         # all products
         products = [
             self.build_product_object_for_context(
                 product, product_prices_by_product_id.get(product.id, [])
             )
-            for product in Product.objects.all().order_by("type")
+            for product in Product.objects.filter(
+                Q(deleted=False) | Q(id__in=products_ids_with_active_subscriptions)
+            ).order_by("type")
         ]
         context["products"] = sorted(
             products, key=lambda product: product["prices"][0].price
