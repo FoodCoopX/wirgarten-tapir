@@ -326,3 +326,7 @@ main {
   padding-left: 1em;
   padding-right: 1em;
 }
+
+.step.active .step-icon {
+  background: #32822D;
+}
