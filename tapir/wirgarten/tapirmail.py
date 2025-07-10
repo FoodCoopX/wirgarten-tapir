@@ -334,7 +334,7 @@ def _register_triggers():
             "Verteilstation Wünsche": "pickup_location_list",
             "Gewünschtes Startdatum": "desired_start_date",
         },
-        required=False,
+        required=True,
     )
 
 

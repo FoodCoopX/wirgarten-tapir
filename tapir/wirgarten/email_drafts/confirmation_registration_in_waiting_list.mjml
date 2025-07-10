@@ -1,0 +1,14 @@
+<mj-wrapper padding="20px 0px 20px 0px" border="none" direction="ltr" text-align="center">
+    <mj-section padding="0px" text-align="left">
+        <mj-column>
+            <mj-text padding="10px 25px 10px 25px" align="left">
+                Emails mit dem Trigger "Bestätigung Eintrag Warteliste" werden an bestehende oder potenzielle Mitglieder geschickt wenn sie sich auf der Warteliste eintragen lassen.
+                Das kann durch den BestellWizard oder den Mitgliederbereich erfolgen.
+                Folgende Token stehen zu verfügung:
+                {{Bestätigung Eintrag Warteliste.Vertragsliste}}
+                {{Bestätigung Eintrag Warteliste.Verteilstation Wünsche}}
+                {{Bestätigung Eintrag Warteliste.Gewünschtes Startdatum}}
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>
