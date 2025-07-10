@@ -9,14 +9,13 @@ import {
   WaitingListProductWish,
 } from "../api-client";
 import "./waiting_list_card.css";
-import { Col, Form, Modal, Row } from "react-bootstrap";
+import { Modal, Tab, Tabs } from "react-bootstrap";
 import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import { handleRequestError } from "../utils/handleRequestError.ts";
-import dayjs from "dayjs";
-import PickupLocationWishesEditor from "./PickupLocationWishesEditor.tsx";
-import ProductWishesEditor from "./ProductWishesEditor.tsx";
-import formatSubscription from "../utils/formatSubscription.ts";
+import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
+import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
+import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;
@@ -141,225 +140,54 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           </h5>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Row>
-              <Col>
-                {entryDetails.memberAlreadyExists && (
-                  <Row>
-                    <Form.Text>
-                      Dieses Eintrag bezieht sich auf ein bestehendes Mitglied,
-                      deswegen können die Stammdaten hier nicht geändert werden.
-                    </Form.Text>
-                  </Row>
-                )}
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Group controlId={"form.first_name"}>
-                      <Form.Label>First Name</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Vorname"}
-                        onChange={(event) => setFirstName(event.target.value)}
-                        required={true}
-                        value={firstName}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group controlId={"form.last_name"}>
-                      <Form.Label>Last Name</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Nachname"}
-                        onChange={(event) => setLastName(event.target.value)}
-                        required={true}
-                        value={lastName}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Group controlId={"form.email"}>
-                      <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type={"email"}
-                        placeholder={"E-Mail"}
-                        onChange={(event) => setEmail(event.target.value)}
-                        required={true}
-                        value={email}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group controlId={"form.phone_number"}>
-                      <Form.Label>Telefonnummer</Form.Label>
-                      <Form.Control
-                        type={"tel"}
-                        placeholder={"Telefonnummer"}
-                        onChange={(event) => setPhoneNumber(event.target.value)}
-                        required={true}
-                        value={phoneNumber}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Group controlId={"form.street"}>
-                      <Form.Label>Adresse</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Adresse"}
-                        onChange={(event) => setStreet(event.target.value)}
-                        required={true}
-                        value={street}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group controlId={"form.street2"}>
-                      <Form.Label>Adresse (Ergänzung)</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Adresse (Ergänzung)"}
-                        onChange={(event) => setStreet2(event.target.value)}
-                        required={true}
-                        value={street2}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Group controlId={"form.postcode"}>
-                      <Form.Label>Postleitzahl</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Postleitzahl"}
-                        onChange={(event) => setPostcode(event.target.value)}
-                        required={true}
-                        value={postcode}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group controlId={"form.city"}>
-                      <Form.Label>Stadt</Form.Label>
-                      <Form.Control
-                        type={"text"}
-                        placeholder={"Stadt"}
-                        onChange={(event) => setCity(event.target.value)}
-                        required={true}
-                        value={city}
-                        disabled={entryDetails.memberAlreadyExists}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Group controlId={"form.desiredStartDate"}>
-                      <Form.Label>Gewünschtes Anfangsdatum</Form.Label>
-                      <Form.Control
-                        type={"date"}
-                        onChange={(event) => {
-                          setDesiredStartDate(
-                            !event.target.value
-                              ? undefined
-                              : new Date(event.target.value),
-                          );
-                        }}
-                        value={
-                          desiredStartDate === undefined
-                            ? undefined
-                            : dayjs(desiredStartDate).format("YYYY-MM-DD")
-                        }
-                        required={false}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group controlId={"form.category"}>
-                      <Form.Label>Category</Form.Label>
-                      <Form.Select
-                        onChange={(event) => setCategory(event.target.value)}
-                        value={category}
-                      >
-                        <option value={""}>Keine Kategorie</option>
-                        {categories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className={"mt-2"}>
-                  <Col>
-                    <Form.Label>Kommentar</Form.Label>
-                    <Form.Control
-                      as={"textarea"}
-                      type={"text"}
-                      placeholder={"Kommentar"}
-                      onChange={(event) => setComment(event.target.value)}
-                      value={comment}
-                    />
-                  </Col>
-                </Row>
-                {entryDetails.currentSubscriptions && (
-                  <Row className={"mt-2"}>
-                    <h6>Schon bestehende Verträge:</h6>
-                    <div>
-                      {entryDetails.currentSubscriptions.length === 0 ? (
-                        "Keine"
-                      ) : (
-                        <ul>
-                          {entryDetails.currentSubscriptions.map(
-                            (subscription) => (
-                              <li key={subscription.id}>
-                                {formatSubscription(subscription)}
-                              </li>
-                            ),
-                          )}
-                        </ul>
-                      )}
-                    </div>
-                  </Row>
-                )}
-              </Col>
-              <Col>
-                <Row>
-                  <PickupLocationWishesEditor
-                    pickupLocations={pickupLocations}
-                    setWishes={setPickupLocationWishes}
-                    wishes={pickupLocationWishes}
-                    waitingListEntryId={entryDetails.id}
-                  />
-                </Row>
-                <Row className={"mt-2"}>
-                  <ProductWishesEditor
-                    wishes={productWishes}
-                    setWishes={setProductWishes}
-                    waitingListEntryId={entryDetails.id}
-                    products={products}
-                  />
-                </Row>
-              </Col>
-            </Row>
-          </Form>
+          <Tabs defaultActiveKey={"personal_data"}>
+            <Tab eventKey="personal_data" title="Persönliche Daten">
+              <WaitingListTabPersonalData
+                categories={categories}
+                entryDetails={entryDetails}
+                firstName={firstName}
+                setFirstName={setFirstName}
+                lastName={lastName}
+                setLastName={setLastName}
+                email={email}
+                setEmail={setEmail}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                street={street}
+                setStreet={setStreet}
+                street2={street2}
+                setStreet2={setStreet2}
+                postcode={postcode}
+                setPostcode={setPostcode}
+                city={city}
+                setCity={setCity}
+                desiredStartDate={desiredStartDate}
+                setDesiredStartDate={setDesiredStartDate}
+                category={category}
+                setCategory={setCategory}
+                comment={comment}
+                setComment={setComment}
+              />
+            </Tab>
+            <Tab eventKey="wishes" title="Wünsche">
+              <WaitingListTabWishes
+                entryDetails={entryDetails}
+                pickupLocations={pickupLocations}
+                pickupLocationWishes={pickupLocationWishes}
+                setPickupLocationWishes={setPickupLocationWishes}
+                products={products}
+                productWishes={productWishes}
+                setProductWishes={setProductWishes}
+              />
+            </Tab>
+            <Tab eventKey="link" title="Link">
+              <WaitingListTabLink entryDetails={entryDetails} />
+            </Tab>
+          </Tabs>
         </Modal.Body>
         <Modal.Footer>
           <TapirButton
-            variant={"danger"}
+            variant={"outline-danger"}
             icon={"delete"}
             text={"Löschen"}
             onClick={() => setShowConfirmDeleteModal(true)}

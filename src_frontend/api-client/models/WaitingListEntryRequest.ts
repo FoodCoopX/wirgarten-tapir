@@ -116,6 +116,18 @@ export interface WaitingListEntryRequest {
    * @type {string}
    * @memberof WaitingListEntryRequest
    */
+  confirmationLinkKey?: string | null;
+  /**
+   *
+   * @type {Date}
+   * @memberof WaitingListEntryRequest
+   */
+  linkSentDate?: Date | null;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntryRequest
+   */
   member?: string | null;
 }
 
@@ -175,6 +187,14 @@ export function WaitingListEntryRequestFromJSONTyped(
         : new Date(json["desired_start_date"]),
     comment: json["comment"] == null ? undefined : json["comment"],
     category: json["category"] == null ? undefined : json["category"],
+    confirmationLinkKey:
+      json["confirmation_link_key"] == null
+        ? undefined
+        : json["confirmation_link_key"],
+    linkSentDate:
+      json["link_sent_date"] == null
+        ? undefined
+        : new Date(json["link_sent_date"]),
     member: json["member"] == null ? undefined : json["member"],
   };
 }
@@ -212,6 +232,11 @@ export function WaitingListEntryRequestToJSONTyped(
         : (value["desiredStartDate"] as any).toISOString().substring(0, 10),
     comment: value["comment"],
     category: value["category"],
+    confirmation_link_key: value["confirmationLinkKey"],
+    link_sent_date:
+      value["linkSentDate"] == null
+        ? undefined
+        : (value["linkSentDate"] as any).toISOString(),
     member: value["member"],
   };
 }

@@ -88,6 +88,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
         key={entry.id}
         style={{ cursor: "pointer" }}
         onClick={() => setSelectedEntryForEdition(entry)}
+        className={entry.linkSentDate ? "table-warning" : ""}
       >
         <td>{entry.memberNo}</td>
         <td>{formatDateNumeric(entry.waitingSince)}</td>

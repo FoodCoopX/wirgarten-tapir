@@ -159,6 +159,11 @@ class WaitingListApiView(APIView):
             "category": entry.category,
             "member_already_exists": entry.member is not None,
             "current_subscriptions": current_subscriptions,
+            "link_sent_date": (
+                entry.link_sent_date
+                if entry.confirmation_link_key is not None
+                else None
+            ),
         }
 
     @staticmethod

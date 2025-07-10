@@ -759,6 +759,12 @@ paths:
               schema:
                 type: string
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /pickup_locations/api/pickup_location_capacity_check:
     post:
       operationId: pickup_locations_api_pickup_location_capacity_check_create
@@ -5926,6 +5932,14 @@ components:
           nullable: true
           minLength: 1
           maxLength: 100
+        confirmation_link_key:
+          type: string
+          format: uuid
+          nullable: true
+        link_sent_date:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
           minLength: 1
@@ -7231,6 +7245,14 @@ components:
           type: string
           nullable: true
           maxLength: 100
+        confirmation_link_key:
+          type: string
+          format: uuid
+          nullable: true
+        link_sent_date:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
           nullable: true
@@ -7305,6 +7327,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Subscription'
+        link_sent_date:
+          type: string
+          format: date-time
       required:
       - city
       - comment
@@ -7381,6 +7406,14 @@ components:
           nullable: true
           minLength: 1
           maxLength: 100
+        confirmation_link_key:
+          type: string
+          format: uuid
+          nullable: true
+        link_sent_date:
+          type: string
+          format: date-time
+          nullable: true
         member:
           type: string
           minLength: 1

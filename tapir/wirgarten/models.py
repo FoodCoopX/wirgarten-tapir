@@ -1138,6 +1138,8 @@ class WaitingListEntry(TapirModel):
     desired_start_date = models.DateField(null=True)
     comment = models.TextField(blank=True)
     category = models.CharField(max_length=100, null=True)
+    confirmation_link_key = models.UUIDField(null=True)
+    link_sent_date = models.DateTimeField(null=True)
 
 
 class WaitingListPickupLocationWish(TapirModel):

@@ -55,6 +55,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     comment = serializers.CharField()
     category = serializers.CharField(required=False)
     current_subscriptions = SubscriptionSerializer(many=True, required=False)
+    link_sent_date = serializers.DateTimeField(required=False)
 
 
 class WaitingListEntrySerializer(serializers.ModelSerializer):
