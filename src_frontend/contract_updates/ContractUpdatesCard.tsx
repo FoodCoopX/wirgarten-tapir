@@ -264,7 +264,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                   <Badge>{changesToConfirm.length}</Badge>
                 </h5>
                 <TapirButton
-                  text={"Auswahl bestätigen"}
+                  text={
+                    "Auswahl bestätigen" +
+                    (selectedChanges.size > 0
+                      ? " (" + selectedChanges.size + ")"
+                      : "")
+                  }
                   disabled={selectedChanges.size === 0}
                   icon={"check"}
                   variant={"primary"}
@@ -312,7 +317,22 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                 <Table striped hover responsive className={"mb-0"}>
                   <thead>
                     <tr>
-                      <th></th>
+                      <th>
+                        <Form.Check
+                          checked={
+                            selectedChanges.size === changesToConfirm.length
+                          }
+                          onClick={() => {
+                            if (
+                              selectedChanges.size === changesToConfirm.length
+                            ) {
+                              setSelectedChanges(new Set());
+                            } else {
+                              setSelectedChanges(new Set(changesToConfirm));
+                            }
+                          }}
+                        />
+                      </th>
                       <th>Mitglied</th>
                       <th>Verteilort</th>
                       <th>Änderungen</th>
