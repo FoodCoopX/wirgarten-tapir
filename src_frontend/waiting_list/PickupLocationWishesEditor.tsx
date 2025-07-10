@@ -18,7 +18,11 @@ const PickupLocationWishesEditor: React.FC<PickupLocationWishesEditorProps> = ({
   waitingListEntryId,
 }) => {
   function removeWish(wishToRemove: WaitingListPickupLocationWish) {
-    setWishes(wishes.filter((wish) => wish.id !== wishToRemove.id));
+    setWishes(
+      wishes.filter(
+        (wish) => wish.pickupLocation.id !== wishToRemove.pickupLocation.id,
+      ),
+    );
   }
 
   function moveWishUp(index: number) {
