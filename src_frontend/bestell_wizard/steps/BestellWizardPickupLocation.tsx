@@ -20,6 +20,7 @@ interface BestellWizardPickupLocationProps {
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   firstDeliveryDatesByProductType: { [key: string]: Date };
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardPickupLocation: React.FC<
@@ -33,6 +34,7 @@ const BestellWizardPickupLocation: React.FC<
   pickupLocationsWithCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByProductType,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   function getEarliestDeliveryDate() {
     return Object.values(firstDeliveryDatesByProductType).sort(
@@ -74,6 +76,9 @@ const BestellWizardPickupLocation: React.FC<
           pickupLocationsWithCapacityCheckLoading
         }
         pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+        waitingListLinkConfirmationModeEnabled={
+          waitingListLinkConfirmationModeEnabled
+        }
       />
       {!waitingListModeEnabled && (
         <Row className={"mt-4"}>

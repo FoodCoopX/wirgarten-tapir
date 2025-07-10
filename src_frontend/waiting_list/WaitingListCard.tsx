@@ -18,6 +18,8 @@ import formatAddress from "../utils/formatAddress.ts";
 import { formatDateText } from "../utils/formatDateText.ts";
 import "./waiting_list_card.css";
 import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
+import { ToastData } from "../types/ToastData.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
 
 interface WaitingListCardProps {
   csrfToken: string;
@@ -39,6 +41,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [showCoopContent, setShowCoopContent] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     pickupLocationApi
@@ -77,6 +80,15 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .then((paginatedData) => {
         setWaitingListEntries(paginatedData.results);
         setTotalNumberOfEntries(paginatedData.count);
+
+        if (selectedEntryForEdition) {
+          const reloadedEntry = paginatedData.results.find(
+            (entry) => entry.id === selectedEntryForEdition.id,
+          );
+          if (reloadedEntry) {
+            setSelectedEntryForEdition(reloadedEntry);
+          }
+        }
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
@@ -141,6 +153,13 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     );
   }
 
+  function addToast(toastData: ToastData) {
+    setToastDatas((datas) => {
+      datas.push(toastData);
+      return [...datas];
+    });
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -190,12 +209,17 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
               </Table>
             </Card.Body>
             <Card.Footer>
-              <BootstrapPagination
-                currentPage={currentPage}
-                pageSize={DEFAULT_PAGE_SIZE}
-                itemCount={totalNumberOfEntries}
-                goToPage={setCurrentPage}
-              />
+              <div
+                className={"d-flex justify-content-center"}
+                style={{ width: "100%" }}
+              >
+                <BootstrapPagination
+                  currentPage={currentPage}
+                  pageSize={DEFAULT_PAGE_SIZE}
+                  itemCount={totalNumberOfEntries}
+                  goToPage={setCurrentPage}
+                />
+              </div>
             </Card.Footer>
           </Card>
         </Col>
@@ -210,8 +234,13 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           pickupLocations={pickupLocations}
           products={products}
           categories={categories}
+          addToast={addToast}
         />
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

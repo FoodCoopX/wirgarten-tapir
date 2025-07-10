@@ -3266,6 +3266,32 @@ paths:
                 items:
                   type: string
           description: ''
+  /waiting_list/api/disable_waiting_list_link:
+    post:
+      operationId: waiting_list_api_disable_waiting_list_link_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/disable_link_serializerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/disable_link_serializerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/disable_link_serializerRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /waiting_list/api/list:
     get:
       operationId: waiting_list_api_list_list
@@ -3291,23 +3317,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
-  /waiting_list/api/public_waiting_list_create_entry_existing_member:
-    post:
-      operationId: waiting_list_api_public_waiting_list_create_entry_existing_member_create
+  /waiting_list/api/public_get_waiting_list_entry_details:
+    get:
+      operationId: waiting_list_api_public_get_waiting_list_entry_details_retrieve
+      parameters:
+      - in: query
+        name: entry_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: link_key
+        schema:
+          type: string
+        required: true
       tags:
       - waiting_list
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
-        required: true
       security:
       - DrfForwardAuthentication: []
       responses:
@@ -3315,7 +3340,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderConfirmationResponse'
+                $ref: '#/components/schemas/WaitingListEntryDetails'
           description: ''
   /waiting_list/api/public_waiting_list_create_entry_new_member:
     post:
@@ -3342,6 +3367,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
+  /waiting_list/api/send_waiting_list_link:
+    post:
+      operationId: waiting_list_api_send_waiting_list_link_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/send_link_serializerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/send_link_serializerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/send_link_serializerRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
           description: ''
   /waiting_list/api/show_coop_content:
     get:
@@ -3382,6 +3433,32 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /waiting_list/api/waiting_list_create_entry_existing_member:
+    post:
+      operationId: waiting_list_api_waiting_list_create_entry_existing_member_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicWaitingListEntryExistingMemberCreateRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
   /waiting_list/waiting_list_entries/:
     get:
@@ -7526,6 +7603,14 @@ components:
       - product
       - quantity
       - waiting_list_entry
+    disable_link_serializerRequest:
+      type: object
+      properties:
+        entry_id:
+          type: string
+          minLength: 1
+      required:
+      - entry_id
     mpl:
       type: object
       properties:
@@ -7535,6 +7620,14 @@ components:
           $ref: '#/components/schemas/PublicPickupLocation'
       required:
       - has_location
+    send_link_serializerRequest:
+      type: object
+      properties:
+        entry_id:
+          type: string
+          minLength: 1
+      required:
+      - entry_id
   securitySchemes:
     DrfForwardAuthentication:
       type: http

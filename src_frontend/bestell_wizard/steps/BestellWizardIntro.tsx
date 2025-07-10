@@ -18,6 +18,7 @@ interface BestellWizardIntroProps {
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -29,6 +30,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   investingMembership,
   setInvestingMembership,
   setShoppingCart,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -103,8 +105,9 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
                 }
                 checked={selectedProductTypes.includes(publicProductType)}
                 disabled={
-                  publicProductType.mustBeSubscribedTo &&
-                  selectedProductTypes.includes(publicProductType)
+                  (publicProductType.mustBeSubscribedTo &&
+                    selectedProductTypes.includes(publicProductType)) ||
+                  waitingListLinkConfirmationModeEnabled
                 }
               />
               <span>
@@ -128,6 +131,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
               label={"Fördermitgliedschaft in Genossenschaft"}
               onChange={(event) => setInvestingMembership(event.target.checked)}
               checked={investingMembership}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
             <span>
               Werde Teil des Biotops und unterstütze die Genossenschaft als

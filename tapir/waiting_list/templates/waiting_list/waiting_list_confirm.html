@@ -1,0 +1,34 @@
+{% load django_vite %}
+{% load configuration %}
+{% load tapir_static %}
+{% load core %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>
+            {% block title %}{{ "wirgarten.site.name"|parameter }} - Tapir{% endblock %}
+        </title>
+        {% with "organisation.theme"|parameter as theme %}
+            <link rel="shortcut icon"
+                  type="image/png"
+                  href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
+            <link rel="stylesheet"
+                  href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
+        {% endwith %}
+        <script src="{% static 'core/bootstrap/5.1.3/js/bootstrap.bundle.min.js' %}"></script>
+        {% javascript_environment_variables %}
+        {% vite_hmr_client %}
+        {% vite_react_refresh %}
+        {% vite_asset 'waiting_list/waiting_list_confirm_entry.tsx' %}
+    </head>
+    <body>
+        <div class="container-fluid">
+            <main id="main-content" role="main">
+                {% csrf_token %}
+                <span id="waiting_list_confirm" data-entry-id="{{ entry_id }}" data-link-key="{{ link_key }}"></span>
+            </main>
+        </div>
+    </body>
+</html>

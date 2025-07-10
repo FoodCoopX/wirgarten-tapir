@@ -11,6 +11,7 @@ interface BestellWizardProductTypeProps {
   productType: PublicProductType;
   shoppingCart: ShoppingCart;
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
@@ -18,6 +19,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   productType,
   shoppingCart,
   setShoppingCart,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -43,6 +45,9 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             productType={productType}
             shoppingCart={shoppingCart}
             setShoppingCart={setShoppingCart}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         </Col>
       </Row>

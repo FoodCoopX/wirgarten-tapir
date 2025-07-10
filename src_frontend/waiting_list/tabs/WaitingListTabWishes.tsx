@@ -33,6 +33,14 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
   return (
     <Row>
       <Col>
+        <Row className={"mt-2"}>
+          <ProductWishesEditor
+            wishes={productWishes}
+            setWishes={setProductWishes}
+            waitingListEntryId={entryDetails.id}
+            products={products}
+          />
+        </Row>
         {entryDetails.currentSubscriptions && (
           <Row className={"mt-2"}>
             <h6>Schon bestehende Verträge:</h6>
@@ -51,14 +59,6 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
             </div>
           </Row>
         )}
-        <Row className={"mt-2"}>
-          <ProductWishesEditor
-            wishes={productWishes}
-            setWishes={setProductWishes}
-            waitingListEntryId={entryDetails.id}
-            products={products}
-          />
-        </Row>
       </Col>
       <Col>
         <Row className={"mt-2"}>

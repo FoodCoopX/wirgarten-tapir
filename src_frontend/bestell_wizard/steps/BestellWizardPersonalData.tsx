@@ -20,6 +20,7 @@ interface BestellWizardPersonalDataProps {
   contractAccepted: boolean;
   setContractAccepted: (contractRead: boolean) => void;
   waitingListModeEnabled: boolean;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -31,6 +32,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   contractAccepted,
   setContractAccepted,
   waitingListModeEnabled,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
@@ -54,6 +56,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Vorname"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -67,6 +70,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Nachname"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -86,6 +90,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               isInvalid={
                 personalData.email !== "" && !isEmailValid(personalData.email)
               }
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -104,6 +109,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 personalData.phoneNumber !== "" &&
                 !isPhoneNumberValid(personalData.phoneNumber)
               }
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -119,6 +125,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Straße & Hausnummer"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -132,6 +139,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Adresszusatz"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -147,6 +155,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Postleitzahl"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -160,6 +169,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 updatePersonalData();
               }}
               placeholder={"Stadt"}
+              disabled={waitingListLinkConfirmationModeEnabled}
             />
           </Form.Group>
         </Col>
@@ -190,72 +200,76 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
       </Row>
-      <Row className={"mt-2"}>
-        <Col>
-          <Form.Label>Kontoinhaber*in</Form.Label>
-          <Form.Control
-            value={personalData.accountOwner}
-            onChange={(event) => {
-              personalData.accountOwner = event.target.value;
-              updatePersonalData();
-            }}
-            placeholder={"Kontoinhaber*in"}
-          />
-        </Col>
-        <Col>
-          <Form.Group>
-            <Form.Label>IBAN</Form.Label>
-            <Form.Control
-              value={personalData.iban}
-              onChange={(event) => {
-                personalData.iban = event.target.value;
-                updatePersonalData();
-              }}
-              placeholder={"IBAN"}
-              isInvalid={
-                personalData.iban !== "" && !isIbanValid(personalData.iban)
-              }
-            />
-          </Form.Group>
-        </Col>
-      </Row>
+
       {!waitingListModeEnabled && (
-        <Row className={"mt-4"}>
-          <Col>
-            <Row>
-              <Col>
-                <BestellWizardCardSubtitle text={"Erteilung SEPA-Mandat"} />
-              </Col>
-            </Row>
-            <Row className={"mt-2"}>
-              <Col>
-                <Form.Check
-                  id={"sepa-mandat"}
-                  label={getTextSepaCheckbox()}
-                  checked={sepaAllowed}
-                  onChange={(event) => setSepaAllowed(event.target.checked)}
-                />
-              </Col>
-              <Col>
-                <Form.Check
-                  id={"contract"}
-                  label={
-                    "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
+        <>
+          {" "}
+          <Row className={"mt-2"}>
+            <Col>
+              <Form.Label>Kontoinhaber*in</Form.Label>
+              <Form.Control
+                value={personalData.accountOwner}
+                onChange={(event) => {
+                  personalData.accountOwner = event.target.value;
+                  updatePersonalData();
+                }}
+                placeholder={"Kontoinhaber*in"}
+              />
+            </Col>
+            <Col>
+              <Form.Group>
+                <Form.Label>IBAN</Form.Label>
+                <Form.Control
+                  value={personalData.iban}
+                  onChange={(event) => {
+                    personalData.iban = event.target.value;
+                    updatePersonalData();
+                  }}
+                  placeholder={"IBAN"}
+                  isInvalid={
+                    personalData.iban !== "" && !isIbanValid(personalData.iban)
                   }
-                  checked={contractAccepted}
-                  onChange={(event) =>
-                    setContractAccepted(event.target.checked)
-                  }
                 />
-                <Form.Text>
-                  <a href="https://biotop-oberland.de/gebuehrenordnung">
-                    https://biotop-oberland.de/gebuehrenordnung
-                  </a>
-                </Form.Text>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row className={"mt-4"}>
+            <Col>
+              <Row>
+                <Col>
+                  <BestellWizardCardSubtitle text={"Erteilung SEPA-Mandat"} />
+                </Col>
+              </Row>
+              <Row className={"mt-2"}>
+                <Col>
+                  <Form.Check
+                    id={"sepa-mandat"}
+                    label={getTextSepaCheckbox()}
+                    checked={sepaAllowed}
+                    onChange={(event) => setSepaAllowed(event.target.checked)}
+                  />
+                </Col>
+                <Col>
+                  <Form.Check
+                    id={"contract"}
+                    label={
+                      "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
+                    }
+                    checked={contractAccepted}
+                    onChange={(event) =>
+                      setContractAccepted(event.target.checked)
+                    }
+                  />
+                  <Form.Text>
+                    <a href="https://biotop-oberland.de/gebuehrenordnung">
+                      https://biotop-oberland.de/gebuehrenordnung
+                    </a>
+                  </Form.Text>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+        </>
       )}
     </>
   );

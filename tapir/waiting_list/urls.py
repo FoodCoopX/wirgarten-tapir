@@ -36,9 +36,29 @@ urlpatterns = [
         name="public_waiting_list_create_entry_new_member",
     ),
     path(
-        "api/public_waiting_list_create_entry_existing_member",
-        views.PublicWaitingListCreateEntryExistingMemberView.as_view(),
-        name="public_waiting_list_create_entry_existing_member",
+        "api/waiting_list_create_entry_existing_member",
+        views.WaitingListCreateEntryExistingMemberView.as_view(),
+        name="waiting_list_create_entry_existing_member",
+    ),
+    path(
+        "api/send_waiting_list_link",
+        views.SendWaitingListLinkApiView.as_view(),
+        name="send_waiting_list_link",
+    ),
+    path(
+        "api/disable_waiting_list_link",
+        views.DisableWaitingListLinkApiView.as_view(),
+        name="disable_waiting_list_link",
+    ),
+    path(
+        "waiting_list_confirm",
+        views.WaitingListConfirmOrderView.as_view(),
+        name="waiting_list_confirm",
+    ),
+    path(
+        "api/public_get_waiting_list_entry_details",
+        views.PublicGetWaitingListEntryDetailsApiView.as_view(),
+        name="public_get_waiting_list_entry_details",
     ),
 ]
 

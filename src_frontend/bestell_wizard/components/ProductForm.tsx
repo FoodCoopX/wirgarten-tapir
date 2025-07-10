@@ -12,12 +12,14 @@ interface ProductFormProps {
   productType: PublicProductType;
   shoppingCart: ShoppingCart;
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
   productType,
   shoppingCart,
   setShoppingCart,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   function totalPriceForThisProductType() {
     let total = 0;
@@ -57,6 +59,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       shoppingCart[product.id!] = event.target.checked ? 1 : 0;
                       setShoppingCart(Object.assign({}, shoppingCart));
                     }}
+                    disabled={waitingListLinkConfirmationModeEnabled}
                   />
                 ) : (
                   <Form.Control
@@ -71,6 +74,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       shoppingCart[product.id!] = newValue;
                       setShoppingCart(Object.assign({}, shoppingCart));
                     }}
+                    disabled={waitingListLinkConfirmationModeEnabled}
                   />
                 )}
               </div>

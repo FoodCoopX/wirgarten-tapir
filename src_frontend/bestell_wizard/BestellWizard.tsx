@@ -13,6 +13,7 @@ import {
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -53,9 +54,13 @@ import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSum
 
 interface BestellWizardProps {
   csrfToken: string;
+  waitingListEntryDetails?: WaitingListEntryDetails;
 }
 
-const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
+const BestellWizard: React.FC<BestellWizardProps> = ({
+  csrfToken,
+  waitingListEntryDetails,
+}) => {
   const [theme, setTheme] = useState<TapirTheme>();
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
@@ -124,6 +129,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [introEnabled, setIntroEnabled] = useState(true);
   const [studentStatusAllowed, setStudentStatusAllowed] = useState(false);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
+  const [
+    waitingListLinkConfirmationModeEnabled,
+    setWaitingListLinkConfirmationModeEnabled,
+  ] = useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -156,6 +165,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, []);
 
   useEffect(() => {
+    if (waitingListLinkConfirmationModeEnabled) return;
+
     setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
 
     selectedAllRequiredProductTypes(
@@ -201,12 +212,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [selectedProductTypes, shoppingCart, introEnabled, pickupLocations]);
 
   useEffect(() => {
-    updateProductsAndProductTypesOverCapacity(
-      shoppingCart,
-      setProductIdsOverCapacity,
-      setProductTypeIdsOverCapacity,
-      setCheckingCapacities,
-    );
+    if (!waitingListLinkConfirmationModeEnabled) {
+      updateProductsAndProductTypesOverCapacity(
+        shoppingCart,
+        setProductIdsOverCapacity,
+        setProductTypeIdsOverCapacity,
+        setCheckingCapacities,
+      );
+    }
 
     updateMinimumAndPriceOfShare(
       shoppingCart,
@@ -217,6 +230,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [shoppingCart]);
 
   useEffect(() => {
+    if (waitingListLinkConfirmationModeEnabled) return;
+
     if (forceWaitingList) {
       setWaitingListModeEnabled(true);
       return;
@@ -240,7 +255,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   ]);
 
   useEffect(() => {
-    if (pickupLocations.length === 0 || isShoppingCartEmpty(shoppingCart)) {
+    if (
+      pickupLocations.length === 0 ||
+      isShoppingCartEmpty(shoppingCart) ||
+      waitingListLinkConfirmationModeEnabled
+    ) {
       return;
     }
 
@@ -268,11 +287,64 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [selectedPickupLocations, shoppingCart]);
 
   useEffect(() => {
+    if (waitingListLinkConfirmationModeEnabled) return;
+
     if (forceWaitingList) {
       setShowGeneralWaitingListModal(true);
       setWaitingListModeEnabled(true);
     }
   }, [forceWaitingList]);
+
+  useEffect(() => {
+    setWaitingListLinkConfirmationModeEnabled(
+      waitingListEntryDetails !== undefined,
+    );
+
+    if (!waitingListEntryDetails) {
+      return;
+    }
+
+    if (
+      waitingListEntryDetails.productWishes === undefined ||
+      waitingListEntryDetails.productWishes.length === 0
+    ) {
+      setCurrentStep("pickup_location");
+    } else {
+      const newShoppingCart = buildEmptyShoppingCart(publicProductTypes);
+      for (const wish of waitingListEntryDetails.productWishes) {
+        newShoppingCart[wish.product.id!] = wish.quantity;
+      }
+      setShoppingCart(newShoppingCart);
+    }
+
+    if (
+      waitingListEntryDetails.pickupLocationWishes !== undefined &&
+      waitingListEntryDetails.pickupLocationWishes.length > 0 &&
+      pickupLocations.length > 0
+    ) {
+      const pickupLocation = pickupLocations.find(
+        (pl) =>
+          pl.id ===
+          waitingListEntryDetails.pickupLocationWishes![0].pickupLocation.id,
+      );
+      setSelectedPickupLocations([pickupLocation!]);
+    }
+
+    setPersonalData({
+      firstName: waitingListEntryDetails.firstName,
+      lastName: waitingListEntryDetails.lastName,
+      email: waitingListEntryDetails.email,
+      phoneNumber: waitingListEntryDetails.phoneNumber,
+      street: waitingListEntryDetails.street,
+      street2: waitingListEntryDetails.street2,
+      postcode: waitingListEntryDetails.postcode,
+      city: waitingListEntryDetails.city,
+      birthdate: new Date(),
+      country: "de",
+      iban: "",
+      accountOwner: "",
+    });
+  }, [waitingListEntryDetails, publicProductTypes, pickupLocations]);
 
   function onNextClicked() {
     if (!waitingListModeEnabled && shouldOpenProductWaitingListModal()) {
@@ -354,6 +426,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
       case "pickup_location":
@@ -369,6 +444,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
       case "coop_shares":
@@ -385,6 +463,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             studentStatusAllowed={studentStatusAllowed}
             studentStatusEnabled={studentStatusEnabled}
             setStudentStatusEnabled={setStudentStatusEnabled}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
       case "personal_data":
@@ -398,6 +479,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             waitingListModeEnabled={waitingListModeEnabled}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
       case "summary":
@@ -436,6 +520,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             productType={productType}
             shoppingCart={shoppingCart}
             setShoppingCart={setShoppingCart}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
     }

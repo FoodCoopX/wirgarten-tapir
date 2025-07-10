@@ -70,6 +70,8 @@ class Events:
         "confirmation_registration_in_waiting_list"
     )
 
+    WAITING_LIST_WISH_CAN_BE_ORDERED = "waiting_list_wish_can_be_ordered"
+
 
 class Segments:
     COOP_MEMBERS = "Geno-Mitglieder"
@@ -333,6 +335,15 @@ def _register_triggers():
             "Vertragsliste": "contract_list",
             "Verteilstation Wünsche": "pickup_location_list",
             "Gewünschtes Startdatum": "desired_start_date",
+        },
+        required=True,
+    )
+
+    register_transactional_trigger(
+        name="Warteliste Wunsch Link",
+        key=Events.WAITING_LIST_WISH_CAN_BE_ORDERED,
+        tokens={
+            "Link zu Bestellwizard": "link",
         },
         required=True,
     )

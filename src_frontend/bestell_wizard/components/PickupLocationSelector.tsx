@@ -16,6 +16,7 @@ interface PickupLocationSelectorProps {
   waitingListModeEnabled: boolean;
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
@@ -25,6 +26,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   waitingListModeEnabled,
   pickupLocationsWithCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   const [map, setMap] = useState<MapRef>(null);
 
@@ -46,18 +48,23 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
   ) {
-    if (waitingListModeEnabled) {
-      return "disabled";
-    }
-
+    let result = "";
     if (selectedPickupLocations.includes(pickupLocation)) {
-      return "active";
+      result += "active";
     }
 
-    return "";
+    if (waitingListModeEnabled || waitingListLinkConfirmationModeEnabled) {
+      result += " disabled";
+    }
+
+    return result;
   }
 
   function buildCapacityIndicator(pickupLocation: PublicPickupLocation) {
+    if (waitingListLinkConfirmationModeEnabled) {
+      return;
+    }
+
     if (pickupLocationsWithCapacityCheckLoading.has(pickupLocation)) {
       return <Spinner size={"sm"} />;
     }
@@ -76,8 +83,15 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
           {pickupLocations.map((pickupLocation) => (
             <ListGroupItem
               key={pickupLocation.id}
-              style={{ cursor: "pointer" }}
-              onClick={() => setSelectedPickupLocations([pickupLocation])}
+              style={
+                waitingListLinkConfirmationModeEnabled
+                  ? {}
+                  : { cursor: "pointer" }
+              }
+              onClick={() => {
+                if (waitingListLinkConfirmationModeEnabled) return;
+                setSelectedPickupLocations([pickupLocation]);
+              }}
               className={getClassForPickupLocationListItem(pickupLocation)}
             >
               <strong>{pickupLocation.name}</strong>{" "}

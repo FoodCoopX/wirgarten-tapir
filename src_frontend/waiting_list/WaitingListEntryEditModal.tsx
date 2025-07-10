@@ -16,6 +16,7 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
 import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
 import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;
@@ -26,6 +27,7 @@ interface WaitingListEntryEditModalProps {
   pickupLocations: PickupLocation[];
   products: Product[];
   categories: string[];
+  addToast: (data: ToastData) => void;
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
@@ -37,6 +39,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   pickupLocations,
   products,
   categories,
+  addToast,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -181,7 +184,12 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
               />
             </Tab>
             <Tab eventKey="link" title="Link">
-              <WaitingListTabLink entryDetails={entryDetails} />
+              <WaitingListTabLink
+                entryDetails={entryDetails}
+                reloadEntries={reloadEntries}
+                csrfToken={csrfToken}
+                addToast={addToast}
+              />
             </Tab>
           </Tabs>
         </Modal.Body>
@@ -196,9 +204,14 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           <TapirButton
             variant={"primary"}
             icon={"save"}
-            text={"Speichern"}
+            text={
+              entryDetails.linkSentDate !== undefined
+                ? "Schreibgeschützt weil Link aktiv"
+                : "Speichern"
+            }
             onClick={onSave}
             loading={loading}
+            disabled={entryDetails.linkSentDate !== undefined}
           />
         </Modal.Footer>
       </Modal>

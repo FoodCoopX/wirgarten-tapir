@@ -208,7 +208,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
 
     if (waitingListModeEnabled) {
       waitingListApi
-        .waitingListApiPublicWaitingListCreateEntryExistingMemberCreate({
+        .waitingListApiWaitingListCreateEntryExistingMemberCreate({
           publicWaitingListEntryExistingMemberCreateRequest: {
             productIds: Object.keys(shoppingCart),
             productQuantities: Object.values(shoppingCart),

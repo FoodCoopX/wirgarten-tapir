@@ -17,6 +17,7 @@ interface BestellWizardCoopSharesProps {
   studentStatusAllowed: boolean;
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -31,6 +32,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   studentStatusAllowed,
   studentStatusEnabled,
   setStudentStatusEnabled,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -91,7 +93,9 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 onChange={(event) =>
                   setSelectedNumberOfCoopShares(parseInt(event.target.value))
                 }
-                disabled={studentStatusEnabled}
+                disabled={
+                  studentStatusEnabled || waitingListLinkConfirmationModeEnabled
+                }
               />
             </Form.Group>
             <span>
@@ -140,6 +144,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                   onChange={(event) =>
                     setStudentStatusEnabled(event.target.checked)
                   }
+                  disabled={waitingListLinkConfirmationModeEnabled}
                 />
                 <Form.Text>
                   Die Immatrikulationsbescheinigung muss per Mail an{" "}

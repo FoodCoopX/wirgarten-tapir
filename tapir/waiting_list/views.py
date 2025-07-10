@@ -1,11 +1,14 @@
+import uuid
+
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import permissions, viewsets, status
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from rest_framework import permissions, viewsets, status, serializers
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -90,12 +93,13 @@ class WaitingListApiView(APIView):
         )
         entries = pagination.paginate_queryset(entries, request)
 
-        data = [self.build_entry_data(entry) for entry in entries]
+        data = [self.build_entry_data(entry, cache=self.cache) for entry in entries]
         serializer = WaitingListEntryDetailsSerializer(data, many=True)
 
         return pagination.get_paginated_response(serializer.data)
 
-    def build_entry_data(self, entry: WaitingListEntry):
+    @classmethod
+    def build_entry_data(cls, entry: WaitingListEntry, cache: dict):
         date_of_entry_in_cooperative = None
         current_pickup_location = None
         member_no = None
@@ -104,24 +108,22 @@ class WaitingListApiView(APIView):
         current_subscriptions = None
         if entry.member is not None:
             member_no = entry.member.member_no
-            self.fill_entry_with_personal_data(entry)
+            cls.fill_entry_with_personal_data(entry)
             date_of_entry_in_cooperative = (
                 MembershipCancellationManager.get_coop_entry_date(entry.member)
             )
             pickup_location_id = (
                 MemberPickupLocationService.get_member_pickup_location_id(
-                    entry.member, reference_date=get_today(cache=self.cache)
+                    entry.member, reference_date=get_today(cache=cache)
                 )
             )
             current_pickup_location = TapirCache.get_pickup_location_by_id(
-                cache=self.cache,
+                cache=cache,
                 pickup_location_id=pickup_location_id,
             )
             current_products = {
                 subscription.product
-                for subscription in get_active_and_future_subscriptions(
-                    cache=self.cache
-                )
+                for subscription in get_active_and_future_subscriptions(cache=cache)
                 .filter(member=entry.member)
                 .select_related("product__type")
             }
@@ -130,7 +132,7 @@ class WaitingListApiView(APIView):
             )
             current_subscriptions = (
                 TapirCache.get_active_and_future_subscriptions_by_member_id(
-                    cache=self.cache, reference_date=get_today(cache=self.cache)
+                    cache=cache, reference_date=get_today(cache=cache)
                 ).get(entry.member.id, [])
             )
 
@@ -326,7 +328,7 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
             self.validate(serializer.validated_data)
             with transaction.atomic():
                 entry = self.create_entry(serializer.validated_data)
-                PublicWaitingListCreateEntryExistingMemberView.send_confirmation_mail(
+                WaitingListCreateEntryExistingMemberView.send_confirmation_mail(
                     entry=entry,
                     future_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
                         email=serializer.validated_data["email"],
@@ -395,7 +397,7 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
         return waiting_list_entry
 
 
-class PublicWaitingListCreateEntryExistingMemberView(APIView):
+class WaitingListCreateEntryExistingMemberView(APIView):
     permission_classes = []
 
     def __init__(self, **kwargs):
@@ -518,3 +520,132 @@ class PublicWaitingListCreateEntryExistingMemberView(APIView):
                 },
             ),
         )
+
+
+class SendWaitingListLinkApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: str},
+        request=inline_serializer(
+            name="send_link_serializer",
+            fields={
+                "entry_id": serializers.CharField(),
+            },
+        ),
+    )
+    @transaction.atomic
+    def post(self, request):
+        entry_id = request.data["entry_id"]
+        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
+
+        with transaction.atomic():
+            if waiting_list_entry.confirmation_link_key is None:
+                waiting_list_entry.confirmation_link_key = uuid.uuid4()
+            waiting_list_entry.link_sent_date = get_now(cache=self.cache)
+            waiting_list_entry.save()
+
+            self.send_mail(waiting_list_entry)
+
+        return Response("OK")
+
+    @staticmethod
+    def build_waiting_list_link(entry_id: str, link_key: uuid.UUID) -> str:
+        url = reverse("waiting_list:waiting_list_confirm")
+        return f"{url}?entry_id={entry_id}&link_key={link_key}"
+
+    @classmethod
+    def send_mail(cls, waiting_list_entry: WaitingListEntry):
+        recipient_id_in_base_queryset = None
+        recipient_outside_of_base_queryset = None
+        if waiting_list_entry.member_id is None:
+            recipient_outside_of_base_queryset = (
+                TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                    email=waiting_list_entry.email,
+                    first_name=waiting_list_entry.first_name,
+                    last_name=waiting_list_entry.last_name,
+                )
+            )
+        else:
+            recipient_id_in_base_queryset = waiting_list_entry.member_id
+
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.WAITING_LIST_WISH_CAN_BE_ORDERED,
+                token_data={
+                    "link": cls.build_waiting_list_link(
+                        waiting_list_entry.id,
+                        waiting_list_entry.confirmation_link_key,
+                    ),
+                },
+                recipient_id_in_base_queryset=recipient_id_in_base_queryset,
+                recipient_outside_of_base_queryset=recipient_outside_of_base_queryset,
+            ),
+        )
+
+
+class DisableWaitingListLinkApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        request=inline_serializer(
+            name="disable_link_serializer",
+            fields={
+                "entry_id": serializers.CharField(),
+            },
+        ),
+    )
+    @transaction.atomic
+    def post(self, request):
+        entry_id = request.data["entry_id"]
+        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
+
+        waiting_list_entry.confirmation_link_key = None
+        waiting_list_entry.link_sent_date = None
+        waiting_list_entry.save()
+
+        return Response("OK")
+
+
+class WaitingListConfirmOrderView(TemplateView):
+    template_name = "waiting_list/waiting_list_confirm.html"
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        context_data["entry_id"] = self.request.GET.get("entry_id", None)
+        context_data["link_key"] = self.request.GET.get("link_key", None)
+        return context_data
+
+
+class PublicGetWaitingListEntryDetailsApiView(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={200: WaitingListEntryDetailsSerializer},
+        parameters=[
+            OpenApiParameter(name="entry_id", type=str, required=True),
+            OpenApiParameter(name="link_key", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        entry_id = request.query_params.get("entry_id")
+        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
+
+        link_key = request.query_params.get("link_key")
+        try:
+            link_key = uuid.UUID(link_key)
+        except ValueError:
+            raise Http404(f"Unknown entry (id:{entry_id}, key:{link_key})")
+
+        if waiting_list_entry.confirmation_link_key != link_key:
+            raise Http404(f"Unknown entry (id:{entry_id}, key:{link_key})")
+
+        data = WaitingListApiView.build_entry_data(waiting_list_entry, cache={})
+        serializer = WaitingListEntryDetailsSerializer(data)
+
+        return Response(serializer.data)
