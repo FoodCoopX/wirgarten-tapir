@@ -147,7 +147,7 @@ def get_existing_payments(due_date: date) -> list[Payment]:
     return list(Payment.objects.filter(transaction__isnull=True, due_date=due_date))
 
 
-def get_total_payment_amount(due_date: date) -> list[Payment]:
+def get_total_payment_amount(due_date: date, cache: dict) -> list[Payment]:
     """
     Returns the total € amount for all due payments on this date.
 
@@ -157,9 +157,11 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
 
     total_amount = 0.0
 
-    subscriptions = Subscription.objects.filter(
-        start_date__lte=due_date, end_date__gte=due_date
-    ).order_by("mandate_ref", "product__type")
+    subscriptions = (
+        Subscription.objects.filter(start_date__lte=due_date, end_date__gte=due_date)
+        .order_by("mandate_ref", "product__type")
+        .select_related("mandate_ref", "product__type")
+    )
 
     existing_payments = {
         f"{p.mandate_ref.ref}-{p.type}": float(p.amount)
@@ -168,7 +170,7 @@ def get_total_payment_amount(due_date: date) -> list[Payment]:
     for sub in subscriptions:
         total_amount += existing_payments.get(
             f"{sub.mandate_ref.ref}-{sub.product.type.name}", None
-        ) or sub.total_price(due_date)
+        ) or sub.total_price(due_date, cache=cache)
 
     total_amount += float(
         Payment.objects.filter(

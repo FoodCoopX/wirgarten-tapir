@@ -325,10 +325,6 @@ def get_product_price(
 ) -> ProductPrice | None:
     """
     Returns the currently active product price.
-
-    :param product: the product
-    :param reference_date: reference date for when the price should be valid
-    :return: the ProductPrice instance
     """
     if reference_date is None:
         reference_date = get_today(cache)
@@ -342,8 +338,15 @@ def get_product_price(
 
     def get_price():
         prices = list(TapirCache.get_product_prices_by_product_id(cache, product))
-        if len(prices) == 1:
-            return prices[0]
+        if len(prices) == 0:
+            return None
+
+        prices.sort(key=lambda p: p.valid_from, reverse=False)
+        oldest_price = prices[0]
+        if oldest_price.valid_from > reference_date:
+            # If no price is defined at the subscription start date, get the closest available price
+            return oldest_price
+
         prices.sort(key=lambda p: p.valid_from, reverse=True)
         for price in prices:
             if price.valid_from <= reference_date:

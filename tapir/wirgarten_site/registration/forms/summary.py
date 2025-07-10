@@ -14,7 +14,10 @@ from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import Product, ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date_for_product_type
-from tapir.wirgarten.service.products import get_product_price
+from tapir.wirgarten.service.products import (
+    get_product_price,
+    get_available_product_types,
+)
 from tapir.wirgarten.utils import legal_status_is_cooperative
 
 
@@ -142,7 +145,9 @@ class SummaryForm(forms.Form):
         }
 
         self.additional_product_infos = []
-        for product_type in ProductType.objects.exclude(id=base_product_type.id):
+        for product_type in get_available_product_types(cache=self.cache):
+            if product_type.id == base_product_type.id:
+                continue
             self.additional_product_infos.append(
                 self.build_additional_product_type_infos(
                     product_type=product_type,
