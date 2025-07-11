@@ -1,4 +1,5 @@
 import csv
+from builtins import print
 import datetime
 
 import django.db
@@ -14,6 +15,11 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MandateReference,
     MemberPickupLocation,
+    Payment,
+    LogEntry,
+    QuestionaireCancellationReasonResponse,
+    QuestionaireTrafficSourceResponse,
+    WaitingListEntry
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
@@ -38,9 +44,14 @@ class Command(BaseCommand):
         # print(options)
 
         if options["reset_all"]:
+            Payment.objects.all().delete()
+            MandateReference.objects.all().delete()
             Subscription.objects.all().delete()
             CoopShareTransaction.objects.all().delete()
-            MandateReference.objects.all().delete()
+            LogEntry.objects.all().delete()
+            QuestionaireCancellationReasonResponse.objects.all().delete()
+            QuestionaireTrafficSourceResponse.objects.all().delete()
+            WaitingListEntry.objects.all().delete()
             Member.objects.all().delete()
             return
 
@@ -54,7 +65,7 @@ class Command(BaseCommand):
         delete_all = options["delete_all"]
 
         with open(filepath, "r") as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter=";")
             if type == "members":
                 if delete_all:
                     Member.objects.all().delete()
@@ -72,7 +83,7 @@ class Command(BaseCommand):
                     m = Member(
                         first_name=row["Vorname"],
                         last_name=row["Nachname"],
-                        birthdate=row["Geburtstag/Gründungsdatum"],
+                        #birthdate=row["Geburtstag/Gründungsdatum"],
                         street=row["Straße"] + " " + row["Hausnr."],
                         postcode=row["PLZ"],
                         city=row["Ort"],
@@ -83,7 +94,7 @@ class Command(BaseCommand):
                         account_owner=row["Kontoinhaber"],
                         sepa_consent=row["consent_sepa"],  # + "T12:00:00+0200",
                         privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
-                        # pickup_location=picloc
+                        #pickup_location=picloc
                     )
                     mp = MemberPickupLocation(
                         member=m,
@@ -102,7 +113,7 @@ class Command(BaseCommand):
                     CoopShareTransaction.objects.all().delete()
                 for row in reader:
                     # print(row)
-                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z, Ü, K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
+                    # {'Mitgliedsnummer': '1', 'Bewegungsart (Z,Ü,K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
                     qu = int(row["Anzahl Anteile"])
                     transfer_member = None
                     valid_date = row["Datum"]
@@ -275,7 +286,7 @@ class Command(BaseCommand):
                             start_date=row["Vertragsbeginn"],
                             end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
-                            solidarity_price_percentage=row["Solidarpreis in Prozent"],
+                            solidarity_price_percentage=float(row["Solidarpreis in Prozent"]) if row["Quantity"] else 0.0,
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
                             product_id=prod.id,
