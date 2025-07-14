@@ -7,6 +7,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
     Payment,
+    LogEntry,
 )
 
 
@@ -102,6 +103,17 @@ class Command(BaseCommand):
                         p.delete()
                         print("Deleted payment.", p)
                     res = ref_list.delete()
+                    print("Deleted:", res)
+            except Exception as e:
+                print(e)
+                return
+            # now delete LogEntries
+            try:
+                logEntries = LogEntry.objects.filter(member_id=m_id)
+                if dry:
+                    print("DRY-RUN: Would delete log entries: ", logEntries)
+                else:
+                    res = logEntries.delete()
                     print("Deleted:", res)
             except Exception as e:
                 print(e)
