@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -24,12 +25,16 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.apply_tapir_order_manager import (
+    ApplyTapirOrderManager,
+)
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
@@ -37,6 +42,7 @@ from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
+from tapir.subscriptions.views.bestell_wizard import BestellWizardConfirmOrderApiView
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
@@ -44,6 +50,7 @@ from tapir.waiting_list.serializers import (
     WaitingListEntryUpdateSerializer,
     PublicWaitingListEntryNewMemberCreateSerializer,
     PublicWaitingListEntryExistingMemberCreateSerializer,
+    PublicConfirmWaitingListEntryRequestSerializer,
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
@@ -56,6 +63,7 @@ from tapir.wirgarten.models import (
     Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
@@ -634,9 +642,22 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
     )
     def get(self, request):
         entry_id = request.query_params.get("entry_id")
-        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
-
         link_key = request.query_params.get("link_key")
+
+        waiting_list_entry = self.get_entry_by_id_and_validate_link_key(
+            entry_id, link_key
+        )
+
+        data = WaitingListApiView.build_entry_data(waiting_list_entry, cache={})
+        serializer = WaitingListEntryDetailsSerializer(data)
+
+        return Response(serializer.data)
+
+    @classmethod
+    def get_entry_by_id_and_validate_link_key(
+        cls, entry_id: str, link_key: str
+    ) -> WaitingListEntry:
+        waiting_list_entry = get_object_or_404(WaitingListEntry, id=entry_id)
         try:
             link_key = uuid.UUID(link_key)
         except ValueError:
@@ -645,7 +666,104 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
         if waiting_list_entry.confirmation_link_key != link_key:
             raise Http404(f"Unknown entry (id:{entry_id}, key:{link_key})")
 
-        data = WaitingListApiView.build_entry_data(waiting_list_entry, cache={})
-        serializer = WaitingListEntryDetailsSerializer(data)
+        return waiting_list_entry
 
-        return Response(serializer.data)
+
+class PublicConfirmWaitingListEntryView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: str},
+        request=PublicConfirmWaitingListEntryRequestSerializer,
+    )
+    def post(self, request):
+        serializer = PublicConfirmWaitingListEntryRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            waiting_list_entry = self.validate_request_and_get_waiting_list_entry(
+                serializer.validated_data
+            )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
+            )
+
+        with transaction.atomic():
+            self.apply_changes(waiting_list_entry)
+
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": None}
+            ).data
+        )
+
+    def validate_request_and_get_waiting_list_entry(self, validated_data: dict):
+        waiting_list_entry = PublicGetWaitingListEntryDetailsApiView.get_entry_by_id_and_validate_link_key(
+            validated_data["entry_id"], validated_data["link_key"]
+        )
+
+        PersonalDataValidator.validate_personal_data_existing_member(
+            birthdate=validated_data["birthdate"],
+            iban=validated_data["iban"],
+            cache=self.cache,
+        )
+
+        if not validated_data["sepa_allowed"]:
+            raise ValidationError("SEPA-Mandat muss erlaubt sein")
+
+        if not validated_data["contract_accepted"]:
+            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
+
+        return waiting_list_entry
+
+    def apply_changes(self, waiting_list_entry: WaitingListEntry):
+        contract_start_date = get_next_contract_start_date(cache=self.cache)
+
+        self.apply_subscription_changes(waiting_list_entry, contract_start_date)
+        self.apply_pickup_location_changes(waiting_list_entry, contract_start_date)
+
+    def apply_subscription_changes(
+        self, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
+    ):
+        member = waiting_list_entry.member
+        wishes = waiting_list_entry.product_wishes.all().select_related("product__type")
+        orders_by_product_type = {}
+        for wish in wishes:
+            if wish.product.type not in orders_by_product_type.keys():
+                orders_by_product_type[wish.product.type] = {}
+            orders_by_product_type[wish.product.type][wish.product] = wish.quantity
+        for product_type, order in orders_by_product_type.items():
+            if member is None:
+                ApplyTapirOrderManager.apply_order_for_product_type_new_member_and_send_confirmation_mail()
+            else:
+                ApplyTapirOrderManager.apply_order_for_product_type_existing_member_and_send_confirmation_mail(
+                    member=waiting_list_entry.member,
+                    order=order,
+                    product_type=product_type,
+                    contract_start_date=contract_start_date,
+                    cache=self.cache,
+                )
+
+    @classmethod
+    def apply_pickup_location_changes(
+        cls, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
+    ):
+        pickup_location_wish = waiting_list_entry.pickup_location_wishes.order_by(
+            "priority"
+        ).first()
+        if pickup_location_wish is None:
+            return
+
+        if waiting_list_entry.member is None:
+            raise NotImplementedError()
+
+        BestellWizardConfirmOrderApiView.link_member_to_pickup_location(
+            pickup_location_wish.pickup_location_id,
+            member=waiting_list_entry.member,
+            contract_start_date=contract_start_date,
+        )

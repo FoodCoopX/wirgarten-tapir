@@ -227,7 +227,7 @@ class BestellWizardConfirmOrderApiView(APIView):
     def validate_everything(
         self, validated_data: dict, contract_start_date: datetime.date
     ):
-        PersonalDataValidator.validate_personal_data(
+        PersonalDataValidator.validate_personal_data_new_member(
             personal_data=validated_data["personal_data"], cache=self.cache
         )
 

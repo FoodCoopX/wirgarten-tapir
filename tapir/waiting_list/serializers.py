@@ -102,3 +102,13 @@ class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serialize
     product_ids = serializers.ListField(child=serializers.CharField())
     product_quantities = serializers.ListField(child=serializers.IntegerField())
     member_id = serializers.CharField()
+
+
+class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
+    entry_id = serializers.CharField()
+    link_key = serializers.CharField()
+    birthdate = serializers.DateField()
+    account_owner = serializers.CharField()
+    iban = serializers.CharField()
+    sepa_allowed = serializers.BooleanField()
+    contract_accepted = serializers.BooleanField()
