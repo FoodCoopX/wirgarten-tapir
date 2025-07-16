@@ -93,9 +93,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 onChange={(event) =>
                   setSelectedNumberOfCoopShares(parseInt(event.target.value))
                 }
-                disabled={
-                  studentStatusEnabled || waitingListLinkConfirmationModeEnabled
-                }
+                disabled={studentStatusEnabled}
               />
             </Form.Group>
             <span>

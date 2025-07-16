@@ -27,7 +27,6 @@ from tapir.subscriptions.services.base_product_type_service import (
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
-from tapir.subscriptions.views.bestell_wizard import BestellWizardConfirmOrderApiView
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
@@ -265,9 +264,9 @@ class UpdateSubscriptionsApiView(APIView):
         ] != MemberPickupLocationService.get_member_pickup_location_id(
             member=member, reference_date=contract_start_date
         ):
-            BestellWizardConfirmOrderApiView.link_member_to_pickup_location(
+            MemberPickupLocationService.link_member_to_pickup_location(
                 member=member,
-                contract_start_date=contract_start_date,
+                valid_from=contract_start_date,
                 pickup_location_id=validated_data["pickup_location_id"],
                 actor=actor,
             )
@@ -286,7 +285,7 @@ class UpdateSubscriptionsApiView(APIView):
             )
         )
 
-        ApplyTapirOrderManager.send_appropriate_mail(
+        ApplyTapirOrderManager.send_order_confirmation_mail(
             subscriptions_existed_before_changes=subscriptions_existed_before_changes,
             member=member,
             new_subscriptions=new_subscriptions,

@@ -3,6 +3,8 @@ from typing import Dict, Set, List
 
 from django.db.models import QuerySet, OuterRef, Subquery
 
+from tapir.accounts.models import TapirUser
+from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import Member, MemberPickupLocation, PickupLocation
 
@@ -117,3 +119,19 @@ class MemberPickupLocationService:
                 return member_pickup_location_object.pickup_location_id
 
         return None
+
+    @staticmethod
+    def link_member_to_pickup_location(
+        pickup_location_id,
+        member: Member,
+        valid_from: datetime.date,
+        actor: TapirUser,
+    ):
+        member_pickup_location = MemberPickupLocation.objects.create(
+            member_id=member.id,
+            pickup_location_id=pickup_location_id,
+            valid_from=valid_from,
+        )
+        PickupLocationChangedLogEntry().populate_pickup_location(
+            actor=actor, member_pickup_location=member_pickup_location, user=member
+        ).save()

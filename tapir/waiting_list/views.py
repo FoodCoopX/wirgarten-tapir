@@ -379,8 +379,8 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
 
         if validated_data[
             "number_of_coop_shares"
-        ] < MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
-            ordered_products_id_to_quantity_map=order, cache=self.cache
+        ] < MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
+            order=order, cache=self.cache
         ):
             raise ValidationError(
                 "The given number of coop shares is less than the required minimum."
@@ -705,27 +705,42 @@ class PublicConfirmWaitingListEntryView(APIView):
                 ).data
             )
 
-        member = waiting_list_entry.member
-        if member is None:
-            raise NotImplementedError("Path for new members not implemented yet")
+        is_new_member = waiting_list_entry.member is None
 
         with transaction.atomic():
+            member = waiting_list_entry.member
+            if is_new_member:
+                member = self.create_member(
+                    waiting_list_entry, serializer.validated_data
+                )
+
             actor = request.user if request.user.is_authenticated else member
             WaitingListChangeConfirmedLogEntry().populate(
-                actor=actor, user=waiting_list_entry.member
+                actor=actor, user=member
             ).save()
 
-            subscriptions_existed_before_changes, subscriptions = self.apply_changes(
-                waiting_list_entry=waiting_list_entry,
-                actor=actor,
+            subscriptions_existed_before_changes, new_subscriptions = (
+                self.apply_changes(
+                    waiting_list_entry=waiting_list_entry,
+                    actor=actor,
+                    member=member,
+                )
             )
             waiting_list_entry.delete()
 
-            if len(subscriptions) > 0:
-                ApplyTapirOrderManager.send_appropriate_mail(
+            if len(new_subscriptions) > 0:
+                ApplyTapirOrderManager.send_order_confirmation_mail(
                     member=member,
                     subscriptions_existed_before_changes=subscriptions_existed_before_changes,
-                    new_subscriptions=subscriptions,
+                    new_subscriptions=new_subscriptions,
+                    cache=self.cache,
+                )
+
+            if is_new_member:
+                BestellWizardConfirmOrderApiView.create_coop_shares(
+                    member=member,
+                    number_of_shares=serializer.validated_data["number_of_coop_shares"],
+                    subscriptions=new_subscriptions,
                     cache=self.cache,
                 )
 
@@ -742,9 +757,23 @@ class PublicConfirmWaitingListEntryView(APIView):
 
         if waiting_list_entry.member is None:
             PersonalDataValidator.validate_personal_data_new_member(
-                personal_data=validated_data,
+                email=waiting_list_entry.email,
+                phone_number=str(waiting_list_entry.phone_number),
+                birthdate=validated_data["birthdate"],
+                iban=validated_data["iban"],
                 cache=self.cache,
             )
+            order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
+                waiting_list_entry
+            )
+
+            min_number_of_shares = MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
+                order, cache=self.cache
+            )
+            if validated_data["number_of_coop_shares"] < min_number_of_shares:
+                raise ValidationError(
+                    f"Diese Bestellung erfordert mindestens {min_number_of_shares} Genossenschaftsanteile"
+                )
 
         if waiting_list_entry.product_wishes.exists():
             if not validated_data["sepa_allowed"]:
@@ -755,18 +784,45 @@ class PublicConfirmWaitingListEntryView(APIView):
 
         return waiting_list_entry
 
-    def apply_changes(self, waiting_list_entry: WaitingListEntry, actor: TapirUser):
+    def create_member(self, waiting_list_entry: WaitingListEntry, validated_data: dict):
+        now = get_now(cache=self.cache)
+        contracts_signed = {
+            contract: now
+            for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
+        }
+
+        return Member.objects.create(
+            first_name=waiting_list_entry.first_name,
+            last_name=waiting_list_entry.last_name,
+            email=waiting_list_entry.email,
+            phone_number=waiting_list_entry.phone_number,
+            street=waiting_list_entry.street,
+            street_2=waiting_list_entry.street_2,
+            postcode=waiting_list_entry.postcode,
+            city=waiting_list_entry.city,
+            country=waiting_list_entry.country,
+            birthdate=validated_data["birthdate"],
+            account_owner=validated_data["account_owner"],
+            iban=validated_data["iban"],
+            **contracts_signed,
+        )
+
+    def apply_changes(
+        self, waiting_list_entry: WaitingListEntry, actor: TapirUser, member: Member
+    ):
         contract_start_date = get_next_contract_start_date(cache=self.cache)
 
         self.apply_pickup_location_changes(
             waiting_list_entry=waiting_list_entry,
             contract_start_date=contract_start_date,
             actor=actor,
+            member=member,
         )
         return self.apply_subscription_changes(
             waiting_list_entry=waiting_list_entry,
             contract_start_date=contract_start_date,
             actor=actor,
+            member=member,
         )
 
     def apply_subscription_changes(
@@ -774,9 +830,8 @@ class PublicConfirmWaitingListEntryView(APIView):
         waiting_list_entry: WaitingListEntry,
         contract_start_date: datetime.date,
         actor: TapirUser,
+        member: Member,
     ):
-        member = waiting_list_entry.member
-
         order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
             waiting_list_entry
         )
@@ -797,6 +852,7 @@ class PublicConfirmWaitingListEntryView(APIView):
         waiting_list_entry: WaitingListEntry,
         contract_start_date: datetime.date,
         actor: TapirUser,
+        member: Member,
     ):
         pickup_location_wish = waiting_list_entry.pickup_location_wishes.order_by(
             "priority"
@@ -804,9 +860,9 @@ class PublicConfirmWaitingListEntryView(APIView):
         if pickup_location_wish is None:
             return
 
-        BestellWizardConfirmOrderApiView.link_member_to_pickup_location(
+        MemberPickupLocationService.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,
-            member=waiting_list_entry.member,
-            contract_start_date=contract_start_date,
+            member=member,
+            valid_from=contract_start_date,
             actor=actor,
         )

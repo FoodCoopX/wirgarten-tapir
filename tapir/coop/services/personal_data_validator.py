@@ -13,15 +13,22 @@ from tapir.wirgarten.utils import get_today
 
 class PersonalDataValidator:
     @classmethod
-    def validate_personal_data_new_member(cls, personal_data: dict, cache: dict):
+    def validate_personal_data_new_member(
+        cls,
+        email: str,
+        phone_number: str,
+        birthdate: datetime.date,
+        iban: str,
+        cache: dict,
+    ):
         # format of the data defined by tapir.subscriptions.serializers.PersonalDataSerializer
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
 
-        cls.validate_email_address_not_in_use(personal_data["email"])
-        cls.validate_phone_number_is_valid(personal_data["phone_number"])
+        cls.validate_email_address_not_in_use(email)
+        cls.validate_phone_number_is_valid(phone_number)
         cls.validate_personal_data_existing_member(
-            birthdate=personal_data["birthdate"],
-            iban=personal_data["iban"],
+            birthdate=birthdate,
+            iban=iban,
             cache=cache,
         )
 

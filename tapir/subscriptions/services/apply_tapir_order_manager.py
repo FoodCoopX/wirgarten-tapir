@@ -162,7 +162,7 @@ class ApplyTapirOrderManager:
         return subscriptions_existed_before_changes, new_subscriptions
 
     @classmethod
-    def send_appropriate_mail(
+    def send_order_confirmation_mail(
         cls,
         subscriptions_existed_before_changes: bool,
         member: Member,

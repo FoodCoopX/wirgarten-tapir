@@ -6547,6 +6547,8 @@ components:
           type: boolean
         contract_accepted:
           type: boolean
+        number_of_coop_shares:
+          type: integer
       required:
       - account_owner
       - birthdate
@@ -6554,6 +6556,7 @@ components:
       - entry_id
       - iban
       - link_key
+      - number_of_coop_shares
       - sepa_allowed
     PublicPickupLocation:
       type: object

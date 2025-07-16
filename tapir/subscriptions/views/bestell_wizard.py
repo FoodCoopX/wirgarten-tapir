@@ -16,7 +16,9 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.pickup_locations.models import PickupLocationChangedLogEntry
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -49,7 +51,6 @@ from tapir.wirgarten.models import (
     Subscription,
     ProductType,
     PickupLocation,
-    MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -112,16 +113,17 @@ class BestellWizardConfirmOrderApiView(APIView):
             if OrderValidator.does_order_need_a_pickup_location(
                 order=order, cache=self.cache
             ):
-                self.link_member_to_pickup_location(
+                MemberPickupLocationService.link_member_to_pickup_location(
                     serializer.validated_data["pickup_location_id"],
                     member=member,
-                    contract_start_date=contract_start_date,
+                    valid_from=contract_start_date,
                     actor=request.user if request.user.is_authenticated else member,
                 )
             self.create_coop_shares(
                 number_of_shares=serializer.validated_data["nb_shares"],
                 member=member,
                 subscriptions=subscriptions,
+                cache=self.cache,
             )
             send_order_confirmation(member, subscriptions, cache=self.cache)
 
@@ -140,31 +142,20 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         return Member.objects.create(**personal_data, **contracts_signed)
 
-    @staticmethod
-    def link_member_to_pickup_location(
-        pickup_location_id,
-        member: Member,
-        contract_start_date: datetime.date,
-        actor: TapirUser,
-    ):
-        member_pickup_location = MemberPickupLocation.objects.create(
-            member_id=member.id,
-            pickup_location_id=pickup_location_id,
-            valid_from=contract_start_date,
-        )
-        PickupLocationChangedLogEntry().populate_pickup_location(
-            actor=actor, member_pickup_location=member_pickup_location, user=member
-        ).save()
-
+    @classmethod
     def create_coop_shares(
-        self, number_of_shares: int, member: Member, subscriptions: list[Subscription]
+        cls,
+        number_of_shares: int,
+        member: Member,
+        subscriptions: list[Subscription],
+        cache: dict,
     ):
         min_trial_end_date = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
         for subscription in subscriptions:
             min_trial_end_date = min(
                 min_trial_end_date,
                 TrialPeriodManager.get_end_of_trial_period(
-                    subscription=subscription, cache=self.cache
+                    subscription=subscription, cache=cache
                 ),
             )
 
@@ -172,7 +163,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             quantity=number_of_shares,
             member=member,
             start_date=min_trial_end_date,
-            cache=self.cache,
+            cache=cache,
         )
 
     def create_subscriptions(
@@ -201,7 +192,11 @@ class BestellWizardConfirmOrderApiView(APIView):
         self, validated_data: dict, contract_start_date: datetime.date
     ):
         PersonalDataValidator.validate_personal_data_new_member(
-            personal_data=validated_data["personal_data"], cache=self.cache
+            email=validated_data["personal_data"]["email"],
+            phone_number=validated_data["personal_data"]["phone_number"],
+            birthdate=validated_data["personal_data"]["birthdate"],
+            iban=validated_data["personal_data"]["iban"],
+            cache=self.cache,
         )
 
         if get_parameter_value(
@@ -268,10 +263,8 @@ class BestellWizardConfirmOrderApiView(APIView):
             if not validated_data["statute_accepted"]:
                 raise ValidationError("Die Satzung muss akzeptiert werden.")
 
-            minimum_number_of_shares = (
-                MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
-                    order, cache=self.cache
-                )
+            minimum_number_of_shares = MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
+                order, cache=self.cache
             )
             if nb_ordered_coop_shares < minimum_number_of_shares:
                 raise ValidationError(

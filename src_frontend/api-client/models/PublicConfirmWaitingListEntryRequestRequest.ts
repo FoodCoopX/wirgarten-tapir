@@ -60,6 +60,12 @@ export interface PublicConfirmWaitingListEntryRequestRequest {
    * @memberof PublicConfirmWaitingListEntryRequestRequest
    */
   contractAccepted: boolean;
+  /**
+   *
+   * @type {number}
+   * @memberof PublicConfirmWaitingListEntryRequestRequest
+   */
+  numberOfCoopShares: number;
 }
 
 /**
@@ -77,6 +83,11 @@ export function instanceOfPublicConfirmWaitingListEntryRequestRequest(
   if (!("sepaAllowed" in value) || value["sepaAllowed"] === undefined)
     return false;
   if (!("contractAccepted" in value) || value["contractAccepted"] === undefined)
+    return false;
+  if (
+    !("numberOfCoopShares" in value) ||
+    value["numberOfCoopShares"] === undefined
+  )
     return false;
   return true;
 }
@@ -102,6 +113,7 @@ export function PublicConfirmWaitingListEntryRequestRequestFromJSONTyped(
     iban: json["iban"],
     sepaAllowed: json["sepa_allowed"],
     contractAccepted: json["contract_accepted"],
+    numberOfCoopShares: json["number_of_coop_shares"],
   };
 }
 
@@ -127,5 +139,6 @@ export function PublicConfirmWaitingListEntryRequestRequestToJSONTyped(
     iban: value["iban"],
     sepa_allowed: value["sepaAllowed"],
     contract_accepted: value["contractAccepted"],
+    number_of_coop_shares: value["numberOfCoopShares"],
   };
 }

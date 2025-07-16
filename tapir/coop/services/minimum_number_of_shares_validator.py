@@ -1,4 +1,5 @@
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import HarvestShareProduct
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -25,3 +26,14 @@ class MinimumNumberOfSharesValidator:
         )
 
         return max(min_number_of_shares_from_config, min_number_of_shares_from_order)
+
+    @classmethod
+    def get_minimum_number_of_shares_for_tapir_order(
+        cls, order: TapirOrder, cache: dict
+    ):
+        transformed_order = {
+            product.id: quantity for product, quantity in order.items()
+        }
+        return cls.get_minimum_number_of_shares_for_order(
+            ordered_products_id_to_quantity_map=transformed_order, cache=cache
+        )

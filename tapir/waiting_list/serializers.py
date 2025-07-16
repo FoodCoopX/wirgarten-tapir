@@ -114,3 +114,4 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     iban = serializers.CharField(allow_blank=True)
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
+    number_of_coop_shares = serializers.IntegerField()

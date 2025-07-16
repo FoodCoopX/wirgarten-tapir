@@ -344,7 +344,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           selectedProductTypes.add(publicProductType);
         }
       }
-      setSelectedProductTypes([...selectedProductTypes]);
+      setSelectedProductTypes(sortProductTypes([...selectedProductTypes]));
       setShoppingCart(newShoppingCart);
     }
 
@@ -375,6 +375,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       iban: "",
       accountOwner: "",
     });
+
+    setSelectedNumberOfCoopShares(waitingListEntryDetails.numberOfCoopShares);
   }, [waitingListEntryDetails, publicProductTypes, pickupLocations]);
 
   function onNextClicked() {
@@ -577,6 +579,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             iban: personalData.iban,
             sepaAllowed: sepaAllowed,
             birthdate: personalData.birthdate,
+            numberOfCoopShares: selectedNumberOfCoopShares,
           },
         })
         .then((response) => {
