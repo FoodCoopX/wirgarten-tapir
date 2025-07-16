@@ -7,7 +7,7 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../types/buildEmptyShoppingCart.ts";
-import { selectedAllRequiredProductTypes } from "../utils/selectedAllRequiredProductTypes.ts";
+import { selectAllRequiredProductTypes } from "../utils/selectAllRequiredProductTypes.ts";
 
 interface BestellWizardIntroProps {
   theme: TapirTheme;
@@ -41,7 +41,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
       setSelectedProductTypes([]);
       setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
     } else {
-      selectedAllRequiredProductTypes(
+      selectAllRequiredProductTypes(
         publicProductTypes,
         selectedProductTypes,
         setSelectedProductTypes,

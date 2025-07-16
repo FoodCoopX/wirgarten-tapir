@@ -48,7 +48,7 @@ import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
 import { BestellWizardStep } from "./types/BestellWizardStep.ts";
 import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
-import { selectedAllRequiredProductTypes } from "./utils/selectedAllRequiredProductTypes.ts";
+import { selectAllRequiredProductTypes } from "./utils/selectAllRequiredProductTypes.ts";
 import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSummary.tsx";
 import {
   shouldIncludeStepCoopShares,
@@ -170,21 +170,18 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, []);
 
   useEffect(() => {
-    if (
-      waitingListLinkConfirmationModeEnabled ||
-      waitingListEntryDetails === undefined
-    ) {
+    if (waitingListLinkConfirmationModeEnabled) {
       return;
     }
 
     setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
 
-    selectedAllRequiredProductTypes(
+    selectAllRequiredProductTypes(
       publicProductTypes,
       selectedProductTypes,
       setSelectedProductTypes,
     );
-  }, [publicProductTypes]);
+  }, [publicProductTypes, waitingListLinkConfirmationModeEnabled]);
 
   useEffect(() => {
     let steps = [];
