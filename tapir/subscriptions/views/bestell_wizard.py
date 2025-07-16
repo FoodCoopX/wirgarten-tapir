@@ -25,13 +25,15 @@ from tapir.subscriptions.serializers import (
     BestellWizardDeliveryDatesForOrderRequestSerializer,
     BestellWizardDeliveryDatesForOrderResponseSerializer,
 )
+from tapir.subscriptions.services.apply_tapir_order_manager import (
+    ApplyTapirOrderManager,
+)
 from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
     EarliestPossibleContractStartDateCalculator,
 )
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
-from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
@@ -50,12 +52,8 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
-    get_or_create_mandate_ref,
     send_order_confirmation,
     buy_cooperative_shares,
-)
-from tapir.wirgarten.service.products import (
-    get_current_growing_period,
 )
 from tapir.wirgarten.utils import (
     get_today,
@@ -173,54 +171,14 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
-        growing_period = get_current_growing_period(
-            reference_date=contract_start_date, cache=self.cache
+        _, subscriptions = (
+            ApplyTapirOrderManager.apply_order_with_several_product_types(
+                member=member,
+                order=order,
+                contract_start_date=contract_start_date,
+                cache=self.cache,
+            )
         )
-        mandate_ref = get_or_create_mandate_ref(member.id, cache=self.cache)
-        now = get_now(cache=self.cache)
-
-        subscriptions = []
-        for product, quantity in order.items():
-            if quantity == 0:
-                continue
-            product_type = TapirCache.get_product_type_by_id(
-                cache=self.cache, product_type_id=product.type_id
-            )
-            notice_period_duration = None
-            if get_parameter_value(
-                ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=self.cache
-            ):
-                notice_period_duration = NoticePeriodManager.get_notice_period_duration(
-                    product_type=product_type,
-                    growing_period=growing_period,
-                    cache=self.cache,
-                )
-
-            end_date = None
-            if product_type.subscriptions_have_end_dates:
-                end_date = growing_period.end_date
-
-            subscriptions.append(
-                Subscription(
-                    member_id=member.id,
-                    product=product,
-                    quantity=quantity,
-                    period=growing_period,
-                    start_date=contract_start_date,
-                    end_date=end_date,
-                    mandate_ref=mandate_ref,
-                    consent_ts=now if product_type.contract_link else None,
-                    withdrawal_consent_ts=now,
-                    trial_disabled=not get_parameter_value(
-                        ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
-                    ),
-                    trial_end_date_override=None,
-                    notice_period_duration=notice_period_duration,
-                )
-            )
-
-        subscriptions = Subscription.objects.bulk_create(subscriptions)
-        TapirCache.clear_category(cache=self.cache, category="subscriptions")
 
         return subscriptions
 

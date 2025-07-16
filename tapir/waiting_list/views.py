@@ -670,6 +670,8 @@ class PublicGetWaitingListEntryDetailsApiView(APIView):
 
 
 class PublicConfirmWaitingListEntryView(APIView):
+    permission_classes = []
+
     def __init__(self):
         super().__init__()
         self.cache = {}
@@ -731,23 +733,26 @@ class PublicConfirmWaitingListEntryView(APIView):
         self, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
     ):
         member = waiting_list_entry.member
-        wishes = waiting_list_entry.product_wishes.all().select_related("product__type")
-        orders_by_product_type = {}
-        for wish in wishes:
-            if wish.product.type not in orders_by_product_type.keys():
-                orders_by_product_type[wish.product.type] = {}
-            orders_by_product_type[wish.product.type][wish.product] = wish.quantity
-        for product_type, order in orders_by_product_type.items():
-            if member is None:
-                ApplyTapirOrderManager.apply_order_for_product_type_new_member_and_send_confirmation_mail()
-            else:
-                ApplyTapirOrderManager.apply_order_for_product_type_existing_member_and_send_confirmation_mail(
-                    member=waiting_list_entry.member,
-                    order=order,
-                    product_type=product_type,
-                    contract_start_date=contract_start_date,
-                    cache=self.cache,
-                )
+        if member is None:
+            raise NotImplementedError("Path for new members not implemented yet")
+
+        order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
+            waiting_list_entry
+        )
+        subscriptions_existed_before_changes, subscriptions = (
+            ApplyTapirOrderManager.apply_order_with_several_product_types(
+                member=member,
+                order=order,
+                contract_start_date=contract_start_date,
+                cache=self.cache,
+            )
+        )
+        ApplyTapirOrderManager.send_appropriate_mail(
+            member=member,
+            subscriptions_existed_before_changes=subscriptions_existed_before_changes,
+            new_subscriptions=subscriptions,
+            cache=self.cache,
+        )
 
     @classmethod
     def apply_pickup_location_changes(

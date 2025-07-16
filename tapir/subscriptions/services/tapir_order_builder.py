@@ -2,6 +2,7 @@ from django.http import Http404
 
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.models import WaitingListEntry
 
 
 class TapirOrderBuilder:
@@ -20,3 +21,10 @@ class TapirOrderBuilder:
         }
 
         return order
+
+    @classmethod
+    def build_tapir_order_from_waiting_list_entry(
+        cls, waiting_list_entry: WaitingListEntry
+    ) -> TapirOrder:
+        wishes = waiting_list_entry.product_wishes.all().select_related("product__type")
+        return {wish.product: wish.quantity for wish in wishes}

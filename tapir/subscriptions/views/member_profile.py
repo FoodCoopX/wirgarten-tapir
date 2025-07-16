@@ -271,10 +271,19 @@ class UpdateSubscriptionsApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
-        ApplyTapirOrderManager.apply_order_for_product_type_existing_member_and_send_confirmation_mail(
+        subscriptions_existed_before_changes, new_subscriptions = (
+            ApplyTapirOrderManager.apply_order_single_product_type(
+                member=member,
+                order=order,
+                contract_start_date=contract_start_date,
+                product_type=product_type,
+                cache=self.cache,
+            )
+        )
+
+        ApplyTapirOrderManager.send_appropriate_mail(
+            subscriptions_existed_before_changes=subscriptions_existed_before_changes,
             member=member,
-            order=order,
-            contract_start_date=contract_start_date,
-            product_type=product_type,
+            new_subscriptions=new_subscriptions,
             cache=self.cache,
         )

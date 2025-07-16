@@ -23,7 +23,7 @@ from tapir.wirgarten.utils import get_now
 
 class ApplyTapirOrderManager:
     @classmethod
-    def apply_order_for_product_type_existing_member_and_send_confirmation_mail(
+    def apply_order_single_product_type(
         cls,
         member: Member,
         order: TapirOrder,
@@ -106,13 +106,55 @@ class ApplyTapirOrderManager:
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
         TapirCache.clear_category(cache=cache, category="subscriptions")
 
+        return subscriptions_existed_before_changes, new_subscriptions
+
+    @classmethod
+    def apply_order_with_several_product_types(
+        cls,
+        member: Member,
+        order: TapirOrder,
+        contract_start_date: datetime.date,
+        cache: dict,
+    ):
+        orders_by_product_type = {}
+        subscriptions_existed_before_changes = False
+        new_subscriptions = []
+
+        for product, quantity in order:
+            if product.type not in orders_by_product_type.keys():
+                orders_by_product_type[product.type] = {}
+            orders_by_product_type[product.type][product] = quantity
+
+        for product_type, order in orders_by_product_type.items():
+            (
+                subscriptions_of_this_product_type_existed_before_changes,
+                new_subscriptions_of_this_product_type,
+            ) = ApplyTapirOrderManager.apply_order_single_product_type(
+                member=member,
+                order=order,
+                product_type=product_type,
+                contract_start_date=contract_start_date,
+                cache=cache,
+            )
+            subscriptions_existed_before_changes = (
+                subscriptions_existed_before_changes
+                or subscriptions_of_this_product_type_existed_before_changes
+            )
+            new_subscriptions.extend(new_subscriptions_of_this_product_type)
+
+        return subscriptions_existed_before_changes, new_subscriptions
+
+    @classmethod
+    def send_appropriate_mail(
+        cls,
+        subscriptions_existed_before_changes: bool,
+        member: Member,
+        new_subscriptions: list[Subscription],
+        cache: dict,
+    ):
         if subscriptions_existed_before_changes:
             send_contract_change_confirmation(
                 member=member, subs=new_subscriptions, cache=cache
             )
         else:
             send_order_confirmation(member=member, subs=new_subscriptions, cache=cache)
-
-    @classmethod
-    def apply_order_for_product_type_new_member_and_send_confirmation_mail(cls):
-        raise NotImplementedError()
