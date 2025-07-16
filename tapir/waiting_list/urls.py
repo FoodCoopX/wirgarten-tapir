@@ -60,6 +60,11 @@ urlpatterns = [
         views.PublicGetWaitingListEntryDetailsApiView.as_view(),
         name="public_get_waiting_list_entry_details",
     ),
+    path(
+        "api/public_confirm_waiting_list_entry",
+        views.PublicConfirmWaitingListEntryView.as_view(),
+        name="public_confirm_waiting_list_entry",
+    ),
 ]
 
 router = DefaultRouter()

@@ -30,6 +30,7 @@ class WaitingListPickupLocationWishSerializer(serializers.ModelSerializer):
 
 class WaitingListEntryDetailsSerializer(serializers.Serializer):
     id = serializers.CharField()
+    link_key = serializers.CharField(required=False)
     member_no = serializers.IntegerField()
     member_already_exists = serializers.BooleanField()
     url_to_member_profile = serializers.CharField(required=False)
@@ -108,7 +109,7 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     entry_id = serializers.CharField()
     link_key = serializers.CharField()
     birthdate = serializers.DateField()
-    account_owner = serializers.CharField()
-    iban = serializers.CharField()
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()

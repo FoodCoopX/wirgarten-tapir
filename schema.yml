@@ -3317,6 +3317,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
+  /waiting_list/api/public_confirm_waiting_list_entry:
+    post:
+      operationId: waiting_list_api_public_confirm_waiting_list_entry_create
+      tags:
+      - waiting_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicConfirmWaitingListEntryRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicConfirmWaitingListEntryRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicConfirmWaitingListEntryRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /waiting_list/api/public_get_waiting_list_entry_details:
     get:
       operationId: waiting_list_api_public_get_waiting_list_entry_details_retrieve
@@ -6501,6 +6527,36 @@ components:
           title: Reihenfolge im BestellWizard (kleiner ist früher)
       required:
       - name
+    PublicConfirmWaitingListEntryRequestRequest:
+      type: object
+      properties:
+        entry_id:
+          type: string
+          minLength: 1
+        link_key:
+          type: string
+          minLength: 1
+        birthdate:
+          type: string
+          format: date
+        account_owner:
+          type: string
+          minLength: 1
+        iban:
+          type: string
+          minLength: 1
+        sepa_allowed:
+          type: boolean
+        contract_accepted:
+          type: boolean
+      required:
+      - account_owner
+      - birthdate
+      - contract_accepted
+      - entry_id
+      - iban
+      - link_key
+      - sepa_allowed
     PublicPickupLocation:
       type: object
       properties:
@@ -7345,6 +7401,8 @@ components:
       type: object
       properties:
         id:
+          type: string
+        link_key:
           type: string
         member_no:
           type: integer

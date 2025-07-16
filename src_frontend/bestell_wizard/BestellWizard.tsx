@@ -45,12 +45,17 @@ import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapaci
 import { sortProductTypes } from "./utils/sortProductTypes.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
 import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
-import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
 import { BestellWizardStep } from "./types/BestellWizardStep.ts";
 import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
 import { selectedAllRequiredProductTypes } from "./utils/selectedAllRequiredProductTypes.ts";
 import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSummary.tsx";
+import {
+  shouldIncludeStepCoopShares,
+  shouldIncludeStepIntro,
+  shouldIncludeStepPersonalData,
+  shouldIncludeStepPickupLocation,
+} from "./utils/shouldIncludeStep.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -165,7 +170,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, []);
 
   useEffect(() => {
-    if (waitingListLinkConfirmationModeEnabled) return;
+    if (
+      waitingListLinkConfirmationModeEnabled ||
+      waitingListEntryDetails === undefined
+    ) {
+      return;
+    }
 
     setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
 
@@ -177,32 +187,37 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [publicProductTypes]);
 
   useEffect(() => {
-    const productSteps = introEnabled
-      ? selectedProductTypes
-      : publicProductTypes;
-    let steps = [
-      "intro",
-      ...productSteps.map((productType) => productType.id!),
-      "pickup_location",
-      "coop_shares",
-      "personal_data",
-      "summary",
-      "end",
-    ];
+    let steps = [];
 
-    if (!introEnabled) {
-      steps = steps.filter((step) => step !== "intro");
+    if (shouldIncludeStepIntro(introEnabled)) {
+      steps.push("intro");
     }
+
+    let productSteps = selectedProductTypes;
+    if (!introEnabled && waitingListEntryDetails === undefined) {
+      productSteps = publicProductTypes;
+    }
+    steps.push(...productSteps.map((productType) => productType.id!));
 
     if (
-      !isAtLeastOneOrderedProductWithDelivery(shoppingCart, publicProductTypes)
+      shouldIncludeStepPickupLocation(
+        shoppingCart,
+        publicProductTypes,
+        waitingListEntryDetails,
+      )
     ) {
-      steps = steps.filter((step) => step !== "pickup_location");
+      steps.push("pickup_location");
     }
 
-    if (pickupLocations.length === 1) {
-      steps = steps.filter((step) => step !== "pickup_location");
+    if (shouldIncludeStepCoopShares(waitingListEntryDetails)) {
+      steps.push("coop_shares");
     }
+
+    if (shouldIncludeStepPersonalData(waitingListEntryDetails)) {
+      steps.push("personal_data");
+    }
+
+    steps.push("summary", "end");
 
     if (!steps.includes(currentStep)) {
       setCurrentStep(steps[0]);
@@ -311,9 +326,15 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       setCurrentStep("pickup_location");
     } else {
       const newShoppingCart = buildEmptyShoppingCart(publicProductTypes);
+      const selectedProductTypes = new Set<PublicProductType>();
       for (const wish of waitingListEntryDetails.productWishes) {
         newShoppingCart[wish.product.id!] = wish.quantity;
+        const publicProductType = publicProductTypes.find(
+          (pt) => pt.id === wish.product.type.id,
+        );
+        selectedProductTypes.add(publicProductType!);
       }
+      setSelectedProductTypes([...selectedProductTypes]);
       setShoppingCart(newShoppingCart);
     }
 
@@ -531,6 +552,29 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   function onConfirmOrder() {
     setConfirmOrderLoading(true);
 
+    if (waitingListEntryDetails !== undefined) {
+      waitingListApi
+        .waitingListApiPublicConfirmWaitingListEntryCreate({
+          publicConfirmWaitingListEntryRequestRequest: {
+            entryId: waitingListEntryDetails.id,
+            linkKey: waitingListEntryDetails.linkKey!,
+            accountOwner: personalData.accountOwner,
+            contractAccepted: contractAccepted,
+            iban: personalData.iban,
+            sepaAllowed: sepaAllowed,
+            birthdate: personalData.birthdate,
+          },
+        })
+        .then((response) => {
+          setCurrentStep("end");
+          setConfirmOrderResponse(response);
+        })
+        .catch(handleRequestError)
+        .finally(() => setConfirmOrderLoading(false));
+
+      return;
+    }
+
     if (waitingListModeEnabled) {
       waitingListApi
         .waitingListApiPublicWaitingListCreateEntryNewMemberCreate({
@@ -557,27 +601,29 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         })
         .catch(handleRequestError)
         .finally(() => setConfirmOrderLoading(false));
-    } else {
-      subscriptionsApi
-        .subscriptionsBestellWizardConfirmOrderCreate({
-          bestellWizardConfirmOrderRequestRequest: {
-            personalData: personalData,
-            sepaAllowed: sepaAllowed,
-            contractAccepted: contractAccepted,
-            statuteAccepted: statuteAccepted,
-            nbShares: selectedNumberOfCoopShares,
-            pickupLocationId: selectedPickupLocations[0].id!,
-            shoppingCart: shoppingCart,
-            studentStatusEnabled: studentStatusEnabled,
-          },
-        })
-        .then((response) => {
-          setCurrentStep("end");
-          setConfirmOrderResponse(response);
-        })
-        .catch(handleRequestError)
-        .finally(() => setConfirmOrderLoading(false));
+
+      return;
     }
+
+    subscriptionsApi
+      .subscriptionsBestellWizardConfirmOrderCreate({
+        bestellWizardConfirmOrderRequestRequest: {
+          personalData: personalData,
+          sepaAllowed: sepaAllowed,
+          contractAccepted: contractAccepted,
+          statuteAccepted: statuteAccepted,
+          nbShares: selectedNumberOfCoopShares,
+          pickupLocationId: selectedPickupLocations[0].id!,
+          shoppingCart: shoppingCart,
+          studentStatusEnabled: studentStatusEnabled,
+        },
+      })
+      .then((response) => {
+        setCurrentStep("end");
+        setConfirmOrderResponse(response);
+      })
+      .catch(handleRequestError)
+      .finally(() => setConfirmOrderLoading(false));
   }
 
   function getNextButton() {
@@ -711,6 +757,19 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               {waitingListModeEnabled && (
                 <ListGroup.Item className={"list-group-item-warning"}>
                   <div className={"text-center"}>Warteliste-Eintrag</div>
+                </ListGroup.Item>
+              )}
+              {waitingListEntryDetails !== undefined && (
+                <ListGroup.Item className={"list-group-item-warning"}>
+                  <div className={"text-center"}>
+                    Warteliste-Zuteilung{" "}
+                    {waitingListEntryDetails.memberAlreadyExists
+                      ? "Bestandmitglied " +
+                        waitingListEntryDetails.firstName +
+                        " " +
+                        waitingListEntryDetails.lastName
+                      : "neues Mitglied"}
+                  </div>
                 </ListGroup.Item>
               )}
               <ListGroup.Item

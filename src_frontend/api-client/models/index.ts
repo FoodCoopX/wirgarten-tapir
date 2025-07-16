@@ -101,6 +101,7 @@ export * from './ProductBasketSizeEquivalence';
 export * from './ProductBasketSizeEquivalenceRequest';
 export * from './ProductForCancellation';
 export * from './ProductType';
+export * from './PublicConfirmWaitingListEntryRequestRequest';
 export * from './PublicPickupLocation';
 export * from './PublicProduct';
 export * from './PublicProductType';

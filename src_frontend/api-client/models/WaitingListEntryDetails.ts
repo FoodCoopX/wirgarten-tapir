@@ -43,6 +43,12 @@ export interface WaitingListEntryDetails {
   id: string;
   /**
    *
+   * @type {string}
+   * @memberof WaitingListEntryDetails
+   */
+  linkKey?: string;
+  /**
+   *
    * @type {number}
    * @memberof WaitingListEntryDetails
    */
@@ -236,6 +242,7 @@ export function WaitingListEntryDetailsFromJSONTyped(
   }
   return {
     id: json["id"],
+    linkKey: json["link_key"] == null ? undefined : json["link_key"],
     memberNo: json["member_no"],
     memberAlreadyExists: json["member_already_exists"],
     urlToMemberProfile:
@@ -312,6 +319,7 @@ export function WaitingListEntryDetailsToJSONTyped(
 
   return {
     id: value["id"],
+    link_key: value["linkKey"],
     member_no: value["memberNo"],
     member_already_exists: value["memberAlreadyExists"],
     url_to_member_profile: value["urlToMemberProfile"],

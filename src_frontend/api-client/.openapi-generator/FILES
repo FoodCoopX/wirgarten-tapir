@@ -109,6 +109,7 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
+models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
 models/PublicProductType.ts

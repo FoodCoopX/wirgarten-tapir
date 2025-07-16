@@ -146,6 +146,7 @@ class WaitingListApiView(APIView):
 
         return {
             "id": entry.id,
+            "link_key": entry.confirmation_link_key,
             "member_no": member_no,
             "url_to_member_profile": url_to_member_profile,
             "waiting_since": entry.created_at,
@@ -677,7 +678,7 @@ class PublicConfirmWaitingListEntryView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: str},
+        responses={200: OrderConfirmationResponseSerializer},
         request=PublicConfirmWaitingListEntryRequestSerializer,
     )
     def post(self, request):
@@ -695,8 +696,23 @@ class PublicConfirmWaitingListEntryView(APIView):
                 ).data
             )
 
+        member = waiting_list_entry.member
+        if member is None:
+            raise NotImplementedError("Path for new members not implemented yet")
+
         with transaction.atomic():
-            self.apply_changes(waiting_list_entry)
+            subscriptions_existed_before_changes, subscriptions = self.apply_changes(
+                waiting_list_entry
+            )
+            waiting_list_entry.delete()
+
+            if len(subscriptions) > 0:
+                ApplyTapirOrderManager.send_appropriate_mail(
+                    member=member,
+                    subscriptions_existed_before_changes=subscriptions_existed_before_changes,
+                    new_subscriptions=subscriptions,
+                    cache=self.cache,
+                )
 
         return Response(
             OrderConfirmationResponseSerializer(
@@ -709,48 +725,42 @@ class PublicConfirmWaitingListEntryView(APIView):
             validated_data["entry_id"], validated_data["link_key"]
         )
 
-        PersonalDataValidator.validate_personal_data_existing_member(
-            birthdate=validated_data["birthdate"],
-            iban=validated_data["iban"],
-            cache=self.cache,
-        )
+        if waiting_list_entry.member is None:
+            PersonalDataValidator.validate_personal_data_new_member(
+                personal_data=validated_data,
+                cache=self.cache,
+            )
 
-        if not validated_data["sepa_allowed"]:
-            raise ValidationError("SEPA-Mandat muss erlaubt sein")
+        if waiting_list_entry.product_wishes.exists():
+            if not validated_data["sepa_allowed"]:
+                raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
-        if not validated_data["contract_accepted"]:
-            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
+            if not validated_data["contract_accepted"]:
+                raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         return waiting_list_entry
 
     def apply_changes(self, waiting_list_entry: WaitingListEntry):
         contract_start_date = get_next_contract_start_date(cache=self.cache)
 
-        self.apply_subscription_changes(waiting_list_entry, contract_start_date)
         self.apply_pickup_location_changes(waiting_list_entry, contract_start_date)
+        return self.apply_subscription_changes(waiting_list_entry, contract_start_date)
 
     def apply_subscription_changes(
         self, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
     ):
         member = waiting_list_entry.member
-        if member is None:
-            raise NotImplementedError("Path for new members not implemented yet")
 
         order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
             waiting_list_entry
         )
-        subscriptions_existed_before_changes, subscriptions = (
-            ApplyTapirOrderManager.apply_order_with_several_product_types(
-                member=member,
-                order=order,
-                contract_start_date=contract_start_date,
-                cache=self.cache,
-            )
-        )
-        ApplyTapirOrderManager.send_appropriate_mail(
+        if len(order) == 0:
+            return False, []
+
+        return ApplyTapirOrderManager.apply_order_with_several_product_types(
             member=member,
-            subscriptions_existed_before_changes=subscriptions_existed_before_changes,
-            new_subscriptions=subscriptions,
+            order=order,
+            contract_start_date=contract_start_date,
             cache=self.cache,
         )
 
@@ -763,9 +773,6 @@ class PublicConfirmWaitingListEntryView(APIView):
         ).first()
         if pickup_location_wish is None:
             return
-
-        if waiting_list_entry.member is None:
-            raise NotImplementedError()
 
         BestellWizardConfirmOrderApiView.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,

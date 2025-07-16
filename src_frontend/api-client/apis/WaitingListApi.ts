@@ -18,6 +18,7 @@ import type {
   OrderConfirmationResponse,
   PaginatedWaitingListEntryDetailsList,
   PatchedWaitingListEntryRequest,
+  PublicConfirmWaitingListEntryRequestRequest,
   PublicWaitingListEntryExistingMemberCreateRequest,
   PublicWaitingListEntryNewMemberCreateRequest,
   SendLinkSerializerRequest,
@@ -31,6 +32,7 @@ import {
   OrderConfirmationResponseFromJSON,
   PaginatedWaitingListEntryDetailsListFromJSON,
   PatchedWaitingListEntryRequestToJSON,
+  PublicConfirmWaitingListEntryRequestRequestToJSON,
   PublicWaitingListEntryExistingMemberCreateRequestToJSON,
   PublicWaitingListEntryNewMemberCreateRequestToJSON,
   SendLinkSerializerRequestToJSON,
@@ -47,6 +49,10 @@ export interface WaitingListApiDisableWaitingListLinkCreateRequest {
 export interface WaitingListApiListListRequest {
   limit: number;
   offset: number;
+}
+
+export interface WaitingListApiPublicConfirmWaitingListEntryCreateRequest {
+  publicConfirmWaitingListEntryRequestRequest: PublicConfirmWaitingListEntryRequestRequest;
 }
 
 export interface WaitingListApiPublicGetWaitingListEntryDetailsRetrieveRequest {
@@ -264,6 +270,68 @@ export class WaitingListApi extends runtime.BaseAPI {
       requestParameters,
       initOverrides,
     );
+    return await response.value();
+  }
+
+  /**
+   */
+  async waitingListApiPublicConfirmWaitingListEntryCreateRaw(
+    requestParameters: WaitingListApiPublicConfirmWaitingListEntryCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<OrderConfirmationResponse>> {
+    if (
+      requestParameters["publicConfirmWaitingListEntryRequestRequest"] == null
+    ) {
+      throw new runtime.RequiredError(
+        "publicConfirmWaitingListEntryRequestRequest",
+        'Required parameter "publicConfirmWaitingListEntryRequestRequest" was null or undefined when calling waitingListApiPublicConfirmWaitingListEntryCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/waiting_list/api/public_confirm_waiting_list_entry`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PublicConfirmWaitingListEntryRequestRequestToJSON(
+          requestParameters["publicConfirmWaitingListEntryRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      OrderConfirmationResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async waitingListApiPublicConfirmWaitingListEntryCreate(
+    requestParameters: WaitingListApiPublicConfirmWaitingListEntryCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<OrderConfirmationResponse> {
+    const response =
+      await this.waitingListApiPublicConfirmWaitingListEntryCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

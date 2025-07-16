@@ -115,12 +115,12 @@ class ApplyTapirOrderManager:
         order: TapirOrder,
         contract_start_date: datetime.date,
         cache: dict,
-    ):
+    ) -> (bool, list[Subscription]):
         orders_by_product_type = {}
         subscriptions_existed_before_changes = False
         new_subscriptions = []
 
-        for product, quantity in order:
+        for product, quantity in order.items():
             if product.type not in orders_by_product_type.keys():
                 orders_by_product_type[product.type] = {}
             orders_by_product_type[product.type][product] = quantity
