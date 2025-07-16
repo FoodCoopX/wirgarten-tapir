@@ -10,6 +10,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT, SOLIDARITY_UNIT_ABSOLUTE
 from tapir.subscriptions.services.base_product_type_service import (
@@ -35,6 +36,7 @@ from tapir.wirgarten.models import (
     Product,
     ProductType,
     Subscription,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
@@ -382,7 +384,7 @@ class BaseProductForm(forms.Form):
 
         self.subscriptions = []
         existing_trial_end_date = cancel_or_delete_subscriptions(
-            member_id, self.start_date, self.product_type, cache=self.cache
+            member_id, self.start_date, self.product_type, actor=None, cache=self.cache
         )
 
         for key, quantity in self.cleaned_data.items():
@@ -808,7 +810,11 @@ class AdditionalProductForm(forms.Form):
         self.start_date = max(self.start_date, self.growing_period.start_date)
 
         existing_trial_end_date = cancel_or_delete_subscriptions(
-            member_id, self.start_date, self.product_type, cache=self.cache
+            Member.objects.get(id=member_id),
+            self.start_date,
+            self.product_type,
+            actor=None,
+            cache=self.cache,
         )
 
         self.subscriptions = []
@@ -1006,7 +1012,11 @@ class AdditionalProductForm(forms.Form):
 
 
 def cancel_or_delete_subscriptions(
-    member_id: str, start_date: date, product_type: ProductType, cache: Dict
+    member: Member,
+    start_date: date,
+    product_type: ProductType,
+    actor: TapirUser | None,
+    cache: Dict,
 ) -> date:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
@@ -1014,11 +1024,23 @@ def cancel_or_delete_subscriptions(
     :return: The trial end date of the last subscription that was canceled
     """
 
-    subscriptions = get_active_and_future_subscriptions(
-        reference_date=start_date, cache=cache
-    ).filter(member_id=member_id, product__type=product_type)
+    subscriptions = list(
+        get_active_and_future_subscriptions(
+            reference_date=start_date, cache=cache
+        ).filter(member_id=member.id, product__type=product_type)
+    )
 
     existing_trial_end_date = None
+
+    if len(subscriptions) == 0:
+        return existing_trial_end_date
+
+    SubscriptionChangeLogEntry().populate(
+        actor=actor,
+        user=member,
+        change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+        subscriptions=subscriptions,
+    ).save()
 
     for subscription in subscriptions:
         subscription.end_date = start_date - relativedelta(days=1)

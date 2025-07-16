@@ -18,6 +18,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -44,6 +45,7 @@ from tapir.subscriptions.services.single_subscription_validator import (
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.views.bestell_wizard import BestellWizardConfirmOrderApiView
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
 from tapir.waiting_list.serializers import (
     WaitingListEntryDetailsSerializer,
     WaitingListEntrySerializer,
@@ -701,8 +703,14 @@ class PublicConfirmWaitingListEntryView(APIView):
             raise NotImplementedError("Path for new members not implemented yet")
 
         with transaction.atomic():
+            actor = request.user if request.user.is_authenticated else member
+            WaitingListChangeConfirmedLogEntry().populate(
+                actor=actor, user=waiting_list_entry.member
+            ).save()
+
             subscriptions_existed_before_changes, subscriptions = self.apply_changes(
-                waiting_list_entry
+                waiting_list_entry=waiting_list_entry,
+                actor=actor,
             )
             waiting_list_entry.delete()
 
@@ -740,14 +748,25 @@ class PublicConfirmWaitingListEntryView(APIView):
 
         return waiting_list_entry
 
-    def apply_changes(self, waiting_list_entry: WaitingListEntry):
+    def apply_changes(self, waiting_list_entry: WaitingListEntry, actor: TapirUser):
         contract_start_date = get_next_contract_start_date(cache=self.cache)
 
-        self.apply_pickup_location_changes(waiting_list_entry, contract_start_date)
-        return self.apply_subscription_changes(waiting_list_entry, contract_start_date)
+        self.apply_pickup_location_changes(
+            waiting_list_entry=waiting_list_entry,
+            contract_start_date=contract_start_date,
+            actor=actor,
+        )
+        return self.apply_subscription_changes(
+            waiting_list_entry=waiting_list_entry,
+            contract_start_date=contract_start_date,
+            actor=actor,
+        )
 
     def apply_subscription_changes(
-        self, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
+        self,
+        waiting_list_entry: WaitingListEntry,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
     ):
         member = waiting_list_entry.member
 
@@ -761,12 +780,16 @@ class PublicConfirmWaitingListEntryView(APIView):
             member=member,
             order=order,
             contract_start_date=contract_start_date,
+            actor=actor,
             cache=self.cache,
         )
 
     @classmethod
     def apply_pickup_location_changes(
-        cls, waiting_list_entry: WaitingListEntry, contract_start_date: datetime.date
+        cls,
+        waiting_list_entry: WaitingListEntry,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
     ):
         pickup_location_wish = waiting_list_entry.pickup_location_wishes.order_by(
             "priority"
@@ -778,4 +801,5 @@ class PublicConfirmWaitingListEntryView(APIView):
             pickup_location_wish.pickup_location_id,
             member=waiting_list_entry.member,
             contract_start_date=contract_start_date,
+            actor=actor,
         )

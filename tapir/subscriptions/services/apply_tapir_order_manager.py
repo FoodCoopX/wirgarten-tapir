@@ -1,12 +1,18 @@
 import datetime
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
-from tapir.wirgarten.models import ProductType, Member, Subscription
+from tapir.wirgarten.models import (
+    ProductType,
+    Member,
+    Subscription,
+    SubscriptionChangeLogEntry,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
@@ -29,6 +35,7 @@ class ApplyTapirOrderManager:
         order: TapirOrder,
         product_type: ProductType,
         contract_start_date: datetime.date,
+        actor: TapirUser,
         cache: dict,
     ):
         active_and_future_subscriptions = get_active_and_future_subscriptions(
@@ -50,9 +57,10 @@ class ApplyTapirOrderManager:
                 )
             )
         cancel_or_delete_subscriptions(
-            member_id=member.id,
+            member=member,
             product_type=product_type,
             start_date=contract_start_date,
+            actor=actor,
             cache=cache,
         )
         TapirCache.clear_category(cache=cache, category="subscriptions")
@@ -106,6 +114,13 @@ class ApplyTapirOrderManager:
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
         TapirCache.clear_category(cache=cache, category="subscriptions")
 
+        SubscriptionChangeLogEntry().populate(
+            actor=actor,
+            user=member,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+            subscriptions=new_subscriptions,
+        ).save()
+
         return subscriptions_existed_before_changes, new_subscriptions
 
     @classmethod
@@ -114,6 +129,7 @@ class ApplyTapirOrderManager:
         member: Member,
         order: TapirOrder,
         contract_start_date: datetime.date,
+        actor: TapirUser,
         cache: dict,
     ) -> (bool, list[Subscription]):
         orders_by_product_type = {}
@@ -134,6 +150,7 @@ class ApplyTapirOrderManager:
                 order=order,
                 product_type=product_type,
                 contract_start_date=contract_start_date,
+                actor=actor,
                 cache=cache,
             )
             subscriptions_existed_before_changes = (

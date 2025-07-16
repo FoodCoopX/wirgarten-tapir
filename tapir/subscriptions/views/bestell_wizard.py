@@ -9,12 +9,14 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.pickup_locations.models import PickupLocationChangedLogEntry
 from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -101,6 +103,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             subscriptions = self.create_subscriptions(
                 validated_data=serializer.validated_data,
                 member=member,
+                actor=request.user,
                 contract_start_date=contract_start_date,
             )
             order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -113,6 +116,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                     serializer.validated_data["pickup_location_id"],
                     member=member,
                     contract_start_date=contract_start_date,
+                    actor=request.user if request.user.is_authenticated else member,
                 )
             self.create_coop_shares(
                 number_of_shares=serializer.validated_data["nb_shares"],
@@ -138,13 +142,19 @@ class BestellWizardConfirmOrderApiView(APIView):
 
     @staticmethod
     def link_member_to_pickup_location(
-        pickup_location_id, member: Member, contract_start_date: datetime.date
+        pickup_location_id,
+        member: Member,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
     ):
-        MemberPickupLocation.objects.create(
+        member_pickup_location = MemberPickupLocation.objects.create(
             member_id=member.id,
             pickup_location_id=pickup_location_id,
             valid_from=contract_start_date,
         )
+        PickupLocationChangedLogEntry().populate_pickup_location(
+            actor=actor, member_pickup_location=member_pickup_location, user=member
+        ).save()
 
     def create_coop_shares(
         self, number_of_shares: int, member: Member, subscriptions: list[Subscription]
@@ -166,7 +176,11 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
 
     def create_subscriptions(
-        self, validated_data, member: Member, contract_start_date: datetime.date
+        self,
+        validated_data,
+        member: Member,
+        contract_start_date: datetime.date,
+        actor: TapirUser,
     ):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
@@ -176,6 +190,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                 member=member,
                 order=order,
                 contract_start_date=contract_start_date,
+                actor=actor,
                 cache=self.cache,
             )
         )

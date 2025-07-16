@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -99,6 +100,7 @@ class UpdateSubscriptionsApiView(APIView):
                 ),
                 contract_start_date=contract_start_date,
                 validated_data=serializer.validated_data,
+                actor=request.user,
             )
 
         data = {
@@ -256,6 +258,7 @@ class UpdateSubscriptionsApiView(APIView):
         product_type: ProductType,
         contract_start_date: datetime.date,
         validated_data: dict,
+        actor: TapirUser,
     ):
         if validated_data[
             "pickup_location_id"
@@ -266,6 +269,7 @@ class UpdateSubscriptionsApiView(APIView):
                 member=member,
                 contract_start_date=contract_start_date,
                 pickup_location_id=validated_data["pickup_location_id"],
+                actor=actor,
             )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -277,6 +281,7 @@ class UpdateSubscriptionsApiView(APIView):
                 order=order,
                 contract_start_date=contract_start_date,
                 product_type=product_type,
+                actor=actor,
                 cache=self.cache,
             )
         )
