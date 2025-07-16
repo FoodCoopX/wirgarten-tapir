@@ -535,6 +535,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListLinkConfirmationModeEnabled={
               waitingListLinkConfirmationModeEnabled
             }
+            waitingListEntryDetails={waitingListEntryDetails}
           />
         );
       case "end":

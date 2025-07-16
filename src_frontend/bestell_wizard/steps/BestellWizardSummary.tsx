@@ -5,12 +5,17 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Col, Form, Row, Table } from "react-bootstrap";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
 import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
 import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
+import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
@@ -28,6 +33,7 @@ interface BestellWizardSummaryProps {
   privacyPolicyRead: boolean;
   setPrivacyPolicyRead: (read: boolean) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
+  waitingListEntryDetails: WaitingListEntryDetails | undefined;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -46,59 +52,86 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   privacyPolicyRead,
   setPrivacyPolicyRead,
   waitingListLinkConfirmationModeEnabled,
+  waitingListEntryDetails,
 }) => {
+  function shouldShowPickupLocationSummary() {
+    if (selectedPickupLocations.length === 0) {
+      return false;
+    }
+
+    return (
+      waitingListEntryDetails === undefined ||
+      (waitingListEntryDetails.pickupLocationWishes ?? []).length > 0
+    );
+  }
+
   return (
     <>
       <Row>
         <Col>
-          <BestellWizardCardTitle text={"Übersicht"} />
-          <BestellWizardCardSubtitle
-            text={"Deine Mitgliedschaft in der Genossenschaft"}
-          />
-          <Table bordered={true}>
-            <tbody>
-              <tr>
-                <td>Deine Genossenschaftsanteile</td>
-                <td>
-                  {selectedNumberOfCoopShares} * {formatCurrency(priceOfAShare)}{" "}
-                  = {formatCurrency(priceOfAShare * selectedNumberOfCoopShares)}
-                </td>
-              </tr>
-              {!waitingListModeEnabled && (
-                <tr>
-                  <td>Abbuchung</td>
-                  <td>TODO Abbuchung</td>
-                </tr>
-              )}
-            </tbody>
-          </Table>
-          {productTypes.map((productType) => (
-            <div className={"mt-4"} key={productType.id}>
-              <BestellWizardCardSubtitle text={productType.name} />
-              {isProductTypeOrdered(productType, shoppingCart) ? (
-                <SummaryProductTypeTable
-                  productType={productType}
-                  firstDeliveryDatesByProductType={
-                    firstDeliveryDatesByProductType
-                  }
-                  shoppingCart={shoppingCart}
-                  waitingListModeEnabled={waitingListModeEnabled}
-                />
-              ) : (
-                <span>Dieses Produkt ist nicht bestellt worden</span>
-              )}
-              {!waitingListLinkConfirmationModeEnabled && (
-                <TapirButton
-                  icon={"edit"}
-                  text={"Bestellung anpassen"}
-                  variant={"outline-primary"}
-                  size={"sm"}
-                  onClick={() => updateOrderFromSummary(productType)}
-                />
-              )}
-            </div>
-          ))}
-          {selectedPickupLocations.length > 0 && (
+          {shouldIncludeStepCoopShares(waitingListEntryDetails) && (
+            <>
+              <BestellWizardCardTitle text={"Übersicht"} />
+              <BestellWizardCardSubtitle
+                text={"Deine Mitgliedschaft in der Genossenschaft"}
+              />
+              <Table bordered={true}>
+                <tbody>
+                  <tr>
+                    <td>Deine Genossenschaftsanteile</td>
+                    <td>
+                      {selectedNumberOfCoopShares} *{" "}
+                      {formatCurrency(priceOfAShare)} ={" "}
+                      {formatCurrency(
+                        priceOfAShare * selectedNumberOfCoopShares,
+                      )}
+                    </td>
+                  </tr>
+                  {!waitingListModeEnabled && (
+                    <tr>
+                      <td>Abbuchung</td>
+                      <td>TODO Abbuchung</td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </>
+          )}
+          {productTypes.map((productType) => {
+            if (
+              waitingListLinkConfirmationModeEnabled &&
+              !isProductTypeOrdered(productType, shoppingCart)
+            ) {
+              return null;
+            }
+            return (
+              <div className={"mt-4"} key={productType.id}>
+                <BestellWizardCardSubtitle text={productType.name} />
+                {isProductTypeOrdered(productType, shoppingCart) ? (
+                  <SummaryProductTypeTable
+                    productType={productType}
+                    firstDeliveryDatesByProductType={
+                      firstDeliveryDatesByProductType
+                    }
+                    shoppingCart={shoppingCart}
+                    waitingListModeEnabled={waitingListModeEnabled}
+                  />
+                ) : (
+                  <span>Dieses Produkt ist nicht bestellt worden</span>
+                )}
+                {!waitingListLinkConfirmationModeEnabled && (
+                  <TapirButton
+                    icon={"edit"}
+                    text={"Bestellung anpassen"}
+                    variant={"outline-primary"}
+                    size={"sm"}
+                    onClick={() => updateOrderFromSummary(productType)}
+                  />
+                )}
+              </div>
+            );
+          })}
+          {shouldShowPickupLocationSummary() && (
             <SummaryPickupLocations
               selectedPickupLocations={selectedPickupLocations}
               waitingListModeEnabled={waitingListModeEnabled}
