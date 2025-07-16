@@ -47,6 +47,7 @@ const SubscriptionEditStepPickupLocation: React.FC<
             pickupLocationsWithCapacityCheckLoading
           }
           pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+          waitingListLinkConfirmationModeEnabled={false}
         />
       </Modal.Body>
       <Modal.Footer>

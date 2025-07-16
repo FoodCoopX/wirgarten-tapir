@@ -41,6 +41,7 @@ const SubscriptionEditStepProductType: React.FC<
               productType={productType}
               shoppingCart={shoppingCart}
               setShoppingCart={setShoppingCart}
+              waitingListLinkConfirmationModeEnabled={false}
             />
           </Col>
         </Row>

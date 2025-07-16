@@ -126,7 +126,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     setConfirmLoading(true);
     if (waitingListModeEnabled) {
       waitingListApi
-        .waitingListApiPublicWaitingListCreateEntryExistingMemberCreate({
+        .waitingListApiWaitingListCreateEntryExistingMemberCreate({
           publicWaitingListEntryExistingMemberCreateRequest: {
             memberId: memberId,
             pickupLocationIds: selectedPickupLocations.map(
@@ -189,6 +189,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
                 pickupLocationsWithCapacityCheckLoading
               }
               pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+              waitingListLinkConfirmationModeEnabled={false}
             />
           )}
         </Modal.Body>
