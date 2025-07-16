@@ -191,6 +191,12 @@ export interface WaitingListEntryDetails {
    * @memberof WaitingListEntryDetails
    */
   linkSentDate?: Date;
+  /**
+   *
+   * @type {string}
+   * @memberof WaitingListEntryDetails
+   */
+  link?: string;
 }
 
 /**
@@ -300,6 +306,7 @@ export function WaitingListEntryDetailsFromJSONTyped(
       json["link_sent_date"] == null
         ? undefined
         : new Date(json["link_sent_date"]),
+    link: json["link"] == null ? undefined : json["link"],
   };
 }
 
@@ -371,5 +378,6 @@ export function WaitingListEntryDetailsToJSONTyped(
       value["linkSentDate"] == null
         ? undefined
         : value["linkSentDate"].toISOString(),
+    link: value["link"],
   };
 }

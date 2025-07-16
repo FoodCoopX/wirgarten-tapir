@@ -27,11 +27,9 @@ from tapir.wirgarten.utils import get_now, get_today
 
 
 class WaitingListGenerator:
-    CHANGE_MORE_COOP_SHARES = "more_coop_shares"
     CHANGE_MORE_PRODUCTS = "more_products"
     CHANGE_PICKUP_LOCATION = "pickup_location"
     POSSIBLE_CHANGES = [
-        CHANGE_MORE_COOP_SHARES,
         CHANGE_MORE_PRODUCTS,
         CHANGE_PICKUP_LOCATION,
     ]
@@ -113,9 +111,6 @@ class WaitingListGenerator:
         product_wishes = []
         for entry in entries:
             desired_changes = random.choice(combinations_of_possible_changes)
-
-            if cls.CHANGE_MORE_COOP_SHARES in desired_changes:
-                entry.number_of_coop_shares = random.randint(1, 10)
 
             member_pickup_location_id = None
             if entry.member:

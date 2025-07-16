@@ -115,6 +115,12 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
             />
           </p>
         )}
+        {entryDetails.link && (
+          <p>
+            Link (zum testen, nur bei test Instanzen sichtbar):{" "}
+            <a href={entryDetails.link}>{entryDetails.link}</a>
+          </p>
+        )}
       </Col>
     </Row>
   );

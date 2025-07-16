@@ -1,6 +1,7 @@
 import datetime
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -145,6 +146,11 @@ class WaitingListApiView(APIView):
                     cache=cache, reference_date=get_today(cache=cache)
                 ).get(entry.member.id, [])
             )
+        link = None
+        if settings.DEBUG and entry.confirmation_link_key:
+            link = SendWaitingListLinkApiView.build_waiting_list_link(
+                entry.id, entry.confirmation_link_key
+            )
 
         return {
             "id": entry.id,
@@ -177,6 +183,7 @@ class WaitingListApiView(APIView):
                 if entry.confirmation_link_key is not None
                 else None
             ),
+            "link": link,
         }
 
     @staticmethod
