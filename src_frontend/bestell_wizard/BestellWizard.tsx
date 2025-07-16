@@ -184,6 +184,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [publicProductTypes, waitingListLinkConfirmationModeEnabled]);
 
   useEffect(() => {
+    if (publicProductTypes.length === 0) return;
+
     let steps = [];
 
     if (shouldIncludeStepIntro(introEnabled)) {
@@ -216,12 +218,21 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     steps.push("summary", "end");
 
-    if (!steps.includes(currentStep)) {
+    if (
+      !steps.includes(currentStep) ||
+      waitingListLinkConfirmationModeEnabled
+    ) {
       setCurrentStep(steps[0]);
     }
 
     setSteps(steps);
-  }, [selectedProductTypes, shoppingCart, introEnabled, pickupLocations]);
+  }, [
+    selectedProductTypes,
+    shoppingCart,
+    introEnabled,
+    pickupLocations,
+    publicProductTypes,
+  ]);
 
   useEffect(() => {
     if (!waitingListLinkConfirmationModeEnabled) {
@@ -329,7 +340,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         const publicProductType = publicProductTypes.find(
           (pt) => pt.id === wish.product.type.id,
         );
-        selectedProductTypes.add(publicProductType!);
+        if (publicProductType) {
+          selectedProductTypes.add(publicProductType);
+        }
       }
       setSelectedProductTypes([...selectedProductTypes]);
       setShoppingCart(newShoppingCart);
@@ -519,6 +532,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             setCancellationPolicyRead={setCancellationPolicyRead}
             privacyPolicyRead={privacyPolicyRead}
             setPrivacyPolicyRead={setPrivacyPolicyRead}
+            waitingListLinkConfirmationModeEnabled={
+              waitingListLinkConfirmationModeEnabled
+            }
           />
         );
       case "end":

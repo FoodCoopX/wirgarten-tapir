@@ -145,6 +145,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                     setStudentStatusEnabled(event.target.checked)
                   }
                   disabled={waitingListLinkConfirmationModeEnabled}
+                  id={"student"}
                 />
                 <Form.Text>
                   Die Immatrikulationsbescheinigung muss per Mail an{" "}

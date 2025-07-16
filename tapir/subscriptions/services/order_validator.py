@@ -55,7 +55,7 @@ class OrderValidator:
 
         product_type_ids_without_enough_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
-            member_id=member.id,
+            member_id=member.id if member is not None else None,
             subscription_start_date=contract_start_date,
             cache=cache,
         )

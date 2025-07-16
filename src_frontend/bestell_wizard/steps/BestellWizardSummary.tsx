@@ -27,6 +27,7 @@ interface BestellWizardSummaryProps {
   setCancellationPolicyRead: (read: boolean) => void;
   privacyPolicyRead: boolean;
   setPrivacyPolicyRead: (read: boolean) => void;
+  waitingListLinkConfirmationModeEnabled: boolean;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -44,15 +45,8 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   setCancellationPolicyRead,
   privacyPolicyRead,
   setPrivacyPolicyRead,
+  waitingListLinkConfirmationModeEnabled,
 }) => {
-  function getProductIdsOfProductType(productType: PublicProductType) {
-    return productType.products.map((product) => product.id);
-  }
-
-  function getProductById(productType: PublicProductType, productId: string) {
-    return productType.products.find((product) => product.id === productId);
-  }
-
   return (
     <>
       <Row>
@@ -93,13 +87,15 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
               ) : (
                 <span>Dieses Produkt ist nicht bestellt worden</span>
               )}
-              <TapirButton
-                icon={"edit"}
-                text={"Bestellung anpassen"}
-                variant={"outline-primary"}
-                size={"sm"}
-                onClick={() => updateOrderFromSummary(productType)}
-              />
+              {!waitingListLinkConfirmationModeEnabled && (
+                <TapirButton
+                  icon={"edit"}
+                  text={"Bestellung anpassen"}
+                  variant={"outline-primary"}
+                  size={"sm"}
+                  onClick={() => updateOrderFromSummary(productType)}
+                />
+              )}
             </div>
           ))}
           {selectedPickupLocations.length > 0 && (

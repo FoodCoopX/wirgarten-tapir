@@ -38,5 +38,5 @@ export function shouldIncludeStepPersonalData(
     return true;
   }
 
-  return !waitingListEntryDetails.memberAlreadyExists;
+  return (waitingListEntryDetails.productWishes ?? []).length > 0;
 }
