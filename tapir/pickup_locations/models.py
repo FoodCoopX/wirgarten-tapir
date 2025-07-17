@@ -27,7 +27,8 @@ class PickupLocationChangedLogEntry(LogEntry):
     """
 
     template_name = "pickup_locations/log/pickup_location_changed_log_entry.html"
-    pickup_location_name = models.CharField(max_length=150)
+    new_pickup_location_name = models.CharField(max_length=150)
+    old_pickup_location_name = models.CharField(max_length=150)
     valid_from = models.DateField()
 
     def populate_pickup_location(
@@ -35,15 +36,18 @@ class PickupLocationChangedLogEntry(LogEntry):
         actor: TapirUser | None,
         user: TapirUser | None,
         member_pickup_location: MemberPickupLocation,
+        old_pickup_location: PickupLocation,
     ):
         super().populate(actor, user)
-        self.pickup_location_name = member_pickup_location.pickup_location.name
+        self.new_pickup_location_name = member_pickup_location.pickup_location.name
+        self.old_pickup_location_name = old_pickup_location.name
         self.valid_from = member_pickup_location.valid_from
 
         return self
 
     def get_context_data(self):
         context_data = super().get_context_data()
-        context_data["pickup_location_name"] = self.pickup_location_name
+        context_data["old_pickup_location_name"] = self.old_pickup_location_name
+        context_data["new_pickup_location_name"] = self.new_pickup_location_name
         context_data["valid_from"] = self.valid_from
         return context_data

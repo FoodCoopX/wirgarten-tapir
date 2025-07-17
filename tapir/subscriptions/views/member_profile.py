@@ -331,7 +331,7 @@ class MemberProfileCapacityCheckApiView(APIView):
 
         if len(ids_of_product_types_over_capacity) == 0:
             pickup_location = MemberPickupLocationService.get_member_pickup_location(
-                member=member, reference_date=subscription_start_date
+                member=member, reference_date=subscription_start_date, cache=self.cache
             )
             if (
                 pickup_location is not None

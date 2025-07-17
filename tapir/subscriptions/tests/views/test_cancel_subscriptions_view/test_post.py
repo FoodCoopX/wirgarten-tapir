@@ -13,9 +13,9 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,

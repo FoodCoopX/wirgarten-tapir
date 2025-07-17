@@ -64,12 +64,4 @@
 {% elif member.pickup_location %}
     <h4>{{ member.pickup_location.name }}</h4>
     {% include 'wirgarten/member/member_pickup_location_info.html' with pickup_location=member.pickup_location %}
-{% else %}
-    <div style="width:100%; text-align: center; padding: 3em">
-        <button class="btn tapir-btn btn-outline-success"
-                style="margin:auto"
-                onclick="FormModal.load(`{% url 'wirgarten:member_pickup_location_choice' member.pk %}`, 'Abholort auswählen')">
-            <span class="material-icons">add_location_alt</span>{% translate 'Abholort auswählen' %}
-        </button>
-    </div>
 {% endif %}

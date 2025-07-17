@@ -24,6 +24,7 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
 from tapir.utils.shortcuts import get_from_cache_or_compute
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     MandateReference,
@@ -49,7 +50,6 @@ from tapir.wirgarten.service.subscriptions import (
     annotate_subscriptions_queryset_with_monthly_payment_including_solidarity,
 )
 from tapir.wirgarten.service.tasks import schedule_task_unique
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.tasks import send_email_member_contract_end_reminder
 from tapir.wirgarten.utils import (
     format_date,

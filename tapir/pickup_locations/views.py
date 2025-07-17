@@ -10,15 +10,10 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serial
 from rest_framework import status, viewsets, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import PickupLocationSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.log.models import TextLogEntry
 from tapir.pickup_locations.config import PICKING_MODE_BASKET, PICKING_MODE_SHARE
 from tapir.pickup_locations.models import PickupLocationBasketCapacity
 from tapir.pickup_locations.serializers import (
@@ -60,15 +55,13 @@ from tapir.wirgarten.models import (
     PickupLocationCapability,
     ProductType,
     Member,
-    MemberPickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.tapirmail import Events
-from tapir.wirgarten.utils import get_today, check_permission_or_self, format_date
+from tapir.wirgarten.utils import get_today, check_permission_or_self
 
 
 class PickupLocationCapacitiesView(APIView):
@@ -456,10 +449,12 @@ class ChangeMemberPickupLocationApiView(APIView):
             )
 
         with transaction.atomic():
-            self.apply_changes(
+            MemberPickupLocationService.link_member_to_pickup_location(
+                pickup_location_id=new_pickup_location_id,
                 member=member,
-                new_pickup_location_id=new_pickup_location_id,
+                valid_from=calculate_pickup_location_change_date(cache=self.cache),
                 actor=request.user,
+                cache=self.cache,
             )
 
         return Response(
@@ -507,50 +502,3 @@ class ChangeMemberPickupLocationApiView(APIView):
             raise ValidationError(
                 "Diese Abholort hat nicht genug Kapazitäten für deine Verträge."
             )
-
-    def apply_changes(self, member: Member, new_pickup_location_id, actor):
-        old_pickup_location_id = (
-            MemberPickupLocationService.get_member_pickup_location_id(
-                member=member, reference_date=get_today(cache=self.cache)
-            )
-        )
-        change_date = (
-            calculate_pickup_location_change_date(cache=self.cache)
-            if old_pickup_location_id is not None
-            else get_today(cache=self.cache)
-        )
-        old_pickup_location = None
-        if old_pickup_location_id is not None:
-            old_pickup_location = TapirCache.get_pickup_location_by_id(
-                cache=self.cache, pickup_location_id=old_pickup_location_id
-            )
-
-        MemberPickupLocation.objects.filter(
-            member=member, valid_from__gte=change_date
-        ).delete()
-        MemberPickupLocation.objects.create(
-            member=member,
-            pickup_location_id=new_pickup_location_id,
-            valid_from=change_date,
-        )
-
-        new_pickup_location = TapirCache.get_pickup_location_by_id(
-            cache=self.cache, pickup_location_id=new_pickup_location_id
-        )
-        change_date_str = format_date(change_date)
-        TextLogEntry().populate(
-            actor=actor,
-            user=member,
-            text=f"Abholort geändert zum {change_date_str}: {old_pickup_location} -> {new_pickup_location}",
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-                recipient_id_in_base_queryset=member.id,
-                token_data={
-                    "pickup_location": new_pickup_location.name,
-                    "pickup_location_start_date": change_date_str,
-                },
-            ),
-        )

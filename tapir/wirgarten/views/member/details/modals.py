@@ -1,4 +1,3 @@
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -26,20 +25,17 @@ from tapir.wirgarten.forms.member import (
     TrialCancellationForm,
     WaitingListForm,
 )
-from tapir.wirgarten.forms.pickup_location import PickupLocationChoiceForm
 from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
-    MemberPickupLocation,
-    PickupLocation,
     ProductType,
     QuestionaireCancellationReasonResponse,
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
@@ -47,15 +43,11 @@ from tapir.wirgarten.service.member import (
     send_contract_change_confirmation,
     send_order_confirmation,
 )
-from tapir.wirgarten.service.payment import (
-    get_active_subscriptions_grouped_by_product_type,
-)
 from tapir.wirgarten.service.products import (
     get_next_growing_period,
     is_product_type_available,
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
@@ -100,85 +92,6 @@ def get_member_personal_data_edit_form(request, **kwargs):
         instance=Member.objects.get(pk=pk),
         handler=lambda x: save(x.instance),
         redirect_url_resolver=lambda _: member_detail_url(pk),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@csrf_protect
-@login_required
-def get_pickup_location_choice_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-    cache = {}
-    kwargs["cache"] = cache
-    check_permission_or_self(member_id, request)
-
-    member = Member.objects.get(pk=member_id)
-    next_month = get_today(cache=cache) + relativedelta(months=1, day=1)
-    kwargs["initial"] = {
-        "subs": get_active_subscriptions_grouped_by_product_type(
-            member, reference_date=next_month, cache=cache
-        ),
-    }
-
-    if member.pickup_location:
-        kwargs["initial"]["initial"] = member.pickup_location.id
-
-    kwargs["member"] = member
-
-    @transaction.atomic
-    def update_pickup_location(form):
-        pickup_location_id = form.cleaned_data["pickup_location"].id
-        change_date = (
-            calculate_pickup_location_change_date(cache=cache)
-            if member.pickup_location is not None
-            else get_today(cache=cache)
-        )
-        old_pickup_location = member.pickup_location
-
-        member_pickup_locations = MemberPickupLocation.objects.filter(member=member)
-        member_pickup_location_valid_from_same_date = member_pickup_locations.filter(
-            valid_from=change_date
-        )
-        if member_pickup_location_valid_from_same_date.exists():
-            found = member_pickup_location_valid_from_same_date.first()
-            found.pickup_location_id = pickup_location_id
-            found.save()
-        else:
-            MemberPickupLocation.objects.create(
-                member=member,
-                pickup_location_id=pickup_location_id,
-                valid_from=change_date,
-            )
-
-        MemberPickupLocation.objects.filter(
-            member=member, valid_from__gt=change_date
-        ).delete()
-
-        new_pickup_location = PickupLocation.objects.get(id=pickup_location_id)
-        change_date_str = format_date(change_date)
-        TextLogEntry().populate(
-            actor=request.user,
-            user=member,
-            text=f"Abholort geändert zum {change_date_str}: {old_pickup_location} -> {new_pickup_location}",
-        ).save()
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-                recipient_id_in_base_queryset=member.id,
-                token_data={
-                    "pickup_location": new_pickup_location.name,
-                    "pickup_location_start_date": change_date_str,
-                },
-            ),
-        )
-
-    return get_form_modal(
-        request=request,
-        form_class=PickupLocationChoiceForm,
-        handler=update_pickup_location,
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
         **kwargs,
     )
 

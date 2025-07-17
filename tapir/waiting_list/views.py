@@ -59,6 +59,7 @@ from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
 )
 from tapir.wirgarten.constants import Permission
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     WaitingListEntry,
     WaitingListProductWish,
@@ -68,7 +69,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
 

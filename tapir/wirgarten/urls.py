@@ -28,7 +28,6 @@ from tapir.wirgarten.views.member.details.modals import (
     get_harvest_shares_waiting_list_form,
     get_member_payment_data_edit_form,
     get_member_personal_data_edit_form,
-    get_pickup_location_choice_form,
     get_renew_contracts_form,
 )
 from tapir.wirgarten.views.member.list.actions import (
@@ -199,11 +198,6 @@ urlpatterns = [
         "members/<str:pk>/editpaymentdetails",
         get_member_payment_data_edit_form,
         name="member_edit_payment_details",
-    ),
-    path(
-        "members/<str:pk>/editpickuplocation",
-        get_pickup_location_choice_form,
-        name="member_pickup_location_choice",
     ),
     path(
         "members/<str:pk>/cancelcontract",

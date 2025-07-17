@@ -13,7 +13,7 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir import settings
 from tapir.accounts.config import EMAIL_CHANGE_LINK_VALIDITY_MINUTES
 from tapir.accounts.models import TapirUser, KeycloakUser, EmailChangeRequest
-from tapir.wirgarten.tapirmail import Events
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.utils import get_now
 
 

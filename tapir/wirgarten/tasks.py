@@ -12,6 +12,7 @@ from tapir_mail.triggers.transactional_trigger import (
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
@@ -31,7 +32,6 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_product_price,
 )
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import (
     format_date,
     format_subscription_list_html,

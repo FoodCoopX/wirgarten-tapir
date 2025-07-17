@@ -9,6 +9,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
@@ -22,7 +23,6 @@ from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_next_growing_period,
 )
-from tapir.wirgarten.tapirmail import Events
 from tapir.wirgarten.utils import format_date, get_now, member_detail_url
 
 
