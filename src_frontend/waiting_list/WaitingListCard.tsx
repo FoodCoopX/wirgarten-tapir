@@ -1,25 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Table } from "react-bootstrap";
+import {
+  Badge,
+  Card,
+  Col,
+  Form,
+  ListGroup,
+  Row,
+  Tab,
+  Tabs,
+} from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  Counts,
   PickupLocation,
   PickupLocationsApi,
   Product,
   SubscriptionsApi,
   WaitingListApi,
+  WaitingListApiListListEntryTypeEnum,
+  WaitingListApiListListMemberTypeEnum,
+  WaitingListApiListListOrderByEnum,
   WaitingListEntryDetails,
 } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
-import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
-import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import formatAddress from "../utils/formatAddress.ts";
-import { formatDateText } from "../utils/formatDateText.ts";
 import "./waiting_list_card.css";
 import WaitingListEntryEditModal from "./WaitingListEntryEditModal.tsx";
 import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import WaitingListTable from "./WaitingListTable.tsx";
 
 interface WaitingListCardProps {
   csrfToken: string;
@@ -42,6 +52,18 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [showCoopContent, setShowCoopContent] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+  const [filterMemberType, setFilterMemberType] =
+    useState<WaitingListApiListListMemberTypeEnum>("all");
+  const [filterEntryType, setFilterEntryType] =
+    useState<WaitingListApiListListEntryTypeEnum>("any");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterCurrentPickupLocation, setFilterCurrentPickupLocation] =
+    useState("");
+  const [filterPickupLocationWish, setFilterPickupLocationWish] = useState("");
+  const [filterProductWish, setFilterProductWish] = useState("");
+  const [orderBy, setOrderBy] =
+    useState<WaitingListApiListListOrderByEnum>("-created_at");
+  const [counts, setCounts] = useState<Counts>();
 
   useEffect(() => {
     pickupLocationApi
@@ -63,11 +85,25 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .waitingListApiShowCoopContentRetrieve()
       .then(setShowCoopContent)
       .catch(handleRequestError);
+
+    waitingListApi
+      .waitingListApiCountsRetrieve()
+      .then(setCounts)
+      .catch(handleRequestError);
   }, []);
 
   useEffect(() => {
     loadPage();
-  }, [currentPage]);
+  }, [
+    currentPage,
+    filterMemberType,
+    filterEntryType,
+    filterCategory,
+    filterCurrentPickupLocation,
+    filterPickupLocationWish,
+    filterProductWish,
+    orderBy,
+  ]);
 
   function loadPage() {
     setLoading(true);
@@ -76,6 +112,13 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .waitingListApiListList({
         limit: DEFAULT_PAGE_SIZE,
         offset: DEFAULT_PAGE_SIZE * currentPage,
+        memberType: filterMemberType,
+        entryType: filterEntryType,
+        category: filterCategory,
+        currentPickupLocationId: filterCurrentPickupLocation,
+        pickupLocationWish: filterPickupLocationWish,
+        productWish: filterProductWish,
+        orderBy: orderBy,
       })
       .then((paginatedData) => {
         setWaitingListEntries(paginatedData.results);
@@ -92,65 +135,6 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       })
       .catch(handleRequestError)
       .finally(() => setLoading(false));
-  }
-
-  function buildWaitingListEntryRow(entry: WaitingListEntryDetails) {
-    return (
-      <tr
-        key={entry.id}
-        style={{ cursor: "pointer" }}
-        onClick={() => setSelectedEntryForEdition(entry)}
-        className={entry.linkSentDate ? "table-warning" : ""}
-      >
-        <td>{entry.memberNo}</td>
-        <td>{formatDateNumeric(entry.waitingSince)}</td>
-        <td>
-          {entry.firstName} {entry.lastName}
-        </td>
-        <td>{entry.email}</td>
-        <td>{entry.phoneNumber}</td>
-        <td>
-          {formatAddress(
-            entry.street,
-            entry.street2,
-            entry.postcode,
-            entry.city,
-          )}
-        </td>
-        {showCoopContent && (
-          <td>{formatDateNumeric(entry.dateOfEntryInCooperative)}</td>
-        )}
-        <td>
-          {entry.currentProducts
-            ?.map((product) => product.type.name + " " + product.name)
-            .join(", ")}
-        </td>
-        <td>
-          {entry.productWishes
-            ?.map(
-              (productWish) =>
-                productWish.product.type.name + " " + productWish.product.name,
-            )
-            .join(", ")}
-        </td>
-        <td>{entry.currentPickupLocation?.name}</td>
-        <td>
-          {entry.pickupLocationWishes
-            ?.map(
-              (pickupLocationWish) => pickupLocationWish.pickupLocation.name,
-            )
-            .join(", ")}
-        </td>
-        {showCoopContent && <td>{entry.numberOfCoopShares}</td>}
-        <td>
-          {entry.desiredStartDate
-            ? formatDateText(entry.desiredStartDate)
-            : "so früh wie möglich"}
-        </td>
-        <td>{entry.category}</td>
-        <td>{entry.comment}</td>
-      </tr>
-    );
   }
 
   function addToast(toastData: ToastData) {
@@ -173,41 +157,185 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
               >
                 <h5 className={"mb-0"}>Warteliste</h5>
               </div>
+              <Tabs
+                defaultActiveKey={"all"}
+                onSelect={(memberType) =>
+                  setFilterMemberType(
+                    memberType as WaitingListApiListListMemberTypeEnum,
+                  )
+                }
+              >
+                <Tab
+                  eventKey={"all"}
+                  title={
+                    <span>
+                      Alle <Badge>{counts?.all}</Badge>
+                    </span>
+                  }
+                />
+                <Tab
+                  eventKey={"new_members"}
+                  title={
+                    <span>
+                      Neue Mitglieder <Badge>{counts?.newMembers}</Badge>
+                    </span>
+                  }
+                />
+                <Tab
+                  eventKey={"existing_members"}
+                  title={
+                    <span>
+                      Bestehende Mitglieder{" "}
+                      <Badge>{counts?.existingMembers}</Badge>
+                    </span>
+                  }
+                />
+              </Tabs>
             </Card.Header>
-            <Card.Body className={"p-0"}>
-              <Table striped hover responsive className={"max-column-width"}>
-                <thead>
-                  <tr>
-                    <th>Mitgliedsnummer</th>
-                    <th>Eintragungsdatum auf Warteliste</th>
-                    <th>Name</th>
-                    <th>Email-Adresse</th>
-                    <th>Telefonnummer</th>
-                    <th>Wohnort</th>
-                    {showCoopContent && <th>Geno-Beitrittsdatum</th>}
-                    <th>Aktuelle Produkte</th>
-                    <th>Gewünschte Produkte</th>
-                    <th>Derzeitiger Verteilort</th>
-                    <th>Verteilort Prioritäten</th>
-                    {showCoopContent && <th>Geno-Anteilen gewünscht</th>}
-                    <th>Wunsch-Startdatum</th>
-                    <th>Kategorie</th>
-                    <th>Kommentar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <PlaceholderTableRows
-                      nbRows={DEFAULT_PAGE_SIZE}
-                      nbColumns={showCoopContent ? 13 : 11}
-                      size={"xs"}
-                    />
-                  ) : (
-                    waitingListEntries.map(buildWaitingListEntryRow)
+            <ListGroup>
+              <ListGroup.Item>
+                <Row>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Art der Wünsche: </Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterEntryType(
+                            event.target
+                              .value as WaitingListApiListListEntryTypeEnum,
+                          )
+                        }
+                      >
+                        <option value="any">Alle</option>
+                        <option value="must_have_pickup_location_wish">
+                          Muss ein Verteilort-Wunsch beinhalten
+                        </option>
+                        <option value="must_have_product_wish">
+                          Muss ein Produkt-Wunsch beinhalten
+                        </option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Kategorie: </Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterCategory(event.target.value)
+                        }
+                      >
+                        <option value="any">Alle</option>
+                        <option value="none">Keine</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  {filterMemberType !== "new_members" && (
+                    <Col>
+                      <Form.Group>
+                        <Form.Label>Derzeitiger Verteilort:</Form.Label>
+                        <Form.Select
+                          onChange={(event) =>
+                            setFilterCurrentPickupLocation(event.target.value)
+                          }
+                        >
+                          <option value="">Filter ausgeschaltet</option>
+                          {pickupLocations.map((pickupLocation) => (
+                            <option
+                              key={pickupLocation.id}
+                              value={pickupLocation.id}
+                            >
+                              {pickupLocation.name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
                   )}
-                </tbody>
-              </Table>
-            </Card.Body>
+                </Row>
+                <Row className={"mt-2"}>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Verteilort-Wunsch:</Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterPickupLocationWish(event.target.value)
+                        }
+                      >
+                        <option value="">Filter ausgeschaltet</option>
+                        {pickupLocations.map((pickupLocation) => (
+                          <option
+                            key={pickupLocation.id}
+                            value={pickupLocation.id}
+                          >
+                            {pickupLocation.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Produkt-Wunsch:</Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setFilterProductWish(event.target.value)
+                        }
+                      >
+                        <option value="">Filter ausgeschaltet</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Sortieren nach:</Form.Label>
+                      <Form.Select
+                        onChange={(event) =>
+                          setOrderBy(
+                            event.target
+                              .value as WaitingListApiListListOrderByEnum,
+                          )
+                        }
+                      >
+                        <option value="-created_at">
+                          Eintragungsdatum auf der Warteliste (absteigend)
+                        </option>
+                        <option value="created_at">
+                          Eintragungsdatum auf der Warteliste (aufsteigend)
+                        </option>
+                        {filterMemberType !== "new_members" && (
+                          <>
+                            <option value="-member_since">
+                              Eintrittsdatum zur Geno (absteigend)
+                            </option>
+                            <option value="member_since">
+                              Eintrittsdatum zur Geno (aufsteigend)
+                            </option>
+                          </>
+                        )}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </ListGroup.Item>
+              <ListGroup.Item>
+                <WaitingListTable
+                  waitingListEntries={waitingListEntries}
+                  setSelectedEntryForEdition={setSelectedEntryForEdition}
+                  loading={loading}
+                  showCoopContent={showCoopContent}
+                />
+              </ListGroup.Item>
+            </ListGroup>
             <Card.Footer>
               <div
                 className={"d-flex justify-content-center"}

@@ -65,6 +65,7 @@ urlpatterns = [
         views.PublicConfirmWaitingListEntryView.as_view(),
         name="public_confirm_waiting_list_entry",
     ),
+    path("api/counts", views.WaitingListGetCountsApiView.as_view(), name="counts"),
 ]
 
 router = DefaultRouter()

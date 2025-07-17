@@ -16,6 +16,7 @@ export * from './CancelSubscriptionsViewResponse';
 export * from './CancellationData';
 export * from './CoopShareTransaction';
 export * from './CountryEnum';
+export * from './Counts';
 export * from './CreateMissingTriggerMailRequest';
 export * from './CsvExportModel';
 export * from './CsvExportModelRequest';

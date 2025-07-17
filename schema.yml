@@ -3292,6 +3292,20 @@ paths:
                 items:
                   type: string
           description: ''
+  /waiting_list/api/counts:
+    get:
+      operationId: waiting_list_api_counts_retrieve
+      tags:
+      - waiting_list
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/counts'
+          description: ''
   /waiting_list/api/disable_waiting_list_link:
     post:
       operationId: waiting_list_api_disable_waiting_list_link_create
@@ -3323,14 +3337,62 @@ paths:
       operationId: waiting_list_api_list_list
       parameters:
       - in: query
+        name: category
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: current_pickup_location_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: entry_type
+        schema:
+          type: string
+          enum:
+          - any
+          - must_have_pickup_location_wish
+          - must_have_product_wish
+        required: true
+      - in: query
         name: limit
         schema:
           type: integer
         required: true
       - in: query
+        name: member_type
+        schema:
+          type: string
+          enum:
+          - all
+          - existing_members
+          - new_members
+        required: true
+      - in: query
         name: offset
         schema:
           type: integer
+        required: true
+      - in: query
+        name: order_by
+        schema:
+          type: string
+          enum:
+          - -created_at
+          - -member_since
+          - created_at
+          - member_since
+        required: true
+      - in: query
+        name: pickup_location_wish
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: product_wish
+        schema:
+          type: string
         required: true
       tags:
       - waiting_list
@@ -7704,6 +7766,19 @@ components:
       - product
       - quantity
       - waiting_list_entry
+    counts:
+      type: object
+      properties:
+        all:
+          type: integer
+        new_members:
+          type: integer
+        existing_members:
+          type: integer
+      required:
+      - all
+      - existing_members
+      - new_members
     disable_link_serializerRequest:
       type: object
       properties:

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import QuerySet, Subquery, OuterRef
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -65,6 +66,8 @@ from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
     Member,
+    PickupLocation,
+    CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_next_contract_start_date
@@ -91,23 +94,157 @@ class WaitingListApiView(APIView):
         parameters=[
             OpenApiParameter(name="limit", type=int, required=True),
             OpenApiParameter(name="offset", type=int, required=True),
+            OpenApiParameter(
+                name="member_type",
+                type=str,
+                enum=["all", "new_members", "existing_members"],
+                required=True,
+            ),
+            OpenApiParameter(
+                name="entry_type",
+                type=str,
+                enum=[
+                    "any",
+                    "must_have_pickup_location_wish",
+                    "must_have_product_wish",
+                ],
+                required=True,
+            ),
+            OpenApiParameter(name="category", type=str, required=True),
+            OpenApiParameter(
+                name="current_pickup_location_id", type=str, required=True
+            ),
+            OpenApiParameter(name="pickup_location_wish", type=str, required=True),
+            OpenApiParameter(name="product_wish", type=str, required=True),
+            OpenApiParameter(
+                name="order_by",
+                type=str,
+                required=True,
+                enum=["created_at", "-created_at", "member_since", "-member_since"],
+            ),
         ],
     )
     def get(self, request):
         pagination = self.pagination_class()
-        entries = (
-            WaitingListEntry.objects.order_by("created_at")
-            .prefetch_related(
-                "product_wishes__product", "pickup_location_wishes__pickup_location"
-            )
-            .select_related("member")
-        )
+
+        entries = WaitingListEntry.objects.prefetch_related(
+            "product_wishes__product", "pickup_location_wishes__pickup_location"
+        ).select_related("member")
+
+        filters = [
+            "member_type",
+            "entry_type",
+            "category",
+            "current_pickup_location_id",
+            "pickup_location_wish",
+            "product_wish",
+        ]
+        for filter in filters:
+            parameter = request.query_params.get(filter)
+            filter_method = getattr(self, f"filter_by_{filter}")
+            entries = filter_method(parameter, entries)
+
+        order_by = request.query_params.get("order_by")
+        if "created_at" in order_by:
+            entries = entries.order_by(order_by)
+        else:
+            entries = self.order_by_coop_entry_date(entries, descending="-" in order_by)
+
         entries = pagination.paginate_queryset(entries, request)
 
         data = [self.build_entry_data(entry, cache=self.cache) for entry in entries]
         serializer = WaitingListEntryDetailsSerializer(data, many=True)
 
         return pagination.get_paginated_response(serializer.data)
+
+    @classmethod
+    def filter_by_member_type(
+        cls, member_type: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if member_type == "new_members":
+            return entries.filter(member__isnull=True)
+
+        if member_type == "existing_members":
+            return entries.filter(member__isnull=False)
+
+        return entries
+
+    @classmethod
+    def filter_by_entry_type(cls, entry_type: str, entries: QuerySet[WaitingListEntry]):
+        if entry_type == "must_have_pickup_location_wish":
+            return entries.filter(pickup_location_wishes__isnull=False)
+
+        if entry_type == "must_have_product_wish":
+            return entries.filter(product_wishes__isnull=False)
+
+        return entries
+
+    @classmethod
+    def filter_by_category(cls, category: str, entries: QuerySet[WaitingListEntry]):
+        if category == "none":
+            return entries.filter(category__isnull=True)
+        if category == "any":
+            return entries
+        if category:
+            return entries.filter(category=category)
+        return entries
+
+    def filter_by_current_pickup_location_id(
+        self, pickup_location_id: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not pickup_location_id:
+            return entries
+
+        pickup_location = get_object_or_404(PickupLocation, id=pickup_location_id)
+        member_ids = MemberPickupLocationService.get_members_ids_at_pickup_location(
+            pickup_location=pickup_location,
+            reference_date=get_today(cache=self.cache),
+            cache=self.cache,
+        )
+        return entries.filter(member_id__in=member_ids)
+
+    @classmethod
+    def filter_by_pickup_location_wish(
+        cls, pickup_location_id: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not pickup_location_id:
+            return entries
+        wishes = WaitingListPickupLocationWish.objects.filter(
+            pickup_location_id=pickup_location_id
+        )
+        return entries.filter(pickup_location_wishes__in=wishes)
+
+    @classmethod
+    def filter_by_product_wish(
+        cls, product_id: str, entries: QuerySet[WaitingListEntry]
+    ):
+        if not product_id:
+            return entries
+        wishes = WaitingListProductWish.objects.filter(product_id=product_id)
+        return entries.filter(product_wishes__in=wishes)
+
+    @classmethod
+    def order_by_coop_entry_date(
+        cls, entries: QuerySet[WaitingListEntry], descending: bool
+    ):
+        entries = entries.annotate(
+            coop_entry_date=Subquery(
+                CoopShareTransaction.objects.filter(
+                    transaction_type__in=[
+                        CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+                        CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
+                    ],
+                    member_id=OuterRef("member_id"),
+                )
+                .order_by("valid_at")
+                .values("valid_at")[:1]
+            )
+        )
+
+        order_by = "coop_entry_date"
+        if descending:
+            order_by = "-" + order_by
+        return entries.order_by(order_by)
 
     @classmethod
     def build_entry_data(cls, entry: WaitingListEntry, cache: dict):
@@ -201,6 +338,33 @@ class WaitingListApiView(APIView):
         ]
         for field in personal_data_fields:
             setattr(entry, field, getattr(entry.member, field))
+
+
+class WaitingListGetCountsApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="counts",
+                fields={
+                    "all": serializers.IntegerField(),
+                    "new_members": serializers.IntegerField(),
+                    "existing_members": serializers.IntegerField(),
+                },
+            )
+        },
+    )
+    def get(self, request):
+        entries = WaitingListEntry.objects.all()
+
+        return Response(
+            {
+                "all": entries.count(),
+                "new_members": entries.filter(member__isnull=True).count(),
+                "existing_members": entries.filter(member__isnull=False).count(),
+            }
+        )
 
 
 class WaitingListEntryViewSet(viewsets.ModelViewSet):
@@ -846,9 +1010,8 @@ class PublicConfirmWaitingListEntryView(APIView):
             cache=self.cache,
         )
 
-    @classmethod
     def apply_pickup_location_changes(
-        cls,
+        self,
         waiting_list_entry: WaitingListEntry,
         contract_start_date: datetime.date,
         actor: TapirUser,
@@ -865,4 +1028,5 @@ class PublicConfirmWaitingListEntryView(APIView):
             member=member,
             valid_from=contract_start_date,
             actor=actor,
+            cache=self.cache,
         )

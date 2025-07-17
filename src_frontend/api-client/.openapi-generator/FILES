@@ -24,6 +24,7 @@ models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/CoopShareTransaction.ts
 models/CountryEnum.ts
+models/Counts.ts
 models/CreateMissingTriggerMailRequest.ts
 models/CsvExportModel.ts
 models/CsvExportModelRequest.ts

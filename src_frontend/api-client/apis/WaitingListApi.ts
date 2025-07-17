@@ -14,6 +14,7 @@
 
 import * as runtime from "../runtime";
 import type {
+  Counts,
   DisableLinkSerializerRequest,
   OrderConfirmationResponse,
   PaginatedWaitingListEntryDetailsList,
@@ -28,6 +29,7 @@ import type {
   WaitingListEntryUpdateRequest,
 } from "../models/index";
 import {
+  CountsFromJSON,
   DisableLinkSerializerRequestToJSON,
   OrderConfirmationResponseFromJSON,
   PaginatedWaitingListEntryDetailsListFromJSON,
@@ -47,8 +49,15 @@ export interface WaitingListApiDisableWaitingListLinkCreateRequest {
 }
 
 export interface WaitingListApiListListRequest {
+  category: string;
+  currentPickupLocationId: string;
+  entryType: WaitingListApiListListEntryTypeEnum;
   limit: number;
+  memberType: WaitingListApiListListMemberTypeEnum;
   offset: number;
+  orderBy: WaitingListApiListListOrderByEnum;
+  pickupLocationWish: string;
+  productWish: string;
 }
 
 export interface WaitingListApiPublicConfirmWaitingListEntryCreateRequest {
@@ -145,6 +154,48 @@ export class WaitingListApi extends runtime.BaseAPI {
 
   /**
    */
+  async waitingListApiCountsRetrieveRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Counts>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/waiting_list/api/counts`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      CountsFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async waitingListApiCountsRetrieve(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Counts> {
+    const response = await this.waitingListApiCountsRetrieveRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
   async waitingListApiDisableWaitingListLinkCreateRaw(
     requestParameters: WaitingListApiDisableWaitingListLinkCreateRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -210,10 +261,38 @@ export class WaitingListApi extends runtime.BaseAPI {
     requestParameters: WaitingListApiListListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<PaginatedWaitingListEntryDetailsList>> {
+    if (requestParameters["category"] == null) {
+      throw new runtime.RequiredError(
+        "category",
+        'Required parameter "category" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
+    if (requestParameters["currentPickupLocationId"] == null) {
+      throw new runtime.RequiredError(
+        "currentPickupLocationId",
+        'Required parameter "currentPickupLocationId" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
+    if (requestParameters["entryType"] == null) {
+      throw new runtime.RequiredError(
+        "entryType",
+        'Required parameter "entryType" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
     if (requestParameters["limit"] == null) {
       throw new runtime.RequiredError(
         "limit",
         'Required parameter "limit" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
+    if (requestParameters["memberType"] == null) {
+      throw new runtime.RequiredError(
+        "memberType",
+        'Required parameter "memberType" was null or undefined when calling waitingListApiListList().',
       );
     }
 
@@ -224,14 +303,65 @@ export class WaitingListApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters["orderBy"] == null) {
+      throw new runtime.RequiredError(
+        "orderBy",
+        'Required parameter "orderBy" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
+    if (requestParameters["pickupLocationWish"] == null) {
+      throw new runtime.RequiredError(
+        "pickupLocationWish",
+        'Required parameter "pickupLocationWish" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
+    if (requestParameters["productWish"] == null) {
+      throw new runtime.RequiredError(
+        "productWish",
+        'Required parameter "productWish" was null or undefined when calling waitingListApiListList().',
+      );
+    }
+
     const queryParameters: any = {};
+
+    if (requestParameters["category"] != null) {
+      queryParameters["category"] = requestParameters["category"];
+    }
+
+    if (requestParameters["currentPickupLocationId"] != null) {
+      queryParameters["current_pickup_location_id"] =
+        requestParameters["currentPickupLocationId"];
+    }
+
+    if (requestParameters["entryType"] != null) {
+      queryParameters["entry_type"] = requestParameters["entryType"];
+    }
 
     if (requestParameters["limit"] != null) {
       queryParameters["limit"] = requestParameters["limit"];
     }
 
+    if (requestParameters["memberType"] != null) {
+      queryParameters["member_type"] = requestParameters["memberType"];
+    }
+
     if (requestParameters["offset"] != null) {
       queryParameters["offset"] = requestParameters["offset"];
+    }
+
+    if (requestParameters["orderBy"] != null) {
+      queryParameters["order_by"] = requestParameters["orderBy"];
+    }
+
+    if (requestParameters["pickupLocationWish"] != null) {
+      queryParameters["pickup_location_wish"] =
+        requestParameters["pickupLocationWish"];
+    }
+
+    if (requestParameters["productWish"] != null) {
+      queryParameters["product_wish"] = requestParameters["productWish"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -1043,3 +1173,35 @@ export class WaitingListApi extends runtime.BaseAPI {
     return await response.value();
   }
 }
+
+/**
+ * @export
+ */
+export const WaitingListApiListListEntryTypeEnum = {
+  Any: "any",
+  MustHavePickupLocationWish: "must_have_pickup_location_wish",
+  MustHaveProductWish: "must_have_product_wish",
+} as const;
+export type WaitingListApiListListEntryTypeEnum =
+  (typeof WaitingListApiListListEntryTypeEnum)[keyof typeof WaitingListApiListListEntryTypeEnum];
+/**
+ * @export
+ */
+export const WaitingListApiListListMemberTypeEnum = {
+  All: "all",
+  ExistingMembers: "existing_members",
+  NewMembers: "new_members",
+} as const;
+export type WaitingListApiListListMemberTypeEnum =
+  (typeof WaitingListApiListListMemberTypeEnum)[keyof typeof WaitingListApiListListMemberTypeEnum];
+/**
+ * @export
+ */
+export const WaitingListApiListListOrderByEnum = {
+  CreatedAt: "-created_at",
+  MemberSince: "-member_since",
+  CreatedAt2: "created_at",
+  MemberSince2: "member_since",
+} as const;
+export type WaitingListApiListListOrderByEnum =
+  (typeof WaitingListApiListListOrderByEnum)[keyof typeof WaitingListApiListListOrderByEnum];
