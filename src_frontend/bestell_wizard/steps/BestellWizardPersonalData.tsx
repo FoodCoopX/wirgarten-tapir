@@ -182,22 +182,24 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group>
-            <Form.Label>Geburtsdatum</Form.Label>
-            <Form.Control
-              onChange={(event) => {
-                personalData.birthdate = new Date(event.target.value);
-                updatePersonalData();
-              }}
-              value={dayjs(personalData.birthdate).format("YYYY-MM-DD")}
-              placeholder={"Geburtsdatum"}
-              type={"date"}
-              isInvalid={
-                personalData.birthdate !== undefined &&
-                !isBirthdateValid(personalData.birthdate)
-              }
-            />
-          </Form.Group>
+          {!waitingListModeEnabled && (
+            <Form.Group>
+              <Form.Label>Geburtsdatum</Form.Label>
+              <Form.Control
+                onChange={(event) => {
+                  personalData.birthdate = new Date(event.target.value);
+                  updatePersonalData();
+                }}
+                value={dayjs(personalData.birthdate).format("YYYY-MM-DD")}
+                placeholder={"Geburtsdatum"}
+                type={"date"}
+                isInvalid={
+                  personalData.birthdate !== undefined &&
+                  !isBirthdateValid(personalData.birthdate)
+                }
+              />
+            </Form.Group>
+          )}
         </Col>
       </Row>
 

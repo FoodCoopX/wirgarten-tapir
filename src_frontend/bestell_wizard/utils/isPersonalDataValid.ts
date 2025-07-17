@@ -4,7 +4,10 @@ import { isEmailValid } from "./isEmailValid.ts";
 import { isBirthdateValid } from "./isBirthdateValid.ts";
 import { isPhoneNumberValid } from "./isPhoneNumberValid.ts";
 
-export function isPersonalDataValid(personalData: PersonalData): boolean {
+export function isPersonalDataValid(
+  personalData: PersonalData,
+  waitingListModeEnabled: boolean,
+): boolean {
   if (!personalData.firstName) return false;
   if (!personalData.lastName) return false;
   if (!personalData.email) return false;
@@ -13,13 +16,19 @@ export function isPersonalDataValid(personalData: PersonalData): boolean {
   if (!personalData.postcode) return false;
   if (!personalData.city) return false;
   if (!personalData.country) return false;
-  if (!personalData.birthdate) return false;
-  if (!personalData.accountOwner) return false;
-  if (!personalData.iban) return false;
 
   if (!isPhoneNumberValid(personalData.phoneNumber)) {
   }
-  if (!isIbanValid(personalData.iban)) return false;
+
   if (!isEmailValid(personalData.email)) return false;
-  return isBirthdateValid(personalData.birthdate);
+
+  if (!waitingListModeEnabled) {
+    if (!personalData.birthdate) return false;
+    if (!personalData.accountOwner) return false;
+    if (!personalData.iban) return false;
+    if (!isIbanValid(personalData.iban)) return false;
+    if (!isBirthdateValid(personalData.birthdate)) return false;
+  }
+
+  return true;
 }

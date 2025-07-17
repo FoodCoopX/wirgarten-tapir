@@ -144,7 +144,7 @@ export function buildNextButtonParametersForPersonalData(
   waitingListModeEnabled: boolean,
 ): NextButtonParameters {
   let text = undefined;
-  if (!isPersonalDataValid(personalData)) {
+  if (!isPersonalDataValid(personalData, waitingListModeEnabled)) {
     text = "Vervollständige deine Daten um weiter zu gehen";
   }
 
@@ -158,10 +158,12 @@ export function buildNextButtonParametersForPersonalData(
 
   let disabled;
   if (waitingListModeEnabled) {
-    disabled = !isPersonalDataValid(personalData);
+    disabled = !isPersonalDataValid(personalData, waitingListModeEnabled);
   } else {
     disabled =
-      !isPersonalDataValid(personalData) || !sepaAllowed || !contractAccepted;
+      !isPersonalDataValid(personalData, waitingListModeEnabled) ||
+      !sepaAllowed ||
+      !contractAccepted;
   }
 
   return {
