@@ -13,10 +13,15 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
+    PickupLocationCapacityGeneralChecker,
+)
 from tapir.subscriptions.serializers import (
     PublicSubscriptionSerializer,
     UpdateSubscriptionsRequestSerializer,
     OrderConfirmationResponseSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
+    MemberProfileCapacityCheckRequestSerializer,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -24,6 +29,7 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
@@ -290,4 +296,59 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
             new_subscriptions=new_subscriptions,
             cache=self.cache,
+        )
+
+
+class MemberProfileCapacityCheckApiView(APIView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: BestellWizardCapacityCheckResponseSerializer},
+        request=MemberProfileCapacityCheckRequestSerializer,
+    )
+    def post(self, request):
+        serializer = MemberProfileCapacityCheckRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member_id = serializer.validated_data["member_id"]
+        check_permission_or_self(member_id, request)
+        member = get_object_or_404(Member, id=member_id)
+
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+
+        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+
+        ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
+            order_with_all_product_types=order,
+            member_id=None,
+            subscription_start_date=subscription_start_date,
+            cache=self.cache,
+        )
+
+        if len(ids_of_product_types_over_capacity) == 0:
+            pickup_location = MemberPickupLocationService.get_member_pickup_location(
+                member=member, reference_date=subscription_start_date
+            )
+            if (
+                pickup_location is not None
+                and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
+                    pickup_location=pickup_location,
+                    order=order,
+                    already_registered_member=member,
+                    subscription_start=subscription_start_date,
+                    cache=self.cache,
+                )
+            ):
+                ids_of_product_types_over_capacity.append(list(order.keys())[0].type_id)
+
+        response_data = {
+            "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
+            "ids_of_products_over_capacity": [],
+        }
+        return Response(
+            BestellWizardCapacityCheckResponseSerializer(response_data).data
         )

@@ -68,6 +68,11 @@ urlpatterns = [
         member_profile.UpdateSubscriptionsApiView.as_view(),
         name="update_subscription",
     ),
+    path(
+        "api/member_profile_capacity_check",
+        member_profile.MemberProfileCapacityCheckApiView.as_view(),
+        name="member_profile_capacity_check",
+    ),
 ]
 
 router = DefaultRouter()

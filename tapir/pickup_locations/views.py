@@ -372,7 +372,7 @@ class PickupLocationCapacityCheckApiView(APIView):
         response_data = {
             "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
-                ordered_products_to_quantity_map=order,
+                order=order,
                 already_registered_member=None,
                 subscription_start=get_next_contract_start_date(cache=self.cache),
                 cache=self.cache,
@@ -499,7 +499,7 @@ class ChangeMemberPickupLocationApiView(APIView):
 
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=new_pickup_location,
-            ordered_products_to_quantity_map=order,
+            order=order,
             already_registered_member=member,
             subscription_start=change_date,
             cache=self.cache,

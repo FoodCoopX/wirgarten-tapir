@@ -13,6 +13,7 @@ from tapir.pickup_locations.services.share_capacities_service import (
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
 )
+from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Member,
@@ -32,7 +33,7 @@ class PickupLocationCapacityModeShareChecker:
     def check_for_picking_mode_share(
         cls,
         pickup_location: PickupLocation,
-        ordered_products_to_quantity_map: Dict[Product, int],
+        order: TapirOrder,
         already_registered_member: Member | None,
         subscription_start: datetime.date,
         cache: Dict,
@@ -54,7 +55,7 @@ class PickupLocationCapacityModeShareChecker:
                 member=already_registered_member,
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
-                ordered_product_to_quantity_map=ordered_products_to_quantity_map,
+                ordered_product_to_quantity_map=order,
                 cache=cache,
             ):
                 return False

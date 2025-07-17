@@ -1045,6 +1045,32 @@ paths:
                 items:
                   $ref: '#/components/schemas/MemberDataToConfirm'
           description: ''
+  /subscriptions/api/member_profile_capacity_check:
+    post:
+      operationId: subscriptions_api_member_profile_capacity_check_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberProfileCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberProfileCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberProfileCapacityCheckRequestRequest'
+        required: true
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
+          description: ''
   /subscriptions/api/member_subscriptions:
     get:
       operationId: subscriptions_api_member_subscriptions_list
@@ -5405,6 +5431,19 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MemberProfileCapacityCheckRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+      - member_id
+      - shopping_cart
     MinimumNumberOfSharesResponse:
       type: object
       properties:

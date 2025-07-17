@@ -24,6 +24,7 @@ import type {
   CancelSubscriptionsViewResponse,
   ExtendedProduct,
   MemberDataToConfirm,
+  MemberProfileCapacityCheckRequestRequest,
   OrderConfirmationResponse,
   PatchedExtendedProductRequest,
   Product,
@@ -42,6 +43,7 @@ import {
   CancelSubscriptionsViewResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
+  MemberProfileCapacityCheckRequestRequestToJSON,
   OrderConfirmationResponseFromJSON,
   PatchedExtendedProductRequestToJSON,
   ProductFromJSON,
@@ -70,6 +72,10 @@ export interface SubscriptionsApiExtendedProductPartialUpdateRequest {
 
 export interface SubscriptionsApiExtendedProductRetrieveRequest {
   productId?: string;
+}
+
+export interface SubscriptionsApiMemberProfileCapacityCheckCreateRequest {
+  memberProfileCapacityCheckRequestRequest: MemberProfileCapacityCheckRequestRequest;
 }
 
 export interface SubscriptionsApiMemberSubscriptionsListRequest {
@@ -505,6 +511,66 @@ export class SubscriptionsApi extends runtime.BaseAPI {
   ): Promise<Array<MemberDataToConfirm>> {
     const response =
       await this.subscriptionsApiMemberDataToConfirmListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiMemberProfileCapacityCheckCreateRaw(
+    requestParameters: SubscriptionsApiMemberProfileCapacityCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<BestellWizardCapacityCheckResponse>> {
+    if (requestParameters["memberProfileCapacityCheckRequestRequest"] == null) {
+      throw new runtime.RequiredError(
+        "memberProfileCapacityCheckRequestRequest",
+        'Required parameter "memberProfileCapacityCheckRequestRequest" was null or undefined when calling subscriptionsApiMemberProfileCapacityCheckCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/member_profile_capacity_check`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: MemberProfileCapacityCheckRequestRequestToJSON(
+          requestParameters["memberProfileCapacityCheckRequestRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      BestellWizardCapacityCheckResponseFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async subscriptionsApiMemberProfileCapacityCheckCreate(
+    requestParameters: SubscriptionsApiMemberProfileCapacityCheckCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<BestellWizardCapacityCheckResponse> {
+    const response =
+      await this.subscriptionsApiMemberProfileCapacityCheckCreateRaw(
+        requestParameters,
+        initOverrides,
+      );
     return await response.value();
   }
 

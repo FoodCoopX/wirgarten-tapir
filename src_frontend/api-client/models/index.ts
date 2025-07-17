@@ -53,6 +53,7 @@ export * from './Member';
 export * from './MemberCountry';
 export * from './MemberDataToConfirm';
 export * from './MemberJokerInformation';
+export * from './MemberProfileCapacityCheckRequestRequest';
 export * from './MinimumNumberOfSharesResponse';
 export * from './MissingTrigger';
 export * from './Mpl';

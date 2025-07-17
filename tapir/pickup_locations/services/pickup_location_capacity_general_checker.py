@@ -14,10 +14,10 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checke
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
 )
+from tapir.subscriptions.types import TapirOrder
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
-    Product,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
@@ -27,7 +27,7 @@ class PickupLocationCapacityGeneralChecker:
     def does_pickup_location_have_enough_capacity_to_add_subscriptions(
         cls,
         pickup_location: PickupLocation,
-        ordered_products_to_quantity_map: Dict[Product, int],
+        order: TapirOrder,
         already_registered_member: Member | None,
         subscription_start: datetime.date,
         cache: Dict,
@@ -47,7 +47,7 @@ class PickupLocationCapacityGeneralChecker:
         if picking_mode == PICKING_MODE_SHARE:
             return PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
                 pickup_location=pickup_location,
-                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                order=order,
                 already_registered_member=already_registered_member,
                 subscription_start=subscription_start,
                 cache=cache,
@@ -56,7 +56,7 @@ class PickupLocationCapacityGeneralChecker:
             return (
                 PickupLocationCapacityModeBasketChecker.check_for_picking_mode_basket(
                     pickup_location=pickup_location,
-                    ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                    order=order,
                     already_registered_member=already_registered_member,
                     subscription_start=subscription_start,
                     cache=cache,

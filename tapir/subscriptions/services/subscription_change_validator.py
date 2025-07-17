@@ -196,7 +196,7 @@ class SubscriptionChangeValidator:
 
         if not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=member,
             subscription_start=subscription_start_date,
             cache=cache,

@@ -13,7 +13,6 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { updateProductsAndProductTypesOverCapacity } from "../../bestell_wizard/utils/updateProductsAndProductTypesOverCapacity.ts";
 import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import SubscriptionEditStepPickupLocation from "./steps/SubscriptionEditStepPickupLocation.tsx";
@@ -126,12 +125,21 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   useEffect(() => {
     if (!show) return;
 
-    updateProductsAndProductTypesOverCapacity(
-      shoppingCart,
-      setProductIdsOverCapacity,
-      setProductTypeIdsOverCapacity,
-      setCheckingCapacities,
-    );
+    setCheckingCapacities(true);
+
+    subscriptionsApi
+      .subscriptionsApiMemberProfileCapacityCheckCreate({
+        memberProfileCapacityCheckRequestRequest: {
+          shoppingCart: shoppingCart,
+          memberId: memberId,
+        },
+      })
+      .then((response) => {
+        setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
+        setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
+      })
+      .catch(handleRequestError)
+      .finally(() => setCheckingCapacities(false));
   }, [shoppingCart, show]);
 
   useEffect(() => {

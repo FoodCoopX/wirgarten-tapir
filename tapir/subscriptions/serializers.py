@@ -277,3 +277,8 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
     sepa_allowed = serializers.BooleanField()
     pickup_location_id = serializers.CharField(required=False)
+
+
+class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())

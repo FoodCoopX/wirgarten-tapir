@@ -36,7 +36,7 @@ class OrderValidator:
             order=order, cache=cache
         ) and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=order,
+            order=order,
             already_registered_member=member,
             subscription_start=contract_start_date,
             cache=cache,

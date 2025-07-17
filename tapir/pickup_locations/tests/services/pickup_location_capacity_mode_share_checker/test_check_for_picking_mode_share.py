@@ -43,7 +43,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
+            order=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -89,7 +89,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
 
         result = PickupLocationCapacityModeShareChecker.check_for_picking_mode_share(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_product_to_quantity_map,
+            order=ordered_product_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,

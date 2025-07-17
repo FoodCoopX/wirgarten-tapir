@@ -59,7 +59,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -105,7 +105,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -150,7 +150,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
 
         result = PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -180,7 +180,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         with self.assertRaises(ImproperlyConfigured):
             PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
-                ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+                order=ordered_products_to_quantity_map,
                 already_registered_member=None,
                 subscription_start=subscription_start,
                 cache=cache,

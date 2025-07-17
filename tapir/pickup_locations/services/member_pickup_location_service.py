@@ -35,13 +35,22 @@ class MemberPickupLocationService:
     @classmethod
     def get_member_pickup_location_id(
         cls, member: Member, reference_date: datetime.date
-    ) -> int | None:
+    ) -> str | None:
         if not hasattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID):
             member = cls.annotate_member_queryset_with_pickup_location_at_date(
                 Member.objects.filter(id=member.id), reference_date
             ).get()
 
         return getattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID)
+
+    @classmethod
+    def get_member_pickup_location(
+        cls, member: Member, reference_date: datetime.date
+    ) -> PickupLocation | None:
+        pickup_location_id = cls.get_member_pickup_location_id(member, reference_date)
+        if pickup_location_id is None:
+            return None
+        return PickupLocation.objects.get(id=pickup_location_id)
 
     @classmethod
     def get_members_ids_at_pickup_location(
