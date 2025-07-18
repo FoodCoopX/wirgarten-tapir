@@ -177,7 +177,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
                   eventKey={"new_members"}
                   title={
                     <span>
-                      Neue Mitglieder <Badge>{counts?.newMembers}</Badge>
+                      Interessent*innen <Badge>{counts?.newMembers}</Badge>
                     </span>
                   }
                 />
