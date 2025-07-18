@@ -22,7 +22,7 @@ from django.forms import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from tapir.accounts.models import KeycloakUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.subscriptions.services.base_product_type_service import (
@@ -111,7 +111,7 @@ class PersonalDataForm(FormWithRequestMixin, ModelForm):
 
     def _validate_duplicate_email_keycloak(self):
         try:
-            kc = KeycloakUser.get_keycloak_client()
+            kc = KeycloakUserManager.get_keycloak_client()
             keycloak_id = kc.get_user_id(self.cleaned_data["email"])
             if keycloak_id is not None:
                 raise ValidationError(

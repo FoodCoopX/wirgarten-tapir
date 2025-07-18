@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.generic.models import IBANField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from tapir.accounts.models import TapirUser, KeycloakUserManager
+from tapir.accounts.models import TapirUser, KeycloakUserQuerySetManager
 from tapir.configuration.parameter import get_parameter_value
 from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry, UpdateModelLogEntry
@@ -336,7 +336,7 @@ class MemberQuerySet(models.QuerySet):
 class TapirUserManager(models.Manager.from_queryset(MemberQuerySet)):
     @staticmethod
     def normalize_email(email: str) -> str:
-        return KeycloakUserManager.normalize_email(email)
+        return KeycloakUserQuerySetManager.normalize_email(email)
 
 
 class Member(TapirUser):

@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from localflavor.generic.validators import IBANValidator
 
-from tapir.accounts.models import KeycloakUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import get_today
 
@@ -61,7 +61,7 @@ class PersonalDataValidator:
                 "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
             )
 
-        kc = KeycloakUser.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client()
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
             raise ValidationError(

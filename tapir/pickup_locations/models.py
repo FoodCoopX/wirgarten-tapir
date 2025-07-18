@@ -36,11 +36,13 @@ class PickupLocationChangedLogEntry(LogEntry):
         actor: TapirUser | None,
         user: TapirUser | None,
         member_pickup_location: MemberPickupLocation,
-        old_pickup_location: PickupLocation,
+        old_pickup_location: PickupLocation | None,
     ):
         super().populate(actor, user)
         self.new_pickup_location_name = member_pickup_location.pickup_location.name
-        self.old_pickup_location_name = old_pickup_location.name
+        self.old_pickup_location_name = (
+            old_pickup_location.name if old_pickup_location is not None else "Keine"
+        )
         self.valid_from = member_pickup_location.valid_from
 
         return self

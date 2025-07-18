@@ -7,12 +7,13 @@ from django.db import models, transaction
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
+from keycloak import KeycloakAdmin
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir import utils
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.settings import DEBUG
@@ -30,7 +31,7 @@ class KeycloakUserQuerySet(models.QuerySet):
         super().delete(*args, **kwargs)
 
 
-class KeycloakUserManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
+class KeycloakUserQuerySetManager(models.Manager.from_queryset(KeycloakUserQuerySet)):
     @staticmethod
     def normalize_email(email: str) -> str:
         return email.strip().lower()
@@ -40,7 +41,7 @@ class KeycloakUser(AbstractUser):
     class Meta:
         abstract = True
 
-    objects = KeycloakUserManager()
+    objects = KeycloakUserQuerySetManager()
 
     _kc: KeycloakAdmin = None
     roles: [str] = []
@@ -58,32 +59,15 @@ class KeycloakUser(AbstractUser):
     )
 
     def email_verified(self):
-        kc = self.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client()
         try:
             kc_user = kc.get_user(self.keycloak_id)
             return kc_user["emailVerified"]
         except Exception:
             return False
 
-    @classmethod
-    def get_keycloak_client(self):
-        if not self._kc:
-            config = settings.KEYCLOAK_ADMIN_CONFIG
-
-            keycloak_connection = KeycloakOpenIDConnection(
-                server_url=config["SERVER_URL"],
-                realm_name=config["REALM_NAME"],
-                client_id=config["CLIENT_ID"],
-                client_secret_key=config["CLIENT_SECRET_KEY"],
-                verify=True,
-            )
-
-            self._kc = KeycloakAdmin(connection=keycloak_connection)
-
-        return self._kc
-
     def send_verify_email(self):
-        kc = self.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client()
         kc.send_verify_email(
             user_id=self.keycloak_id,
             redirect_uri=settings.SITE_URL,
@@ -112,85 +96,45 @@ class KeycloakUser(AbstractUser):
             super().save(*args, **kwargs)
             return
 
-        kc = self.get_keycloak_client()
+        keycloak_client = KeycloakUserManager.get_keycloak_client()
         has_kc_account = self.keycloak_id is not None
         if has_kc_account:
             try:  # try fetch the keycloak user to see if it exists
-                kc.get_user(self.keycloak_id)
+                keycloak_client.get_user(self.keycloak_id)
             except:
                 has_kc_account = False
 
-        if not has_kc_account:  # Keycloak User does not exist yet --> create
-            data = {
-                "username": self.email,
-                "email": self.email,
-                "firstName": self.first_name,
-                "lastName": self.last_name,
-                "enabled": True,
-            }
-
-            keycloak_id = kc.get_user_id(self.email)
-            if keycloak_id is not None:
-                if not TapirUser.objects.filter(keycloak_id=keycloak_id).exists():
-                    self.keycloak_id = keycloak_id
-                    kc.update_user(user_id=self.keycloak_id, payload=data)
-            else:
-                if initial_password:
-                    data["credentials"] = [
-                        {"value": initial_password, "type": "password"}
-                    ]
-                    data["emailVerified"] = True
-                else:
-                    data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
-
-                if self.is_superuser:
-                    group = kc.get_group_by_path(path="/superuser")
-                    if group:
-                        data["groups"] = ["superuser"]
-
-                self.keycloak_id = kc.create_user(data)
-
-                if not self.email.endswith("@example.com"):
-                    try:
-                        self.send_verify_email()
-                    except Exception as e:
-                        print(
-                            f"Failed to send verify email to new user: ",
-                            e,
-                            f" (email: '{self.email}', id: '{self.id}', keycloak_id: '{self.keycloak_id}'): ",
-                        )
-
-        else:  # Update --> change of keycloak data if necessary
-            original = type(self).objects.get(id=self.id)
-            email_changed = original.email != self.email
-            first_name_changed = original.first_name != self.first_name
-            last_name_changed = original.last_name != self.last_name
-
-            if first_name_changed or last_name_changed:
-                data = {"firstName": self.first_name, "lastName": self.last_name}
-                kc.update_user(user_id=self.keycloak_id, payload=data)
-
-            if email_changed:
-                if self.email_verified():
-                    from tapir.accounts.services.mail_change_service import (
-                        MailChangeService,
-                    )
-
-                    MailChangeService.start_email_change_process(
-                        user=self, new_email=self.email, orig_email=original.email
-                    )
-                    # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
-                    self.email = original.email
-                else:  # in this case, don't start the email change process, just send the keycloak email to the new address and resend the link
-                    kc.update_user(
-                        user_id=self.keycloak_id, payload={"email": self.email}
-                    )
-                    self.send_verify_email()
+        if has_kc_account:
+            self_before_save = type(self).objects.get(id=self.id)
+            transaction.on_commit(
+                partial(
+                    KeycloakUserManager.update_keycloak_user,
+                    user=self,
+                    keycloak_client=keycloak_client,
+                    old_first_name=self_before_save.first_name,
+                    old_last_name=self_before_save.last_name,
+                    old_email=self_before_save.email,
+                    new_first_name=self.first_name,
+                    new_last_name=self.last_name,
+                    new_email=self.email,
+                )
+            )
+            # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
+            self.email = self_before_save.email
+        else:
+            transaction.on_commit(
+                partial(
+                    KeycloakUserManager.create_keycloak_user,
+                    user=self,
+                    keycloak_client=keycloak_client,
+                    initial_password=initial_password,
+                )
+            )
 
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        kc = self.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client()
         if self.keycloak_id:
             try:
                 kc.delete_user(self.keycloak_id)
@@ -199,7 +143,7 @@ class KeycloakUser(AbstractUser):
         super().delete(*args, **kwargs)
 
     def change_email(self, new_email: str):
-        kc = self.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client()
         kc.update_user(
             user_id=self.keycloak_id,
             payload={
