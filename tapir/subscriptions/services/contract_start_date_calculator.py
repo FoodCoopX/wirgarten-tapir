@@ -24,7 +24,7 @@ class ContractStartDateCalculator:
         return current_date
 
     @classmethod
-    def can_contract_start_on_date(
+    def can_contract_start_in_week(
         cls, reference_date: datetime.date, cache: dict
     ) -> bool:
         date_limit = DateLimitForDeliveryChangeCalculator.calculate_date_limit_for_delivery_changes_in_week(
