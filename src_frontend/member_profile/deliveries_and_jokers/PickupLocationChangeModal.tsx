@@ -215,7 +215,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             ? selectedPickupLocations[0].name
             : "") +
           "). Du kannst eine andere Station wählen, oder dich auf die Warteliste setzen lassen. " +
-          "In dem Fall kannst du mehrere Wünsche eintragen, um vielleicht früher einsteigen zu dürfen."
+          "Du kannst dich auch auf die Warteliste von bis zu drei Verteilstationen setzen lassen."
         }
         title={"Verteilstation ausgelastet"}
         open={showWaitingListConfirmationModal}
