@@ -283,7 +283,7 @@ div.option.selected {
 }
 
 .navbar.sticky-top {
-  z-index: 2010;
+  z-index: 995;
 }
 
 .custom-sidebar {
@@ -292,7 +292,7 @@ div.option.selected {
   position: absolute;
   padding-top: 4.5em;
   white-space: nowrap;
-  z-index: 2000;
+  z-index: 990;
   box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
 }
 

@@ -70,6 +70,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
@@ -976,9 +977,14 @@ class PublicConfirmWaitingListEntryView(APIView):
     ):
         contract_start_date = get_next_contract_start_date(cache=self.cache)
 
+        pickup_location_change_valid_from = contract_start_date
+        if not waiting_list_entry.product_wishes.exists():
+            pickup_location_change_valid_from = calculate_pickup_location_change_date(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
         self.apply_pickup_location_changes(
             waiting_list_entry=waiting_list_entry,
-            contract_start_date=contract_start_date,
+            valid_from=pickup_location_change_valid_from,
             actor=actor,
             member=member,
         )
@@ -1013,7 +1019,7 @@ class PublicConfirmWaitingListEntryView(APIView):
     def apply_pickup_location_changes(
         self,
         waiting_list_entry: WaitingListEntry,
-        contract_start_date: datetime.date,
+        valid_from: datetime.date,
         actor: TapirUser,
         member: Member,
     ):
@@ -1026,7 +1032,7 @@ class PublicConfirmWaitingListEntryView(APIView):
         MemberPickupLocationService.link_member_to_pickup_location(
             pickup_location_wish.pickup_location_id,
             member=member,
-            valid_from=contract_start_date,
+            valid_from=valid_from,
             actor=actor,
             cache=self.cache,
         )
