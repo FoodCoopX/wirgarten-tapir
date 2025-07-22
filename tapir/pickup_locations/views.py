@@ -45,6 +45,9 @@ from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
 )
 from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -58,7 +61,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, check_permission_or_self
@@ -363,7 +365,9 @@ class PickupLocationCapacityCheckApiView(APIView):
                 pickup_location=pickup_location,
                 order=order,
                 already_registered_member=None,
-                subscription_start=get_next_contract_start_date(cache=self.cache),
+                subscription_start=ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
                 cache=self.cache,
             )
         }
@@ -395,7 +399,9 @@ class GetMemberPickupLocationApiView(APIView):
         check_permission_or_self(member_id, request)
 
         member = get_object_or_404(Member, id=member_id)
-        reference_date = get_next_contract_start_date(cache=self.cache)
+        reference_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
         pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
             member=member, reference_date=reference_date
         )

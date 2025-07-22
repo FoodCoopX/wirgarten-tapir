@@ -69,6 +69,9 @@ class ParameterKeys:
     SUBSCRIPTION_WAITING_LIST_CATEGORIES = (
         f"{PREFIX}.subscriptions.waiting_list_categories"
     )
+    SUBSCRIPTION_BUFFER_TIME_BEFORE_START = (
+        f"{PREFIX}.subscriptions.buffer_time_before_start"
+    )
     TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
     TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
 

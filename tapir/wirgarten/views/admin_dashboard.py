@@ -14,12 +14,16 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
@@ -30,7 +34,6 @@ from tapir.wirgarten.models import (
     Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
     get_total_payment_amount,
@@ -97,7 +100,11 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
             return context
         self.harvest_share_type = base_product_type
 
-        next_contract_start_date = get_next_contract_start_date(cache=self.cache)
+        next_contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+        )
         next_growing_period = get_next_growing_period(
             next_contract_start_date, cache=self.cache
         )
@@ -283,7 +290,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
         prefix="current",
     ):
         if reference_date is None:
-            reference_date = get_next_contract_start_date(cache=self.cache)
+            reference_date = get_first_of_next_month(date=get_today(cache=self.cache))
 
         active_product_capacities = {
             c.product_type.id: c

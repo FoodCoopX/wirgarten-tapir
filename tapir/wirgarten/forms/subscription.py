@@ -16,6 +16,9 @@ from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT, SOLIDARITY_UNIT_
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
@@ -49,7 +52,6 @@ from tapir.wirgarten.service.delivery import (
 )
 from tapir.wirgarten.service.member import (
     change_pickup_location,
-    get_next_contract_start_date,
     get_or_create_mandate_ref,
     send_order_confirmation,
 )
@@ -82,7 +84,12 @@ class BaseProductForm(forms.Form):
 
         self.start_date = kwargs.pop(
             "start_date",
-            initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
+            initial.get(
+                "start_date",
+                ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
+            ),
         )
         self.intro_templates = initial.pop("intro_templates", None)
         self.outro_templates = initial.pop("outro_templates", None)
@@ -635,7 +642,12 @@ class AdditionalProductForm(forms.Form):
 
         self.start_date = kwargs.pop(
             "start_date",
-            initial.get("start_date", get_next_contract_start_date(cache=self.cache)),
+            initial.get(
+                "start_date",
+                ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
+            ),
         )
         super().__init__(*args, **kwargs)
 

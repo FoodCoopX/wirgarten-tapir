@@ -13,6 +13,9 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
@@ -34,7 +37,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
-    get_next_contract_start_date,
     buy_cooperative_shares,
 )
 from tapir.wirgarten.tasks import generate_member_numbers
@@ -227,10 +229,11 @@ class UserGenerator:
     ):
         mandate_ref = get_or_create_mandate_ref(member, cache=cache)
         future_growing_period = cls.get_future_growing_period(cache=cache)
-        start_date = get_next_contract_start_date(
-            cls.get_random_date_in_range_biased_towards_lower_end(
+        start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=cls.get_random_date_in_range_biased_towards_lower_end(
                 member.date_joined.date(), future_growing_period.end_date
-            )
+            ),
+            cache=cache,
         )
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=start_date, cache=cache

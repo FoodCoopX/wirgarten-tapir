@@ -266,9 +266,8 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
         response = self.send_add_subscription_request(3, 0)
 
         self.assertStatusCode(response, 200)
-
         subscription: Subscription = Subscription.objects.get(
-            start_date=datetime.date(year=2023, month=7, day=1)
+            start_date=datetime.date(year=2023, month=6, day=19)
         )
         self.assertEqual(member.id, subscription.member_id)
         self.assertEqual(3, subscription.quantity)

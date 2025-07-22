@@ -38,6 +38,9 @@ from tapir.subscriptions.serializers import OrderConfirmationResponseSerializer
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
@@ -71,7 +74,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
@@ -975,7 +977,9 @@ class PublicConfirmWaitingListEntryView(APIView):
     def apply_changes(
         self, waiting_list_entry: WaitingListEntry, actor: TapirUser, member: Member
     ):
-        contract_start_date = get_next_contract_start_date(cache=self.cache)
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         pickup_location_change_valid_from = contract_start_date
         if not waiting_list_entry.product_wishes.exists():

@@ -17,6 +17,9 @@ from tapir.log.models import TextLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.member import (
     CancellationReasonForm,
@@ -39,7 +42,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_wait_list_entry,
-    get_next_contract_start_date,
     send_contract_change_confirmation,
     send_order_confirmation,
 )
@@ -221,7 +223,9 @@ def get_add_subscription_form(request, **kwargs):
 
     if is_base_product_type:
         form_type = BaseProductForm
-        next_start_date = get_next_contract_start_date(cache=cache)
+        next_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
         next_period = get_next_growing_period(cache=cache)
         if not is_product_type_available(
             product_type.id,

@@ -621,6 +621,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
+            key=ParameterKeys.SUBSCRIPTION_BUFFER_TIME_BEFORE_START,
+            label="Vorlaufzeit zu Vertragsstart",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=0,
+            description="Anzahl an Tage die zwischen vor ein Vertrag starten kann.",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=1,
+        )
+
+        parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED,
             label="Probezeit einschalten",
             datatype=TapirParameterDatatype.BOOLEAN,

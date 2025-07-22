@@ -32,6 +32,9 @@ from tapir.subscriptions.serializers import (
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
     EarliestPossibleContractStartDateCalculator,
 )
@@ -55,7 +58,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    get_next_contract_start_date,
     send_order_confirmation,
     buy_cooperative_shares,
 )
@@ -84,7 +86,9 @@ class BestellWizardConfirmOrderApiView(APIView):
         serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        contract_start_date = get_next_contract_start_date(cache=self.cache)
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
 
         try:
             self.validate_everything(
@@ -293,7 +297,11 @@ class BestellWizardCapacityCheckApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
 
-        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+        subscription_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+        )
 
         ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,

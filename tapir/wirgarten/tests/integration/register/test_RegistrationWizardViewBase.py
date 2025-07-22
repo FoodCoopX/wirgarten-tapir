@@ -27,13 +27,12 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
-
-    def create_growing_period_with_one_subscription(self, year: int):
-        self.product: Product = ProductFactory.create()
+        cls.product: Product = ProductFactory.create()
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
-            value=self.product.type.id
+            value=cls.product.type_id
         )
 
+    def create_growing_period_with_one_subscription(self, year: int):
         growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=year, month=1, day=1),
             end_date=datetime.date(year=year, month=12, day=31),
@@ -87,6 +86,9 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
         self,
     ):
         mock_timezone(self, datetime.datetime(year=2023, month=12, day=21))
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_BUFFER_TIME_BEFORE_START
+        ).update(value=12)
         current_growing_period = self.create_growing_period_with_one_subscription(2023)
         next_growing_period = self.create_growing_period_with_one_subscription(2024)
         ProductPriceFactory.create(

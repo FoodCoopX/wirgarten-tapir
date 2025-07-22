@@ -14,7 +14,11 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
@@ -39,7 +43,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
-    get_next_contract_start_date,
     send_order_confirmation,
 )
 from tapir.wirgarten.service.products import (
@@ -106,12 +109,17 @@ class RegistrationWizardViewBase(CookieWizardView):
         self.cache = {}
 
         today = get_today(cache=self.cache)
-        self.growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=get_next_contract_start_date(today, cache=self.cache),
-            cache=self.cache,
+        next_contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=today, cache=self.cache
+            )
         )
 
-        self.start_date = get_next_contract_start_date(today, cache=self.cache)
+        self.growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=next_contract_start_date,
+            cache=self.cache,
+        )
+        self.start_date = next_contract_start_date
         self.end_date = self.growing_period.end_date if self.growing_period else None
 
         self.dynamic_steps = [f for f in self.form_list if f not in STATIC_STEPS]
@@ -169,10 +177,15 @@ class RegistrationWizardViewBase(CookieWizardView):
         steps_kwargs[STEP_BASE_PRODUCT]["product_type_id"] = (
             base_product_type.id if base_product_type is not None else None
         )
+        next_contract_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=cache), cache=cache
+            )
+        )
         available_and_additional_product_types = [
             product_type
             for product_type in get_available_product_types(
-                get_next_contract_start_date(cache=cache), cache=cache
+                next_contract_start_date, cache=cache
             )
             if product_type.id != base_product_type.id
         ]
@@ -394,6 +407,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @transaction.atomic
     def done(self, form_list, form_dict, **kwargs):
+        today = get_today(cache=self.cache)
         member = self.save_member(form_dict)
         try:
             if STEP_PICKUP_LOCATION in form_dict:
@@ -402,27 +416,27 @@ class RegistrationWizardViewBase(CookieWizardView):
                     pickup_location_id=form_dict[STEP_PICKUP_LOCATION]
                     .cleaned_data["pickup_location"]
                     .id,
-                    valid_from=get_today(),
+                    valid_from=today,
                 )
 
             start_date = (
                 self.start_date
                 if hasattr(self, "start_date")
-                else get_next_contract_start_date(cache=self.cache)
+                else ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=today, cache=self.cache
+                )
             )
             if STEP_BASE_PRODUCT in form_dict:
                 self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
                     "growing_period",
                     TapirCache.get_growing_period_at_date(
-                        reference_date=get_today(cache=self.cache), cache=self.cache
+                        reference_date=today, cache=self.cache
                     ),
                 )
-            if self.growing_period and self.growing_period.start_date > get_today():
+            if self.growing_period and self.growing_period.start_date > today:
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(
-                reference_date=start_date, cache=self.cache
-            )
+            actual_coop_start = get_first_of_next_month(date=start_date)
 
             mandate_ref = create_mandate_ref(member, cache=self.cache)
             if not member.is_student and STEP_COOP_SHARES in form_dict.keys():

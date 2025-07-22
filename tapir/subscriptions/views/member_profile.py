@@ -29,6 +29,9 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
@@ -38,13 +41,10 @@ from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import (
-    get_next_contract_start_date,
-)
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
 )
-from tapir.wirgarten.utils import check_permission_or_self
+from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
 class GetMemberSubscriptionsApiView(APIView):
@@ -81,7 +81,9 @@ class UpdateSubscriptionsApiView(APIView):
         check_permission_or_self(member_id, request)
         member = get_object_or_404(Member, id=member_id)
 
-        contract_start_date = get_next_contract_start_date(cache=self.cache)
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)
             self.validate_everything(
@@ -321,7 +323,11 @@ class MemberProfileCapacityCheckApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
 
-        subscription_start_date = get_next_contract_start_date(cache=self.cache)
+        subscription_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=self.cache), cache=self.cache
+            )
+        )
 
         ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,

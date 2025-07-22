@@ -26,7 +26,7 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
                 lowest_free_capacity,
                 cls.get_free_capacity_at_date(
                     product_type=product_type,
-                    reference_date=reference_date,
+                    reference_date=current_date,
                     cache=cache,
                 ),
             )
@@ -41,10 +41,10 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         reference_date: datetime.date,
         cache: dict,
     ):
+        total_capacity = 0
         capacity_object = TapirCache.get_product_type_capacity_at_date(
             cache=cache, product_type=product_type, reference_date=reference_date
         )
-        total_capacity = 0
         if capacity_object is not None:
             total_capacity = capacity_object.capacity
 

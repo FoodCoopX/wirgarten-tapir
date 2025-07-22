@@ -137,11 +137,11 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
         self.assertEqual(2, Subscription.objects.count())
         subscription.refresh_from_db()
         self.assertEqual(
-            datetime.date(year=2024, month=3, day=31), subscription.end_date
+            datetime.date(year=2024, month=3, day=17), subscription.end_date
         )
         new_subscription = Subscription.objects.exclude(id=subscription.id).get()
         self.assertEqual(
-            datetime.date(year=2024, month=4, day=1), new_subscription.start_date
+            datetime.date(year=2024, month=3, day=18), new_subscription.start_date
         )
         self.assertEqual("M", new_subscription.product.name)
 
@@ -176,11 +176,11 @@ class TestValidateCannotReduceSize(TapirIntegrationTest):
         self.assertEqual(2, Subscription.objects.count())
         subscription.refresh_from_db()
         self.assertEqual(
-            datetime.date(year=2024, month=3, day=31), subscription.end_date
+            datetime.date(year=2024, month=3, day=17), subscription.end_date
         )
         new_subscription = Subscription.objects.exclude(id=subscription.id).get()
         self.assertEqual(
-            datetime.date(year=2024, month=4, day=1), new_subscription.start_date
+            datetime.date(year=2024, month=3, day=18), new_subscription.start_date
         )
         self.assertEqual("L", new_subscription.product.name)
 

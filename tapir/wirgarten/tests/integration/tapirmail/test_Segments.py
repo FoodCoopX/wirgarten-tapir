@@ -3,8 +3,11 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from tapir_mail.service.segment import resolve_segments
 
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.wirgarten.models import Subscription
-from tapir.wirgarten.service.member import get_next_contract_start_date
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import Segments, _register_segments
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -21,6 +24,10 @@ from tapir.wirgarten.tests.test_utils import (
 
 class SegmentTest(TapirIntegrationTest):
     NOW = datetime.datetime(2023, 4, 15, 12, 0, tzinfo=datetime.timezone.utc)
+
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
 
     def setUp(self):
         mock_timezone(self, self.NOW)
@@ -78,8 +85,10 @@ class SegmentTest(TapirIntegrationTest):
         self,
     ):
         expected_member_ids = [self.member_with_subscription.id]
-        start_date_next_month = get_next_contract_start_date(
-            reference_date=self.NOW.date()
+        start_date_next_month = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=self.NOW.date(), cache={}
+            )
         )
 
         edge_case_member = MemberFactory.create()

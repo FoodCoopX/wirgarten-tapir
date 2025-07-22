@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
+from tapir.utils.shortcuts import get_first_of_next_month
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -16,7 +17,6 @@ from tapir.wirgarten.models import (
     TaxRate,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.utils import get_today, legal_status_is_association
 from tapir.wirgarten.validators import (
     validate_date_range,
@@ -283,9 +283,7 @@ class GrowingPeriodForm(forms.Form):
                     period = period[:1][0]
                     new_start_date = period.end_date + relativedelta(days=1)
                 else:
-                    new_start_date = get_next_contract_start_date(
-                        reference_date=today, cache=self.cache
-                    )
+                    new_start_date = get_first_of_next_month(date=today)
                 self.update_initial(initial, new_start_date)
             except GrowingPeriod.DoesNotExist:
                 pass

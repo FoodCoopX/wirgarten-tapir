@@ -43,3 +43,7 @@ def dict_get_or_set(dictionary: Dict, key, call_if_not_set: callable):
     if key not in dictionary:
         dictionary[key] = call_if_not_set()
     return dictionary[key]
+
+
+def get_first_of_next_month(date: datetime.date):
+    return (date.replace(day=1) + datetime.timedelta(days=32)).replace(day=1)

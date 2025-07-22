@@ -23,6 +23,9 @@ from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
+from tapir.subscriptions.services.contract_start_date_calculator import (
+    ContractStartDateCalculator,
+)
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -197,20 +200,6 @@ def get_or_create_mandate_ref(
     return mandate_ref
 
 
-def get_next_contract_start_date(
-    reference_date: datetime.date = None, cache: Dict = None
-):
-    """
-    Gets the earliest possible start date for a contract
-    """
-    if reference_date is None:
-        reference_date = get_today(cache=cache)
-
-    now = reference_date
-    y, m = divmod(now.year * 12 + now.month, 12)
-    return datetime.date(y, m + 1, 1)
-
-
 @transaction.atomic
 def buy_cooperative_shares(
     quantity: int,
@@ -229,7 +218,9 @@ def buy_cooperative_shares(
     member_id = resolve_member_id(member)
 
     if start_date == None:
-        start_date = get_next_contract_start_date(cache=cache)
+        start_date = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
 
     if mandate_ref is None:
         mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
