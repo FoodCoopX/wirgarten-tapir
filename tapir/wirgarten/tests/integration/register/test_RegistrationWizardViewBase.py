@@ -80,7 +80,8 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
 
         self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
         self.assertNotIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
-        self.assertEqual(["1.0"], response.context_data["form"].free_capacity)
+        self.assertEqual(1, len(response.context_data["form"].free_capacity))
+        self.assertEqual(1.0, float(response.context_data["form"].free_capacity[0]))
 
     def test_RegistrationWizardViewBase_contractStartDateIsOnTheFollowingGrowingPeriod_checkTheFollowingGrowingPeriod(
         self,
@@ -100,7 +101,8 @@ class TestRegistrationWizardViewBase(TapirIntegrationTest):
 
         self.assertIn(STEP_BASE_PRODUCT, steps_helper.all)
         self.assertNotIn(STEP_BASE_PRODUCT_NOT_AVAILABLE, steps_helper.all)
-        self.assertEqual(["1.4"], response.context_data["form"].free_capacity)
+        self.assertEqual(1, len(response.context_data["form"].free_capacity))
+        self.assertEqual(1.4, float(response.context_data["form"].free_capacity[0]))
 
     def test_RegistrationWizardViewBase_currentGrowingPeriodHasMembersInTrial_freeCapacityShouldIncludeMembersInTrial(
         self,

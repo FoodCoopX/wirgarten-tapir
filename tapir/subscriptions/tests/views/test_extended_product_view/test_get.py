@@ -37,7 +37,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
         )
         self.client.force_login(member)
         product = ProductFactory.create(
-            name="test product name", deleted=False, base=True
+            name="test product name", deleted=False, base=True, capacity=100
         )
 
         url = reverse("subscriptions:extended_product")
@@ -60,6 +60,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "size": 0.0,
                 "description_in_bestellwizard": "",
                 "url_of_image_in_bestellwizard": "",
+                "capacity": 100,
             },
             response_content,
         )
@@ -76,6 +77,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
             base=True,
             description_in_bestellwizard="test description",
             url_of_image_in_bestellwizard="test url",
+            capacity=234,
         )
         ProductPriceFactory.create(product=product, price=15.2, size=1.3)
         ProductBasketSizeEquivalence.objects.create(
@@ -105,6 +107,7 @@ class TestExtendedProductViewGet(TapirIntegrationTest):
                 "size": 1.3,
                 "description_in_bestellwizard": "test description",
                 "url_of_image_in_bestellwizard": "test url",
+                "capacity": 234,
             },
             response_content,
         )

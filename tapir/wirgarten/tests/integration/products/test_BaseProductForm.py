@@ -221,6 +221,7 @@ class TestBaseProductFormCapacityLimits(TapirIntegrationTest):
             solidarity_price_percentage=0.25,
             product=Product.objects.get(name="M"),
             quantity=1,
+            period=current_growing_period,
         )
 
         response = self.send_add_subscription_request(

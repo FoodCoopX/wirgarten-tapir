@@ -97,14 +97,15 @@ class TestStudentStatus(TapirIntegrationTest):
         member: Member = MemberFactory.create(is_student=True)
         now = datetime.datetime(year=2023, month=6, day=12)
         mock_timezone(self, now)
+        growing_period = GrowingPeriod.objects.create(
+            start_date=datetime.date(year=2023, month=1, day=1),
+            end_date=datetime.date(year=2023, month=12, day=31),
+        )
         product_capacity: ProductCapacity = ProductCapacityFactory.create(
             capacity=1000,
             product_type__name="Ernteanteile",
             product_type__delivery_cycle=WEEKLY[0],
-        )
-        growing_period = GrowingPeriod.objects.create(
-            start_date=datetime.date(year=2023, month=1, day=1),
-            end_date=datetime.date(year=2023, month=12, day=31),
+            period=growing_period,
         )
 
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(

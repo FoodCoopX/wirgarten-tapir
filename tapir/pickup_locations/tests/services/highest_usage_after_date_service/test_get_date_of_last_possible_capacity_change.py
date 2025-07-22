@@ -1,7 +1,7 @@
 import datetime
 
-from tapir.pickup_locations.services.highest_usage_after_date_service import (
-    HighestUsageAfterDateService,
+from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
+    PickupLocationHighestUsageAfterDateService,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -25,7 +25,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         SubscriptionFactory.create(end_date=datetime.date(year=2023, month=12, day=8))
         SubscriptionFactory.create(end_date=datetime.date(year=2023, month=7, day=6))
 
-        result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+        result = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
             pickup_location=PickupLocationFactory.create(), cache={}
         )
 
@@ -48,7 +48,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
             valid_from=datetime.date(year=2023, month=7, day=28),
         )
 
-        result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+        result = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
             pickup_location=pickup_location, cache={}
         )
 
@@ -68,7 +68,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
             member=member, end_date=datetime.date(year=2023, month=5, day=12)
         )
 
-        result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+        result = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
             pickup_location=pickup_location, cache={}
         )
 
@@ -88,7 +88,7 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
             member=member, end_date=datetime.date(year=2023, month=5, day=14)
         )
 
-        result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+        result = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
             pickup_location=pickup_location, cache={}
         )
 

@@ -17,6 +17,9 @@ from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
@@ -24,6 +27,7 @@ from tapir.subscriptions.services.subscription_change_validator import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import DateInput
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.pickup_location import (
     PickupLocationChoiceField,
 )
@@ -53,8 +57,6 @@ from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
 )
 from tapir.wirgarten.service.products import (
-    get_current_growing_period,
-    get_free_product_capacity,
     get_product_price,
     get_total_price_for_subs,
     get_next_growing_period,
@@ -157,9 +159,13 @@ class BaseProductForm(forms.Form):
                 )
                 self.solidarity_total.append(solidarity_total)
 
-                free_capacity = f"{get_free_product_capacity(harvest_share_products[0].type.id, start_date, cache=self.cache)}".replace(
-                    ",", "."
+                free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                    product_type=base_product_type,
+                    reference_date=start_date,
+                    cache=self.cache,
                 )
+
+                free_capacity = f"{free_capacity_for_growing_period}".replace(",", ".")
                 self.free_capacity.append(free_capacity)
 
             self.fields["growing_period"] = forms.ModelChoiceField(
@@ -181,8 +187,8 @@ class BaseProductForm(forms.Form):
                 ),
             )
         else:
-            self.growing_period = get_current_growing_period(
-                self.start_date, cache=self.cache
+            self.growing_period = TapirCache.get_growing_period_at_date(
+                reference_date=self.start_date, cache=self.cache
             )
 
             self.solidarity_total = [
@@ -190,11 +196,13 @@ class BaseProductForm(forms.Form):
                     ",", "."
                 )
             ]
-
+            free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=base_product_type,
+                reference_date=max(self.growing_period.start_date, self.start_date),
+                cache=self.cache,
+            )
             self.free_capacity = [
-                f"{get_free_product_capacity(harvest_share_products[0].type.id, max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
-                    ",", "."
-                )
+                f"{free_capacity_for_growing_period}".replace(",", ".")
             ]
 
         for prod_field in harvest_share_products:
@@ -383,8 +391,13 @@ class BaseProductForm(forms.Form):
         now = get_now(cache=self.cache)
 
         self.subscriptions = []
+        member = Member.objects.get(id=member_id)
         existing_trial_end_date = cancel_or_delete_subscriptions(
-            member_id, self.start_date, self.product_type, actor=None, cache=self.cache
+            member=member,
+            start_date=self.start_date,
+            product_type=self.product_type,
+            actor=None,
+            cache=self.cache,
         )
 
         for key, quantity in self.cleaned_data.items():
@@ -437,8 +450,8 @@ class BaseProductForm(forms.Form):
 
             self.subscriptions.append(sub)
 
-        TapirCache.clear_category(cache=self.cache, category="subscriptions")
-        member = Member.objects.get(id=member_id)
+        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
+
         member.sepa_consent = now
         member.save(cache=self.cache)
 
@@ -512,7 +525,10 @@ class BaseProductForm(forms.Form):
     def clean(self):
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.get(
-                "growing_period", get_current_growing_period(cache=self.cache)
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=get_today(cache=self.cache), cache=self.cache
+                ),
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
@@ -657,10 +673,13 @@ class AdditionalProductForm(forms.Form):
 
             self.free_capacity = []
             for period in growing_periods:
+                free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                    product_type=self.product_type,
+                    reference_date=max(period.start_date, self.start_date),
+                    cache=self.cache,
+                )
                 self.free_capacity.append(
-                    f"{get_free_product_capacity(self.product_type.id, max(period.start_date, self.start_date), cache=self.cache)}".replace(
-                        ",", "."
-                    )
+                    f"{free_capacity_for_growing_period}".replace(",", ".")
                 )
 
             self.fields["growing_period"] = forms.ModelChoiceField(
@@ -671,13 +690,16 @@ class AdditionalProductForm(forms.Form):
                 initial=0,
             )
         else:
-            self.growing_period = get_current_growing_period(
-                self.start_date, cache=self.cache
+            self.growing_period = TapirCache.get_growing_period_at_date(
+                reference_date=self.start_date, cache=self.cache
+            )
+            free_capacity_for_growing_period = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=self.product_type,
+                reference_date=max(self.growing_period.start_date, self.start_date),
+                cache=self.cache,
             )
             self.free_capacity = [
-                f"{get_free_product_capacity(self.product_type.id, max(self.growing_period.start_date, self.start_date), cache=self.cache)}".replace(
-                    ",", "."
-                )
+                f"{free_capacity_for_growing_period}".replace(",", ".")
             ]
 
         if self.product_type.single_subscription_only:
@@ -804,7 +826,10 @@ class AdditionalProductForm(forms.Form):
 
         if not hasattr(self, "growing_period"):
             self.growing_period = self.cleaned_data.pop(
-                "growing_period", get_current_growing_period(cache=self.cache)
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=now.date(), cache=self.cache
+                ),
             )
 
         self.start_date = max(self.start_date, self.growing_period.start_date)
@@ -857,7 +882,7 @@ class AdditionalProductForm(forms.Form):
 
         Subscription.objects.bulk_create(self.subscriptions)
 
-        TapirCache.clear_category(cache=self.cache, category="subscriptions")
+        TapirCacheManager.clear_category(cache=self.cache, category="subscriptions")
         Member.objects.filter(id=member_id).update(sepa_consent=get_now())
 
         new_pickup_location = self.cleaned_data.get("pickup_location")
@@ -944,7 +969,10 @@ class AdditionalProductForm(forms.Form):
             self,
             "growing_period",
             self.cleaned_data.pop(
-                "growing_period", get_current_growing_period(cache=cache)
+                "growing_period",
+                TapirCache.get_growing_period_at_date(
+                    reference_date=get_today(cache), cache=cache
+                ),
             ),
         )
         if not Subscription.objects.filter(
@@ -1017,7 +1045,7 @@ def cancel_or_delete_subscriptions(
     product_type: ProductType,
     actor: TapirUser | None,
     cache: Dict,
-) -> date:
+) -> date | None:
     """
     Cancels all subscriptions of the given product type for the given member and start date because they changed their contract.
 

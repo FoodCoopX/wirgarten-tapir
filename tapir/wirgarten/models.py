@@ -551,6 +551,7 @@ class Product(TapirModel):
     base = models.BooleanField(default=False, null=True)
     description_in_bestellwizard = models.TextField(default="", blank=True)
     url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
+    capacity = models.PositiveIntegerField(null=True, blank=False)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType

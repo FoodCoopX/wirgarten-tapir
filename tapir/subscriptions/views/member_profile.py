@@ -31,6 +31,7 @@ from tapir.subscriptions.services.base_product_type_service import (
 )
 from tapir.subscriptions.services.global_capacity_checker import GlobalCapacityChecker
 from tapir.subscriptions.services.order_validator import OrderValidator
+from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
@@ -324,7 +325,7 @@ class MemberProfileCapacityCheckApiView(APIView):
 
         ids_of_product_types_over_capacity = GlobalCapacityChecker.get_product_type_ids_without_enough_capacity_for_order(
             order_with_all_product_types=order,
-            member_id=None,
+            member_id=member.id,
             subscription_start_date=subscription_start_date,
             cache=self.cache,
         )
@@ -345,9 +346,20 @@ class MemberProfileCapacityCheckApiView(APIView):
             ):
                 ids_of_product_types_over_capacity.append(list(order.keys())[0].type_id)
 
+        ids_of_products_over_capacity = []
+        for product, quantity in order.items():
+            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                product=product,
+                ordered_quantity=quantity,
+                member_id=member.id,
+                subscription_start_date=subscription_start_date,
+                cache=self.cache,
+            ):
+                ids_of_products_over_capacity.append(product.id)
+
         response_data = {
             "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
-            "ids_of_products_over_capacity": [],
+            "ids_of_products_over_capacity": ids_of_products_over_capacity,
         }
         return Response(
             BestellWizardCapacityCheckResponseSerializer(response_data).data

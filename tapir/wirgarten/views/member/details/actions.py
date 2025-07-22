@@ -8,7 +8,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
-from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -67,7 +67,7 @@ def renew_contract_same_conditions(request, **kwargs):
 
     Subscription.objects.bulk_create(new_subs)
 
-    TapirCache.clear_category(cache=cache, category="subscriptions")
+    TapirCacheManager.clear_category(cache=cache, category="subscriptions")
 
     member = Member.objects.get(id=member_id)
     member.sepa_consent = get_now(cache=cache)

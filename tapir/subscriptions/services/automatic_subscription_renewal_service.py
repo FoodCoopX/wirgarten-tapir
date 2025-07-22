@@ -10,7 +10,6 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_active_subscriptions,
     get_next_growing_period,
-    get_current_growing_period,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -108,7 +107,9 @@ class AutomaticSubscriptionRenewalService:
         if not get_parameter_value(ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache):
             return set()
 
-        current_growing_period = get_current_growing_period(reference_date, cache)
+        current_growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
         if current_growing_period is None:
             return set()
 

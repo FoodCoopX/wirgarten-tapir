@@ -25,6 +25,7 @@ class ProductUpdater:
             url_of_image_in_bestellwizard=serializer.validated_data[
                 "url_of_image_in_bestellwizard"
             ],
+            capacity=serializer.validated_data.get("capacity", None),
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

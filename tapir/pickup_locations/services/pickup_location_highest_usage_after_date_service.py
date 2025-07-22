@@ -9,7 +9,7 @@ from tapir.wirgarten.models import (
 )
 
 
-class HighestUsageAfterDateService:
+class PickupLocationHighestUsageAfterDateService:
     @classmethod
     def get_highest_usage_after_date_generic(
         cls,

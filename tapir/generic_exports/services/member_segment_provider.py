@@ -5,11 +5,11 @@ from django.db.models import QuerySet
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
 )
-from tapir.wirgarten.service.products import get_current_growing_period
 
 
 class MemberSegmentProvider:
@@ -67,7 +67,9 @@ class MemberSegmentProvider:
     ) -> QuerySet:
         from tapir.wirgarten.models import Member
 
-        growing_period = get_current_growing_period(reference_datetime.date())
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_datetime.date(), cache={}
+        )
         member_ids = Joker.objects.filter(
             date__gte=growing_period.start_date,
             date__lte=reference_datetime.date(),

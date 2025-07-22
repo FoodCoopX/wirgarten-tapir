@@ -24,9 +24,6 @@ from tapir.wirgarten.models import (
     Subscription,
     CoopShareTransaction,
 )
-from tapir.wirgarten.service.products import (
-    get_current_growing_period,
-)
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
@@ -210,10 +207,10 @@ class MemberDataToConfirmApiView(APIView):
     def get_cancellation_type(subscription: Subscription, cache: dict):
         cancellation_type = "Reguläre Kündigung"
         show_warning = False
-        if (
-            get_current_growing_period(subscription.end_date, cache=cache).end_date
-            > subscription.end_date
-        ):
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=subscription.end_date, cache=cache
+        )
+        if growing_period.end_date > subscription.end_date:
             cancellation_type = "Unterjährige Kündigung"
             show_warning = True
         if TrialPeriodManager.is_subscription_in_trial(

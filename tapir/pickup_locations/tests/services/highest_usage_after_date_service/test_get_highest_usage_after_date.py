@@ -3,14 +3,14 @@ from unittest.mock import patch, Mock, call
 
 from django.test import SimpleTestCase
 
-from tapir.pickup_locations.services.highest_usage_after_date_service import (
-    HighestUsageAfterDateService,
+from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
+    PickupLocationHighestUsageAfterDateService,
 )
 
 
 class TestGetHighestUsageAfterDate(SimpleTestCase):
     @patch.object(
-        HighestUsageAfterDateService,
+        PickupLocationHighestUsageAfterDateService,
         "get_date_of_last_possible_capacity_change",
     )
     def test_getHighestUsageAfterDate_default_returnsHighestUsage(
@@ -27,7 +27,7 @@ class TestGetHighestUsageAfterDate(SimpleTestCase):
         lambda_get_usage_at_date = Mock()
         lambda_get_usage_at_date.side_effect = [5, 12, 10]
 
-        result = HighestUsageAfterDateService.get_highest_usage_after_date_generic(
+        result = PickupLocationHighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
             reference_date=datetime.date(year=2025, month=3, day=4),
             lambda_get_usage_at_date=lambda_get_usage_at_date,

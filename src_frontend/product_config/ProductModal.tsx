@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Card,
   Col,
   Form,
   ListGroup,
@@ -38,6 +39,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [deleted, setDeleted] = useState(false);
   const [price, setPrice] = useState(0);
   const [size, setSize] = useState(0);
+  const [capacity, setCapacity] = useState<number | null>(null);
   const [descriptionInBestellWizard, setDescriptionInBestellWizard] =
     useState("");
   const [urlOfImageInBestellWizard, setUrlOfImageInBestellWizard] =
@@ -74,6 +76,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           extendedProduct.descriptionInBestellwizard,
         );
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
+        setCapacity(extendedProduct.capacity);
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -98,6 +101,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           growingPeriodId: getPeriodIdFromUrl(),
           descriptionInBestellwizard: descriptionInBestellWizard,
           urlOfImageInBestellwizard: urlOfImageInBestellWizard,
+          capacity: capacity,
         },
       })
       .then(() => location.reload())
@@ -111,6 +115,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
     newEquivalences[index].quantity = value;
     setEquivalences(newEquivalences);
   }
+
+  useEffect(() => {
+    console.log(capacity);
+  }, [capacity]);
 
   function getModalBody() {
     if (dataLoading) {
@@ -127,6 +135,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
           <ListGroup.Item>
             <Row>
               <Col>
+                <Card.Title>Allgemein</Card.Title>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
                 <Form.Group>
                   <Form.Label>Produkt Name</Form.Label>
                   <Form.Control
@@ -138,15 +151,16 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </Col>
               <Col>
                 <Form.Group>
-                  <Form.Label>Ist Basisprodukt</Form.Label>
+                  <Form.Label htmlFor={"is_baseproduct"}>
+                    Ist Basisprodukt
+                  </Form.Label>
                   <Form.Check
                     checked={isBaseProduct}
                     onChange={(e) => setIsBaseProduct(e.target.checked)}
+                    id={"is_baseproduct"}
                   />
                 </Form.Group>
               </Col>
-            </Row>
-            <Row className={"mt-2"}>
               <Col>
                 <Form.Group>
                   <Form.Label>Preis (monatlich, €)</Form.Label>
@@ -159,17 +173,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   />
                 </Form.Group>
               </Col>
+            </Row>
+          </ListGroup.Item>
+          <ListGroup.Item>
+            <Row>
               <Col>
-                <Form.Group>
-                  <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
-                  <Form.Control
-                    value={size}
-                    type={"number"}
-                    step={"any"}
-                    min={0}
-                    onChange={(e) => setSize(parseFloat(e.target.value))}
-                  />
-                </Form.Group>
+                <Card.Title>BestellWizard</Card.Title>
               </Col>
             </Row>
             <Row>
@@ -205,41 +214,84 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </Col>
             </Row>
           </ListGroup.Item>
-          {pickingMode === PickingModeEnum.Basket && (
-            <ListGroup.Item>
-              <Table striped hover responsive>
-                <thead>
-                  <tr>
-                    <th>Kistengröße</th>
-                    <th>Menge</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {equivalences.map((equivalence, index) => {
-                    return (
-                      <tr key={equivalence.basketSizeName}>
-                        <td>{equivalence.basketSizeName}</td>
-                        <td>
-                          <Form.Control
-                            type={"number"}
-                            min={0}
-                            step={1}
-                            value={equivalence.quantity}
-                            onChange={(event) =>
-                              onEquivalenceChanged(
-                                index,
-                                parseInt(event.target.value),
-                              )
-                            }
-                          />
-                        </td>
+          <ListGroup.Item>
+            <Row>
+              <Col>
+                <Card.Title>Größe & Kapazitäten</Card.Title>
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Form.Group>
+                  <Form.Label>Größe (M-Anteil-Equivalent)</Form.Label>
+                  <Form.Control
+                    value={size}
+                    type={"number"}
+                    step={"any"}
+                    min={0}
+                    onChange={(e) => setSize(parseFloat(e.target.value))}
+                  />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group>
+                  <Form.Label>Kapazität</Form.Label>
+                  <Form.Control
+                    value={capacity ?? ""}
+                    type={"number"}
+                    step={"any"}
+                    min={0}
+                    onChange={(e) => {
+                      setCapacity(
+                        e.target.value ? parseFloat(e.target.value) : null,
+                      );
+                    }}
+                  />
+                  <Form.Text>
+                    Kapazitätsgrenze für dieses Produkt, als Vertragsanzahl.{" "}
+                    Leer lassen für keine Grenze.
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+            {pickingMode === PickingModeEnum.Basket && (
+              <Row>
+                <Col>
+                  <Table striped hover responsive>
+                    <thead>
+                      <tr>
+                        <th>Kistengröße</th>
+                        <th>Menge</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            </ListGroup.Item>
-          )}
+                    </thead>
+                    <tbody>
+                      {equivalences.map((equivalence, index) => {
+                        return (
+                          <tr key={equivalence.basketSizeName}>
+                            <td>{equivalence.basketSizeName}</td>
+                            <td>
+                              <Form.Control
+                                type={"number"}
+                                min={0}
+                                step={1}
+                                value={equivalence.quantity}
+                                onChange={(event) =>
+                                  onEquivalenceChanged(
+                                    index,
+                                    parseInt(event.target.value),
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+            )}
+          </ListGroup.Item>
         </Form>
       </ListGroup>
     );

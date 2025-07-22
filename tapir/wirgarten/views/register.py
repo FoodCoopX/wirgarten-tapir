@@ -14,6 +14,7 @@ from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.forms.empty_form import EmptyForm
 from tapir.wirgarten.forms.member import (
@@ -43,7 +44,6 @@ from tapir.wirgarten.service.member import (
 )
 from tapir.wirgarten.service.products import (
     get_available_product_types,
-    get_current_growing_period,
     get_active_and_future_subscriptions,
     is_product_type_available,
 )
@@ -106,8 +106,9 @@ class RegistrationWizardViewBase(CookieWizardView):
         self.cache = {}
 
         today = get_today(cache=self.cache)
-        self.growing_period = get_current_growing_period(
-            get_next_contract_start_date(today, cache=self.cache), cache=self.cache
+        self.growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_next_contract_start_date(today, cache=self.cache),
+            cache=self.cache,
         )
 
         self.start_date = get_next_contract_start_date(today, cache=self.cache)
@@ -411,7 +412,10 @@ class RegistrationWizardViewBase(CookieWizardView):
             )
             if STEP_BASE_PRODUCT in form_dict:
                 self.growing_period = form_dict[STEP_BASE_PRODUCT].cleaned_data.get(
-                    "growing_period", get_current_growing_period(cache=self.cache)
+                    "growing_period",
+                    TapirCache.get_growing_period_at_date(
+                        reference_date=get_today(cache=self.cache), cache=self.cache
+                    ),
                 )
             if self.growing_period and self.growing_period.start_date > get_today():
                 start_date = self.growing_period.start_date

@@ -32,7 +32,6 @@ class PickupLocationCapacityGeneralChecker:
         subscription_start: datetime.date,
         cache: Dict,
     ) -> bool:
-
         if (
             already_registered_member
             and MemberPickupLocationService.get_member_pickup_location_id(

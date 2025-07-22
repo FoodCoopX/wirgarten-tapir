@@ -169,7 +169,7 @@ def generate_future_payments(member_id, limit: int = None, cache: Dict = None):
         )
         for sub in active_subs:
             due_date = next_payment_date
-            amount = sub.total_price()
+            amount = sub.total_price(cache=cache)
             payments_per_due_date[next_payment_date].append(
                 {
                     "type": sub.product.type.name,

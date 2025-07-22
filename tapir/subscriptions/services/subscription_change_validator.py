@@ -10,14 +10,15 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
 )
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, PickupLocation, ProductType
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
-    get_current_growing_period,
     get_product_price,
     get_active_subscriptions,
-    get_free_product_capacity,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -82,8 +83,8 @@ class SubscriptionChangeValidator:
             return False
 
         # Members cannot reduce the size of their subscriptions for the currently ongoing growing period.
-        growing_period = get_current_growing_period(
-            subscription_start_date, cache=cache
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=subscription_start_date, cache=cache
         )
 
         if not growing_period:
@@ -144,11 +145,14 @@ class SubscriptionChangeValidator:
         subscription_start_date: datetime.date,
         cache: Dict,
     ):
-        free_capacity = get_free_product_capacity(
-            product_type_id=product_type_id,
+        free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+            product_type=TapirCache.get_product_type_by_id(
+                product_type_id=product_type_id, cache=cache
+            ),
             reference_date=subscription_start_date,
             cache=cache,
         )
+
         capacity_used_by_the_ordered_products = (
             cls.calculate_capacity_used_by_the_ordered_products(
                 form=form,
@@ -271,7 +275,7 @@ class SubscriptionChangeValidator:
 
         solidarity_fields = form.build_solidarity_fields()
 
-        growing_period = get_current_growing_period(
+        growing_period = TapirCache.get_growing_period_at_date(
             reference_date=subscription_start_date, cache=cache
         )
         if growing_period and growing_period.start_date > get_today(cache=cache):

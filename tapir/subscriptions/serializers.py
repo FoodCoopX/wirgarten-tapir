@@ -56,6 +56,7 @@ class ExtendedProductSerializer(serializers.Serializer):
     picking_mode = serializers.ChoiceField(choices=OPTIONS_PICKING_MODE, read_only=True)
     description_in_bestellwizard = serializers.CharField()
     url_of_image_in_bestellwizard = serializers.URLField()
+    capacity = serializers.IntegerField(allow_null=True)
 
 
 class MemberSerializer(serializers.ModelSerializer):

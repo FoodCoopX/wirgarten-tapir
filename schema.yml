@@ -5131,9 +5131,13 @@ components:
         url_of_image_in_bestellwizard:
           type: string
           format: uri
+        capacity:
+          type: integer
+          nullable: true
       required:
       - base
       - basket_size_equivalences
+      - capacity
       - deleted
       - description_in_bestellwizard
       - id
@@ -5878,6 +5882,9 @@ components:
           type: string
           format: uri
           minLength: 1
+        capacity:
+          type: integer
+          nullable: true
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -6532,6 +6539,11 @@ components:
           type: string
           format: uri
           maxLength: 200
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
       required:
       - name
       - type

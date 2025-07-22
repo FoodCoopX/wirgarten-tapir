@@ -14,8 +14,12 @@ from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     CoopShareTransaction,
     Member,
@@ -34,11 +38,9 @@ from tapir.wirgarten.service.payment import (
 from tapir.wirgarten.service.products import (
     get_active_product_capacities,
     get_active_product_types,
-    get_current_growing_period,
     get_active_and_future_subscriptions,
     get_next_growing_period,
     get_product_price,
-    get_free_product_capacity,
 )
 from tapir.wirgarten.utils import (
     format_currency,
@@ -80,7 +82,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        current_growing_period = get_current_growing_period(cache=self.cache)
+        current_growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_today(cache=self.cache), cache=self.cache
+        )
         if not current_growing_period:
             context["no_growing_period"] = True
             return context
@@ -309,8 +313,10 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 float(product_capacity.capacity) or 1
             )  # "or 1" to avoid a division by 0
 
-            free_capacity = get_free_product_capacity(
-                product_type.id, reference_date, cache=self.cache
+            free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=product_type,
+                reference_date=reference_date,
+                cache=self.cache,
             )
             used_capacity = total_capacity - free_capacity
 

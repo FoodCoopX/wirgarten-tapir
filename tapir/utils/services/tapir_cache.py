@@ -1,6 +1,7 @@
 import datetime
 from typing import Dict, Set
 
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     Subscription,
@@ -10,15 +11,20 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationOpeningTime,
     CoopShareTransaction,
+    ProductCapacity,
+    GrowingPeriod,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
+from tapir.wirgarten.utils import get_today
 
 
 class TapirCache:
     @classmethod
     def get_all_subscriptions(cls, cache: Dict) -> Set[Subscription]:
         key = "all_subscriptions"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
         return get_from_cache_or_compute(
             cache, key, lambda: set(Subscription.objects.order_by("id"))
         )
@@ -28,7 +34,9 @@ class TapirCache:
         cls, reference_date: datetime.date, cache: Dict
     ):
         key = "subscriptions_by_date"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         def compute():
             all_subscriptions = cls.get_all_subscriptions(cache)
@@ -50,7 +58,9 @@ class TapirCache:
         cls, cache: dict, reference_date: datetime.date
     ):
         key = "subscriptions_by_date_and_member_id"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         def compute():
             from tapir.wirgarten.service.products import (
@@ -78,7 +88,9 @@ class TapirCache:
         cls, cache: Dict, delivery_cycle
     ) -> Set[Subscription]:
         key = "subscriptions_by_delivery_cycle"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         subscriptions_by_delivery_cycle = get_from_cache_or_compute(
             cache, key, lambda: {}
@@ -96,7 +108,9 @@ class TapirCache:
     @classmethod
     def get_subscriptions_affected_by_jokers(cls, cache: Dict):
         key = "subscriptions_affected_by_jokers"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         return get_from_cache_or_compute(
             cache,
@@ -157,7 +171,9 @@ class TapirCache:
     @classmethod
     def get_subscriptions_by_product_type(cls, cache: Dict):
         key = "subscriptions_by_product_type"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         def compute():
             subscriptions_by_product_type = {
@@ -195,7 +211,9 @@ class TapirCache:
     @classmethod
     def get_last_subscription(cls, cache: Dict):
         key = "last_subscription"
-        cls.register_key_in_category(cache=cache, key=key, category="subscriptions")
+        TapirCacheManager.register_key_in_category(
+            cache=cache, key=key, category="subscriptions"
+        )
 
         return get_from_cache_or_compute(
             cache,
@@ -286,26 +304,52 @@ class TapirCache:
         )
 
     @classmethod
-    def register_key_in_category(cls, cache: dict, key: str, category: str):
-        if cache is None:
-            return
+    def get_product_type_capacity_at_date(
+        cls, cache: dict, product_type: ProductType, reference_date: datetime.date
+    ):
+        product_type_capacities_by_growing_period = get_from_cache_or_compute(
+            cache, "product_type_capacities_by_growing_period", lambda: {}
+        )
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
 
-        if "categories" not in cache.keys():
-            cache["categories"] = {}
+        def compute():
+            return ProductCapacity.objects.filter(
+                product_type=product_type, period=growing_period
+            ).first()
 
-        if category not in cache["categories"].keys():
-            cache["categories"][category] = set()
-
-        cache["categories"][category].add(key)
+        return get_from_cache_or_compute(
+            product_type_capacities_by_growing_period,
+            growing_period,
+            compute,
+        )
 
     @classmethod
-    def clear_category(cls, cache: dict, category: str):
-        if cache is None:
-            return
-        if "categories" not in cache.keys():
-            return
-        if category not in cache["categories"].keys():
-            return
-        for key in cache["categories"][category]:
-            if key in cache.keys():
-                del cache[key]
+    def get_growing_period_at_date(
+        cls, reference_date: datetime.date, cache: Dict
+    ) -> GrowingPeriod | None:
+        if reference_date is None:
+            reference_date = get_today(cache=cache)
+
+        def compute():
+            growing_periods = get_from_cache_or_compute(
+                cache,
+                "all_growing_periods",
+                lambda: set(GrowingPeriod.objects.order_by("start_date")),
+            )
+            for growing_period in growing_periods:
+                if (
+                    growing_period.start_date
+                    <= reference_date
+                    <= growing_period.end_date
+                ):
+                    return growing_period
+            return None
+
+        growing_periods_by_date_cache = get_from_cache_or_compute(
+            cache, "growing_periods_by_date", lambda: {}
+        )
+        return get_from_cache_or_compute(
+            growing_periods_by_date_cache, reference_date, compute
+        )

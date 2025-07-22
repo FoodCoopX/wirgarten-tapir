@@ -1,12 +1,15 @@
 import datetime
 
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
 from tapir.subscriptions.services.subscription_change_validator import (
     SubscriptionChangeValidator,
 )
 from tapir.subscriptions.types import TapirOrder
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.service.products import (
     get_product_price,
-    get_free_product_capacity,
 )
 
 
@@ -64,11 +67,14 @@ class GlobalCapacityChecker:
         product_type_id,
         cache: dict,
     ):
-        free_capacity = get_free_product_capacity(
-            product_type_id=product_type_id,
+        free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+            product_type=TapirCache.get_product_type_by_id(
+                product_type_id=product_type_id, cache=cache
+            ),
             reference_date=subscription_start_date,
             cache=cache,
         )
+
         capacity_used_by_the_ordered_products = (
             cls.calculate_global_capacity_used_by_the_ordered_products(
                 order_for_a_single_product_type=order_for_a_single_product_type,

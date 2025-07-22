@@ -5,11 +5,11 @@ from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
-from tapir.pickup_locations.services.highest_usage_after_date_service import (
-    HighestUsageAfterDateService,
-)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
+    PickupLocationHighestUsageAfterDateService,
 )
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -211,7 +211,7 @@ class PickupLocationCapacityModeBasketChecker:
         reference_date: datetime.date,
         cache: Dict,
     ):
-        return HighestUsageAfterDateService.get_highest_usage_after_date_generic(
+        return PickupLocationHighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
             reference_date=reference_date,
             lambda_get_usage_at_date=lambda date: PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(

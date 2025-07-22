@@ -6,6 +6,7 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.forms.subscription import cancel_or_delete_subscriptions
 from tapir.wirgarten.models import (
     ProductType,
@@ -22,7 +23,6 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.service.products import (
     get_active_and_future_subscriptions,
     get_active_subscriptions,
-    get_current_growing_period,
 )
 from tapir.wirgarten.utils import get_now
 
@@ -63,9 +63,9 @@ class ApplyTapirOrderManager:
             actor=actor,
             cache=cache,
         )
-        TapirCache.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
 
-        growing_period = get_current_growing_period(
+        growing_period = TapirCache.get_growing_period_at_date(
             reference_date=contract_start_date, cache=cache
         )
 
@@ -112,7 +112,7 @@ class ApplyTapirOrderManager:
             )
 
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
-        TapirCache.clear_category(cache=cache, category="subscriptions")
+        TapirCacheManager.clear_category(cache=cache, category="subscriptions")
 
         SubscriptionChangeLogEntry().populate(
             actor=actor,

@@ -87,7 +87,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
         )
 
         url = reverse("waiting_list:api_list")
-        url = f"{url}?limit=2&offset=0"
+        url = f"{url}?limit=2&offset=0&order_by=created_at"
         response = self.client.get(url)
 
         response_content = response.json()
@@ -120,6 +120,9 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "desired_start_date": None,
                 "current_subscriptions": None,
                 "url_to_member_profile": None,
+                "link": None,
+                "link_key": None,
+                "link_sent_date": None,
             },
             response_content["results"][0],
         )

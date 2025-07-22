@@ -8,7 +8,7 @@ from tapir.generic_exports.services.export_segment_manager import ExportSegmentC
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.service.products import get_current_growing_period
+from tapir.utils.services.tapir_cache import TapirCache
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import Member
@@ -115,8 +115,8 @@ class MemberColumnProvider:
     ):
         from tapir.deliveries.models import Joker
 
-        growing_period = get_current_growing_period(
-            reference_datetime.date(), cache=cache
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_datetime.date(), cache=cache
         )
         jokers = Joker.objects.filter(
             date__gte=growing_period.start_date,
@@ -146,8 +146,8 @@ class MemberColumnProvider:
     ):
         from tapir.deliveries.models import Joker
 
-        growing_period = get_current_growing_period(
-            reference_datetime.date(), cache=cache
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_datetime.date(), cache=cache
         )
         nb_jokers = Joker.objects.filter(
             date__gte=growing_period.start_date,

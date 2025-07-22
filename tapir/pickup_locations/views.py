@@ -26,9 +26,6 @@ from tapir.pickup_locations.serializers import (
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
-from tapir.pickup_locations.services.highest_usage_after_date_service import (
-    HighestUsageAfterDateService,
-)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -40,6 +37,9 @@ from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checke
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
+)
+from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
+    PickupLocationHighestUsageAfterDateService,
 )
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
@@ -240,10 +240,8 @@ class PickupLocationCapacityEvolutionView(APIView):
             pickup_location
         )
 
-        max_date = (
-            HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-                pickup_location, cache
-            )
+        max_date = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+            pickup_location, cache
         )
         current_date = get_today()
         while current_date < max_date:
@@ -289,10 +287,8 @@ class PickupLocationCapacityEvolutionView(APIView):
                 pickup_location=pickup_location, cache=cache
             )
         )
-        max_date = (
-            HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-                pickup_location=pickup_location, cache=cache
-            )
+        max_date = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+            pickup_location=pickup_location, cache=cache
         )
         current_date = get_today()
         while current_date < max_date:

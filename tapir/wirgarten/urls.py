@@ -63,7 +63,6 @@ from tapir.wirgarten.views.product_cfg import (
     get_period_add_form,
     get_period_copy_form,
     get_product_add_form,
-    get_product_edit_form,
     get_product_type_capacity_add_form,
     get_product_type_capacity_edit_form,
 )
@@ -98,11 +97,6 @@ urlpatterns = [
         "product/<str:periodId>/<str:capacityId>/add",
         get_product_add_form,
         name="product_add",
-    ),
-    path(
-        "product/<str:periodId>/<str:capacityId>/<str:prodId>/edit",
-        get_product_edit_form,
-        name="product_edit",
     ),
     path(
         "product/<str:periodId>/<str:capacityId>/<str:prodId>/delete",

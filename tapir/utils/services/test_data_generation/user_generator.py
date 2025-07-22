@@ -18,6 +18,7 @@ from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
 from tapir.utils.json_user import JsonUser
 from tapir.utils.models import copy_user_info
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_timezone_aware_datetime, get_from_cache_or_compute
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
@@ -36,7 +37,6 @@ from tapir.wirgarten.service.member import (
     get_next_contract_start_date,
     buy_cooperative_shares,
 )
-from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.tasks import generate_member_numbers
 from tapir.wirgarten.utils import get_today
 
@@ -232,7 +232,9 @@ class UserGenerator:
                 member.date_joined.date(), future_growing_period.end_date
             )
         )
-        growing_period = get_current_growing_period(start_date, cache=cache)
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=start_date, cache=cache
+        )
         end_date = growing_period.end_date
 
         choices = [1, 2]
@@ -246,7 +248,9 @@ class UserGenerator:
         already_subscribed_products_ids = set()
 
         previous_growing_period = cls.get_past_growing_period(cache=cache)
-        current_growing_period = get_current_growing_period(cache=cache)
+        current_growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
 
         min_shares = 0
         needs_pickup_location = False
@@ -359,7 +363,9 @@ class UserGenerator:
     def create_subscription_to_required_products(
         cls, member: Member, products: List[Product], cache: Dict
     ):
-        growing_period = get_current_growing_period(cache=cache)
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=get_today(cache=cache), cache=cache
+        )
 
         Subscription.objects.create(
             member=member,

@@ -144,7 +144,7 @@ class WaitingListApiView(APIView):
             filter_method = getattr(self, f"filter_by_{filter}")
             entries = filter_method(parameter, entries)
 
-        order_by = request.query_params.get("order_by")
+        order_by = request.query_params.get("order_by", "-created_at")
         if "created_at" in order_by:
             entries = entries.order_by(order_by)
         else:

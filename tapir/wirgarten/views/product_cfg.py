@@ -34,7 +34,6 @@ from tapir.wirgarten.service.products import (
     delete_growing_period_with_capacities,
     copy_growing_period,
     create_growing_period,
-    update_product,
     get_active_and_future_subscriptions,
 )
 from tapir.wirgarten.utils import get_today
@@ -269,26 +268,6 @@ def delete_product_type(request, **kwargs):
 
     return HttpResponseRedirect(
         reverse_lazy(PAGE_ROOT) + "?" + request.environ["QUERY_STRING"]
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@permission_required(Permission.Products.MANAGE)
-@csrf_protect
-def get_product_edit_form(request, **kwargs):
-    return get_form_modal(
-        request=request,
-        form_class=ProductForm,
-        handler=lambda form: update_product(
-            id_=form.cleaned_data["id"],
-            name=form.cleaned_data["name"],
-            base=form.cleaned_data["base"],
-            price=form.cleaned_data["price"],
-            size=form.cleaned_data["size"],
-            growing_period_id=kwargs[KW_PERIOD_ID],
-        ),
-        redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
-        **kwargs,
     )
 
 

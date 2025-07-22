@@ -10,6 +10,7 @@ from django.db.models import Q
 from tapir.configuration.models import TapirParameter
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
     GrowingPeriod,
@@ -79,7 +80,11 @@ def get_available_product_types(
         reference_date = get_today(cache=cache)
 
     product_types = get_active_product_types(reference_date, cache=cache)
-    return [p for p in product_types if is_product_type_available(p, reference_date)]
+    return [
+        p
+        for p in product_types
+        if is_product_type_available(p, reference_date, cache=cache)
+    ]
 
 
 def get_next_growing_period(
@@ -101,31 +106,6 @@ def get_next_growing_period(
 
     return get_from_cache_or_compute(
         next_growing_periods_by_date_cache, reference_date, compute
-    )
-
-
-def get_current_growing_period(
-    reference_date: datetime.date = None, cache: Dict | None = None
-) -> GrowingPeriod | None:
-    if reference_date is None:
-        reference_date = get_today()
-
-    def compute():
-        growing_periods = get_from_cache_or_compute(
-            cache,
-            "all_growing_periods",
-            lambda: set(GrowingPeriod.objects.order_by("start_date")),
-        )
-        for growing_period in growing_periods:
-            if growing_period.start_date <= reference_date <= growing_period.end_date:
-                return growing_period
-        return None
-
-    growing_periods_by_date_cache = get_from_cache_or_compute(
-        cache, "growing_periods_by_date", lambda: {}
-    )
-    return get_from_cache_or_compute(
-        growing_periods_by_date_cache, reference_date, compute
     )
 
 
@@ -255,7 +235,9 @@ def get_active_and_future_subscriptions(
         )
 
     key = "active_and_future_subscriptions_by_date"
-    TapirCache.register_key_in_category(cache=cache, key=key, category="subscriptions")
+    TapirCacheManager.register_key_in_category(
+        cache=cache, key=key, category="subscriptions"
+    )
     active_and_future_subscriptions_by_date_cache = get_from_cache_or_compute(
         cache, key, lambda: {}
     )
@@ -279,7 +261,9 @@ def get_active_subscriptions(
         )
 
     key = "active_subscriptions_by_date"
-    TapirCache.register_key_in_category(cache=cache, key=key, category="subscriptions")
+    TapirCacheManager.register_key_in_category(
+        cache=cache, key=key, category="subscriptions"
+    )
     active_subscriptions_by_date_cache = get_from_cache_or_compute(
         cache, "active_subscriptions_by_date", lambda: {}
     )
@@ -366,6 +350,7 @@ def update_product(
     growing_period_id: str,
     description_in_bestellwizard: str,
     url_of_image_in_bestellwizard: str,
+    capacity: int | None,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -384,6 +369,7 @@ def update_product(
     product.deleted = False
     product.description_in_bestellwizard = description_in_bestellwizard
     product.url_of_image_in_bestellwizard = url_of_image_in_bestellwizard
+    product.capacity = capacity
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)
@@ -624,37 +610,6 @@ def create_or_update_default_tax_rate(
     )
 
 
-def get_free_product_capacity(
-    product_type_id: str,
-    reference_date: datetime.date = None,
-    cache: Dict | None = None,
-):
-    if reference_date is None:
-        reference_date = get_today()
-
-    active_product_capacities = get_active_product_capacities(
-        reference_date, cache=cache
-    ).filter(product_type_id=product_type_id)
-
-    capacity_object: ProductCapacity | None = active_product_capacities.first()
-    if capacity_object is None:
-        return 0
-
-    total_capacity = float(capacity_object.capacity)
-    used_capacity = sum(
-        map(
-            lambda sub: float(
-                get_product_price(sub.product_id, reference_date, cache=cache).size
-            )
-            * sub.quantity,
-            get_active_subscriptions(reference_date, cache=cache).filter(
-                product__type_id=product_type_id
-            ),
-        )
-    )
-    return total_capacity - used_capacity
-
-
 def get_smallest_product_size(
     product_type: ProductType | str, reference_date: datetime.date = None
 ):
@@ -690,19 +645,27 @@ def get_smallest_product_size(
 def is_product_type_available(
     product_type: ProductType | str,
     reference_date: datetime.date = None,
-    cache: Dict | None = None,
+    cache: dict | None = None,
 ) -> bool:
     if reference_date is None:
         reference_date = get_today()
 
-    if isinstance(product_type, ProductType):
-        product_type = product_type.id
+    if isinstance(product_type, str):
+        product_type = TapirCache.get_product_type_by_id(
+            cache=cache, product_type_id=product_type
+        )
 
-    if not Product.objects.filter(type_id=product_type, deleted=False).exists():
+    if not Product.objects.filter(type=product_type, deleted=False).exists():
         return False
 
-    return get_free_product_capacity(
-        product_type_id=product_type,
+    from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+        ProductTypeLowestFreeCapacityAfterDateCalculator,
+    )
+
+    free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+        product_type=product_type,
         reference_date=reference_date,
         cache=cache,
-    ) >= get_smallest_product_size(product_type, reference_date)
+    )
+
+    return free_capacity >= get_smallest_product_size(product_type, reference_date)

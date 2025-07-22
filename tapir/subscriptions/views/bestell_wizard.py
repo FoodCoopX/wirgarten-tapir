@@ -39,6 +39,7 @@ from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
+from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
@@ -118,6 +119,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                     member=member,
                     valid_from=contract_start_date,
                     actor=request.user if request.user.is_authenticated else member,
+                    cache=self.cache,
                 )
             self.create_coop_shares(
                 number_of_shares=serializer.validated_data["nb_shares"],
@@ -300,9 +302,20 @@ class BestellWizardCapacityCheckApiView(APIView):
             cache=self.cache,
         )
 
+        ids_of_products_over_capacity = []
+        for product, quantity in order.items():
+            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                product=product,
+                ordered_quantity=quantity,
+                member_id=None,
+                subscription_start_date=subscription_start_date,
+                cache=self.cache,
+            ):
+                ids_of_products_over_capacity.append(product.id)
+
         response_data = {
             "ids_of_product_types_over_capacity": ids_of_product_types_over_capacity,
-            "ids_of_products_over_capacity": [],
+            "ids_of_products_over_capacity": ids_of_products_over_capacity,
         }
         return Response(
             BestellWizardCapacityCheckResponseSerializer(response_data).data

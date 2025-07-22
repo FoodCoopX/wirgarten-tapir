@@ -43,7 +43,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         pickup_location = PickupLocationFactory.create()
         ordered_products_to_quantity_map = Mock()
         subscription_start = datetime.date(year=2024, month=5, day=1)
-        already_registered_member = MemberFactory()
+        already_registered_member = MemberFactory.create()
         MemberPickupLocationFactory.create(
             member=already_registered_member,
             pickup_location=pickup_location,
@@ -68,7 +68,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         self.assertEqual(expected, result)
         mock_check_for_picking_mode_share.assert_called_once_with(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -89,7 +89,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         pickup_location = PickupLocationFactory.create()
         ordered_products_to_quantity_map = Mock()
         subscription_start = datetime.date(year=2024, month=5, day=1)
-        already_registered_member = MemberFactory()
+        already_registered_member = MemberFactory.create()
         MemberPickupLocationFactory.create(
             member=already_registered_member,
             pickup_location=pickup_location,
@@ -115,7 +115,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         mock_check_for_picking_mode_share.assert_not_called()
         mock_check_for_picking_mode_basket.assert_called_once_with(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=already_registered_member,
             subscription_start=subscription_start,
             cache=cache,
@@ -135,7 +135,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         pickup_location = PickupLocationFactory.create()
         ordered_products_to_quantity_map = Mock()
         subscription_start = datetime.date(year=2024, month=5, day=1)
-        already_registered_member = MemberFactory()
+        already_registered_member = MemberFactory.create()
         MemberPickupLocationFactory.create(
             member=already_registered_member,
             pickup_location=PickupLocationFactory.create(),
@@ -160,7 +160,7 @@ class TestPickupLocationCapacityGeneralChecker(TapirIntegrationTest):
         mock_check_for_picking_mode_share.assert_not_called()
         mock_check_for_picking_mode_basket.assert_called_once_with(
             pickup_location=pickup_location,
-            ordered_products_to_quantity_map=ordered_products_to_quantity_map,
+            order=ordered_products_to_quantity_map,
             already_registered_member=None,
             subscription_start=subscription_start,
             cache=cache,

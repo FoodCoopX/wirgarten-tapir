@@ -42,6 +42,7 @@ class TestExtendedProductViewPath(TapirIntegrationTest):
             "basket_size_equivalences": [],
             "description_in_bestellwizard": "test description",
             "url_of_image_in_bestellwizard": "https://test.url.com",
+            "capacity": 123,
         }
 
         url = reverse("subscriptions:extended_product")

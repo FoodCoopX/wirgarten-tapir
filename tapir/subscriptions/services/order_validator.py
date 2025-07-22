@@ -8,6 +8,7 @@ from tapir.pickup_locations.services.pickup_location_capacity_general_checker im
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
+from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )
@@ -70,6 +71,18 @@ class OrderValidator:
             raise ValidationError(
                 "Manche Produkte die nur einmal bestellt werden dürfen sind mehrmals in der Bestellung"
             )
+
+        for product, quantity in order.items():
+            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                product=product,
+                member_id=member.id if member is not None else None,
+                subscription_start_date=contract_start_date,
+                ordered_quantity=quantity,
+                cache=cache,
+            ):
+                raise ValidationError(
+                    f"Folgende Produkt hat nicht genug Kapazität für diese Bestellung: {product.name}"
+                )
 
     @classmethod
     def validate_cannot_reduce_size(

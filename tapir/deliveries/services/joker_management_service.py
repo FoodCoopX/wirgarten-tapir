@@ -14,7 +14,6 @@ from tapir.deliveries.services.weeks_without_delivery_service import (
 )
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
-from tapir.wirgarten.service.products import get_current_growing_period
 from tapir.wirgarten.utils import get_today
 
 
@@ -47,7 +46,9 @@ class JokerManagementService:
     def can_joker_be_used_relative_to_max_amount_per_growing_period(
         cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        growing_period = get_current_growing_period(reference_date, cache=cache)
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=reference_date, cache=cache
+        )
         if not growing_period:
             return False
 
@@ -157,7 +158,7 @@ class JokerManagementService:
     def can_joker_be_used_relative_to_restrictions(
         cls, member: Member, reference_date: datetime.date, cache: Dict
     ) -> bool:
-        growing_period = get_current_growing_period(
+        growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
         )
         restrictions = cls.get_extra_joker_restrictions(growing_period=growing_period)

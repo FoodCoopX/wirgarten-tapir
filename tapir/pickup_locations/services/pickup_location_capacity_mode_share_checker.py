@@ -1,11 +1,11 @@
 import datetime
 from typing import Dict
 
-from tapir.pickup_locations.services.highest_usage_after_date_service import (
-    HighestUsageAfterDateService,
-)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
+)
+from tapir.pickup_locations.services.pickup_location_highest_usage_after_date_service import (
+    PickupLocationHighestUsageAfterDateService,
 )
 from tapir.pickup_locations.services.share_capacities_service import (
     SharesCapacityService,
@@ -199,7 +199,7 @@ class PickupLocationCapacityModeShareChecker:
         reference_date: datetime.date,
         cache: Dict,
     ):
-        return HighestUsageAfterDateService.get_highest_usage_after_date_generic(
+        return PickupLocationHighestUsageAfterDateService.get_highest_usage_after_date_generic(
             pickup_location=pickup_location,
             reference_date=reference_date,
             lambda_get_usage_at_date=lambda data: (
