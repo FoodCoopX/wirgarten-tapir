@@ -12,6 +12,9 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
+import ConfirmModal from "../components/ConfirmModal.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
@@ -34,6 +37,8 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     Set<MemberDataToConfirm>
   >(new Set());
   const [selectedFilter, setSelectedFilter] = useState<ContractFilter>("all");
+  const [showRevokeConfirmModal, setShowRevokeConfirmModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -59,6 +64,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Zeichnungen: " + error.message,
+          addToast,
         ),
       )
       .finally(() => setLoading(false));
@@ -210,8 +216,53 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         setSelectedChanges(new Set());
         loadList();
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Bestätigen: " + error.message,
+          addToast,
+        ),
+      )
       .finally(() => setLoading(false));
+  }
+
+  function isAtLeastOneCancellationSelected() {
+    for (const change of selectedChanges) {
+      if (change.subscriptionCancellations.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function onConfirmRevoke() {
+    if (isAtLeastOneCancellationSelected()) {
+      alert("Kündigungen können nicht widerrufen werden.");
+    }
+
+    setLoading(true);
+
+    subscriptionsApi
+      .subscriptionsApiRevokeChangesCreate({
+        subscriptionCreationIds: getCreationIdsToConfirm(),
+        coopSharePurchaseIds: getCancellationIdsToConfirm(),
+      })
+      .then(() => {
+        setConfirmedChanges(new Set(selectedChanges));
+        setSelectedChanges(new Set());
+        loadList();
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Widerrufen: " + error.message,
+          addToast,
+        ),
+      )
+      .finally(() => {
+        setLoading(false);
+        setShowRevokeConfirmModal(false);
+      });
   }
 
   function getFilteredChanges(filter?: ContractFilter) {
@@ -248,6 +299,31 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     );
   }
 
+  function buildRevokeConfirmationModalText() {
+    return (
+      <>
+        <p>Bist du sicher das du folgende Änderungen widerrufen willst?</p>
+        <ul>
+          {Array.from(selectedChanges).map((change) => (
+            <li key={change.member.id}>
+              <a href={change.memberProfileUrl}>
+                {change.member.firstName} {change.member.lastName} #
+                {change.member.memberNo}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
+
+  function addToast(toastData: ToastData) {
+    setToastDatas((datas) => {
+      datas.push(toastData);
+      return [...datas];
+    });
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -263,19 +339,34 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                   Zeichnungen und Kündigungen{" "}
                   <Badge>{changesToConfirm.length}</Badge>
                 </h5>
-                <TapirButton
-                  text={
-                    "Auswahl bestätigen" +
-                    (selectedChanges.size > 0
-                      ? " (" + selectedChanges.size + ")"
-                      : "")
-                  }
-                  disabled={selectedChanges.size === 0}
-                  icon={"check"}
-                  variant={"primary"}
-                  onClick={onConfirm}
-                  loading={loading}
-                />
+                <div className={"d-flex flex-row gap-2"}>
+                  <TapirButton
+                    text={
+                      "Auswahl widerrufen" +
+                      (selectedChanges.size > 0
+                        ? " (" + selectedChanges.size + ")"
+                        : "")
+                    }
+                    disabled={selectedChanges.size === 0}
+                    icon={"contract_delete"}
+                    variant={"outline-danger"}
+                    onClick={() => setShowRevokeConfirmModal(true)}
+                    loading={loading}
+                  />
+                  <TapirButton
+                    text={
+                      "Auswahl bestätigen" +
+                      (selectedChanges.size > 0
+                        ? " (" + selectedChanges.size + ")"
+                        : "")
+                    }
+                    disabled={selectedChanges.size === 0}
+                    icon={"check"}
+                    variant={"primary"}
+                    onClick={onConfirm}
+                    loading={loading}
+                  />
+                </div>
               </div>
             </Card.Header>
             <ListGroup>
@@ -406,6 +497,20 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           </Card>
         </Col>
       </Row>
+      <ConfirmModal
+        open={showRevokeConfirmModal}
+        onConfirm={onConfirmRevoke}
+        message={buildRevokeConfirmationModalText()}
+        title={"Änderungen widerrufen"}
+        confirmButtonText={"Widerrufen"}
+        confirmButtonVariant={"danger"}
+        confirmButtonIcon={"contract_delete"}
+        onCancel={() => setShowRevokeConfirmModal(false)}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

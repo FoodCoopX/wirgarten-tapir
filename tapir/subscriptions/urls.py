@@ -73,6 +73,11 @@ urlpatterns = [
         member_profile.MemberProfileCapacityCheckApiView.as_view(),
         name="member_profile_capacity_check",
     ),
+    path(
+        "api/revoke_changes",
+        confirmations.RevokeChangesApiView.as_view(),
+        name="revoke_changes",
+    ),
 ]
 
 router = DefaultRouter()

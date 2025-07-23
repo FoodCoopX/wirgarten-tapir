@@ -28,11 +28,14 @@ from tapir.wirgarten.models import (
     Member,
     Subscription,
     CoopShareTransaction,
+    WaitingListEntry,
+    WaitingListProductWish,
 )
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
     format_subscription_list_html,
+    format_date,
 )
 
 
@@ -358,3 +361,87 @@ class ConfirmSubscriptionChangesView(APIView):
                     },
                 ),
             )
+
+
+class RevokeChangesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: str},
+        parameters=[
+            OpenApiParameter(
+                name="subscription_creation_ids", type=str, required=True, many=True
+            ),
+            OpenApiParameter(
+                name="coop_share_purchase_ids", type=str, required=True, many=True
+            ),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request: Request):
+        cache = {}
+
+        subscriptions = self.delete_objects_or_404(
+            ids_to_delete=request.query_params.getlist("subscription_creation_ids"),
+            model=Subscription,
+        )
+        share_transactions = self.delete_objects_or_404(
+            ids_to_delete=request.query_params.getlist("coop_share_purchase_ids"),
+            model=CoopShareTransaction,
+        )
+
+        if len(subscriptions) > 0:
+            member = subscriptions[0].member
+        else:
+            member = share_transactions[0].member
+
+        nb_shares = sum(
+            [share_transaction.quantity for share_transaction in share_transactions]
+        )
+
+        waiting_list_entry = WaitingListEntry.objects.create(
+            member=member,
+            comment=f"Erzeugt von einem Widerruf am {format_date(get_now(cache=cache))}",
+            number_of_coop_shares=nb_shares,
+            first_name=member.first_name,
+            last_name=member.last_name,
+            phone_number=member.phone_number,
+            email=member.email,
+            privacy_consent=get_now(cache=cache),
+        )
+
+        WaitingListProductWish.objects.bulk_create(
+            [
+                WaitingListProductWish(
+                    waiting_list_entry=waiting_list_entry,
+                    product_id=subscription.product_id,
+                    quantity=subscription.quantity,
+                )
+                for subscription in subscriptions
+            ],
+        )
+
+        return Response("OK")
+
+    @staticmethod
+    def delete_objects_or_404(ids_to_delete: list[str], model: Type[Model]):
+        ids_to_delete = [
+            ids_to_delete.strip()
+            for ids_to_delete in ids_to_delete
+            if ids_to_delete.strip() != ""
+        ]
+
+        objects_to_delete = model.objects.filter(
+            id__in=ids_to_delete, admin_confirmed__isnull=True
+        ).select_related("member")
+        found_ids = [obj.id for obj in objects_to_delete]
+        ids_not_found = [
+            object_id for object_id in ids_to_delete if object_id not in found_ids
+        ]
+
+        if len(ids_not_found) > 0:
+            raise Http404(f"Could not find {model.__name__} with ids {ids_not_found}")
+
+        objects = list(objects_to_delete)
+        objects_to_delete.delete()
+        return objects

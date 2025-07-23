@@ -60,11 +60,11 @@ INSTALLED_APPS = [
     "django_select2",  # For autocompletion in form fields
     "phonenumber_field",
     "localflavor",
-    # TODO(Leon Handreke): Don't install in prod
     "django_extensions",
     "formtools",
     "tapir.wirgarten_site",
     "rest_framework",
+    "rest_framework.authtoken",
     "drf_spectacular",
     "django_vite",
 ]
@@ -198,7 +198,9 @@ BOOTSTRAP_DATEPICKER_PLUS = {
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "tapir.accounts.drf_authentication.DrfForwardAuthentication"
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "tapir.accounts.drf_authentication.DrfForwardAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
