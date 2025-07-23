@@ -30,7 +30,7 @@ from tapir.wirgarten.utils import format_date
 class TestCancelSubscriptionsPostView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         mock_timezone(self, NOW)

@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestJokerManagementServiceDoesMemberHaveAJokerInWeek(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_doesMemberHaveAJokerInWeek_noJokerInWeek_returnsFalse(self):
         member = MemberFactory.create()

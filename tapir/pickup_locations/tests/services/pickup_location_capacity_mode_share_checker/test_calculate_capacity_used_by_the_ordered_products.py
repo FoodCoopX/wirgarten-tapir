@@ -16,7 +16,7 @@ class TestCalculateCapacityUsedByTheOrderedProducts(TapirIntegrationTest):
     def test_calculateCapacityUsedByTheOrderedProducts_default_returnsCorrectValue(
         self,
     ):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         reference_date = datetime.date(2020, 1, 1)
         product_type = ProductTypeFactory.create()
         product_s = ProductFactory(name="S", type=product_type)

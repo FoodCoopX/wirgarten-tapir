@@ -23,7 +23,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_waitingListView_loggedInAsNormalUser_redirectsToUserProfile(self):
         member = MemberFactory.create()

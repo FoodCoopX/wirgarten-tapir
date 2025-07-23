@@ -62,7 +62,7 @@ class ParameterMetaInfo:
 
     def initialize(self):
         for cls in TapirParameterDefinitionImporter.__subclasses__():
-            cls.import_definitions(cls)
+            cls().import_definitions()
         self.initialized = True
 
 
@@ -112,6 +112,7 @@ def parameter_definition(
     meta: ParameterMeta = ParameterMeta(
         options=None, validators=[], vars_hint=None, textarea=False
     ),
+    no_db_request=False,
 ):
     __validate_initial_value(datatype, initial_value, key, meta.validators)
 
@@ -125,9 +126,12 @@ def parameter_definition(
         order_priority,
         enabled,
         debug,
+        no_db_request,
     )
 
     meta_info.parameters[param.key] = meta
+
+    return param
 
 
 def __create_or_update_parameter(
@@ -140,7 +144,26 @@ def __create_or_update_parameter(
     order_priority,
     enabled: bool,
     debug: bool,
+    no_db_request: bool,
 ):
+    """
+    Updates the parameter in the DB if it exists, otherwise returns the new object, not yet persisted.
+    """
+
+    if no_db_request:
+        param = TapirParameter(
+            key=key,
+            label=label,
+            description=description,
+            category=category,
+            order_priority=order_priority,
+            datatype=datatype.value,
+            value=str(initial_value),
+            enabled=enabled,
+            debug=debug,
+        )
+        return param
+
     try:
         param = TapirParameter.objects.get(pk=key)
         param.label = label

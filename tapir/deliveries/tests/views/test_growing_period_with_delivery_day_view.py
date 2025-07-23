@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGrowingPeriodWithDeliveryDayAdjustmentsView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_get_loggedInAsNormalUser_returns403(self):
         member = MemberFactory.create()

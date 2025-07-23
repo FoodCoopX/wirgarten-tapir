@@ -9,7 +9,7 @@ from tapir.wirgarten.utils import get_now
 class TestBuildContextForEntry(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_buildContextForEntry_default_buildsContextWithOnlyUsedColumns(self):
         member = MemberFactory(member_no=1234, first_name="John")

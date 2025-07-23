@@ -15,7 +15,7 @@ from tapir.wirgarten.utils import get_now
 class TestRevokeChangesAPIView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_post_loggedInAsNormalUser_returns403(self):
         actor = MemberFactory.create(is_superuser=False)
@@ -91,9 +91,11 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         self.assertIn(transaction_other_member.id, transaction_ids)
         self.assertNotIn(transaction, transaction_ids)
 
-        waiting_list_entry = WaitingListEntry.objects.first()
+        waiting_list_entry = WaitingListEntry.objects.prefetch_related(
+            "product_wishes"
+        ).first()
         self.assertIsNotNone(waiting_list_entry)
-        self.assertEqual(member.id, waiting_list_entry.member.id)
+        self.assertEqual(member.id, waiting_list_entry.member_id)
         self.assertEqual(7, waiting_list_entry.number_of_coop_shares)
 
         product_wishes = waiting_list_entry.product_wishes.all()

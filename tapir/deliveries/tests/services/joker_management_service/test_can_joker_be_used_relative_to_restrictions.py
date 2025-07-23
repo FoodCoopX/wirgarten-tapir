@@ -13,7 +13,7 @@ class TestJokerManagementServiceCanJokerBeUsedRelativeToRestrictions(
 ):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_canJokerBeUsedRelativeToRestrictions_noRestrictions_returnsTrue(self):
         GrowingPeriodFactory.create(

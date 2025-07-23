@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestWaitingListCategoriesView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_WAITING_LIST_CATEGORIES
         ).update(value="cat1,cat2")

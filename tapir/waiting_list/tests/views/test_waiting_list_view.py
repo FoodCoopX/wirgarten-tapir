@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestWaitingListView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         product = ProductFactory.create()
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=product.type_id

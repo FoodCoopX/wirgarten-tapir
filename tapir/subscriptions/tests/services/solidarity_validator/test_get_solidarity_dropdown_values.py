@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, call
 
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
@@ -13,12 +13,14 @@ class TestGetSolidarityDropdownValues(SimpleTestCase):
     def test_getSolidarityDropdownValues_unitIsPercentage_returnsCorrectPercentages(
         self, mock_get_parameter_value: Mock
     ):
-        mock_get_parameter_value.return_value = SOLIDARITY_UNIT_PERCENT
+        parameter_values = {
+            ParameterKeys.SOLIDARITY_UNIT: SOLIDARITY_UNIT_PERCENT,
+            ParameterKeys.SOLIDARITY_CHOICES: "-5,0,5",
+        }
+        mock_get_parameter_value.side_effect = lambda key, cache: parameter_values[key]
         cache = Mock()
 
-        result = SolidarityValidator.get_solidarity_dropdown_values(
-            "-5,0,5", cache=cache
-        )
+        result = SolidarityValidator.get_solidarity_dropdown_values(cache=cache)
 
         self.assertEqual(
             {
@@ -30,20 +32,27 @@ class TestGetSolidarityDropdownValues(SimpleTestCase):
             result,
         )
 
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SOLIDARITY_UNIT, cache=cache
+        mock_get_parameter_value.assert_has_calls(
+            [
+                call(ParameterKeys.SOLIDARITY_UNIT, cache=cache),
+                call(ParameterKeys.SOLIDARITY_CHOICES, cache=cache),
+            ],
+            any_order=True,
         )
+        self.assertEqual(2, mock_get_parameter_value.call_count)
 
     @patch("tapir.subscriptions.services.solidarity_validator.get_parameter_value")
     def test_getSolidarityDropdownValues_unitIsAbsolute_returnsCorrectValues(
         self, mock_get_parameter_value: Mock
     ):
-        mock_get_parameter_value.return_value = SOLIDARITY_UNIT_ABSOLUTE
+        parameter_values = {
+            ParameterKeys.SOLIDARITY_UNIT: SOLIDARITY_UNIT_ABSOLUTE,
+            ParameterKeys.SOLIDARITY_CHOICES: "-7.5,12",
+        }
+        mock_get_parameter_value.side_effect = lambda key, cache: parameter_values[key]
         cache = Mock()
 
-        result = SolidarityValidator.get_solidarity_dropdown_values(
-            "-7.5,12", cache=cache
-        )
+        result = SolidarityValidator.get_solidarity_dropdown_values(cache=cache)
 
         self.assertEqual(
             {
@@ -55,9 +64,14 @@ class TestGetSolidarityDropdownValues(SimpleTestCase):
             result,
         )
 
-        mock_get_parameter_value.assert_called_once_with(
-            ParameterKeys.SOLIDARITY_UNIT, cache=cache
+        mock_get_parameter_value.assert_has_calls(
+            [
+                call(ParameterKeys.SOLIDARITY_UNIT, cache=cache),
+                call(ParameterKeys.SOLIDARITY_CHOICES, cache=cache),
+            ],
+            any_order=True,
         )
+        self.assertEqual(2, mock_get_parameter_value.call_count)
 
     def test_getSolidarityDropdownValues_invalidValue_raisesException(self):
         with self.assertRaises(Exception):

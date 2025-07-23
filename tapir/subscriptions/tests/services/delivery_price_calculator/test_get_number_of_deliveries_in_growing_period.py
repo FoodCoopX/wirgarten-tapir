@@ -13,7 +13,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetNumberOfDeliveriesInGrowingPeriod(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_getNumberOfDeliveriesInGrowingPeriod_deliveryCycleIsNoDeliveries_returns0(
         self,

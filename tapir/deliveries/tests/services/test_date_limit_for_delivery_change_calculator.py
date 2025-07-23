@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestDateLimitForDeliveryChanceCalculator(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_calculateDateLimitForDeliveryChanges_default_returnsCorrectDate(self):
         TapirParameter.objects.filter(

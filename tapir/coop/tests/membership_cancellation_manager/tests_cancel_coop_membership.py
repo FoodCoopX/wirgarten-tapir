@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestCancelCoopMembership(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2024, month=9, day=27))

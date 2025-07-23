@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestSendWarningMailIfNecessary(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT
         ).update(value=8)

@@ -23,7 +23,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
         self.now = mock_timezone(self, NOW)

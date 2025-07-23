@@ -35,7 +35,7 @@ class TestMemberAddSubscription(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         product_capacity_base: ProductCapacity = ProductCapacityFactory.create(
             capacity=100,
             product_type__name="Ernteanteile",

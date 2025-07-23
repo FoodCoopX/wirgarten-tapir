@@ -31,6 +31,10 @@ class SolidarityValidator:
             parameter_value = get_parameter_value(
                 ParameterKeys.SOLIDARITY_CHOICES, cache=cache
             )
+            unit = get_parameter_value(ParameterKeys.SOLIDARITY_UNIT, cache=cache)
+        else:
+            unit = SOLIDARITY_UNIT_PERCENT
+
         values_as_string = parameter_value.split(",")
         values: list[float | str] = [float(value.strip()) for value in values_as_string]
 
@@ -39,8 +43,6 @@ class SolidarityValidator:
 
         if "custom" not in values:
             values.append("custom")
-
-        unit = get_parameter_value(ParameterKeys.SOLIDARITY_UNIT, cache=cache)
 
         return {
             value: cls.get_value_display(value=value, unit=unit) for value in values

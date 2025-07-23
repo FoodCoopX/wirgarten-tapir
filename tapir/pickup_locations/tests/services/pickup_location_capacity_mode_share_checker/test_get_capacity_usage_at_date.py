@@ -23,7 +23,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetCapacityUsageAtDate(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         member = MemberFactory.create()
         cls.pickup_location = PickupLocationFactory.create()
         cls.reference_date = datetime.date(year=2026, month=3, day=12)

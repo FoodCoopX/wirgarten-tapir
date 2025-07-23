@@ -30,7 +30,7 @@ class TestGetDeliveriesServiceBuildDeliveryObject(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_buildDeliveryObject_noSubscriptionWithDeliveryOnGivenWeek_returnsNone(
         self,

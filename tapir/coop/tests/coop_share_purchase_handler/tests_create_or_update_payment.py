@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestCreateOrUpdatePayment(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(CoopSharePurchaseHandler, "get_payment_due_date")
     def test_createOrUpdatePayment_paymentAlreadyExistsAtDueDate_existingPaymentUpdated(

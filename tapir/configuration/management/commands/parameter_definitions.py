@@ -13,4 +13,4 @@ class Command(BaseCommand):
 
         for cls in TapirParameterDefinitionImporter.__subclasses__():
             self.stdout.write(" - " + cls.__module__ + "." + cls.__name__)
-            cls.import_definitions(cls)
+            cls().import_definitions()

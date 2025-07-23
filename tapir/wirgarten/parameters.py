@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
+    TapirParameter,
 )
 from tapir.configuration.parameter import ParameterMeta, parameter_definition
 from tapir.configuration.parameter import get_parameter_value
@@ -70,8 +71,17 @@ class ParameterCategory:
 
 
 class ParameterDefinitions(TapirParameterDefinitionImporter):
-    def import_definitions(self):
+    def __init__(self):
+        self.parameters_to_create = []
+        self.no_db_request = False
 
+    def import_definitions(self, bulk_create=False):
+        self.no_db_request = bulk_create
+        self.define_all_parameters()
+        if bulk_create:
+            TapirParameter.objects.bulk_create(self.parameters_to_create)
+
+    def define_all_parameters(self):
         from tapir.wirgarten.models import ProductType
         from tapir.wirgarten.validators import (
             validate_html,
@@ -82,7 +92,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             BasketSizeCapacitiesService,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
             label="Abholort-Änderung möglich bis",
             datatype=TapirParameterDatatype.INTEGER,
@@ -92,7 +102,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_NAME,
             label="Standort Name",
             datatype=TapirParameterDatatype.STRING,
@@ -102,7 +112,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=1000,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_STREET,
             label="Straße u. Hausnummer",
             datatype=TapirParameterDatatype.STRING,
@@ -112,7 +122,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=900,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_CITY,
             label="Postleitzahl u. Ort",
             datatype=TapirParameterDatatype.STRING,
@@ -122,7 +132,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=800,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_EMAIL,
             label="Kontakt Email-Adresse",
             datatype=TapirParameterDatatype.STRING,
@@ -132,7 +142,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(validators=[EmailValidator()]),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_ADMIN_EMAIL,
             label="Admin Email",
             datatype=TapirParameterDatatype.STRING,
@@ -142,7 +152,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(validators=[EmailValidator()]),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_ADMIN_NAME,
             label="Admin/Ansprechpartner Name",
             datatype=TapirParameterDatatype.STRING,
@@ -151,7 +161,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SITE,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_ADMIN_TELEPHONE,
             label="Admin/Ansprechpartner Telefonnummer",
             datatype=TapirParameterDatatype.STRING,
@@ -160,7 +170,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SITE,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_ADMIN_IMAGE,
             label="Admin/Ansprechpartner Foto",
             datatype=TapirParameterDatatype.STRING,
@@ -169,7 +179,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SITE,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_PRIVACY_LINK,
             label="Link zur Datenschutzerklärung",
             datatype=TapirParameterDatatype.STRING,
@@ -179,7 +189,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SITE_FAQ_LINK,
             label="Link zum Mitglieder-FAQ",
             datatype=TapirParameterDatatype.STRING,
@@ -189,7 +199,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_MIN_SHARES,
             label="Mindestanzahl Genossenschaftsanteile",
             datatype=TapirParameterDatatype.INTEGER,
@@ -203,7 +213,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_STATUTE_LINK,
             label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,
@@ -216,7 +226,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_INFO_LINK,
             label="Link zu weiteren Infos über der Betrieb",
             datatype=TapirParameterDatatype.STRING,
@@ -226,7 +236,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(validators=[URLValidator()]),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT,
             label="Schwelle Anzahl an Geno-Anteile bei Zeichnungen",
             datatype=TapirParameterDatatype.INTEGER,
@@ -236,7 +246,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUPPLIER_LIST_PRODUCT_TYPES,
             label="Produkte für Lieferantenlisten",
             datatype=TapirParameterDatatype.STRING,
@@ -245,7 +255,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SUPPLIER_LIST,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUPPLIER_LIST_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -254,7 +264,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.SUPPLIER_LIST,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.PICKING_PRODUCT_TYPES,
             label="Produkte für Kommisionierliste",
             datatype=TapirParameterDatatype.STRING,
@@ -264,7 +274,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=4,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.PICKING_SEND_ADMIN_EMAIL,
             label="Automatische Email an Admin",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -274,7 +284,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=5,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.PICKING_MODE,
             label="Kommissionierungsmodus",
             datatype=TapirParameterDatatype.STRING,
@@ -286,7 +296,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.PICKING_BASKET_SIZES,
             label="Kistengrößen",
             datatype=TapirParameterDatatype.STRING,
@@ -299,7 +309,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.PAYMENT_DUE_DAY,
             label="Fälligkeitsdatum der Beitragszahlungen (Tag des Monats)",
             datatype=TapirParameterDatatype.INTEGER,
@@ -315,7 +325,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.DELIVERY_DAY,
             label="Wochentag an dem Ware geliefert wird",
             datatype=TapirParameterDatatype.INTEGER,
@@ -325,7 +335,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES,
             label="Genossenschaftsanteile separat von Ernteanteilen zeichenbar",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -349,7 +359,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             "next_period_end_date",
         ]
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
@@ -362,7 +372,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_UNKOWN_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat weder verlängert noch gekündigt",
             datatype=TapirParameterDatatype.STRING,
@@ -379,7 +389,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
@@ -392,7 +402,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_CANCELLED_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat explizit gekündigt",
             datatype=TapirParameterDatatype.STRING,
@@ -409,7 +419,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
@@ -422,7 +432,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_RENEWED_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Mitglied hat Verträge verlängert",
             datatype=TapirParameterDatatype.STRING,
@@ -439,7 +449,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_HEADER,
             label="Überschrift: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
@@ -450,7 +460,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(vars_hint=MEMBER_RENEWAL_ALERT_VARS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_RENEWAL_ALERT_WAITLIST_CONTENT,
             label="Text: Hinweis zur Vertragsverlängerung -> Keine Kapazität (Warteliste)",
             datatype=TapirParameterDatatype.STRING,
@@ -467,7 +477,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES,
             label="Kündigungsgründe",
             datatype=TapirParameterDatatype.STRING,
@@ -492,7 +502,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 else None
             )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.COOP_BASE_PRODUCT_TYPE,
             label="Basis Produkttyp",
             datatype=TapirParameterDatatype.STRING,
@@ -509,7 +519,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
             label="TEMPORÄR: Umgehe Keycloak bei der Erstellung von Accounts",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -519,7 +529,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.JOKERS_ENABLED,
             label="Joker-Feature einschalten",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -529,7 +539,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=3,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL,
             label="Automatische Verlängerung der Verträge",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -540,7 +550,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD,
             label="Kündigungsfrist",
             datatype=TapirParameterDatatype.INTEGER,
@@ -556,7 +566,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT,
             label="Einheit der Kündigungsfrist",
             datatype=TapirParameterDatatype.STRING,
@@ -573,7 +583,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT,
             label="Zusatzproduktverträge erlauben ohne Basisproduktvertrag",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -584,7 +594,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=0,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_WAITING_LIST_CATEGORIES,
             label="Warteliste-Kategorien",
             datatype=TapirParameterDatatype.STRING,
@@ -594,7 +604,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=1,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT,
             label="Startpunkt der 4-Wochigen Lieferrhythmus",
             datatype=TapirParameterDatatype.DATE,
@@ -604,7 +614,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=1,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SUBSCRIPTION_BUFFER_TIME_BEFORE_START,
             label="Vorlaufzeit zu Vertragsstart",
             datatype=TapirParameterDatatype.INTEGER,
@@ -614,7 +624,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=1,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED,
             label="Probezeit einschalten",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -625,7 +635,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_DURATION,
             label="Probezeit dauer",
             datatype=TapirParameterDatatype.INTEGER,
@@ -641,7 +651,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_UNIT,
             label="Probezeit Dauer Einheit",
             datatype=TapirParameterDatatype.STRING,
@@ -658,7 +668,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END,
             label="Probezeit kann flexibel gekündigt werden.",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -674,7 +684,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         if getattr(settings, "DEBUG", False):
-            parameter_definition(
+            self.parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE_PRESET,
                 label="Datum festlegen",
                 datatype=TapirParameterDatatype.STRING,
@@ -689,7 +699,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 meta=ParameterMeta(options=TEST_DATE_OVERRIDE_OPTIONS),
             )
 
-            parameter_definition(
+            self.parameter_definition(
                 key=ParameterKeys.TESTS_OVERRIDE_DATE,
                 label="Beliebiges Test-Datum",
                 datatype=TapirParameterDatatype.STRING,
@@ -712,9 +722,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         self.import_definitions_organization()
         self.import_definitions_bestellwizard()
 
-    @classmethod
-    def import_definitions_organization(cls):
-        parameter_definition(
+    def import_definitions_organization(self):
+        self.parameter_definition(
             key=ParameterKeys.ORGANISATION_LEGAL_STATUS,
             label="Rechtsform der Organisation",
             datatype=TapirParameterDatatype.STRING,
@@ -726,7 +735,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             enabled=is_debug_instance(),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.ORGANISATION_THEME,
             label="Theme",
             datatype=TapirParameterDatatype.STRING,
@@ -737,7 +746,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(options=THEME_OPTIONS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
             label="Vertriebskanäle",
             datatype=TapirParameterDatatype.STRING,
@@ -747,7 +756,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=3,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
             label="Studenten dürfen ohne Genossenschaft-Anteile Produkte bestellen",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -757,13 +766,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
-    @classmethod
-    def import_definitions_solidarity(cls):
+    def import_definitions_solidarity(self):
         from tapir.subscriptions.services.solidarity_validator import (
             SolidarityValidator,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SOLIDARITY_UNIT,
             label="Einheit des Solidarbeitrag",
             datatype=TapirParameterDatatype.STRING,
@@ -773,7 +781,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(options=SOLIDARITY_UNIT_OPTIONS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.SOLIDARITY_CHOICES,
             label="Vordefinierte Solidarbeitrag-Werten",
             datatype=TapirParameterDatatype.STRING,
@@ -788,7 +796,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             ),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED,
             label="Solidarpreise möglich",
             datatype=TapirParameterDatatype.INTEGER,
@@ -798,7 +806,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(options=SOLIDARITY_MODE_OPTIONS),
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.HARVEST_MEMBERS_ARE_ALLOWED_TO_CHANGE_SOLIPRICE,
             label="Mitglieder dürfen der Solibeitrag laufend ändern",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -808,9 +816,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.HARVEST,
         )
 
-    @classmethod
-    def import_definitions_bestellwizard(cls):
-        parameter_definition(
+    def import_definitions_bestellwizard(self):
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             label="BestellWizard in Warteiste-Modus",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -820,7 +827,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.BESTELLWIZARD,
         )
 
-        parameter_definition(
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
             label="Intro-Seite zeigen",
             datatype=TapirParameterDatatype.BOOLEAN,
@@ -829,3 +836,35 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             "Wenn ausgeschaltet ist diese Seite nicht angezeigt. Der BestellWizard verhält sich wie der Benutzer alle Produkte bei der Intro-Seite ausgewählte hätte.",
             category=ParameterCategory.BESTELLWIZARD,
         )
+
+    def parameter_definition(
+        self,
+        key: str,
+        label: str,
+        description: str,
+        category: str,
+        datatype: TapirParameterDatatype,
+        initial_value: str | int | float | bool | datetime.date,
+        order_priority: int = -1,
+        enabled: bool = True,
+        debug: bool = False,
+        meta: ParameterMeta = ParameterMeta(
+            options=None, validators=[], vars_hint=None, textarea=False
+        ),
+    ):
+        parameter_to_create = parameter_definition(
+            key=key,
+            label=label,
+            description=description,
+            category=category,
+            datatype=datatype,
+            initial_value=initial_value,
+            order_priority=order_priority,
+            enabled=enabled,
+            debug=debug,
+            meta=meta,
+            no_db_request=self.no_db_request,
+        )
+
+        if self.no_db_request:
+            self.parameters_to_create.append(parameter_to_create)

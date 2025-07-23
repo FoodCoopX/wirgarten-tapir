@@ -32,7 +32,7 @@ class TestPickupLocationCapacityEvolutionView(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def test_pickupLocationCapacityEvolutionView_loggedInAsNormalUser_returns403(
         self,

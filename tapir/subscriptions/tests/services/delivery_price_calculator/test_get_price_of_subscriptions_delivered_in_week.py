@@ -12,7 +12,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(
         DeliveryPriceCalculator, "get_price_of_single_delivery_without_solidarity"

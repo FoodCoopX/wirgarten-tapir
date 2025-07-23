@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetQuerysetMembersWithJokerUsed(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
         GrowingPeriodFactory.create(
             start_date=datetime.date(year=2022, month=1, day=1),

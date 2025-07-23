@@ -16,7 +16,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestGetSubscriptionsThatGetDeliveredInWeek(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         cls.growing_period = GrowingPeriodFactory.create(
             start_date=datetime.date(year=2025, month=1, day=1),
             end_date=datetime.date(year=2025, month=1, day=31),

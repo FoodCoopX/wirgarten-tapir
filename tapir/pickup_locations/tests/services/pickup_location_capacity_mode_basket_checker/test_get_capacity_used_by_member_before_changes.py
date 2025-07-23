@@ -29,7 +29,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         )
 
     def test_getCapacityUsedByMemberBeforeChanges_default_otherMemberNotCounted(self):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium"
         )
@@ -79,7 +79,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
     def test_getCapacityUsedByMemberBeforeChanges_default_inactiveSubscriptionNotCounted(
         self,
     ):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium"
         )

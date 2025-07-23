@@ -18,7 +18,7 @@ class TestGet(TapirIntegrationTest):
 
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
         mock_timezone(self, datetime.datetime(year=2023, month=2, day=15))

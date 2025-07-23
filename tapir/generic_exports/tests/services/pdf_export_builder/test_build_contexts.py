@@ -11,7 +11,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestBuildContexts(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(PdfExportBuilder, "build_context_for_entry")
     def test_buildContexts_default_buildsContextOnlyForUsedColumns(

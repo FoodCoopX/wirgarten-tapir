@@ -28,7 +28,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
         )
 
     def test_getCapacityUsedByMemberBeforeChanges_default_otherMemberNotCounted(self):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         product_type = ProductTypeFactory.create()
         product_s = ProductFactory(name="S", type=product_type)
         product_m = ProductFactory(name="M", type=product_type)
@@ -76,7 +76,7 @@ class TestGetCapacityUsedByMemberBeforeChanges(TapirIntegrationTest):
     def test_getCapacityUsedByMemberBeforeChanges_default_inactiveSubscriptionNotCounted(
         self,
     ):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         product_type = ProductTypeFactory.create()
         product_s = ProductFactory(name="S", type=product_type)
         product_m = ProductFactory(name="M", type=product_type)

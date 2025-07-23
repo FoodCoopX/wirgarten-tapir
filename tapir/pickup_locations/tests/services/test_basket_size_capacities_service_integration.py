@@ -15,7 +15,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestBasketSizeCapacitiesServiceIntegration(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium"
         )

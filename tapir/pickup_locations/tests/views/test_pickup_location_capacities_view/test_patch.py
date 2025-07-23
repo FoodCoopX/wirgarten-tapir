@@ -27,7 +27,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestPickupLocationCapacitiesViewPatch(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         cls.pickup_location = PickupLocationFactory.create()
         cls.product_type_1 = ProductTypeFactory.create(
             name="test product type 1", delivery_cycle=WEEKLY[0]

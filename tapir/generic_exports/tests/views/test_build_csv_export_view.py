@@ -14,7 +14,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestBuildCsvExportView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(CsvExportBuilder, "create_exported_file")
     def test_buildCsvExportView_default_returnsCorrectData(

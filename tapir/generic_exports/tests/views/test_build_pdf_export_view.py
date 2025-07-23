@@ -14,7 +14,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestBuildPdfExportView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     @patch.object(PdfExportBuilder, "create_exported_files")
     def test_buildPdfExportView_default_returnsCorrectData(

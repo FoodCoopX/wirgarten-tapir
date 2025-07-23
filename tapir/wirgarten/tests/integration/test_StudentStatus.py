@@ -31,7 +31,7 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 class TestStudentStatus(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(
             key=ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES
         ).update(value="True")

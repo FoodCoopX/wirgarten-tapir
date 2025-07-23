@@ -35,7 +35,7 @@ from tapir.wirgarten.tests.test_utils import (
 class TestAdditionalProductForm(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self):
         now = datetime.datetime(year=2023, month=6, day=12)

@@ -26,7 +26,7 @@ from tapir.wirgarten.views.register import (
 class TestRegistrationWizardViewBase(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         cls.product: Product = ProductFactory.create()
         TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
             value=cls.product.type_id

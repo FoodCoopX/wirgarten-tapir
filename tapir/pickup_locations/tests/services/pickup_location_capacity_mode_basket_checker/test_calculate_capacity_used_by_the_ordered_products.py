@@ -13,7 +13,7 @@ class TestCalculateCapacityUsedByTheOrderedProducts(TapirIntegrationTest):
     def test_calculateCapacityUsedByTheOrderedProducts_default_returnsCorrectValue(
         self,
     ):
-        ParameterDefinitions().import_definitions()
+        ParameterDefinitions().import_definitions(bulk_create=True)
         TapirParameter.objects.filter(key=ParameterKeys.PICKING_BASKET_SIZES).update(
             value="small;medium"
         )
