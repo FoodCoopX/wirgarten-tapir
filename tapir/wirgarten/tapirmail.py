@@ -303,6 +303,16 @@ def _register_triggers():
         required=True,
     )
 
+    register_transactional_trigger(
+        name="Bestellung vom Admin bestätigt",
+        key=Events.ORDER_CONFIRMED_BY_ADMIN,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Anzahl an GenoAnteile": "number_of_coop_shares",
+        },
+        required=True,
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False

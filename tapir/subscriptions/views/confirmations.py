@@ -9,6 +9,10 @@ from rest_framework import status, permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
@@ -19,6 +23,7 @@ from tapir.subscriptions.serializers import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -27,6 +32,7 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
+    format_subscription_list_html,
 )
 
 
@@ -271,6 +277,11 @@ class ConfirmSubscriptionChangesView(APIView):
             cache=cache,
         )
 
+        self.send_confirmation_mail_if_necessary(
+            confirm_creation_ids=confirm_creation_ids,
+            confirm_purchase_ids=confirm_purchase_ids,
+        )
+
         return Response("OK", status=status.HTTP_200_OK)
 
     @staticmethod
@@ -280,26 +291,70 @@ class ConfirmSubscriptionChangesView(APIView):
         confirmation_field: str,
         cache: dict,
     ):
-        subscription_ids_to_confirm = [
-            subscription_id.strip()
-            for subscription_id in ids_to_confirm
-            if subscription_id.strip() != ""
+        ids_to_confirm = [
+            id_to_confirm.strip()
+            for id_to_confirm in ids_to_confirm
+            if id_to_confirm.strip() != ""
         ]
 
-        subscriptions_to_confirm = model.objects.filter(
-            id__in=subscription_ids_to_confirm
-        ).filter(**{f"{confirmation_field}__isnull": True})
+        objects_to_confirm = model.objects.filter(id__in=ids_to_confirm).filter(
+            **{f"{confirmation_field}__isnull": True}
+        )
 
         ids_not_found = [
-            subscription_id
-            for subscription_id in subscription_ids_to_confirm
-            if subscription_id
-            not in [subscription.id for subscription in subscriptions_to_confirm]
+            object_id
+            for object_id in ids_to_confirm
+            if object_id not in [obj.id for obj in objects_to_confirm]
         ]
 
         if len(ids_not_found) > 0:
             raise Http404(
-                f"No subscription to confirm with ids {ids_not_found} found, field: {confirmation_field}"
+                f"No {model.__name__} to confirm with ids {ids_not_found} found, field: {confirmation_field}"
             )
 
-        subscriptions_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
+        objects_to_confirm.update(**{confirmation_field: get_now(cache=cache)})
+
+    @staticmethod
+    def send_confirmation_mail_if_necessary(confirm_creation_ids, confirm_purchase_ids):
+        if len(confirm_creation_ids) == 0 and len(confirm_purchase_ids) == 0:
+            return
+
+        data_by_member = {}
+
+        for subscription in Subscription.objects.filter(
+            id__in=confirm_creation_ids
+        ).select_related("member"):
+            if subscription.member not in data_by_member.keys():
+                data_by_member[subscription.member] = {
+                    "subscriptions": [],
+                    "number_of_coop_shares": 0,
+                }
+
+            data_by_member[subscription.member]["subscriptions"].append(subscription)
+
+        for share_transaction in CoopShareTransaction.objects.filter(
+            id__in=confirm_purchase_ids
+        ).select_related("member"):
+            if share_transaction.member not in data_by_member.keys():
+                data_by_member[share_transaction.member] = {
+                    "subscriptions": [],
+                    "number_of_coop_shares": 0,
+                }
+
+            data_by_member[share_transaction.member][
+                "number_of_coop_shares"
+            ] += share_transaction.quantity
+
+        for member, data in data_by_member.items():
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.ORDER_CONFIRMED_BY_ADMIN,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "contract_list": format_subscription_list_html(
+                            data["subscriptions"]
+                        ),
+                        "number_of_coop_shares": data["number_of_coop_shares"],
+                    },
+                ),
+            )
