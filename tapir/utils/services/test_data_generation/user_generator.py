@@ -10,6 +10,7 @@ from faker import Faker
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -37,7 +38,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     get_or_create_mandate_ref,
-    buy_cooperative_shares,
 )
 from tapir.wirgarten.tasks import generate_member_numbers
 from tapir.wirgarten.utils import get_today
@@ -391,10 +391,10 @@ class UserGenerator:
 
         shares = max(1, min_shares)
 
-        buy_cooperative_shares(
+        CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=shares,
             member=member,
-            start_date=member.date_joined.date(),
+            shares_valid_at=member.date_joined.date(),
             cache=cache,
         )
 

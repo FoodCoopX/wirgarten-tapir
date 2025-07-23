@@ -10,6 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -41,7 +42,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    buy_cooperative_shares,
     create_mandate_ref,
     send_order_confirmation,
 )
@@ -440,14 +440,15 @@ class RegistrationWizardViewBase(CookieWizardView):
 
             mandate_ref = create_mandate_ref(member, cache=self.cache)
             if not member.is_student and STEP_COOP_SHARES in form_dict.keys():
-                buy_cooperative_shares(
-                    quantity=form_dict[STEP_COOP_SHARES].cleaned_data[
-                        "cooperative_shares"
-                    ]
-                    / settings.COOP_SHARE_PRICE,
+                number_of_shares = (
+                    form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
+                    / settings.COOP_SHARE_PRICE
+                )
+                CoopSharePurchaseHandler.buy_cooperative_shares(
+                    quantity=number_of_shares,
                     member=member,
-                    start_date=actual_coop_start,
-                    mandate_ref=mandate_ref,
+                    shares_valid_at=actual_coop_start,
+                    cache=self.cache,
                 )
 
             if STEP_BASE_PRODUCT in form_dict and is_base_product_selected(

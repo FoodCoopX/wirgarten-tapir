@@ -37,7 +37,6 @@ from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import (
     legal_status_is_cooperative,
-    legal_status_is_association,
 )
 
 OPTIONS_WEEKDAYS = [
@@ -228,28 +227,13 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
-            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD,
-            label="Kündigungsfrist für die Vereinsmitgliedschaft",
+            key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT,
+            label="Schwelle Anzahl an Geno-Anteile bei Zeichnungen",
             datatype=TapirParameterDatatype.INTEGER,
-            initial_value=2,
-            description="",
+            initial_value=10,
+            description="Wenn mehr als der angegebene Anzahl an Geno-Anteile gezeichnet werden, wird ein Mail an der Admin versendet.",
             category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(show_only_when=legal_status_is_association),
-            enabled=is_debug_instance(),
-        )
-
-        parameter_definition(
-            key=ParameterKeys.COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT,
-            label="Einheit der Kündigungsfrist für die Vereinsmitgliedschaft",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
-            description="Ob der Feld 'Kündigungsfrist für die Vereinsmitgliedschaft' Monate oder Wochen angibt",
-            category=ParameterCategory.BUSINESS,
-            meta=ParameterMeta(
-                options=NOTICE_PERIOD_UNIT_OPTIONS,
-                show_only_when=legal_status_is_association,
-            ),
-            enabled=is_debug_instance(),
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
         )
 
         parameter_definition(

@@ -12,6 +12,7 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.log.models import TextLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
@@ -40,7 +41,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
-    buy_cooperative_shares,
     create_wait_list_entry,
     send_contract_change_confirmation,
     send_order_confirmation,
@@ -341,14 +341,21 @@ def get_add_coop_shares_form(request, **kwargs):
         "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
     }
     kwargs["cache"] = cache
+
+    @transaction.atomic
+    def handler(form):
+        CoopSharePurchaseHandler.buy_cooperative_shares(
+            quantity=form.cleaned_data["cooperative_shares"]
+            / settings.COOP_SHARE_PRICE,
+            member=member,
+            shares_valid_at=today,
+            cache=cache,
+        ),
+
     return get_form_modal(
         request=request,
         form_class=CooperativeShareForm,
-        handler=lambda x: buy_cooperative_shares(
-            x.cleaned_data["cooperative_shares"] / settings.COOP_SHARE_PRICE,
-            member_id,
-            start_date=today,
-        ),
+        handler=handler,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
         show_student_checkbox=False,
         member_is_student=member.is_student,

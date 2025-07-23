@@ -20,12 +20,8 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
-from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
-)
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
@@ -33,7 +29,6 @@ from tapir.wirgarten.models import (
     MandateReference,
     Member,
     MemberPickupLocation,
-    Payment,
     PickupLocation,
     ReceivedCoopSharesLogEntry,
     Subscription,
@@ -41,7 +36,6 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     GrowingPeriod,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_next_delivery_date,
 )
@@ -198,77 +192,6 @@ def get_or_create_mandate_ref(
     if mandate_ref_cache:
         mandate_ref_cache[member_id] = mandate_ref
     return mandate_ref
-
-
-@transaction.atomic
-def buy_cooperative_shares(
-    quantity: int,
-    member: int | str | Member,
-    start_date: datetime.date = None,
-    mandate_ref: MandateReference = None,
-    cache: Dict | None = None,
-):
-    """
-    Member buys cooperative shares. The start date is the date on which the member enters the cooperative (after the trial period).
-
-    :param quantity: how many coop shares to buy
-    :param member: the member
-    :param start_date: the date on which the member officially enters the cooperative
-    """
-    member_id = resolve_member_id(member)
-
-    if start_date == None:
-        start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=cache), cache=cache
-        )
-
-    if mandate_ref is None:
-        mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
-
-    share_price = settings.COOP_SHARE_PRICE
-    due_date = start_date + relativedelta(
-        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
-    )
-    if due_date < start_date:
-        due_date = due_date + relativedelta(months=1)
-
-    payment_type = "Genossenschaftsanteile"
-    existing_payment = Payment.objects.filter(
-        due_date=due_date,
-        mandate_ref=mandate_ref,
-        status=Payment.PaymentStatus.DUE,
-        type=payment_type,
-    )
-    if existing_payment.exists():
-        payment = existing_payment.first()
-        payment.amount = float(payment.amount) + share_price * quantity
-        payment.save()
-    else:
-        payment = Payment.objects.create(
-            due_date=due_date,
-            amount=share_price * quantity,
-            mandate_ref=mandate_ref,
-            status=Payment.PaymentStatus.DUE,
-            type=payment_type,
-        )
-
-    coop_share_tx = CoopShareTransaction.objects.create(
-        member_id=member_id,
-        quantity=quantity,
-        share_price=share_price,
-        valid_at=start_date,
-        mandate_ref=mandate_ref,
-        transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-        payment=payment,
-    )
-
-    member = Member.objects.get(id=member_id)
-    now = get_now(cache=cache)
-    if member.sepa_consent != now:
-        member.sepa_consent = get_now(cache=cache)
-        member.save(cache=cache)
-
-    return coop_share_tx
 
 
 def create_wait_list_entry(

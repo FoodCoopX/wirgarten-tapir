@@ -223,9 +223,7 @@ class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
         model = Payment
 
     due_date = TODAY + timedelta(weeks=1)
-    mandate_ref = factory.SubFactory(
-        MandateReferenceFactory, member=factory.SelfAttribute("..member")
-    )
+    mandate_ref = factory.SubFactory(MandateReferenceFactory)
     amount = 100
     status = "PAID"
     transaction = factory.SubFactory(PaymentTransactionFactory)

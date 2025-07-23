@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
@@ -59,7 +60,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     send_order_confirmation,
-    buy_cooperative_shares,
 )
 from tapir.wirgarten.utils import (
     get_today,
@@ -165,10 +165,10 @@ class BestellWizardConfirmOrderApiView(APIView):
                 ),
             )
 
-        buy_cooperative_shares(
+        CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
             member=member,
-            start_date=min_trial_end_date,
+            shares_valid_at=min_trial_end_date,
             cache=cache,
         )
 

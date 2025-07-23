@@ -21,8 +21,9 @@ class ParameterKeys:
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"
     COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES = f"{PREFIX}.coop.shares_independent"
-    COOP_MEMBERSHIP_NOTICE_PERIOD = f"{PREFIX}.coop.membership_notice_period"
-    COOP_MEMBERSHIP_NOTICE_PERIOD_UNIT = f"{PREFIX}.coop.membership_notice_period_unit"
+    COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT = (
+        f"{PREFIX}.coop.threshold_warning_on_many_coop_shares_bought"
+    )
     CHICKEN_MAX_SHARES = f"{PREFIX}.chicken.max_shares"
     SUPPLIER_LIST_PRODUCT_TYPES = f"{PREFIX}.supplier_list.product_types"
     SUPPLIER_LIST_SEND_ADMIN_EMAIL = f"{PREFIX}.supplier_list.admin_email_enabled"

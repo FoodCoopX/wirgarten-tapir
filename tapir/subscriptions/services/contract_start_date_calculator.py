@@ -17,7 +17,7 @@ class ContractStartDateCalculator:
         """
         current_date = get_monday(reference_date)
 
-        while not cls.can_contract_start_on_date(
+        while not cls.can_contract_start_in_week(
             reference_date=current_date, cache=cache
         ):
             current_date += datetime.timedelta(weeks=1)

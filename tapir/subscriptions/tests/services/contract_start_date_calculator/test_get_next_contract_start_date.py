@@ -9,11 +9,11 @@ from tapir.subscriptions.services.contract_start_date_calculator import (
 
 
 class TestGetNextContractStartDate(SimpleTestCase):
-    @patch.object(ContractStartDateCalculator, "can_contract_start_on_date")
+    @patch.object(ContractStartDateCalculator, "can_contract_start_in_week")
     def test_getNextContractStartDate_referenceDateIsNotMonday_returnsMonday(
-        self, mock_can_contract_start_on_date: Mock
+        self, mock_can_contract_start_in_week: Mock
     ):
-        mock_can_contract_start_on_date.return_value = True
+        mock_can_contract_start_in_week.return_value = True
 
         cache = {}
         input_date = datetime.date(year=2025, month=7, day=15)  # Tuesday
@@ -24,11 +24,11 @@ class TestGetNextContractStartDate(SimpleTestCase):
         self.assertEqual(0, result.weekday())
         self.assertEqual(datetime.date(year=2025, month=7, day=14), result)
 
-    @patch.object(ContractStartDateCalculator, "can_contract_start_on_date")
+    @patch.object(ContractStartDateCalculator, "can_contract_start_in_week")
     def test_getNextContractStartDate_default_returnsFirstMondayAfterTheDateLimit(
-        self, mock_can_contract_start_on_date: Mock
+        self, mock_can_contract_start_in_week: Mock
     ):
-        mock_can_contract_start_on_date.side_effect = (
+        mock_can_contract_start_in_week.side_effect = (
             lambda reference_date, cache: reference_date
             > datetime.date(year=2025, month=8, day=2)
         )
