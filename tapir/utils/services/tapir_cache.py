@@ -375,7 +375,7 @@ class TapirCache:
 
     @classmethod
     def get_member_payment_rhythm_object(
-        cls, member: Member, at_date: datetime.date, cache: dict
+        cls, member: Member, reference_date: datetime.date, cache: dict
     ):
         payment_rhythms_by_member = cls.get_payment_rhythms_objects_by_member(
             cache=cache
@@ -385,7 +385,7 @@ class TapirCache:
         rhythm_at_date = None
         for rhythm in member_payment_rhythms:
             # member_payment_rhythms is assumed sorted by valid_from ascending
-            if rhythm.valid_from <= at_date:
+            if rhythm.valid_from <= reference_date:
                 rhythm_at_date = rhythm
 
         return rhythm_at_date

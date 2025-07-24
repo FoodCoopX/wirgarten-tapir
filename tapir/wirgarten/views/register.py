@@ -126,7 +126,7 @@ class RegistrationWizardViewBase(CookieWizardView):
 
     @classmethod
     def get_summary_form(cls):
-        raise not NotImplementedError(
+        raise NotImplementedError(
             "Please implement get_summary_form in the inherited class()"
         )
 
