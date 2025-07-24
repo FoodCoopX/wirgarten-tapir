@@ -652,6 +652,7 @@ class AdminConfirmableMixin(models.Model):
     """
 
     admin_confirmed = models.DateTimeField(null=True)
+    auto_confirmed = models.DateTimeField(null=True)
 
     class Meta:
         abstract = True
