@@ -136,17 +136,6 @@ def get_active_subscriptions_grouped_by_product_type(
     return subscriptions_by_product_type
 
 
-def get_existing_payments(due_date: date) -> list[Payment]:
-    """
-    Gets already persisted payments for the given due date
-
-    :param due_date: the date on which the payments are due
-    :return: the list of persisted payments for the given date
-    """
-
-    return list(Payment.objects.filter(transaction__isnull=True, due_date=due_date))
-
-
 def get_total_payment_amount(due_date: date, cache: dict) -> list[Payment]:
     """
     Returns the total € amount for all due payments on this date.
