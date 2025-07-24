@@ -46,7 +46,7 @@ def __send_email(file: ExportedFile, recipient: str = None, cache: Dict = None):
     email.send()
 
 
-def begin_csv_string(field_names: [str], delimiter: str = ";"):
+def begin_csv_string(field_names: list[str], delimiter: str = ";"):
     """
     Call this to start writing your CSV file.
 
