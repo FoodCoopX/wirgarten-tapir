@@ -84,6 +84,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tapir.subscriptions.tasks.automatic_subscription_renewal",
         "schedule": celery.schedules.crontab(hour="2", minute="0"),
     },
+    "automatic_confirmation": {
+        "task": "tapir.subscriptions.tasks.automatic_confirmation_subscriptions_and_share_purchases",
+        "schedule": celery.schedules.crontab(hour="0", minute="30"),
+    },
 }
 
 EMAIL_DISPATCH_BATCH_SIZE = (
