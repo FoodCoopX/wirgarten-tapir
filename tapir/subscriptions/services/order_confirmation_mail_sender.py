@@ -19,17 +19,20 @@ class OrderConfirmationMailSender:
         for subscription in Subscription.objects.filter(
             id__in=confirm_creation_ids
         ).select_related("member"):
+            if subscription.auto_confirmed is not None:
+                continue
             if subscription.member not in data_by_member.keys():
                 data_by_member[subscription.member] = {
                     "subscriptions": [],
                     "number_of_coop_shares": 0,
                 }
-
             data_by_member[subscription.member]["subscriptions"].append(subscription)
 
         for share_transaction in CoopShareTransaction.objects.filter(
             id__in=confirm_purchase_ids
         ).select_related("member"):
+            if share_transaction.auto_confirmed is not None:
+                continue
             if share_transaction.member not in data_by_member.keys():
                 data_by_member[share_transaction.member] = {
                     "subscriptions": [],

@@ -79,11 +79,17 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         <ul>
           {memberDataToConfirm.subscriptionCreations.map((creation) => {
             return (
-              <li key={creation.id}>
+              <li
+                key={creation.id}
+                className={creation.autoConfirmed ? "text-warning" : ""}
+              >
                 Zeichnung: {creation.quantity}
                 {" × "}
                 {creation.product.name} {creation.product.type.name} am{" "}
                 {formatDateNumeric(creation.startDate)}
+                {creation.autoConfirmed
+                  ? " (automatische Bestätigung schon versendet)"
+                  : ""}
               </li>
             );
           })}
@@ -110,14 +116,21 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                 ))}{" "}
                 <span className={"material-icons fs-6"}>arrow_forward</span>{" "}
                 {change.subscriptionCreations.map((creation, index) => (
-                  <span key={creation.id}>
-                    {creation.quantity} {"×"} {creation.product.name}
+                  <span
+                    key={creation.id}
+                    className={creation.autoConfirmed ? "text-warning" : ""}
+                  >
+                    {creation.quantity} {"×"} {creation.product.name}{" "}
+                    {creation.autoConfirmed
+                      ? " (automatische Bestätigung schon versendet)"
+                      : ""}
                     {index !== change.subscriptionCreations.length - 1 && ", "}
                   </span>
                 ))}
               </li>
             );
           })}
+
           {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) ===
             1 && (
             <li>
