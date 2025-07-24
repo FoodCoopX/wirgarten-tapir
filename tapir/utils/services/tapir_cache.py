@@ -1,6 +1,7 @@
 import datetime
 from typing import Dict, Set
 
+from tapir.payments.models import MemberPaymentRhythm
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
@@ -13,6 +14,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     ProductCapacity,
     GrowingPeriod,
+    Member,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
@@ -353,3 +355,37 @@ class TapirCache:
         return get_from_cache_or_compute(
             growing_periods_by_date_cache, reference_date, compute
         )
+
+    @classmethod
+    def get_payment_rhythms_objects_by_member(
+        cls, cache: dict
+    ) -> dict[Member, list[MemberPaymentRhythm]]:
+        def compute():
+            result = {}
+            all_rhythms = MemberPaymentRhythm.objects.select_related("member").order_by(
+                "valid_from"
+            )
+            for rhythm in all_rhythms:
+                if rhythm.member not in result.keys():
+                    result[rhythm.member] = []
+                result[rhythm.member].append(rhythm)
+            return result
+
+        return get_from_cache_or_compute(cache, "payment_rhythms_by_member", compute)
+
+    @classmethod
+    def get_member_payment_rhythm_object(
+        cls, member: Member, at_date: datetime.date, cache: dict
+    ):
+        payment_rhythms_by_member = cls.get_payment_rhythms_objects_by_member(
+            cache=cache
+        )
+        member_payment_rhythms = payment_rhythms_by_member.get(member, [])
+
+        rhythm_at_date = None
+        for rhythm in member_payment_rhythms:
+            # member_payment_rhythms is assumed sorted by valid_from ascending
+            if rhythm.valid_from <= at_date:
+                rhythm_at_date = rhythm
+
+        return rhythm_at_date
