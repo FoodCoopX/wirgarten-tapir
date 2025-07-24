@@ -22,7 +22,7 @@ class TestCanContractStartOnDate(TapirIntegrationTest):
             value=2
         )  # Wednesday
 
-    def test_canContractStartOnDate_noBuffer_dateLimitIsThePickupLocationChangeLimit(
+    def test_canContractStartOnDate_bufferIsZero_dateLimitIsThePickupLocationChangeLimit(
         self,
     ):
         mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=15))
@@ -32,16 +32,40 @@ class TestCanContractStartOnDate(TapirIntegrationTest):
 
         self.assertFalse(
             ContractStartDateCalculator.can_contract_start_in_week(
-                reference_date=datetime.date(year=2025, month=7, day=20), cache={}
+                reference_date=datetime.date(year=2025, month=7, day=20),
+                apply_buffer_time=True,
+                cache={},
             )
         )
         self.assertTrue(
             ContractStartDateCalculator.can_contract_start_in_week(
-                reference_date=datetime.date(year=2025, month=7, day=21), cache={}
+                reference_date=datetime.date(year=2025, month=7, day=21),
+                apply_buffer_time=True,
+                cache={},
             )
         )
 
-    def test_canContractStartOnDate_withBuffer_dateLimitIsThePickupLocationChangeLimit(
+    def test_canContractStartOnDate_bufferDisabled_dateLimitIsThePickupLocationChangeLimit(
+        self,
+    ):
+        mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=15))
+
+        self.assertFalse(
+            ContractStartDateCalculator.can_contract_start_in_week(
+                reference_date=datetime.date(year=2025, month=7, day=20),
+                apply_buffer_time=False,
+                cache={},
+            )
+        )
+        self.assertTrue(
+            ContractStartDateCalculator.can_contract_start_in_week(
+                reference_date=datetime.date(year=2025, month=7, day=21),
+                apply_buffer_time=False,
+                cache={},
+            )
+        )
+
+    def test_canContractStartOnDate_withBuffer_dateLimitIsThePickupLocationChangeLimitMinusBuffer(
         self,
     ):
         mock_timezone(self, now=datetime.datetime(year=2025, month=7, day=15))
@@ -52,11 +76,15 @@ class TestCanContractStartOnDate(TapirIntegrationTest):
 
         self.assertFalse(
             ContractStartDateCalculator.can_contract_start_in_week(
-                reference_date=datetime.date(year=2025, month=7, day=27), cache={}
+                reference_date=datetime.date(year=2025, month=7, day=27),
+                apply_buffer_time=True,
+                cache={},
             )
         )
         self.assertTrue(
             ContractStartDateCalculator.can_contract_start_in_week(
-                reference_date=datetime.date(year=2025, month=7, day=28), cache={}
+                reference_date=datetime.date(year=2025, month=7, day=28),
+                apply_buffer_time=True,
+                cache={},
             )
         )

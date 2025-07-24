@@ -3,7 +3,9 @@ from unittest.mock import patch, Mock
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.subscriptions.views.confirmations import ConfirmSubscriptionChangesView
+from tapir.subscriptions.services.order_confirmation_mail_sender import (
+    OrderConfirmationMailSender,
+)
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -84,7 +86,7 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             ).exists()
         )
 
-    @patch.object(ConfirmSubscriptionChangesView, "send_confirmation_mail_if_necessary")
+    @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
     def test_post_default_confirmSelectionAndSendConfirmationMails(
         self, mock_send_confirmation_mail_if_necessary: Mock
     ):

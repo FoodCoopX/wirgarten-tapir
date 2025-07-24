@@ -36,6 +36,7 @@ class ApplyTapirOrderManager:
         product_type: ProductType,
         contract_start_date: datetime.date,
         actor: TapirUser,
+        needs_admin_confirmation: bool,
         cache: dict,
     ):
         active_and_future_subscriptions = get_active_and_future_subscriptions(
@@ -108,6 +109,7 @@ class ApplyTapirOrderManager:
                     trial_disabled=trial_disabled,
                     trial_end_date_override=earliest_trial_period_end_date,
                     notice_period_duration=notice_period_duration,
+                    auto_confirmed=None if needs_admin_confirmation else now,
                 )
             )
 
@@ -130,6 +132,7 @@ class ApplyTapirOrderManager:
         order: TapirOrder,
         contract_start_date: datetime.date,
         actor: TapirUser,
+        needs_admin_confirmation,
         cache: dict,
     ) -> (bool, list[Subscription]):
         orders_by_product_type = {}
@@ -151,6 +154,7 @@ class ApplyTapirOrderManager:
                 product_type=product_type,
                 contract_start_date=contract_start_date,
                 actor=actor,
+                needs_admin_confirmation=needs_admin_confirmation,
                 cache=cache,
             )
             subscriptions_existed_before_changes = (

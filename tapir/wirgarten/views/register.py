@@ -111,7 +111,7 @@ class RegistrationWizardViewBase(CookieWizardView):
         today = get_today(cache=self.cache)
         next_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=today, cache=self.cache
+                reference_date=today, apply_buffer_time=True, cache=self.cache
             )
         )
 
@@ -179,7 +179,9 @@ class RegistrationWizardViewBase(CookieWizardView):
         )
         next_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=cache), cache=cache
+                reference_date=get_today(cache=cache),
+                apply_buffer_time=True,
+                cache=cache,
             )
         )
         available_and_additional_product_types = [
@@ -423,7 +425,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                 self.start_date
                 if hasattr(self, "start_date")
                 else ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=today, cache=self.cache
+                    reference_date=today, apply_buffer_time=True, cache=self.cache
                 )
             )
             if STEP_BASE_PRODUCT in form_dict:

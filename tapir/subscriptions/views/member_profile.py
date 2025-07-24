@@ -82,7 +82,9 @@ class UpdateSubscriptionsApiView(APIView):
         member = get_object_or_404(Member, id=member_id)
 
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=True,
+            cache=self.cache,
         )
         try:
             logged_in_user_is_admin = request.user.has_perm(Permission.Accounts.MANAGE)
@@ -290,6 +292,7 @@ class UpdateSubscriptionsApiView(APIView):
                 contract_start_date=contract_start_date,
                 product_type=product_type,
                 actor=actor,
+                needs_admin_confirmation=True,
                 cache=self.cache,
             )
         )
@@ -325,7 +328,9 @@ class MemberProfileCapacityCheckApiView(APIView):
 
         subscription_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=self.cache), cache=self.cache
+                reference_date=get_today(cache=self.cache),
+                apply_buffer_time=True,
+                cache=self.cache,
             )
         )
 

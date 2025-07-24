@@ -360,14 +360,18 @@ class PickupLocationCapacityCheckApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
 
+        subscription_start = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=True,
+            cache=self.cache,
+        )
+
         response_data = {
             "enough_capacity_for_order": PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
                 pickup_location=pickup_location,
                 order=order,
                 already_registered_member=None,
-                subscription_start=ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
-                ),
+                subscription_start=subscription_start,
                 cache=self.cache,
             )
         }
@@ -400,7 +404,9 @@ class GetMemberPickupLocationApiView(APIView):
 
         member = get_object_or_404(Member, id=member_id)
         reference_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=False,
+            cache=self.cache,
         )
         pickup_location_id = MemberPickupLocationService.get_member_pickup_location_id(
             member=member, reference_date=reference_date

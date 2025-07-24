@@ -224,7 +224,7 @@ def get_add_subscription_form(request, **kwargs):
     if is_base_product_type:
         form_type = BaseProductForm
         next_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=cache), cache=cache
+            reference_date=get_today(cache=cache), apply_buffer_time=True, cache=cache
         )
         next_period = get_next_growing_period(cache=cache)
         if not is_product_type_available(

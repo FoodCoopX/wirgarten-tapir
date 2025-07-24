@@ -233,6 +233,7 @@ class UserGenerator:
             reference_date=cls.get_random_date_in_range_biased_towards_lower_end(
                 member.date_joined.date(), future_growing_period.end_date
             ),
+            apply_buffer_time=True,
             cache=cache,
         )
         growing_period = TapirCache.get_growing_period_at_date(

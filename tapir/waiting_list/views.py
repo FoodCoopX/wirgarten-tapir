@@ -978,7 +978,9 @@ class PublicConfirmWaitingListEntryView(APIView):
         self, waiting_list_entry: WaitingListEntry, actor: TapirUser, member: Member
     ):
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache), cache=self.cache
+            reference_date=get_today(cache=self.cache),
+            apply_buffer_time=False,
+            cache=self.cache,
         )
 
         pickup_location_change_valid_from = contract_start_date
@@ -1017,6 +1019,7 @@ class PublicConfirmWaitingListEntryView(APIView):
             order=order,
             contract_start_date=contract_start_date,
             actor=actor,
+            needs_admin_confirmation=False,
             cache=self.cache,
         )
 

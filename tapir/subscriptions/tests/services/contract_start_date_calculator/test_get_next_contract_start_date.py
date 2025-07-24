@@ -18,7 +18,7 @@ class TestGetNextContractStartDate(SimpleTestCase):
         cache = {}
         input_date = datetime.date(year=2025, month=7, day=15)  # Tuesday
         result = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=input_date, cache=cache
+            reference_date=input_date, apply_buffer_time=True, cache=cache
         )
 
         self.assertEqual(0, result.weekday())
@@ -29,14 +29,14 @@ class TestGetNextContractStartDate(SimpleTestCase):
         self, mock_can_contract_start_in_week: Mock
     ):
         mock_can_contract_start_in_week.side_effect = (
-            lambda reference_date, cache: reference_date
+            lambda reference_date, apply_buffer_time, cache: reference_date
             > datetime.date(year=2025, month=8, day=2)
         )
 
         cache = {}
         input_date = datetime.date(year=2025, month=7, day=15)  # Tuesday
         result = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=input_date, cache=cache
+            reference_date=input_date, apply_buffer_time=True, cache=cache
         )
 
         self.assertEqual(0, result.weekday())

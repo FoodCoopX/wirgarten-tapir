@@ -87,7 +87,7 @@ class SegmentTest(TapirIntegrationTest):
         expected_member_ids = [self.member_with_subscription.id]
         start_date_next_month = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=self.NOW.date(), cache={}
+                reference_date=self.NOW.date(), apply_buffer_time=True, cache={}
             )
         )
 

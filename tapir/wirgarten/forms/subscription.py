@@ -87,7 +87,9 @@ class BaseProductForm(forms.Form):
             initial.get(
                 "start_date",
                 ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
                 ),
             ),
         )
@@ -645,7 +647,9 @@ class AdditionalProductForm(forms.Form):
             initial.get(
                 "start_date",
                 ContractStartDateCalculator.get_next_contract_start_date(
-                    reference_date=get_today(cache=self.cache), cache=self.cache
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
                 ),
             ),
         )

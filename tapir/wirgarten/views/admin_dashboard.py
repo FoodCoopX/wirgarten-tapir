@@ -102,7 +102,9 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
         next_contract_start_date = (
             ContractStartDateCalculator.get_next_contract_start_date(
-                reference_date=get_today(cache=self.cache), cache=self.cache
+                reference_date=get_today(cache=self.cache),
+                apply_buffer_time=True,
+                cache=self.cache,
             )
         )
         next_growing_period = get_next_growing_period(
