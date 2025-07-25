@@ -183,6 +183,17 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     );
   }, [publicProductTypes, waitingListLinkConfirmationModeEnabled]);
 
+  function getRelevantProductSteps(withDelivery: boolean) {
+    let productSteps = selectedProductTypes;
+    if (!introEnabled && waitingListEntryDetails === undefined) {
+      productSteps = publicProductTypes;
+    }
+    productSteps = productSteps.filter(
+      (productType) => productType.noDelivery !== withDelivery,
+    );
+    return productSteps.map((productType) => productType.id!);
+  }
+
   useEffect(() => {
     if (publicProductTypes.length === 0) return;
 
@@ -192,11 +203,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       steps.push("intro");
     }
 
-    let productSteps = selectedProductTypes;
-    if (!introEnabled && waitingListEntryDetails === undefined) {
-      productSteps = publicProductTypes;
-    }
-    steps.push(...productSteps.map((productType) => productType.id!));
+    steps.push(...getRelevantProductSteps(true));
 
     if (
       shouldIncludeStepPickupLocation(
@@ -207,6 +214,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     ) {
       steps.push("pickup_location");
     }
+
+    steps.push(...getRelevantProductSteps(false));
 
     if (
       shouldIncludeStepCoopShares(
