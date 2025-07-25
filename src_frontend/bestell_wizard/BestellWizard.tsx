@@ -277,9 +277,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     if (
       productIdsOverCapacity.length === 0 &&
       productTypeIdsOverCapacity.length === 0 &&
-      selectedPickupLocations.length > 0 &&
       pickupLocationsWithCapacityCheckLoading.size === 0 &&
-      !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+      (selectedPickupLocations.length === 0 ||
+        !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]))
     ) {
       setWaitingListModeEnabled(false);
     }
