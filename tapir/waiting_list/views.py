@@ -71,6 +71,7 @@ from tapir.wirgarten.models import (
     Member,
     PickupLocation,
     CoopShareTransaction,
+    Subscription,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
@@ -286,6 +287,9 @@ class WaitingListApiView(APIView):
                     cache=cache, reference_date=get_today(cache=cache)
                 ).get(entry.member.id, [])
             )
+            current_subscriptions = cls.remove_renewals(
+                subscriptions=current_subscriptions, cache=cache
+            )
         link = None
         if settings.DEBUG and entry.confirmation_link_key:
             link = SendWaitingListLinkApiView.build_waiting_list_link(
@@ -325,6 +329,36 @@ class WaitingListApiView(APIView):
             ),
             "link": link,
         }
+
+    @staticmethod
+    def remove_renewals(subscriptions: list[Subscription], cache: dict):
+        current_subscriptions = list(
+            filter(
+                lambda subscription: subscription.start_date <= get_today(cache=cache),
+                subscriptions,
+            )
+        )
+        future_subscriptions = list(
+            filter(
+                lambda subscription: subscription.start_date > get_today(cache=cache),
+                subscriptions,
+            )
+        )
+
+        subscriptions_without_renewals = current_subscriptions.copy()
+        for future_subscription in future_subscriptions:
+            is_renewal = False
+            for current_subscription in current_subscriptions:
+                if (
+                    current_subscription.product_id == future_subscription.product_id
+                    and current_subscription.quantity == future_subscription.quantity
+                ):
+                    is_renewal = True
+                    break
+            if not is_renewal:
+                subscriptions_without_renewals.append(future_subscription)
+
+        return subscriptions_without_renewals
 
     @staticmethod
     def fill_entry_with_personal_data(entry: WaitingListEntry):

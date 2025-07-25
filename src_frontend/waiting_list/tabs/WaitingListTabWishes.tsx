@@ -10,6 +10,7 @@ import {
   WaitingListProductWish,
 } from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
+import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 interface WaitingListTabWishesProps {
   entryDetails: WaitingListEntryDetails;
@@ -51,7 +52,10 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
                 <ul>
                   {entryDetails.currentSubscriptions.map((subscription) => (
                     <li key={subscription.id}>
-                      {formatSubscription(subscription)}
+                      {formatSubscription(subscription)} (
+                      {formatDateNumeric(subscription.startDate)}
+                      {" -> "}
+                      {formatDateNumeric(subscription.endDate)})
                     </li>
                   ))}
                 </ul>
