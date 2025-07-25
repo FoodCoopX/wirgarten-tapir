@@ -2,6 +2,7 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { SubscriptionsApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 
 export function updateProductsAndProductTypesOverCapacity(
   shoppingCart: ShoppingCart,
@@ -9,7 +10,7 @@ export function updateProductsAndProductTypesOverCapacity(
   setProductTypeIdsOverCapacity: (ids: string[]) => void,
   setCheckingCapacities: (enabled: boolean) => void,
 ) {
-  const subscriptionsApi = useApi(SubscriptionsApi, "unused");
+  const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
 
   setCheckingCapacities(true);
 

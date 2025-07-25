@@ -3,6 +3,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import React from "react";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 
 export function checkPickupLocationCapacities(
   pickupLocations: PublicPickupLocation[],
@@ -14,7 +15,7 @@ export function checkPickupLocationCapacities(
     React.SetStateAction<Set<PublicPickupLocation>>
   >,
 ) {
-  const pickupLocationApi = useApi(PickupLocationsApi, "unused");
+  const pickupLocationApi = useApi(PickupLocationsApi, getCsrfToken());
 
   setPickupLocationsWithCapacityCheckLoading(new Set(pickupLocations));
 

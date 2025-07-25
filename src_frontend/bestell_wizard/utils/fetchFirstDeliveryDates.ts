@@ -2,6 +2,7 @@ import { PublicPickupLocation, SubscriptionsApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 
 export function fetchFirstDeliveryDates(
   pickupLocations: PublicPickupLocation[],
@@ -11,7 +12,7 @@ export function fetchFirstDeliveryDates(
   if (pickupLocations.length === 0) {
     return;
   }
-  const subscriptionsApi = useApi(SubscriptionsApi, "unused");
+  const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
 
   subscriptionsApi
     .subscriptionsApiBestellWizardDeliveryDatesCreate({

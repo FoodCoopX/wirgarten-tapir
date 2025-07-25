@@ -48,7 +48,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   reloadSubscriptions,
 }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
-  const pickupLocationsApi = useApi(PickupLocationsApi, "unused");
+  const pickupLocationsApi = useApi(PickupLocationsApi, getCsrfToken());
   const waitingListApi = useApi(WaitingListApi, getCsrfToken());
 
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});

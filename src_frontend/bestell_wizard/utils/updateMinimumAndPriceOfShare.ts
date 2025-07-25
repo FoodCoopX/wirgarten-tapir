@@ -1,6 +1,7 @@
 import { useApi } from "../../hooks/useApi.ts";
 import { CoopApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 
 export function updateMinimumAndPriceOfShare(
   shoppingCart: ShoppingCart,
@@ -8,7 +9,7 @@ export function updateMinimumAndPriceOfShare(
   selectedNumberOfCoopShares: number,
   setSelectedNumberOfCoopShares: (num: number) => void,
 ) {
-  const coopApi = useApi(CoopApi, "unused");
+  const coopApi = useApi(CoopApi, getCsrfToken());
 
   coopApi
     .coopApiMinimumNumberOfSharesRetrieve({
