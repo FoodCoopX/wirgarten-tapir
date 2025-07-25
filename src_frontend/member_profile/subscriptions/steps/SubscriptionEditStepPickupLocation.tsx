@@ -70,7 +70,7 @@ const SubscriptionEditStepPickupLocation: React.FC<
             text={
               selectedPickupLocations.length > 0
                 ? "Weiter"
-                : "Wähle dein Verteilstation aus um weiter zu gehen"
+                : "Wähle deine Verteilstation aus um weiter zu gehen"
             }
             iconPosition={"right"}
             disabled={selectedPickupLocations.length === 0}

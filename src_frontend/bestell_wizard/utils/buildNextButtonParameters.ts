@@ -85,17 +85,24 @@ export function buildNextButtonParametersForIntro(
 export function buildNextButtonParametersForPickupLocation(
   selectedPickupLocations: PublicPickupLocation[],
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>,
+  waitingListModeEnabled: boolean,
 ): NextButtonParameters {
+  let text = undefined;
+  if (selectedPickupLocations.length === 0) {
+    if (waitingListModeEnabled) {
+      text = "Wähle deine gewünschten Verteilstationen aus um weiter zu gehen";
+    } else {
+      text = "Wähle deine Verteilstation aus um weiter zu gehen";
+    }
+  }
+
   return {
     disabled:
       selectedPickupLocations.length === 0 ||
       pickupLocationsWithCapacityCheckLoading.size > 0,
     icon: undefined,
     loading: pickupLocationsWithCapacityCheckLoading.size > 0,
-    text:
-      selectedPickupLocations.length === 0
-        ? "Wähle dein Verteilstation aus um weiter zu gehen"
-        : undefined,
+    text: text,
   };
 }
 
