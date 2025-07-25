@@ -69,7 +69,10 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     <>
       <Row>
         <Col>
-          {shouldIncludeStepCoopShares(waitingListEntryDetails) && (
+          {shouldIncludeStepCoopShares(
+            waitingListEntryDetails,
+            waitingListModeEnabled,
+          ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
               <BestellWizardCardSubtitle

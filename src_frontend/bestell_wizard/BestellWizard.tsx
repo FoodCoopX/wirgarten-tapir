@@ -208,7 +208,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       steps.push("pickup_location");
     }
 
-    if (shouldIncludeStepCoopShares(waitingListEntryDetails)) {
+    if (
+      shouldIncludeStepCoopShares(
+        waitingListEntryDetails,
+        waitingListModeEnabled,
+      )
+    ) {
       steps.push("coop_shares");
     }
 
@@ -232,6 +237,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     introEnabled,
     pickupLocations,
     publicProductTypes,
+    waitingListModeEnabled,
   ]);
 
   useEffect(() => {

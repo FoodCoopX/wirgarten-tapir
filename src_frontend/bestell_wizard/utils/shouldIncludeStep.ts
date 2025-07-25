@@ -23,9 +23,10 @@ export function shouldIncludeStepPickupLocation(
 
 export function shouldIncludeStepCoopShares(
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
+  waitingListModeEnabled: boolean,
 ) {
   if (waitingListEntryDetails === undefined) {
-    return true;
+    return !waitingListModeEnabled;
   }
 
   return !waitingListEntryDetails.memberAlreadyExists;
