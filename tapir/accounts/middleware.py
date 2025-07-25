@@ -7,6 +7,7 @@ from jwt import decode
 from keycloak import KeycloakOpenID
 
 from tapir.accounts.models import TapirUser
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,8 @@ class KeycloakMiddleware(MiddlewareMixin):
             except TapirUser.DoesNotExist as e:
                 self.auth_failed("Could not find matching TapirUser", e)
                 request.error = True
+                keycloak_client = KeycloakUserManager.get_keycloak_client()
+                keycloak_client.user_logout(user_id=keycloak_id)
 
     def auth_failed(self, log_message, error):
         """Return authentication failed message in log and API."""

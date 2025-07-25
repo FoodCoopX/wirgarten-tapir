@@ -1,11 +1,13 @@
 import inspect
-from django.http import HttpResponse, HttpResponseRedirect
+
+from django.conf import settings
+from django.contrib.auth import logout
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 
-from django.conf import settings
 from tapir.wirgarten.constants import Permission
 
 
@@ -33,27 +35,27 @@ def dynamic_view(view_key: str):
 
 @require_http_methods(["GET"])
 def wirgarten_redirect_view(request):
+    if request.error:
+        return handle_403(
+            request,
+            PermissionError(_("Du bist nicht authorisiert diese Seite zu sehen.")),
+        )
+
     user_type = get_user_type(request)
 
-    if not request.error:
-        if user_type == RequestUserType.ANONYMOUS:
-            return HttpResponseRedirect(reverse_lazy("login"))
+    # User is Admin --> redirect to dashboard
+    if user_type == RequestUserType.STAFF:
+        return HttpResponseRedirect(reverse_lazy("wirgarten:admin_dashboard"))
 
-        # User is Admin --> redirect to dashboard
-        if user_type == RequestUserType.STAFF:
-            return HttpResponseRedirect(reverse_lazy("wirgarten:admin_dashboard"))
+    # User is Member --> redirect to member detail view
+    if user_type == RequestUserType.MEMBER:
+        return HttpResponseRedirect(
+            reverse_lazy("wirgarten:member_detail", kwargs={"pk": request.user.id})
+            + "?"
+            + request.environ["QUERY_STRING"]
+        )
 
-        # User is Member --> redirect to member detail view
-        if user_type == RequestUserType.MEMBER:
-            return HttpResponseRedirect(
-                reverse_lazy("wirgarten:member_detail", kwargs={"pk": request.user.id})
-                + "?"
-                + request.environ["QUERY_STRING"]
-            )
-
-    return handle_403(
-        request, PermissionError(_("Du bist nicht authorisiert diese Seite zu sehen."))
-    )
+    return HttpResponseRedirect(reverse_lazy("login"))
 
 
 def get_user_type(request) -> int:
@@ -69,15 +71,21 @@ def get_user_type(request) -> int:
 
 
 def handle_403(request, exception):
-    user_type = get_user_type(request)
+    response = HttpResponseForbidden(str(exception))
+    if request.error:
+        logout(request)
+        cookies = [
+            "token",
+            "csrftoken",
+            "AUTH_SESSION_ID_LEGACY",
+            "AUTH_SESSION_ID",
+            "KEYCLOAK_IDENTITY_LEGACY",
+            "KEYCLOAK_IDENTITY",
+            "KEYCLOAK_REMEMBER_ME",
+            "KEYCLOAK_SESSION_LEGACY",
+            "KEYCLOAK_SESSION",
+        ]
+        for cookie in cookies:
+            response.delete_cookie(cookie)
 
-    if user_type == RequestUserType.ANONYMOUS and not request.error:
-        return HttpResponseRedirect(reverse_lazy("login"))
-    if user_type == RequestUserType.MEMBER:
-        return HttpResponseRedirect(
-            reverse_lazy("wirgarten:member_detail", kwargs={"pk": request.user.id})
-        )
-
-    return HttpResponse(
-        _("Du bist nicht authorisiert diese Seite zu sehen."), status=403
-    )
+    return response
