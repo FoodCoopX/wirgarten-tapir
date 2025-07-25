@@ -53,11 +53,18 @@ const BestellWizardPickupLocation: React.FC<
             geliefert. Du kannst deine Station während der Vertragslaufzeit auch
             wechseln, z.B. wenn du umziehst oder Freunde deinen Anteil abholen.
           </p>
-          <p>
-            Ausgegraute Stationen sind derzeit komplett belegt. Du kannst dich
-            auf die Warteliste setzen lassen. Erst wenn ein Mitglied hier
-            kündigt, wird wieder ein Platz frei.{" "}
-          </p>
+          {waitingListModeEnabled ? (
+            <p>
+              Bitte wähle deine Wunschverteilstationen. Sobald dort ein Platz
+              frei wird, melden wir uns bei dir.
+            </p>
+          ) : (
+            <p>
+              Ausgegraute Stationen sind derzeit komplett belegt. Du kannst dich
+              auf die Warteliste setzen lassen. Erst wenn ein Mitglied hier
+              kündigt, wird wieder ein Platz frei.{" "}
+            </p>
+          )}
         </Col>
       </Row>
       {waitingListModeEnabled && (
