@@ -24,7 +24,7 @@ class PersonalDataValidator:
         # format of the data defined by tapir.subscriptions.serializers.PersonalDataSerializer
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
 
-        cls.validate_email_address_not_in_use(email)
+        cls.validate_email_address_not_in_use(email, cache=cache)
         cls.validate_phone_number_is_valid(phone_number)
         cls.validate_personal_data_existing_member(
             birthdate=birthdate,
@@ -51,7 +51,7 @@ class PersonalDataValidator:
             raise ValidationError("Ungültiges Telefonnummer")
 
     @classmethod
-    def validate_email_address_not_in_use(cls, email: str):
+    def validate_email_address_not_in_use(cls, email: str, cache: dict):
         duplicate_email_query = Member.objects.filter(
             Q(email=email) | Q(username=email)
         )
@@ -61,7 +61,7 @@ class PersonalDataValidator:
                 "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
             )
 
-        kc = KeycloakUserManager.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
             raise ValidationError(

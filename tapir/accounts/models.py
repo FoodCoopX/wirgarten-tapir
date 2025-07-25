@@ -58,16 +58,18 @@ class KeycloakUser(AbstractUser):
         max_length=64, unique=True, primary_key=False, null=True
     )
 
-    def email_verified(self):
-        kc = KeycloakUserManager.get_keycloak_client()
+    def email_verified(self, cache: dict = None) -> bool:
+        if cache is None:
+            cache = {}
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         try:
             kc_user = kc.get_user(self.keycloak_id)
             return kc_user["emailVerified"]
         except Exception:
             return False
 
-    def send_verify_email(self):
-        kc = KeycloakUserManager.get_keycloak_client()
+    def send_verify_email(self, cache: dict):
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         kc.send_verify_email(
             user_id=self.keycloak_id,
             redirect_uri=settings.SITE_URL,
@@ -86,6 +88,7 @@ class KeycloakUser(AbstractUser):
     def save(self, *args, **kwargs):
         bypass = kwargs.pop("bypass_keycloak", False)
         initial_password = kwargs.pop("initial_password", None)
+        cache = kwargs.pop("cache", {})
 
         if not self.email:
             print(f"{self} has no email address, skipping keycloak account creation.")
@@ -96,7 +99,7 @@ class KeycloakUser(AbstractUser):
             super().save(*args, **kwargs)
             return
 
-        keycloak_client = KeycloakUserManager.get_keycloak_client()
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache=cache)
         has_kc_account = self.keycloak_id is not None
         if has_kc_account:
             try:  # try fetch the keycloak user to see if it exists
@@ -117,24 +120,23 @@ class KeycloakUser(AbstractUser):
                     new_first_name=self.first_name,
                     new_last_name=self.last_name,
                     new_email=self.email,
+                    cache=cache,
                 )
             )
             # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
             self.email = self_before_save.email
         else:
-            transaction.on_commit(
-                partial(
-                    KeycloakUserManager.create_keycloak_user,
-                    user=self,
-                    keycloak_client=keycloak_client,
-                    initial_password=initial_password,
-                )
+            KeycloakUserManager.create_keycloak_user(
+                user=self,
+                keycloak_client=keycloak_client,
+                initial_password=initial_password,
+                cache=cache,
             )
 
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        kc = KeycloakUserManager.get_keycloak_client()
+        kc = KeycloakUserManager.get_keycloak_client(cache=kwargs.pop("cache", {}))
         if self.keycloak_id:
             try:
                 kc.delete_user(self.keycloak_id)
@@ -142,8 +144,8 @@ class KeycloakUser(AbstractUser):
                 print("Error deleting Keycloak user: ", e)
         super().delete(*args, **kwargs)
 
-    def change_email(self, new_email: str):
-        kc = KeycloakUserManager.get_keycloak_client()
+    def change_email(self, new_email: str, cache: dict):
+        kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         kc.update_user(
             user_id=self.keycloak_id,
             payload={
@@ -177,9 +179,9 @@ class TapirUser(KeycloakUser):
         super().save(*args, **kwargs)  # call the parent save method
 
     @transaction.atomic
-    def change_email(self, new_email: str):
+    def change_email(self, new_email: str, cache: dict):
         TapirUser.objects.filter(id=self.id).update(email=new_email, username=new_email)
-        super().change_email(new_email)
+        super().change_email(new_email, cache=cache)
 
     def get_display_name(self):
         return UserUtils.build_display_name(self.first_name, self.last_name)

@@ -395,7 +395,7 @@ class Member(TapirUser):
         if "bypass_keycloak" not in kwargs:
             kwargs["bypass_keycloak"] = get_parameter_value(
                 ParameterKeys.MEMBER_BYPASS_KEYCLOAK,
-                cache=kwargs.pop("cache", None),
+                cache=kwargs.get("cache", {}),
             )
 
         super().save(*args, **kwargs)
