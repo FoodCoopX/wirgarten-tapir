@@ -43,41 +43,8 @@ class MemberDataToConfirmApiView(APIView):
         responses={200: MemberDataToConfirmSerializer(many=True)},
     )
     def get(self, request):
-        changes_by_member = {}
-
-        unconfirmed_cancellations = Subscription.objects.filter(
-            cancellation_ts__isnull=False,
-            cancellation_admin_confirmed__isnull=True,
-        ).select_related("member", "product__type")
-        self.group_changes_by_member_and_product_type(
-            subscriptions=unconfirmed_cancellations,
-            key="cancellations",
-            changes_by_member=changes_by_member,
-        )
-
-        unconfirmed_creations = Subscription.objects.filter(
-            admin_confirmed__isnull=True
-        ).select_related("member", "product__type")
-        self.group_changes_by_member_and_product_type(
-            subscriptions=unconfirmed_creations,
-            key="creations",
-            changes_by_member=changes_by_member,
-        )
-
         cache = {}
-
-        for member in Member.objects.all():
-            if member in changes_by_member.keys():
-                continue
-            unconfirmed_share_purchases = (
-                TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
-                    cache=cache
-                ).get(member.id, [])
-            )
-            if len(unconfirmed_share_purchases) == 0:
-                continue
-            changes_by_member[member] = {}
-
+        changes_by_member = self.build_changes_by_member(cache=cache)
         data = MemberDataToConfirmSerializer(
             [
                 self.build_data_to_confirm_for_member(
@@ -92,21 +59,46 @@ class MemberDataToConfirmApiView(APIView):
 
         return Response(data)
 
-    @staticmethod
-    def get_number_of_unconfirmed_changes(cache: dict):
+    @classmethod
+    def build_changes_by_member(cls, cache: dict):
+        changes_by_member = {}
 
-        return (
-            Subscription.objects.filter(
-                cancellation_ts__isnull=False,
-                cancellation_admin_confirmed__isnull=True,
-            ).count()
-            + Subscription.objects.filter(admin_confirmed__isnull=True).count()
-            + len(
+        unconfirmed_cancellations = Subscription.objects.filter(
+            cancellation_ts__isnull=False,
+            cancellation_admin_confirmed__isnull=True,
+        ).select_related("member", "product__type")
+        cls.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_cancellations,
+            key="cancellations",
+            changes_by_member=changes_by_member,
+        )
+
+        unconfirmed_creations = Subscription.objects.filter(
+            admin_confirmed__isnull=True
+        ).select_related("member", "product__type")
+        cls.group_changes_by_member_and_product_type(
+            subscriptions=unconfirmed_creations,
+            key="creations",
+            changes_by_member=changes_by_member,
+        )
+
+        for member in Member.objects.all():
+            if member in changes_by_member.keys():
+                continue
+            unconfirmed_share_purchases = (
                 TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
                     cache=cache
-                ).keys()
+                ).get(member.id, [])
             )
-        )
+            if len(unconfirmed_share_purchases) == 0:
+                continue
+            changes_by_member[member] = {}
+
+        return changes_by_member
+
+    @classmethod
+    def get_number_of_unconfirmed_changes(cls, cache: dict):
+        return len(cls.build_changes_by_member(cache=cache).keys())
 
     @classmethod
     def group_changes_by_member_and_product_type(
