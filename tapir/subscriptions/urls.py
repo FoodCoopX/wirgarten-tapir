@@ -78,6 +78,11 @@ urlpatterns = [
         confirmations.RevokeChangesApiView.as_view(),
         name="revoke_changes",
     ),
+    path(
+        "api/is_email_address_valid",
+        bestell_wizard.PublicBestellWizardIsEmailAddressValidApiView.as_view(),
+        name="is_email_address_valid",
+    ),
 ]
 
 router = DefaultRouter()

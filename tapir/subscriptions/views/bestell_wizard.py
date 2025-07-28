@@ -5,7 +5,7 @@ from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -422,3 +422,23 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         return Response(
             BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
         )
+
+
+class PublicBestellWizardIsEmailAddressValidApiView(APIView):
+    permission_classes = []
+
+    @extend_schema(
+        responses={200: bool},
+        parameters=[OpenApiParameter(name="email", type=str)],
+    )
+    def get(self, request):
+        email = request.query_params.get("email")
+
+        try:
+            PersonalDataValidator.validate_email_address_not_in_use(
+                email=email, cache={}
+            )
+        except ValidationError:
+            return Response(False)
+
+        return Response(True)

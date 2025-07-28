@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { Col, Form, Row } from "react-bootstrap";
+import { Col, Form, Row, Spinner } from "react-bootstrap";
 import { PersonalData } from "../types/PersonalData.ts";
 import dayjs from "dayjs";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
@@ -10,6 +10,10 @@ import { isEmailValid } from "../utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 import { getTextSepaCheckbox } from "../utils/getTextSepaCheckbox.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { SubscriptionsApi } from "../../api-client";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -34,6 +38,49 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   waitingListModeEnabled,
   waitingListLinkConfirmationModeEnabled,
 }) => {
+  const [emailAddressAlreadyInUse, setEmailAddressAlreadyInUse] =
+    useState(false);
+  const [emailAdresseAlreadyInUseIsKnown, setEmailAdresseAlreadyInUseIsKnown] =
+    useState(false);
+  const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
+    useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [controller, setController] = useState<AbortController>();
+  const api = useApi(SubscriptionsApi, getCsrfToken());
+
+  useEffect(() => {
+    setEmailAddress(personalData.email);
+  }, [personalData]);
+
+  useEffect(() => {
+    if (controller) controller.abort();
+
+    setEmailAdresseAlreadyInUseIsKnown(false);
+
+    if (!isEmailValid(emailAddress)) {
+      return;
+    }
+
+    setEmailAddressAlreadyInUseLoading(true);
+    const localController = new AbortController();
+    setController(localController);
+
+    api
+      .subscriptionsApiIsEmailAddressValidRetrieve(
+        { email: emailAddress },
+        { signal: localController.signal },
+      )
+      .then((valid) => {
+        setEmailAddressAlreadyInUse(!valid);
+        setEmailAdresseAlreadyInUseIsKnown(true);
+      })
+      .catch(async (error) => {
+        if (error.cause && error.cause.name === "AbortError") return;
+        await handleRequestError(error);
+      })
+      .finally(() => setEmailAddressAlreadyInUseLoading(false));
+  }, [emailAddress]);
+
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
   }
@@ -78,7 +125,10 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
       <Row className={"mt-2"}>
         <Col>
           <Form.Group>
-            <Form.Label>E-Mail-Adresse</Form.Label>
+            <Form.Label>
+              E-Mail-Adresse{" "}
+              {emailAddressAlreadyInUseLoading && <Spinner size={"sm"} />}
+            </Form.Label>
             <Form.Control
               value={personalData.email}
               onChange={(event) => {
@@ -88,10 +138,17 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               type="email"
               placeholder={"E-Mail-Adresse"}
               isInvalid={
-                personalData.email !== "" && !isEmailValid(personalData.email)
+                personalData.email !== "" &&
+                (!isEmailValid(personalData.email) ||
+                  (emailAdresseAlreadyInUseIsKnown && emailAddressAlreadyInUse))
               }
               disabled={waitingListLinkConfirmationModeEnabled}
             />
+            {emailAdresseAlreadyInUseIsKnown && emailAddressAlreadyInUse && (
+              <Form.Control.Feedback type="invalid">
+                Diese Email-Adresse ist schon vergeben
+              </Form.Control.Feedback>
+            )}
           </Form.Group>
         </Col>
         <Col>

@@ -74,6 +74,10 @@ export interface SubscriptionsApiExtendedProductRetrieveRequest {
   productId?: string;
 }
 
+export interface SubscriptionsApiIsEmailAddressValidRetrieveRequest {
+  email?: string;
+}
+
 export interface SubscriptionsApiMemberProfileCapacityCheckCreateRequest {
   memberProfileCapacityCheckRequestRequest: MemberProfileCapacityCheckRequestRequest;
 }
@@ -501,6 +505,50 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<ExtendedProduct> {
     const response = await this.subscriptionsApiExtendedProductRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async subscriptionsApiIsEmailAddressValidRetrieveRaw(
+    requestParameters: SubscriptionsApiIsEmailAddressValidRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<boolean>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["email"] != null) {
+      queryParameters["email"] = requestParameters["email"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    const response = await this.request(
+      {
+        path: `/subscriptions/api/is_email_address_valid`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<boolean>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async subscriptionsApiIsEmailAddressValidRetrieve(
+    requestParameters: SubscriptionsApiIsEmailAddressValidRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<boolean> {
+    const response = await this.subscriptionsApiIsEmailAddressValidRetrieveRaw(
       requestParameters,
       initOverrides,
     );

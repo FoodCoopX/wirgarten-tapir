@@ -1119,6 +1119,23 @@ paths:
               schema:
                 type: string
           description: ''
+  /subscriptions/api/is_email_address_valid:
+    get:
+      operationId: subscriptions_api_is_email_address_valid_retrieve
+      parameters:
+      - in: query
+        name: email
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
   /subscriptions/api/member_data_to_confirm:
     get:
       operationId: subscriptions_api_member_data_to_confirm_list
