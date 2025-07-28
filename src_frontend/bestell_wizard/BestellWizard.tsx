@@ -682,6 +682,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         params = buildNextButtonParametersForPickupLocation(
           selectedPickupLocations,
           pickupLocationsWithCapacityCheckLoading,
+          waitingListModeEnabled,
         );
         break;
       case "coop_shares":
