@@ -337,6 +337,39 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     });
   }
 
+  function doesSelectionContainChangesThatAreAlreadyValid(): boolean {
+    for (const change of selectedChanges) {
+      for (const subscription of change.subscriptionCreations) {
+        if (subscription.startDate <= new Date()) {
+          return true;
+        }
+      }
+
+      for (const change2 of change.subscriptionChanges) {
+        for (const subscription of change2.subscriptionCreations) {
+          if (subscription.startDate <= new Date()) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function getRevokeButtonText() {
+    if (doesSelectionContainChangesThatAreAlreadyValid()) {
+      return "Nur zukünftige Zeichnungen können widerrufen werden";
+    }
+
+    const base = "Auswahl widerrufen";
+    if (selectedChanges.size === 0) {
+      return base;
+    }
+
+    return base + " (" + selectedChanges.size + ")";
+  }
+
   return (
     <>
       <Row className={"mt-4"}>
@@ -354,13 +387,11 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                 </h5>
                 <div className={"d-flex flex-row gap-2"}>
                   <TapirButton
-                    text={
-                      "Auswahl widerrufen" +
-                      (selectedChanges.size > 0
-                        ? " (" + selectedChanges.size + ")"
-                        : "")
+                    text={getRevokeButtonText()}
+                    disabled={
+                      selectedChanges.size === 0 ||
+                      doesSelectionContainChangesThatAreAlreadyValid()
                     }
-                    disabled={selectedChanges.size === 0}
                     icon={"contract_delete"}
                     variant={"outline-danger"}
                     onClick={() => setShowRevokeConfirmModal(true)}
