@@ -9,39 +9,18 @@ from tapir.wirgarten.utils import format_subscription_list_html
 
 
 class OrderConfirmationMailSender:
-    @staticmethod
-    def send_confirmation_mail_if_necessary(confirm_creation_ids, confirm_purchase_ids):
+    @classmethod
+    def send_confirmation_mail_if_necessary(
+        cls,
+        confirm_creation_ids: list[str],
+        confirm_purchase_ids: list[str],
+    ):
         if len(confirm_creation_ids) == 0 and len(confirm_purchase_ids) == 0:
             return
 
-        data_by_member = {}
-
-        for subscription in Subscription.objects.filter(
-            id__in=confirm_creation_ids
-        ).select_related("member"):
-            if subscription.auto_confirmed is not None:
-                continue
-            if subscription.member not in data_by_member.keys():
-                data_by_member[subscription.member] = {
-                    "subscriptions": [],
-                    "number_of_coop_shares": 0,
-                }
-            data_by_member[subscription.member]["subscriptions"].append(subscription)
-
-        for share_transaction in CoopShareTransaction.objects.filter(
-            id__in=confirm_purchase_ids
-        ).select_related("member"):
-            if share_transaction.auto_confirmed is not None:
-                continue
-            if share_transaction.member not in data_by_member.keys():
-                data_by_member[share_transaction.member] = {
-                    "subscriptions": [],
-                    "number_of_coop_shares": 0,
-                }
-
-            data_by_member[share_transaction.member][
-                "number_of_coop_shares"
-            ] += share_transaction.quantity
+        data_by_member = cls.build_data_by_member(
+            confirm_creation_ids, confirm_purchase_ids, skip_auto_confirmed=True
+        )
 
         for member, data in data_by_member.items():
             TransactionalTrigger.fire_action(
@@ -56,3 +35,41 @@ class OrderConfirmationMailSender:
                     },
                 ),
             )
+
+    @classmethod
+    def build_data_by_member(
+        cls,
+        confirm_creation_ids: list[str],
+        confirm_purchase_ids: list[str],
+        skip_auto_confirmed: bool,
+    ):
+        data_by_member = {}
+
+        for subscription in Subscription.objects.filter(
+            id__in=confirm_creation_ids
+        ).select_related("member"):
+            if skip_auto_confirmed and subscription.auto_confirmed is not None:
+                continue
+            if subscription.member not in data_by_member.keys():
+                data_by_member[subscription.member] = {
+                    "subscriptions": [],
+                    "number_of_coop_shares": 0,
+                }
+            data_by_member[subscription.member]["subscriptions"].append(subscription)
+
+        for share_transaction in CoopShareTransaction.objects.filter(
+            id__in=confirm_purchase_ids
+        ).select_related("member"):
+            if skip_auto_confirmed and share_transaction.auto_confirmed is not None:
+                continue
+            if share_transaction.member not in data_by_member.keys():
+                data_by_member[share_transaction.member] = {
+                    "subscriptions": [],
+                    "number_of_coop_shares": 0,
+                }
+
+            data_by_member[share_transaction.member][
+                "number_of_coop_shares"
+            ] += share_transaction.quantity
+
+        return data_by_member

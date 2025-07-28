@@ -84,6 +84,7 @@ export interface SubscriptionsApiMemberSubscriptionsListRequest {
 
 export interface SubscriptionsApiRevokeChangesCreateRequest {
   coopSharePurchaseIds: Array<string>;
+  putOnWaitingList: boolean;
   subscriptionCreationIds: Array<string>;
 }
 
@@ -688,6 +689,13 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters["putOnWaitingList"] == null) {
+      throw new runtime.RequiredError(
+        "putOnWaitingList",
+        'Required parameter "putOnWaitingList" was null or undefined when calling subscriptionsApiRevokeChangesCreate().',
+      );
+    }
+
     if (requestParameters["subscriptionCreationIds"] == null) {
       throw new runtime.RequiredError(
         "subscriptionCreationIds",
@@ -700,6 +708,11 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     if (requestParameters["coopSharePurchaseIds"] != null) {
       queryParameters["coop_share_purchase_ids"] =
         requestParameters["coopSharePurchaseIds"];
+    }
+
+    if (requestParameters["putOnWaitingList"] != null) {
+      queryParameters["put_on_waiting_list"] =
+        requestParameters["putOnWaitingList"];
     }
 
     if (requestParameters["subscriptionCreationIds"] != null) {

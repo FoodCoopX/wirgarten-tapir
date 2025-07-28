@@ -313,6 +313,16 @@ def _register_triggers():
         required=True,
     )
 
+    register_transactional_trigger(
+        name="Bestellung widerruft",
+        key=Events.ORDER_REVOKED,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Anzahl an GenoAnteile": "number_of_coop_shares",
+        },
+        required=True,
+    )
+
 
 def register_transactional_trigger(
     name: str, key: str, tokens: dict = None, required: bool | Callable = False

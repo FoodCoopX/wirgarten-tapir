@@ -43,3 +43,5 @@ class Events:
     WAITING_LIST_WISH_CAN_BE_ORDERED = "waiting_list_wish_can_be_ordered"
 
     ORDER_CONFIRMED_BY_ADMIN = "order_confirmed_by_admin"
+
+    ORDER_REVOKED = "order_revoked"

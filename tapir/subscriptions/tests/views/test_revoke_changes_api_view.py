@@ -1,8 +1,14 @@
 import datetime
+from unittest.mock import patch, Mock
 
 from django.urls import reverse
 from rest_framework import status
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -20,6 +26,7 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         ParameterDefinitions().import_definitions(bulk_create=True)
 
     def setUp(self) -> None:
+        super().setUp()
         self.now = mock_timezone(self, datetime.datetime(year=2024, month=6, day=1))
 
     def test_post_loggedInAsNormalUser_returns403(self):
@@ -98,8 +105,9 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
 
-    def test_post_default_deleteSubscriptionAndTransactionAndCreateWaitingListEntry(
-        self,
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_putOnWaitingList_deleteSubscriptionAndTransactionAndCreateWaitingListEntry(
+        self, mock_fire_action: Mock
     ):
         actor = MemberFactory.create(is_superuser=True)
         self.client.force_login(actor)
@@ -133,7 +141,7 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         )
 
         url = reverse("subscriptions:revoke_changes")
-        url = f"{url}?subscription_creation_ids={subscription_1.id}&subscription_creation_ids={subscription_2.id}&coop_share_purchase_ids={transaction.id}"
+        url = f"{url}?subscription_creation_ids={subscription_1.id}&subscription_creation_ids={subscription_2.id}&coop_share_purchase_ids={transaction.id}&put_on_waiting_list=true"
         response = self.client.post(url)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
@@ -164,3 +172,79 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
             product_id=subscription_2.product_id
         )
         self.assertEqual(3, wish_second_subscription.quantity)
+
+        mock_fire_action.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_dontPutOnWaitingList_deleteSubscriptionAndTransactionAndSendMailToMembers(
+        self, mock_fire_action: Mock
+    ):
+        actor = MemberFactory.create(is_superuser=True)
+        self.client.force_login(actor)
+
+        member = MemberFactory.create(phone_number="017726254538")
+        subscription_1 = SubscriptionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=2,
+            product__name="P1",
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
+        subscription_2 = SubscriptionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=3,
+            product__name="P2",
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
+        subscription_other_member = SubscriptionFactory.create(
+            admin_confirmed=None,
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
+        transaction = CoopShareTransactionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=7,
+            valid_at=self.now.date() + datetime.timedelta(days=1),
+        )
+        transaction_other_member = CoopShareTransactionFactory.create(
+            admin_confirmed=None,
+            valid_at=self.now.date() + datetime.timedelta(days=1),
+        )
+
+        url = reverse("subscriptions:revoke_changes")
+        url = f"{url}?subscription_creation_ids={subscription_1.id}&subscription_creation_ids={subscription_2.id}&coop_share_purchase_ids={transaction.id}&put_on_waiting_list=false"
+        response = self.client.post(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        subscription_ids = Subscription.objects.values_list("id", flat=True)
+        self.assertIn(subscription_other_member.id, subscription_ids)
+        self.assertNotIn(subscription_1, subscription_ids)
+        self.assertNotIn(subscription_2, subscription_ids)
+
+        transaction_ids = CoopShareTransaction.objects.values_list("id", flat=True)
+        self.assertIn(transaction_other_member.id, transaction_ids)
+        self.assertNotIn(transaction, transaction_ids)
+
+        self.assertEqual(0, WaitingListEntry.objects.count())
+
+        mock_fire_action.assert_called_once()
+        call = mock_fire_action.call_args_list[0]
+        transactional_trigger_data: TransactionalTriggerData = call.args[0]
+        self.assertEqual(transactional_trigger_data.key, Events.ORDER_REVOKED)
+        self.assertIn(
+            transactional_trigger_data.recipient_id_in_base_queryset,
+            [member.id],
+        )
+        self.assertEqual(
+            7, transactional_trigger_data.token_data["number_of_coop_shares"]
+        )
+        self.assertIn(
+            "2 × P1",
+            transactional_trigger_data.token_data["contract_list"],
+        )
+        self.assertIn(
+            "3 × P2",
+            transactional_trigger_data.token_data["contract_list"],
+        )

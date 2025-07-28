@@ -9,6 +9,10 @@ from rest_framework import status, permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
@@ -22,6 +26,7 @@ from tapir.subscriptions.services.order_confirmation_mail_sender import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     Subscription,
@@ -33,6 +38,7 @@ from tapir.wirgarten.utils import (
     get_today,
     get_now,
     format_date,
+    format_subscription_list_html,
 )
 
 
@@ -319,25 +325,79 @@ class RevokeChangesApiView(APIView):
             OpenApiParameter(
                 name="coop_share_purchase_ids", type=str, required=True, many=True
             ),
+            OpenApiParameter(
+                name="put_on_waiting_list", type=bool, required=True, many=False
+            ),
         ],
     )
     @transaction.atomic
     def post(self, request: Request):
         cache = {}
+        subscription_creation_ids = request.query_params.getlist(
+            "subscription_creation_ids"
+        )
+        coop_share_purchase_ids = request.query_params.getlist(
+            "coop_share_purchase_ids"
+        )
+        put_on_waiting_list = request.query_params.get("put_on_waiting_list") == "true"
+
+        if not put_on_waiting_list:
+            self.send_mail_to_members(
+                subscription_creation_ids=subscription_creation_ids,
+                coop_share_purchase_ids=coop_share_purchase_ids,
+            )
 
         subscriptions = self.delete_objects_or_404(
-            ids_to_delete=request.query_params.getlist("subscription_creation_ids"),
+            ids_to_delete=subscription_creation_ids,
             model=Subscription,
             field_start_date="start_date",
             cache=cache,
         )
         share_transactions = self.delete_objects_or_404(
-            ids_to_delete=request.query_params.getlist("coop_share_purchase_ids"),
+            ids_to_delete=coop_share_purchase_ids,
             model=CoopShareTransaction,
             field_start_date="valid_at",
             cache=cache,
         )
 
+        if put_on_waiting_list:
+            self.create_waiting_list_entry(
+                subscriptions=subscriptions,
+                share_transactions=share_transactions,
+                cache=cache,
+            )
+
+        return Response("OK")
+
+    @staticmethod
+    def send_mail_to_members(
+        subscription_creation_ids: list[str], coop_share_purchase_ids: list[str]
+    ):
+        data_by_member = OrderConfirmationMailSender.build_data_by_member(
+            confirm_creation_ids=subscription_creation_ids,
+            confirm_purchase_ids=coop_share_purchase_ids,
+            skip_auto_confirmed=False,
+        )
+        for member, data in data_by_member.items():
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.ORDER_REVOKED,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "contract_list": format_subscription_list_html(
+                            data["subscriptions"]
+                        ),
+                        "number_of_coop_shares": data["number_of_coop_shares"],
+                    },
+                ),
+            )
+
+    @staticmethod
+    def create_waiting_list_entry(
+        subscriptions: list[Subscription],
+        share_transactions: list[CoopShareTransaction],
+        cache: dict,
+    ):
         if len(subscriptions) > 0:
             member = subscriptions[0].member
         else:
@@ -368,8 +428,6 @@ class RevokeChangesApiView(APIView):
                 for subscription in subscriptions
             ],
         )
-
-        return Response("OK")
 
     @staticmethod
     def delete_objects_or_404(

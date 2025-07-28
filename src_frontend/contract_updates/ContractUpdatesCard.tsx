@@ -12,9 +12,9 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import TapirButton from "../components/TapirButton.tsx";
-import ConfirmModal from "../components/ConfirmModal.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
+import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
@@ -248,9 +248,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     return false;
   }
 
-  function onConfirmRevoke() {
+  function onConfirmRevoke(putOnWaitingList: boolean) {
     if (isAtLeastOneCancellationSelected()) {
       alert("Kündigungen können nicht widerrufen werden.");
+      return;
     }
 
     setLoading(true);
@@ -259,6 +260,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       .subscriptionsApiRevokeChangesCreate({
         subscriptionCreationIds: getCreationIdsToConfirm(),
         coopSharePurchaseIds: getCancellationIdsToConfirm(),
+        putOnWaitingList: putOnWaitingList,
       })
       .then(() => {
         setConfirmedChanges(new Set(selectedChanges));
@@ -309,24 +311,6 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       change.subscriptionCreations.length === 0 &&
       change.subscriptionChanges.length === 0 &&
       change.subscriptionCancellations.length > 0
-    );
-  }
-
-  function buildRevokeConfirmationModalText() {
-    return (
-      <>
-        <p>Bist du sicher das du folgende Änderungen widerrufen willst?</p>
-        <ul>
-          {Array.from(selectedChanges).map((change) => (
-            <li key={change.member.id}>
-              <a href={change.memberProfileUrl}>
-                {change.member.firstName} {change.member.lastName} #
-                {change.member.memberNo}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </>
     );
   }
 
@@ -541,15 +525,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           </Card>
         </Col>
       </Row>
-      <ConfirmModal
+      <ConfirmRevokeModal
         open={showRevokeConfirmModal}
-        onConfirm={onConfirmRevoke}
-        message={buildRevokeConfirmationModalText()}
-        title={"Änderungen widerrufen"}
-        confirmButtonText={"Widerrufen"}
-        confirmButtonVariant={"danger"}
-        confirmButtonIcon={"contract_delete"}
+        onRevoke={() => onConfirmRevoke(false)}
+        onWaitingList={() => onConfirmRevoke(true)}
         onCancel={() => setShowRevokeConfirmModal(false)}
+        selectedChanges={selectedChanges}
       />
       <TapirToastContainer
         toastDatas={toastDatas}
