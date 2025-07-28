@@ -107,10 +107,11 @@ class CoopSharePurchaseHandler:
     def send_warning_mail_if_necessary(
         cls, quantity: int, member: Member, shares_valid_at: datetime.date, cache: dict
     ):
-        if quantity < get_parameter_value(
+        threshold = get_parameter_value(
             key=ParameterKeys.COOP_THRESHOLD_WARNING_ON_MANY_COOP_SHARES_BOUGHT,
             cache=cache,
-        ):
+        )
+        if quantity < threshold:
             return
 
         transaction.on_commit(
@@ -118,7 +119,7 @@ class CoopSharePurchaseHandler:
                 to_email=[
                     get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)
                 ],
-                subject="Warnung: eine große Anzahl an Anteile ist bestellt worden",
-                content=f"Mitglied: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig.",
+                subject=f"Warnung: es wurden mehr als {threshold} Genossenschaftsanteile gezeichnet- bitte prüfen",
+                content=f"Bestehendes Mitglied oder Neuanmeldung: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
             )
         )

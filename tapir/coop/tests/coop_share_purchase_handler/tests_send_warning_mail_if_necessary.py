@@ -48,8 +48,8 @@ class TestSendWarningMailIfNecessary(TapirIntegrationTest):
 
         mock_send_email.assert_called_once_with(
             to_email=["admin@example.com"],
-            subject="Warnung: eine große Anzahl an Anteile ist bestellt worden",
-            content="Mitglied: John Smith mit Mail-Adresse john@example.com hat gerade 9 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig.",
+            subject="Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
+            content="Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 9 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
         )
 
     @patch("tapir.coop.services.coop_share_purchase_handler.send_email")
@@ -70,6 +70,6 @@ class TestSendWarningMailIfNecessary(TapirIntegrationTest):
 
         mock_send_email.assert_called_once_with(
             to_email=["admin@example.com"],
-            subject="Warnung: eine große Anzahl an Anteile ist bestellt worden",
-            content="Mitglied: John Smith mit Mail-Adresse john@example.com hat gerade 8 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig.",
+            subject="Warnung: es wurden mehr als 8 Genossenschaftsanteile gezeichnet- bitte prüfen",
+            content="Bestehendes Mitglied oder Neuanmeldung: John Smith mit Mail-Adresse john@example.com hat gerade 8 Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem 27.02.2022 gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
         )
