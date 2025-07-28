@@ -336,10 +336,14 @@ class RevokeChangesApiView(APIView):
         subscriptions = self.delete_objects_or_404(
             ids_to_delete=request.query_params.getlist("subscription_creation_ids"),
             model=Subscription,
+            field_start_date="start_date",
+            cache=cache,
         )
         share_transactions = self.delete_objects_or_404(
             ids_to_delete=request.query_params.getlist("coop_share_purchase_ids"),
             model=CoopShareTransaction,
+            field_start_date="valid_at",
+            cache=cache,
         )
 
         if len(subscriptions) > 0:
@@ -376,16 +380,20 @@ class RevokeChangesApiView(APIView):
         return Response("OK")
 
     @staticmethod
-    def delete_objects_or_404(ids_to_delete: list[str], model: Type[Model]):
+    def delete_objects_or_404(
+        ids_to_delete: list[str], model: Type[Model], field_start_date: str, cache: dict
+    ):
         ids_to_delete = [
             ids_to_delete.strip()
             for ids_to_delete in ids_to_delete
             if ids_to_delete.strip() != ""
         ]
 
-        objects_to_delete = model.objects.filter(
-            id__in=ids_to_delete, admin_confirmed__isnull=True
-        ).select_related("member")
+        objects_to_delete = (
+            model.objects.filter(id__in=ids_to_delete, admin_confirmed__isnull=True)
+            .exclude(**{f"{field_start_date}__lte": get_today(cache=cache)})
+            .select_related("member")
+        )
         found_ids = [obj.id for obj in objects_to_delete]
         ids_not_found = [
             object_id for object_id in ids_to_delete if object_id not in found_ids

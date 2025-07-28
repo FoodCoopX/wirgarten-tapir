@@ -1,3 +1,5 @@
+import datetime
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -8,7 +10,7 @@ from tapir.wirgarten.tests.factories import (
     MemberFactory,
     CoopShareTransactionFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 from tapir.wirgarten.utils import get_now
 
 
@@ -16,6 +18,9 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+
+    def setUp(self) -> None:
+        self.now = mock_timezone(self, datetime.datetime(year=2024, month=6, day=1))
 
     def test_post_loggedInAsNormalUser_returns403(self):
         actor = MemberFactory.create(is_superuser=False)
@@ -33,7 +38,10 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         actor = MemberFactory.create(is_superuser=True)
         self.client.force_login(actor)
 
-        subscription = SubscriptionFactory.create(admin_confirmed=get_now())
+        subscription = SubscriptionFactory.create(
+            admin_confirmed=get_now(),
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
 
         url = reverse("subscriptions:revoke_changes")
         url = f"{url}?subscription_creation_ids={subscription.id}&coop_share_purchase_ids="
@@ -45,7 +53,42 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         actor = MemberFactory.create(is_superuser=True)
         self.client.force_login(actor)
 
-        transaction = CoopShareTransactionFactory.create(admin_confirmed=get_now())
+        transaction = CoopShareTransactionFactory.create(
+            admin_confirmed=get_now(),
+            valid_at=self.now.date() + datetime.timedelta(days=1),
+        )
+
+        url = reverse("subscriptions:revoke_changes")
+        url = (
+            f"{url}?subscription_creation_ids=&coop_share_purchase_ids={transaction.id}"
+        )
+        response = self.client.post(url)
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_post_subscriptionIdAlreadyStarted_returns404(self):
+        actor = MemberFactory.create(is_superuser=True)
+        self.client.force_login(actor)
+
+        subscription = SubscriptionFactory.create(
+            admin_confirmed=None,
+            start_date=self.now.date() - datetime.timedelta(days=1),
+        )
+
+        url = reverse("subscriptions:revoke_changes")
+        url = f"{url}?subscription_creation_ids={subscription.id}&coop_share_purchase_ids="
+        response = self.client.post(url)
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+
+    def test_post_shareTransactionIdAlreadyValid_returns404(self):
+        actor = MemberFactory.create(is_superuser=True)
+        self.client.force_login(actor)
+
+        transaction = CoopShareTransactionFactory.create(
+            admin_confirmed=get_now(),
+            valid_at=self.now.date() - datetime.timedelta(days=1),
+        )
 
         url = reverse("subscriptions:revoke_changes")
         url = (
@@ -63,17 +106,30 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
 
         member = MemberFactory.create(phone_number="017726254538")
         subscription_1 = SubscriptionFactory.create(
-            admin_confirmed=None, member=member, quantity=2
+            admin_confirmed=None,
+            member=member,
+            quantity=2,
+            start_date=self.now.date() + datetime.timedelta(days=1),
         )
         subscription_2 = SubscriptionFactory.create(
-            admin_confirmed=None, member=member, quantity=3
+            admin_confirmed=None,
+            member=member,
+            quantity=3,
+            start_date=self.now.date() + datetime.timedelta(days=1),
         )
-        subscription_other_member = SubscriptionFactory.create(admin_confirmed=None)
+        subscription_other_member = SubscriptionFactory.create(
+            admin_confirmed=None,
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
         transaction = CoopShareTransactionFactory.create(
-            admin_confirmed=None, member=member, quantity=7
+            admin_confirmed=None,
+            member=member,
+            quantity=7,
+            valid_at=self.now.date() + datetime.timedelta(days=1),
         )
         transaction_other_member = CoopShareTransactionFactory.create(
-            admin_confirmed=None
+            admin_confirmed=None,
+            valid_at=self.now.date() + datetime.timedelta(days=1),
         )
 
         url = reverse("subscriptions:revoke_changes")
