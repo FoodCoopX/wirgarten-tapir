@@ -1,6 +1,6 @@
 import csv
-from builtins import print
 import datetime
+from builtins import print
 
 import django.db
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -19,7 +19,7 @@ from tapir.wirgarten.models import (
     LogEntry,
     QuestionaireCancellationReasonResponse,
     QuestionaireTrafficSourceResponse,
-    WaitingListEntry
+    WaitingListEntry,
 )
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
@@ -83,7 +83,7 @@ class Command(BaseCommand):
                     m = Member(
                         first_name=row["Vorname"],
                         last_name=row["Nachname"],
-                        #birthdate=row["Geburtstag/Gründungsdatum"],
+                        # birthdate=row["Geburtstag/Gründungsdatum"],
                         street=row["Straße"] + " " + row["Hausnr."],
                         postcode=row["PLZ"],
                         city=row["Ort"],
@@ -94,7 +94,7 @@ class Command(BaseCommand):
                         account_owner=row["Kontoinhaber"],
                         sepa_consent=row["consent_sepa"],  # + "T12:00:00+0200",
                         privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
-                        #pickup_location=picloc
+                        # pickup_location=picloc
                     )
                     mp = MemberPickupLocation(
                         member=m,
@@ -286,7 +286,11 @@ class Command(BaseCommand):
                             start_date=row["Vertragsbeginn"],
                             end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
-                            solidarity_price_percentage=float(row["Solidarpreis in Prozent"]) if row["Quantity"] else 0.0,
+                            solidarity_price_percentage=(
+                                float(row["Solidarpreis in Prozent"])
+                                if row["Quantity"]
+                                else 0.0
+                            ),
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
                             product_id=prod.id,
