@@ -4,18 +4,22 @@ from django.test import TestCase
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     GrowingPeriodFactory,
     MemberFactory,
 )
-from tapir.wirgarten.tests.test_utils import mock_timezone, set_bypass_keycloak
+from tapir.wirgarten.tests.test_utils import mock_timezone
 from tapir.wirgarten.views.member.list.member_list import ContractStatusFilter
 
 
 class ContractStatusFilterTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
-        set_bypass_keycloak()
         mock_timezone(self, datetime.datetime(year=2023, month=6, day=15))
 
         current_growing_period = GrowingPeriodFactory.create(

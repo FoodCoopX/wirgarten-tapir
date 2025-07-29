@@ -43,9 +43,9 @@ class KeycloakUserManager:
             data["requiredActions"] = ["VERIFY_EMAIL", "UPDATE_PASSWORD"]
 
         if user.is_superuser:
-            group = keycloak_client.get_group_by_path(path="/superuser")
-            if group:
-                data["groups"] = ["superuser"]
+            data["groups"] = ["superuser"]
+        else:
+            data["groups"] = []
 
         user.keycloak_id = keycloak_client.create_user(data)
 
@@ -95,7 +95,7 @@ class KeycloakUserManager:
         keycloak_client.update_user(
             user_id=user.keycloak_id, payload={"email": new_email}
         )
-        user.send_verify_email()
+        user.send_verify_email(cache=cache)
 
     @classmethod
     def get_keycloak_client(cls, cache: dict):
@@ -115,3 +115,17 @@ class KeycloakUserManager:
         return get_from_cache_or_compute(
             cache=cache, key="keycloak_client", compute_function=compute
         )
+
+    @classmethod
+    def get_user_roles(cls, keycloak_id):
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+
+        raw_roles = keycloak_client.get_composite_realm_roles_of_user(
+            keycloak_id,
+        )
+
+        return [
+            raw_role["name"]
+            for raw_role in raw_roles
+            if raw_role["name"] not in settings.KEYCLOAK_NON_TAPIR_ROLES
+        ]

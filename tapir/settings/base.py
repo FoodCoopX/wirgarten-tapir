@@ -68,6 +68,10 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_spectacular",
     "django_vite",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.openid_connect",
 ]
 
 if ENABLE_SILK_PROFILING:
@@ -80,10 +84,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "tapir.accounts.models.language_middleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "tapir.accounts.middleware.KeycloakMiddleware",
     "tapir.wirgarten.middleware.error.GlobalServerErrorHandlerMiddleware",
     "tapir.wirgarten.middleware.mailing.TapirMailPermissionMiddleware",
 ]
@@ -158,8 +162,7 @@ SELECT2_I18N_PATH = "core/select2/4.0.13/js/i18n"
 WEASYPRINT_BASEURL = "/"
 
 AUTH_USER_MODEL = "accounts.TapirUser"
-# LOGIN_REDIRECT_URL = "index"
-LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "/"
 
 PHONENUMBER_DEFAULT_REGION = "DE"
 
@@ -226,3 +229,12 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+AUTHENTICATION_BACKENDS = [
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+SOCIALACCOUNT_ONLY = False
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_ADAPTER = "tapir.accounts.adapter.MySocialAccountAdapter"
+SOCIALACCOUNT_LOGIN_ON_GET = True

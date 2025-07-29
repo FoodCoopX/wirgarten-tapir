@@ -73,5 +73,5 @@ class TestAdditionalSharesDuringTrialPeriod(TapirIntegrationTest):
 
         response = self.client.post(url, data=data, follow=True)
 
-        self.assertStatusCode(response, 200)
+        self.assertStatusCode(response, 403)
         self.assertEqual(0, member.coop_shares_quantity)

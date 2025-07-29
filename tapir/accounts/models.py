@@ -1,13 +1,15 @@
 import logging
 from functools import partial
 
+from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
+from django.contrib.auth import user_logged_out
 from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from keycloak import KeycloakAdmin
 from keycloak.exceptions import KeycloakDeleteError
 from nanoid import generate
 from phonenumber_field.modelfields import PhoneNumberField
@@ -16,7 +18,6 @@ from tapir import utils
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
-from tapir.settings import DEBUG
 from tapir.utils.models import CountryField
 from tapir.utils.user_utils import UserUtils
 
@@ -43,10 +44,6 @@ class KeycloakUser(AbstractUser):
 
     objects = KeycloakUserQuerySetManager()
 
-    _kc: KeycloakAdmin = None
-    roles: [str] = []
-    email_verified = False
-
     id = models.CharField(
         "ID",
         max_length=ID_LENGTH,
@@ -57,6 +54,10 @@ class KeycloakUser(AbstractUser):
     keycloak_id = models.CharField(
         max_length=64, unique=True, primary_key=False, null=True
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.roles = None
 
     def email_verified(self, cache: dict = None) -> bool:
         if cache is None:
@@ -80,9 +81,22 @@ class KeycloakUser(AbstractUser):
         ).save()
 
     def has_perm(self, perm, obj=None):
-        if DEBUG and self.is_superuser:
-            return True
-        return perm in self.roles
+        target = self
+        if obj is not None:
+            target = obj
+
+        if target.roles is None:
+            target.roles = KeycloakUserManager.get_user_roles(
+                keycloak_id=target.keycloak_id
+            )
+
+        return perm in target.roles
+
+    def has_perms(self, perms, obj=None):
+        for perm in perms:
+            if not self.has_perm(perm, obj):
+                return False
+        return True
 
     @transaction.atomic
     def save(self, *args, **kwargs):
@@ -134,6 +148,10 @@ class KeycloakUser(AbstractUser):
             )
 
         super().save(*args, **kwargs)
+        if not has_kc_account:
+            SocialAccount.objects.create(
+                user=self, provider="keycloak", uid=self.keycloak_id
+            )
 
     def delete(self, *args, **kwargs):
         kc = KeycloakUserManager.get_keycloak_client(cache=kwargs.pop("cache", {}))
@@ -197,11 +215,11 @@ class TapirUser(KeycloakUser):
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
 
-    def has_perms(self, perms):
-        for perm in perms:
-            if not self.has_perm(perm, self):
-                return False
-        return True
+
+@receiver(user_logged_out)
+def terminate_session(sender, request, user, **kwargs):
+    keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+    keycloak_client.user_logout(user.keycloak_id)
 
 
 def generate_random_secret():

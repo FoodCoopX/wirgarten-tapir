@@ -1,11 +1,9 @@
 import inspect
 
 from django.conf import settings
-from django.contrib.auth import logout
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.urls import reverse_lazy
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse_lazy, reverse
 from django.utils.module_loading import import_string
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
@@ -35,12 +33,6 @@ def dynamic_view(view_key: str):
 
 @require_http_methods(["GET"])
 def wirgarten_redirect_view(request):
-    if request.error:
-        return handle_403(
-            request,
-            PermissionError(_("Du bist nicht authorisiert diese Seite zu sehen.")),
-        )
-
     user_type = get_user_type(request)
 
     # User is Admin --> redirect to dashboard
@@ -55,7 +47,7 @@ def wirgarten_redirect_view(request):
             + request.environ["QUERY_STRING"]
         )
 
-    return HttpResponseRedirect(reverse_lazy("login"))
+    return HttpResponseRedirect(reverse("openid_connect_login", args=["keycloak"]))
 
 
 def get_user_type(request) -> int:
@@ -68,24 +60,3 @@ def get_user_type(request) -> int:
     # User is Member
     else:
         return RequestUserType.MEMBER
-
-
-def handle_403(request, exception):
-    response = HttpResponseForbidden(str(exception))
-    if request.error:
-        logout(request)
-        cookies = [
-            "token",
-            "csrftoken",
-            "AUTH_SESSION_ID_LEGACY",
-            "AUTH_SESSION_ID",
-            "KEYCLOAK_IDENTITY_LEGACY",
-            "KEYCLOAK_IDENTITY",
-            "KEYCLOAK_REMEMBER_ME",
-            "KEYCLOAK_SESSION_LEGACY",
-            "KEYCLOAK_SESSION",
-        ]
-        for cookie in cookies:
-            response.delete_cookie(cookie)
-
-    return response
