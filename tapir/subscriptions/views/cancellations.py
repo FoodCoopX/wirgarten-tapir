@@ -38,6 +38,7 @@ from tapir.wirgarten.service.products import (
 from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
+    format_subscription_list_html,
 )
 
 
@@ -183,7 +184,9 @@ class CancelSubscriptionsView(APIView):
                             key=Events.CONTRACT_CANCELLED,
                             recipient_id_in_base_queryset=member.id,
                             token_data={
-                                "contract_list": cancelled_subscriptions,
+                                "contract_list": format_subscription_list_html(
+                                    cancelled_subscriptions
+                                ),
                                 "contract_end_date": format_date(
                                     cancelled_subscriptions[0].end_date
                                 ),

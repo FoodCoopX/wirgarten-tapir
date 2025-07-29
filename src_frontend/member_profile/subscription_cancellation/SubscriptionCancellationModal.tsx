@@ -134,6 +134,8 @@ const SubscriptionCancellationModal: React.FC<
       .then((response) => {
         if (response.subscriptionsCancelled) {
           location.reload();
+          setShowConfirmationModal(false);
+          onHide();
           return;
         }
         setErrors(response.errors);
