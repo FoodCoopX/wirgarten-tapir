@@ -238,9 +238,9 @@ const SubscriptionCancellationModal: React.FC<
         confirmButtonVariant={"danger"}
         open={showConfirmationModal}
         title={"Verträge kündigen bestätigen"}
+        loading={confirmationLoading}
         onConfirm={() => {
           onConfirm();
-          setShowConfirmationModal(false);
         }}
       />
     </>
