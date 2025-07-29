@@ -548,6 +548,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListLinkConfirmationModeEnabled={
               waitingListLinkConfirmationModeEnabled
             }
+            setToastDatas={setToastDatas}
           />
         );
       case "summary":

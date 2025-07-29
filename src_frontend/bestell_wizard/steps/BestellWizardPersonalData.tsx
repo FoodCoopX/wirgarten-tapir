@@ -14,6 +14,7 @@ import { useApi } from "../../hooks/useApi.ts";
 import { SubscriptionsApi } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -25,6 +26,7 @@ interface BestellWizardPersonalDataProps {
   setContractAccepted: (contractRead: boolean) => void;
   waitingListModeEnabled: boolean;
   waitingListLinkConfirmationModeEnabled: boolean;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -37,6 +39,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   setContractAccepted,
   waitingListModeEnabled,
   waitingListLinkConfirmationModeEnabled,
+  setToastDatas,
 }) => {
   const [emailAddressAlreadyInUse, setEmailAddressAlreadyInUse] =
     useState(false);
@@ -76,7 +79,11 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
       })
       .catch(async (error) => {
         if (error.cause && error.cause.name === "AbortError") return;
-        await handleRequestError(error);
+        await handleRequestError(
+          error,
+          "Fehler beim Prüfen der Mail-Gültigkeit",
+          setToastDatas,
+        );
       })
       .finally(() => setEmailAddressAlreadyInUseLoading(false));
   }, [emailAddress]);
