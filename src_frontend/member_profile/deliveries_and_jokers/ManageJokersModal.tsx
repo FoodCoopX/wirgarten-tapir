@@ -85,7 +85,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Joker-Daten: " + error.message,
+          "Fehler beim Laden der Joker-Daten",
           setToastDatas,
         ),
       )
@@ -209,11 +209,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       .deliveriesApiCancelJokerCreate({ jokerId: joker.id })
       .then(() => loadData())
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Absagen: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Absagen", setToastDatas),
       )
       .finally(() => {
         setRequestLoading(false);
@@ -232,11 +228,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
       })
       .then(() => loadData())
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Einsetzen: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Einsetzen", setToastDatas),
       )
       .finally(() => {
         setRequestLoading(false);

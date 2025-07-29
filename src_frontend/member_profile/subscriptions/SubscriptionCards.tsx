@@ -36,7 +36,7 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Produkte: " + error.message,
+          "Fehler beim Laden der Produkte",
           setToastDatas,
         ),
       )
@@ -55,7 +55,7 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verträge: " + error.message,
+          "Fehler beim Laden der Verträge",
           setToastDatas,
         ),
       )

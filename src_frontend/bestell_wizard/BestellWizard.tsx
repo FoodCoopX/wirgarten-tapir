@@ -158,7 +158,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der BestellWizard-Daten: " + error.message,
+          "Fehler beim Laden der BestellWizard-Daten",
           setToastDatas,
         ),
       )
@@ -178,7 +178,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstationen: " + error.message,
+          "Fehler beim Laden der Verteilstationen",
           setToastDatas,
         ),
       );
@@ -622,8 +622,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler bei der Bestätigung der Bestellung aus Warteliste-Eintrag: " +
-              error.message,
+            "Fehler bei der Bestätigung der Bestellung aus Warteliste-Eintrag",
             setToastDatas,
           ),
         )
@@ -659,8 +658,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler bei der Erzeugung des Warteliste-Eintrags: " +
-              error.message,
+            "Fehler bei der Erzeugung des Warteliste-Eintrags",
             setToastDatas,
           ),
         )
@@ -689,7 +687,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler bei der Bestätigung der Bestellung: " + error.message,
+          "Fehler bei der Bestätigung der Bestellung",
           setToastDatas,
         ),
       )

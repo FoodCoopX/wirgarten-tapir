@@ -6,18 +6,19 @@ import { addToast } from "./addToast.ts";
 
 export async function handleRequestError(
   error: ResponseError,
-  errorMessage?: string,
+  errorMessage: string,
   setToastDatas?: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
-  if (!errorMessage) {
-    errorMessage = error.message;
-  }
   console.error(error);
+  let text = await error.response.text();
+  if (text.length > 100) {
+    text = text.substring(0, 100) + "...";
+  }
   if (setToastDatas) {
     addToast(
       {
-        title: errorMessage ?? "Fehler!",
-        message: await error.response.text(),
+        title: errorMessage,
+        message: text,
         variant: "danger",
         id: uuidv4(),
       },

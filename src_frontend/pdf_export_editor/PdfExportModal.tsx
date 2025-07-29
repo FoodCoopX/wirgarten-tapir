@@ -143,11 +143,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         onHide();
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Speichern: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Speichern", setToastDatas),
       )
       .finally(() => setLoading(false));
   }

@@ -38,7 +38,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Bauen des Exports: " + error.message,
+          "Fehler beim Bauen des Exports",
           setToastDatas,
         ),
       )

@@ -56,7 +56,7 @@ const SubscriptionCancellationModal: React.FC<
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Laden der Kündigungsdaten: " + error.message,
+            "Fehler beim Laden der Kündigungsdaten",
             setToastDatas,
           ),
         )
@@ -141,11 +141,7 @@ const SubscriptionCancellationModal: React.FC<
         setErrors(response.errors);
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Kündigen: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Kündigen", setToastDatas),
       )
       .finally(() => setConfirmationLoading(false));
   }

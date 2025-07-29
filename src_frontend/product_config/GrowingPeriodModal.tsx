@@ -57,7 +57,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Vertragsperioden: " + error.message,
+          "Fehler beim Laden der Vertragsperioden",
           setToastDatas,
         ),
       )
@@ -86,11 +86,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
       })
       .then(() => location.reload())
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Speichern: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Speichern", setToastDatas),
       )
       .finally(() => setSaving(false));
   }

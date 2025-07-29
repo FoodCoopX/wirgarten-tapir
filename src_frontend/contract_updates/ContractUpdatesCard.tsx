@@ -63,7 +63,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Zeichnungen: " + error.message,
+          "Fehler beim Laden der Zeichnungen",
           setToastDatas,
         ),
       )
@@ -230,11 +230,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         loadList();
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Bestätigen: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Bestätigen", setToastDatas),
       )
       .finally(() => setLoading(false));
   }
@@ -268,11 +264,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         loadList();
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Widerrufen: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Widerrufen", setToastDatas),
       )
       .finally(() => {
         setLoading(false);

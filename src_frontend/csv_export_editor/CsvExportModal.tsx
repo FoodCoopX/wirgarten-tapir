@@ -176,11 +176,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
         onHide();
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim ???: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim ???", setToastDatas),
       )
       .finally(() => setLoading(false));
   }

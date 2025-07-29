@@ -86,7 +86,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Löschen des Eintrags: " + error.message,
+          "Fehler beim Löschen des Eintrags",
           setToastDatas,
         ),
       )
@@ -124,11 +124,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
         onClose();
       })
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Speichern: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Speichern", setToastDatas),
       )
       .finally(() => setLoading(false));
   }

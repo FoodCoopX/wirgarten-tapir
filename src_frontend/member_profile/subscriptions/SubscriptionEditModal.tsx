@@ -104,7 +104,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstation: " + error.message,
+          "Fehler beim Laden der Verteilstation",
           setToastDatas,
         ),
       );
@@ -117,7 +117,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der BestellWizard-Daten: " + error.message,
+          "Fehler beim Laden der BestellWizard-Daten",
           setToastDatas,
         ),
       );
@@ -156,7 +156,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Prüfen der Kapazitäten: " + error.message,
+          "Fehler beim Prüfen der Kapazitäten",
           setToastDatas,
         ),
       )
@@ -176,7 +176,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstationen: " + error.message,
+          "Fehler beim Laden der Verteilstationen",
           setToastDatas,
         ),
       );
@@ -265,7 +265,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Erzeugen des Warteliste-Eintrags: " + error.message,
+            "Fehler beim Erzeugen des Warteliste-Eintrags",
             setToastDatas,
           ),
         )
@@ -294,7 +294,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Anpassen der Verträge: " + error.message,
+            "Fehler beim Anpassen der Verträge",
             setToastDatas,
           ),
         )

@@ -62,7 +62,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Lieferungen: " + error.message,
+          "Fehler beim Laden der Lieferungen",
           setToastDatas,
         ),
       )

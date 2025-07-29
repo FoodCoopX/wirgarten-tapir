@@ -69,7 +69,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Kapazitäten: " + error.message,
+          "Fehler beim Laden der Kapazitäten",
           setToastDatas,
         ),
       )
@@ -106,7 +106,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Speichern der Kapazitäten: " + error.message,
+          "Fehler beim Speichern der Kapazitäten",
           setToastDatas,
         ),
       )

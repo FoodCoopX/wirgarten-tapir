@@ -72,7 +72,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstationen: " + error.message,
+          "Fehler beim Laden der Verteilstationen",
           setToastDatas,
         ),
       );
@@ -83,7 +83,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Produkte: " + error.message,
+          "Fehler beim Laden der Produkte",
           setToastDatas,
         ),
       );
@@ -94,7 +94,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Kategorien: " + error.message,
+          "Fehler beim Laden der Kategorien",
           setToastDatas,
         ),
       );
@@ -105,7 +105,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Geno-Daten: " + error.message,
+          "Fehler beim Laden der Geno-Daten",
           setToastDatas,
         ),
       );
@@ -116,7 +116,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Anzahl an Einträge: " + error.message,
+          "Fehler beim Laden der Anzahl an Einträge",
           setToastDatas,
         ),
       );
@@ -166,7 +166,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Warteliste-Einträge: " + error.message,
+          "Fehler beim Laden der Warteliste-Einträge",
           setToastDatas,
         ),
       )

@@ -42,7 +42,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Bauen des Exports: " + error.message,
+          "Fehler beim Bauen des Exports",
           setToastDatas,
         ),
       )

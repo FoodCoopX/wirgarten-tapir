@@ -73,7 +73,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstationen: " + error.message,
+          "Fehler beim Laden der Verteilstationen",
           setToastDatas,
         ),
       );
@@ -84,7 +84,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verträge: " + error.message,
+          "Fehler beim Laden der Verträge",
           setToastDatas,
         ),
       );
@@ -155,7 +155,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Erzeugen des Warteliste-Eintrags: " + error.message,
+            "Fehler beim Erzeugen des Warteliste-Eintrags",
             setToastDatas,
           ),
         )
@@ -172,7 +172,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         .catch((error) =>
           handleRequestError(
             error,
-            "Fehler beim Wechsel der Verteilstation: " + error.message,
+            "Fehler beim Wechsel der Verteilstation",
             setToastDatas,
           ),
         )

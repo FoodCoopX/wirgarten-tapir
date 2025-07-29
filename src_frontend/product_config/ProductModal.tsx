@@ -84,7 +84,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Produkt-Daten: " + error.message,
+          "Fehler beim Laden der Produkt-Daten",
           setToastDatas,
         ),
       )
@@ -115,11 +115,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       })
       .then(() => location.reload())
       .catch((error) =>
-        handleRequestError(
-          error,
-          "Fehler beim Speichern: " + error.message,
-          setToastDatas,
-        ),
+        handleRequestError(error, "Fehler beim Speichern", setToastDatas),
       )
       .finally(() => setSaving(false));
     return;

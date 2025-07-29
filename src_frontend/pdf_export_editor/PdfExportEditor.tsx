@@ -42,7 +42,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Segmente: " + error.message,
+          "Fehler beim Laden der Segmente",
           setToastDatas,
         ),
       )
@@ -59,7 +59,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Exports: " + error.message,
+          "Fehler beim Laden der Exports",
           setToastDatas,
         ),
       )
@@ -73,7 +73,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Löschen des Exports: " + error.message,
+          "Fehler beim Löschen des Exports",
           setToastDatas,
         ),
       )

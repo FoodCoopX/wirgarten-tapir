@@ -44,7 +44,7 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstationen: " + error.message,
+          "Fehler beim Laden der Verteilstationen",
           setToastDatas,
         ),
       )
@@ -76,7 +76,7 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Verteilstation-Kapazitäten: " + error.message,
+          "Fehler beim Laden der Verteilstation-Kapazitäten",
           setToastDatas,
         ),
       )
