@@ -27,7 +27,7 @@ interface WaitingListEntryEditModalProps {
   pickupLocations: PickupLocation[];
   products: Product[];
   categories: string[];
-  addToast: (data: ToastData) => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
@@ -39,7 +39,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   pickupLocations,
   products,
   categories,
-  addToast,
+  setToastDatas,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -83,7 +83,13 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     api
       .waitingListWaitingListEntriesDestroy({ id: entryDetails.id })
       .then(() => reloadEntries())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen des Eintrags: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setLoading(false));
   }
 
@@ -117,7 +123,13 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
         reloadEntries();
         onClose();
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setLoading(false));
   }
 
@@ -188,7 +200,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 entryDetails={entryDetails}
                 reloadEntries={reloadEntries}
                 csrfToken={csrfToken}
-                addToast={addToast}
+                setToastDatas={setToastDatas}
               />
             </Tab>
           </Tabs>

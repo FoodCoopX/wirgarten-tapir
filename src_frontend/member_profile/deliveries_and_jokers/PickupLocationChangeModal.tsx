@@ -15,6 +15,7 @@ import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface PickupLocationChangeModalProps {
   show: boolean;
@@ -22,6 +23,7 @@ interface PickupLocationChangeModalProps {
   csrfToken: string;
   memberId: string;
   reloadDeliveries: () => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
@@ -30,6 +32,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
   csrfToken,
   memberId,
   reloadDeliveries,
+  setToastDatas,
 }) => {
   const pickupLocationsApi = useApi(PickupLocationsApi, csrfToken);
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
@@ -67,12 +70,24 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           setSelectedPickupLocations([responsePickupLocations[0]]);
         }
       })
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstationen: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     subscriptionsApi
       .subscriptionsApiMemberSubscriptionsList({ memberId: memberId })
       .then(setSubscriptions)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verträge: " + error.message,
+          setToastDatas,
+        ),
+      );
   }, []);
 
   useEffect(() => {
@@ -92,6 +107,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
+      setToastDatas,
     );
   }, [pickupLocations, subscriptions, show]);
 
@@ -136,7 +152,13 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             productQuantities: [],
           },
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Erzeugen des Warteliste-Eintrags: " + error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => {
           setConfirmLoading(false);
           onHide();
@@ -147,7 +169,13 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
           pickupLocationId: selectedPickupLocations[0].id!,
           memberId: memberId,
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Wechsel der Verteilstation: " + error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => {
           setConfirmLoading(false);
           onHide();

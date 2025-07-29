@@ -5,12 +5,14 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface PdfExportBuildModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
   exportToBuild: PdfExportModel;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
@@ -18,6 +20,7 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
   onHide,
   csrfToken,
   exportToBuild,
+  setToastDatas,
 }) => {
   const api = useApi(GenericExportsApi, csrfToken);
 
@@ -32,7 +35,13 @@ const PdfExportBuildModal: React.FC<PdfExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Bauen des Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => {
         setLoading(false);
         onHide();

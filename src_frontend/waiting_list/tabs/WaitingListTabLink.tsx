@@ -7,19 +7,20 @@ import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { v4 as uuidv4 } from "uuid";
+import { addToast } from "../../utils/addToast.ts";
 
 interface WaitingListTabLinkProps {
   entryDetails: WaitingListEntryDetails;
   csrfToken: string;
   reloadEntries: () => void;
-  addToast: (data: ToastData) => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
   entryDetails,
   csrfToken,
   reloadEntries,
-  addToast,
+  setToastDatas,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [loading, setLoading] = useState(false);
@@ -33,14 +34,21 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
       })
       .then(() => {
         reloadEntries();
-        addToast({
-          title: "Mail versendet",
-          variant: "success",
-          id: uuidv4(),
-        });
+        addToast(
+          {
+            title: "Mail versendet",
+            variant: "success",
+            id: uuidv4(),
+          },
+          setToastDatas,
+        );
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim versenden der Mail", addToast),
+        handleRequestError(
+          error,
+          "Fehler beim versenden der Mail",
+          setToastDatas,
+        ),
       )
       .finally(() => setLoading(false));
   }
@@ -54,14 +62,21 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
       })
       .then(() => {
         reloadEntries();
-        addToast({
-          title: "Link ausgeschaltet",
-          variant: "success",
-          id: uuidv4(),
-        });
+        addToast(
+          {
+            title: "Link ausgeschaltet",
+            variant: "success",
+            id: uuidv4(),
+          },
+          setToastDatas,
+        );
       })
       .catch((error) =>
-        handleRequestError(error, "Fehler beim ausschalten der Link", addToast),
+        handleRequestError(
+          error,
+          "Fehler beim ausschalten der Link",
+          setToastDatas,
+        ),
       )
       .finally(() => setLoading(false));
   }

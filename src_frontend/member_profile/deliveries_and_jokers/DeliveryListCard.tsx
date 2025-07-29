@@ -18,6 +18,8 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import PickupLocationChangeModal from "./PickupLocationChangeModal.tsx";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface DeliveryListCardProps {
   memberId: string;
@@ -42,6 +44,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
   const [showManageJokersModal, setShowManageJokersModal] = useState(false);
   const [showPickupLocationChangeModal, setShowPickupLocationChangeModal] =
     useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   dayjs.extend(RelativeTime);
   dayjs.extend(WeekOfYear);
@@ -56,7 +59,13 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
     api
       .deliveriesApiMemberDeliveriesList({ memberId: memberId })
       .then(setDeliveries)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Lieferungen: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setDeliveriesLoading(false));
   }
 
@@ -223,6 +232,7 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
           loadDeliveries={loadDeliveries}
           deliveriesLoading={deliveriesLoading}
           csrfToken={csrfToken}
+          setToastDatas={setToastDatas}
         />
       )}
       <PickupLocationChangeModal
@@ -231,6 +241,11 @@ const DeliveryListCard: React.FC<DeliveryListCardProps> = ({
         csrfToken={csrfToken}
         memberId={memberId}
         reloadDeliveries={loadDeliveries}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

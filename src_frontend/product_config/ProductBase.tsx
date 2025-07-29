@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
 import { getProductIdFromUrl } from "./get_parameter_from_url.ts";
 import ProductModal from "./ProductModal.tsx";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface ProductBaseProps {
   csrfToken: string;
@@ -9,6 +11,7 @@ interface ProductBaseProps {
 
 const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   function onClick() {
     if (!getProductIdFromUrl()) {
@@ -28,6 +31,11 @@ const ProductBase: React.FC<ProductBaseProps> = ({ csrfToken }) => {
         csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

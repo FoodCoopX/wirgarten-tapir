@@ -10,17 +10,20 @@ import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
   csrfToken,
+  setToastDatas,
 }) => {
   const api = useApi(PickupLocationsApi, csrfToken);
 
@@ -63,7 +66,13 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
             break;
         }
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Kapazitäten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -94,7 +103,13 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern der Kapazitäten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSaving(false));
   }
 

@@ -56,6 +56,8 @@ import {
   shouldIncludeStepPersonalData,
   shouldIncludeStepPickupLocation,
 } from "./utils/shouldIncludeStep.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -138,6 +140,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     waitingListLinkConfirmationModeEnabled,
     setWaitingListLinkConfirmationModeEnabled,
   ] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -152,7 +155,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setIntroEnabled(data.introEnabled);
         setStudentStatusAllowed(data.studentStatusAllowed);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der BestellWizard-Daten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setBaseDataLoading(false));
 
     pickupLocationApi
@@ -166,7 +175,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           setSelectedPickupLocations([pickupLocations[0]]);
         }
       })
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstationen: " + error.message,
+          setToastDatas,
+        ),
+      );
   }, []);
 
   useEffect(() => {
@@ -256,6 +271,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setProductIdsOverCapacity,
         setProductTypeIdsOverCapacity,
         setCheckingCapacities,
+        setToastDatas,
       );
     }
 
@@ -306,6 +322,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
+      setToastDatas,
     );
   }, [pickupLocations, shoppingCart]);
 
@@ -321,6 +338,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       selectedPickupLocations,
       shoppingCart,
       setFirstDeliveryDatesByProductType,
+      setToastDatas,
     );
   }, [selectedPickupLocations, shoppingCart]);
 
@@ -601,7 +619,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           setCurrentStep("end");
           setConfirmOrderResponse(response);
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler bei der Bestätigung der Bestellung aus Warteliste-Eintrag: " +
+              error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => setConfirmOrderLoading(false));
 
       return;
@@ -631,7 +656,14 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           setCurrentStep("end");
           setConfirmOrderResponse(response);
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler bei der Erzeugung des Warteliste-Eintrags: " +
+              error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => setConfirmOrderLoading(false));
 
       return;
@@ -654,7 +686,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setCurrentStep("end");
         setConfirmOrderResponse(response);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Bestätigung der Bestellung: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setConfirmOrderLoading(false));
   }
 
@@ -888,6 +926,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       <GeneralWaitingListModal
         show={showGeneralWaitingListModal}
         confirmEnableWaitingListMode={confirmEnableGeneralWaitingListMode}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

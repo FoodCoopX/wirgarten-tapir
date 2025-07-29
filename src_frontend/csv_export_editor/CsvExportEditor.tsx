@@ -12,6 +12,8 @@ import TapirButton from "../components/TapirButton.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import CsvExportBuildModal from "./CsvExportBuildModal.tsx";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
 
 interface CsvExportEditorProps {
   csrfToken: string;
@@ -30,13 +32,20 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     useState<CsvExportModel>();
   const [exportSelectedForBuild, setExportSelectedForBuild] =
     useState<CsvExportModel>();
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     setSegmentsLoading(true);
     api
       .genericExportsExportSegmentsList()
       .then(setSegments)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Segmente: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSegmentsLoading(false));
 
     loadExports();
@@ -47,7 +56,13 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsCsvExportsList()
       .then(setExports)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setExportsLoading(false));
   }
 
@@ -55,7 +70,13 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsCsvExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen des Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
@@ -106,6 +127,7 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
         loadExports={loadExports}
         csrfToken={csrfToken}
         exportToEdit={exportSelectedForEdition}
+        setToastDatas={setToastDatas}
       />
       {exportSelectedForDeletion && (
         <ConfirmDeleteModal
@@ -123,8 +145,13 @@ const CsvExportEditor: React.FC<CsvExportEditorProps> = ({ csrfToken }) => {
           show={true}
           csrfToken={csrfToken}
           onHide={() => setExportSelectedForBuild(undefined)}
+          setToastDatas={setToastDatas}
         />
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

@@ -6,17 +6,20 @@ import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
 import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface GrowingPeriodModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   show,
   onHide,
   csrfToken,
+  setToastDatas,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
   const [startDate, setStartDate] = useState<Date>(new Date());
@@ -51,7 +54,13 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         setMaxJokersPerMember(response.maxJokersPerMember);
         setJokerRestrictions(response.jokerRestrictions);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Vertragsperioden: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -76,7 +85,13 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSaving(false));
   }
 

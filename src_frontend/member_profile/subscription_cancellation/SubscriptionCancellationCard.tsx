@@ -3,6 +3,8 @@ import { Card } from "react-bootstrap";
 import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
 import SubscriptionCancellationModal from "./SubscriptionCancellationModal.tsx";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionCancellationCardProps {
   memberId: string;
@@ -13,6 +15,7 @@ const SubscriptionCancellationCard: React.FC<
   SubscriptionCancellationCardProps
 > = ({ memberId, csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   return (
     <>
@@ -39,6 +42,11 @@ const SubscriptionCancellationCard: React.FC<
         show={showModal}
         memberId={memberId}
         onHide={() => setShowModal(false)}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

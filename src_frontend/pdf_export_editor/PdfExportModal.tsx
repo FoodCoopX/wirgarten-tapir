@@ -11,6 +11,7 @@ import EmailInput from "../components/EmailInput";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface PdfExportModalProps {
   show: boolean;
@@ -19,6 +20,7 @@ interface PdfExportModalProps {
   loadExports: () => void;
   csrfToken: string;
   exportToEdit?: PdfExportModel;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const PdfExportModal: React.FC<PdfExportModalProps> = ({
@@ -28,6 +30,7 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
   loadExports,
   csrfToken,
   exportToEdit,
+  setToastDatas,
 }) => {
   const api = useApi(GenericExportsApi, csrfToken);
 
@@ -139,7 +142,13 @@ const PdfExportModal: React.FC<PdfExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setLoading(false));
   }
 

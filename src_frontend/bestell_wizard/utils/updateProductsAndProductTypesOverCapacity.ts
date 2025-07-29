@@ -3,12 +3,15 @@ import { useApi } from "../../hooks/useApi.ts";
 import { SubscriptionsApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import React from "react";
+import { ToastData } from "../../types/ToastData.ts";
 
 export function updateProductsAndProductTypesOverCapacity(
   shoppingCart: ShoppingCart,
   setProductIdsOverCapacity: (ids: string[]) => void,
   setProductTypeIdsOverCapacity: (ids: string[]) => void,
   setCheckingCapacities: (enabled: boolean) => void,
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
   const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
 
@@ -24,6 +27,12 @@ export function updateProductsAndProductTypesOverCapacity(
       setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
       setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
     })
-    .catch(handleRequestError)
+    .catch((error) =>
+      handleRequestError(
+        error,
+        "Fehler beim Laden der Produkt-Kapazitäten: " + error.message,
+        setToastDatas,
+      ),
+    )
     .finally(() => setCheckingCapacities(false));
 }

@@ -9,6 +9,8 @@ import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import SubscriptionCard from "./SubscriptionCard.tsx";
 import { Spinner } from "react-bootstrap";
+import TapirToastContainer from "../../components/TapirToastContainer.tsx";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionCardsProps {
   memberId: string;
@@ -24,13 +26,20 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
   const [productTypes, setProductTypes] = useState<PublicProductType[]>([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
   const [productTypesLoading, setProductTypesLoading] = useState(true);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     setProductTypesLoading(true);
     api
       .subscriptionsPublicProductTypesList()
       .then(setProductTypes)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Produkte: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setProductTypesLoading(false));
 
     loadSubscriptions();
@@ -43,7 +52,13 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
       .then((subscriptions) => {
         setSubscriptions(subscriptions);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verträge: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSubscriptionsLoading(false));
   }
 
@@ -61,9 +76,14 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
             productType={productType}
             memberId={memberId}
             reloadSubscriptions={loadSubscriptions}
+            setToastDatas={setToastDatas}
           />
         ))
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

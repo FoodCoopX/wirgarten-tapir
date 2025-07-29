@@ -4,6 +4,7 @@ import { PickupLocationsApi, PublicPickupLocation } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import React from "react";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 export function checkPickupLocationCapacities(
   pickupLocations: PublicPickupLocation[],
@@ -14,6 +15,7 @@ export function checkPickupLocationCapacities(
   setPickupLocationsWithCapacityFull: React.Dispatch<
     React.SetStateAction<Set<PublicPickupLocation>>
   >,
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
   const pickupLocationApi = useApi(PickupLocationsApi, getCsrfToken());
 
@@ -37,7 +39,14 @@ export function checkPickupLocationCapacities(
           return new Set(set);
         });
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler bei der Bestätigung der Verteilstationen-Kapazitäten: " +
+            error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => {
         setPickupLocationsWithCapacityCheckLoading((set) => {
           set.delete(pickupLocation);

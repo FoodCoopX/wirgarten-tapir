@@ -32,17 +32,10 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
       })
       .then(setWaitingListEntryDetails)
       .catch((error) =>
-        handleRequestError(error, "Fehler vom Server!", addToast),
+        handleRequestError(error, "Fehler vom Server!", setToastDatas),
       )
       .finally(() => setLoading(false));
   }, []);
-
-  function addToast(toastData: ToastData) {
-    setToastDatas((datas) => {
-      datas.push(toastData);
-      return [...datas];
-    });
-  }
 
   return (
     <>

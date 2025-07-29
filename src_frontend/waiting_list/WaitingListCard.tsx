@@ -69,27 +69,57 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
     pickupLocationApi
       .pickupLocationsPickupLocationsList()
       .then(setPickupLocations)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstationen: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     subscriptionsApi
       .subscriptionsProductsList()
       .then(setProducts)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Produkte: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     waitingListApi
       .waitingListApiCategoriesRetrieve()
       .then(setCategories)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Kategorien: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     waitingListApi
       .waitingListApiShowCoopContentRetrieve()
       .then(setShowCoopContent)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Geno-Daten: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     waitingListApi
       .waitingListApiCountsRetrieve()
       .then(setCounts)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Anzahl an Einträge: " + error.message,
+          setToastDatas,
+        ),
+      );
   }, []);
 
   useEffect(() => {
@@ -133,15 +163,14 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           }
         }
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Warteliste-Einträge: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setLoading(false));
-  }
-
-  function addToast(toastData: ToastData) {
-    setToastDatas((datas) => {
-      datas.push(toastData);
-      return [...datas];
-    });
   }
 
   return (
@@ -362,7 +391,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           pickupLocations={pickupLocations}
           products={products}
           categories={categories}
-          addToast={addToast}
+          setToastDatas={setToastDatas}
         />
       )}
       <TapirToastContainer

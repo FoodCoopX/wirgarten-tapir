@@ -7,12 +7,14 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import SubscriptionEditModal from "./SubscriptionEditModal.tsx";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionCardProps {
   subscriptions: PublicSubscription[];
   productType: PublicProductType;
   memberId: string;
   reloadSubscriptions: () => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
@@ -20,6 +22,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   productType,
   memberId,
   reloadSubscriptions,
+  setToastDatas,
 }) => {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -112,6 +115,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         productType={productType}
         memberId={memberId}
         reloadSubscriptions={reloadSubscriptions}
+        setToastDatas={setToastDatas}
       />
     </>
   );

@@ -12,6 +12,7 @@ import ColumnInput from "./ColumnInput.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface CsvExportModalProps {
   show: boolean;
@@ -20,6 +21,7 @@ interface CsvExportModalProps {
   loadExports: () => void;
   csrfToken: string;
   exportToEdit?: CsvExportModel;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const CsvExportModal: React.FC<CsvExportModalProps> = ({
@@ -29,6 +31,7 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
   loadExports,
   csrfToken,
   exportToEdit,
+  setToastDatas,
 }) => {
   const api = useApi(GenericExportsApi, csrfToken);
 
@@ -172,7 +175,13 @@ const CsvExportModal: React.FC<CsvExportModalProps> = ({
         loadExports();
         onHide();
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim ???: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setLoading(false));
   }
 

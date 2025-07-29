@@ -11,17 +11,19 @@ import TapirButton from "../../components/TapirButton.tsx";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
   show: boolean;
   memberId: string;
   csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const SubscriptionCancellationModal: React.FC<
   SubscriptionCancellationModalProps
-> = ({ onHide, show, memberId, csrfToken }) => {
+> = ({ onHide, show, memberId, csrfToken, setToastDatas }) => {
   const api = useApi(SubscriptionsApi, csrfToken);
   const [subscribedProducts, setSubscribedProducts] = useState<
     ProductForCancellation[]
@@ -51,7 +53,13 @@ const SubscriptionCancellationModal: React.FC<
           setCanCancelCoopMembership(data.canCancelCoopMembership);
           setLegalStatus(data.legalStatus);
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Laden der Kündigungsdaten: " + error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => setLoading(false));
     }
   }, [show]);
@@ -130,7 +138,13 @@ const SubscriptionCancellationModal: React.FC<
         }
         setErrors(response.errors);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Kündigen: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setConfirmationLoading(false));
   }
 

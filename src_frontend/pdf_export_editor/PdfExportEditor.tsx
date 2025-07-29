@@ -12,6 +12,8 @@ import PdfExportModal from "./PdfExportModal.tsx";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.tsx";
 import PdfExportBuildModal from "./PdfExportBuildModal.tsx";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
 
 interface PdfExportEditorProps {
   csrfToken: string;
@@ -30,13 +32,20 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     useState<PdfExportModel>();
   const [exportSelectedForBuild, setExportSelectedForBuild] =
     useState<PdfExportModel>();
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   useEffect(() => {
     setSegmentsLoading(true);
     api
       .genericExportsExportSegmentsList()
       .then(setSegments)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Segmente: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSegmentsLoading(false));
 
     loadExports();
@@ -47,7 +56,13 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsPdfExportsList()
       .then(setExports)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setExportsLoading(false));
   }
 
@@ -55,7 +70,13 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
     api
       .genericExportsPdfExportsDestroy({ id: exp.id! })
       .then(() => loadExports())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Löschen des Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setExportSelectedForDeletion(undefined));
   }
 
@@ -110,6 +131,7 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
         loadExports={loadExports}
         csrfToken={csrfToken}
         exportToEdit={exportSelectedForEdition}
+        setToastDatas={setToastDatas}
       />
       {exportSelectedForDeletion && (
         <ConfirmDeleteModal
@@ -127,8 +149,13 @@ const PdfExportEditor: React.FC<PdfExportEditorProps> = ({ csrfToken }) => {
           show={true}
           csrfToken={csrfToken}
           onHide={() => setExportSelectedForBuild(undefined)}
+          setToastDatas={setToastDatas}
         />
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

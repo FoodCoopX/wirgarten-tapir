@@ -12,6 +12,8 @@ import "dayjs/locale/de";
 import WeekOfYear from "dayjs/plugin/weekOfYear";
 import { formatDateText } from "../utils/formatDateText.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 const DashboardPickupLocationCapacityBase: React.FC = () => {
   const api = useApi(PickupLocationsApi, "no_token");
@@ -24,6 +26,7 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
   const [dataPoints, setDataPoints] = useState<
     PickupLocationCapacityChangePoint[]
   >([]);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   dayjs.extend(WeekOfYear);
   dayjs.locale("de");
@@ -38,7 +41,13 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
           setSelectedPickupLocation(data[0]);
         }
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstationen: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setBaseLoading(false));
   }, []);
 
@@ -64,7 +73,13 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
         setTableHeaders(data.tableHeaders);
         setDataPoints(data.dataPoints);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstation-Kapazitäten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setDataLoading(false));
   }, [selectedPickupLocation]);
 
@@ -119,19 +134,25 @@ const DashboardPickupLocationCapacityBase: React.FC = () => {
   }
 
   return (
-    <Card>
-      <Card.Header>
-        <div
-          className={
-            "d-flex flex-row justify-content-between align-items-center"
-          }
-        >
-          <h5 className={"mb-0"}>Freiwerdende Kapazitäten</h5>
-          {!baseLoading && pickupLocationSelect()}
-        </div>
-      </Card.Header>
-      <Card.Body>{dataLoading ? <Spinner /> : getDataTable()}</Card.Body>
-    </Card>
+    <>
+      <Card>
+        <Card.Header>
+          <div
+            className={
+              "d-flex flex-row justify-content-between align-items-center"
+            }
+          >
+            <h5 className={"mb-0"}>Freiwerdende Kapazitäten</h5>
+            {!baseLoading && pickupLocationSelect()}
+          </div>
+        </Card.Header>
+        <Card.Body>{dataLoading ? <Spinner /> : getDataTable()}</Card.Body>
+      </Card>
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
+    </>
   );
 };
 

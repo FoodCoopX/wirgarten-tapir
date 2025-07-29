@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
 import PickupLocationCapacityModal from "./PickupLocationCapacityModal.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface ProductBaseProps {
   csrfToken: string;
@@ -11,6 +13,7 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
   csrfToken,
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   const URL_PARAMETER_PICKUP_LOCATION_ID = "selected";
 
@@ -33,6 +36,11 @@ const PickupLocationCapacityBase: React.FC<ProductBaseProps> = ({
         csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

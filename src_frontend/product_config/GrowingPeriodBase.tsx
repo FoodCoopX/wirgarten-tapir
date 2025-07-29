@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import TapirButton from "../components/TapirButton.tsx";
 import GrowingPeriodModal from "./GrowingPeriodModal.tsx";
 import { getPeriodIdFromUrl } from "./get_parameter_from_url.ts";
+import { ToastData } from "../types/ToastData.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
 
 interface GrowingPeriodBaseProps {
   csrfToken: string;
@@ -9,6 +11,7 @@ interface GrowingPeriodBaseProps {
 
 const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   function onClick() {
     if (!getPeriodIdFromUrl()) {
@@ -30,6 +33,11 @@ const GrowingPeriodBase: React.FC<GrowingPeriodBaseProps> = ({ csrfToken }) => {
         csrfToken={csrfToken}
         show={showModal}
         onHide={() => setShowModal(false)}
+        setToastDatas={setToastDatas}
+      />
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
       />
     </>
   );

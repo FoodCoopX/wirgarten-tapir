@@ -27,6 +27,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 
 import "../../fixed_header.css";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface ManageJokersModalProps {
   onHide: () => void;
@@ -36,6 +37,7 @@ interface ManageJokersModalProps {
   loadDeliveries: () => void;
   deliveriesLoading: boolean;
   csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
@@ -46,6 +48,7 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
   loadDeliveries,
   deliveriesLoading,
   csrfToken,
+  setToastDatas,
 }) => {
   const api = useApi(DeliveriesApi, csrfToken);
   const [jokers, setJokers] = useState<JokerWithCancellationLimit[]>([]);
@@ -79,7 +82,13 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         setWeekdayLimit(info.weekdayLimit);
         setUsedJokerInGrowingPeriods(info.usedJokerInGrowingPeriod);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Joker-Daten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setInfoLoading(false));
 
     loadDeliveries();
@@ -199,7 +208,13 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
     api
       .deliveriesApiCancelJokerCreate({ jokerId: joker.id })
       .then(() => loadData())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Absagen: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => {
         setRequestLoading(false);
         setSelectedJokerForCancellation(undefined);
@@ -216,7 +231,13 @@ const ManageJokersModal: React.FC<ManageJokersModalProps> = ({
         date: delivery.deliveryDate,
       })
       .then(() => loadData())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Einsetzen: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => {
         setRequestLoading(false);
         setSelectedDeliveryForJokerUse(undefined);

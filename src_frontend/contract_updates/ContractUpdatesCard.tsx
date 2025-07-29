@@ -64,7 +64,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Zeichnungen: " + error.message,
-          addToast,
+          setToastDatas,
         ),
       )
       .finally(() => setLoading(false));
@@ -233,7 +233,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         handleRequestError(
           error,
           "Fehler beim Bestätigen: " + error.message,
-          addToast,
+          setToastDatas,
         ),
       )
       .finally(() => setLoading(false));
@@ -271,7 +271,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         handleRequestError(
           error,
           "Fehler beim Widerrufen: " + error.message,
-          addToast,
+          setToastDatas,
         ),
       )
       .finally(() => {
@@ -312,13 +312,6 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       change.subscriptionChanges.length === 0 &&
       change.subscriptionCancellations.length > 0
     );
-  }
-
-  function addToast(toastData: ToastData) {
-    setToastDatas((datas) => {
-      datas.push(toastData);
-      return [...datas];
-    });
   }
 
   function doesSelectionContainChangesThatAreAlreadyValid(): boolean {

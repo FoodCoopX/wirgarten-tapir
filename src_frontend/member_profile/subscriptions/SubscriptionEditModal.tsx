@@ -23,6 +23,7 @@ import SubscriptionEditStepSummary from "./steps/SubscriptionEditStepSummary.tsx
 import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import SubscriptionEditStepConfirmation from "./steps/SubscriptionEditStepConfirmation.tsx";
 import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
+import { ToastData } from "../../types/ToastData.ts";
 
 interface SubscriptionEditModalProps {
   show: boolean;
@@ -31,6 +32,7 @@ interface SubscriptionEditModalProps {
   productType: PublicProductType;
   memberId: string;
   reloadSubscriptions: () => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 export type SubscriptionEditStep =
@@ -46,6 +48,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   productType,
   memberId,
   reloadSubscriptions,
+  setToastDatas,
 }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
   const pickupLocationsApi = useApi(PickupLocationsApi, getCsrfToken());
@@ -98,14 +101,26 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           setSelectedPickupLocations([response.location!]);
         }
       })
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstation: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     subscriptionsApi
       .subscriptionsApiBestellWizardBaseDataRetrieve()
       .then((response) => {
         setForceWaitingList(response.forceWaitingList);
       })
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der BestellWizard-Daten: " + error.message,
+          setToastDatas,
+        ),
+      );
   }, [show]);
 
   useEffect(() => {
@@ -138,7 +153,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
         setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Prüfen der Kapazitäten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setCheckingCapacities(false));
   }, [shoppingCart, show]);
 
@@ -152,7 +173,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
     pickupLocationsApi
       .pickupLocationsPublicPickupLocationsList()
       .then(setPickupLocations)
-      .catch(handleRequestError);
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Verteilstationen: " + error.message,
+          setToastDatas,
+        ),
+      );
 
     let steps: SubscriptionEditStep[] = [
       "product_type",
@@ -176,6 +203,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       shoppingCart,
       setPickupLocationsWithCapacityCheckLoading,
       setPickupLocationsWithCapacityFull,
+      setToastDatas,
     );
   }, [pickupLocations, show, needPickupLocation, shoppingCart]);
 
@@ -208,6 +236,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       selectedPickupLocations,
       shoppingCart,
       setFirstDeliveryDatesByProductType,
+      setToastDatas,
     );
   }, [selectedPickupLocations, shoppingCart]);
 
@@ -233,7 +262,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           }
           setCurrentStep("confirmation");
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Erzeugen des Warteliste-Eintrags: " + error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => setLoading(false));
     } else {
       subscriptionsApi
@@ -256,7 +291,13 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           }
           setCurrentStep("confirmation");
         })
-        .catch(handleRequestError)
+        .catch((error) =>
+          handleRequestError(
+            error,
+            "Fehler beim Anpassen der Verträge: " + error.message,
+            setToastDatas,
+          ),
+        )
         .finally(() => setLoading(false));
     }
   }

@@ -3,11 +3,14 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import React from "react";
 
 export function fetchFirstDeliveryDates(
   pickupLocations: PublicPickupLocation[],
   shoppingCart: ShoppingCart,
   setFirstDeliveryDatesByProductType: (map: { [key: string]: Date }) => void,
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
   if (pickupLocations.length === 0) {
     return;
@@ -35,5 +38,11 @@ export function fetchFirstDeliveryDates(
         ),
       );
     })
-    .catch(handleRequestError);
+    .catch((error) =>
+      handleRequestError(
+        error,
+        "Fehler beim Laden der Lieferungsdaten: " + error.message,
+        setToastDatas,
+      ),
+    );
 }

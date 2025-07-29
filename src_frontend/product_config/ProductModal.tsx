@@ -21,17 +21,20 @@ import {
   getProductIdFromUrl,
 } from "./get_parameter_from_url.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface ProductModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
   show,
   onHide,
   csrfToken,
+  setToastDatas,
 }) => {
   const api = useApi(SubscriptionsApi, csrfToken);
   const [productName, setProductName] = useState<string>("");
@@ -78,7 +81,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
         setCapacity(extendedProduct.capacity);
       })
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Produkt-Daten: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setDataLoading(false));
   }, [show]);
 
@@ -105,7 +114,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
         },
       })
       .then(() => location.reload())
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => setSaving(false));
     return;
   }

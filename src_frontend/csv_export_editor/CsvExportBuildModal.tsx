@@ -9,12 +9,14 @@ import TapirButton from "../components/TapirButton.tsx";
 import { useApi } from "../hooks/useApi.ts";
 import dayjs from "dayjs";
 import { handleRequestError } from "../utils/handleRequestError.ts";
+import { ToastData } from "../types/ToastData.ts";
 
 interface CsvExportBuildModalProps {
   show: boolean;
   onHide: () => void;
   csrfToken: string;
   exportToBuild: CsvExportModel;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
@@ -22,6 +24,7 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
   onHide,
   csrfToken,
   exportToBuild,
+  setToastDatas,
 }) => {
   const api = useApi(GenericExportsApi, csrfToken);
 
@@ -36,7 +39,13 @@ const CsvExportBuildModal: React.FC<CsvExportBuildModalProps> = ({
         referenceDatetime: datetime,
       })
       .then(downloadExportFile)
-      .catch(handleRequestError)
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Bauen des Exports: " + error.message,
+          setToastDatas,
+        ),
+      )
       .finally(() => {
         setLoading(false);
         onHide();

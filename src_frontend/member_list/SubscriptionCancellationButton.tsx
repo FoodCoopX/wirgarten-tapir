@@ -3,6 +3,8 @@ import "dayjs/locale/de";
 import SubscriptionCancellationModal from "../member_profile/subscription_cancellation/SubscriptionCancellationModal";
 import TapirButton from "../components/TapirButton.tsx";
 import { getParameterFromUrl } from "../product_config/get_parameter_from_url.ts";
+import TapirToastContainer from "../components/TapirToastContainer.tsx";
+import { ToastData } from "../types/ToastData.ts";
 
 interface SubscriptionCancellationButtonProps {
   csrfToken: string;
@@ -13,6 +15,7 @@ const SubscriptionCancellationButton: React.FC<
 > = ({ csrfToken }) => {
   const [showModal, setShowModal] = useState(false);
   const [memberId, setMemberId] = useState();
+  const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
 
   return (
     <>
@@ -35,8 +38,13 @@ const SubscriptionCancellationButton: React.FC<
           show={showModal}
           memberId={memberId}
           onHide={() => setShowModal(false)}
+          setToastDatas={setToastDatas}
         />
       )}
+      <TapirToastContainer
+        toastDatas={toastDatas}
+        setToastDatas={setToastDatas}
+      />
     </>
   );
 };

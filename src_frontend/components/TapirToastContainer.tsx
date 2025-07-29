@@ -4,7 +4,7 @@ import { ToastData } from "../types/ToastData.ts";
 
 interface TapirToastContainerProps {
   toastDatas: ToastData[];
-  setToastDatas: (toastDatas: ToastData[]) => void;
+  setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
 
 const TapirToastContainer: React.FC<TapirToastContainerProps> = ({
