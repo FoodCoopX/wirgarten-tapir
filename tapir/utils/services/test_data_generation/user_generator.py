@@ -14,9 +14,6 @@ from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHan
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
-from tapir.subscriptions.services.contract_start_date_calculator import (
-    ContractStartDateCalculator,
-)
 from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.config import Organization
@@ -229,12 +226,8 @@ class UserGenerator:
     ):
         mandate_ref = get_or_create_mandate_ref(member, cache=cache)
         future_growing_period = cls.get_future_growing_period(cache=cache)
-        start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=cls.get_random_date_in_range_biased_towards_lower_end(
-                member.date_joined.date(), future_growing_period.end_date
-            ),
-            apply_buffer_time=True,
-            cache=cache,
+        start_date = cls.get_random_date_in_range_biased_towards_lower_end(
+            member.date_joined.date(), future_growing_period.end_date
         )
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=start_date, cache=cache
