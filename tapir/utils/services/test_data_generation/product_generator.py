@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.models import TapirParameter
@@ -32,6 +33,11 @@ class ProductGenerator:
         description_in_bestellwizard: str = "",
         url_of_image_in_bestellwizard: str = "",
     ):
+        if url_of_image_in_bestellwizard.startswith("/"):
+            url_of_image_in_bestellwizard = (
+                settings.SITE_URL + url_of_image_in_bestellwizard
+            )
+
         if min_coop_shares is not None:
             product = HarvestShareProduct.objects.create(
                 type=product_type,
