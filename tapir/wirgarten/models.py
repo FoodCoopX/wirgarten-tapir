@@ -1104,7 +1104,13 @@ class SubscriptionChangeLogEntry(LogEntry):
     ):
         super().populate(actor=actor, user=user, **kwargs)
         self.change_type = change_type
-        self.subscriptions = ", ".join(
+        self.subscriptions = self.build_subscription_list_as_string(subscriptions)
+
+        return self
+
+    @staticmethod
+    def build_subscription_list_as_string(subscriptions: list[Subscription]) -> str:
+        return ", ".join(
             list(
                 map(
                     lambda x: f"{x.quantity} × {x.product.name} ({format_date(x.start_date)} - {format_date(x.end_date)})",
@@ -1112,8 +1118,6 @@ class SubscriptionChangeLogEntry(LogEntry):
                 )
             )
         )
-
-        return self
 
     def get_context_data(self):
         context = super().get_context_data()

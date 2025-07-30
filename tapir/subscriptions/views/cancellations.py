@@ -30,6 +30,7 @@ from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
     Product,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -172,12 +173,14 @@ class CancelSubscriptionsView(APIView):
             )
 
         with transaction.atomic():
+            all_cancelled_subscriptions = []
             for product in products_selected_for_cancellation:
                 cancelled_subscriptions = (
                     SubscriptionCancellationManager.cancel_subscriptions(
                         product, member, cache=self.cache
                     )
                 )
+                all_cancelled_subscriptions.extend(cancelled_subscriptions)
                 if len(cancelled_subscriptions) > 0:
                     TransactionalTrigger.fire_action(
                         TransactionalTriggerData(
@@ -193,6 +196,14 @@ class CancelSubscriptionsView(APIView):
                             },
                         ),
                     )
+
+            if len(all_cancelled_subscriptions) > 0:
+                SubscriptionChangeLogEntry().populate(
+                    actor=request.user,
+                    user=member,
+                    change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                    subscriptions=all_cancelled_subscriptions,
+                ).save()
 
             if cancel_coop_membership:
                 MembershipCancellationManager.cancel_coop_membership(

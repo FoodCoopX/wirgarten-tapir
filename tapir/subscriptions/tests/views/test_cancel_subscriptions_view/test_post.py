@@ -14,6 +14,7 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.wirgarten.mail_events import Events
+from tapir.wirgarten.models import SubscriptionChangeLogEntry
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -245,7 +246,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
-    def test_post_default_sendsMailTrigger(
+    def test_post_default_sendsMailTriggerAndCreatesLogEntry(
         self,
         mock_fire_action: Mock,
     ):
@@ -301,4 +302,17 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                 for subscription in subscriptions[:2]
             ],
             any_order=True,
+        )
+
+        self.assertEqual(1, SubscriptionChangeLogEntry.objects.count())
+        log_entry = SubscriptionChangeLogEntry.objects.get()
+        self.assertEqual(
+            SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+            log_entry.change_type,
+        )
+        self.assertEqual(
+            SubscriptionChangeLogEntry.build_subscription_list_as_string(
+                subscriptions[:2]
+            ),
+            log_entry.subscriptions,
         )
