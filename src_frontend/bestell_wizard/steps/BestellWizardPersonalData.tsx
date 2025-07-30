@@ -68,6 +68,13 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   useEffect(() => {
     if (controller) controller.abort();
 
+    if (waitingListLinkConfirmationModeEnabled) {
+      setEmailAddressAlreadyInUse(false);
+      setEmailAdresseAlreadyInUseIsKnown(false);
+      setEmailAddressAlreadyInUseLoading(false);
+      return;
+    }
+
     setEmailAdresseAlreadyInUseIsKnown(false);
 
     if (!isEmailValid(emailAddress)) {
@@ -96,7 +103,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
         );
       })
       .finally(() => setEmailAddressAlreadyInUseLoading(false));
-  }, [emailAddress]);
+  }, [emailAddress, waitingListLinkConfirmationModeEnabled]);
 
   function updatePersonalData() {
     setPersonalData(Object.assign({}, personalData));
