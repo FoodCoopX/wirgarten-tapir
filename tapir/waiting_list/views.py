@@ -143,9 +143,9 @@ class WaitingListApiView(APIView):
             "pickup_location_wish",
             "product_wish",
         ]
-        for filter in filters:
-            parameter = request.query_params.get(filter)
-            filter_method = getattr(self, f"filter_by_{filter}")
+        for filter_name in filters:
+            parameter = request.query_params.get(filter_name)
+            filter_method = getattr(self, f"filter_by_{filter_name}")
             entries = filter_method(parameter, entries)
 
         order_by = request.query_params.get("order_by", "-created_at")
@@ -1014,8 +1014,12 @@ class PublicConfirmWaitingListEntryView(APIView):
     def apply_changes(
         self, waiting_list_entry: WaitingListEntry, actor: TapirUser, member: Member
     ):
+        reference_date = waiting_list_entry.desired_start_date
+        if reference_date is None:
+            reference_date = get_today(cache=self.cache)
+
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache),
+            reference_date=reference_date,
             apply_buffer_time=False,
             cache=self.cache,
         )
@@ -1023,7 +1027,7 @@ class PublicConfirmWaitingListEntryView(APIView):
         pickup_location_change_valid_from = contract_start_date
         if not waiting_list_entry.product_wishes.exists():
             pickup_location_change_valid_from = calculate_pickup_location_change_date(
-                reference_date=get_today(cache=self.cache), cache=self.cache
+                reference_date=reference_date, cache=self.cache
             )
         self.apply_pickup_location_changes(
             waiting_list_entry=waiting_list_entry,
