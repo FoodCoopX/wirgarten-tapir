@@ -27,6 +27,16 @@ interface BestellWizardPersonalDataProps {
   waitingListModeEnabled: boolean;
   waitingListLinkConfirmationModeEnabled: boolean;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  emailAddressAlreadyInUse: boolean;
+  setEmailAddressAlreadyInUse: (emailAddressAlreadyInUse: boolean) => void;
+  emailAdresseAlreadyInUseIsKnown: boolean;
+  setEmailAdresseAlreadyInUseIsKnown: (
+    emailAdresseAlreadyInUseIsKnown: boolean,
+  ) => void;
+  emailAddressAlreadyInUseLoading: boolean;
+  setEmailAddressAlreadyInUseLoading: (
+    emailAddressAlreadyInUseLoading: boolean,
+  ) => void;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -40,13 +50,13 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   waitingListModeEnabled,
   waitingListLinkConfirmationModeEnabled,
   setToastDatas,
+  emailAddressAlreadyInUse,
+  setEmailAddressAlreadyInUse,
+  emailAdresseAlreadyInUseIsKnown,
+  setEmailAdresseAlreadyInUseIsKnown,
+  emailAddressAlreadyInUseLoading,
+  setEmailAddressAlreadyInUseLoading,
 }) => {
-  const [emailAddressAlreadyInUse, setEmailAddressAlreadyInUse] =
-    useState(false);
-  const [emailAdresseAlreadyInUseIsKnown, setEmailAdresseAlreadyInUseIsKnown] =
-    useState(false);
-  const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
-    useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
   const api = useApi(SubscriptionsApi, getCsrfToken());

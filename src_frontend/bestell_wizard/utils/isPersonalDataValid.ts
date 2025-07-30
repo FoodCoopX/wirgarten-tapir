@@ -7,7 +7,9 @@ import { isPhoneNumberValid } from "./isPhoneNumberValid.ts";
 export function isPersonalDataValid(
   personalData: PersonalData,
   waitingListModeEnabled: boolean,
+  emailAddressAlreadyInUse: boolean,
 ): boolean {
+  if (emailAddressAlreadyInUse) return false;
   if (!personalData.firstName) return false;
   if (!personalData.lastName) return false;
   if (!personalData.email) return false;

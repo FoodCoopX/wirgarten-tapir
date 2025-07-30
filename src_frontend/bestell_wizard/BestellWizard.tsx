@@ -141,6 +141,12 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     setWaitingListLinkConfirmationModeEnabled,
   ] = useState(false);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
+  const [emailAddressAlreadyInUse, setEmailAddressAlreadyInUse] =
+    useState(false);
+  const [emailAdresseAlreadyInUseIsKnown, setEmailAdresseAlreadyInUseIsKnown] =
+    useState(false);
+  const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
+    useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -549,6 +555,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               waitingListLinkConfirmationModeEnabled
             }
             setToastDatas={setToastDatas}
+            emailAddressAlreadyInUse={emailAddressAlreadyInUse}
+            setEmailAddressAlreadyInUse={setEmailAddressAlreadyInUse}
+            emailAdresseAlreadyInUseIsKnown={emailAdresseAlreadyInUseIsKnown}
+            setEmailAdresseAlreadyInUseIsKnown={
+              setEmailAdresseAlreadyInUseIsKnown
+            }
+            emailAddressAlreadyInUseLoading={emailAddressAlreadyInUseLoading}
+            setEmailAddressAlreadyInUseLoading={
+              setEmailAddressAlreadyInUseLoading
+            }
           />
         );
       case "summary":
@@ -737,6 +753,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           sepaAllowed,
           contractAccepted,
           waitingListModeEnabled,
+          emailAddressAlreadyInUse,
         );
         break;
       default:

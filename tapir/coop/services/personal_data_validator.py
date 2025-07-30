@@ -7,7 +7,7 @@ from django.db.models import Q
 from localflavor.generic.validators import IBANValidator
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, WaitingListEntry
 from tapir.wirgarten.utils import get_today
 
 
@@ -64,6 +64,11 @@ class PersonalDataValidator:
         kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
+            raise ValidationError(
+                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+            )
+
+        if WaitingListEntry.objects.filter(email=email).exists():
             raise ValidationError(
                 "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
             )

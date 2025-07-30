@@ -149,9 +149,16 @@ export function buildNextButtonParametersForPersonalData(
   sepaAllowed: boolean,
   contractAccepted: boolean,
   waitingListModeEnabled: boolean,
+  emailAddressAlreadyInUse: boolean,
 ): NextButtonParameters {
   let text = undefined;
-  if (!isPersonalDataValid(personalData, waitingListModeEnabled)) {
+  if (
+    !isPersonalDataValid(
+      personalData,
+      waitingListModeEnabled,
+      emailAddressAlreadyInUse,
+    )
+  ) {
     text = "Vervollständige deine Daten um weiter zu gehen";
   }
 
@@ -165,10 +172,18 @@ export function buildNextButtonParametersForPersonalData(
 
   let disabled;
   if (waitingListModeEnabled) {
-    disabled = !isPersonalDataValid(personalData, waitingListModeEnabled);
+    disabled = !isPersonalDataValid(
+      personalData,
+      waitingListModeEnabled,
+      emailAddressAlreadyInUse,
+    );
   } else {
     disabled =
-      !isPersonalDataValid(personalData, waitingListModeEnabled) ||
+      !isPersonalDataValid(
+        personalData,
+        waitingListModeEnabled,
+        emailAddressAlreadyInUse,
+      ) ||
       !sepaAllowed ||
       !contractAccepted;
   }
