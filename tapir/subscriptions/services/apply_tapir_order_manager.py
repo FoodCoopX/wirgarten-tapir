@@ -92,6 +92,8 @@ class ApplyTapirOrderManager:
         )
         subscriptions = []
         for product, quantity in order.items():
+            if quantity == 0:
+                continue
             subscriptions.append(
                 Subscription(
                     member=member,
@@ -140,6 +142,8 @@ class ApplyTapirOrderManager:
         new_subscriptions = []
 
         for product, quantity in order.items():
+            if quantity == 0:
+                continue
             if product.type not in orders_by_product_type.keys():
                 orders_by_product_type[product.type] = {}
             orders_by_product_type[product.type][product] = quantity

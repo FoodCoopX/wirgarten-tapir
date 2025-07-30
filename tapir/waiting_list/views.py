@@ -471,11 +471,14 @@ class WaitingListEntryUpdateView(APIView):
     ):
         product_wishes = []
         for index, product_id in enumerate(validated_data["product_ids"]):
+            quantity = validated_data["product_quantities"][index]
+            if quantity == 0:
+                continue
             product_wishes.append(
                 WaitingListProductWish(
                     waiting_list_entry=waiting_list_entry,
                     product_id=product_id,
-                    quantity=validated_data["product_quantities"][index],
+                    quantity=quantity,
                 )
             )
         WaitingListProductWish.objects.bulk_create(product_wishes)
