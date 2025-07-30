@@ -82,7 +82,11 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
     setLoading(true);
     api
       .waitingListWaitingListEntriesDestroy({ id: entryDetails.id })
-      .then(() => reloadEntries())
+      .then(() => {
+        reloadEntries();
+        onClose();
+        setShowConfirmDeleteModal(false);
+      })
       .catch((error) =>
         handleRequestError(
           error,
