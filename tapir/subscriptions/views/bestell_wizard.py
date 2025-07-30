@@ -56,6 +56,7 @@ from tapir.wirgarten.models import (
     Subscription,
     ProductType,
     PickupLocation,
+    WaitingListEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -400,8 +401,17 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         if pickup_location is None:
             raise Http404(f"Unknown pickup location")
 
+        reference_date = get_today(cache=self.cache)
+        waiting_list_entry_id = serializer.validated_data.get(
+            "waiting_list_entry_id", None
+        )
+        if waiting_list_entry_id is not None:
+            reference_date = get_object_or_404(
+                WaitingListEntry, id=waiting_list_entry_id
+            ).desired_start_date
+
         contract_start_date = EarliestPossibleContractStartDateCalculator.get_earliest_possible_contract_start_date(
-            reference_date=get_today(cache=self.cache),
+            reference_date=reference_date,
             pickup_location_id=pickup_location_id,
             cache=self.cache,
         )

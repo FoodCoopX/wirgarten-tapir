@@ -11,6 +11,7 @@ export function fetchFirstDeliveryDates(
   shoppingCart: ShoppingCart,
   setFirstDeliveryDatesByProductType: (map: { [key: string]: Date }) => void,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
+  waitingListEntryId: string | undefined,
 ) {
   if (pickupLocations.length === 0) {
     return;
@@ -22,6 +23,7 @@ export function fetchFirstDeliveryDates(
       bestellWizardDeliveryDatesForOrderRequestRequest: {
         pickupLocationId: pickupLocations[0].id!,
         shoppingCart: shoppingCart,
+        waitingListEntryId: waitingListEntryId,
       },
     })
     .then((response) => {

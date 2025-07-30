@@ -345,6 +345,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       shoppingCart,
       setFirstDeliveryDatesByProductType,
       setToastDatas,
+      waitingListEntryDetails?.id,
     );
   }, [selectedPickupLocations, shoppingCart]);
 

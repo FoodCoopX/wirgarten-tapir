@@ -1129,6 +1129,10 @@ paths:
           type: string
       tags:
       - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
       responses:
         '200':
           content:
@@ -4188,6 +4192,9 @@ components:
           additionalProperties:
             type: integer
         pickup_location_id:
+          type: string
+          minLength: 1
+        waiting_list_entry_id:
           type: string
           minLength: 1
       required:

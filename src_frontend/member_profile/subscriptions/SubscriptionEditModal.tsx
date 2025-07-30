@@ -237,6 +237,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       shoppingCart,
       setFirstDeliveryDatesByProductType,
       setToastDatas,
+      undefined,
     );
   }, [selectedPickupLocations, shoppingCart]);
 
