@@ -42,6 +42,14 @@ const BestellWizardPickupLocation: React.FC<
     )[0];
   }
 
+  function shouldShowDeliveryInfo() {
+    if (waitingListModeEnabled) return false;
+    return !(
+      selectedPickupLocations.length > 0 &&
+      pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
+    );
+  }
+
   return (
     <>
       <Row>
@@ -87,7 +95,7 @@ const BestellWizardPickupLocation: React.FC<
           waitingListLinkConfirmationModeEnabled
         }
       />
-      {!waitingListModeEnabled && (
+      {shouldShowDeliveryInfo() && (
         <Row className={"mt-4"}>
           <BestellWizardCardSubtitle text={"Deine erste Lieferung"} />
           <p>
