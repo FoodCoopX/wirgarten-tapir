@@ -43,7 +43,10 @@ const BestellWizardPickupLocation: React.FC<
   }
 
   function shouldShowDeliveryInfo() {
+    if (waitingListLinkConfirmationModeEnabled) return true;
+
     if (waitingListModeEnabled) return false;
+
     return !(
       selectedPickupLocations.length > 0 &&
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0])
