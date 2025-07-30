@@ -452,7 +452,7 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
             token_data={
                 "contract_start_date": format_date(contract_start_date),
                 "contract_end_date": format_date(subs[0].end_date),
-                "first_pickup_date": future_deliveries[0]["delivery_date"],
+                "first_pickup_date": format_date(future_deliveries[0]["delivery_date"]),
                 "contract_list": format_subscription_list_html(subs),
             },
         ),
