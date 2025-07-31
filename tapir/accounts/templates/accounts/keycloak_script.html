@@ -79,11 +79,12 @@
         return params.next ? decodeURIComponent(params.next) : "{% url 'index' %}";
     }
 
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const savedToken = getCookieValue("token");
     keycloak.init({
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri: window.location.origin + "/static/accounts/silent-refresh.html",
-        checkLoginIframe: true,
+        onLoad: isSafari ? 'login-required' : 'check-sso',
+        silentCheckSsoRedirectUri: isSafari ? undefined : window.location.origin + "/static/accounts/silent-refresh.html",
+        checkLoginIframe: !isSafari,
         token: savedToken,
         onTokenExpired: () => {
             console.log("Token expired, refreshing...");
