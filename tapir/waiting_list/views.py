@@ -75,7 +75,6 @@ from tapir.wirgarten.models import (
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
 
 
@@ -132,8 +131,11 @@ class WaitingListApiView(APIView):
         pagination = self.pagination_class()
 
         entries = WaitingListEntry.objects.prefetch_related(
-            "product_wishes__product", "pickup_location_wishes__pickup_location"
-        ).select_related("member")
+            "product_wishes__product",
+            "pickup_location_wishes__pickup_location",
+        ).select_related(
+            "member",
+        )
 
         filters = [
             "member_type",
@@ -153,6 +155,8 @@ class WaitingListApiView(APIView):
             entries = entries.order_by(order_by)
         else:
             entries = self.order_by_coop_entry_date(entries, descending="-" in order_by)
+
+        entries = entries.distinct()
 
         entries = pagination.paginate_queryset(entries, request)
 
@@ -265,28 +269,31 @@ class WaitingListApiView(APIView):
                 MembershipCancellationManager.get_coop_entry_date(entry.member)
             )
             pickup_location_id = (
-                MemberPickupLocationService.get_member_pickup_location_id(
-                    entry.member, reference_date=get_today(cache=cache)
+                MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                    entry.member.id, reference_date=get_today(cache=cache), cache=cache
                 )
             )
             current_pickup_location = TapirCache.get_pickup_location_by_id(
                 cache=cache,
                 pickup_location_id=pickup_location_id,
             )
-            current_products = {
-                subscription.product
-                for subscription in get_active_and_future_subscriptions(cache=cache)
-                .filter(member=entry.member)
-                .select_related("product__type")
-            }
-            url_to_member_profile = reverse(
-                "wirgarten:member_detail", args=[entry.member.id]
-            )
+
             current_subscriptions = (
                 TapirCache.get_active_and_future_subscriptions_by_member_id(
                     cache=cache, reference_date=get_today(cache=cache)
                 ).get(entry.member.id, [])
             )
+
+            current_products = {
+                TapirCache.get_product_by_id(
+                    cache=cache, product_id=subscription.product_id
+                )
+                for subscription in current_subscriptions
+            }
+            url_to_member_profile = reverse(
+                "wirgarten:member_detail", args=[entry.member.id]
+            )
+
             current_subscriptions = cls.remove_renewals(
                 subscriptions=current_subscriptions, cache=cache
             )

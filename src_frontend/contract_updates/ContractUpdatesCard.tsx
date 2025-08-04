@@ -440,7 +440,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                       <th>Mitglied</th>
                       <th>Verteilort</th>
                       <th>Änderungen</th>
-                      <th>Datum</th>
+                      <th>Gültig ab</th>
                     </tr>
                   </thead>
                   <tbody>

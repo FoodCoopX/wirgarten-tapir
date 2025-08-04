@@ -255,7 +255,10 @@ class TapirCache:
             return None
 
         def compute():
-            return {product.id: product for product in Product.objects.all()}
+            return {
+                product.id: product
+                for product in Product.objects.select_related("type")
+            }
 
         product_by_id_cache = get_from_cache_or_compute(
             cache, "product_by_id", lambda: compute()
