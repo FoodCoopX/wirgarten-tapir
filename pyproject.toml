@@ -37,6 +37,7 @@ unidecode = "^1.3.6"
 importlib-resources = "^6.1.0"
 tapir-mail = { url = "https://github.com/FoodCoopX/tapir-mail-releases/releases/download/0.0.0-dev-1733225183/tapir_mail-0.0.0.dev1733225183-py3-none-any.whl" }
 whitenoise = "^6.9.0"
+django-allauth = {version = "0.63.6", extras = ["socialaccount"]}
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.1.0"

@@ -172,3 +172,19 @@ CACHES = {
 TAPIR_MAIL_PATH = "/tapirmail"
 os.environ["REACT_APP_API_ROOT"] = SITE_URL + TAPIR_MAIL_PATH
 os.environ["REACT_APP_BASENAME"] = TAPIR_MAIL_PATH
+
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "APPS": [
+            {
+                "provider_id": "keycloak",
+                "name": "Keycloak",
+                "client_id": KEYCLOAK_ADMIN_CONFIG["CLIENT_ID"],
+                "secret": KEYCLOAK_ADMIN_CONFIG["CLIENT_SECRET_KEY"],
+                "settings": {
+                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG['SERVER_URL']}/realms/{KEYCLOAK_ADMIN_CONFIG['REALM_NAME']}/.well-known/openid-configuration",
+                },
+            }
+        ]
+    }
+}
