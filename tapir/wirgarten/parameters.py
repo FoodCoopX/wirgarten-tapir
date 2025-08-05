@@ -815,8 +815,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Intro-Seite zeigen",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
-            description="Wenn aktiviert ist die erste Seite des BestellWizards eine Intro-Seite wo der Benutzer auswählen kann welche Produkte ihn interessieren."
-            "Wenn ausgeschaltet ist diese Seite nicht angezeigt. Der BestellWizard verhält sich wie der Benutzer alle Produkte bei der Intro-Seite ausgewählte hätte.",
+            description="Wenn aktiviert, erscheint eine Intro-Seite, auf der der Benutzer auswählen kann, welche Produktanteile gezeichnet werden sollen. "
+            "Wenn nicht aktiviert, werden alle Formularseiten zu allen Produktanteilen angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
         )
 
