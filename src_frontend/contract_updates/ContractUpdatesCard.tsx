@@ -98,7 +98,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
-                {cancellation.product.name} {cancellation.product.type.name}am{" "}
+                {cancellation.product.name} {cancellation.product.type.name} am{" "}
                 {formatDateNumeric(cancellation.endDate)}
               </li>
             );
@@ -252,10 +252,17 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
 
     setLoading(true);
 
+    let coopSharePurchaseIds: string[] = [];
+    for (const change of selectedChanges) {
+      coopSharePurchaseIds.push(
+        ...change.sharePurchases.map((purchase) => purchase.id!),
+      );
+    }
+
     subscriptionsApi
       .subscriptionsApiRevokeChangesCreate({
         subscriptionCreationIds: getCreationIdsToConfirm(),
-        coopSharePurchaseIds: getCancellationIdsToConfirm(),
+        coopSharePurchaseIds: coopSharePurchaseIds,
         putOnWaitingList: putOnWaitingList,
       })
       .then(() => {
@@ -319,6 +326,12 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
           if (subscription.startDate <= new Date()) {
             return true;
           }
+        }
+      }
+
+      for (const purchase of change.sharePurchases) {
+        if (purchase.validAt <= new Date()) {
+          return true;
         }
       }
     }
