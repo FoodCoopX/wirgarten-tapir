@@ -619,9 +619,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Vorlaufzeit zu Vertragsstart",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=0,
-            description="Anzahl an Tage die zwischen vor ein Vertrag starten kann.",
+            description="Gibt an, wie viele Tage vor der Kommissionierungsvariable der Vertrag gezeichnet werden muss, um noch in der nächsten Woche zu starten.",
             category=ParameterCategory.SUBSCRIPTIONS,
-            order_priority=1,
+            order_priority=2,
         )
 
         self.parameter_definition(
