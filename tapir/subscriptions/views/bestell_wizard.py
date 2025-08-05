@@ -47,6 +47,7 @@ from tapir.subscriptions.services.required_product_types_validator import (
 from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
+from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import (
     Member,
@@ -62,6 +63,7 @@ from tapir.wirgarten.service.member import (
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
+    legal_status_is_cooperative,
 )
 
 
@@ -125,12 +127,13 @@ class BestellWizardConfirmOrderApiView(APIView):
                     actor=request.user if request.user.is_authenticated else member,
                     cache=self.cache,
                 )
-            self.create_coop_shares(
-                number_of_shares=serializer.validated_data["nb_shares"],
-                member=member,
-                subscriptions=subscriptions,
-                cache=self.cache,
-            )
+            if legal_status_is_cooperative(cache=self.cache):
+                self.create_coop_shares(
+                    number_of_shares=serializer.validated_data["nb_shares"],
+                    member=member,
+                    subscriptions=subscriptions,
+                    cache=self.cache,
+                )
             send_order_confirmation(member, subscriptions, cache=self.cache)
 
         data = {
@@ -254,6 +257,10 @@ class BestellWizardConfirmOrderApiView(APIView):
         ):
             raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
 
+        if legal_status_is_cooperative(cache=self.cache):
+            self.validate_coop_content(validated_data=validated_data, order=order)
+
+    def validate_coop_content(self, validated_data: dict, order: TapirOrder):
         student_status_enabled = validated_data["student_status_enabled"]
         if student_status_enabled and not get_parameter_value(
             ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache=self.cache
@@ -364,6 +371,7 @@ class BestellWizardBaseDataApiView(APIView):
                 ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
                 cache=self.cache,
             ),
+            "show_coop_content": legal_status_is_cooperative(cache=self.cache),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

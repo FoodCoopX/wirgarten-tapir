@@ -24,7 +24,12 @@ export function shouldIncludeStepPickupLocation(
 export function shouldIncludeStepCoopShares(
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
   waitingListModeEnabled: boolean,
+  showCoopContent: boolean,
 ) {
+  if (!showCoopContent) {
+    return false;
+  }
+
   if (waitingListEntryDetails === undefined) {
     return !waitingListModeEnabled;
   }

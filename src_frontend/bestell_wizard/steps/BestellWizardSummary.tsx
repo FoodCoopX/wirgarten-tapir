@@ -34,6 +34,7 @@ interface BestellWizardSummaryProps {
   setPrivacyPolicyRead: (read: boolean) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails: WaitingListEntryDetails | undefined;
+  showCoopContent: boolean;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -53,6 +54,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   setPrivacyPolicyRead,
   waitingListLinkConfirmationModeEnabled,
   waitingListEntryDetails,
+  showCoopContent,
 }) => {
   function shouldShowPickupLocationSummary() {
     if (selectedPickupLocations.length === 0) {
@@ -72,6 +74,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           {shouldIncludeStepCoopShares(
             waitingListEntryDetails,
             waitingListModeEnabled,
+            showCoopContent,
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />

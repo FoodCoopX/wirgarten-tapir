@@ -147,6 +147,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     useState(false);
   const [emailAddressAlreadyInUseLoading, setEmailAddressAlreadyInUseLoading] =
     useState(false);
+  const [showCoopContent, setShowCoopContent] = useState(false);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -160,6 +161,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setForceWaitingList(data.forceWaitingList);
         setIntroEnabled(data.introEnabled);
         setStudentStatusAllowed(data.studentStatusAllowed);
+        setShowCoopContent(data.showCoopContent);
       })
       .catch((error) =>
         handleRequestError(
@@ -242,6 +244,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       shouldIncludeStepCoopShares(
         waitingListEntryDetails,
         waitingListModeEnabled,
+        showCoopContent,
       )
     ) {
       steps.push("coop_shares");
@@ -589,6 +592,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               waitingListLinkConfirmationModeEnabled
             }
             waitingListEntryDetails={waitingListEntryDetails}
+            showCoopContent={showCoopContent}
           />
         );
       case "end":

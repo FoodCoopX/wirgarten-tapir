@@ -4122,12 +4122,15 @@ components:
           type: boolean
         student_status_allowed:
           type: boolean
+        show_coop_content:
+          type: boolean
       required:
       - allow_investing_membership
       - force_waiting_list
       - intro_enabled
       - price_of_a_share
       - product_types
+      - show_coop_content
       - student_status_allowed
       - theme
     BestellWizardCapacityCheckRequestRequest:

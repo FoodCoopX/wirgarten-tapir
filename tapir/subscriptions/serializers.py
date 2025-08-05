@@ -199,6 +199,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()
+    show_coop_content = serializers.BooleanField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
