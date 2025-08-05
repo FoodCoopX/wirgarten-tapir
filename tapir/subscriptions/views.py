@@ -48,6 +48,7 @@ from tapir.wirgarten.models import (
     Product,
     Subscription,
     CoopShareTransaction,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -61,6 +62,7 @@ from tapir.wirgarten.utils import (
     format_date,
     get_today,
     get_now,
+    format_subscription_list_html,
 )
 
 
@@ -194,25 +196,37 @@ class CancelSubscriptionsView(APIView):
             )
 
         with transaction.atomic():
+            all_cancelled_subscriptions = []
             for product in products_selected_for_cancellation:
                 cancelled_subscriptions = (
                     SubscriptionCancellationManager.cancel_subscriptions(
                         product, member, cache=self.cache
                     )
                 )
+                all_cancelled_subscriptions.extend(cancelled_subscriptions)
                 if len(cancelled_subscriptions) > 0:
                     TransactionalTrigger.fire_action(
                         TransactionalTriggerData(
                             key=Events.CONTRACT_CANCELLED,
                             recipient_id_in_base_queryset=member.id,
                             token_data={
-                                "contract_list": cancelled_subscriptions,
+                                "contract_list": format_subscription_list_html(
+                                    cancelled_subscriptions
+                                ),
                                 "contract_end_date": format_date(
                                     cancelled_subscriptions[0].end_date
                                 ),
                             },
                         ),
                     )
+
+            if len(all_cancelled_subscriptions) > 0:
+                SubscriptionChangeLogEntry().populate(
+                    actor=request.user,
+                    user=member,
+                    change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                    subscriptions=all_cancelled_subscriptions,
+                ).save()
 
             if cancel_coop_membership:
                 MembershipCancellationManager.cancel_coop_membership(

@@ -1079,7 +1079,7 @@ class SubscriptionChangeLogEntry(LogEntry):
         actor: TapirUser,
         user: Member,
         change_type: SubscriptionChangeLogEntryType,
-        subscriptions: [Subscription],
+        subscriptions: list[Subscription],
         **kwargs,
     ):
         super().populate(actor=actor, user=user, **kwargs)
