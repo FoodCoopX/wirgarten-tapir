@@ -81,7 +81,6 @@ class ParameterKeys:
     )
     TRIAL_PERIOD_ENABLED = f"{PREFIX}.trial_period.enabled"
     TRIAL_PERIOD_DURATION = f"{PREFIX}.trial_period.duration"
-    TRIAL_PERIOD_UNIT = f"{PREFIX}.trial_period.unit"
     TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END = (
         f"{PREFIX}.trial_period.can_be_cancelled_before_end"
     )

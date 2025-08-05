@@ -27,12 +27,12 @@ from tapir.core.config import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE, PICKING_MODE_SHARE
 from tapir.subscriptions.config import (
-    NOTICE_PERIOD_UNIT_MONTHS,
-    NOTICE_PERIOD_UNIT_OPTIONS,
     SOLIDARITY_UNIT_PERCENT,
     SOLIDARITY_UNIT_OPTIONS,
     SOLIDARITY_MODE_NEGATIVE_ALLOWED_IF_ENOUGH_POSITIVE,
     SOLIDARITY_MODE_OPTIONS,
+    NOTICE_PERIOD_UNIT_MONTHS,
+    NOTICE_PERIOD_UNIT_OPTIONS,
 )
 from tapir.wirgarten.is_debug_instance import is_debug_instance
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -640,27 +640,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Probezeit dauer",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=1,
-            description="Wir lang die Probezeit dauert, in Monate oder Woche entsprechend der Einheit parameter gleich Unten.",
+            description="Wie lang die Probezeit dauert in Wochen.",
             category=ParameterCategory.TRIAL_PERIOD,
             order_priority=90,
             meta=ParameterMeta(
-                show_only_when=lambda cache: get_parameter_value(
-                    ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
-                ),
-            ),
-            enabled=is_debug_instance(),
-        )
-
-        self.parameter_definition(
-            key=ParameterKeys.TRIAL_PERIOD_UNIT,
-            label="Probezeit Dauer Einheit",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value=NOTICE_PERIOD_UNIT_MONTHS,
-            description="Ob die Probezeit-Dauer Wochen oder Monaten entspricht.",
-            category=ParameterCategory.TRIAL_PERIOD,
-            order_priority=89,
-            meta=ParameterMeta(
-                options=NOTICE_PERIOD_UNIT_OPTIONS,
                 show_only_when=lambda cache: get_parameter_value(
                     ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache
                 ),

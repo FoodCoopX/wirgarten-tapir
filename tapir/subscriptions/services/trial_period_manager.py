@@ -2,15 +2,10 @@ import datetime
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.date_limit_for_delivery_change_calculator import (
     DateLimitForDeliveryChangeCalculator,
-)
-from tapir.subscriptions.config import (
-    NOTICE_PERIOD_UNIT_MONTHS,
-    NOTICE_PERIOD_UNIT_WEEKS,
 )
 from tapir.wirgarten.models import Subscription, Product, Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -33,19 +28,7 @@ class TrialPeriodManager:
         if subscription.trial_end_date_override is not None:
             return subscription.trial_end_date_override
 
-        unit = get_parameter_value(ParameterKeys.TRIAL_PERIOD_UNIT, cache=cache)
-        if unit == NOTICE_PERIOD_UNIT_MONTHS:
-            return cls.get_end_of_trial_period_by_months(subscription, cache=cache)
-        if unit == NOTICE_PERIOD_UNIT_WEEKS:
-            return cls.get_end_of_trial_period_by_weeks(subscription, cache=cache)
-
-        raise ImproperlyConfigured(f"Unknown trial period unit: {unit}")
-
-    @classmethod
-    def get_end_of_trial_period_by_months(cls, subscription: Subscription, cache: Dict):
-        return subscription.start_date + relativedelta(
-            months=get_parameter_value(ParameterKeys.TRIAL_PERIOD_DURATION, cache=cache)
-        )
+        return cls.get_end_of_trial_period_by_weeks(subscription, cache=cache)
 
     @classmethod
     def get_end_of_trial_period_by_weeks(cls, subscription: Subscription, cache: Dict):

@@ -23,6 +23,12 @@ class TestIsProductInTrial(TapirIntegrationTest):
         self.today = mock_timezone(
             self, datetime.datetime(year=2021, month=8, day=10)
         ).date()
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=2
+        )
 
     def test_isProductInTrial_earliestSubscriptionIsInTrial_returnsTrue(self):
         member = MemberFactory.create()
