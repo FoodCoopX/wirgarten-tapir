@@ -36,9 +36,6 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.subscriptions.services.earliest_possible_contract_start_date_calculator import (
-    EarliestPossibleContractStartDateCalculator,
-)
 from tapir.subscriptions.services.global_capacity_checker import (
     GlobalCapacityChecker,
 )
@@ -410,9 +407,9 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
                 WaitingListEntry, id=waiting_list_entry_id
             ).desired_start_date
 
-        contract_start_date = EarliestPossibleContractStartDateCalculator.get_earliest_possible_contract_start_date(
+        contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=reference_date,
-            pickup_location_id=pickup_location_id,
+            apply_buffer_time=waiting_list_entry_id is None,
             cache=self.cache,
         )
         response_data = {
