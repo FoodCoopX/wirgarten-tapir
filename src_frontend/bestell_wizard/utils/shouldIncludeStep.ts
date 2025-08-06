@@ -11,14 +11,14 @@ export function shouldIncludeStepPickupLocation(
   publicProductTypes: PublicProductType[],
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
 ) {
-  if (waitingListEntryDetails !== undefined) {
-    return (waitingListEntryDetails.pickupLocationWishes ?? []).length > 0;
+  if (waitingListEntryDetails === undefined) {
+    return isAtLeastOneOrderedProductWithDelivery(
+      shoppingCart,
+      publicProductTypes,
+    );
   }
 
-  return isAtLeastOneOrderedProductWithDelivery(
-    shoppingCart,
-    publicProductTypes,
-  );
+  return (waitingListEntryDetails.pickupLocationWishes ?? []).length > 0;
 }
 
 export function shouldIncludeStepCoopShares(
@@ -34,7 +34,11 @@ export function shouldIncludeStepCoopShares(
     return !waitingListModeEnabled;
   }
 
-  return !waitingListEntryDetails.memberAlreadyExists;
+  if (waitingListEntryDetails.memberAlreadyExists) {
+    return waitingListEntryDetails.numberOfCoopShares > 0;
+  }
+
+  return true;
 }
 
 export function shouldIncludeStepPersonalData(

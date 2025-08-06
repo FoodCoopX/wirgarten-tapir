@@ -388,7 +388,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       waitingListEntryDetails.productWishes === undefined ||
       waitingListEntryDetails.productWishes.length === 0
     ) {
-      setCurrentStep("pickup_location");
+      setCurrentStep(steps.length > 0 ? steps[0] : "intro");
     } else {
       const newShoppingCart = buildEmptyShoppingCart(publicProductTypes);
       const selectedProductTypes = new Set<PublicProductType>();
