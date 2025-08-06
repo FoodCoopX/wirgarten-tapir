@@ -30,6 +30,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
       >
         <td>{entry.memberNo}</td>
         <td>{formatDateNumeric(entry.waitingSince)}</td>
+        <td>{entry.linkSentDate && formatDateNumeric(entry.linkSentDate)}</td>
         <td>
           {entry.firstName} {entry.lastName}
         </td>
@@ -85,6 +86,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
         <tr>
           <th>Mitgliedsnummer</th>
           <th>Eintragungsdatum auf Warteliste</th>
+          <th>Link Versand Datum</th>
           <th>Name</th>
           <th>Email-Adresse</th>
           <th>Telefonnummer</th>
@@ -104,7 +106,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
         {loading ? (
           <PlaceholderTableRows
             nbRows={DEFAULT_PAGE_SIZE}
-            nbColumns={showCoopContent ? 13 : 11}
+            nbColumns={showCoopContent ? 16 : 14}
             size={"xs"}
           />
         ) : (
