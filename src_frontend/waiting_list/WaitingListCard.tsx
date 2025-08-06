@@ -22,7 +22,7 @@ import {
   WaitingListApiListListOrderByEnum,
   WaitingListEntryDetails,
 } from "../api-client";
-import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BootstrapPagination from "../components/pagination/BootstrapPagination.tsx";
 import "./waiting_list_card.css";
@@ -140,8 +140,8 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
 
     waitingListApi
       .waitingListApiListList({
-        limit: DEFAULT_PAGE_SIZE,
-        offset: DEFAULT_PAGE_SIZE * currentPage,
+        limit: DEFAULT_PAGE_SIZE_BIG,
+        offset: DEFAULT_PAGE_SIZE_BIG * currentPage,
         memberType: filterMemberType,
         entryType: filterEntryType,
         category: filterCategory,
@@ -372,7 +372,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
               >
                 <BootstrapPagination
                   currentPage={currentPage}
-                  pageSize={DEFAULT_PAGE_SIZE}
+                  pageSize={DEFAULT_PAGE_SIZE_BIG}
                   itemCount={totalNumberOfEntries}
                   goToPage={setCurrentPage}
                 />

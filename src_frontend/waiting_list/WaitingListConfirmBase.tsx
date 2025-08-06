@@ -11,12 +11,14 @@ interface WaitingListConfirmBaseProps {
   csrfToken: string;
   waitingListEntryId: string;
   waitingListLinkKey: string;
+  adminEmail: string;
 }
 
 const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
   csrfToken,
   waitingListEntryId,
   waitingListLinkKey,
+  adminEmail,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
@@ -31,9 +33,14 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
         linkKey: waitingListLinkKey,
       })
       .then(setWaitingListEntryDetails)
-      .catch((error) =>
-        handleRequestError(error, "Fehler vom Server!", setToastDatas),
-      )
+      .catch(async (error) => {
+        if (error?.response?.status === 404) return;
+        await handleRequestError(
+          error,
+          "Fehler beim Laden der Warteliste-Eintrag!",
+          setToastDatas,
+        );
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -49,7 +56,7 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
           <Row className={"justify-content-center p-4"}>
             <Col style={{ maxWidth: "1200px" }}>
               <Card style={{ height: "95vh" }}>
-                <Card.Header>Laden...</Card.Header>
+                <Card.Header>{loading ? "Laden..." : "Fehler"}</Card.Header>
                 <ListGroup
                   variant={"flush"}
                   style={{
@@ -64,7 +71,14 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
                       overflowX: "hidden",
                     }}
                   >
-                    {loading ? <Spinner /> : "Fehler"}
+                    {loading ? (
+                      <Spinner />
+                    ) : (
+                      <p>
+                        Der Link ist bereits abgelaufen. Bitte wende ich an{" "}
+                        <a href={"mailto:" + adminEmail}>{adminEmail}</a>
+                      </p>
+                    )}
                   </ListGroup.Item>
                 </ListGroup>
               </Card>

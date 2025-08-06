@@ -27,7 +27,7 @@
         <div class="container-fluid">
             <main id="main-content" role="main">
                 {% csrf_token %}
-                <span id="waiting_list_confirm" data-entry-id="{{ entry_id }}" data-link-key="{{ link_key }}"></span>
+                <span id="waiting_list_confirm" data-entry-id="{{ entry_id }}" data-link-key="{{ link_key }}" data-admin-email="{{ "wirgarten.site.admin_email"|parameter }}"></span>
             </main>
         </div>
     </body>

@@ -10,6 +10,7 @@ if (domNode) {
       csrfToken={getCsrfToken()}
       waitingListEntryId={domNode.dataset.entryId ?? ""}
       waitingListLinkKey={domNode.dataset.linkKey ?? ""}
+      adminEmail={domNode.dataset.adminEmail ?? ""}
     />,
   );
 } else {

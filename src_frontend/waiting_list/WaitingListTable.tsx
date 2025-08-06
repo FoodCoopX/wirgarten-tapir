@@ -1,7 +1,7 @@
 import React from "react";
 import { Table } from "react-bootstrap";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
-import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
+import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { WaitingListEntryDetails } from "../api-client";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
 import formatAddress from "../utils/formatAddress.ts";
@@ -105,7 +105,7 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
       <tbody>
         {loading ? (
           <PlaceholderTableRows
-            nbRows={DEFAULT_PAGE_SIZE}
+            nbRows={DEFAULT_PAGE_SIZE_BIG}
             nbColumns={showCoopContent ? 16 : 14}
             size={"xs"}
           />
