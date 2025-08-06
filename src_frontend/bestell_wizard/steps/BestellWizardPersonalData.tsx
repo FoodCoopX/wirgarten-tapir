@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, Form, Row, Spinner } from "react-bootstrap";
 import { PersonalData } from "../types/PersonalData.ts";
-import dayjs from "dayjs";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { isIbanValid } from "../utils/isIbanValid.ts";
@@ -15,6 +14,12 @@ import { SubscriptionsApi } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import Datetime from "react-datetime";
+import "react-datetime/css/react-datetime.css";
+import moment from "moment";
+import "moment/dist/locale/de";
+
+moment.locale("de");
 
 interface BestellWizardPersonalDataProps {
   theme: TapirTheme;
@@ -59,7 +64,12 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
+  const [innerDate, setInnerDate] = useState("");
   const api = useApi(SubscriptionsApi, getCsrfToken());
+
+  useEffect(() => {
+    setInnerDate(moment(personalData.birthdate).format("DD.MM.YYYY"));
+  }, [personalData]);
 
   useEffect(() => {
     setEmailAddress(personalData.email);
@@ -265,19 +275,31 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
         <Col>
           {!waitingListModeEnabled && (
             <Form.Group>
-              <Form.Label>Geburtsdatum</Form.Label>
-              <Form.Control
-                onChange={(event) => {
-                  personalData.birthdate = new Date(event.target.value);
-                  updatePersonalData();
+              <Form.Label>
+                <span
+                  className={
+                    personalData.birthdate !== undefined &&
+                    !isBirthdateValid(personalData.birthdate)
+                      ? "text-danger"
+                      : ""
+                  }
+                >
+                  Geburtsdatum
+                </span>
+              </Form.Label>
+              <Datetime
+                value={innerDate}
+                timeFormat={false}
+                dateFormat={true}
+                onChange={(changedValue) => {
+                  if (moment.isMoment(changedValue)) {
+                    setInnerDate(changedValue.format("DD.MM.YYYY"));
+                    personalData.birthdate = changedValue.toDate();
+                    updatePersonalData();
+                  } else {
+                    setInnerDate(changedValue);
+                  }
                 }}
-                value={dayjs(personalData.birthdate).format("YYYY-MM-DD")}
-                placeholder={"Geburtsdatum"}
-                type={"date"}
-                isInvalid={
-                  personalData.birthdate !== undefined &&
-                  !isBirthdateValid(personalData.birthdate)
-                }
               />
             </Form.Group>
           )}

@@ -25,6 +25,7 @@
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-icons": "^1.11.6",
     "react-chartjs-2": "^5.3.0",
+    "react-datetime": "^3.3.1",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0",
     "typescript": "^5.8.3",
