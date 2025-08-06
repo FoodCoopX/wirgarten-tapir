@@ -120,7 +120,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                     key={creation.id}
                     className={creation.autoConfirmed ? "text-warning" : ""}
                   >
-                    {creation.quantity} {"×"} {creation.product.name}{" "}
+                    {creation.quantity} {"×"} {creation.product.name}
+                    {" ("}
+                    {formatDateNumeric(creation.startDate)}
+                    {") "}
                     {creation.autoConfirmed
                       ? " (automatische Bestätigung schon versendet)"
                       : ""}
@@ -162,13 +165,25 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         (cancellation) => cancellation.endDate!,
       ),
     ];
+
     if ("subscriptionChanges" in data) {
       dates = [...dates, ...data.subscriptionChanges.map(getEarliestChange)];
     }
 
+    if ("sharePurchases" in data) {
+      dates = [
+        ...dates,
+        ...data.sharePurchases.map((purchase) => purchase.validAt),
+      ];
+    }
+
+    if (dates.length === 0) {
+      return new Date();
+    }
+
     return dates.reduce(function (a, b) {
       return a < b ? a : b;
-    }, new Date());
+    });
   }
 
   function getCreationIdsToConfirm() {
