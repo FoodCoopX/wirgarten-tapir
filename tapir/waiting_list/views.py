@@ -15,11 +15,6 @@ from rest_framework import permissions, viewsets, status, serializers
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
-
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
@@ -76,6 +71,10 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -671,6 +670,13 @@ class WaitingListCreateEntryExistingMemberView(APIView):
         return Response(OrderConfirmationResponseSerializer(data).data)
 
     def validate(self, validated_data: dict):
+        if WaitingListEntry.objects.filter(
+            member_id=validated_data["member_id"]
+        ).exists():
+            raise ValidationError(
+                "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied."
+            )
+
         shopping_cart = {}
         for index, product_id in enumerate(validated_data["product_ids"]):
             shopping_cart[product_id] = validated_data["product_quantities"][index]
@@ -681,13 +687,6 @@ class WaitingListCreateEntryExistingMemberView(APIView):
             order=order, cache=self.cache
         ):
             raise ValidationError("Single subscription product ordered more than once")
-
-        if WaitingListEntry.objects.filter(
-            member_id=validated_data["member_id"]
-        ).exists():
-            raise ValidationError(
-                "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied."
-            )
 
     def create_entry(self, validated_data: dict):
         waiting_list_entry = WaitingListEntry(

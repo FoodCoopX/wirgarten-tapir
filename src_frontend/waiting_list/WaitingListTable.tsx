@@ -28,7 +28,14 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
         onClick={() => setSelectedEntryForEdition(entry)}
         className={entry.linkSentDate ? "table-warning" : ""}
       >
-        <td>{entry.memberNo}</td>
+        <td>
+          <a
+            onClick={(event) => event.stopPropagation()}
+            href={entry.urlToMemberProfile}
+          >
+            {entry.memberNo}
+          </a>
+        </td>
         <td>{formatDateNumeric(entry.waitingSince)}</td>
         <td>{entry.linkSentDate && formatDateNumeric(entry.linkSentDate)}</td>
         <td>

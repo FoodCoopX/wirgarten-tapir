@@ -16,6 +16,8 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { ToastData } from "../../types/ToastData.ts";
+import { addToast } from "../../utils/addToast.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface PickupLocationChangeModalProps {
   show: boolean;
@@ -151,6 +153,34 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             productIds: [],
             productQuantities: [],
           },
+        })
+        .then((result) => {
+          if (result.orderConfirmed) {
+            const message = selectedPickupLocations
+              .map((pickupLocation) => pickupLocation.name)
+              .join(", ");
+
+            addToast(
+              {
+                id: uuidv4(),
+                variant: "success",
+                message: message,
+                title: "Warteliste-Eintrag erzeugt",
+              },
+              setToastDatas,
+            );
+          } else {
+            addToast(
+              {
+                id: uuidv4(),
+                variant: "danger",
+                message:
+                  "Es gibt schon einen Warteliste-Eintrag für dich, wenn du den ändern willst, wende dich bitte an dem Kontakt hier Oben Rechts",
+                title: "Warteliste-Eintrag nicht erzeugt",
+              },
+              setToastDatas,
+            );
+          }
         })
         .catch((error) =>
           handleRequestError(
