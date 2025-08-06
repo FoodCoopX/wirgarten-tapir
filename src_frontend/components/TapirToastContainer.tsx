@@ -26,6 +26,7 @@ const TapirToastContainer: React.FC<TapirToastContainerProps> = ({
           bg={toastData.variant}
           key={toastData.id}
           autohide={true}
+          delay={toastData.variant === "danger" ? 20000 : 8000}
         >
           <Toast.Header>{toastData.title}</Toast.Header>
           <Toast.Body>{toastData.message ?? toastData.title}</Toast.Body>
