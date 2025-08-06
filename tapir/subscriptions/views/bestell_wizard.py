@@ -411,9 +411,11 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             "waiting_list_entry_id", None
         )
         if waiting_list_entry_id is not None:
-            reference_date = get_object_or_404(
+            desired_start_date = get_object_or_404(
                 WaitingListEntry, id=waiting_list_entry_id
             ).desired_start_date
+            if desired_start_date is not None:
+                reference_date = desired_start_date
 
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=reference_date,
