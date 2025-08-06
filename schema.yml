@@ -7931,6 +7931,13 @@ components:
           type: string
         country:
           type: string
+        birthdate:
+          type: string
+          format: date
+        account_owner:
+          type: string
+        iban:
+          type: string
         date_of_entry_in_cooperative:
           type: string
           format: date

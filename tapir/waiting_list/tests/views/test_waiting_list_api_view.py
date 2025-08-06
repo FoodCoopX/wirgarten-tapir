@@ -123,6 +123,9 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "link": None,
                 "link_key": None,
                 "link_sent_date": None,
+                "birthdate": None,
+                "account_owner": None,
+                "iban": None,
             },
             response_content["results"][0],
         )

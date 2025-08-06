@@ -413,10 +413,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       street2: waitingListEntryDetails.street2,
       postcode: waitingListEntryDetails.postcode,
       city: waitingListEntryDetails.city,
-      birthdate: new Date(),
+      birthdate: waitingListEntryDetails.birthdate ?? new Date(),
       country: "de",
-      iban: "",
-      accountOwner: "",
+      iban: waitingListEntryDetails.iban ?? "",
+      accountOwner: waitingListEntryDetails.accountOwner ?? "",
     });
 
     setSelectedNumberOfCoopShares(waitingListEntryDetails.numberOfCoopShares);

@@ -262,6 +262,9 @@ class WaitingListApiView(APIView):
         current_products = None
         url_to_member_profile = None
         current_subscriptions = None
+        birthdate = None
+        account_owner = None
+        iban = None
         if entry.member is not None:
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
@@ -297,6 +300,10 @@ class WaitingListApiView(APIView):
             current_subscriptions = cls.remove_renewals(
                 subscriptions=current_subscriptions, cache=cache
             )
+
+            birthdate = entry.member.birthdate
+            account_owner = entry.member.account_owner
+            iban = entry.member.iban
         link = None
         if settings.DEBUG and entry.confirmation_link_key:
             link = SendWaitingListLinkApiView.build_waiting_list_link(
@@ -335,6 +342,9 @@ class WaitingListApiView(APIView):
                 else None
             ),
             "link": link,
+            "birthdate": birthdate,
+            "account_owner": account_owner,
+            "iban": iban,
         }
 
     @staticmethod
