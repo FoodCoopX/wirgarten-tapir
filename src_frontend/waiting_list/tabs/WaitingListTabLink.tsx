@@ -100,9 +100,9 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
         )}
         {!linkCanBeSent() && (
           <p>
-            <span className={"material-icons"}>warning</span> Es muss maximal 1
-            Verteilstation-Wunsch geben um den Link zu versenden (ggf. muss
-            einmal gespeichert werden).
+            <span className={"material-icons"}>warning</span> Bitte bearbeite
+            bei den Verteilstation-Wünschen so, dass als einziger Wunsch die
+            zukünftige Verteilstation verbleibt
           </p>
         )}
         <p>
