@@ -1,63 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import { TapirTheme } from "../types/TapirTheme.ts";
-import { Card, Col, ListGroup, Row, Spinner } from "react-bootstrap";
+import {TapirTheme} from "../types/TapirTheme.ts";
+import {Card, Col, ListGroup, Row, Spinner} from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
-import { useApi } from "../hooks/useApi.ts";
+import {useApi} from "../hooks/useApi.ts";
 import {
-  OrderConfirmationResponse,
-  PickupLocationsApi,
-  PublicPickupLocation,
-  type PublicProductType,
-  SubscriptionsApi,
-  WaitingListApi,
-  WaitingListEntryDetails,
+    OrderConfirmationResponse,
+    PickupLocationsApi,
+    PublicPickupLocation,
+    type PublicProductType,
+    SubscriptionsApi,
+    WaitingListApi,
+    WaitingListEntryDetails,
 } from "../api-client";
-import { handleRequestError } from "../utils/handleRequestError.ts";
+import {handleRequestError} from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
-import { ShoppingCart } from "./types/ShoppingCart.ts";
+import {ShoppingCart} from "./types/ShoppingCart.ts";
 import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import BestellWizardCoopShares from "./steps/BestellWizardCoopShares.tsx";
 import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
-import { PersonalData } from "./types/PersonalData.ts";
-import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
+import {PersonalData} from "./types/PersonalData.ts";
+import {getEmptyPersonalData} from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
-import { getTestPersonalData } from "./utils/getTestPersonalData.ts";
+import {getTestPersonalData} from "./utils/getTestPersonalData.ts";
 import BestellWizardEnd from "./steps/BestellWizardEnd.tsx";
 import {
-  buildNextButtonParametersForCoopShares,
-  buildNextButtonParametersForIntro,
-  buildNextButtonParametersForPersonalData,
-  buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+    buildNextButtonParametersForCoopShares,
+    buildNextButtonParametersForIntro,
+    buildNextButtonParametersForPersonalData,
+    buildNextButtonParametersForPickupLocation,
+    buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
-import { NextButtonParameters } from "./types/NextButtonParameters.ts";
-import { isShoppingCartEmpty } from "./utils/isShoppingCartEmpty.ts";
+import {NextButtonParameters} from "./types/NextButtonParameters.ts";
+import {isShoppingCartEmpty} from "./utils/isShoppingCartEmpty.ts";
 import PickupLocationWaitingListModal from "./components/PickupLocationWaitingListModal.tsx";
-import { updateProductsAndProductTypesOverCapacity } from "./utils/updateProductsAndProductTypesOverCapacity.ts";
-import { updateMinimumAndPriceOfShare } from "./utils/updateMinimumAndPriceOfShare.ts";
-import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapacities.ts";
-import { sortProductTypes } from "./utils/sortProductTypes.ts";
+import {updateProductsAndProductTypesOverCapacity} from "./utils/updateProductsAndProductTypesOverCapacity.ts";
+import {updateMinimumAndPriceOfShare} from "./utils/updateMinimumAndPriceOfShare.ts";
+import {checkPickupLocationCapacities} from "./utils/checkPickupLocationCapacities.ts";
+import {sortProductTypes} from "./utils/sortProductTypes.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
-import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
+import {fetchFirstDeliveryDates} from "./utils/fetchFirstDeliveryDates.ts";
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
-import { BestellWizardStep } from "./types/BestellWizardStep.ts";
-import { buildEmptyShoppingCart } from "./types/buildEmptyShoppingCart.ts";
-import { selectAllRequiredProductTypes } from "./utils/selectAllRequiredProductTypes.ts";
-import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSummary.tsx";
+import {BestellWizardStep} from "./types/BestellWizardStep.ts";
+import {buildEmptyShoppingCart} from "./types/buildEmptyShoppingCart.ts";
+import {selectAllRequiredProductTypes} from "./utils/selectAllRequiredProductTypes.ts";
+import {buildNextButtonForStepSummary} from "./utils/buildNextButtonForStepSummary.tsx";
 import {
-  shouldIncludeStepCoopShares,
-  shouldIncludeStepIntro,
-  shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation,
+    shouldIncludeStepCoopShares,
+    shouldIncludeStepIntro,
+    shouldIncludeStepPersonalData,
+    shouldIncludeStepPickupLocation,
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import { ToastData } from "../types/ToastData.ts";
+import {ToastData} from "../types/ToastData.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -175,9 +175,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     pickupLocationApi
       .pickupLocationsPublicPickupLocationsList()
       .then((pickupLocations) => {
-        pickupLocations.sort((a, b) => {
-          return a.name.localeCompare(b.name);
-        });
+        pickupLocations.sort((a, b) => a.name.localeCompare(b.name));
+        if (
+          waitingListEntryDetails?.pickupLocationWishes !== undefined &&
+          waitingListEntryDetails.pickupLocationWishes.length > 0
+        ) {
+          const pickupLocationId =
+            waitingListEntryDetails.pickupLocationWishes[0].pickupLocation.id;
+          pickupLocations.sort((a, b) => {
+            if (a.id === pickupLocationId) {
+              return -1;
+            }
+            if (b.id === pickupLocationId) {
+              return 1;
+            }
+            return 0;
+          });
+        }
         setPickupLocations(pickupLocations);
         if (pickupLocations.length === 1) {
           setSelectedPickupLocations([pickupLocations[0]]);
@@ -190,7 +204,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           setToastDatas,
         ),
       );
-  }, []);
+  }, [waitingListLinkConfirmationModeEnabled]);
 
   useEffect(() => {
     if (waitingListLinkConfirmationModeEnabled) {
