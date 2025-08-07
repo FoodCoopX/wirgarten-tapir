@@ -3750,6 +3750,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWaitingListEntryDetailsList'
           description: ''
+  /waiting_list/api/member_waiting_list_entry_details:
+    get:
+      operationId: waiting_list_api_member_waiting_list_entry_details_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - waiting_list
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionalWaitingListEntryDetails'
+          description: ''
   /waiting_list/api/public_confirm_waiting_list_entry:
     post:
       operationId: waiting_list_api_public_confirm_waiting_list_entry_create
@@ -5911,6 +5933,11 @@ components:
       - draft_version_exists
       - key
       - name
+    OptionalWaitingListEntryDetails:
+      type: object
+      properties:
+        entry:
+          $ref: '#/components/schemas/WaitingListEntryDetails'
     OrderConfirmationResponse:
       type: object
       properties:

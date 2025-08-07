@@ -63,6 +63,10 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     link = serializers.URLField(required=False)
 
 
+class OptionalWaitingListEntryDetailsSerializer(serializers.Serializer):
+    entry = WaitingListEntryDetailsSerializer(required=False)
+
+
 class WaitingListEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitingListEntry

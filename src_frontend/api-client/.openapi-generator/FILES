@@ -66,6 +66,7 @@ models/MemberProfileCapacityCheckRequestRequest.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts
 models/Mpl.ts
+models/OptionalWaitingListEntryDetails.ts
 models/OrderConfirmationResponse.ts
 models/PaginatedEmailConfigurationDispatchList.ts
 models/PaginatedEmailConfigurationList.ts

@@ -58,6 +58,7 @@ export * from './MemberProfileCapacityCheckRequestRequest';
 export * from './MinimumNumberOfSharesResponse';
 export * from './MissingTrigger';
 export * from './Mpl';
+export * from './OptionalWaitingListEntryDetails';
 export * from './OrderConfirmationResponse';
 export * from './PaginatedEmailConfigurationDispatchList';
 export * from './PaginatedEmailConfigurationList';

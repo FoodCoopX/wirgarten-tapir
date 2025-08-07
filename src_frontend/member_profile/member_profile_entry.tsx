@@ -3,6 +3,7 @@ import DeliveryListCard from "./deliveries_and_jokers/DeliveryListCard.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import SubscriptionCancellationCard from "./subscription_cancellation/SubscriptionCancellationCard.tsx";
 import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
+import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -49,4 +50,20 @@ if (contractTilesElement) {
       </>,
     );
   }
+}
+
+const domNodeWaitingListCard = document.getElementById(
+  "member_profile_waiting_list_entry",
+);
+if (domNodeWaitingListCard) {
+  const root = createRoot(domNodeWaitingListCard);
+
+  root.render(
+    <MemberProfileWaitingListCard
+      memberId={domNodeWaitingListCard.dataset.memberId!}
+      adminEmail={domNodeWaitingListCard.dataset.adminEmail!}
+    />,
+  );
+} else {
+  console.error("Failed to render waiting list card from React");
 }

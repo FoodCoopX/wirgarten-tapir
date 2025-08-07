@@ -15,6 +15,11 @@ from rest_framework import permissions, viewsets, status, serializers
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import (
+    TransactionalTrigger,
+    TransactionalTriggerData,
+)
+
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
@@ -53,6 +58,7 @@ from tapir.waiting_list.serializers import (
     PublicWaitingListEntryNewMemberCreateSerializer,
     PublicWaitingListEntryExistingMemberCreateSerializer,
     PublicConfirmWaitingListEntryRequestSerializer,
+    OptionalWaitingListEntryDetailsSerializer,
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
@@ -71,10 +77,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import calculate_pickup_location_change_date
 from tapir.wirgarten.utils import get_today, get_now, check_permission_or_self
-from tapir_mail.triggers.transactional_trigger import (
-    TransactionalTrigger,
-    TransactionalTriggerData,
-)
 
 
 class WaitingListView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -1100,3 +1102,28 @@ class PublicConfirmWaitingListEntryView(APIView):
             actor=actor,
             cache=self.cache,
         )
+
+
+class GetMemberWaitingListEntryDetailsApiView(APIView):
+    @extend_schema(
+        responses={200: OptionalWaitingListEntryDetailsSerializer},
+        parameters=[
+            OpenApiParameter(name="member_id", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(member_id, request)
+
+        waiting_list_entry = WaitingListEntry.objects.filter(
+            member_id=member_id
+        ).first()
+
+        entry_data = None
+        if waiting_list_entry is not None:
+            entry_data = WaitingListApiView.build_entry_data(
+                waiting_list_entry, cache={}
+            )
+        serializer = OptionalWaitingListEntryDetailsSerializer({"entry": entry_data})
+
+        return Response(serializer.data)
