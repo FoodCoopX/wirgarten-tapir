@@ -233,6 +233,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
               setSelectedPickupLocations={setSelectedPickupLocations}
               pickupLocations={pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
+              pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             />
           )}
           {pickupLocations.length === 0 ? (

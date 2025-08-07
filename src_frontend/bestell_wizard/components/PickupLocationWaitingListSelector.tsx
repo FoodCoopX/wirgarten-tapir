@@ -9,6 +9,7 @@ interface PickupLocationWaitingListSelectorProps {
     selectedPickupLocations: PublicPickupLocation[],
   ) => void;
   pickupLocations: PublicPickupLocation[];
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
 }
 
 const PickupLocationWaitingListSelector: React.FC<
@@ -17,6 +18,7 @@ const PickupLocationWaitingListSelector: React.FC<
   selectedPickupLocations,
   setSelectedPickupLocations,
   pickupLocations,
+  pickupLocationsWithCapacityFull,
 }) => {
   function setPickupLocationAtIndex(
     pickupLocation: PublicPickupLocation,
@@ -47,11 +49,15 @@ const PickupLocationWaitingListSelector: React.FC<
                   }
                   value={selectedPickupLocation.id}
                 >
-                  {pickupLocations.map((pickupLocation) => (
-                    <option key={pickupLocation.id} value={pickupLocation.id}>
-                      {pickupLocation.name}
-                    </option>
-                  ))}
+                  {pickupLocations
+                    .filter((pickupLocation) =>
+                      pickupLocationsWithCapacityFull.has(pickupLocation),
+                    )
+                    .map((pickupLocation) => (
+                      <option key={pickupLocation.id} value={pickupLocation.id}>
+                        {pickupLocation.name}
+                      </option>
+                    ))}
                 </Form.Select>
                 <TapirButton
                   variant={"outline-danger"}

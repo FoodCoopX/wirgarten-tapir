@@ -83,6 +83,7 @@ const BestellWizardPickupLocation: React.FC<
           selectedPickupLocations={selectedPickupLocations}
           setSelectedPickupLocations={setSelectedPickupLocations}
           pickupLocations={pickupLocations}
+          pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
         />
       )}
       <PickupLocationSelector
