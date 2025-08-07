@@ -12,7 +12,6 @@ from tapir.wirgarten.models import (
     Product,
     GrowingPeriod,
     ProductPrice,
-    HarvestShareProduct,
     ProductCapacity,
     TaxRate,
 )
@@ -38,23 +37,14 @@ class ProductGenerator:
                 settings.SITE_URL + url_of_image_in_bestellwizard
             )
 
-        if min_coop_shares is not None:
-            product = HarvestShareProduct.objects.create(
-                type=product_type,
-                name=name,
-                base=base,
-                min_coop_shares=min_coop_shares,
-                description_in_bestellwizard=description_in_bestellwizard,
-                url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
-            )
-        else:
-            product = Product.objects.create(
-                type=product_type,
-                name=name,
-                base=base,
-                description_in_bestellwizard=description_in_bestellwizard,
-                url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
-            )
+        product = Product.objects.create(
+            type=product_type,
+            name=name,
+            base=base,
+            min_coop_shares=min_coop_shares,
+            description_in_bestellwizard=description_in_bestellwizard,
+            url_of_image_in_bestellwizard=url_of_image_in_bestellwizard,
+        )
 
         # prices were a bit cheaper last year
         start_of_previous_growing_period = (

@@ -552,6 +552,7 @@ class Product(TapirModel):
     description_in_bestellwizard = models.TextField(default="", blank=True)
     url_of_image_in_bestellwizard = models.URLField(default="", blank=True)
     capacity = models.PositiveIntegerField(null=True, blank=False)
+    min_coop_shares = models.IntegerField(default=0)
 
     def clean(self):
         # Check if there is exactly one base product per ProductType
@@ -611,14 +612,6 @@ class ProductPrice(TapirModel):
 
     def __str__(self):
         return f"{self.product} - {self.price} - {self.size} - {self.valid_from} -{self.id}"
-
-
-class HarvestShareProduct(Product):
-    """
-    Product variations of harvest share products.
-    """
-
-    min_coop_shares = models.IntegerField()
 
 
 class MandateReference(models.Model):

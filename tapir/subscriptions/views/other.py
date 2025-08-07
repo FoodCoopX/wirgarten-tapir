@@ -48,6 +48,7 @@ class ExtendedProductView(APIView):
                 "description_in_bestellwizard",
                 "url_of_image_in_bestellwizard",
                 "capacity",
+                "min_coop_shares",
             ]
         }
 

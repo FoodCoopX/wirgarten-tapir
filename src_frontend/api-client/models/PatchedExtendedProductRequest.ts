@@ -93,6 +93,12 @@ export interface PatchedExtendedProductRequest {
      * @memberof PatchedExtendedProductRequest
      */
     capacity?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof PatchedExtendedProductRequest
+     */
+    minCoopShares?: number;
 }
 
 /**
@@ -123,6 +129,7 @@ export function PatchedExtendedProductRequestFromJSONTyped(json: any, ignoreDisc
         'descriptionInBestellwizard': json['description_in_bestellwizard'] == null ? undefined : json['description_in_bestellwizard'],
         'urlOfImageInBestellwizard': json['url_of_image_in_bestellwizard'] == null ? undefined : json['url_of_image_in_bestellwizard'],
         'capacity': json['capacity'] == null ? undefined : json['capacity'],
+        'minCoopShares': json['min_coop_shares'] == null ? undefined : json['min_coop_shares'],
     };
 }
 
@@ -148,6 +155,7 @@ export function PatchedExtendedProductRequestFromJSONTyped(json: any, ignoreDisc
         'description_in_bestellwizard': value['descriptionInBestellwizard'],
         'url_of_image_in_bestellwizard': value['urlOfImageInBestellwizard'],
         'capacity': value['capacity'],
+        'min_coop_shares': value['minCoopShares'],
     };
 }
 

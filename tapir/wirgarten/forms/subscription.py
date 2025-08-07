@@ -36,7 +36,6 @@ from tapir.wirgarten.forms.pickup_location import (
 )
 from tapir.wirgarten.models import (
     GrowingPeriod,
-    HarvestShareProduct,
     MandateReference,
     Member,
     MemberPickupLocation,
@@ -129,17 +128,10 @@ class BaseProductForm(forms.Form):
         )
 
         self.product_type = base_product_type
-        self.products = (
-            {
-                """harvest_shares_{variation}""".format(variation=p.product_ptr.name): p
-                for p in harvest_share_products
-            }
-            if type(harvest_share_products[0]) == HarvestShareProduct
-            else {
-                """harvest_shares_{variation}""".format(variation=p.name): p
-                for p in harvest_share_products
-            }
-        )
+        self.products = {
+            """harvest_shares_{variation}""".format(variation=p.name): p
+            for p in harvest_share_products
+        }
 
         self.field_order = list(self.products.keys()) + ["solidarity_price_choice"]
         self.colspans = {

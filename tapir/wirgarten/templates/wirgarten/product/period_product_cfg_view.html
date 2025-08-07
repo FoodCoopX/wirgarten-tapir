@@ -31,35 +31,35 @@
             <div style="overflow: auto" class="card-body">
                 <table class="table">
                     <thead>
-                        <tr style="text-align: center">
-                            <th>Status</th>
-                            <th style="text-align: center">Start</th>
-                            <th style="text-align: center">Ende</th>
-                        </tr>
+                    <tr style="text-align: center">
+                        <th>Status</th>
+                        <th style="text-align: center">Start</th>
+                        <th style="text-align: center">Ende</th>
+                    </tr>
                     </thead>
                     <tbody id="list_growing_periods">
-                        {% for period in growing_periods %}
-                            <tr style="text-align: center"
-                                id="period-{{ period.id }}"
-                                class="tr-clickable"
-                                onclick="select_period('{{ period.id }}', '{{ pe_c_map }}')">
-                                {% if period.status == 'active' %}
-                                    <td>
-                                        <span class="badge bg-success">Aktuell</span>
-                                    </td>
-                                {% elif period.status == 'upcoming' %}
-                                    <td>
-                                        <span class="badge bg-primary">Geplant</span>
-                                    </td>
-                                {% elif period.status == 'old' %}
-                                    <td>
-                                        <span class="badge bg-secondary">Alt</span>
-                                    </td>
-                                {% endif %}
-                                <td>{{ period|get_value:'start_date' }}</td>
-                                <td>{{ period|get_value:'end_date' }}</td>
-                            </tr>
-                        {% endfor %}
+                    {% for period in growing_periods %}
+                        <tr style="text-align: center"
+                            id="period-{{ period.id }}"
+                            class="tr-clickable"
+                            onclick="select_period('{{ period.id }}', '{{ pe_c_map }}')">
+                            {% if period.status == 'active' %}
+                                <td>
+                                    <span class="badge bg-success">Aktuell</span>
+                                </td>
+                            {% elif period.status == 'upcoming' %}
+                                <td>
+                                    <span class="badge bg-primary">Geplant</span>
+                                </td>
+                            {% elif period.status == 'old' %}
+                                <td>
+                                    <span class="badge bg-secondary">Alt</span>
+                                </td>
+                            {% endif %}
+                            <td>{{ period|get_value:'start_date' }}</td>
+                            <td>{{ period|get_value:'end_date' }}</td>
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -78,34 +78,35 @@
             <div style="overflow: auto" class="card-body">
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Lieferzyklus</th>
-                            <th style="text-align: right">Kapazität</th>
-                            <th style="text-align: right">MWST</th>
-                        </tr>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Lieferzyklus</th>
+                        <th style="text-align: right">Kapazität</th>
+                        <th style="text-align: right">MWST</th>
+                    </tr>
                     </thead>
                     <tbody id="list_capacities">
-                        {% for capacity in capacities %}
-                            <tr id="c-{{ capacity.id }}"
-                                class="tr-clickable"
-                                style="display: none"
-                                onclick="select_capacity('{{ capacity.id }}', '{{ capacity.product_type.id }}', '{{ c_p_map }}')">
-                                <td>
-                                    <img width="28" src="{{ capacity.product_type.icon_link }}" />
-                                </td>
-                                <th>
-                                    {% translate capacity.product_type.name %}
-                                    {% with base_type='wirgarten.coop.base_product_type'|parameter %}
-                                        {% if base_type == capacity.product_type.id %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
-                                    {% endwith %}
-                                </th>
-                                <td>{{ capacity.product_type.delivery_cycle }}</td>
-                                <td style="text-align: right">{{ capacity.capacity|floatformat:-2 }}</td>
-                                <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
-                            </tr>
-                        {% endfor %}
+                    {% for capacity in capacities %}
+                        <tr id="c-{{ capacity.id }}"
+                            class="tr-clickable"
+                            style="display: none"
+                            onclick="select_capacity('{{ capacity.id }}', '{{ capacity.product_type.id }}', '{{ c_p_map }}')">
+                            <td>
+                                <img width="28" src="{{ capacity.product_type.icon_link }}"/>
+                            </td>
+                            <th>
+                                {% translate capacity.product_type.name %}
+                                {% with base_type='wirgarten.coop.base_product_type'|parameter %}
+                                    {% if base_type == capacity.product_type.id %}&nbsp;&nbsp;
+                                        <span class="badge bg-danger">Basis</span>{% endif %}
+                                {% endwith %}
+                            </th>
+                            <td>{{ capacity.product_type.delivery_cycle }}</td>
+                            <td style="text-align: right">{{ capacity.capacity|floatformat:-2 }}</td>
+                            <td style="text-align: right">{{ tax_rates|get_value:capacity.product_type.id }} %</td>
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -127,53 +128,55 @@
             <div style="overflow: auto" class="card-body">
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Größe</th>
-                            <th style="text-align:right">Preis</th>
-                        </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th>Größe</th>
+                        <th style="text-align:right">Preis</th>
+                        <th>Pflicht Geno-Anteile</th>
+                    </tr>
                     </thead>
                     <tbody id="list_product">
-                        {% for product in products %}
-                            <tr style="display: none"
-                                id="p-{{ product.id }}"
-                                class="tr-clickable"
-                                onclick="select_product('{{ product.id }}')">
-                                <th>
-                                    {% if product.deleted %}
-                                        <del>{% translate product.name %}</del>
-                                        <span class="badge bg-danger">Gelöscht</span>
-                                    {% else %}
-                                        {% translate product.name %}
-                                    {% endif %}
-                                    {% if product.base %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
-                                </th>
-                                <td>
-                                    {% if product.prices.1 and product.prices.1.size != product.prices.0.size %}
-                                        <del>{{ product.prices.1.size|floatformat:-2 }}</del>
-                                        {{ product.prices.0.size|floatformat:-2 }}
-                                        <br />
-                                        <small>gültig ab {{ product.prices.0.valid_from }}
-                                            <br />
-                                        </small>
-                                    {% else %}
-                                        {{ product.prices.0.size|floatformat:-2 }}
-                                    {% endif %}
-                                </td>
-                                <td style="text-align: right">
-                                    {% if product.prices.1 and product.prices.1.price != product.prices.0.price %}
-                                        <del>{{ product.prices.1.price }} €</del>
-                                        {{ product.prices.0.price }} €
-                                        <br />
-                                        <small>gültig ab {{ product.prices.0.valid_from }}
-                                            <br />
-                                        </small>
-                                    {% else %}
-                                        {{ product.prices.0.price }} €
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
+                    {% for product in products %}
+                        <tr style="display: none"
+                            id="p-{{ product.id }}"
+                            class="tr-clickable"
+                            onclick="select_product('{{ product.id }}')">
+                            <th>
+                                {% if product.deleted %}
+                                    <del>{% translate product.name %}</del>
+                                    <span class="badge bg-danger">Gelöscht</span>
+                                {% else %}
+                                    {% translate product.name %}
+                                {% endif %}
+                                {% if product.base %}&nbsp;&nbsp;<span class="badge bg-danger">Basis</span>{% endif %}
+                            </th>
+                            <td>
+                                {% if product.prices.1 and product.prices.1.size != product.prices.0.size %}
+                                    <del>{{ product.prices.1.size|floatformat:-2 }}</del>
+                                    {{ product.prices.0.size|floatformat:-2 }}
+                                    <br/>
+                                    <small>gültig ab {{ product.prices.0.valid_from }}
+                                        <br/>
+                                    </small>
+                                {% else %}
+                                    {{ product.prices.0.size|floatformat:-2 }}
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right">
+                                {% if product.prices.1 and product.prices.1.price != product.prices.0.price %}
+                                    <del>{{ product.prices.1.price }} €</del>
+                                    {{ product.prices.0.price }} €
+                                    <br/>
+                                    <small>gültig ab {{ product.prices.0.valid_from }}
+                                        <br/>
+                                    </small>
+                                {% else %}
+                                    {{ product.prices.0.price }} €
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right">{{ product.min_coop_shares }}</td>
+                        </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -236,9 +239,8 @@
     </div>
     <script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
     <script>
-    const allowedActions = JSON.parse('{{ buttons | safe }}');
-    init('{{ c_p_map | safe }}', '{{ pe_c_map | safe }}');
-
+        const allowedActions = JSON.parse('{{ buttons | safe }}');
+        init('{{ c_p_map | safe }}', '{{ pe_c_map | safe }}');
 
 
     </script>

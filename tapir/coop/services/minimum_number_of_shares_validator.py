@@ -1,6 +1,6 @@
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.types import TapirOrder
-from tapir.wirgarten.models import HarvestShareProduct
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
@@ -9,14 +9,12 @@ class MinimumNumberOfSharesValidator:
     def get_minimum_number_of_shares_for_order(
         ordered_products_id_to_quantity_map: dict, cache: dict
     ):
-        min_shares_map = {
-            product.id: product.min_coop_shares
-            for product in HarvestShareProduct.objects.all()
-        }
-
         min_number_of_shares_from_order = sum(
             [
-                min_shares_map.get(product_id, 0) * quantity
+                TapirCache.get_product_by_id(
+                    cache=cache, product_id=product_id
+                ).min_coop_shares
+                * quantity
                 for product_id, quantity in ordered_products_id_to_quantity_map.items()
             ]
         )

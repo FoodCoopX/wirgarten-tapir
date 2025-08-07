@@ -26,6 +26,7 @@ class ProductUpdater:
                 "url_of_image_in_bestellwizard"
             ],
             capacity=serializer.validated_data.get("capacity", None),
+            min_coop_shares=serializer.validated_data.get("min_coop_shares"),
         )
 
         ProductBasketSizeEquivalence.objects.filter(product=product).delete()

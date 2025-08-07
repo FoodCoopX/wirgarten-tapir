@@ -106,6 +106,12 @@ export interface ExtendedProduct {
      * @memberof ExtendedProduct
      */
     capacity: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof ExtendedProduct
+     */
+    minCoopShares: number;
 }
 
 
@@ -125,6 +131,7 @@ export function instanceOfExtendedProduct(value: object): value is ExtendedProdu
     if (!('descriptionInBestellwizard' in value) || value['descriptionInBestellwizard'] === undefined) return false;
     if (!('urlOfImageInBestellwizard' in value) || value['urlOfImageInBestellwizard'] === undefined) return false;
     if (!('capacity' in value) || value['capacity'] === undefined) return false;
+    if (!('minCoopShares' in value) || value['minCoopShares'] === undefined) return false;
     return true;
 }
 
@@ -150,6 +157,7 @@ export function ExtendedProductFromJSONTyped(json: any, ignoreDiscriminator: boo
         'descriptionInBestellwizard': json['description_in_bestellwizard'],
         'urlOfImageInBestellwizard': json['url_of_image_in_bestellwizard'],
         'capacity': json['capacity'],
+        'minCoopShares': json['min_coop_shares'],
     };
 }
 
@@ -175,6 +183,7 @@ export function ExtendedProductFromJSONTyped(json: any, ignoreDiscriminator: boo
         'description_in_bestellwizard': value['descriptionInBestellwizard'],
         'url_of_image_in_bestellwizard': value['urlOfImageInBestellwizard'],
         'capacity': value['capacity'],
+        'min_coop_shares': value['minCoopShares'],
     };
 }
 

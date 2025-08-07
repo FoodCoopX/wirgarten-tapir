@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
-from tapir.wirgarten.models import HarvestShareProduct
+from tapir.wirgarten.models import Product
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import get_available_product_types
 
@@ -26,7 +26,7 @@ class CooperativeShareForm(forms.Form):
         self.coop_share_price = settings.COOP_SHARE_PRICE
 
         self.harvest_shares_products = list(
-            HarvestShareProduct.objects.filter(
+            Product.objects.filter(
                 deleted=False, type_id__in=get_available_product_types(cache=self.cache)
             )
         )

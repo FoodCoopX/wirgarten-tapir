@@ -5537,6 +5537,8 @@ components:
         capacity:
           type: integer
           nullable: true
+        min_coop_shares:
+          type: integer
       required:
       - base
       - basket_size_equivalences
@@ -5544,6 +5546,7 @@ components:
       - deleted
       - description_in_bestellwizard
       - id
+      - min_coop_shares
       - name
       - picking_mode
       - price
@@ -6293,6 +6296,8 @@ components:
         capacity:
           type: integer
           nullable: true
+        min_coop_shares:
+          type: integer
     PatchedGrowingPeriodRequest:
       type: object
       properties:
@@ -6952,6 +6957,10 @@ components:
           maximum: 2147483647
           minimum: 0
           nullable: true
+        min_coop_shares:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
       required:
       - name
       - type

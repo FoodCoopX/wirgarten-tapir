@@ -75,6 +75,12 @@ export interface Product {
      * @memberof Product
      */
     capacity?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof Product
+     */
+    minCoopShares?: number;
 }
 
 /**
@@ -104,6 +110,7 @@ export function ProductFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'descriptionInBestellwizard': json['description_in_bestellwizard'] == null ? undefined : json['description_in_bestellwizard'],
         'urlOfImageInBestellwizard': json['url_of_image_in_bestellwizard'] == null ? undefined : json['url_of_image_in_bestellwizard'],
         'capacity': json['capacity'] == null ? undefined : json['capacity'],
+        'minCoopShares': json['min_coop_shares'] == null ? undefined : json['min_coop_shares'],
     };
 }
 
@@ -126,6 +133,7 @@ export function ProductFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
         'description_in_bestellwizard': value['descriptionInBestellwizard'],
         'url_of_image_in_bestellwizard': value['urlOfImageInBestellwizard'],
         'capacity': value['capacity'],
+        'min_coop_shares': value['minCoopShares'],
     };
 }
 

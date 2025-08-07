@@ -351,6 +351,7 @@ def update_product(
     description_in_bestellwizard: str,
     url_of_image_in_bestellwizard: str,
     capacity: int | None,
+    min_coop_shares: int,
 ):
     """
     Updates a product and product price with the provided attributes.
@@ -370,6 +371,7 @@ def update_product(
     product.description_in_bestellwizard = description_in_bestellwizard
     product.url_of_image_in_bestellwizard = url_of_image_in_bestellwizard
     product.capacity = capacity
+    product.min_coop_shares = min_coop_shares
     product.save()
 
     price_change_date = get_next_product_price_change_date(growing_period_id)

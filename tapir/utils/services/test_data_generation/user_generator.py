@@ -29,7 +29,6 @@ from tapir.wirgarten.models import (
     PickupLocation,
     MemberPickupLocation,
     Product,
-    HarvestShareProduct,
     CoopShareTransaction,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -92,7 +91,7 @@ class UserGenerator:
         cache = {}
         base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
 
-        products_from_base_type = HarvestShareProduct.objects.filter(
+        products_from_base_type = Product.objects.filter(
             type=base_product_type
         ).select_related("type")
         products_from_base_type = [product for product in products_from_base_type]
@@ -221,7 +220,7 @@ class UserGenerator:
         member: Member,
         create_subs_for_additional_products: bool,
         cache: Dict,
-        products_from_base_type: List[HarvestShareProduct],
+        products_from_base_type: List[Product],
         additional_products: List[Product],
     ):
         mandate_ref = get_or_create_mandate_ref(member, cache=cache)

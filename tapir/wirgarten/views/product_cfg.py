@@ -73,6 +73,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
             "prices": product_prices,
             "deleted": product.deleted,
             "base": product.base,
+            "min_coop_shares": product.min_coop_shares,
         }
 
     def get_context_data(self, **kwargs):

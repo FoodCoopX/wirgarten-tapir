@@ -43,6 +43,7 @@ class TestExtendedProductViewPath(TapirIntegrationTest):
             "description_in_bestellwizard": "test description",
             "url_of_image_in_bestellwizard": "https://test.url.com",
             "capacity": 123,
+            "min_coop_shares": 2,
         }
 
         url = reverse("subscriptions:extended_product")

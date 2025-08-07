@@ -53,6 +53,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [pickingMode, setPickingMode] = useState<PickingModeEnum>(
     PickingModeEnum.Share,
   );
+  const [minCoopShares, setMinCoopShares] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -80,6 +81,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         );
         setUrlOfImageInBestellWizard(extendedProduct.urlOfImageInBestellwizard);
         setCapacity(extendedProduct.capacity);
+        setMinCoopShares(extendedProduct.minCoopShares);
       })
       .catch((error) =>
         handleRequestError(
@@ -111,6 +113,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           descriptionInBestellwizard: descriptionInBestellWizard,
           urlOfImageInBestellwizard: urlOfImageInBestellWizard,
           capacity: capacity,
+          minCoopShares: minCoopShares,
         },
       })
       .then(() => location.reload())
@@ -172,6 +175,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   />
                 </Form.Group>
               </Col>
+            </Row>
+            <Row>
               <Col>
                 <Form.Group>
                   <Form.Label>Preis (monatlich, €)</Form.Label>
@@ -183,6 +188,25 @@ const ProductModal: React.FC<ProductModalProps> = ({
                     onChange={(e) => setPrice(parseFloat(e.target.value))}
                   />
                 </Form.Group>
+              </Col>
+
+              <Col>
+                <Form.Group>
+                  <Form.Label>Pflicht-Genossenschaftsanteile</Form.Label>
+                  <Form.Control
+                    value={minCoopShares}
+                    type={"number"}
+                    min={0}
+                    step={1}
+                    onChange={(e) =>
+                      setMinCoopShares(parseFloat(e.target.value))
+                    }
+                  />
+                </Form.Group>
+                <Form.Text>
+                  Anzahl an Genossenschaftsanteile die gezeichnet werden müssen
+                  pro Anteil von dieses Produkt die bestellt werden.
+                </Form.Text>
               </Col>
             </Row>
           </ListGroup.Item>
