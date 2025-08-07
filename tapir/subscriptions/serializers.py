@@ -201,6 +201,8 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()
     show_coop_content = serializers.BooleanField()
+    intro_step_text = serializers.CharField()
+    coop_step_text = serializers.CharField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

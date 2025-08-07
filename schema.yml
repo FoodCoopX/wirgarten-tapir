@@ -4146,10 +4146,16 @@ components:
           type: boolean
         show_coop_content:
           type: boolean
+        intro_step_text:
+          type: string
+        coop_step_text:
+          type: string
       required:
       - allow_investing_membership
+      - coop_step_text
       - force_waiting_list
       - intro_enabled
+      - intro_step_text
       - price_of_a_share
       - product_types
       - show_coop_content

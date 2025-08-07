@@ -3,7 +3,6 @@ import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
 import { Form, Spinner } from "react-bootstrap";
-import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { buildEmptyShoppingCart } from "../types/buildEmptyShoppingCart.ts";
@@ -19,6 +18,7 @@ interface BestellWizardIntroProps {
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
+  introStepText: string;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -31,6 +31,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   setInvestingMembership,
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
+  introStepText,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -71,20 +72,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
 
   return (
     <>
-      <BestellWizardCardTitle text={"Mitmachen im Biotop"} />
-      <p>
-        Du möchtest Teil des Biotops werden? Dann gibt es jetzt verschiedene
-        Möglichkeiten:
-      </p>
-      <p>
-        Das Biotop Oberland ist eine Genossenschaft. Es gehört allen
-        Mitgliedern, und nur Mitglieder können weitere Verträge abschließen und
-        damit Gemüse beziehen oder vergünstigt im Hofpunkt einkaufen.
-      </p>
-      <p>
-        Du bist bereits Mitglied? Dann schließe bitte weitere Verträge über
-        deinen persönlichen <a href={"/"}>Mitglieder-Bereich</a> ab.
-      </p>
+      <span dangerouslySetInnerHTML={{ __html: introStepText }} />
       <BestellWizardCardSubtitle
         text={"Welche Mitgliedschaft(en) möchtest du?"}
       />

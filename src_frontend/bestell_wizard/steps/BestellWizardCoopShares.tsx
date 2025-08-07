@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
-import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 
 interface BestellWizardCoopSharesProps {
@@ -18,6 +17,7 @@ interface BestellWizardCoopSharesProps {
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
+  coopStepText: string;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -33,6 +33,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   studentStatusEnabled,
   setStudentStatusEnabled,
   waitingListLinkConfirmationModeEnabled,
+  coopStepText,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -47,29 +48,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
     <>
       <Row>
         <Col>
-          <BestellWizardCardTitle text={"Mitglied der Genossenschaft"} />
-          <p>
-            Als Mitglied unserer Genossenschaft bist du gleichzeitig
-            MiteigentümerIn deiner eigenen Gemüsegärtnerei und deines regionalen
-            Selbstbedienungsladens! Du kannst somit bei allen
-            Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der
-            Generalversammlung.
-          </p>
-          <p>
-            Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame
-            Finanzierung wichtiger Investitionen für die Genossenschaft.
-          </p>
-          <p>
-            Weitere Infos zur Mitgliedschaft findest du hier:{" "}
-            <a href={"https://biotop-oberland.de/gebuehrenordnung"}>
-              https://biotop-oberland.de/gebuehrenordnung
-            </a>
-            <br />
-            Warum eine Genossenschaft? Details dazu findest du hier:{" "}
-            <a href={"https://biotop-oberland.de/so-gehts/"}>
-              https://biotop-oberland.de/so-gehts/
-            </a>
-          </p>
+          <span dangerouslySetInnerHTML={{ __html: coopStepText }} />
           <BestellWizardCardSubtitle
             text={
               "Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem Biotop beteiligen?"
@@ -96,6 +75,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 disabled={studentStatusEnabled}
               />
             </Form.Group>
+            <span> x {formatCurrency(priceOfAShare)} = </span>
             <span>
               <strong>
                 {formatCurrency(selectedNumberOfCoopShares * priceOfAShare)}

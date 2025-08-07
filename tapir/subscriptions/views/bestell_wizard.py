@@ -372,6 +372,12 @@ class BestellWizardBaseDataApiView(APIView):
                 cache=self.cache,
             ),
             "show_coop_content": legal_status_is_cooperative(cache=self.cache),
+            "coop_step_text": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_COOP_TEXT, cache=self.cache
+            ),
+            "intro_step_text": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_INTRO_TEXT, cache=self.cache
+            ),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

@@ -808,6 +808,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, bestehende und neue Mitglieder können keine neue Produkt-Anteile buchen, egal ob es Kapazitäten gibt."
             "Wenn ausgeschaltet, Produkt-Anteile können gebucht werden wenn es genug Kapazitäten gibt.",
             category=ParameterCategory.BESTELLWIZARD,
+            order_priority=10,
         )
 
         self.parameter_definition(
@@ -818,6 +819,52 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, erscheint eine Intro-Seite, auf der der Benutzer auswählen kann, welche Produktanteile gezeichnet werden sollen. "
             "Wenn nicht aktiviert, werden alle Formularseiten zu allen Produktanteilen angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
+            order_priority=5,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
+            label="Text im BestellWizard in der Intro-Seite Oben",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""<h3 class='card-title'>Dieser Standard-Text soll in der Allgemein-Konfig angepasst werden</h3>
+<p>
+    Du möchtest Teil des COOP_NAME werden? Dann gibt es jetzt verschiedene Möglichkeiten:
+</p>
+<p>
+    Das COOP_NAME ist eine Genossenschaft. Es gehört allen Mitgliedern, und nur Mitglieder können weitere Verträge abschließen und damit Gemüse beziehen.
+</p>
+<p>
+    Du bist bereits Mitglied? Dann schließe bitte weitere Verträge über deinen persönlichen <a href={"/"}>Mitglieder-Bereich</a> ab.
+</p>""",
+            category=ParameterCategory.BESTELLWIZARD,
+            description="Kann Text oder HTML sein",
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.BESTELLWIZARD_SHOW_INTRO, cache=cache
+                ),
+                textarea=True,
+            ),
+            order_priority=4,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_COOP_TEXT,
+            label="Text im BestellWizard in der Genossenschaft-Seite Oben",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="""<h3 class='card-title'>Dieser Standard-Text soll in der Allgemein-Konfig angepasst werden</h3>
+<p>
+    Als Mitglied unserer Genossenschaft bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei! Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung.
+</p>
+<p>
+    Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.
+</p>
+""",
+            category=ParameterCategory.BESTELLWIZARD,
+            description="Kann Text oder HTML sein",
+            meta=ParameterMeta(
+                show_only_when=legal_status_is_cooperative, textarea=True
+            ),
+            order_priority=3,
         )
 
     def parameter_definition(

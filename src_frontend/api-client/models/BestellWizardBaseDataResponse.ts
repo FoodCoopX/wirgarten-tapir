@@ -75,6 +75,18 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     showCoopContent: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    introStepText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    coopStepText: string;
 }
 
 /**
@@ -89,6 +101,8 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('introEnabled' in value) || value['introEnabled'] === undefined) return false;
     if (!('studentStatusAllowed' in value) || value['studentStatusAllowed'] === undefined) return false;
     if (!('showCoopContent' in value) || value['showCoopContent'] === undefined) return false;
+    if (!('introStepText' in value) || value['introStepText'] === undefined) return false;
+    if (!('coopStepText' in value) || value['coopStepText'] === undefined) return false;
     return true;
 }
 
@@ -110,6 +124,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'introEnabled': json['intro_enabled'],
         'studentStatusAllowed': json['student_status_allowed'],
         'showCoopContent': json['show_coop_content'],
+        'introStepText': json['intro_step_text'],
+        'coopStepText': json['coop_step_text'],
     };
 }
 
@@ -132,6 +148,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'intro_enabled': value['introEnabled'],
         'student_status_allowed': value['studentStatusAllowed'],
         'show_coop_content': value['showCoopContent'],
+        'intro_step_text': value['introStepText'],
+        'coop_step_text': value['coopStepText'],
     };
 }
 

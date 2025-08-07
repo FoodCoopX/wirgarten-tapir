@@ -30,13 +30,11 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
       <Row>
         <Col>
           <BestellWizardCardTitle text={productType.name} />
-          {
-            <span
-              dangerouslySetInnerHTML={getHtmlDescription(
-                productType.descriptionBestellwizardLong!,
-              )}
-            ></span>
-          }
+          <span
+            dangerouslySetInnerHTML={getHtmlDescription(
+              productType.descriptionBestellwizardLong!,
+            )}
+          />
         </Col>
       </Row>
       <Row>
