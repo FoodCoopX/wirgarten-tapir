@@ -4,20 +4,16 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.utils.shortcuts import get_first_of_next_month
-from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
 from tapir.wirgarten.models import (
     GrowingPeriod,
     Product,
     ProductCapacity,
     ProductPrice,
-    ProductType,
-    TaxRate,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.utils import get_today, legal_status_is_association
+from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
     validate_date_range,
     validate_growing_period_overlap,
@@ -26,182 +22,6 @@ from tapir.wirgarten.validators import (
 KW_PROD_ID = "prodId"
 KW_CAPACITY_ID = "capacityId"
 KW_PERIOD_ID = "periodId"
-
-
-class ProductTypeForm(forms.Form):
-    template_name = "wirgarten/product/product_type_form.html"
-
-    def __init__(self, *args, **kwargs):
-        super(ProductTypeForm, self).__init__(*args)
-        initial_name = ""
-        initial_description_bestellwizard_short = ""
-        initial_description_bestellwizard_long = ""
-        initial_delivery_cycle = NO_DELIVERY
-        initial_tax_rate = 0
-        initial_capacity = 0.0
-        product_type = None
-        cache = {}
-        initial_notice_period = get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD, cache=cache
-        )
-        initial_order_in_bestellwizard = 1
-
-        if KW_PERIOD_ID in kwargs:
-            initial_period_id = kwargs[KW_PERIOD_ID]
-
-            if KW_CAPACITY_ID in kwargs:  # update existing product type
-                self.capacity = ProductCapacity.objects.get(id=kwargs[KW_CAPACITY_ID])
-                initial_capacity = self.capacity.capacity
-                product_type = ProductType.objects.get(id=self.capacity.product_type.id)
-
-                try:
-                    self.tax_rate = TaxRate.objects.get(
-                        product_type=product_type, valid_to=None
-                    )
-                    initial_tax_rate = self.tax_rate.tax_rate
-                except TaxRate.DoesNotExist:
-                    initial_tax_rate = 0.19
-
-                initial_name = product_type.name
-                initial_description_bestellwizard_short = (
-                    product_type.description_bestellwizard_short
-                )
-                initial_description_bestellwizard_long = (
-                    product_type.description_bestellwizard_long
-                )
-                initial_order_in_bestellwizard = product_type.order_in_bestellwizard
-                initial_delivery_cycle = product_type.delivery_cycle
-                initial_notice_period = NoticePeriodManager.get_notice_period_duration(
-                    product_type=product_type,
-                    growing_period=self.capacity.period,
-                    cache=cache,
-                )
-
-            else:  # create NEW -> lets choose from existing product types
-                prod_types_without_capacity = [(None, _("--- Neu anlegen ---"))]
-                prod_types_without_capacity.extend(
-                    list(
-                        map(
-                            lambda pt: (pt.id, _(pt.name)),
-                            ProductType.objects.exclude(
-                                id__in=ProductCapacity.objects.filter(
-                                    period__id=initial_period_id
-                                ).values("product_type__id")
-                            ),
-                        )
-                    )
-                )
-
-                self.fields["product_type"] = forms.ChoiceField(
-                    choices=prod_types_without_capacity, required=False
-                )
-
-        self.fields["name"] = forms.CharField(
-            initial=initial_name, required=False, label=_("Produkt-Typ Name")
-        )
-        self.fields["description_bestellwizard_short"] = forms.CharField(
-            initial=initial_description_bestellwizard_short,
-            required=True,
-            label=ProductType._meta.get_field(
-                "description_bestellwizard_short"
-            ).verbose_name,
-            widget=forms.Textarea(),
-        )
-        self.fields["description_bestellwizard_long"] = forms.CharField(
-            initial=initial_description_bestellwizard_long,
-            required=True,
-            label=ProductType._meta.get_field(
-                "description_bestellwizard_long"
-            ).verbose_name,
-            widget=forms.Textarea(),
-        )
-        self.fields["order_in_bestellwizard"] = forms.IntegerField(
-            initial=initial_order_in_bestellwizard,
-            required=True,
-            label=ProductType._meta.get_field("order_in_bestellwizard").verbose_name,
-        )
-        self.fields["icon_link"] = forms.CharField(
-            required=False,
-            label=_("Icon Link"),
-            initial=product_type.icon_link if product_type is not None else "",
-        )
-        self.fields["contract_link"] = forms.CharField(
-            required=False,
-            label=_("Link zu den Vertragsgrundsätzen"),
-            initial=product_type.contract_link if product_type is not None else "",
-        )
-        self.fields["capacity"] = forms.FloatField(
-            initial=initial_capacity,
-            required=True,
-            label=_("Produkt Kapazität (in Produkt-Größe)"),
-        )
-        self.fields["delivery_cycle"] = forms.ChoiceField(
-            initial=initial_delivery_cycle,
-            required=True,
-            label=_("Liefer-/Abholzyklus"),
-            choices=DeliveryCycle,
-        )
-
-        if get_parameter_value(
-            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
-        ):
-            self.fields["notice_period"] = forms.IntegerField(
-                initial=initial_notice_period,
-                required=True,
-                label=_("Kündigungsfrist"),
-                help_text=_("Anzahl an Monate"),
-            )
-
-        self.fields["tax_rate"] = forms.FloatField(
-            initial=initial_tax_rate,
-            required=True,
-            label=_("Mehrwertsteuersatz"),
-        )
-
-        if product_type is not None:
-            next_month = get_today(cache=cache) + relativedelta(day=1, months=1)
-            self.fields["tax_rate_change_date"] = forms.DateField(
-                required=True,
-                label=_("Neuer Mehrwertsteuersatz gültig ab"),
-                widget=DateInput(),
-                initial=next_month,
-            )
-
-        self.fields["single_subscription_only"] = forms.BooleanField(
-            required=False,
-            label=_("Nur Einzelabonnement möglich"),
-            initial=(
-                product_type.single_subscription_only
-                if product_type is not None
-                else False
-            ),
-        )
-        if get_parameter_value(ParameterKeys.JOKERS_ENABLED, cache=cache):
-            self.fields["is_affected_by_jokers"] = forms.BooleanField(
-                initial=product_type.is_affected_by_jokers if product_type else True,
-                required=False,
-                label=_("Nimmt am Joker-Verfahren teil"),
-            )
-        self.fields["must_be_subscribed_to"] = forms.BooleanField(
-            required=False,
-            label=_("Ist Pflicht"),
-            initial=(
-                product_type.must_be_subscribed_to
-                if product_type is not None
-                else False
-            ),
-        )
-
-        if legal_status_is_association(cache=cache):
-            self.fields["is_association_membership"] = forms.BooleanField(
-                required=False,
-                label=_("Repräsentiert Vereinsmitgliedschaften"),
-                initial=(
-                    product_type.is_association_membership
-                    if product_type is not None
-                    else False
-                ),
-            )
 
 
 class ProductForm(forms.Form):

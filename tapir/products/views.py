@@ -20,7 +20,6 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.models import ProductType, GrowingPeriod, ProductCapacity
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import create_or_update_default_tax_rate
 from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 
@@ -133,7 +132,7 @@ class ExtendedProductTypeApiView(APIView):
                 notice_period_duration=extended_data.get("notice_period", None),
             )
 
-            create_or_update_default_tax_rate(
+            TaxRateService.create_or_update_default_tax_rate(
                 product_type_id=product_type.id,
                 tax_rate=extended_data["tax_rate"],
                 tax_rate_change_date=extended_data["tax_rate_change_date"],

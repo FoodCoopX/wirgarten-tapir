@@ -449,33 +449,6 @@ def delete_product_type_capacity(id_: str):
         ProductType.objects.get(id=product_type_id).delete()
 
 
-@transaction.atomic
-def create_or_update_default_tax_rate(
-    product_type_id: str, tax_rate: float, tax_rate_change_date: datetime.date
-):
-    existing_tax_rate = TaxRate.objects.filter(
-        product_type_id=product_type_id, valid_from=tax_rate_change_date
-    )
-    if existing_tax_rate.exists():
-        existing_tax_rate.update(tax_rate=tax_rate)
-    else:
-        TaxRate.objects.create(
-            product_type_id=product_type_id,
-            tax_rate=tax_rate,
-            valid_from=tax_rate_change_date,
-            valid_to=None,
-        )
-
-    TaxRate.objects.filter(
-        product_type_id=product_type_id, valid_from__gt=tax_rate_change_date
-    ).delete()
-    TaxRate.objects.filter(
-        product_type_id=product_type_id, valid_from__lt=tax_rate_change_date
-    ).filter(Q(valid_to__isnull=True) | Q(valid_to__gte=tax_rate_change_date)).update(
-        valid_to=tax_rate_change_date - datetime.timedelta(days=1)
-    )
-
-
 def get_smallest_product_size(
     product_type: ProductType | str, reference_date: datetime.date = None
 ):

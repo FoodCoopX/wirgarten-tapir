@@ -151,9 +151,7 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         context["tax_rates"] = {
             k: round(float(list(v)[0].tax_rate) * 100.0, 1)
             for k, v in itertools.groupby(
-                TaxRate.objects.filter(
-                    valid_to=None, product_type__in=ProductType.objects.all()
-                ),
+                TaxRate.objects.filter(product_type__in=ProductType.objects.all()),
                 lambda t: t.product_type.id,
             )
         }
