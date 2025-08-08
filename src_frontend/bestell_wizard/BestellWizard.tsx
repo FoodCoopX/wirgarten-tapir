@@ -13,7 +13,7 @@ import {
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -54,7 +54,7 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation
+  shouldIncludeStepPickupLocation,
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
@@ -717,7 +717,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           contractAccepted: contractAccepted,
           statuteAccepted: statuteAccepted,
           nbShares: selectedNumberOfCoopShares,
-          pickupLocationId: selectedPickupLocations[0].id!,
+          pickupLocationId:
+            selectedPickupLocations.length > 0
+              ? selectedPickupLocations[0].id!
+              : undefined,
           shoppingCart: shoppingCart,
           studentStatusEnabled: studentStatusEnabled,
         },
@@ -726,13 +729,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setCurrentStep("end");
         setConfirmOrderResponse(response);
       })
-      .catch((error) =>
-        handleRequestError(
+      .catch(async (error) => {
+        await handleRequestError(
           error,
           "Fehler bei der Bestätigung der Bestellung",
           setToastDatas,
-        ),
-      )
+        );
+      })
       .finally(() => setConfirmOrderLoading(false));
   }
 

@@ -71,6 +71,9 @@
                 {% if perms.products.manage %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityAddForm()' title='Produkttyp hinzufügen' disabled=True class='need-growing-period' type='success' icon='add' id='add-capacity-btn' %}
                     {% include 'wirgarten/generic/action-button.html' with onclick='getCapacityEditForm()' title='Produkttyp/Kapazität bearbeiten' disabled=True class='need-product-type' type='primary' icon='edit' id='edit-capacity-btn' %}
+                    <div id="edit_product_type_button" class="mx-1">
+                        <span class="spinner-border"></span>
+                    </div>
                     <div style="width: 3em"></div>
                     {% include 'wirgarten/generic/action-button.html' with onclick='deleteCapacity()' title='Produkttyp/Kapazität löschen' disabled=True class='need-product-type delete-btn' type='danger' icon='delete' id='del-capacity-btn' %}
                 {% endif %}

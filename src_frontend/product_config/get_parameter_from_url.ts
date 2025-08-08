@@ -6,6 +6,10 @@ export function getProductIdFromUrl() {
   return getParameterFromUrl("prodId");
 }
 
+export function getProductTypeIdFromUrl() {
+  return getParameterFromUrl("productTypeId");
+}
+
 export function getParameterFromUrl(parameter: string) {
   const urlParameters = Object.fromEntries(
     window.location.search

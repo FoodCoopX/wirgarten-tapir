@@ -130,10 +130,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
     setEquivalences(newEquivalences);
   }
 
-  useEffect(() => {
-    console.log(capacity);
-  }, [capacity]);
-
   function getModalBody() {
     if (dataLoading) {
       return (

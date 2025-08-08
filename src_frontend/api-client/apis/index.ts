@@ -5,6 +5,7 @@ export * from './CoreApi';
 export * from './DeliveriesApi';
 export * from './GenericExportsApi';
 export * from './PickupLocationsApi';
+export * from './ProductsApi';
 export * from './SubscriptionsApi';
 export * from './TapirmailApi';
 export * from './WaitingListApi';

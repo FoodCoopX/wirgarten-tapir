@@ -3,6 +3,7 @@ apis/CoreApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PickupLocationsApi.ts
+apis/ProductsApi.ts
 apis/SubscriptionsApi.ts
 apis/TapirmailApi.ts
 apis/WaitingListApi.ts
@@ -49,6 +50,8 @@ models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
 models/ExtendedProduct.ts
+models/ExtendedProductType.ts
+models/ExtendedProductTypeAndConfig.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts

@@ -159,19 +159,23 @@ class BestellWizardConfirmOrderApiView(APIView):
         subscriptions: list[Subscription],
         cache: dict,
     ):
-        min_trial_end_date = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
-        for subscription in subscriptions:
-            min_trial_end_date = min(
-                min_trial_end_date,
-                TrialPeriodManager.get_end_of_trial_period(
-                    subscription=subscription, cache=cache
-                ),
-            )
+        shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+            reference_date=get_today(cache), apply_buffer_time=True, cache=cache
+        )
+        if len(subscriptions) > 0:
+            shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
+            for subscription in subscriptions:
+                shares_valid_at = min(
+                    shares_valid_at,
+                    TrialPeriodManager.get_end_of_trial_period(
+                        subscription=subscription, cache=cache
+                    ),
+                )
 
         CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
             member=member,
-            shares_valid_at=min_trial_end_date,
+            shares_valid_at=shares_valid_at,
             cache=cache,
         )
 

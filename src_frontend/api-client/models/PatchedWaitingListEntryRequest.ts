@@ -12,8 +12,14 @@
  * Do not edit the class manually.
  */
 
-import type { MemberCountry } from "./MemberCountry";
-import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
+import { mapValues } from '../runtime';
+import type { MemberCountry } from './MemberCountry';
+import {
+    MemberCountryFromJSON,
+    MemberCountryFromJSONTyped,
+    MemberCountryToJSON,
+    MemberCountryToJSONTyped,
+} from './MemberCountry';
 
 /**
  * 

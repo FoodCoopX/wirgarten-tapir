@@ -171,7 +171,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     contract_accepted = serializers.BooleanField()
     statute_accepted = serializers.BooleanField()
     nb_shares = serializers.IntegerField()
-    pickup_location_id = serializers.CharField()
+    pickup_location_id = serializers.CharField(required=False)
     student_status_enabled = serializers.BooleanField()
 
 

@@ -962,6 +962,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicPickupLocation'
           description: ''
+  /products/api/extended_product_type:
+    get:
+      operationId: products_api_extended_product_type_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: array
+          items:
+            type: string
+      - in: query
+        name: product_type_id
+        schema:
+          type: array
+          items:
+            type: string
+      tags:
+      - products
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedProductTypeAndConfig'
+          description: ''
+    post:
+      operationId: products_api_extended_product_type_create
+      tags:
+      - products
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: products_api_extended_product_type_partial_update
+      tags:
+      - products
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          description: No response body
   /subscriptions/api/bestell_wizard_base_data:
     get:
       operationId: subscriptions_api_bestell_wizard_base_data_retrieve
@@ -4210,7 +4261,6 @@ components:
       - contract_accepted
       - nb_shares
       - personal_data
-      - pickup_location_id
       - sepa_allowed
       - shopping_cart
       - statute_accepted
@@ -5558,6 +5608,75 @@ components:
       - price
       - size
       - url_of_image_in_bestellwizard
+    ExtendedProductType:
+      type: object
+      properties:
+        name:
+          type: string
+        description_bestellwizard_short:
+          type: string
+        description_bestellwizard_long:
+          type: string
+        order_in_bestellwizard:
+          type: integer
+        icon_link:
+          type: string
+          format: uri
+        contract_link:
+          type: string
+          format: uri
+        capacity:
+          type: number
+          format: double
+        delivery_cycle:
+          $ref: '#/components/schemas/DeliveryCycleEnum'
+        notice_period:
+          type: integer
+        tax_rate:
+          type: number
+          format: double
+        tax_rate_change_date:
+          type: string
+          format: date
+        single_subscription_only:
+          type: boolean
+        is_affected_by_jokers:
+          type: boolean
+        must_be_subscribed_to:
+          type: boolean
+        is_association_membership:
+          type: boolean
+      required:
+      - capacity
+      - delivery_cycle
+      - is_affected_by_jokers
+      - is_association_membership
+      - must_be_subscribed_to
+      - name
+      - order_in_bestellwizard
+      - single_subscription_only
+      - tax_rate
+      - tax_rate_change_date
+    ExtendedProductTypeAndConfig:
+      type: object
+      properties:
+        show_notice_period:
+          type: boolean
+        show_jokers:
+          type: boolean
+        show_association_membership:
+          type: boolean
+        delivery_cycle_options:
+          type: object
+          additionalProperties: {}
+        extended_product_type:
+          $ref: '#/components/schemas/ExtendedProductType'
+      required:
+      - delivery_cycle_options
+      - extended_product_type
+      - show_association_membership
+      - show_jokers
+      - show_notice_period
     GroupedEmailDispatch:
       type: object
       properties:

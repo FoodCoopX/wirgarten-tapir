@@ -41,6 +41,8 @@ export * from './EmailTemplateRequest';
 export * from './ExportSegment';
 export * from './ExportSegmentColumn';
 export * from './ExtendedProduct';
+export * from './ExtendedProductType';
+export * from './ExtendedProductTypeAndConfig';
 export * from './GroupedEmailDispatch';
 export * from './GrowingPeriod';
 export * from './GrowingPeriodRequest';

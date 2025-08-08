@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import GrowingPeriodBase from "./GrowingPeriodBase.tsx";
 import { getCsrfToken } from "../utils/getCsrfToken.ts";
 import ProductBase from "./ProductBase.tsx";
+import ProductTypeBase from "./ProductTypeBase.tsx";
 
 const domNodeGrowingPeriodButton = document.getElementById(
   "edit_growing_period_button",
@@ -21,4 +22,18 @@ if (domNodeProductButton) {
   root.render(<ProductBase csrfToken={getCsrfToken()} />);
 } else {
   console.error("Failed to render product button from React");
+}
+
+const domNodeProductTypeButton = document.getElementById(
+  "edit_product_type_button",
+);
+if (domNodeProductTypeButton) {
+  const root = createRoot(domNodeProductTypeButton);
+  // WIP product type edit
+  root.render(<span></span>);
+  if (false) {
+    root.render(<ProductTypeBase csrfToken={getCsrfToken()} />);
+  }
+} else {
+  console.error("Failed to render product_type button from React");
 }

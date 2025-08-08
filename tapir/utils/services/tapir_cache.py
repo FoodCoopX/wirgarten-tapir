@@ -15,6 +15,7 @@ from tapir.wirgarten.models import (
     ProductCapacity,
     GrowingPeriod,
     Member,
+    TaxRate,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
@@ -392,3 +393,16 @@ class TapirCache:
                 rhythm_at_date = rhythm
 
         return rhythm_at_date
+
+    @classmethod
+    def get_product_type_tax_rates(cls, product_type: ProductType, cache: dict):
+        tax_rates_by_product_type = get_from_cache_or_compute(
+            cache=cache, key="tax_rates_by_product_type", compute_function=lambda: {}
+        )
+
+        def compute():
+            return TaxRate.objects.filter(product_type=product_type)
+
+        return get_from_cache_or_compute(
+            cache=tax_rates_by_product_type, key=product_type, compute_function=compute
+        )

@@ -223,6 +223,7 @@ const select_capacity = (capacityId, productTypeId, pt_p_map_json) => {
     params.prodId = null;
   }
   params.capacityId = capacityId;
+  params.productTypeId = productTypeId;
   Tapir.replaceUrlParams(params);
 
   activateCapacityList(pt_p_map_json);

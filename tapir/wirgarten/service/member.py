@@ -342,11 +342,14 @@ def send_contract_change_confirmation(
 
 
 def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dict):
-    if not len(subs):
-        raise Exception(
-            "No subscriptions provided for sending order confirmation for member: ",
-            member,
+    if len(subs) == 0:
+        TransactionalTrigger.fire_action(
+            TransactionalTriggerData(
+                key=Events.REGISTER_MEMBERSHIP_ONLY,
+                recipient_id_in_base_queryset=member.id,
+            ),
         )
+        return
 
     contract_start_date = subs[0].start_date
 

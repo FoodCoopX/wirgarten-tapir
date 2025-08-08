@@ -68,7 +68,7 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @type {string}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    pickupLocationId: string;
+    pickupLocationId?: string;
     /**
      * 
      * @type {boolean}
@@ -87,7 +87,6 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('contractAccepted' in value) || value['contractAccepted'] === undefined) return false;
     if (!('statuteAccepted' in value) || value['statuteAccepted'] === undefined) return false;
     if (!('nbShares' in value) || value['nbShares'] === undefined) return false;
-    if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
     return true;
 }
@@ -108,7 +107,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'contractAccepted': json['contract_accepted'],
         'statuteAccepted': json['statute_accepted'],
         'nbShares': json['nb_shares'],
-        'pickupLocationId': json['pickup_location_id'],
+        'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
         'studentStatusEnabled': json['student_status_enabled'],
     };
 }
