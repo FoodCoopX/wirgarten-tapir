@@ -94,10 +94,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
-            label="Abholort-Änderung möglich bis",
+            label="Kommissioniervariable",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=6,
-            description="Bis zu welchem Wochentag kann ein Mitglied seinen Abholort ändern, um für die darauffolgede Woche den neuen Abholort zu nutzen? Es gilt der gewählte Tag bis 23:59 Uhr.",
+            description="Es gilt der gewählte Tag bis 23:59 Uhr. Tag, bis zu dem eine Abholort-Änderung möglich ist. Danach werden Kommissionier-Listen für die jeweilige Woche erstellt.",
             category=ParameterCategory.MEMBER_DASHBOARD,
             meta=ParameterMeta(options=OPTIONS_WEEKDAYS),
         )
