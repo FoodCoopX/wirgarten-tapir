@@ -143,24 +143,6 @@ const manageButtons = () => {
   manageProductDependentButtons(params);
 };
 
-const getCapacityEditForm = () => {
-  const params = Tapir.getUrlParams();
-  if (params.capacityId) {
-    const url = `/tapir/product/${params.periodId}/${
-      params.capacityId
-    }/typeedit${Tapir.stringifyUrlParams(params)}`;
-    FormModal.load(url, "Vertrag / Kapazität editieren");
-  }
-};
-
-const getCapacityAddForm = () => {
-  const params = Tapir.getUrlParams();
-  const url = `/tapir/product/${
-    params.periodId
-  }/typeadd${Tapir.stringifyUrlParams(params)}`;
-  FormModal.load(url, "Vertrag / Kapazität hinzufügen");
-};
-
 const getProductEditForm = () => {
   const params = Tapir.getUrlParams();
   if (params.prodId) {

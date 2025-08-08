@@ -12,6 +12,7 @@ from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
     ExtendedProductTypeAndConfigSerializer,
     SaveExtendedProductTypeSerializer,
+    ProductTypesAndConfigSerializer,
 )
 from tapir.products.services.TaxRateService import TaxRateService
 from tapir.subscriptions.models import NoticePeriod
@@ -77,32 +78,45 @@ class ExtendedProductTypeApiView(APIView):
 
         return Response(ExtendedProductTypeAndConfigSerializer(data).data)
 
+    @extend_schema(
+        responses={200: str},
+        request=SaveExtendedProductTypeSerializer(),
+    )
     def post(self, request):
-        pass
+        self.update_product_type(request, create_product_type=True)
+        return Response("OK")
 
     @extend_schema(
         responses={200: str},
         request=SaveExtendedProductTypeSerializer(),
     )
     def patch(self, request):
+        self.update_product_type(request, create_product_type=False)
+        return Response("OK")
+
+    def update_product_type(self, request, create_product_type: bool):
         serializer = SaveExtendedProductTypeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        product_type = get_object_or_404(
-            ProductType, id=serializer.validated_data.get("product_type_id")
-        )
+        if create_product_type:
+            product_type = ProductType()
+        else:
+            product_type = get_object_or_404(
+                ProductType, id=serializer.validated_data.get("product_type_id")
+            )
         growing_period = get_object_or_404(
             GrowingPeriod, id=serializer.validated_data.get("growing_period_id")
         )
-        product_capacity = get_object_or_404(
-            ProductCapacity, product_type=product_type, period=growing_period
-        )
+        product_capacity = ProductCapacity.objects.filter(
+            product_type=product_type, period=growing_period
+        ).first()
+        if product_capacity is None:
+            product_capacity = ProductCapacity(
+                product_type=product_type, period=growing_period
+            )
 
         extended_data = serializer.validated_data["extended_product_type"]
         with transaction.atomic():
-            product_capacity.capacity = extended_data["capacity"]
-            product_capacity.save()
-
             for field in self.direct_fields:
                 setattr(product_type, field, extended_data[field])
 
@@ -110,10 +124,13 @@ class ExtendedProductTypeApiView(APIView):
             product_type.icon_link = extended_data["icon_link"]
             product_type.save()
 
+            product_capacity.capacity = extended_data["capacity"]
+            product_capacity.save()
+
             NoticePeriodManager.set_notice_period_duration(
                 product_type=product_capacity.product_type,
                 growing_period=product_capacity.period,
-                notice_period_duration=extended_data["notice_period"],
+                notice_period_duration=extended_data.get("notice_period", None),
             )
 
             create_or_update_default_tax_rate(
@@ -121,8 +138,6 @@ class ExtendedProductTypeApiView(APIView):
                 tax_rate=extended_data["tax_rate"],
                 tax_rate_change_date=extended_data["tax_rate_change_date"],
             )
-
-        return Response("OK")
 
     def build_extended_product_type_data(
         self, product_type: ProductType, growing_period: GrowingPeriod
@@ -154,3 +169,39 @@ class ExtendedProductTypeApiView(APIView):
         )
 
         return data
+
+
+class ProductTypesWithoutCapacityAndConfigApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    @extend_schema(
+        responses={200: ProductTypesAndConfigSerializer},
+        parameters=[
+            OpenApiParameter(name="growing_period_id", type=str, many=True),
+        ],
+    )
+    def get(self, request):
+        cache = {}
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=request.query_params.get("growing_period_id")
+        )
+
+        types_without_capacity = ProductType.objects.exclude(
+            id__in=ProductCapacity.objects.filter(period=growing_period).values_list(
+                "product_type_id", flat=True
+            )
+        )
+
+        data = {
+            "show_notice_period": get_parameter_value(
+                ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
+            ),
+            "show_jokers": get_parameter_value(
+                ParameterKeys.JOKERS_ENABLED, cache=cache
+            ),
+            "show_association_membership": legal_status_is_association(cache=cache),
+            "delivery_cycle_options": DeliveryCycleDict,
+            "product_types_without_capacity": types_without_capacity,
+        }
+
+        return Response(ProductTypesAndConfigSerializer(data).data)

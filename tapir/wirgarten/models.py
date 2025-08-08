@@ -281,6 +281,14 @@ class ProductCapacity(TapirModel):
     This is used to configure how much of a ProductType can be sold in a growing period.
     """
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["period", "product_type"],
+                name="unique_period_type",
+            ),
+        ]
+
     period = models.ForeignKey(GrowingPeriod, null=False, on_delete=models.CASCADE)
     product_type = models.ForeignKey(ProductType, null=False, on_delete=models.CASCADE)
     capacity = models.DecimalField(decimal_places=4, max_digits=20, null=False)

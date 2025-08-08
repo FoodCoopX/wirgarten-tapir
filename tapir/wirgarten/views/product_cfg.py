@@ -13,7 +13,6 @@ from django.views.decorators.http import require_http_methods
 
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.product_cfg.period_product_cfg_forms import (
-    ProductTypeForm,
     ProductForm,
     GrowingPeriodForm,
 )
@@ -26,8 +25,6 @@ from tapir.wirgarten.models import (
     ProductPrice,
 )
 from tapir.wirgarten.service.products import (
-    create_product_type_capacity,
-    update_product_type_capacity,
     delete_product_type_capacity,
     create_product,
     delete_product,
@@ -175,90 +172,6 @@ class ProductCfgView(PermissionRequiredMixin, generic.TemplateView):
         )
 
         return context
-
-
-@require_http_methods(["GET", "POST"])
-@permission_required(Permission.Products.MANAGE)
-@csrf_protect
-def get_product_type_capacity_edit_form(request, **kwargs):
-    return get_form_modal(
-        request=request,
-        form_class=ProductTypeForm,
-        handler=lambda form: update_product_type_capacity(
-            id_=kwargs[KW_CAPACITY_ID],
-            name=form.cleaned_data["name"],
-            description_bestellwizard_short=form.cleaned_data[
-                "description_bestellwizard_short"
-            ],
-            description_bestellwizard_long=form.cleaned_data[
-                "description_bestellwizard_long"
-            ],
-            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
-            contract_link=form.cleaned_data["contract_link"],
-            icon_link=form.cleaned_data["icon_link"],
-            single_subscription_only=form.cleaned_data["single_subscription_only"],
-            delivery_cycle=form.cleaned_data["delivery_cycle"],
-            default_tax_rate=form.cleaned_data["tax_rate"],
-            capacity=form.cleaned_data["capacity"],
-            tax_rate_change_date=form.cleaned_data["tax_rate_change_date"],
-            is_affected_by_jokers=form.cleaned_data.get("is_affected_by_jokers", False),
-            notice_period_duration=form.cleaned_data.get("notice_period", None),
-            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
-            is_association_membership=form.cleaned_data.get(
-                "is_association_membership", False
-            ),
-        ),
-        redirect_url_resolver=lambda data: f"""{reverse_lazy(PAGE_ROOT)}?{request.environ["QUERY_STRING"]}""",
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@permission_required(Permission.Products.MANAGE)
-@csrf_protect
-def get_product_type_capacity_add_form(request, **kwargs):
-    def handler(form):
-        return create_product_type_capacity(
-            name=form.cleaned_data["name"],
-            description_bestellwizard_short=form.cleaned_data[
-                "description_bestellwizard_short"
-            ],
-            description_bestellwizard_long=form.cleaned_data[
-                "description_bestellwizard_long"
-            ],
-            order_in_bestellwizard=int(form.cleaned_data["order_in_bestellwizard"]),
-            contract_link=form.cleaned_data["contract_link"],
-            icon_link=form.cleaned_data["icon_link"],
-            single_subscription_only=form.cleaned_data["single_subscription_only"],
-            delivery_cycle=form.cleaned_data["delivery_cycle"],
-            default_tax_rate=form.cleaned_data["tax_rate"],
-            capacity=form.cleaned_data["capacity"],
-            period_id=kwargs[KW_PERIOD_ID],
-            notice_period_duration=form.cleaned_data.get("notice_period", None),
-            is_affected_by_jokers=form.cleaned_data.get("is_affected_by_jokers", False),
-            must_be_subscribed_to=form.cleaned_data["must_be_subscribed_to"],
-            is_association_membership=form.cleaned_data.get(
-                "is_association_membership", False
-            ),
-            product_type_id=form.cleaned_data["product_type"],
-        )
-
-    def redirect_url(data):
-        new_query_string = (
-            re.sub(
-                KW_CAPACITY_ID + r"=([\d\w]*)&?", "", request.environ["QUERY_STRING"]
-            )
-            + f"&{KW_CAPACITY_ID}={data.id}"
-        )
-        return f"{reverse_lazy(PAGE_ROOT)}?{new_query_string}"
-
-    return get_form_modal(
-        request=request,
-        form_class=ProductTypeForm,
-        handler=handler,
-        redirect_url_resolver=redirect_url,
-        **kwargs,
-    )
 
 
 @require_http_methods(["GET"])

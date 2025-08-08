@@ -12,21 +12,10 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PreferredLanguageEnum } from './PreferredLanguageEnum';
-import {
-    PreferredLanguageEnumFromJSON,
-    PreferredLanguageEnumFromJSONTyped,
-    PreferredLanguageEnumToJSON,
-    PreferredLanguageEnumToJSONTyped,
-} from './PreferredLanguageEnum';
-import type { MemberCountry } from './MemberCountry';
-import {
-    MemberCountryFromJSON,
-    MemberCountryFromJSONTyped,
-    MemberCountryToJSON,
-    MemberCountryToJSONTyped,
-} from './MemberCountry';
+import type { PreferredLanguageEnum } from "./PreferredLanguageEnum";
+import { PreferredLanguageEnumFromJSON, PreferredLanguageEnumToJSON } from "./PreferredLanguageEnum";
+import type { MemberCountry } from "./MemberCountry";
+import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
 
 /**
  * 

@@ -117,6 +117,7 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
+models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicPickupLocation.ts
 models/PublicProduct.ts
@@ -125,6 +126,7 @@ models/PublicSubscription.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
 models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/RecipientRequest.ts
+models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts
 models/SendLinkSerializerRequest.ts

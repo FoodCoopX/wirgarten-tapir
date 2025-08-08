@@ -7,8 +7,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 
-from tapir.configuration.models import TapirParameter
-from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -22,7 +20,6 @@ from tapir.wirgarten.models import (
     Subscription,
     TaxRate,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
 from tapir.wirgarten.validators import (
@@ -428,139 +425,6 @@ def delete_product(id_: str):
     else:
         ProductPrice.objects.filter(product=product).delete()
         product.delete()
-
-
-@transaction.atomic
-def create_product_type_capacity(
-    name: str,
-    description_bestellwizard_short: str,
-    description_bestellwizard_long: str,
-    order_in_bestellwizard: int,
-    contract_link: str,
-    icon_link: str,
-    single_subscription_only: bool,
-    delivery_cycle: str,
-    default_tax_rate: float,
-    capacity: Decimal,
-    period_id: str,
-    notice_period_duration: int | None,
-    is_affected_by_jokers: bool,
-    is_association_membership: bool,
-    must_be_subscribed_to: bool,
-    product_type_id: str = "",
-):
-
-    # update or create product type
-    if product_type_id is not None and len(product_type_id.strip()) > 0:
-        product_type = ProductType.objects.get(id=product_type_id)
-        product_type.name = name
-        product_type.description_bestellwizard_short = description_bestellwizard_short
-        product_type.description_bestellwizard_long = description_bestellwizard_long
-        product_type.order_in_bestellwizard = order_in_bestellwizard
-        product_type.delivery_cycle = delivery_cycle
-        product_type.contract_link = contract_link
-        product_type.icon_link = icon_link
-        product_type.single_subscription_only = single_subscription_only
-        product_type.is_affected_by_jokers = is_affected_by_jokers
-        product_type.is_association_membership = is_association_membership
-        product_type.must_be_subscribed_to = must_be_subscribed_to
-        product_type.save()
-    else:
-        product_type = ProductType.objects.create(
-            name=name,
-            description_bestellwizard_short=description_bestellwizard_short,
-            description_bestellwizard_long=description_bestellwizard_long,
-            order_in_bestellwizard=order_in_bestellwizard,
-            delivery_cycle=delivery_cycle,
-            contract_link=contract_link,
-            icon_link=icon_link,
-            single_subscription_only=single_subscription_only,
-            is_affected_by_jokers=is_affected_by_jokers,
-            is_association_membership=is_association_membership,
-            must_be_subscribed_to=must_be_subscribed_to,
-        )
-        if not ProductType.objects.exclude(id=product_type.id).exists():
-            TapirParameter.objects.filter(
-                key=ParameterKeys.COOP_BASE_PRODUCT_TYPE
-            ).update(value=product_type.id)
-
-    # tax rate
-    period = GrowingPeriod.objects.get(id=period_id)
-    today = get_today()
-    create_or_update_default_tax_rate(
-        product_type_id=product_type.id,
-        tax_rate=default_tax_rate,
-        tax_rate_change_date=today if period.start_date < today else period.start_date,
-    )
-
-    NoticePeriodManager.set_notice_period_duration(
-        product_type=product_type,
-        growing_period=period,
-        notice_period_duration=notice_period_duration,
-    )
-
-    # capacity
-    return ProductCapacity.objects.create(
-        period_id=period_id,
-        product_type=product_type,
-        capacity=capacity,
-    )
-
-
-@transaction.atomic
-def update_product_type_capacity(
-    id_: str,
-    name: str,
-    description_bestellwizard_short: str,
-    description_bestellwizard_long: str,
-    order_in_bestellwizard: int,
-    contract_link: str,
-    icon_link: str,
-    single_subscription_only: bool,
-    delivery_cycle: str,
-    default_tax_rate: float,
-    capacity: Decimal,
-    tax_rate_change_date: datetime.date,
-    is_affected_by_jokers: bool,
-    notice_period_duration: int,
-    must_be_subscribed_to: bool,
-    is_association_membership: bool,
-):
-
-    # capacity
-    product_capacity = ProductCapacity.objects.get(id=id_)
-    product_capacity.capacity = capacity
-    product_capacity.save()
-
-    product_capacity.product_type.name = name
-    product_capacity.product_type.description_bestellwizard_short = (
-        description_bestellwizard_short
-    )
-    product_capacity.product_type.description_bestellwizard_long = (
-        description_bestellwizard_long
-    )
-    product_capacity.product_type.order_in_bestellwizard = order_in_bestellwizard
-    product_capacity.product_type.contract_link = contract_link
-    product_capacity.product_type.icon_link = icon_link
-    product_capacity.product_type.single_subscription_only = single_subscription_only
-    product_capacity.product_type.delivery_cycle = delivery_cycle
-    product_capacity.product_type.is_affected_by_jokers = is_affected_by_jokers
-    product_capacity.product_type.must_be_subscribed_to = must_be_subscribed_to
-    product_capacity.product_type.is_association_membership = is_association_membership
-    product_capacity.product_type.save()
-
-    NoticePeriodManager.set_notice_period_duration(
-        product_type=product_capacity.product_type,
-        growing_period=product_capacity.period,
-        notice_period_duration=notice_period_duration,
-    )
-
-    # tax rate
-    create_or_update_default_tax_rate(
-        product_type_id=product_capacity.product_type.id,
-        tax_rate=default_tax_rate,
-        tax_rate_change_date=tax_rate_change_date,
-    )
 
 
 @transaction.atomic

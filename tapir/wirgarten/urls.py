@@ -63,8 +63,6 @@ from tapir.wirgarten.views.product_cfg import (
     get_period_add_form,
     get_period_copy_form,
     get_product_add_form,
-    get_product_type_capacity_add_form,
-    get_product_type_capacity_edit_form,
 )
 from tapir.wirgarten.views.register import (
     RegistrationWizardConfirmView,
@@ -77,16 +75,6 @@ urlpatterns = [
         "product",
         ProductCfgView.as_view(),
         name="product",
-    ),
-    path(
-        "product/<str:periodId>/<str:capacityId>/typeedit",
-        get_product_type_capacity_edit_form,
-        name="product_type_edit",
-    ),
-    path(
-        "product/<str:periodId>/typeadd",
-        get_product_type_capacity_add_form,
-        name="product_type_add",
     ),
     path(
         "product/<str:periodId>/<str:capacityId>/typedelete",

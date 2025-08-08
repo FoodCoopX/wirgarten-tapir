@@ -995,13 +995,29 @@ paths:
       operationId: products_api_extended_product_type_create
       tags:
       - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveExtendedProductTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SaveExtendedProductTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SaveExtendedProductTypeRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
     patch:
       operationId: products_api_extended_product_type_partial_update
       tags:
@@ -1027,6 +1043,29 @@ paths:
             application/json:
               schema:
                 type: string
+          description: ''
+  /products/api/product_types_without_capacity:
+    get:
+      operationId: products_api_product_types_without_capacity_retrieve
+      parameters:
+      - in: query
+        name: growing_period_id
+        schema:
+          type: array
+          items:
+            type: string
+      tags:
+      - products
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductTypesAndConfig'
           description: ''
   /subscriptions/api/bestell_wizard_base_data:
     get:
@@ -5700,20 +5739,16 @@ components:
           minLength: 1
         description_bestellwizard_short:
           type: string
-          minLength: 1
         description_bestellwizard_long:
           type: string
-          minLength: 1
         order_in_bestellwizard:
           type: integer
         icon_link:
           type: string
           format: uri
-          minLength: 1
         contract_link:
           type: string
           format: uri
-          minLength: 1
         capacity:
           type: number
           format: double
@@ -7262,6 +7297,28 @@ components:
           title: Reihenfolge im BestellWizard (kleiner ist früher)
       required:
       - name
+    ProductTypesAndConfig:
+      type: object
+      properties:
+        product_types_without_capacity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductType'
+        show_notice_period:
+          type: boolean
+        show_jokers:
+          type: boolean
+        show_association_membership:
+          type: boolean
+        delivery_cycle_options:
+          type: object
+          additionalProperties: {}
+      required:
+      - delivery_cycle_options
+      - product_types_without_capacity
+      - show_association_membership
+      - show_jokers
+      - show_notice_period
     PublicConfirmWaitingListEntryRequestRequest:
       type: object
       properties:
@@ -7533,6 +7590,20 @@ components:
             minLength: 1
       required:
       - recipients
+    SaveExtendedProductTypeRequest:
+      type: object
+      properties:
+        product_type_id:
+          type: string
+          minLength: 1
+        growing_period_id:
+          type: string
+          minLength: 1
+        extended_product_type:
+          $ref: '#/components/schemas/ExtendedProductTypeRequest'
+      required:
+      - extended_product_type
+      - growing_period_id
     SegmentData:
       type: object
       properties:
