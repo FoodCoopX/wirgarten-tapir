@@ -52,6 +52,7 @@ models/ExportSegmentColumn.ts
 models/ExtendedProduct.ts
 models/ExtendedProductType.ts
 models/ExtendedProductTypeAndConfig.ts
+models/ExtendedProductTypeRequest.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
@@ -89,6 +90,7 @@ models/PatchedGrowingPeriodRequest.ts
 models/PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest.ts
 models/PatchedPdfExportModelRequest.ts
 models/PatchedPickupLocationCapacitiesRequest.ts
+models/PatchedSaveExtendedProductTypeRequest.ts
 models/PatchedStaticSegmentRecipientRequest.ts
 models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts

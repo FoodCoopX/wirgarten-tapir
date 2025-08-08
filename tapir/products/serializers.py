@@ -8,8 +8,8 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     description_bestellwizard_short = serializers.CharField(required=False)
     description_bestellwizard_long = serializers.CharField(required=False)
     order_in_bestellwizard = serializers.IntegerField()
-    icon_link = serializers.URLField(required=False)
-    contract_link = serializers.URLField(required=False)
+    icon_link = serializers.URLField(required=False, allow_blank=True)
+    contract_link = serializers.URLField(required=False, allow_blank=True)
     capacity = serializers.FloatField()
     delivery_cycle = serializers.ChoiceField(choices=DeliveryCycle)
     notice_period = serializers.IntegerField(required=False)
@@ -26,4 +26,10 @@ class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):
     show_jokers = serializers.BooleanField()
     show_association_membership = serializers.BooleanField()
     delivery_cycle_options = serializers.DictField()
+    extended_product_type = ExtendedProductTypeSerializer()
+
+
+class SaveExtendedProductTypeSerializer(serializers.Serializer):
+    product_type_id = serializers.CharField(required=False)
+    growing_period_id = serializers.CharField(required=False)
     extended_product_type = ExtendedProductTypeSerializer()

@@ -1,5 +1,6 @@
 import datetime
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import permissions
@@ -8,17 +9,36 @@ from rest_framework.views import APIView
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.products.serializers import ExtendedProductTypeAndConfigSerializer
+from tapir.products.serializers import (
+    ExtendedProductTypeAndConfigSerializer,
+    SaveExtendedProductTypeSerializer,
+)
 from tapir.products.services.TaxRateService import TaxRateService
 from tapir.subscriptions.models import NoticePeriod
+from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.wirgarten.constants import DeliveryCycleDict
 from tapir.wirgarten.models import ProductType, GrowingPeriod, ProductCapacity
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.products import create_or_update_default_tax_rate
 from tapir.wirgarten.utils import get_today, legal_status_is_association
 
 
 class ExtendedProductTypeApiView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    direct_fields = [
+        "name",
+        "description_bestellwizard_short",
+        "description_bestellwizard_long",
+        "order_in_bestellwizard",
+        "icon_link",
+        "contract_link",
+        "delivery_cycle",
+        "single_subscription_only",
+        "is_affected_by_jokers",
+        "must_be_subscribed_to",
+        "is_association_membership",
+    ]
 
     def __init__(self):
         super().__init__()
@@ -60,27 +80,54 @@ class ExtendedProductTypeApiView(APIView):
     def post(self, request):
         pass
 
+    @extend_schema(
+        responses={200: str},
+        request=SaveExtendedProductTypeSerializer(),
+    )
     def patch(self, request):
-        pass
+        serializer = SaveExtendedProductTypeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        product_type = get_object_or_404(
+            ProductType, id=serializer.validated_data.get("product_type_id")
+        )
+        growing_period = get_object_or_404(
+            GrowingPeriod, id=serializer.validated_data.get("growing_period_id")
+        )
+        product_capacity = get_object_or_404(
+            ProductCapacity, product_type=product_type, period=growing_period
+        )
+
+        extended_data = serializer.validated_data["extended_product_type"]
+        with transaction.atomic():
+            product_capacity.capacity = extended_data["capacity"]
+            product_capacity.save()
+
+            for field in self.direct_fields:
+                setattr(product_type, field, extended_data[field])
+
+            product_type.name = extended_data["name"]
+            product_type.icon_link = extended_data["icon_link"]
+            product_type.save()
+
+            NoticePeriodManager.set_notice_period_duration(
+                product_type=product_capacity.product_type,
+                growing_period=product_capacity.period,
+                notice_period_duration=extended_data["notice_period"],
+            )
+
+            create_or_update_default_tax_rate(
+                product_type_id=product_type.id,
+                tax_rate=extended_data["tax_rate"],
+                tax_rate_change_date=extended_data["tax_rate_change_date"],
+            )
+
+        return Response("OK")
 
     def build_extended_product_type_data(
         self, product_type: ProductType, growing_period: GrowingPeriod
     ):
-        direct_fields = [
-            "name",
-            "description_bestellwizard_short",
-            "description_bestellwizard_long",
-            "order_in_bestellwizard",
-            "icon_link",
-            "contract_link",
-            "delivery_cycle",
-            "single_subscription_only",
-            "is_affected_by_jokers",
-            "must_be_subscribed_to",
-            "is_association_membership",
-        ]
-
-        data = {field: getattr(product_type, field) for field in direct_fields}
+        data = {field: getattr(product_type, field) for field in self.direct_fields}
 
         product_capacity = get_object_or_404(
             ProductCapacity, product_type=product_type, period=growing_period

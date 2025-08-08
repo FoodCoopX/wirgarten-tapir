@@ -1006,13 +1006,28 @@ paths:
       operationId: products_api_extended_product_type_partial_update
       tags:
       - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSaveExtendedProductTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSaveExtendedProductTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSaveExtendedProductTypeRequest'
       security:
       - tokenAuth: []
       - cookieAuth: []
       - DrfForwardAuthentication: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /subscriptions/api/bestell_wizard_base_data:
     get:
       operationId: subscriptions_api_bestell_wizard_base_data_retrieve
@@ -5677,6 +5692,60 @@ components:
       - show_association_membership
       - show_jokers
       - show_notice_period
+    ExtendedProductTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description_bestellwizard_short:
+          type: string
+          minLength: 1
+        description_bestellwizard_long:
+          type: string
+          minLength: 1
+        order_in_bestellwizard:
+          type: integer
+        icon_link:
+          type: string
+          format: uri
+          minLength: 1
+        contract_link:
+          type: string
+          format: uri
+          minLength: 1
+        capacity:
+          type: number
+          format: double
+        delivery_cycle:
+          $ref: '#/components/schemas/DeliveryCycleEnum'
+        notice_period:
+          type: integer
+        tax_rate:
+          type: number
+          format: double
+        tax_rate_change_date:
+          type: string
+          format: date
+        single_subscription_only:
+          type: boolean
+        is_affected_by_jokers:
+          type: boolean
+        must_be_subscribed_to:
+          type: boolean
+        is_association_membership:
+          type: boolean
+      required:
+      - capacity
+      - delivery_cycle
+      - is_affected_by_jokers
+      - is_association_membership
+      - must_be_subscribed_to
+      - name
+      - order_in_bestellwizard
+      - single_subscription_only
+      - tax_rate
+      - tax_rate_change_date
     GroupedEmailDispatch:
       type: object
       properties:
@@ -6536,6 +6605,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByBasketSizeRequest'
+    PatchedSaveExtendedProductTypeRequest:
+      type: object
+      properties:
+        product_type_id:
+          type: string
+          minLength: 1
+        growing_period_id:
+          type: string
+          minLength: 1
+        extended_product_type:
+          $ref: '#/components/schemas/ExtendedProductTypeRequest'
     PatchedStaticSegmentRecipientRequest:
       type: object
       properties:

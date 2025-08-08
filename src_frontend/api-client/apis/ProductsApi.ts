@@ -16,11 +16,18 @@
 import * as runtime from '../runtime';
 import type {
   ExtendedProductTypeAndConfig,
+  PatchedSaveExtendedProductTypeRequest,
 } from '../models/index';
 import {
     ExtendedProductTypeAndConfigFromJSON,
     ExtendedProductTypeAndConfigToJSON,
+    PatchedSaveExtendedProductTypeRequestFromJSON,
+    PatchedSaveExtendedProductTypeRequestToJSON,
 } from '../models/index';
+
+export interface ProductsApiExtendedProductTypePartialUpdateRequest {
+    patchedSaveExtendedProductTypeRequest?: PatchedSaveExtendedProductTypeRequest;
+}
 
 export interface ProductsApiExtendedProductTypeRetrieveRequest {
     growingPeriodId?: Array<string>;
@@ -64,10 +71,12 @@ export class ProductsApi extends runtime.BaseAPI {
 
     /**
      */
-    async productsApiExtendedProductTypePartialUpdateRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async productsApiExtendedProductTypePartialUpdateRaw(requestParameters: ProductsApiExtendedProductTypePartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
@@ -81,15 +90,21 @@ export class ProductsApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
+            body: PatchedSaveExtendedProductTypeRequestToJSON(requestParameters['patchedSaveExtendedProductTypeRequest']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      */
-    async productsApiExtendedProductTypePartialUpdate(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.productsApiExtendedProductTypePartialUpdateRaw(initOverrides);
+    async productsApiExtendedProductTypePartialUpdate(requestParameters: ProductsApiExtendedProductTypePartialUpdateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
+        const response = await this.productsApiExtendedProductTypePartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

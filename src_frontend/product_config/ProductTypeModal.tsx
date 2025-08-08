@@ -128,7 +128,41 @@ const ProductTypeModal: React.FC<ProductTypeModalProps> = ({
   }, [show]);
 
   function onSave() {
-    alert("NOT IMPLEMENTED");
+    setSaving(true);
+
+    productsApi
+      .productsApiExtendedProductTypePartialUpdate({
+        patchedSaveExtendedProductTypeRequest: {
+          productTypeId: getProductTypeIdFromUrl(),
+          growingPeriodId: getPeriodIdFromUrl(),
+          extendedProductType: {
+            name: name,
+            iconLink: iconLink,
+            capacity: capacity,
+            deliveryCycle: deliveryCycle,
+            isAffectedByJokers: isAffectedByJokers,
+            noticePeriod: noticePeriod,
+            taxRate: taxRate,
+            taxRateChangeDate: taxRateChangeDate,
+            singleSubscriptionOnly: singleSubscriptionOnly,
+            mustBeSubscribedTo: mustBeSubscribedTo,
+            isAssociationMembership: isAssociationMembership,
+            descriptionBestellwizardShort: descriptionBestellwizardShort,
+            descriptionBestellwizardLong: descriptionBestellwizardLong,
+            orderInBestellwizard: orderInBestellwizard,
+            contractLink: contractLink,
+          },
+        },
+      })
+      .then(() => location.reload())
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern der Produkt-Typ",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSaving(false));
   }
 
   function getModalBody() {
@@ -227,20 +261,22 @@ const ProductTypeModal: React.FC<ProductTypeModalProps> = ({
             <Row>
               <h5>Verträge</h5>
             </Row>
-            <Row>
-              <Form.Group controlId={"notice_period"}>
-                <Form.Label>Kündigungsfrist</Form.Label>
-                <Form.Control
-                  type={"number"}
-                  onChange={(event) =>
-                    setNoticePeriod(parseInt(event.target.value))
-                  }
-                  required={true}
-                  value={noticePeriod}
-                />
-                <Form.Text>Anzahl an Monate</Form.Text>
-              </Form.Group>
-            </Row>
+            {showNoticePeriod && (
+              <Row>
+                <Form.Group controlId={"notice_period"}>
+                  <Form.Label>Kündigungsfrist</Form.Label>
+                  <Form.Control
+                    type={"number"}
+                    onChange={(event) =>
+                      setNoticePeriod(parseInt(event.target.value))
+                    }
+                    required={true}
+                    value={noticePeriod}
+                  />
+                  <Form.Text>Anzahl an Monate</Form.Text>
+                </Form.Group>
+              </Row>
+            )}
             <Row className={"mt-2"}>
               <Form.Group controlId={"tax_rate"}>
                 <Form.Label>Mehrwertsteuersatz</Form.Label>

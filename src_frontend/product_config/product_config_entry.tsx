@@ -29,11 +29,8 @@ const domNodeProductTypeButton = document.getElementById(
 );
 if (domNodeProductTypeButton) {
   const root = createRoot(domNodeProductTypeButton);
-  // WIP product type edit
-  root.render(<span></span>);
-  if (false) {
-    root.render(<ProductTypeBase csrfToken={getCsrfToken()} />);
-  }
+
+  root.render(<ProductTypeBase csrfToken={getCsrfToken()} />);
 } else {
   console.error("Failed to render product_type button from React");
 }
