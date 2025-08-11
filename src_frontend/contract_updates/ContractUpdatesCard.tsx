@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import {
-  CoopShareTransaction,
-  MemberDataToConfirm,
-  type SubscriptionChange,
-  SubscriptionsApi,
-} from "../api-client";
+import { CoopShareTransaction, MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
@@ -146,7 +141,11 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
             <li>
               {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases)}{" "}
               Genossenschaftsanteile gültig am{" "}
-              {formatDateNumeric(memberDataToConfirm.sharePurchases[0].validAt)}
+              {formatDateNumeric(
+                memberDataToConfirm.sharePurchases.sort(
+                  (a, b) => a.validAt.getTime() - b.validAt.getTime(),
+                )[0].validAt,
+              )}
             </li>
           )}
         </ul>
