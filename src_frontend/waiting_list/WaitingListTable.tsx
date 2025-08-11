@@ -29,17 +29,30 @@ const WaitingListTable: React.FC<WaitingListTableProps> = ({
         className={entry.linkSentDate ? "table-warning" : ""}
       >
         <td>
-          <a
-            onClick={(event) => event.stopPropagation()}
-            href={entry.urlToMemberProfile}
-          >
-            {entry.memberNo}
-          </a>
+          {entry.urlToMemberProfile && (
+            <a
+              onClick={(event) => event.stopPropagation()}
+              href={entry.urlToMemberProfile}
+            >
+              {entry.memberNo}
+            </a>
+          )}
         </td>
         <td>{formatDateNumeric(entry.waitingSince)}</td>
         <td>{entry.linkSentDate && formatDateNumeric(entry.linkSentDate)}</td>
         <td>
-          {entry.firstName} {entry.lastName}
+          {entry.urlToMemberProfile ? (
+            <a
+              onClick={(event) => event.stopPropagation()}
+              href={entry.urlToMemberProfile}
+            >
+              {entry.firstName} {entry.lastName}
+            </a>
+          ) : (
+            <>
+              {entry.firstName} {entry.lastName}
+            </>
+          )}
         </td>
         <td>{entry.email}</td>
         <td>{entry.phoneNumber}</td>

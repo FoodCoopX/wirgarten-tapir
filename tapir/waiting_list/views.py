@@ -170,11 +170,18 @@ class WaitingListApiView(APIView):
     def filter_by_member_type(
         cls, member_type: str, entries: QuerySet[WaitingListEntry]
     ):
+        member_ids_with_at_least_one_transaction = (
+            CoopShareTransaction.objects.values_list("member_id", flat=True).distinct()
+        )
         if member_type == "new_members":
-            return entries.filter(member__isnull=True)
+            return entries.exclude(
+                member_id__in=member_ids_with_at_least_one_transaction
+            )
 
         if member_type == "existing_members":
-            return entries.filter(member__isnull=False)
+            return entries.filter(
+                member_id__in=member_ids_with_at_least_one_transaction
+            )
 
         return entries
 

@@ -28,7 +28,7 @@ class ProductGenerator:
         base_price: float,
         size: float,
         base: bool,
-        min_coop_shares: int | None = None,
+        min_coop_shares: int,
         description_in_bestellwizard: str = "",
         url_of_image_in_bestellwizard: str = "",
     ):
@@ -160,10 +160,20 @@ class ProductGenerator:
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
         cls.generate_product(
-            product_type=eggs, name="Ganze", base_price=18, size=1, base=True
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
         )
         cls.generate_product(
-            product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
         )
 
         association_membership = ProductType.objects.create(
@@ -187,6 +197,7 @@ class ProductGenerator:
             base_price=10,
             size=1,
             base=True,
+            min_coop_shares=0,
         )
         cls.generate_product(
             product_type=association_membership,
@@ -194,6 +205,7 @@ class ProductGenerator:
             base_price=17.5,
             size=1,
             base=False,
+            min_coop_shares=0,
         )
         cls.generate_product(
             product_type=association_membership,
@@ -201,6 +213,7 @@ class ProductGenerator:
             base_price=22.5,
             size=1,
             base=False,
+            min_coop_shares=0,
         )
 
     @classmethod
@@ -250,10 +263,20 @@ class ProductGenerator:
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
         cls.generate_product(
-            product_type=eggs, name="Ganze", base_price=18, size=1, base=True
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
         )
         cls.generate_product(
-            product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
         )
 
         hofpunkt = ProductType.objects.create(
@@ -274,6 +297,7 @@ class ProductGenerator:
             base_price=3,
             size=1,
             base=True,
+            min_coop_shares=0,
         )
 
     @classmethod
@@ -321,10 +345,20 @@ class ProductGenerator:
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
         cls.generate_product(
-            product_type=eggs, name="Ganze", base_price=18, size=1, base=True
+            product_type=eggs,
+            name="Ganze",
+            base_price=18,
+            size=1,
+            base=True,
+            min_coop_shares=0,
         )
         cls.generate_product(
-            product_type=eggs, name="Halbe", base_price=9.5, size=0.5, base=False
+            product_type=eggs,
+            name="Halbe",
+            base_price=9.5,
+            size=0.5,
+            base=False,
+            min_coop_shares=0,
         )
 
         hofpunkt = ProductType.objects.create(
@@ -345,6 +379,7 @@ class ProductGenerator:
             base_price=3,
             size=1,
             base=True,
+            min_coop_shares=0,
         )
 
         ProductBasketSizeEquivalence.objects.create(
@@ -399,7 +434,12 @@ class ProductGenerator:
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
         cls.generate_product(
-            product_type=bread, name="Vollkornbrot", base_price=27, size=1, base=True
+            product_type=bread,
+            name="Vollkornbrot",
+            base_price=27,
+            size=1,
+            base=True,
+            min_coop_shares=0,
         )
         cls.generate_product(
             product_type=bread,
@@ -407,6 +447,7 @@ class ProductGenerator:
             base_price=27,
             size=1,
             base=False,
+            min_coop_shares=0,
         )
 
         honey = ProductType.objects.create(
@@ -421,7 +462,12 @@ class ProductGenerator:
             valid_from=GrowingPeriod.objects.order_by("start_date").first().start_date,
         )
         cls.generate_product(
-            product_type=honey, name="Honig", base_price=7, size=1, base=True
+            product_type=honey,
+            name="Honig",
+            base_price=7,
+            size=1,
+            base=True,
+            min_coop_shares=0,
         )
 
         oil = ProductType.objects.create(
@@ -441,6 +487,7 @@ class ProductGenerator:
             base_price=11,
             size=1,
             base=True,
+            min_coop_shares=0,
         )
 
     @classmethod

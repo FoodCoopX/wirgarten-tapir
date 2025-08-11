@@ -111,7 +111,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             subscriptions = self.create_subscriptions(
                 validated_data=serializer.validated_data,
                 member=member,
-                actor=request.user,
+                actor=request.user if request.user.is_authenticated else None,
                 contract_start_date=contract_start_date,
             )
             order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
