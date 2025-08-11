@@ -240,7 +240,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     let steps = [];
 
-    if (shouldIncludeStepIntro(introEnabled)) {
+    if (shouldIncludeStepIntro(introEnabled, waitingListEntryDetails)) {
       steps.push("intro");
     }
 

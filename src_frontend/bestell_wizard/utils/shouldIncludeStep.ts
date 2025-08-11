@@ -2,7 +2,14 @@ import { isAtLeastOneOrderedProductWithDelivery } from "./isAtLeastOneOrderedPro
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { PublicProductType, WaitingListEntryDetails } from "../../api-client";
 
-export function shouldIncludeStepIntro(introEnabled: boolean) {
+export function shouldIncludeStepIntro(
+  introEnabled: boolean,
+  waitingListEntryDetails: WaitingListEntryDetails | undefined,
+) {
+  if (waitingListEntryDetails) {
+    return false;
+  }
+
   return introEnabled;
 }
 
