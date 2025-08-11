@@ -60,6 +60,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     send_order_confirmation,
 )
+from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import (
     get_today,
     get_now,
@@ -408,6 +409,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             shopping_cart=serializer.validated_data["shopping_cart"], cache=self.cache
         )
         product_type_ids = {product.type_id for product in order.keys()}
+
         pickup_location_id = serializer.validated_data["pickup_location_id"]
         pickup_location = TapirCache.get_pickup_location_by_id(
             cache=self.cache,
@@ -421,11 +423,22 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             "waiting_list_entry_id", None
         )
         if waiting_list_entry_id is not None:
-            desired_start_date = get_object_or_404(
+            waiting_list_entry = get_object_or_404(
                 WaitingListEntry, id=waiting_list_entry_id
-            ).desired_start_date
+            )
+            desired_start_date = waiting_list_entry.desired_start_date
             if desired_start_date is not None:
                 reference_date = desired_start_date
+
+            if len(product_type_ids) == 0 and waiting_list_entry.member is not None:
+                product_type_ids = (
+                    get_active_and_future_subscriptions(
+                        reference_date=reference_date, cache=self.cache
+                    )
+                    .filter(member=waiting_list_entry.member)
+                    .values_list("product__type_id", flat=True)
+                    .distinct()
+                )
 
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=reference_date,

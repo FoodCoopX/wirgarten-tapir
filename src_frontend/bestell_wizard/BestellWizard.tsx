@@ -355,8 +355,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   useEffect(() => {
     if (
-      selectedPickupLocations.length === 0 ||
-      isShoppingCartEmpty(shoppingCart)
+      !waitingListLinkConfirmationModeEnabled &&
+      (selectedPickupLocations.length === 0 ||
+        isShoppingCartEmpty(shoppingCart))
     ) {
       return;
     }
@@ -368,7 +369,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       setToastDatas,
       waitingListEntryDetails?.id,
     );
-  }, [selectedPickupLocations, shoppingCart]);
+  }, [
+    selectedPickupLocations,
+    shoppingCart,
+    waitingListLinkConfirmationModeEnabled,
+  ]);
 
   useEffect(() => {
     if (waitingListLinkConfirmationModeEnabled) return;
@@ -542,6 +547,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListLinkConfirmationModeEnabled={
               waitingListLinkConfirmationModeEnabled
             }
+            waitingListEntryDetails={waitingListEntryDetails}
           />
         );
       case "coop_shares":
