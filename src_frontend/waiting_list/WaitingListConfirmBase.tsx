@@ -75,7 +75,7 @@ const WaitingListConfirmBase: React.FC<WaitingListConfirmBaseProps> = ({
                       <Spinner />
                     ) : (
                       <p>
-                        Der Link ist bereits abgelaufen. Bitte wende ich an{" "}
+                        Der Link ist bereits abgelaufen. Bitte wende dich an{" "}
                         <a href={"mailto:" + adminEmail}>{adminEmail}</a>
                       </p>
                     )}
