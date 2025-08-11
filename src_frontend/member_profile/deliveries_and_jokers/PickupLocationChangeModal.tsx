@@ -5,7 +5,7 @@ import {
   PublicPickupLocation,
   type PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi,
+  WaitingListApi
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
@@ -59,6 +59,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
     showWaitingListConfirmationModal,
     setShowWaitingListConfirmationModal,
   ] = useState(false);
+  const [hasWaitingListEntry, setHasWaitingListEntry] = useState(false);
 
   useEffect(() => {
     pickupLocationsApi
@@ -87,6 +88,19 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der Verträge",
+          setToastDatas,
+        ),
+      );
+
+    waitingListApi
+      .waitingListApiMemberWaitingListEntryDetailsRetrieve({
+        memberId: memberId,
+      })
+      .then((result) => setHasWaitingListEntry(result.entry !== undefined))
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Warteliste-Eintrag",
           setToastDatas,
         ),
       );
@@ -132,7 +146,14 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
       pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]) &&
       !pickupLocationsWithCapacityCheckLoading.has(selectedPickupLocations[0])
     ) {
-      setShowWaitingListConfirmationModal(true);
+      if (hasWaitingListEntry) {
+        alert(
+          "Du stehst schon auf der Warteliste, deswegen kannst du kein ausgelastete Verteilstation auswählen.",
+        );
+        setSelectedPickupLocations([]);
+      } else {
+        setShowWaitingListConfirmationModal(true);
+      }
     }
   }, [
     selectedPickupLocations,
