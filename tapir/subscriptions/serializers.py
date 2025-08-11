@@ -203,6 +203,8 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     show_coop_content = serializers.BooleanField()
     intro_step_text = serializers.CharField()
     coop_step_text = serializers.CharField()
+    label_checkbox_sepa_mandat = serializers.CharField()
+    label_checkbox_contract_policy = serializers.CharField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

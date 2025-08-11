@@ -383,6 +383,13 @@ class BestellWizardBaseDataApiView(APIView):
             "intro_step_text": get_parameter_value(
                 ParameterKeys.BESTELLWIZARD_INTRO_TEXT, cache=self.cache
             ),
+            "label_checkbox_sepa_mandat": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT, cache=self.cache
+            ),
+            "label_checkbox_contract_policy": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
+                cache=self.cache,
+            ),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

@@ -7,7 +7,7 @@ import {
   PublicProductType,
   PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi,
+  WaitingListApi
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -89,6 +89,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   const [steps, setSteps] = useState<SubscriptionEditStep[]>([]);
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
+  const [labelCheckboxSepaMandat, setLabelCheckboxSepaMandat] = useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -113,6 +114,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .subscriptionsApiBestellWizardBaseDataRetrieve()
       .then((response) => {
         setForceWaitingList(response.forceWaitingList);
+        setLabelCheckboxSepaMandat(response.labelCheckboxSepaMandat);
       })
       .catch((error) =>
         handleRequestError(
@@ -358,6 +360,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
             setSepaAllowed={setSepaAllowed}
             onCancelClicked={onHide}
             onNextClicked={onNextClicked}
+            labelCheckboxSepaMandat={labelCheckboxSepaMandat}
           />
         )}
         {currentStep == "pickup_location" && (

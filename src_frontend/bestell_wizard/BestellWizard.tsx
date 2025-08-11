@@ -150,6 +150,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   const [showCoopContent, setShowCoopContent] = useState(false);
   const [coopStepText, setCoopStepText] = useState("");
   const [introStepText, setIntroStepText] = useState("");
+  const [labelCheckboxSepaMandat, setLabelCheckboxSepaMandat] = useState("");
+  const [labelCheckboxContractPolicy, setLabelCheckboxContractPolicy] =
+    useState("");
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -166,6 +169,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setShowCoopContent(data.showCoopContent);
         setIntroStepText(data.introStepText);
         setCoopStepText(data.coopStepText);
+        setLabelCheckboxSepaMandat(data.labelCheckboxSepaMandat);
+        setLabelCheckboxContractPolicy(data.labelCheckboxContractPolicy);
       })
       .catch((error) =>
         handleRequestError(
@@ -529,6 +534,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               waitingListLinkConfirmationModeEnabled
             }
             introStepText={introStepText}
+            showCoopContent={showCoopContent}
           />
         );
       case "pickup_location":
@@ -596,6 +602,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               setEmailAddressAlreadyInUseLoading
             }
             waitingListEntryDetails={waitingListEntryDetails}
+            labelCheckboxSepaMandat={labelCheckboxSepaMandat}
+            labelCheckboxContractPolicy={labelCheckboxContractPolicy}
           />
         );
       case "summary":

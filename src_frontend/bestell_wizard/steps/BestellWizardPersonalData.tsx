@@ -8,7 +8,6 @@ import { isIbanValid } from "../utils/isIbanValid.ts";
 import { isEmailValid } from "../utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
-import { getTextSepaCheckbox } from "../utils/getTextSepaCheckbox.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { SubscriptionsApi, WaitingListEntryDetails } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -43,6 +42,8 @@ interface BestellWizardPersonalDataProps {
     emailAddressAlreadyInUseLoading: boolean,
   ) => void;
   waitingListEntryDetails?: WaitingListEntryDetails;
+  labelCheckboxSepaMandat: string;
+  labelCheckboxContractPolicy: string;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -63,6 +64,8 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   emailAddressAlreadyInUseLoading,
   setEmailAddressAlreadyInUseLoading,
   waitingListEntryDetails,
+  labelCheckboxSepaMandat,
+  labelCheckboxContractPolicy,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -354,7 +357,13 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 <Col>
                   <Form.Check
                     id={"sepa-mandat"}
-                    label={getTextSepaCheckbox()}
+                    label={
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: labelCheckboxSepaMandat,
+                        }}
+                      />
+                    }
                     checked={sepaAllowed}
                     onChange={(event) => setSepaAllowed(event.target.checked)}
                   />
@@ -363,18 +372,17 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                   <Form.Check
                     id={"contract"}
                     label={
-                      "Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese."
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: labelCheckboxContractPolicy,
+                        }}
+                      />
                     }
                     checked={contractAccepted}
                     onChange={(event) =>
                       setContractAccepted(event.target.checked)
                     }
                   />
-                  <Form.Text>
-                    <a href="https://biotop-oberland.de/gebuehrenordnung">
-                      https://biotop-oberland.de/gebuehrenordnung
-                    </a>
-                  </Form.Text>
                 </Col>
               </Row>
             </Col>

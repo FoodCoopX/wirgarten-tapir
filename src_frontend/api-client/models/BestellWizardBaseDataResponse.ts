@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PublicProductType } from './PublicProductType';
-import {
-    PublicProductTypeFromJSON,
-    PublicProductTypeFromJSONTyped,
-    PublicProductTypeToJSON,
-    PublicProductTypeToJSONTyped,
-} from './PublicProductType';
+import type { PublicProductType } from "./PublicProductType";
+import { PublicProductTypeFromJSON, PublicProductTypeToJSON } from "./PublicProductType";
 
 /**
  * 
@@ -87,6 +81,18 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     coopStepText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    labelCheckboxSepaMandat: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    labelCheckboxContractPolicy: string;
 }
 
 /**
@@ -103,6 +109,8 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('showCoopContent' in value) || value['showCoopContent'] === undefined) return false;
     if (!('introStepText' in value) || value['introStepText'] === undefined) return false;
     if (!('coopStepText' in value) || value['coopStepText'] === undefined) return false;
+    if (!('labelCheckboxSepaMandat' in value) || value['labelCheckboxSepaMandat'] === undefined) return false;
+    if (!('labelCheckboxContractPolicy' in value) || value['labelCheckboxContractPolicy'] === undefined) return false;
     return true;
 }
 
@@ -126,6 +134,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'showCoopContent': json['show_coop_content'],
         'introStepText': json['intro_step_text'],
         'coopStepText': json['coop_step_text'],
+        'labelCheckboxSepaMandat': json['label_checkbox_sepa_mandat'],
+        'labelCheckboxContractPolicy': json['label_checkbox_contract_policy'],
     };
 }
 
@@ -150,6 +160,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'show_coop_content': value['showCoopContent'],
         'intro_step_text': value['introStepText'],
         'coop_step_text': value['coopStepText'],
+        'label_checkbox_sepa_mandat': value['labelCheckboxSepaMandat'],
+        'label_checkbox_contract_policy': value['labelCheckboxContractPolicy'],
     };
 }
 

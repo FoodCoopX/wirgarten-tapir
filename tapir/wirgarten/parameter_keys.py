@@ -73,12 +73,13 @@ class ParameterKeys:
     SUBSCRIPTION_BUFFER_TIME_BEFORE_START = (
         f"{PREFIX}.subscriptions.buffer_time_before_start"
     )
-    TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
-    TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
-
     SUBSCRIPTION_FOUR_WEEK_CYCLE_START_POINT = (
         f"{PREFIX}.subscriptions.four_week_cycle_start_point"
     )
+
+    TESTS_OVERRIDE_DATE_PRESET = f"{PREFIX}.tests.override_date_preset"
+    TESTS_OVERRIDE_DATE = f"{PREFIX}.tests.override_date"
+
     TRIAL_PERIOD_ENABLED = f"{PREFIX}.trial_period.enabled"
     TRIAL_PERIOD_DURATION = f"{PREFIX}.trial_period.duration"
     TRIAL_PERIOD_CAN_BE_CANCELLED_BEFORE_END = (
@@ -100,6 +101,12 @@ class ParameterKeys:
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
     BESTELLWIZARD_INTRO_TEXT = f"{PREFIX}.bestellwizard.intro_text"
     BESTELLWIZARD_COOP_TEXT = f"{PREFIX}.bestellwizard.coop_text"
+    BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT = (
+        f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_text"
+    )
+    BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT = (
+        f"{PREFIX}.bestellwizard.contract_policy_checkbox_text"
+    )
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

@@ -867,6 +867,28 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=3,
         )
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
+            label="Text zum Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich ermächtige den Betrieb die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen.",
+            description="Kann HTML sein",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=2,
+            meta=ParameterMeta(textarea=True),
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
+            label="Text zum Checkbox zu Vertragsgrundsätze",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese.",
+            description="Kann HTML sein",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=1,
+            meta=ParameterMeta(textarea=True),
+        )
+
     def parameter_definition(
         self,
         key: str,

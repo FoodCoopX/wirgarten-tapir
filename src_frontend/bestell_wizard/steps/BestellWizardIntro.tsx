@@ -19,6 +19,7 @@ interface BestellWizardIntroProps {
   setShoppingCart: (cart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
   introStepText: string;
+  showCoopContent: boolean;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
@@ -32,6 +33,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
   introStepText,
+  showCoopContent,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -112,7 +114,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
             </div>
           ))
         )}
-        {allowInvestingMembership && (
+        {allowInvestingMembership && showCoopContent && (
           <div>
             <Form.Check
               id={"investingMembership"}

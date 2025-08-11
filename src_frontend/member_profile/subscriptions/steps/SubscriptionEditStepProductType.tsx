@@ -3,7 +3,6 @@ import { Col, Form, Modal, Row } from "react-bootstrap";
 import ProductForm from "../../../bestell_wizard/components/ProductForm";
 import { PublicProductType } from "../../../api-client";
 import { ShoppingCart } from "../../../bestell_wizard/types/ShoppingCart.ts";
-import { getTextSepaCheckbox } from "../../../bestell_wizard/utils/getTextSepaCheckbox.ts";
 import TapirButton from "../../../components/TapirButton.tsx";
 import { isShoppingCartEmpty } from "../../../bestell_wizard/utils/isShoppingCartEmpty.ts";
 
@@ -17,6 +16,7 @@ interface SubscriptionEditStepProductTypeProps {
   loading: boolean;
   checkingCapacities: boolean;
   onNextClicked: () => void;
+  labelCheckboxSepaMandat: string;
 }
 
 const SubscriptionEditStepProductType: React.FC<
@@ -31,6 +31,7 @@ const SubscriptionEditStepProductType: React.FC<
   loading,
   checkingCapacities,
   onNextClicked,
+  labelCheckboxSepaMandat,
 }) => {
   return (
     <>
@@ -49,7 +50,11 @@ const SubscriptionEditStepProductType: React.FC<
           <Col>
             <Form.Check
               id={"sepa-mandat"}
-              label={getTextSepaCheckbox()}
+              label={
+                <span
+                  dangerouslySetInnerHTML={{ __html: labelCheckboxSepaMandat }}
+                />
+              }
               checked={sepaAllowed}
               onChange={(event) => setSepaAllowed(event.target.checked)}
             />
