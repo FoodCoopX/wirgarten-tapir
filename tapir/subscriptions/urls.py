@@ -83,6 +83,11 @@ urlpatterns = [
         bestell_wizard.PublicBestellWizardIsEmailAddressValidApiView.as_view(),
         name="is_email_address_valid",
     ),
+    path(
+        "api/next_contract_start_date",
+        bestell_wizard.GetNextContractStartDateApiView.as_view(),
+        name="next_contract_start_date",
+    ),
 ]
 
 router = DefaultRouter()

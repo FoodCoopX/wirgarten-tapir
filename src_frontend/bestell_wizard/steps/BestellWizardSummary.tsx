@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { PersonalData } from "../types/PersonalData.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
@@ -15,7 +14,6 @@ import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
 
 interface BestellWizardSummaryProps {
   theme: TapirTheme;
-  personalData: PersonalData;
   shoppingCart: ShoppingCart;
   selectedNumberOfCoopShares: number;
   productTypes: PublicProductType[];
@@ -32,11 +30,11 @@ interface BestellWizardSummaryProps {
   waitingListEntryDetails: WaitingListEntryDetails | undefined;
   showCoopContent: boolean;
   revocationRightsExplanation: string;
+  contractStartDate: Date;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   theme,
-  personalData,
   shoppingCart,
   selectedNumberOfCoopShares,
   productTypes,
@@ -53,6 +51,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   waitingListEntryDetails,
   showCoopContent,
   revocationRightsExplanation,
+  contractStartDate,
 }) => {
   function shouldShowPickupLocationSummary() {
     if (selectedPickupLocations.length === 0) {
@@ -119,6 +118,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
                     }
                     shoppingCart={shoppingCart}
                     waitingListModeEnabled={waitingListModeEnabled}
+                    contractStartDate={contractStartDate}
                   />
                 ) : (
                   <span>Dieses Produkt ist nicht bestellt worden</span>

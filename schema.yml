@@ -1314,6 +1314,28 @@ paths:
                 items:
                   $ref: '#/components/schemas/PublicSubscription'
           description: ''
+  /subscriptions/api/next_contract_start_date:
+    get:
+      operationId: subscriptions_api_next_contract_start_date_retrieve
+      parameters:
+      - in: query
+        name: waiting_list_entry_id
+        schema:
+          type: string
+      tags:
+      - subscriptions
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: date
+          description: ''
   /subscriptions/api/revoke_changes:
     post:
       operationId: subscriptions_api_revoke_changes_create

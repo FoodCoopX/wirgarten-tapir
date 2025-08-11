@@ -10,6 +10,7 @@ interface SummaryProductTypeTableProps {
   firstDeliveryDatesByProductType: { [key: string]: Date };
   productType: PublicProductType;
   shoppingCart: ShoppingCart;
+  contractStartDate: Date;
 }
 
 const SummaryProductTypeTable: React.FC<SummaryProductTypeTableProps> = ({
@@ -17,6 +18,7 @@ const SummaryProductTypeTable: React.FC<SummaryProductTypeTableProps> = ({
   firstDeliveryDatesByProductType,
   productType,
   shoppingCart,
+  contractStartDate,
 }) => {
   function getProductIdsOfProductType(productType: PublicProductType) {
     return productType.products.map((product) => product.id);
@@ -30,13 +32,24 @@ const SummaryProductTypeTable: React.FC<SummaryProductTypeTableProps> = ({
     <Table bordered={true}>
       <tbody>
         {!waitingListModeEnabled && (
-          <tr>
-            <td>Erste Lieferung</td>
-            <td>
-              {formatDateText(firstDeliveryDatesByProductType[productType.id!])}
-            </td>
-          </tr>
+          <>
+            <tr>
+              <td>Vertragsstart</td>
+              <td>{formatDateText(contractStartDate)}</td>
+            </tr>
+            {!productType.noDelivery && (
+              <tr>
+                <td>Erste Lieferung</td>
+                <td>
+                  {formatDateText(
+                    firstDeliveryDatesByProductType[productType.id!],
+                  )}
+                </td>
+              </tr>
+            )}
+          </>
         )}
+
         {Object.entries(shoppingCart)
           .filter(
             ([productId, quantity]) =>

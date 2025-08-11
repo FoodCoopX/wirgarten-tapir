@@ -13,7 +13,7 @@ import {
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -54,7 +54,7 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation
+  shouldIncludeStepPickupLocation,
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
@@ -156,6 +156,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   const [revocationRightsExplanation, setRevocationRightsExplanation] =
     useState("");
   const [trialPeriodLengthInWeeks, setTrialPeriodLengthInWeeks] = useState(4);
+  const [contractStartDate, setContractStartDate] = useState(new Date());
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -455,6 +456,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     setSelectedNumberOfCoopShares(waitingListEntryDetails.numberOfCoopShares);
   }, [waitingListEntryDetails, publicProductTypes, pickupLocations]);
 
+  useEffect(() => {
+    subscriptionsApi
+      .subscriptionsApiNextContractStartDateRetrieve({
+        waitingListEntryId: waitingListEntryDetails?.id,
+      })
+      .then((result) => {
+        setContractStartDate(new Date(result));
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Vertragsstart-Datum",
+          setToastDatas,
+        ),
+      );
+  }, [waitingListEntryDetails]);
+
   function onNextClicked() {
     if (!waitingListModeEnabled && shouldOpenProductWaitingListModal()) {
       setProductWaitingListModalOpen(true);
@@ -617,7 +635,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           <BestellWizardSummary
             theme={theme}
             shoppingCart={shoppingCart}
-            personalData={personalData}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             productTypes={publicProductTypes}
             selectedPickupLocations={selectedPickupLocations}
@@ -635,6 +652,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             showCoopContent={showCoopContent}
             revocationRightsExplanation={revocationRightsExplanation}
+            contractStartDate={contractStartDate}
           />
         );
       case "end":

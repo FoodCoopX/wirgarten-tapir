@@ -5,6 +5,7 @@ from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -475,6 +476,39 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
 
         return Response(
             BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
+        )
+
+
+class GetNextContractStartDateApiView(APIView):
+    permission_classes = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: OpenApiTypes.DATE},
+        parameters=[
+            OpenApiParameter("waiting_list_entry_id", type=str, required=False)
+        ],
+    )
+    def get(self, request):
+        reference_date = get_today(cache=self.cache)
+        waiting_list_entry_id = request.query_params.get("waiting_list_entry_id", None)
+        if waiting_list_entry_id is not None:
+            waiting_list_entry = get_object_or_404(
+                WaitingListEntry, id=waiting_list_entry_id
+            )
+            desired_start_date = waiting_list_entry.desired_start_date
+            if desired_start_date is not None:
+                reference_date = desired_start_date
+
+        return Response(
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=reference_date,
+                apply_buffer_time=waiting_list_entry_id is None,
+                cache=self.cache,
+            )
         )
 
 
