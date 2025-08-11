@@ -637,10 +637,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_DURATION,
-            label="Probezeit dauer",
+            label="Probezeit in Wochen",
             datatype=TapirParameterDatatype.INTEGER,
             initial_value=1,
-            description="Wie lang die Probezeit dauert in Wochen.",
+            description="Länge der Probezeit in Wochen.",
             category=ParameterCategory.TRIAL_PERIOD,
             order_priority=90,
             meta=ParameterMeta(
