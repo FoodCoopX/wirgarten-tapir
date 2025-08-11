@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { CoopShareTransaction, MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
+import { MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
@@ -129,32 +129,21 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
             );
           })}
 
-          {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) ===
-            1 && (
-            <li>
-              1 Genossenschaftsanteil gültig am{" "}
-              {formatDateNumeric(memberDataToConfirm.sharePurchases[0].validAt)}
+          {memberDataToConfirm.sharePurchases.map((purchase) => (
+            <li className={purchase.autoConfirmed ? "text-warning" : ""}>
+              {purchase.quantity}{" "}
+              {purchase.quantity === 1
+                ? "Genossenschaftsanteil"
+                : "Genossenschaftsanteile"}{" "}
+              gültig am {formatDateNumeric(purchase.validAt)}
+              {purchase.autoConfirmed
+                ? " (automatische Bestätigung schon versendet)"
+                : ""}
             </li>
-          )}
-          {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases) >
-            1 && (
-            <li>
-              {getNumberOfSharesPurchased(memberDataToConfirm.sharePurchases)}{" "}
-              Genossenschaftsanteile gültig am{" "}
-              {formatDateNumeric(
-                memberDataToConfirm.sharePurchases.sort(
-                  (a, b) => a.validAt.getTime() - b.validAt.getTime(),
-                )[0].validAt,
-              )}
-            </li>
-          )}
+          ))}
         </ul>
       </>
     );
-  }
-
-  function getNumberOfSharesPurchased(purchases: CoopShareTransaction[]) {
-    return purchases.reduce((sum, purchase) => sum + purchase.quantity, 0);
   }
 
   function getEarliestChange(data: MemberDataToConfirm | SubscriptionChange) {
