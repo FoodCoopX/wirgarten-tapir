@@ -4261,6 +4261,8 @@ components:
           type: string
         revocation_rights_explanation:
           type: string
+        trial_period_length_in_weeks:
+          type: integer
       required:
       - allow_investing_membership
       - coop_step_text
@@ -4275,6 +4277,7 @@ components:
       - show_coop_content
       - student_status_allowed
       - theme
+      - trial_period_length_in_weeks
     BestellWizardCapacityCheckRequestRequest:
       type: object
       properties:

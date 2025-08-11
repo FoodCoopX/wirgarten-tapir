@@ -25,6 +25,7 @@ interface BestellWizardPickupLocationProps {
   firstDeliveryDatesByProductType: { [key: string]: Date };
   waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails?: WaitingListEntryDetails;
+  trialPeriodLengthInWeeks: number;
 }
 
 const BestellWizardPickupLocation: React.FC<
@@ -40,6 +41,7 @@ const BestellWizardPickupLocation: React.FC<
   firstDeliveryDatesByProductType,
   waitingListEntryDetails,
   waitingListLinkConfirmationModeEnabled,
+  trialPeriodLengthInWeeks,
 }) => {
   function getEarliestDeliveryDate() {
     return Object.values(firstDeliveryDatesByProductType).sort(
@@ -125,12 +127,12 @@ const BestellWizardPickupLocation: React.FC<
                 Bitte überprüfe ggf. deinen Spam-Ordner.
               </p>
               <p>
-                Deine X-wöchige Probezeit beginnt erst, nachdem du die erste
-                Lieferung erhalten hast. Während der Probezeit besteht keine
-                Kündigungsfrist und Du kannst Deinen Ernteanteil wöchentlich
-                jeweils zum Freitag der Vorwoche kündigen. Du zahlst nur die
-                Anteile, die du erhalten hast. Nach der Probezeit ist eine
-                Kündigung nur zum Jahresende möglich.
+                Deine {trialPeriodLengthInWeeks}-wöchige Probezeit beginnt erst,
+                nachdem du die erste Lieferung erhalten hast. Während der
+                Probezeit besteht keine Kündigungsfrist und Du kannst Deinen
+                Ernteanteil wöchentlich jeweils zum Freitag der Vorwoche
+                kündigen. Du zahlst nur die Anteile, die du erhalten hast. Nach
+                der Probezeit ist eine Kündigung nur zum Jahresende möglich.
               </p>
             </>
           )}

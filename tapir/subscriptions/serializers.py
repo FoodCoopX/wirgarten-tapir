@@ -206,6 +206,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     label_checkbox_sepa_mandat = serializers.CharField()
     label_checkbox_contract_policy = serializers.CharField()
     revocation_rights_explanation = serializers.CharField()
+    trial_period_length_in_weeks = serializers.IntegerField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

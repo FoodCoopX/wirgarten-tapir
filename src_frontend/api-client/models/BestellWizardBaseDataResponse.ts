@@ -99,6 +99,12 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     revocationRightsExplanation: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    trialPeriodLengthInWeeks: number;
 }
 
 /**
@@ -118,6 +124,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('labelCheckboxSepaMandat' in value) || value['labelCheckboxSepaMandat'] === undefined) return false;
     if (!('labelCheckboxContractPolicy' in value) || value['labelCheckboxContractPolicy'] === undefined) return false;
     if (!('revocationRightsExplanation' in value) || value['revocationRightsExplanation'] === undefined) return false;
+    if (!('trialPeriodLengthInWeeks' in value) || value['trialPeriodLengthInWeeks'] === undefined) return false;
     return true;
 }
 
@@ -144,6 +151,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'labelCheckboxSepaMandat': json['label_checkbox_sepa_mandat'],
         'labelCheckboxContractPolicy': json['label_checkbox_contract_policy'],
         'revocationRightsExplanation': json['revocation_rights_explanation'],
+        'trialPeriodLengthInWeeks': json['trial_period_length_in_weeks'],
     };
 }
 
@@ -171,6 +179,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'label_checkbox_sepa_mandat': value['labelCheckboxSepaMandat'],
         'label_checkbox_contract_policy': value['labelCheckboxContractPolicy'],
         'revocation_rights_explanation': value['revocationRightsExplanation'],
+        'trial_period_length_in_weeks': value['trialPeriodLengthInWeeks'],
     };
 }
 

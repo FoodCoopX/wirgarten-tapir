@@ -234,7 +234,7 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
                 }
                 required={false}
                 checked={isAssociationMembership}
-                label={"Ist Pflicht"}
+                label={"Ist die Vereinsmitgliedschaft"}
               />
             </Form.Group>
           </Row>

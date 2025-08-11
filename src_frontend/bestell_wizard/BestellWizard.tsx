@@ -13,7 +13,7 @@ import {
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
-  WaitingListEntryDetails,
+  WaitingListEntryDetails
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -54,7 +54,7 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation,
+  shouldIncludeStepPickupLocation
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
@@ -155,6 +155,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     useState("");
   const [revocationRightsExplanation, setRevocationRightsExplanation] =
     useState("");
+  const [trialPeriodLengthInWeeks, setTrialPeriodLengthInWeeks] = useState(4);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -174,6 +175,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setLabelCheckboxSepaMandat(data.labelCheckboxSepaMandat);
         setLabelCheckboxContractPolicy(data.labelCheckboxContractPolicy);
         setRevocationRightsExplanation(data.revocationRightsExplanation);
+        setTrialPeriodLengthInWeeks(data.trialPeriodLengthInWeeks);
       })
       .catch((error) =>
         handleRequestError(
@@ -557,6 +559,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               waitingListLinkConfirmationModeEnabled
             }
             waitingListEntryDetails={waitingListEntryDetails}
+            trialPeriodLengthInWeeks={trialPeriodLengthInWeeks}
           />
         );
       case "coop_shares":

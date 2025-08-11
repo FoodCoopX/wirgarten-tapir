@@ -394,6 +394,9 @@ class BestellWizardBaseDataApiView(APIView):
                 ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
                 cache=self.cache,
             ),
+            "trial_period_length_in_weeks": get_parameter_value(
+                ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
+            ),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
