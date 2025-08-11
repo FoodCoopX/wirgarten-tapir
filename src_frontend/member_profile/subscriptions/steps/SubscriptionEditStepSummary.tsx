@@ -15,6 +15,7 @@ interface SubscriptionEditStepSummaryProps {
   onBackClicked: () => void;
   onConfirmClicked: () => void;
   loading: boolean;
+  contractStartDate: Date;
 }
 
 const SubscriptionEditStepSummary: React.FC<
@@ -28,6 +29,7 @@ const SubscriptionEditStepSummary: React.FC<
   onBackClicked,
   onConfirmClicked,
   loading,
+  contractStartDate,
 }) => {
   return (
     <>
@@ -37,6 +39,7 @@ const SubscriptionEditStepSummary: React.FC<
           firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
           productType={productType}
           shoppingCart={shoppingCart}
+          contractStartDate={contractStartDate}
         />
         <SummaryPickupLocations
           selectedPickupLocations={selectedPickupLocations}

@@ -90,6 +90,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
   const [labelCheckboxSepaMandat, setLabelCheckboxSepaMandat] = useState("");
+  const [contractStartDate, setContractStartDate] = useState(new Date());
 
   useEffect(() => {
     if (!show) return;
@@ -120,6 +121,19 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         handleRequestError(
           error,
           "Fehler beim Laden der BestellWizard-Daten",
+          setToastDatas,
+        ),
+      );
+
+    subscriptionsApi
+      .subscriptionsApiNextContractStartDateRetrieve({
+        waitingListEntryId: undefined,
+      })
+      .then((result) => setContractStartDate(new Date(result)))
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Vertragstart-Datum",
           setToastDatas,
         ),
       );
@@ -387,6 +401,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
             onBackClicked={goToPreviousStep}
             onConfirmClicked={onConfirmOrder}
             loading={loading}
+            contractStartDate={contractStartDate}
           />
         )}
         {currentStep === "confirmation" && (
