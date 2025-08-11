@@ -6,7 +6,7 @@ import {
   WaitingListApi,
   WaitingListEntryDetails,
   WaitingListPickupLocationWish,
-  WaitingListProductWish,
+  WaitingListProductWish
 } from "../api-client";
 import "./waiting_list_card.css";
 import { Modal, Tab, Tabs } from "react-bootstrap";
@@ -28,6 +28,7 @@ interface WaitingListEntryEditModalProps {
   products: Product[];
   categories: string[];
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  entryReloading: boolean;
 }
 
 const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
@@ -40,6 +41,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
   products,
   categories,
   setToastDatas,
+  entryReloading,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -201,6 +203,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 reloadEntries={reloadEntries}
                 csrfToken={csrfToken}
                 setToastDatas={setToastDatas}
+                entryReloading={entryReloading}
               />
             </Tab>
           </Tabs>
@@ -211,7 +214,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
             icon={"delete"}
             text={"Löschen"}
             onClick={() => setShowConfirmDeleteModal(true)}
-            loading={loading}
+            loading={loading || entryReloading}
           />
           <TapirButton
             variant={"primary"}
@@ -222,7 +225,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 : "Speichern"
             }
             onClick={onSave}
-            loading={loading}
+            loading={loading || entryReloading}
             disabled={entryDetails.linkSentDate !== undefined}
           />
         </Modal.Footer>

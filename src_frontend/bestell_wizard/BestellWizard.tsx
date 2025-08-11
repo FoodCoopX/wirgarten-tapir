@@ -595,6 +595,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             setEmailAddressAlreadyInUseLoading={
               setEmailAddressAlreadyInUseLoading
             }
+            waitingListEntryDetails={waitingListEntryDetails}
           />
         );
       case "summary":

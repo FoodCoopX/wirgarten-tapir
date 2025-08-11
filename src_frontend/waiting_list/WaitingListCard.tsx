@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Badge,
-  Card,
-  Col,
-  Form,
-  ListGroup,
-  Row,
-  Tab,
-  Tabs,
-} from "react-bootstrap";
+import { Badge, Card, Col, Form, ListGroup, Row, Tab, Tabs } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   Counts,
@@ -20,7 +11,7 @@ import {
   WaitingListApiListListEntryTypeEnum,
   WaitingListApiListListMemberTypeEnum,
   WaitingListApiListListOrderByEnum,
-  WaitingListEntryDetails,
+  WaitingListEntryDetails
 } from "../api-client";
 import { DEFAULT_PAGE_SIZE_BIG } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
@@ -392,6 +383,7 @@ const WaitingListCard: React.FC<WaitingListCardProps> = ({ csrfToken }) => {
           products={products}
           categories={categories}
           setToastDatas={setToastDatas}
+          entryReloading={loading}
         />
       )}
       <TapirToastContainer

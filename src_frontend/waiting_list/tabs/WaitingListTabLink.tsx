@@ -14,6 +14,7 @@ interface WaitingListTabLinkProps {
   csrfToken: string;
   reloadEntries: () => void;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
+  entryReloading: boolean;
 }
 
 const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
@@ -21,6 +22,7 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
   csrfToken,
   reloadEntries,
   setToastDatas,
+  entryReloading,
 }) => {
   const api = useApi(WaitingListApi, csrfToken);
   const [loading, setLoading] = useState(false);
@@ -114,7 +116,7 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
                 : "Link versenden"
             }
             icon={"send"}
-            loading={loading}
+            loading={loading || entryReloading}
             onClick={onSendLink}
             disabled={!linkCanBeSent()}
           />
@@ -125,7 +127,7 @@ const WaitingListTabLink: React.FC<WaitingListTabLinkProps> = ({
               variant={"danger"}
               text={"Link ausschalten"}
               icon={"link_off"}
-              loading={loading}
+              loading={loading || entryReloading}
               onClick={onDisableLink}
             />
           </p>

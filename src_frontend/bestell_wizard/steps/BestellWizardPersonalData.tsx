@@ -10,7 +10,7 @@ import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 import { getTextSepaCheckbox } from "../utils/getTextSepaCheckbox.ts";
 import { useApi } from "../../hooks/useApi.ts";
-import { SubscriptionsApi } from "../../api-client";
+import { SubscriptionsApi, WaitingListEntryDetails } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -42,6 +42,7 @@ interface BestellWizardPersonalDataProps {
   setEmailAddressAlreadyInUseLoading: (
     emailAddressAlreadyInUseLoading: boolean,
   ) => void;
+  waitingListEntryDetails?: WaitingListEntryDetails;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -61,6 +62,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   setEmailAdresseAlreadyInUseIsKnown,
   emailAddressAlreadyInUseLoading,
   setEmailAddressAlreadyInUseLoading,
+  waitingListEntryDetails,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -299,6 +301,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                   } else {
                     setInnerDate(changedValue);
                   }
+                }}
+                inputProps={{
+                  disabled: waitingListEntryDetails?.memberAlreadyExists,
                 }}
               />
             </Form.Group>
