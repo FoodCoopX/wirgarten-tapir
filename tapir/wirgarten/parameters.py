@@ -889,6 +889,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(textarea=True),
         )
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
+            label="Erklärungstext unter dem Checkbox zur Widerrufsbelehrung ",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
+            description="Kann HTML sein",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=0,
+            meta=ParameterMeta(textarea=True),
+        )
+
     def parameter_definition(
         self,
         key: str,

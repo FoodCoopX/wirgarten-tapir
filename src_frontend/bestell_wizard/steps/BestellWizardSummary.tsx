@@ -5,11 +5,7 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Col, Form, Row, Table } from "react-bootstrap";
-import {
-  PublicPickupLocation,
-  PublicProductType,
-  WaitingListEntryDetails,
-} from "../../api-client";
+import { PublicPickupLocation, PublicProductType, WaitingListEntryDetails } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
@@ -35,6 +31,7 @@ interface BestellWizardSummaryProps {
   waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails: WaitingListEntryDetails | undefined;
   showCoopContent: boolean;
+  revocationRightsExplanation: string;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
@@ -55,6 +52,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   waitingListLinkConfirmationModeEnabled,
   waitingListEntryDetails,
   showCoopContent,
+  revocationRightsExplanation,
 }) => {
   function shouldShowPickupLocationSummary() {
     if (selectedPickupLocations.length === 0) {
@@ -159,12 +157,11 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
                 }
               />
               <Form.Text>
-                Du kannst deine Verträge und Beitrittserklärung innerhalb von
-                zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die
-                Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur
-                Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung
-                eines formlosen Widerrufsschreibens an
-                verwaltung@biotop-oberland.de.
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: revocationRightsExplanation,
+                  }}
+                />
               </Form.Text>
             </Form.Group>
           )}

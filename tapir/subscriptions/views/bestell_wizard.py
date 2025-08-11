@@ -390,6 +390,10 @@ class BestellWizardBaseDataApiView(APIView):
                 ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
                 cache=self.cache,
             ),
+            "revocation_rights_explanation": get_parameter_value(
+                ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
+                cache=self.cache,
+            ),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

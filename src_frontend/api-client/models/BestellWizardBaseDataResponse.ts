@@ -93,6 +93,12 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     labelCheckboxContractPolicy: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    revocationRightsExplanation: string;
 }
 
 /**
@@ -111,6 +117,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('coopStepText' in value) || value['coopStepText'] === undefined) return false;
     if (!('labelCheckboxSepaMandat' in value) || value['labelCheckboxSepaMandat'] === undefined) return false;
     if (!('labelCheckboxContractPolicy' in value) || value['labelCheckboxContractPolicy'] === undefined) return false;
+    if (!('revocationRightsExplanation' in value) || value['revocationRightsExplanation'] === undefined) return false;
     return true;
 }
 
@@ -136,6 +143,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'coopStepText': json['coop_step_text'],
         'labelCheckboxSepaMandat': json['label_checkbox_sepa_mandat'],
         'labelCheckboxContractPolicy': json['label_checkbox_contract_policy'],
+        'revocationRightsExplanation': json['revocation_rights_explanation'],
     };
 }
 
@@ -162,6 +170,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'coop_step_text': value['coopStepText'],
         'label_checkbox_sepa_mandat': value['labelCheckboxSepaMandat'],
         'label_checkbox_contract_policy': value['labelCheckboxContractPolicy'],
+        'revocation_rights_explanation': value['revocationRightsExplanation'],
     };
 }
 

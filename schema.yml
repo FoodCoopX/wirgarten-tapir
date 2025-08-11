@@ -4259,6 +4259,8 @@ components:
           type: string
         label_checkbox_contract_policy:
           type: string
+        revocation_rights_explanation:
+          type: string
       required:
       - allow_investing_membership
       - coop_step_text
@@ -4269,6 +4271,7 @@ components:
       - label_checkbox_sepa_mandat
       - price_of_a_share
       - product_types
+      - revocation_rights_explanation
       - show_coop_content
       - student_status_allowed
       - theme

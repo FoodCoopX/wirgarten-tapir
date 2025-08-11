@@ -153,6 +153,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   const [labelCheckboxSepaMandat, setLabelCheckboxSepaMandat] = useState("");
   const [labelCheckboxContractPolicy, setLabelCheckboxContractPolicy] =
     useState("");
+  const [revocationRightsExplanation, setRevocationRightsExplanation] =
+    useState("");
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -171,6 +173,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setCoopStepText(data.coopStepText);
         setLabelCheckboxSepaMandat(data.labelCheckboxSepaMandat);
         setLabelCheckboxContractPolicy(data.labelCheckboxContractPolicy);
+        setRevocationRightsExplanation(data.revocationRightsExplanation);
       })
       .catch((error) =>
         handleRequestError(
@@ -628,6 +631,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             }
             waitingListEntryDetails={waitingListEntryDetails}
             showCoopContent={showCoopContent}
+            revocationRightsExplanation={revocationRightsExplanation}
           />
         );
       case "end":
