@@ -18,9 +18,10 @@ from tapir.wirgarten.utils import get_today
 
 class MemberPickupLocationService:
     ANNOTATION_CURRENT_PICKUP_LOCATION_ID = "current_pickup_location_id"
+    ANNOTATION_CURRENT_PICKUP_LOCATION_NAME = "current_pickup_location_name"
 
     @classmethod
-    def annotate_member_queryset_with_pickup_location_at_date(
+    def annotate_member_queryset_with_pickup_location_id_at_date(
         cls, queryset: QuerySet[Member], reference_date: datetime.date
     ) -> QuerySet[Member]:
         current_member_pickup_location = (
@@ -40,11 +41,31 @@ class MemberPickupLocationService:
         )
 
     @classmethod
+    def annotate_member_queryset_with_pickup_location_name_at_date(
+        cls, queryset: QuerySet[Member], reference_date: datetime.date
+    ) -> QuerySet[Member]:
+        current_member_pickup_location = (
+            MemberPickupLocation.objects.filter(
+                member=OuterRef("id"), valid_from__lte=reference_date
+            )
+            .order_by("-valid_from")
+            .values("pickup_location__name")[:1]
+        )
+
+        return queryset.annotate(
+            **{
+                cls.ANNOTATION_CURRENT_PICKUP_LOCATION_NAME: Subquery(
+                    current_member_pickup_location
+                )
+            }
+        )
+
+    @classmethod
     def get_member_pickup_location_id(
         cls, member: Member, reference_date: datetime.date
     ) -> str | None:
         if not hasattr(member, cls.ANNOTATION_CURRENT_PICKUP_LOCATION_ID):
-            member = cls.annotate_member_queryset_with_pickup_location_at_date(
+            member = cls.annotate_member_queryset_with_pickup_location_id_at_date(
                 Member.objects.filter(id=member.id), reference_date
             ).get()
 

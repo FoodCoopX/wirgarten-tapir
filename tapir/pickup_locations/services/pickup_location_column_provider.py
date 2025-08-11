@@ -40,7 +40,7 @@ class PickupLocationColumnProvider:
         cls, location: PickupLocation, reference_datetime: datetime.datetime
     ):
 
-        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
+        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
             Member.objects.all(), reference_datetime.date()
         )
 
@@ -55,7 +55,7 @@ class PickupLocationColumnProvider:
         cls, location: PickupLocation, reference_datetime: datetime.datetime
     ):
 
-        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_at_date(
+        members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
             Member.objects.all(), reference_datetime.date()
         )
 

@@ -84,7 +84,8 @@
             <td>{{ member.first_name }}</td>
             <td>{{ member.last_name }}</td>
             <td>
-                {% if not member.email_verified %}
+                {% member_email_verified member cache as verified %}
+                {% if not verified %}
                     <span title="Nicht verifiziert!"
                           style="color: var(--secondary);
                                  font-size: 1.5em;
@@ -98,7 +99,7 @@
                 <td class="text-end">{{ member.coop_shares_total_value|format_currency }} €&nbsp;&nbsp;</td>
             {% endif %}
             <td class="text-end">{{ member.monthly_payment|format_currency }} €&nbsp;&nbsp;</td>
-            <td>{{ member.pickup_location.name }}{% pickup_location_warning member %}</td>
+            <td>{{ member.current_pickup_location_name }}{% pickup_location_warning member cache %}</td>
             <td>{{ member.coop_entry_date|format_date }}</td>
         </tr>
     {% endfor %}
