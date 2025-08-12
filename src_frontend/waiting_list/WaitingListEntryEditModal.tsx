@@ -160,7 +160,6 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           <Tabs defaultActiveKey={"personal_data"}>
             <Tab eventKey="personal_data" title="Persönliche Daten">
               <WaitingListTabPersonalData
-                categories={categories}
                 entryDetails={entryDetails}
                 firstName={firstName}
                 setFirstName={setFirstName}
@@ -178,10 +177,6 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 setPostcode={setPostcode}
                 city={city}
                 setCity={setCity}
-                desiredStartDate={desiredStartDate}
-                setDesiredStartDate={setDesiredStartDate}
-                category={category}
-                setCategory={setCategory}
                 comment={comment}
                 setComment={setComment}
               />
@@ -195,6 +190,11 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
                 products={products}
                 productWishes={productWishes}
                 setProductWishes={setProductWishes}
+                categories={categories}
+                desiredStartDate={desiredStartDate}
+                setDesiredStartDate={setDesiredStartDate}
+                category={category}
+                setCategory={setCategory}
               />
             </Tab>
             <Tab eventKey="link" title="Link">

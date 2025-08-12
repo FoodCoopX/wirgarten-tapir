@@ -1,7 +1,6 @@
 import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { WaitingListEntryDetails } from "../../api-client";
-import dayjs from "dayjs";
 
 interface WaitingListTabPersonalDataProps {
   entryDetails: WaitingListEntryDetails;
@@ -21,13 +20,8 @@ interface WaitingListTabPersonalDataProps {
   setPostcode: (postcode: string) => void;
   city: string;
   setCity: (city: string) => void;
-  desiredStartDate: Date | undefined;
-  setDesiredStartDate: (date: Date | undefined) => void;
-  category: string;
-  setCategory: (category: string) => void;
   comment: string;
   setComment: (comment: string) => void;
-  categories: string[];
 }
 
 const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
@@ -48,13 +42,8 @@ const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
   setPostcode,
   city,
   setCity,
-  desiredStartDate,
-  setDesiredStartDate,
-  category,
-  setCategory,
   comment,
   setComment,
-  categories,
 }) => {
   return (
     <>
@@ -175,45 +164,6 @@ const WaitingListTabPersonalData: React.FC<WaitingListTabPersonalDataProps> = ({
               value={city}
               disabled={entryDetails.memberAlreadyExists}
             />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row className={"mt-2"}>
-        <Col>
-          <Form.Group controlId={"form.desiredStartDate"}>
-            <Form.Label>Gewünschtes Anfangsdatum</Form.Label>
-            <Form.Control
-              type={"date"}
-              onChange={(event) => {
-                setDesiredStartDate(
-                  !event.target.value
-                    ? undefined
-                    : new Date(event.target.value),
-                );
-              }}
-              value={
-                desiredStartDate === undefined
-                  ? undefined
-                  : dayjs(desiredStartDate).format("YYYY-MM-DD")
-              }
-              required={false}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId={"form.category"}>
-            <Form.Label>Category</Form.Label>
-            <Form.Select
-              onChange={(event) => setCategory(event.target.value)}
-              value={category}
-            >
-              <option value={""}>Keine Kategorie</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </Form.Select>
           </Form.Group>
         </Col>
       </Row>
