@@ -5,6 +5,7 @@ import { PublicPickupLocation, PublicProductType } from "../../../api-client";
 import { ShoppingCart } from "../../../bestell_wizard/types/ShoppingCart.ts";
 import { Modal } from "react-bootstrap";
 import TapirButton from "../../../components/TapirButton.tsx";
+import { isAtLeastOneOrderedProductWithDelivery } from "../../../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 
 interface SubscriptionEditStepSummaryProps {
   waitingListModeEnabled: boolean;
@@ -41,10 +42,14 @@ const SubscriptionEditStepSummary: React.FC<
           shoppingCart={shoppingCart}
           contractStartDate={contractStartDate}
         />
-        <SummaryPickupLocations
-          selectedPickupLocations={selectedPickupLocations}
-          waitingListModeEnabled={waitingListModeEnabled}
-        />
+        {isAtLeastOneOrderedProductWithDelivery(shoppingCart, [
+          productType,
+        ]) && (
+          <SummaryPickupLocations
+            selectedPickupLocations={selectedPickupLocations}
+            waitingListModeEnabled={waitingListModeEnabled}
+          />
+        )}
       </Modal.Body>
       <Modal.Footer>
         <div

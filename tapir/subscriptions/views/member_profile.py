@@ -280,6 +280,7 @@ class UpdateSubscriptionsApiView(APIView):
                 valid_from=contract_start_date,
                 pickup_location_id=validated_data["pickup_location_id"],
                 actor=actor,
+                cache=self.cache,
             )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
