@@ -12,42 +12,18 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PickupLocation } from './PickupLocation';
-import {
-    PickupLocationFromJSON,
-    PickupLocationFromJSONTyped,
-    PickupLocationToJSON,
-    PickupLocationToJSONTyped,
-} from './PickupLocation';
-import type { CoopShareTransaction } from './CoopShareTransaction';
-import {
-    CoopShareTransactionFromJSON,
-    CoopShareTransactionFromJSONTyped,
-    CoopShareTransactionToJSON,
-    CoopShareTransactionToJSONTyped,
-} from './CoopShareTransaction';
-import type { SubscriptionChange } from './SubscriptionChange';
-import {
-    SubscriptionChangeFromJSON,
-    SubscriptionChangeFromJSONTyped,
-    SubscriptionChangeToJSON,
-    SubscriptionChangeToJSONTyped,
-} from './SubscriptionChange';
-import type { Subscription } from './Subscription';
-import {
-    SubscriptionFromJSON,
-    SubscriptionFromJSONTyped,
-    SubscriptionToJSON,
-    SubscriptionToJSONTyped,
-} from './Subscription';
-import type { Member } from './Member';
-import {
-    MemberFromJSON,
-    MemberFromJSONTyped,
-    MemberToJSON,
-    MemberToJSONTyped,
-} from './Member';
+import type { PickupLocation } from "./PickupLocation";
+import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
+import type { CoopShareTransaction } from "./CoopShareTransaction";
+import { CoopShareTransactionFromJSON, CoopShareTransactionToJSON } from "./CoopShareTransaction";
+import type { SubscriptionChangeLogEntry } from "./SubscriptionChangeLogEntry";
+import { SubscriptionChangeLogEntryFromJSON, SubscriptionChangeLogEntryToJSON } from "./SubscriptionChangeLogEntry";
+import type { SubscriptionChange } from "./SubscriptionChange";
+import { SubscriptionChangeFromJSON, SubscriptionChangeToJSON } from "./SubscriptionChange";
+import type { Subscription } from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
+import type { Member } from "./Member";
+import { MemberFromJSON, MemberToJSON } from "./Member";
 
 /**
  * 
@@ -93,6 +69,12 @@ export interface MemberDataToConfirm {
     subscriptionChanges: Array<SubscriptionChange>;
     /**
      * 
+     * @type {Array<SubscriptionChangeLogEntry>}
+     * @memberof MemberDataToConfirm
+     */
+    subscriptionsDeleted: Array<SubscriptionChangeLogEntry>;
+    /**
+     * 
      * @type {boolean}
      * @memberof MemberDataToConfirm
      */
@@ -121,6 +103,7 @@ export function instanceOfMemberDataToConfirm(value: object): value is MemberDat
     if (!('subscriptionCancellations' in value) || value['subscriptionCancellations'] === undefined) return false;
     if (!('subscriptionCreations' in value) || value['subscriptionCreations'] === undefined) return false;
     if (!('subscriptionChanges' in value) || value['subscriptionChanges'] === undefined) return false;
+    if (!('subscriptionsDeleted' in value) || value['subscriptionsDeleted'] === undefined) return false;
     if (!('showWarning' in value) || value['showWarning'] === undefined) return false;
     if (!('cancellationTypes' in value) || value['cancellationTypes'] === undefined) return false;
     if (!('sharePurchases' in value) || value['sharePurchases'] === undefined) return false;
@@ -143,6 +126,7 @@ export function MemberDataToConfirmFromJSONTyped(json: any, ignoreDiscriminator:
         'subscriptionCancellations': ((json['subscription_cancellations'] as Array<any>).map(SubscriptionFromJSON)),
         'subscriptionCreations': ((json['subscription_creations'] as Array<any>).map(SubscriptionFromJSON)),
         'subscriptionChanges': ((json['subscription_changes'] as Array<any>).map(SubscriptionChangeFromJSON)),
+        'subscriptionsDeleted': ((json['subscriptions_deleted'] as Array<any>).map(SubscriptionChangeLogEntryFromJSON)),
         'showWarning': json['show_warning'],
         'cancellationTypes': json['cancellation_types'],
         'sharePurchases': ((json['share_purchases'] as Array<any>).map(CoopShareTransactionFromJSON)),
@@ -166,6 +150,7 @@ export function MemberDataToConfirmFromJSONTyped(json: any, ignoreDiscriminator:
         'subscription_cancellations': ((value['subscriptionCancellations'] as Array<any>).map(SubscriptionToJSON)),
         'subscription_creations': ((value['subscriptionCreations'] as Array<any>).map(SubscriptionToJSON)),
         'subscription_changes': ((value['subscriptionChanges'] as Array<any>).map(SubscriptionChangeToJSON)),
+        'subscriptions_deleted': ((value['subscriptionsDeleted'] as Array<any>).map(SubscriptionChangeLogEntryToJSON)),
         'show_warning': value['showWarning'],
         'cancellation_types': value['cancellationTypes'],
         'share_purchases': ((value['sharePurchases'] as Array<any>).map(CoopShareTransactionToJSON)),

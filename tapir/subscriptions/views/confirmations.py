@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     WaitingListEntry,
     WaitingListProductWish,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.utils import (
     get_today,
@@ -87,6 +88,17 @@ class MemberDataToConfirmApiView(APIView):
             key="creations",
             changes_by_member=changes_by_member,
         )
+
+        for change in SubscriptionChangeLogEntry.objects.filter(
+            admin_confirmed__isnull=True,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+        ).select_related("actor"):
+            member = change.user.member
+            if member not in changes_by_member.keys():
+                changes_by_member[member] = {}
+            if "deleted" not in changes_by_member[member].keys():
+                changes_by_member[member]["deleted"] = []
+            changes_by_member[member]["deleted"].append(change)
 
         for member in Member.objects.all():
             if member in changes_by_member.keys():
@@ -153,7 +165,7 @@ class MemberDataToConfirmApiView(APIView):
             product_type,
             changes_for_this_product_type,
         ) in changes_by_product_type.items():
-            if product_type is None:
+            if product_type is None or product_type == "deleted":
                 continue
             creations_for_this_product_type = changes_for_this_product_type["creations"]
             cancellations_for_this_product_type = changes_for_this_product_type[
@@ -200,6 +212,7 @@ class MemberDataToConfirmApiView(APIView):
             "show_warning": show_warning,
             "subscription_creations": creations,
             "subscription_changes": changes,
+            "subscriptions_deleted": changes_by_product_type.get("deleted", []),
             "share_purchases": TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
                 cache=cache
             ).get(

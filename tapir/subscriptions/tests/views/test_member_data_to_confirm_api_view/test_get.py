@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
+from tapir.wirgarten.models import SubscriptionChangeLogEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -109,6 +110,39 @@ class TestMemberDataToConfirmView(TapirIntegrationTest):
         self.assertEqual(
             purchase.id,
             member_data["share_purchases"][0]["id"],
+        )
+
+    def test_get_subscriptionsGotDeletedBecauseCancelledBeforeTheyStarted_returnedDataContainsLogEntry(
+        self,
+    ):
+        member = MemberFactory.create(is_superuser=True)
+        self.client.force_login(member)
+
+        member = MemberFactory.create()
+        subscription = SubscriptionFactory.create(member=member)
+        subscription.delete()
+        log_entry = SubscriptionChangeLogEntry().populate_subscription_changed(
+            actor=member,
+            user=member,
+            admin_confirmed=None,
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+            subscriptions=[subscription],
+        )
+        log_entry.save()
+
+        response = self.client.get(reverse("subscriptions:member_data_to_confirm"))
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        response_content = response.json()
+        self.assertEqual(1, len(response_content))
+
+        member_data = response_content[0]
+
+        self.assertEqual(1, len(member_data["subscriptions_deleted"]))
+        self.assertEqual(
+            log_entry.id,
+            member_data["subscriptions_deleted"][0]["id"],
         )
 
     @staticmethod

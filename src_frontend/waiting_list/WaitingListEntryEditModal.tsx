@@ -6,7 +6,7 @@ import {
   WaitingListApi,
   WaitingListEntryDetails,
   WaitingListPickupLocationWish,
-  WaitingListProductWish
+  WaitingListProductWish,
 } from "../api-client";
 import "./waiting_list_card.css";
 import { Modal, Tab, Tabs } from "react-bootstrap";

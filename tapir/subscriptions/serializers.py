@@ -22,6 +22,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Product,
     Subscription,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.service.products import get_product_price
 from tapir.wirgarten.utils import get_today
@@ -86,6 +87,12 @@ class CoopShareTransactionSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class SubscriptionChangeLogEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionChangeLogEntry
+        fields = "__all__"
+
+
 class MemberDataToConfirmSerializer(serializers.Serializer):
     member = MemberSerializer()
     member_profile_url = serializers.CharField()
@@ -93,6 +100,7 @@ class MemberDataToConfirmSerializer(serializers.Serializer):
     subscription_cancellations = SubscriptionSerializer(many=True)
     subscription_creations = SubscriptionSerializer(many=True)
     subscription_changes = SubscriptionChangeSerializer(many=True)
+    subscriptions_deleted = SubscriptionChangeLogEntrySerializer(many=True)
     show_warning = serializers.BooleanField()
     cancellation_types = serializers.ListField(child=serializers.CharField())
     share_purchases = CoopShareTransactionSerializer(many=True)

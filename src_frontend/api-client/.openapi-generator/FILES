@@ -23,6 +23,7 @@ models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
+models/ChangeTypeEnum.ts
 models/CoopShareTransaction.ts
 models/CountryEnum.ts
 models/Counts.ts
@@ -139,6 +140,7 @@ models/StoredUpload.ts
 models/StoredUploadRequest.ts
 models/Subscription.ts
 models/SubscriptionChange.ts
+models/SubscriptionChangeLogEntry.ts
 models/TapirmailApiSegmentAvailableFiltersRetrieve200Response.ts
 models/TapirmailApiSegmentAvailableSegmentsRetrieve200Response.ts
 models/TapirmailApiSegmentCombineCreate200Response.ts

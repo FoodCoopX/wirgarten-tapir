@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
+import {
+  MemberDataToConfirm,
+  type SubscriptionChange,
+  SubscriptionsApi,
+} from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
@@ -93,8 +97,17 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               <li key={cancellation.id}>
                 Kündigung: {cancellation.quantity}
                 {" × "}
-                {cancellation.product.name} {cancellation.product.type.name} am{" "}
+                {cancellation.product.name} {cancellation.product.type.name} zum{" "}
                 {formatDateNumeric(cancellation.endDate)}
+              </li>
+            );
+          })}
+          {memberDataToConfirm.subscriptionsDeleted.map((deleted) => {
+            return (
+              <li key={deleted.id}>
+                Kündigung am {formatDateNumeric(deleted.createdDate)} vor
+                Vertragsstart: <br />
+                {deleted.subscriptions}
               </li>
             );
           })}
@@ -128,7 +141,6 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
               </li>
             );
           })}
-
           {memberDataToConfirm.sharePurchases.map((purchase) => (
             <li className={purchase.autoConfirmed ? "text-warning" : ""}>
               {purchase.quantity}{" "}
@@ -163,6 +175,15 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         ...dates,
         ...data.sharePurchases.map((purchase) => purchase.validAt),
       ];
+    }
+
+    if ("subscriptionsDeleted" in data) {
+      {
+        dates = [
+          ...dates,
+          ...data.subscriptionsDeleted.map((deleted) => deleted.createdDate),
+        ];
+      }
     }
 
     if (dates.length === 0) {
@@ -317,25 +338,9 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   }
 
   function doesSelectionContainChangesThatAreAlreadyValid(): boolean {
-    for (const change of selectedChanges) {
-      for (const subscription of change.subscriptionCreations) {
-        if (subscription.startDate <= new Date()) {
-          return true;
-        }
-      }
-
-      for (const change2 of change.subscriptionChanges) {
-        for (const subscription of change2.subscriptionCreations) {
-          if (subscription.startDate <= new Date()) {
-            return true;
-          }
-        }
-      }
-
-      for (const purchase of change.sharePurchases) {
-        if (purchase.validAt <= new Date()) {
-          return true;
-        }
+    for (const memberChanges of selectedChanges) {
+      if (getEarliestChange(memberChanges) <= new Date()) {
+        return true;
       }
     }
 

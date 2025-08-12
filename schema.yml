@@ -4496,6 +4496,18 @@ components:
       - can_cancel_coop_membership
       - legal_status
       - subscribed_products
+    ChangeTypeEnum:
+      enum:
+      - ADDED
+      - CANCELLED
+      - RENEWED
+      - NOT_RENEWED
+      type: string
+      description: |-
+        * `ADDED` - Vertragsabschluss
+        * `CANCELLED` - Kündigung
+        * `RENEWED` - Verlängerung
+        * `NOT_RENEWED` - Keine Verlängerung
     CoopShareTransaction:
       type: object
       properties:
@@ -6129,6 +6141,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SubscriptionChange'
+        subscriptions_deleted:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionChangeLogEntry'
         show_warning:
           type: boolean
         cancellation_types:
@@ -6149,6 +6165,7 @@ components:
       - subscription_cancellations
       - subscription_changes
       - subscription_creations
+      - subscriptions_deleted
     MemberJokerInformation:
       type: object
       properties:
@@ -7974,6 +7991,40 @@ components:
       - product_type
       - subscription_cancellations
       - subscription_creations
+    SubscriptionChangeLogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_date:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Creation Date
+        change_type:
+          $ref: '#/components/schemas/ChangeTypeEnum'
+        subscriptions:
+          type: string
+          maxLength: 1024
+        admin_confirmed:
+          type: string
+          format: date-time
+          nullable: true
+        actor:
+          type: string
+          nullable: true
+        user:
+          type: string
+          nullable: true
+        log_class_type:
+          type: integer
+      required:
+      - change_type
+      - created_date
+      - id
+      - log_class_type
+      - subscriptions
     TemporaryUpload:
       type: object
       properties:
