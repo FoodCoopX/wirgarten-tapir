@@ -73,11 +73,12 @@ def renew_contract_same_conditions(request, **kwargs):
     member.sepa_consent = get_now(cache=cache)
     member.save()
 
-    SubscriptionChangeLogEntry().populate(
+    SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=request.user,
         user=member,
         change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.RENEWED,
         subscriptions=new_subs,
+        admin_confirmed=get_now(cache=cache),
     ).save()
 
     send_order_confirmation(member, new_subs, cache=cache, from_waiting_list=False)
@@ -107,11 +108,12 @@ def cancel_contract_at_period_end(request, **kwargs):
 
     member = Member.objects.get(id=member_id)
 
-    SubscriptionChangeLogEntry().populate(
+    SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=request.user,
         user=member,
         change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.NOT_RENEWED,
         subscriptions=subs,
+        admin_confirmed=now,
     ).save()
 
     TransactionalTrigger.fire_action(

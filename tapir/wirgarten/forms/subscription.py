@@ -1073,11 +1073,12 @@ def cancel_or_delete_subscriptions(
     if len(subscriptions) == 0:
         return existing_trial_end_date
 
-    SubscriptionChangeLogEntry().populate(
+    SubscriptionChangeLogEntry().populate_subscription_changed(
         actor=actor,
         user=member,
         change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
         subscriptions=subscriptions,
+        admin_confirmed=get_now(cache=cache),
     ).save()
 
     for subscription in subscriptions:

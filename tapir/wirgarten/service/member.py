@@ -375,7 +375,7 @@ def send_order_confirmation(
                 "contract_start_date": format_date(contract_start_date),
                 "contract_end_date": format_date(subs[0].end_date),
                 "first_pickup_date": future_deliveries[0]["delivery_date"],
-                "contract_list": format_subscription_list_html(subs),
+                "contract_list": format_subscription_list_html(list(subs)),
             },
         ),
     )

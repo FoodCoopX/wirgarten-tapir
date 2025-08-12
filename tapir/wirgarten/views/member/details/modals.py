@@ -184,11 +184,12 @@ def get_renew_contracts_form(request, **kwargs):
             member_id=member_id,
         )
 
-        SubscriptionChangeLogEntry().populate(
+        SubscriptionChangeLogEntry().populate_subscription_changed(
             actor=request.user,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.RENEWED,
-            subscriptions=form.subs,
+            subscriptions=list(form.subs),
+            admin_confirmed=get_now(),
         ).save()
 
     return get_form_modal(
@@ -293,11 +294,12 @@ def get_add_subscription_form(request, **kwargs):
         else:
             form.save(member_id=member_id)
 
-        SubscriptionChangeLogEntry().populate(
+        SubscriptionChangeLogEntry().populate_subscription_changed(
             actor=request.user,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=form.subscriptions,
+            admin_confirmed=get_now(cache=cache),
         ).save()
 
     return get_form_modal(
@@ -383,11 +385,12 @@ def get_cancel_trial_form(request, **kwargs):
                 actor=request.user,
             ).save()
         if len(subs_to_cancel) > 0:
-            SubscriptionChangeLogEntry().populate(
+            SubscriptionChangeLogEntry().populate_subscription_changed(
                 actor=request.user,
                 user=form.member,
                 change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-                subscriptions=subs_to_cancel,
+                subscriptions=list(subs_to_cancel),
+                admin_confirmed=get_now(),
             ).save()
 
         return form.save()
