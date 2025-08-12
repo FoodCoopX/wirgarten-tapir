@@ -7,7 +7,7 @@ import {
   Product,
   WaitingListEntryDetails,
   WaitingListPickupLocationWish,
-  WaitingListProductWish,
+  WaitingListProductWish
 } from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
@@ -42,27 +42,27 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
             products={products}
           />
         </Row>
-        {entryDetails.currentSubscriptions && (
-          <Row className={"mt-2"}>
-            <h6>Schon bestehende Verträge:</h6>
-            <div>
-              {entryDetails.currentSubscriptions.length === 0 ? (
-                "Keine"
-              ) : (
-                <ul>
-                  {entryDetails.currentSubscriptions.map((subscription) => (
+        <Row className={"mt-4"}>
+          <h6>Schon bestehende Verträge:</h6>
+          <div>
+            {(entryDetails.currentSubscriptions ?? []).length === 0 ? (
+              "Keine"
+            ) : (
+              <ul>
+                {(entryDetails.currentSubscriptions ?? []).map(
+                  (subscription) => (
                     <li key={subscription.id}>
                       {formatSubscription(subscription)} (
                       {formatDateNumeric(subscription.startDate)}
                       {" -> "}
                       {formatDateNumeric(subscription.endDate)})
                     </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Row>
-        )}
+                  ),
+                )}
+              </ul>
+            )}
+          </div>
+        </Row>
       </Col>
       <Col>
         <Row className={"mt-2"}>
@@ -72,6 +72,14 @@ const WaitingListTabWishes: React.FC<WaitingListTabWishesProps> = ({
             wishes={pickupLocationWishes}
             waitingListEntryId={entryDetails.id}
           />
+        </Row>
+        <Row className={"mt-4"}>
+          <h6>Aktuelle Abholort</h6>
+          <div>
+            {entryDetails.currentPickupLocation === undefined
+              ? "Keine"
+              : entryDetails.currentPickupLocation.name}
+          </div>
         </Row>
       </Col>
     </Row>
