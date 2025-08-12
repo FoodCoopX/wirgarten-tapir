@@ -963,6 +963,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                     subscriptions_existed_before_changes=subscriptions_existed_before_changes,
                     new_subscriptions=new_subscriptions,
                     cache=self.cache,
+                    from_waiting_list=True,
                 )
 
             if is_new_member:

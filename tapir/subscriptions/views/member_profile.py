@@ -302,6 +302,7 @@ class UpdateSubscriptionsApiView(APIView):
             member=member,
             new_subscriptions=new_subscriptions,
             cache=self.cache,
+            from_waiting_list=False,
         )
 
 

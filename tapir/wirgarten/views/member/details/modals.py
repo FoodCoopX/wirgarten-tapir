@@ -288,6 +288,7 @@ def get_add_subscription_form(request, **kwargs):
                         member=member
                     ),
                     cache=cache,
+                    from_waiting_list=False,
                 )
         else:
             form.save(member_id=member_id)

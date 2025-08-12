@@ -136,7 +136,9 @@ class BestellWizardConfirmOrderApiView(APIView):
                     subscriptions=subscriptions,
                     cache=self.cache,
                 )
-            send_order_confirmation(member, subscriptions, cache=self.cache)
+            send_order_confirmation(
+                member, subscriptions, cache=self.cache, from_waiting_list=False
+            )
 
         data = {
             "order_confirmed": True,

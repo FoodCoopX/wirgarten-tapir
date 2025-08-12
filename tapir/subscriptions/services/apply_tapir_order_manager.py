@@ -176,10 +176,16 @@ class ApplyTapirOrderManager:
         member: Member,
         new_subscriptions: list[Subscription],
         cache: dict,
+        from_waiting_list: bool,
     ):
         if subscriptions_existed_before_changes:
             send_contract_change_confirmation(
                 member=member, subs=new_subscriptions, cache=cache
             )
         else:
-            send_order_confirmation(member=member, subs=new_subscriptions, cache=cache)
+            send_order_confirmation(
+                member=member,
+                subs=new_subscriptions,
+                cache=cache,
+                from_waiting_list=from_waiting_list,
+            )

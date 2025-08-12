@@ -80,7 +80,7 @@ def renew_contract_same_conditions(request, **kwargs):
         subscriptions=new_subs,
     ).save()
 
-    send_order_confirmation(member, new_subs, cache=cache)
+    send_order_confirmation(member, new_subs, cache=cache, from_waiting_list=False)
 
     return HttpResponseRedirect(member_detail_url(member_id))
 

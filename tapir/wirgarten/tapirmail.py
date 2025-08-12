@@ -304,6 +304,18 @@ def _register_triggers():
     )
 
     register_transactional_trigger(
+        name="Bestellung durch Warteliste-Link abgeschlossen",
+        key=Events.WAITING_LIST_ORDER_CONFIRMATION,
+        tokens={
+            "Vertragsliste": "contract_list",
+            "Vertragsstart": "contract_start_date",
+            "Vertragsende": "contract_end_date",
+            "Erste Abholung am": "first_pickup_date",
+        },
+        required=True,
+    )
+
+    register_transactional_trigger(
         name="Bestellung vom Admin bestätigt",
         key=Events.ORDER_CONFIRMED_BY_ADMIN,
         tokens={

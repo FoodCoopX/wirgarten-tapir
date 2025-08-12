@@ -30,6 +30,7 @@ from tapir.subscriptions.services.base_product_type_service import (
 )
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.forms import TapirPhoneNumberField
+from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.form_mixins import FormWithRequestMixin
 from tapir.wirgarten.forms.registration.consents import ConsentForm
@@ -625,7 +626,9 @@ class SubscriptionRenewalForm(Form):
         ).filter(member_id=member_id, cancellation_ts__isnull=True)
 
         member = Member.objects.get(id=member_id)
-        send_order_confirmation(member, self.subs, cache=self.cache)
+        send_order_confirmation(
+            member, self.subs, cache=self.cache, from_waiting_list=False
+        )
 
 
 class CancellationReasonForm(Form):

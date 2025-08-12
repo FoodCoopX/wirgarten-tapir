@@ -341,7 +341,9 @@ def send_contract_change_confirmation(
     )
 
 
-def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dict):
+def send_order_confirmation(
+    member: Member, subs: List[Subscription], cache: Dict, from_waiting_list: bool
+):
     if len(subs) == 0:
         TransactionalTrigger.fire_action(
             TransactionalTriggerData(
@@ -363,7 +365,11 @@ def send_order_confirmation(member: Member, subs: List[Subscription], cache: Dic
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
-            key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION,
+            key=(
+                Events.WAITING_LIST_ORDER_CONFIRMATION
+                if from_waiting_list
+                else Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
+            ),
             recipient_id_in_base_queryset=member.id,
             token_data={
                 "contract_start_date": format_date(contract_start_date),
