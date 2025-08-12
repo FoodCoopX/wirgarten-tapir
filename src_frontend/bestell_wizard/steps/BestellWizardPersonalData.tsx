@@ -327,6 +327,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                   updatePersonalData();
                 }}
                 placeholder={"Kontoinhaber*in"}
+                disabled={waitingListEntryDetails?.memberAlreadyExists}
               />
             </Col>
             <Col>
@@ -342,6 +343,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                   isInvalid={
                     personalData.iban !== "" && !isIbanValid(personalData.iban)
                   }
+                  disabled={waitingListEntryDetails?.memberAlreadyExists}
                 />
               </Form.Group>
             </Col>
