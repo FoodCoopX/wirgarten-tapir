@@ -20,11 +20,14 @@ class PersonalDataValidator:
         birthdate: datetime.date,
         iban: str,
         cache: dict,
+        check_waiting_list: bool,
     ):
         # format of the data defined by tapir.subscriptions.serializers.PersonalDataSerializer
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
 
-        cls.validate_email_address_not_in_use(email, cache=cache)
+        cls.validate_email_address_not_in_use(
+            email, cache=cache, check_waiting_list=check_waiting_list
+        )
         cls.validate_phone_number_is_valid(phone_number)
         cls.validate_personal_data_existing_member(
             birthdate=birthdate,
@@ -51,7 +54,9 @@ class PersonalDataValidator:
             raise ValidationError("Ungültiges Telefonnummer")
 
     @classmethod
-    def validate_email_address_not_in_use(cls, email: str, cache: dict):
+    def validate_email_address_not_in_use(
+        cls, email: str, cache: dict, check_waiting_list: bool
+    ):
         duplicate_email_query = Member.objects.filter(
             Q(email=email) | Q(username=email)
         )
@@ -68,7 +73,7 @@ class PersonalDataValidator:
                 "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
             )
 
-        if WaitingListEntry.objects.filter(email=email).exists():
+        if check_waiting_list and WaitingListEntry.objects.filter(email=email).exists():
             raise ValidationError(
                 "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
             )

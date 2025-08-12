@@ -215,6 +215,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             birthdate=validated_data["personal_data"]["birthdate"],
             iban=validated_data["personal_data"]["iban"],
             cache=self.cache,
+            check_waiting_list=True,
         )
 
         if get_parameter_value(
@@ -526,7 +527,7 @@ class PublicBestellWizardIsEmailAddressValidApiView(APIView):
 
         try:
             PersonalDataValidator.validate_email_address_not_in_use(
-                email=email, cache={}
+                email=email, cache={}, check_waiting_list=True
             )
         except ValidationError:
             return Response(False)

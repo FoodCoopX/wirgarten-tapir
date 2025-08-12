@@ -992,6 +992,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                 birthdate=validated_data["birthdate"],
                 iban=validated_data["iban"],
                 cache=self.cache,
+                check_waiting_list=False,
             )
             order = TapirOrderBuilder.build_tapir_order_from_waiting_list_entry(
                 waiting_list_entry
