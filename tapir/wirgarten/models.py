@@ -1092,23 +1092,26 @@ class SubscriptionChangeLogEntry(LogEntry):
         choices=SubscriptionChangeLogEntryType.choices, null=False, max_length=32
     )
     subscriptions = models.CharField(null=False, blank=False, max_length=1024)
+    admin_confirmed = models.DateTimeField(null=True)
 
-    def populate(
+    def populate_subscription_changed(
         self,
         actor: TapirUser,
         user: Member,
         change_type: SubscriptionChangeLogEntryType,
         subscriptions: list[Subscription],
-        **kwargs,
+        admin_confirmed: datetime.datetime | None,
     ):
-        super().populate(actor=actor, user=user, **kwargs)
+        super().populate(actor=actor, user=user)
         self.change_type = change_type
         self.subscriptions = self.build_subscription_list_as_string(subscriptions)
+        self.admin_confirmed = admin_confirmed
 
         return self
 
     @staticmethod
     def build_subscription_list_as_string(subscriptions: list[Subscription]) -> str:
+        subscriptions.sort(key=lambda subscription: subscription.product_id)
         return ", ".join(
             list(
                 map(

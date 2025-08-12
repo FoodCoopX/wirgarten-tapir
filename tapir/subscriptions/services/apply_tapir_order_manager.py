@@ -118,11 +118,12 @@ class ApplyTapirOrderManager:
         new_subscriptions = Subscription.objects.bulk_create(subscriptions)
         TapirCacheManager.clear_category(cache=cache, category="subscriptions")
 
-        SubscriptionChangeLogEntry().populate(
+        SubscriptionChangeLogEntry().populate_subscription_changed(
             actor=actor,
             user=member,
             change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
             subscriptions=new_subscriptions,
+            admin_confirmed=now,
         ).save()
 
         return subscriptions_existed_before_changes, new_subscriptions

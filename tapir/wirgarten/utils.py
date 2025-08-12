@@ -115,7 +115,8 @@ def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
     return timezone.now()
 
 
-def format_subscription_list_html(subs):
+def format_subscription_list_html(subs: list) -> str:
+    subs.sort(key=lambda sub: sub.product_id)
     return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
 
 

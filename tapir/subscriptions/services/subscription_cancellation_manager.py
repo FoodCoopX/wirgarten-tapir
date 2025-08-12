@@ -41,6 +41,7 @@ class SubscriptionCancellationManager:
         )
 
         cancelled_subscriptions = []
+        deleted_subscriptions = []
         for subscription in get_active_and_future_subscriptions(cache=cache).filter(
             member=member, product=product
         ):
@@ -54,6 +55,7 @@ class SubscriptionCancellationManager:
 
             if subscription.start_date > cancellation_date:
                 subscription.delete()
+                deleted_subscriptions.append(subscription)
                 continue
 
             subscription.cancellation_ts = get_now()
@@ -61,4 +63,4 @@ class SubscriptionCancellationManager:
             subscription.save()
             cancelled_subscriptions.append(subscription)
 
-        return cancelled_subscriptions
+        return cancelled_subscriptions, deleted_subscriptions

@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -11,6 +12,7 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -40,6 +42,7 @@ from tapir.wirgarten.utils import (
     check_permission_or_self,
     format_date,
     format_subscription_list_html,
+    get_now,
 )
 
 
@@ -120,35 +123,120 @@ class CancelSubscriptionsView(APIView):
             for product_id in product_ids
             if product_id != ""
         }
-        subscribed_products = GetCancellationDataView.get_subscribed_products(
-            member, cache=self.cache
-        )
 
         cancel_coop_membership = (
             request.query_params.get("cancel_coop_membership") == "true"
         )
+
+        try:
+            self.validate_everything(
+                cancel_coop_membership=cancel_coop_membership,
+                member=member,
+                products_selected_for_cancellation=products_selected_for_cancellation,
+            )
+        except ValidationError as e:
+            return self.build_response(
+                subscriptions_cancelled=False, errors=[e.message]
+            )
+
+        self.apply_changes(
+            cancel_coop_membership=cancel_coop_membership,
+            member=member,
+            products_selected_for_cancellation=products_selected_for_cancellation,
+            actor=request.user,
+        )
+
+        return self.build_response(subscriptions_cancelled=True, errors=[])
+
+    @transaction.atomic
+    def apply_changes(
+        self,
+        cancel_coop_membership,
+        member,
+        products_selected_for_cancellation,
+        actor: TapirUser,
+    ):
+        all_cancelled_subscriptions = []
+        all_deleted_subscriptions = []
+        for product in products_selected_for_cancellation:
+            cancelled_subscriptions, deleted_subscriptions = (
+                SubscriptionCancellationManager.cancel_subscriptions(
+                    product, member, cache=self.cache
+                )
+            )
+            all_cancelled_subscriptions.extend(cancelled_subscriptions)
+            all_deleted_subscriptions.extend(deleted_subscriptions)
+
+        all_relevant_subscriptions = (
+            all_cancelled_subscriptions + all_deleted_subscriptions
+        )
+        if len(all_relevant_subscriptions) > 0:
+            all_relevant_subscriptions.sort(
+                key=lambda subscription: subscription.end_date, reverse=False
+            )
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.CONTRACT_CANCELLED,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "contract_list": format_subscription_list_html(
+                            all_relevant_subscriptions
+                        ),
+                        "contract_end_date": format_date(
+                            all_relevant_subscriptions[0].end_date
+                        ),
+                    },
+                ),
+            )
+
+        if len(all_cancelled_subscriptions) > 0:
+            SubscriptionChangeLogEntry().populate_subscription_changed(
+                actor=actor,
+                user=member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=all_cancelled_subscriptions,
+                admin_confirmed=get_now(cache=self.cache),
+            ).save()
+
+        if len(all_deleted_subscriptions) > 0:
+            SubscriptionChangeLogEntry().populate_subscription_changed(
+                actor=actor,
+                user=member,
+                change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+                subscriptions=all_deleted_subscriptions,
+                admin_confirmed=None,
+            ).save()
+
+        if cancel_coop_membership:
+            MembershipCancellationManager.cancel_coop_membership(
+                member, cache=self.cache
+            )
+
+    def validate_everything(
+        self,
+        cancel_coop_membership: bool,
+        member: Member,
+        products_selected_for_cancellation: set[Product],
+    ):
         if (
             cancel_coop_membership
             and not MembershipCancellationManager.can_member_cancel_coop_membership(
                 member, cache=self.cache
             )
         ):
-            return self.build_response(
-                False,
-                [
-                    "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
-                ],
+            raise ValidationError(
+                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du noch nicht Mitglied bist."
             )
 
+        subscribed_products = GetCancellationDataView.get_subscribed_products(
+            member, cache=self.cache
+        )
         if (
             cancel_coop_membership
             and products_selected_for_cancellation != subscribed_products
         ):
-            return self.build_response(
-                False,
-                [
-                    "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn alle Verträge auch kündigst."
-                ],
+            raise ValidationError(
+                "Es ist nur möglich die Beitrittserklärung zu widerrufen wenn du alle Verträge auch kündigst."
             )
 
         if (
@@ -167,50 +255,9 @@ class CancelSubscriptionsView(APIView):
                 cache=self.cache,
             )
         ):
-            return self.build_response(
-                False,
-                ["Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."],
+            raise ValidationError(
+                "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
             )
-
-        with transaction.atomic():
-            all_cancelled_subscriptions = []
-            for product in products_selected_for_cancellation:
-                cancelled_subscriptions = (
-                    SubscriptionCancellationManager.cancel_subscriptions(
-                        product, member, cache=self.cache
-                    )
-                )
-                all_cancelled_subscriptions.extend(cancelled_subscriptions)
-                if len(cancelled_subscriptions) > 0:
-                    TransactionalTrigger.fire_action(
-                        TransactionalTriggerData(
-                            key=Events.CONTRACT_CANCELLED,
-                            recipient_id_in_base_queryset=member.id,
-                            token_data={
-                                "contract_list": format_subscription_list_html(
-                                    cancelled_subscriptions
-                                ),
-                                "contract_end_date": format_date(
-                                    cancelled_subscriptions[0].end_date
-                                ),
-                            },
-                        ),
-                    )
-
-            if len(all_cancelled_subscriptions) > 0:
-                SubscriptionChangeLogEntry().populate(
-                    actor=request.user,
-                    user=member,
-                    change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
-                    subscriptions=all_cancelled_subscriptions,
-                ).save()
-
-            if cancel_coop_membership:
-                MembershipCancellationManager.cancel_coop_membership(
-                    member, cache=self.cache
-                )
-
-        return self.build_response(subscriptions_cancelled=True, errors=[])
 
     @staticmethod
     def are_all_base_products_selected(
