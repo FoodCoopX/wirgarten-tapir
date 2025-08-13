@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load django_bootstrap5 %}
 {% load log %}
+{% load wirgarten %}
 <div class="card m-2">
     <div class="card-header">
         <h5 class="mb-0">{% translate "Log" %}</h5>
@@ -17,7 +18,7 @@
             </thead>
             {% for o in log_entries %}
                 <tr>
-                    <td>{{ o.created_date|date:"SHORT_DATETIME_FORMAT" }}</td>
+                    <td>{{ o.created_date|format_date }}</td>
                     <td>{{ o.actor.get_display_name|default_if_none:o.actor }}</td>
                     <td class="text-wrap">{{ o.render }}</td>
                 </tr>
