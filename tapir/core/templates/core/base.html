@@ -54,9 +54,11 @@
             <div style="width: 100%; display: flex; justify-content: space-between">
                 <a class="text-light nav-link" style="white-space:nowrap"
                    href="/">{{ request.user.first_name }} {{ request.user.last_name }}</a>
-                {% get_parameter_value_tag "wirgarten.tests.override_date_preset" cache as date_preset %}
-                {% if date_preset != "disabled" %}
-                    <span class="text-warning nav-link">Datum überschrieben: {% get_now_tag cache %}</span>
+                {% if debug %}
+                    {% get_parameter_value_tag "wirgarten.tests.override_date_preset" cache as date_preset %}
+                    {% if date_preset != "disabled" %}
+                        <span class="text-warning nav-link">Datum überschrieben: {% get_now_tag cache %}</span>
+                    {% endif %}
                 {% endif %}
                 <form action="{% url 'account_logout' %}" method="post">
                     {% csrf_token %}

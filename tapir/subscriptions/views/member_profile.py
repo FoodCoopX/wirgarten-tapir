@@ -270,9 +270,9 @@ class UpdateSubscriptionsApiView(APIView):
         validated_data: dict,
         actor: TapirUser,
     ):
-        if validated_data[
-            "pickup_location_id"
-        ] != MemberPickupLocationService.get_member_pickup_location_id(
+        if validated_data.get(
+            "pickup_location_id", None
+        ) != MemberPickupLocationService.get_member_pickup_location_id(
             member=member, reference_date=contract_start_date
         ):
             MemberPickupLocationService.link_member_to_pickup_location(

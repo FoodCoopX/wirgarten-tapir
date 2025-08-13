@@ -7,7 +7,7 @@ import {
   PublicProductType,
   PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi
+  WaitingListApi,
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -133,7 +133,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       .catch((error) =>
         handleRequestError(
           error,
-          "Fehler beim Laden der Vertragstart-Datum",
+          "Fehler beim Laden der Vertragsstart-Datum",
           setToastDatas,
         ),
       );
@@ -308,13 +308,18 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           }
           setCurrentStep("confirmation");
         })
-        .catch((error) =>
-          handleRequestError(
+        .catch(async (error) => {
+          await handleRequestError(
             error,
             "Fehler beim Anpassen der Verträge",
             setToastDatas,
-          ),
-        )
+          );
+          setOrderConfirmed(false);
+          setOrderError(
+            "Fehler beim Anpassen der Verträge, bitte versuche es später nochmal oder kontaktiere die Verwaltung",
+          );
+          setCurrentStep("confirmation");
+        })
         .finally(() => setLoading(false));
     }
   }

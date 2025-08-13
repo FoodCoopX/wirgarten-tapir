@@ -21,8 +21,13 @@ from tapir_mail.triggers.transactional_trigger import (
 
 from tapir.accounts.models import TapirUser
 from tapir.coop.services.membership_text_service import MembershipTextService
+from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.utils.shortcuts import get_from_cache_or_compute
+from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -353,15 +358,24 @@ def send_order_confirmation(
         )
         return
 
-    contract_start_date = subs[0].start_date
+    min_contract_start_date = min([subscription.start_date for subscription in subs])
+    min_contract_end_date = min([subscription.end_date for subscription in subs])
 
-    end_date = GrowingPeriod.objects.order_by("end_date").last().end_date
+    first_pickup_date = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
+    at_least_one_product_with_delivery = False
     for subscription in subs:
-        if subscription.end_date:
-            end_date = min(subscription.end_date, end_date)
-    future_deliveries = GetDeliveriesService.get_deliveries(
-        member=member, date_from=get_today(cache=cache), date_to=end_date, cache=cache
-    )
+        if subscription.product.type.delivery_cycle == NO_DELIVERY[0]:
+            continue
+        at_least_one_product_with_delivery = True
+        next_delivery_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
+            reference_date=subscription.start_date,
+            pickup_location_id=MemberPickupLocationService.get_member_pickup_location_id(
+                member, subscription.start_date
+            ),
+            delivery_cycle=subscription.product.type.delivery_cycle,
+            cache=cache,
+        )
+        first_pickup_date = min(first_pickup_date, next_delivery_date)
 
     TransactionalTrigger.fire_action(
         TransactionalTriggerData(
@@ -372,22 +386,16 @@ def send_order_confirmation(
             ),
             recipient_id_in_base_queryset=member.id,
             token_data={
-                "contract_start_date": format_date(contract_start_date),
-                "contract_end_date": format_date(subs[0].end_date),
-                "first_pickup_date": future_deliveries[0]["delivery_date"],
+                "contract_start_date": format_date(min_contract_start_date),
+                "contract_end_date": format_date(min_contract_end_date),
+                "first_pickup_date": (
+                    format_date(first_pickup_date)
+                    if at_least_one_product_with_delivery
+                    else "Keine Lieferung"
+                ),
                 "contract_list": format_subscription_list_html(list(subs)),
             },
         ),
-    )
-
-    last_delivery_date = future_deliveries[-1]["delivery_date"]
-
-    schedule_task_unique(
-        task=send_email_member_contract_end_reminder,
-        eta=datetime.datetime.combine(
-            last_delivery_date + relativedelta(days=1), datetime.time(hour=0)
-        ),
-        kwargs={"member_id": member.id},
     )
 
 
