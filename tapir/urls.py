@@ -17,9 +17,8 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
-from django.contrib import admin
-from django.urls import include, path
-from django.views import generic
+from django.urls import include, path, reverse
+from django.views.generic import RedirectView
 
 from tapir.wirgarten.views.default_redirect import wirgarten_redirect_view
 from tapir.wirgarten.views.mailing import TapirMailView
@@ -33,6 +32,11 @@ tapir_mail_path = (
 urlpatterns = [
     path("", wirgarten_redirect_view, name="index"),
     path("accounts/", include("tapir.accounts.urls")),
+    path(
+        "accounts/login/",
+        RedirectView.as_view(url="/accounts/oidc/keycloak/login"),
+        name="account_login",
+    ),
     path("accounts/", include("allauth.urls")),
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
