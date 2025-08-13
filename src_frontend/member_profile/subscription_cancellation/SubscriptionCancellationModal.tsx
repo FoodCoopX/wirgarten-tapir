@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
-import {
-  LegalStatusEnum,
-  ProductForCancellation,
-  SubscriptionsApi,
-} from "../../api-client";
+import { LegalStatusEnum, ProductForCancellation, SubscriptionsApi } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
@@ -83,7 +79,7 @@ const SubscriptionCancellationModal: React.FC<
       formatDateText(subscribedProduct.cancellationDate) +
       " kündigen";
     if (subscribedProduct.isInTrial) {
-      result += " (probezeit)";
+      result += " (Probezeit)";
     }
     result += ".";
     return result;
