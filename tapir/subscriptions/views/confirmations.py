@@ -14,10 +14,12 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.coop.models import CoopSharesRevokedLogEntry
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.models import SubscriptionsRevokedLogEntry
 from tapir.subscriptions.serializers import (
     MemberDataToConfirmSerializer,
 )
@@ -366,11 +368,18 @@ class RevokeChangesApiView(APIView):
             field_start_date="start_date",
             cache=cache,
         )
+
         share_transactions = self.delete_objects_or_404(
             ids_to_delete=coop_share_purchase_ids,
             model=CoopShareTransaction,
             field_start_date="valid_at",
             cache=cache,
+        )
+
+        self.create_log_entries(
+            subscriptions=subscriptions,
+            share_transactions=share_transactions,
+            actor=request.user,
         )
 
         if put_on_waiting_list:
@@ -381,6 +390,37 @@ class RevokeChangesApiView(APIView):
             )
 
         return Response("OK")
+
+    @classmethod
+    def create_log_entries(
+        cls,
+        subscriptions: list[Subscription],
+        share_transactions: list[CoopShareTransaction],
+        actor,
+    ):
+        subscriptions_by_member = {}
+        for subscription in subscriptions:
+            if subscription.member not in subscriptions_by_member.keys():
+                subscriptions_by_member[subscription.member] = []
+            subscriptions_by_member[subscription.member].append(subscription)
+
+        for member, member_subscriptions in subscriptions_by_member.items():
+            SubscriptionsRevokedLogEntry().populate_subscriptions(
+                subscriptions=member_subscriptions, actor=actor, user=member
+            ).save()
+
+        share_transactions_by_member = {}
+        for share_transaction in share_transactions:
+            if share_transaction.member not in share_transactions_by_member.keys():
+                share_transactions_by_member[share_transaction.member] = []
+            share_transactions_by_member[share_transaction.member].append(
+                share_transaction
+            )
+
+        for member, member_transactions in share_transactions_by_member.items():
+            CoopSharesRevokedLogEntry().populate_transactions(
+                coop_share_transactions=member_transactions, actor=actor, user=member
+            ).save()
 
     @staticmethod
     def send_mail_to_members(
@@ -443,9 +483,9 @@ class RevokeChangesApiView(APIView):
         )
 
     @staticmethod
-    def delete_objects_or_404(
-        ids_to_delete: list[str], model: Type[Model], field_start_date: str, cache: dict
-    ):
+    def delete_objects_or_404[T: Model](
+        ids_to_delete: list[str], model: Type[T], field_start_date: str, cache: dict
+    ) -> list[T]:
         ids_to_delete = [
             ids_to_delete.strip()
             for ids_to_delete in ids_to_delete

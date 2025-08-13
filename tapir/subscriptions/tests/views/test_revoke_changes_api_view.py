@@ -8,6 +8,8 @@ from tapir_mail.triggers.transactional_trigger import (
     TransactionalTriggerData,
 )
 
+from tapir.coop.models import CoopSharesRevokedLogEntry
+from tapir.subscriptions.models import SubscriptionsRevokedLogEntry
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import Subscription, CoopShareTransaction, WaitingListEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
@@ -17,7 +19,7 @@ from tapir.wirgarten.tests.factories import (
     CoopShareTransactionFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, format_subscription_list_html
 
 
 class TestRevokeChangesAPIView(TapirIntegrationTest):
@@ -247,4 +249,53 @@ class TestRevokeChangesAPIView(TapirIntegrationTest):
         self.assertIn(
             "3 × P2",
             transactional_trigger_data.token_data["contract_list"],
+        )
+
+    def test_post_default_createsLogEntries(self):
+        actor = MemberFactory.create(is_superuser=True)
+        self.client.force_login(actor)
+
+        member = MemberFactory.create()
+        subscription_1 = SubscriptionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=2,
+            product__name="P1",
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
+        subscription_2 = SubscriptionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=3,
+            product__name="P2",
+            start_date=self.now.date() + datetime.timedelta(days=1),
+        )
+
+        transaction = CoopShareTransactionFactory.create(
+            admin_confirmed=None,
+            member=member,
+            quantity=7,
+            valid_at=self.now.date() + datetime.timedelta(days=1),
+        )
+
+        url = reverse("subscriptions:revoke_changes")
+        url = f"{url}?subscription_creation_ids={subscription_1.id}&subscription_creation_ids={subscription_2.id}&coop_share_purchase_ids={transaction.id}&put_on_waiting_list=false"
+        response = self.client.post(url)
+
+        self.assertStatusCode(response, status.HTTP_200_OK)
+
+        self.assertEqual(1, SubscriptionsRevokedLogEntry.objects.count())
+        subscriptions_log_entry = SubscriptionsRevokedLogEntry.objects.get()
+        self.assertEqual(member.id, subscriptions_log_entry.user_id)
+        self.assertEqual(
+            format_subscription_list_html([subscription_1, subscription_2]),
+            subscriptions_log_entry.subscriptions,
+        )
+
+        self.assertEqual(1, CoopSharesRevokedLogEntry.objects.count())
+        transactions_log_entry = CoopSharesRevokedLogEntry.objects.get()
+        self.assertEqual(member.id, transactions_log_entry.user_id)
+        self.assertEqual(
+            CoopSharesRevokedLogEntry.format_coop_share_transactions([transaction]),
+            transactions_log_entry.coop_share_transactions,
         )

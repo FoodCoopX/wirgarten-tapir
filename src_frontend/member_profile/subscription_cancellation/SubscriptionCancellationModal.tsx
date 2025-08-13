@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
-import { LegalStatusEnum, ProductForCancellation, SubscriptionsApi } from "../../api-client";
+import {
+  LegalStatusEnum,
+  ProductForCancellation,
+  SubscriptionsApi,
+} from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import "dayjs/locale/de";
 import TapirButton from "../../components/TapirButton.tsx";
