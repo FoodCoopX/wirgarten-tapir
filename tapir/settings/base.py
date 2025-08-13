@@ -235,7 +235,7 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-SOCIALACCOUNT_ONLY = False
+SOCIALACCOUNT_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 SOCIALACCOUNT_ADAPTER = "tapir.accounts.adapter.MySocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = True
