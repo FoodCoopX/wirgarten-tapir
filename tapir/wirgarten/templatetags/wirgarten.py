@@ -4,6 +4,7 @@ from decimal import Decimal
 from django import template
 
 from tapir.wirgarten import utils
+from tapir.wirgarten.utils import get_now
 
 register = template.Library()
 
@@ -44,3 +45,10 @@ def format_percent(value: float | Decimal, decimal_places: int = 0):
 @register.simple_tag
 def create_range(n):
     return range(n)
+
+
+@register.simple_tag()
+def get_now_tag(cache):
+    if not isinstance(cache, dict):
+        cache = None
+    return format_date(get_now(cache=cache))

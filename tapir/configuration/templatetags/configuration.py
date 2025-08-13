@@ -20,6 +20,13 @@ def parameter_value(key: str):
         return None
 
 
+@register.simple_tag()
+def get_parameter_value_tag(key: str, cache):
+    if not isinstance(cache, dict):
+        cache = None
+    return get_parameter_value(key, cache=cache)
+
+
 @register.simple_tag
 def tokenize_parameter(text: str, cache: Dict = None):
     legal_status = "Betrieb"
