@@ -140,6 +140,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "must_be_subscribed_to",
             "no_delivery",
             "single_subscription_only",
+            "force_waiting_list",
         ]
 
     products = SerializerMethodField()

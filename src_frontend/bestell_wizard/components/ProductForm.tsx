@@ -1,5 +1,5 @@
 import React from "react";
-import { Col, Form, Row } from "react-bootstrap";
+import { Alert, Col, Form, Row } from "react-bootstrap";
 
 import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
@@ -92,6 +92,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Col>
           ))}
       </Row>
+      {productType.forceWaitingList && (
+        <Row className={"mt-4"}>
+          <Col>
+            <Alert variant={"warning"}>
+              Derzeit ausgebucht. Nur Wartelisteneintrag möglich
+            </Alert>
+          </Col>
+        </Row>
+      )}
       <Row className={"mt-4"}>
         <Col>
           <BestellWizardCardSubtitle

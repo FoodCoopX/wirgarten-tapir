@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PublicProduct } from './PublicProduct';
-import {
-    PublicProductFromJSON,
-    PublicProductFromJSONTyped,
-    PublicProductToJSON,
-    PublicProductToJSONTyped,
-} from './PublicProduct';
+import type { PublicProduct } from "./PublicProduct";
+import { PublicProductFromJSON } from "./PublicProduct";
 
 /**
  * 
@@ -81,6 +75,12 @@ export interface PublicProductType {
      * @memberof PublicProductType
      */
     singleSubscriptionOnly?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PublicProductType
+     */
+    forceWaitingList?: boolean;
 }
 
 /**
@@ -112,6 +112,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'mustBeSubscribedTo': json['must_be_subscribed_to'] == null ? undefined : json['must_be_subscribed_to'],
         'noDelivery': json['no_delivery'],
         'singleSubscriptionOnly': json['single_subscription_only'] == null ? undefined : json['single_subscription_only'],
+        'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
     };
 }
 
@@ -133,6 +134,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'order_in_bestellwizard': value['orderInBestellwizard'],
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'single_subscription_only': value['singleSubscriptionOnly'],
+        'force_waiting_list': value['forceWaitingList'],
     };
 }
 

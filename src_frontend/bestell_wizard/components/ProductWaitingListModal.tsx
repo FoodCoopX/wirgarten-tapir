@@ -1,17 +1,20 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import TapirButton from "../../components/TapirButton.tsx";
+import { PublicProductType } from "../../api-client";
 
 interface ProductWaitingListModalProps {
   show: boolean;
   onHide: () => void;
   confirmEnableWaitingListMode: () => void;
+  productType: PublicProductType | undefined;
 }
 
 const ProductWaitingListModal: React.FC<ProductWaitingListModalProps> = ({
   show,
   onHide,
   confirmEnableWaitingListMode,
+  productType,
 }) => {
   return (
     <Modal show={show} centered={true} onHide={onHide} size={"lg"}>
@@ -19,10 +22,15 @@ const ProductWaitingListModal: React.FC<ProductWaitingListModalProps> = ({
         <h5 className={"mb-0"}>Warteliste</h5>
       </Modal.Header>
       <Modal.Body>
-        <p>Derzeit ist deine gewünschte Ernteanteilsgröße nicht verfügbar.</p>
         <p>
-          Du kannst eine andere Größe wählen, oder dich auf die Warteliste
-          setzen lassen. Dafür brauchen wir noch ein paar Angaben von dir.
+          Derzeit ist deine gewünschte {productType?.name}-Größe nicht
+          verfügbar.
+        </p>
+        <p>
+          {productType?.forceWaitingList
+            ? "Du kannst dich auf die Warteliste setzen lassen."
+            : "Du kannst eine andere Größe wählen, oder dich auf die Warteliste setzen lassen."}
+          Dafür brauchen wir noch ein paar Angaben von dir.
         </p>
       </Modal.Body>
       <Modal.Footer>

@@ -94,7 +94,12 @@
                             style="display: none"
                             onclick="select_capacity('{{ capacity.id }}', '{{ capacity.product_type.id }}', '{{ c_p_map }}')">
                             <td>
-                                <img width="28" src="{{ capacity.product_type.icon_link }}"/>
+                                {% if capacity.product_type.icon_link %}
+                                    <img width="28" src="{{ capacity.product_type.icon_link }}" alt="Produkt-Typ Icon"/>
+                                {% endif %}
+                                {% if capacity.product_type.force_waiting_list %}
+                                    <span class="material-icons" data-bs-toggle="tooltip" data-bs-title="Warteliste-Modus">pending_actions</span>
+                                {% endif %}
                             </td>
                             <th>
                                 {% translate capacity.product_type.name %}

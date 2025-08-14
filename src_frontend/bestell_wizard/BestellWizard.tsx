@@ -474,7 +474,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [waitingListEntryDetails]);
 
   function onNextClicked() {
-    if (!waitingListModeEnabled && shouldOpenProductWaitingListModal()) {
+    if (
+      !waitingListModeEnabled &&
+      shouldOpenProductWaitingListModal(shoppingCart)
+    ) {
       setProductWaitingListModalOpen(true);
       return;
     }
@@ -485,12 +488,32 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     goToNextStep();
   }
 
-  function shouldOpenProductWaitingListModal() {
+  function shouldOpenProductWaitingListModal(shoppingCart: ShoppingCart) {
     const productType = publicProductTypes.find(
       (productType) => productType.id === currentStep,
     );
     if (productType === undefined) {
       return false;
+    }
+
+    let productTypeIsOrdered = false;
+    for (const [productId, quantity] of Object.entries(shoppingCart)) {
+      if (quantity === 0) continue;
+
+      for (const product of productType.products) {
+        if (product.id === productId) {
+          productTypeIsOrdered = true;
+          break;
+        }
+      }
+    }
+
+    if (!productTypeIsOrdered) {
+      return false;
+    }
+
+    if (productType.forceWaitingList) {
+      return true;
     }
 
     if (productTypeIdsOverCapacity.includes(productType.id!)) {
@@ -999,6 +1022,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         show={productWaitingListModalOpen}
         onHide={cancelEnableProductWaitingListMode}
         confirmEnableWaitingListMode={confirmEnableProductWaitingListMode}
+        productType={publicProductTypes.find(
+          (productType) => productType.id === currentStep,
+        )}
       />
       <PickupLocationWaitingListModal
         show={pickupLocationWaitingListModalOpen}

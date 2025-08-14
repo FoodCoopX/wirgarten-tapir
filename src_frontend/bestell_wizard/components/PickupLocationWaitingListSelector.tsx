@@ -28,6 +28,20 @@ const PickupLocationWaitingListSelector: React.FC<
     setSelectedPickupLocations([...selectedPickupLocations]);
   }
 
+  function getPickupLocationsThatAreFull() {
+    return pickupLocations.filter((pickupLocation) =>
+      pickupLocationsWithCapacityFull.has(pickupLocation),
+    );
+  }
+
+  function getNewWishLocation() {
+    const pickupLocationsThatAreFull = getPickupLocationsThatAreFull();
+    if (pickupLocationsThatAreFull.length > 0) {
+      return pickupLocationsThatAreFull[0];
+    }
+    return pickupLocations[0];
+  }
+
   return (
     <Row className={"mb-2"}>
       <Col>
@@ -49,15 +63,11 @@ const PickupLocationWaitingListSelector: React.FC<
                   }
                   value={selectedPickupLocation.id}
                 >
-                  {pickupLocations
-                    .filter((pickupLocation) =>
-                      pickupLocationsWithCapacityFull.has(pickupLocation),
-                    )
-                    .map((pickupLocation) => (
-                      <option key={pickupLocation.id} value={pickupLocation.id}>
-                        {pickupLocation.name}
-                      </option>
-                    ))}
+                  {getPickupLocationsThatAreFull().map((pickupLocation) => (
+                    <option key={pickupLocation.id} value={pickupLocation.id}>
+                      {pickupLocation.name}
+                    </option>
+                  ))}
                 </Form.Select>
                 <TapirButton
                   variant={"outline-danger"}
@@ -83,7 +93,7 @@ const PickupLocationWaitingListSelector: React.FC<
                 onClick={() =>
                   setSelectedPickupLocations([
                     ...selectedPickupLocations,
-                    pickupLocations[0],
+                    getNewWishLocation(),
                   ])
                 }
               />

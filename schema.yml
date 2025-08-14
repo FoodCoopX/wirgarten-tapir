@@ -7513,6 +7513,8 @@ components:
         single_subscription_only:
           type: boolean
           title: Nur Einzelabonnement erlaubt
+        force_waiting_list:
+          type: boolean
       required:
       - name
       - no_delivery

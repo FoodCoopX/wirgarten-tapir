@@ -11,6 +11,7 @@ import SubscriptionCard from "./SubscriptionCard.tsx";
 import { Spinner } from "react-bootstrap";
 import TapirToastContainer from "../../components/TapirToastContainer.tsx";
 import { ToastData } from "../../types/ToastData.ts";
+import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
 
 interface SubscriptionCardsProps {
   memberId: string;
@@ -32,7 +33,7 @@ const SubscriptionCards: React.FC<SubscriptionCardsProps> = ({
     setProductTypesLoading(true);
     api
       .subscriptionsPublicProductTypesList()
-      .then(setProductTypes)
+      .then((productTypes) => setProductTypes(sortProductTypes(productTypes)))
       .catch((error) =>
         handleRequestError(
           error,

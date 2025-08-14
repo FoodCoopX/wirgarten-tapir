@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { ListGroup, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
 import {
   PickupLocationsApi,
@@ -137,6 +137,10 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
           setToastDatas,
         ),
       );
+
+    if (productType.forceWaitingList) {
+      setShowWaitingListConfirmModal(true);
+    }
   }, [show]);
 
   useEffect(() => {
@@ -368,66 +372,72 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         <Modal.Header closeButton>
           <h5 className={"mb-0"}>{productType.name} bearbeiten</h5>
         </Modal.Header>
-        {currentStep == "product_type" && (
-          <SubscriptionEditStepProductType
-            productType={productType}
-            shoppingCart={shoppingCart}
-            setShoppingCart={setShoppingCart}
-            checkingCapacities={checkingCapacities}
-            loading={loading}
-            sepaAllowed={sepaAllowed}
-            setSepaAllowed={setSepaAllowed}
-            onCancelClicked={onHide}
-            onNextClicked={onNextClicked}
-            labelCheckboxSepaMandat={labelCheckboxSepaMandat}
-          />
-        )}
-        {currentStep == "pickup_location" && (
-          <SubscriptionEditStepPickupLocation
-            pickupLocations={pickupLocations}
-            setSelectedPickupLocations={setSelectedPickupLocations}
-            selectedPickupLocations={selectedPickupLocations}
-            pickupLocationsWithCapacityCheckLoading={
-              pickupLocationsWithCapacityCheckLoading
-            }
-            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
-            waitingListModeEnabled={waitingListModeEnabled}
-            onBackClicked={goToPreviousStep}
-            onNextClicked={onNextClicked}
-          />
-        )}
-        {currentStep === "summary" && (
-          <SubscriptionEditStepSummary
-            waitingListModeEnabled={waitingListModeEnabled}
-            selectedPickupLocations={selectedPickupLocations}
-            shoppingCart={shoppingCart}
-            productType={productType}
-            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
-            onBackClicked={goToPreviousStep}
-            onConfirmClicked={onConfirmOrder}
-            loading={loading}
-            contractStartDate={contractStartDate}
-          />
-        )}
-        {currentStep === "confirmation" && (
-          <SubscriptionEditStepConfirmation
-            orderConfirmed={orderConfirmed}
-            error={orderError}
-            onBackClicked={() => setCurrentStep("product_type")}
-            onFinishedClicked={() => {
-              reloadSubscriptions();
-              onHide();
-            }}
-            waitingListModeEnabled={waitingListModeEnabled}
-          />
-        )}
+        <ListGroup variant={"flush"}>
+          {waitingListModeEnabled && (
+            <ListGroup.Item className={"list-group-item-warning"}>
+              <div className={"text-center"}>Warteliste-Eintrag</div>
+            </ListGroup.Item>
+          )}
+          {currentStep == "product_type" && (
+            <SubscriptionEditStepProductType
+              productType={productType}
+              shoppingCart={shoppingCart}
+              setShoppingCart={setShoppingCart}
+              checkingCapacities={checkingCapacities}
+              loading={loading}
+              sepaAllowed={sepaAllowed}
+              setSepaAllowed={setSepaAllowed}
+              onCancelClicked={onHide}
+              onNextClicked={onNextClicked}
+              labelCheckboxSepaMandat={labelCheckboxSepaMandat}
+            />
+          )}
+          {currentStep == "pickup_location" && (
+            <SubscriptionEditStepPickupLocation
+              pickupLocations={pickupLocations}
+              setSelectedPickupLocations={setSelectedPickupLocations}
+              selectedPickupLocations={selectedPickupLocations}
+              pickupLocationsWithCapacityCheckLoading={
+                pickupLocationsWithCapacityCheckLoading
+              }
+              pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+              waitingListModeEnabled={waitingListModeEnabled}
+              onBackClicked={goToPreviousStep}
+              onNextClicked={onNextClicked}
+            />
+          )}
+          {currentStep === "summary" && (
+            <SubscriptionEditStepSummary
+              waitingListModeEnabled={waitingListModeEnabled}
+              selectedPickupLocations={selectedPickupLocations}
+              shoppingCart={shoppingCart}
+              productType={productType}
+              firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+              onBackClicked={goToPreviousStep}
+              onConfirmClicked={onConfirmOrder}
+              loading={loading}
+              contractStartDate={contractStartDate}
+            />
+          )}
+          {currentStep === "confirmation" && (
+            <SubscriptionEditStepConfirmation
+              orderConfirmed={orderConfirmed}
+              error={orderError}
+              onBackClicked={() => setCurrentStep("product_type")}
+              onFinishedClicked={() => {
+                reloadSubscriptions();
+                onHide();
+              }}
+              waitingListModeEnabled={waitingListModeEnabled}
+            />
+          )}
+        </ListGroup>
       </Modal>
       <PickupLocationWaitingListModal
         show={showWaitingListConfirmModal && currentStep === "pickup_location"}
         onHide={() => setShowWaitingListConfirmModal(false)}
         confirmEnableWaitingListMode={() => {
           setWaitingListModeEnabled(true);
-          goToNextStep();
           setShowWaitingListConfirmModal(false);
         }}
       />
@@ -436,9 +446,9 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         onHide={() => setShowWaitingListConfirmModal(false)}
         confirmEnableWaitingListMode={() => {
           setWaitingListModeEnabled(true);
-          goToNextStep();
           setShowWaitingListConfirmModal(false);
         }}
+        productType={productType}
       />
     </>
   );

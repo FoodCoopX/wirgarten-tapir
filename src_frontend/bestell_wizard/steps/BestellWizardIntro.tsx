@@ -83,7 +83,10 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
           <Spinner style={{ width: "10rem", height: "10rem" }} />
         ) : (
           publicProductTypes.map((publicProductType) => (
-            <div key={publicProductType.id}>
+            <div
+              key={publicProductType.id}
+              className={"d-flex flex-column gap-2"}
+            >
               <Form.Check
                 id={publicProductType.id}
                 label={publicProductType.name}
@@ -111,6 +114,11 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
                   ></span>
                 )}
               </span>
+              {publicProductType.forceWaitingList && (
+                <Form.Text>
+                  Derzeit ausgebucht. Nur Wartelisteneintrag möglich.
+                </Form.Text>
+              )}
             </div>
           ))
         )}

@@ -53,7 +53,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
       result += "active";
     }
 
-    if (waitingListModeEnabled || waitingListLinkConfirmationModeEnabled) {
+    if (!areListGroupItemsClickable()) {
       result += " disabled";
     }
 
@@ -76,6 +76,23 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
     return <span className={"text-success"}>Kapazität frei</span>;
   }
 
+  function areListGroupItemsClickable() {
+    if (waitingListLinkConfirmationModeEnabled) {
+      console.log("waitingListLinkConfirmationModeEnabled");
+      console.log(waitingListLinkConfirmationModeEnabled);
+      return false;
+    }
+
+    if (!waitingListModeEnabled) {
+      console.log("waitingListModeEnabled");
+      console.log(waitingListModeEnabled);
+      return true;
+    }
+
+    console.log(selectedPickupLocations.length);
+    return selectedPickupLocations.length === 0;
+  }
+
   return (
     <Row>
       <Col>
@@ -83,13 +100,9 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
           {pickupLocations.map((pickupLocation) => (
             <ListGroupItem
               key={pickupLocation.id}
-              style={
-                waitingListLinkConfirmationModeEnabled
-                  ? {}
-                  : { cursor: "pointer" }
-              }
+              style={areListGroupItemsClickable() ? { cursor: "pointer" } : {}}
               onClick={() => {
-                if (waitingListLinkConfirmationModeEnabled) return;
+                if (!areListGroupItemsClickable()) return;
                 setSelectedPickupLocations([pickupLocation]);
               }}
               className={getClassForPickupLocationListItem(pickupLocation)}
