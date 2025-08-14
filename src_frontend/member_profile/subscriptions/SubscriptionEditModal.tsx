@@ -95,6 +95,8 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   useEffect(() => {
     if (!show) return;
 
+    setCurrentStep("product_type");
+
     pickupLocationsApi
       .pickupLocationsApiGetMemberPickupLocationRetrieve({ memberId: memberId })
       .then((response) => {

@@ -33,6 +33,12 @@ class OrderValidator:
         member: Member | None,
         pickup_location: PickupLocation | None,
     ):
+        for product, quantity in order.items():
+            if product.type.force_waiting_list:
+                raise ValidationError(
+                    f"Bei {product.type.name}-Produkte sind nur Warteliste-Einträge möglich"
+                )
+
         if cls.does_order_need_a_pickup_location(
             order=order, cache=cache
         ) and not PickupLocationCapacityGeneralChecker.does_pickup_location_have_enough_capacity_to_add_subscriptions(
