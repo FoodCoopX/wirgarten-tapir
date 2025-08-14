@@ -40,6 +40,8 @@ interface ProductTypeFormProps {
   setOrderInBestellwizard: (orderInBestellWizard: number) => void;
   contractLink: string;
   setContractLink: (contractLink: string) => void;
+  forceWaitingList: boolean;
+  setForceWaitingList: (forceWaitingList: boolean) => void;
 }
 
 const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
@@ -78,6 +80,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setOrderInBestellwizard,
   contractLink,
   setContractLink,
+  forceWaitingList,
+  setForceWaitingList,
 }) => {
   return (
     <Row>
@@ -239,6 +243,23 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
             </Form.Group>
           </Row>
         )}
+        <Row className={"mt-2"}>
+          <Form.Group controlId={"force_waiting_list"}>
+            <Form.Check
+              onChange={(event) => setForceWaitingList(event.target.checked)}
+              required={false}
+              checked={forceWaitingList}
+              label={"Warteliste-Modus"}
+            />
+            <Form.Text>
+              Wenn aktiviert, können bestehende Mitglieder und neue
+              Interessenten keine neuen {name} buchen, unabhängig davon, ob es
+              freie Kapazitäten gäbe. Wenn nicht aktiviert, können {name} nur
+              gebucht werden, wenn es gemäß automatisierter Berechnung genug
+              Kapazitäten gibt.
+            </Form.Text>
+          </Form.Group>
+        </Row>
       </Col>
       <Col>
         <h5>BestellWizard</h5>

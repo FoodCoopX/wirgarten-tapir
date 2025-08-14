@@ -5746,9 +5746,12 @@ components:
           type: boolean
         is_association_membership:
           type: boolean
+        force_waiting_list:
+          type: boolean
       required:
       - capacity
       - delivery_cycle
+      - force_waiting_list
       - is_affected_by_jokers
       - is_association_membership
       - must_be_subscribed_to
@@ -5816,9 +5819,12 @@ components:
           type: boolean
         is_association_membership:
           type: boolean
+        force_waiting_list:
+          type: boolean
       required:
       - capacity
       - delivery_cycle
+      - force_waiting_list
       - is_affected_by_jokers
       - is_association_membership
       - must_be_subscribed_to
@@ -7346,6 +7352,8 @@ components:
           maximum: 2147483647
           minimum: -2147483648
           title: Reihenfolge im BestellWizard (kleiner ist früher)
+        force_waiting_list:
+          type: boolean
       required:
       - name
     ProductTypesAndConfig:

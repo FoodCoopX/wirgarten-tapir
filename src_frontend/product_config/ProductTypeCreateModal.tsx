@@ -59,6 +59,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [isAffectedByJokers, setIsAffectedByJokers] = useState(false);
   const [mustBeSubscribedTo, setMustBeSubscribedTo] = useState(false);
   const [isAssociationMembership, setIsAssociationMembership] = useState(false);
+  const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
   const [saving, setSaving] = useState(false);
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<
@@ -79,6 +80,9 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
         setShowJokers(result.showJokers);
         setShowNoticePeriod(result.showNoticePeriod);
         setDeliveryCycleOptions(result.deliveryCycleOptions);
+        if (result.productTypesWithoutCapacity.length === 0) {
+          setMode("create");
+        }
       })
       .catch((error) =>
         handleRequestError(
@@ -151,6 +155,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
             capacity: capacity,
             iconLink: iconLink,
             name: name,
+            forceWaitingList: forceWaitingList,
           },
         },
       })
@@ -263,6 +268,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           orderInBestellwizard={orderInBestellwizard}
           setOrderInBestellwizard={setOrderInBestellwizard}
           contractLink={contractLink}
+          forceWaitingList={forceWaitingList}
+          setForceWaitingList={setForceWaitingList}
         />
       </Modal.Body>
     );

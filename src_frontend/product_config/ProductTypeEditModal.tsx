@@ -59,6 +59,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [isAffectedByJokers, setIsAffectedByJokers] = useState(false);
   const [mustBeSubscribedTo, setMustBeSubscribedTo] = useState(false);
   const [isAssociationMembership, setIsAssociationMembership] = useState(false);
+  const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
 
   useEffect(() => {
@@ -104,6 +105,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         setIsAssociationMembership(
           result.extendedProductType.isAssociationMembership,
         );
+        setForceWaitingList(result.extendedProductType.forceWaitingList);
       })
       .catch((error) =>
         handleRequestError(
@@ -150,6 +152,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             descriptionBestellwizardLong: descriptionBestellwizardLong,
             orderInBestellwizard: orderInBestellwizard,
             contractLink: contractLink,
+            forceWaitingList: forceWaitingList,
           },
         },
       })
@@ -211,6 +214,8 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           orderInBestellwizard={orderInBestellwizard}
           setOrderInBestellwizard={setOrderInBestellwizard}
           contractLink={contractLink}
+          forceWaitingList={forceWaitingList}
+          setForceWaitingList={setForceWaitingList}
         />
       </Modal.Body>
     );

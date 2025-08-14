@@ -38,6 +38,7 @@ class ExtendedProductTypeApiView(APIView):
         "is_affected_by_jokers",
         "must_be_subscribed_to",
         "is_association_membership",
+        "force_waiting_list",
     ]
 
     def __init__(self):

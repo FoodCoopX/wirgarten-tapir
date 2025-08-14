@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { DeliveryCycleEnum } from './DeliveryCycleEnum';
-import {
-    DeliveryCycleEnumFromJSON,
-    DeliveryCycleEnumFromJSONTyped,
-    DeliveryCycleEnumToJSON,
-    DeliveryCycleEnumToJSONTyped,
-} from './DeliveryCycleEnum';
+import type { DeliveryCycleEnum } from "./DeliveryCycleEnum";
+import { DeliveryCycleEnumFromJSON, DeliveryCycleEnumToJSON } from "./DeliveryCycleEnum";
 
 /**
  * 
@@ -105,6 +99,12 @@ export interface ProductType {
      * @memberof ProductType
      */
     orderInBestellwizard?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProductType
+     */
+    forceWaitingList?: boolean;
 }
 
 
@@ -140,6 +140,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'descriptionBestellwizardShort': json['description_bestellwizard_short'] == null ? undefined : json['description_bestellwizard_short'],
         'descriptionBestellwizardLong': json['description_bestellwizard_long'] == null ? undefined : json['description_bestellwizard_long'],
         'orderInBestellwizard': json['order_in_bestellwizard'] == null ? undefined : json['order_in_bestellwizard'],
+        'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
     };
 }
 
@@ -167,6 +168,7 @@ export function ProductTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'description_bestellwizard_short': value['descriptionBestellwizardShort'],
         'description_bestellwizard_long': value['descriptionBestellwizardLong'],
         'order_in_bestellwizard': value['orderInBestellwizard'],
+        'force_waiting_list': value['forceWaitingList'],
     };
 }
 

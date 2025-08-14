@@ -24,6 +24,7 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     is_affected_by_jokers = serializers.BooleanField()
     must_be_subscribed_to = serializers.BooleanField()
     is_association_membership = serializers.BooleanField()
+    force_waiting_list = serializers.BooleanField()
 
 
 class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):

@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { DeliveryCycleEnum } from './DeliveryCycleEnum';
-import {
-    DeliveryCycleEnumFromJSON,
-    DeliveryCycleEnumFromJSONTyped,
-    DeliveryCycleEnumToJSON,
-    DeliveryCycleEnumToJSONTyped,
-} from './DeliveryCycleEnum';
+import type { DeliveryCycleEnum } from "./DeliveryCycleEnum";
+import { DeliveryCycleEnumFromJSON, DeliveryCycleEnumToJSON } from "./DeliveryCycleEnum";
 
 /**
  * 
@@ -117,6 +111,12 @@ export interface ExtendedProductType {
      * @memberof ExtendedProductType
      */
     isAssociationMembership: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ExtendedProductType
+     */
+    forceWaitingList: boolean;
 }
 
 
@@ -135,6 +135,7 @@ export function instanceOfExtendedProductType(value: object): value is ExtendedP
     if (!('isAffectedByJokers' in value) || value['isAffectedByJokers'] === undefined) return false;
     if (!('mustBeSubscribedTo' in value) || value['mustBeSubscribedTo'] === undefined) return false;
     if (!('isAssociationMembership' in value) || value['isAssociationMembership'] === undefined) return false;
+    if (!('forceWaitingList' in value) || value['forceWaitingList'] === undefined) return false;
     return true;
 }
 
@@ -163,6 +164,7 @@ export function ExtendedProductTypeFromJSONTyped(json: any, ignoreDiscriminator:
         'isAffectedByJokers': json['is_affected_by_jokers'],
         'mustBeSubscribedTo': json['must_be_subscribed_to'],
         'isAssociationMembership': json['is_association_membership'],
+        'forceWaitingList': json['force_waiting_list'],
     };
 }
 
@@ -192,6 +194,7 @@ export function ExtendedProductTypeFromJSONTyped(json: any, ignoreDiscriminator:
         'is_affected_by_jokers': value['isAffectedByJokers'],
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'is_association_membership': value['isAssociationMembership'],
+        'force_waiting_list': value['forceWaitingList'],
     };
 }
 
