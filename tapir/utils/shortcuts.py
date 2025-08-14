@@ -1,3 +1,4 @@
+import calendar
 import datetime
 from typing import Dict, Callable
 
@@ -47,3 +48,7 @@ def dict_get_or_set(dictionary: Dict, key, call_if_not_set: callable):
 
 def get_first_of_next_month(date: datetime.date):
     return (date.replace(day=1) + datetime.timedelta(days=32)).replace(day=1)
+
+
+def get_last_day_of_month(date: datetime.date) -> datetime.date:
+    return date.replace(day=calendar.monthrange(date.year, date.month)[1])

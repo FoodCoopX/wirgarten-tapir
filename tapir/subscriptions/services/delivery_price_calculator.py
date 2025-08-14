@@ -4,7 +4,12 @@ from typing import Dict
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.utils.shortcuts import get_monday
-from tapir.wirgarten.constants import NO_DELIVERY
+from tapir.wirgarten.constants import (
+    NO_DELIVERY,
+    ODD_WEEKS,
+    EVEN_WEEKS,
+    EVERY_FOUR_WEEKS,
+)
 from tapir.wirgarten.models import Member, Subscription, GrowingPeriod
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.products import get_active_subscriptions, get_product_price
@@ -29,7 +34,7 @@ class DeliveryPriceCalculator:
         return sum(
             [
                 cls.get_price_of_single_delivery_without_solidarity(
-                    subscription, reference_date
+                    subscription, reference_date, cache=cache
                 )
                 * subscription.quantity
                 for subscription in subscriptions
@@ -50,10 +55,20 @@ class DeliveryPriceCalculator:
 
     @classmethod
     def get_price_of_single_delivery_without_solidarity(
-        cls, subscription: Subscription, at_date: datetime.date
+        cls, subscription: Subscription, at_date: datetime.date, cache: dict
     ) -> Decimal:
-        product_price = get_product_price(subscription.product, at_date).price
-        return product_price * 12 / 52
+        product_price = get_product_price(
+            subscription.product, at_date, cache=cache
+        ).price
+        delivery_price = product_price * 12 / 52
+        if (
+            subscription.product.type.delivery_cycle == ODD_WEEKS[0]
+            or subscription.product.type.delivery_cycle == EVEN_WEEKS[0]
+        ):
+            delivery_price *= 2
+        elif subscription.product.type.delivery_cycle == EVERY_FOUR_WEEKS[0]:
+            delivery_price += 4
+        return delivery_price
 
     @classmethod
     def get_number_of_deliveries_in_growing_period(

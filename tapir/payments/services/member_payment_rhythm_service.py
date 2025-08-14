@@ -21,7 +21,7 @@ class MemberPaymentRhythmService:
         return rhythm_object.rhythm
 
     @classmethod
-    def should_generate_payment_at_date(
+    def is_start_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
     ) -> bool:
         months_with_generation = cls.get_months_where_payments_should_be_generated(
@@ -55,3 +55,43 @@ class MemberPaymentRhythmService:
             reference_date=reference_date, cache=cache
         )
         return relativedelta(reference_date, growing_period.start_date).months + 1
+
+    @classmethod
+    def get_number_of_months_paid_in_advance(cls, rhythm):
+        match rhythm:
+            case MemberPaymentRhythm.Rhythm.MONTHLY:
+                return 1
+            case MemberPaymentRhythm.Rhythm.QUARTERLY:
+                return 3
+            case MemberPaymentRhythm.Rhythm.SEMIANNUALLY:
+                return 6
+            case MemberPaymentRhythm.Rhythm.YEARLY:
+                return 12
+            case _:
+                raise ImproperlyConfigured(f"Unknown payment rhythm: {rhythm}")
+
+    @classmethod
+    def get_first_day_of_rhythm_period(
+        cls, rhythm, reference_date: datetime.date, cache: dict
+    ):
+        reference_date = reference_date.replace(day=1)
+        while not cls.is_start_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
+        ):
+            reference_date = reference_date - relativedelta(months=1)
+        return reference_date
+
+    @classmethod
+    def get_last_day_of_rhythm_period(
+        cls, rhythm, reference_date: datetime.date, cache: dict
+    ):
+        start = cls.get_first_day_of_rhythm_period(
+            rhythm=rhythm, reference_date=reference_date, cache=cache
+        )
+        return (
+            start
+            + relativedelta(
+                months=cls.get_number_of_months_paid_in_advance(rhythm=rhythm)
+            )
+            - datetime.timedelta(days=1)
+        )

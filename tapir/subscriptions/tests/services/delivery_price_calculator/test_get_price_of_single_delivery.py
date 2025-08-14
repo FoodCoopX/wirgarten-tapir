@@ -32,7 +32,7 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
 
         result = (
             DeliveryPriceCalculator.get_price_of_single_delivery_without_solidarity(
-                subscription, date
+                subscription, date, cache={}
             )
         )
 
