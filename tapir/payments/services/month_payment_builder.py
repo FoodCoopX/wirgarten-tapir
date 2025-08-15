@@ -32,7 +32,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 
-class MonthPaymentGenerator:
+class MonthPaymentBuilder:
     @classmethod
     def build_payments_for_month(cls, reference_date: datetime.date, cache: dict):
         first_of_month = reference_date.replace(day=1)
