@@ -3,9 +3,11 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
+from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class MemberPaymentRhythmService:
@@ -17,14 +19,16 @@ class MemberPaymentRhythmService:
             member=member, reference_date=reference_date, cache=cache
         )
         if rhythm_object is None:
-            return MemberPaymentRhythm.Rhythm.MONTHLY
+            return get_parameter_value(
+                ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache=cache
+            )
         return rhythm_object.rhythm
 
     @classmethod
     def is_start_of_rhythm_period(
         cls, rhythm, reference_date: datetime.date, cache: dict
     ) -> bool:
-        months_with_generation = cls.get_months_where_payments_should_be_generated(
+        months_with_generation = cls.get_month_index_where_payments_should_be_created(
             rhythm
         )
         month_index = cls.get_month_index_relative_to_growing_period(
@@ -33,7 +37,7 @@ class MemberPaymentRhythmService:
         return month_index in months_with_generation
 
     @classmethod
-    def get_months_where_payments_should_be_generated(cls, rhythm):
+    def get_month_index_where_payments_should_be_created(cls, rhythm):
         match rhythm:
             case MemberPaymentRhythm.Rhythm.MONTHLY:
                 return range(1, 13)
