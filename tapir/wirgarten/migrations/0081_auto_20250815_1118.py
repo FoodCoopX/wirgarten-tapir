@@ -25,7 +25,7 @@ def set_payment_ranges(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("wirgarten", "0079_producttype_force_waiting_list"),
+        ("wirgarten", "0080_payment_subscription_payment_range_end_and_more"),
     ]
 
     operations = [
