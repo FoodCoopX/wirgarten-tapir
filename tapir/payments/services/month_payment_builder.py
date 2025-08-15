@@ -27,7 +27,13 @@ from tapir.wirgarten.constants import (
     EVEN_WEEKS,
     EVERY_FOUR_WEEKS,
 )
-from tapir.wirgarten.models import Subscription, Payment, Member, ProductType
+from tapir.wirgarten.models import (
+    Subscription,
+    Payment,
+    Member,
+    ProductType,
+    MandateReference,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
@@ -51,16 +57,18 @@ class MonthPaymentBuilder:
     def build_payments_for_subscriptions_not_in_trial(
         cls, current_month: datetime.date, cache: dict
     ):
-        subscriptions = TapirCache.get_all_subscriptions(cache=cache)
-        subscriptions = [
+        all_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        subscriptions_not_in_trial = [
             subscription
-            for subscription in subscriptions
+            for subscription in all_subscriptions
             if not TrialPeriodManager.is_subscription_in_trial(
                 subscription=subscription, reference_date=current_month, cache=cache
             )
         ]
         subscriptions_by_member_and_product_type = (
-            cls.group_subscriptions_by_member_and_product_type(subscriptions)
+            cls.group_subscriptions_by_member_and_product_type(
+                subscriptions_not_in_trial
+            )
         )
 
         payments_to_create = []
@@ -97,12 +105,7 @@ class MonthPaymentBuilder:
         product_type: ProductType,
         rhythm: MemberPaymentRhythm,
         cache: dict,
-    ):
-        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
-        payments_due_date = cls.get_payment_due_date_on_month(
-            reference_date=first_of_month, cache=cache
-        )
-
+    ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
                 rhythm=rhythm, reference_date=first_of_month, cache=cache
@@ -113,54 +116,28 @@ class MonthPaymentBuilder:
                 rhythm=rhythm, reference_date=first_of_month, cache=cache
             )
         )
+        mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 
-        existing_payments = list(
-            Payment.objects.filter(
-                mandate_ref=mandate_ref,
-                type=product_type.name,
-            )
+        already_paid = cls.get_already_paid_amount(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            product_type_name=product_type.name,
         )
-        # This filters out payments that have a due date this month but are not relevant to the current rhythm period.
-        # This can happen for payments relative to trial periods, which are created after the month ended
-        payments_for_this_period = [
-            payment
-            for payment in existing_payments
-            if DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=first_day_of_rhythm_period,
-                range_1_end=last_day_of_rhythm_period,
-                range_2_start=payment.subscription_payment_range_start,
-                range_2_end=payment.subscription_payment_range_end,
-            )
-        ]
-
-        already_paid = sum([payment.amount for payment in payments_for_this_period])
-
-        subscriptions_active_within_period = [
-            subscription
-            for subscription in subscriptions
-            if DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=first_day_of_rhythm_period,
-                range_1_end=last_day_of_rhythm_period,
-                range_2_start=subscription.start_date,
-                range_2_end=subscription.end_date,
-            )
-        ]
-        total_to_pay = sum(
-            [
-                cls.get_amount_to_pay_for_subscription_within_range(
-                    subscription=subscription,
-                    range_start=first_day_of_rhythm_period,
-                    range_end=last_day_of_rhythm_period,
-                    cache=cache,
-                )
-                for subscription in subscriptions_active_within_period
-            ]
+        total_to_pay = cls.get_total_to_pay(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            subscriptions=subscriptions,
+            cache=cache,
         )
 
         new_payment_amount = total_to_pay - already_paid
         if new_payment_amount <= 0:
             return None
 
+        payments_due_date = cls.get_payment_due_date_on_month(
+            reference_date=first_of_month, cache=cache
+        )
         return Payment(
             due_date=payments_due_date,
             amount=Decimal(total_to_pay - already_paid).quantize(Decimal("0.01")),
@@ -170,6 +147,65 @@ class MonthPaymentBuilder:
             subscription_payment_range_start=first_day_of_rhythm_period,
             subscription_payment_range_end=last_day_of_rhythm_period,
         )
+
+    @classmethod
+    def get_total_to_pay(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        subscriptions: list[Subscription],
+        cache: dict,
+    ):
+        subscriptions_active_within_period = [
+            subscription
+            for subscription in subscriptions
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=range_start,
+                range_1_end=range_end,
+                range_2_start=subscription.start_date,
+                range_2_end=subscription.end_date,
+            )
+        ]
+        total_to_pay = sum(
+            [
+                cls.get_amount_to_pay_for_subscription_within_range(
+                    subscription=subscription,
+                    range_start=range_start,
+                    range_end=range_end,
+                    cache=cache,
+                )
+                for subscription in subscriptions_active_within_period
+            ]
+        )
+        return total_to_pay
+
+    @classmethod
+    def get_already_paid_amount(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        mandate_ref: MandateReference,
+        product_type_name: str,
+    ) -> Decimal:
+        existing_payments = list(
+            Payment.objects.filter(
+                mandate_ref=mandate_ref,
+                type=product_type_name,
+            )
+        )
+        # This filters out payments that have a due date this month but are not relevant to the current rhythm period.
+        # This can happen for payments relative to trial periods, which are created after the month ended
+        payments_for_this_period = [
+            payment
+            for payment in existing_payments
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=range_start,
+                range_1_end=range_end,
+                range_2_start=payment.subscription_payment_range_start,
+                range_2_end=payment.subscription_payment_range_end,
+            )
+        ]
+        return sum([payment.amount for payment in payments_for_this_period])
 
     @classmethod
     def get_amount_to_pay_for_subscription_within_range(
@@ -293,8 +329,10 @@ class MonthPaymentBuilder:
     @classmethod
     def group_subscriptions_by_member_and_product_type(
         cls, subscriptions: list[Subscription]
-    ):
-        subscriptions_by_member_and_product_type = {}
+    ) -> dict[Member, dict[ProductType, set[Subscription]]]:
+        subscriptions_by_member_and_product_type: dict[
+            Member, dict[ProductType, set[Subscription]]
+        ] = {}
         for subscription in subscriptions:
             if (
                 subscription.member
@@ -306,11 +344,9 @@ class MonthPaymentBuilder:
                 subscription.member
             ]
             if subscription.product.type not in subscriptions_by_product_type.keys():
-                subscriptions_by_product_type[subscription.product.type] = []
+                subscriptions_by_product_type[subscription.product.type] = set()
 
-            subscriptions_by_product_type[subscription.product.type].append(
-                subscription
-            )
+            subscriptions_by_product_type[subscription.product.type].add(subscription)
 
         return subscriptions_by_member_and_product_type
 
@@ -319,16 +355,16 @@ class MonthPaymentBuilder:
         cls, current_month: datetime.date, cache: dict
     ):
         previous_month = (current_month - relativedelta(months=1)).replace(day=1)
-        subscriptions = TapirCache.get_all_subscriptions(cache=cache)
-        subscriptions = [
+        all_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        subscriptions_in_trial = [
             subscription
-            for subscription in subscriptions
+            for subscription in all_subscriptions
             if TrialPeriodManager.is_subscription_in_trial(
                 subscription=subscription, reference_date=previous_month, cache=cache
             )
         ]
         subscriptions_by_member_and_product_type = (
-            cls.group_subscriptions_by_member_and_product_type(subscriptions)
+            cls.group_subscriptions_by_member_and_product_type(subscriptions_in_trial)
         )
 
         payments_to_create = []

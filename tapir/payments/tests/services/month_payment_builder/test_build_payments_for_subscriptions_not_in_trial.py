@@ -114,10 +114,10 @@ class TestBuildPaymentsForSubscriptionsNotInTrial(TapirIntegrationTest):
                 call(
                     member=member_1,
                     first_of_month=current_month,
-                    subscriptions=[
+                    subscriptions={
                         subscription_member_1_product_type_1_a,
                         subscription_member_1_product_type_1_b,
-                    ],
+                    },
                     product_type=product_type_1,
                     rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                     cache=cache,
@@ -125,7 +125,7 @@ class TestBuildPaymentsForSubscriptionsNotInTrial(TapirIntegrationTest):
                 call(
                     member=member_1,
                     first_of_month=current_month,
-                    subscriptions=[subscription_member_1_product_type_2],
+                    subscriptions={subscription_member_1_product_type_2},
                     product_type=product_type_2,
                     rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                     cache=cache,
@@ -133,7 +133,7 @@ class TestBuildPaymentsForSubscriptionsNotInTrial(TapirIntegrationTest):
                 call(
                     member=member_2,
                     first_of_month=current_month,
-                    subscriptions=[subscription_member_2_product_type_1],
+                    subscriptions={subscription_member_2_product_type_1},
                     product_type=product_type_1,
                     rhythm=MemberPaymentRhythm.Rhythm.QUARTERLY,
                     cache=cache,
