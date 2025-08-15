@@ -56,10 +56,6 @@ CELERY_BEAT_SCHEDULE = {
             hour=4,
         ),
     },
-    "export_payments_per_product_type": {
-        "task": "tapir.wirgarten.tasks.export_payment_parts_csv",
-        "schedule": celery.schedules.crontab(day_of_month="1", minute="0", hour="3"),
-    },
     "generate_member_numbers": {
         "task": "tapir.wirgarten.tasks.generate_member_numbers",
         "schedule": celery.schedules.crontab(minute="0", hour="3"),
@@ -87,6 +83,10 @@ CELERY_BEAT_SCHEDULE = {
     "automatic_confirmation": {
         "task": "tapir.subscriptions.tasks.automatic_confirmation_subscriptions_and_share_purchases",
         "schedule": celery.schedules.crontab(hour="0", minute="30"),
+    },
+    "create_payments_for_this_month": {
+        "task": "tapir.payments.tasks.create_payments_for_this_month",
+        "schedule": celery.schedules.crontab(hour="23", minute="59"),
     },
 }
 

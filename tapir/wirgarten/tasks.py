@@ -10,22 +10,17 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     ExportedFile,
     Member,
-    Payment,
-    PaymentTransaction,
     Product,
-    ProductType,
     ScheduledTask,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_next_delivery_date
 from tapir.wirgarten.service.file_export import begin_csv_string, export_file
-from tapir.wirgarten.service.payment import generate_new_payments
 from tapir.wirgarten.service.products import (
     get_active_product_types,
     get_active_subscriptions,
@@ -33,7 +28,6 @@ from tapir.wirgarten.service.products import (
     get_product_price,
 )
 from tapir.wirgarten.utils import (
-    format_date,
     format_subscription_list_html,
     get_now,
     get_today,
@@ -214,106 +208,6 @@ def send_email_member_contract_end_reminder(member_id: str):
     else:
         print(
             f"[task] send_email_member_contract_end_reminder: skipping email, because {member} has no active contract OR has a future contract"
-        )
-
-
-@shared_task
-@transaction.atomic
-def export_payment_parts_csv(reference_date=None):
-    cache = {}
-    if reference_date is None:
-        reference_date = get_today(cache=cache)
-
-    def export_product_or_coop_payment_csv(
-        product_type: bool | ProductType, payments: list[Payment]
-    ):
-        KEY_NAME = "Name"
-        KEY_IBAN = "IBAN"
-        KEY_AMOUNT = "Betrag"
-        KEY_VERWENDUNGSZWECK = "Verwendungszweck"
-        KEY_MANDATE_REF = "Mandatsreferenz"
-        KEY_MANDATE_DATE = "Mandatsdatum"
-
-        output, writer = begin_csv_string(
-            [
-                KEY_NAME,
-                KEY_IBAN,
-                KEY_AMOUNT,
-                KEY_VERWENDUNGSZWECK,
-                KEY_MANDATE_REF,
-                KEY_MANDATE_DATE,
-            ]
-        )
-
-        for payment in payments:
-            verwendungszweck = payment.mandate_ref.member.last_name + (
-                " Geschäftsanteile" if not product_type else " " + product_type.name
-            )
-
-            writer.writerow(
-                {
-                    KEY_NAME: f"{payment.mandate_ref.member.first_name} {payment.mandate_ref.member.last_name}",
-                    KEY_IBAN: payment.mandate_ref.member.iban,
-                    KEY_AMOUNT: payment.amount,
-                    KEY_VERWENDUNGSZWECK: verwendungszweck,
-                    KEY_MANDATE_REF: payment.mandate_ref.ref,
-                    KEY_MANDATE_DATE: format_date(
-                        payment.mandate_ref.member.sepa_consent
-                    ),
-                }
-            )
-
-        payment_type = product_type.name if product_type else "Geschäftsanteile"
-        file = export_file(
-            filename=(payment_type) + "-Einzahlungen",
-            filetype=ExportedFile.FileType.CSV,
-            content=bytes("".join(output.csv_string), "utf-8"),
-            send_email=True,
-            cache=cache,
-        )
-        transaction = PaymentTransaction.objects.create(file=file, type=payment_type)
-        for p in payments:
-            p.transaction = transaction
-            p.save()
-
-    due_date = reference_date.replace(
-        day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
-    )
-
-    print(
-        f"[task] export_payment_parts_csv: generating payments for due date {format_date(due_date)}"
-    )
-
-    payments = generate_new_payments(due_date, cache=cache)
-    for p in payments:
-        if p.id is None:
-            p.save()
-
-    payments.sort(key=lambda x: x.type if x.type else "")
-    payments_grouped = {
-        key: list(group)
-        for key, group in itertools.groupby(payments, key=lambda x: x.type)
-    }
-
-    # export for product types
-    for pt in get_active_product_types(cache=cache):
-        export_product_or_coop_payment_csv(
-            pt, payments_grouped[pt.name] if pt.name in payments_grouped else []
-        )
-
-    if (
-        get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
-        == LEGAL_STATUS_COOPERATIVE
-    ):
-        # export for coop shares
-        coop_share_payments = Payment.objects.filter(
-            transaction__isnull=True,
-            due_date__lte=due_date,
-            type="Genossenschaftsanteile",
-        )
-        export_product_or_coop_payment_csv(
-            False,
-            coop_share_payments,
         )
 
 
