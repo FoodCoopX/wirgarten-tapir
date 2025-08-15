@@ -193,8 +193,7 @@ class MonthPaymentBuilder:
                 type=product_type_name,
             )
         )
-        # This filters out payments that have a due date this month but are not relevant to the current rhythm period.
-        # This can happen for payments relative to trial periods, which are created after the month ended
+
         payments_for_this_period = [
             payment
             for payment in existing_payments
