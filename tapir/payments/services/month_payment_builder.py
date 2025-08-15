@@ -215,7 +215,7 @@ class MonthPaymentBuilder:
         cache: dict,
     ):
         number_of_full_month_to_pay, number_of_single_deliveries_to_pay = (
-            cls.get_number_of_month_and_deliveries_to_pay(
+            cls.get_number_of_months_and_deliveries_to_pay(
                 range_start=range_start,
                 range_end=range_end,
                 subscription=subscription,
@@ -236,7 +236,7 @@ class MonthPaymentBuilder:
         return full_months_price + single_deliveries_price
 
     @classmethod
-    def get_number_of_month_and_deliveries_to_pay(
+    def get_number_of_months_and_deliveries_to_pay(
         cls,
         range_start: datetime.date,
         range_end: datetime.date,
