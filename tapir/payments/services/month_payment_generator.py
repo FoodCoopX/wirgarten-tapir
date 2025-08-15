@@ -6,6 +6,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -33,33 +34,29 @@ from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 class MonthPaymentGenerator:
     @classmethod
-    def generate_payments_for_month(cls, reference_date: datetime.date, cache: dict):
+    def build_payments_for_month(cls, reference_date: datetime.date, cache: dict):
         first_of_month = reference_date.replace(day=1)
 
-        payments_to_create_trial = cls.generate_payments_for_subscriptions_in_trial(
-            first_of_month=first_of_month, cache=cache
+        payments_to_create_trial = cls.build_payments_for_subscriptions_in_trial(
+            current_month=first_of_month, cache=cache
         )
 
-        payments_to_create_no_trial = (
-            cls.generate_payments_for_subscriptions_not_in_trial(
-                first_of_month=first_of_month, cache=cache
-            )
+        payments_to_create_no_trial = cls.build_payments_for_subscriptions_not_in_trial(
+            current_month=first_of_month, cache=cache
         )
 
-        Payment.objects.bulk_create(
-            payments_to_create_no_trial + payments_to_create_trial
-        )
+        return payments_to_create_no_trial + payments_to_create_trial
 
     @classmethod
-    def generate_payments_for_subscriptions_not_in_trial(
-        cls, first_of_month: datetime.date, cache: dict
+    def build_payments_for_subscriptions_not_in_trial(
+        cls, current_month: datetime.date, cache: dict
     ):
         subscriptions = TapirCache.get_all_subscriptions(cache=cache)
         subscriptions = [
             subscription
             for subscription in subscriptions
             if not TrialPeriodManager.is_subscription_in_trial(
-                subscription=subscription, reference_date=first_of_month, cache=cache
+                subscription=subscription, reference_date=current_month, cache=cache
             )
         ]
         subscriptions_by_member_and_product_type = (
@@ -72,13 +69,19 @@ class MonthPaymentGenerator:
             member,
             subscriptions_by_product_type,
         ) in subscriptions_by_member_and_product_type.items():
+            rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member, reference_date=current_month, cache=cache
+            )
             for product_type, subscriptions in subscriptions_by_product_type:
-                payment = cls.generate_payments_for_subscriptions_not_in_trial_for_member_and_product_type(
-                    member=member,
-                    first_of_month=first_of_month,
-                    subscriptions=subscriptions,
-                    product_type=product_type,
-                    cache=cache,
+                payment = (
+                    cls.build_payments_for_subscriptions_for_member_and_product_type(
+                        member=member,
+                        first_of_month=current_month,
+                        subscriptions=subscriptions,
+                        product_type=product_type,
+                        rhythm=rhythm,
+                        cache=cache,
+                    )
                 )
                 if payment is not None:
                     payments_to_create.append(payment)
@@ -86,18 +89,16 @@ class MonthPaymentGenerator:
         return payments_to_create
 
     @classmethod
-    def generate_payments_for_subscriptions_not_in_trial_for_member_and_product_type(
+    def build_payments_for_subscriptions_for_member_and_product_type(
         cls,
         member: Member,
         first_of_month: datetime.date,
         subscriptions,
         product_type: ProductType,
+        rhythm: MemberPaymentRhythm,
         cache: dict,
     ):
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
-        rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
-            member=member, reference_date=first_of_month, cache=cache
-        )
         payments_due_date = cls.get_payment_due_date_on_month(
             reference_date=first_of_month, cache=cache
         )
@@ -113,16 +114,6 @@ class MonthPaymentGenerator:
             )
         )
 
-        subscriptions_active_within_period = [
-            subscription
-            for subscription in subscriptions
-            if DateRangeOverlapChecker.do_ranges_overlap(
-                range_1_start=first_day_of_rhythm_period,
-                range_1_end=last_day_of_rhythm_period,
-                range_2_start=subscription.start_date,
-                range_2_end=subscription.end_date,
-            )
-        ]
         existing_payments = list(
             Payment.objects.filter(
                 mandate_ref=mandate_ref,
@@ -143,6 +134,17 @@ class MonthPaymentGenerator:
         ]
 
         already_paid = sum([payment.amount for payment in payments_for_this_period])
+
+        subscriptions_active_within_period = [
+            subscription
+            for subscription in subscriptions
+            if DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=first_day_of_rhythm_period,
+                range_1_end=last_day_of_rhythm_period,
+                range_2_start=subscription.start_date,
+                range_2_end=subscription.end_date,
+            )
+        ]
         total_to_pay = sum(
             [
                 cls.get_amount_to_pay_for_subscription_within_range(
@@ -313,11 +315,43 @@ class MonthPaymentGenerator:
         return subscriptions_by_member_and_product_type
 
     @classmethod
-    def generate_payments_for_subscriptions_in_trial(
-        cls, first_of_month: datetime.date, cache: dict
+    def build_payments_for_subscriptions_in_trial(
+        cls, current_month: datetime.date, cache: dict
     ):
-        raise NotImplementedError("TODO")
-        return [], []
+        previous_month = (current_month - relativedelta(months=1)).replace(day=1)
+        subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        subscriptions = [
+            subscription
+            for subscription in subscriptions
+            if TrialPeriodManager.is_subscription_in_trial(
+                subscription=subscription, reference_date=previous_month, cache=cache
+            )
+        ]
+        subscriptions_by_member_and_product_type = (
+            cls.group_subscriptions_by_member_and_product_type(subscriptions)
+        )
+
+        payments_to_create = []
+
+        for (
+            member,
+            subscriptions_by_product_type,
+        ) in subscriptions_by_member_and_product_type.items():
+            for product_type, subscriptions in subscriptions_by_product_type:
+                payment = (
+                    cls.build_payments_for_subscriptions_for_member_and_product_type(
+                        member=member,
+                        first_of_month=previous_month,
+                        subscriptions=subscriptions,
+                        product_type=product_type,
+                        rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
+                        cache=cache,
+                    )
+                )
+                if payment is not None:
+                    payments_to_create.append(payment)
+
+        return payments_to_create
 
     @classmethod
     def get_number_of_deliveries_for_full_month_price(cls, delivery_cycle: str):
