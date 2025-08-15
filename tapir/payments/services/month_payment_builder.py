@@ -72,9 +72,9 @@ class MonthPaymentBuilder:
             rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
                 member=member, reference_date=current_month, cache=cache
             )
-            for product_type, subscriptions in subscriptions_by_product_type:
+            for product_type, subscriptions in subscriptions_by_product_type.items():
                 payment = (
-                    cls.build_payments_for_subscriptions_for_member_and_product_type(
+                    cls.build_payment_for_subscriptions_for_member_and_product_type(
                         member=member,
                         first_of_month=current_month,
                         subscriptions=subscriptions,
@@ -89,7 +89,7 @@ class MonthPaymentBuilder:
         return payments_to_create
 
     @classmethod
-    def build_payments_for_subscriptions_for_member_and_product_type(
+    def build_payment_for_subscriptions_for_member_and_product_type(
         cls,
         member: Member,
         first_of_month: datetime.date,
@@ -339,7 +339,7 @@ class MonthPaymentBuilder:
         ) in subscriptions_by_member_and_product_type.items():
             for product_type, subscriptions in subscriptions_by_product_type:
                 payment = (
-                    cls.build_payments_for_subscriptions_for_member_and_product_type(
+                    cls.build_payment_for_subscriptions_for_member_and_product_type(
                         member=member,
                         first_of_month=previous_month,
                         subscriptions=subscriptions,

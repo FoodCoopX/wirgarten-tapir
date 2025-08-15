@@ -44,6 +44,9 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
     @factory.post_generation
     def member_no(self: Member, create, member_no, **kwargs):
+        if not create:
+            return
+
         if member_no is not None:
             self.member_no = member_no
             return
