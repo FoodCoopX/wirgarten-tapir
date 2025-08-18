@@ -311,7 +311,10 @@ class MonthPaymentBuilder:
     ):
         last_of_month = get_last_day_of_month(first_of_month)
         number_of_deliveries = 0
-        current_date = first_of_month
+
+        # we start one day back so that deliveries on the first day of the month are counted
+        current_date = first_of_month - datetime.timedelta(days=1)
+
         while current_date <= last_of_month:
             current_date = DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
                 reference_date=current_date,
@@ -323,7 +326,10 @@ class MonthPaymentBuilder:
                 delivery_cycle=subscription.product.type.delivery_cycle,
                 cache=cache,
             )
-            if current_date <= last_of_month:
+            if (
+                current_date <= last_of_month
+                and subscription.start_date <= current_date <= subscription.end_date
+            ):
                 number_of_deliveries += 1
 
         return number_of_deliveries
