@@ -59,7 +59,7 @@ const MemberProfileWaitingListCard: React.FC<
                     {waitingListEntry.pickupLocationWishes
                       .sort((w1, w2) => w1.priority - w2.priority)
                       .map((wish) => (
-                        <li>{wish.pickupLocation.name}</li>
+                        <li key={wish.id!}>{wish.pickupLocation.name}</li>
                       ))}
                   </ol>
                 </Col>
@@ -70,7 +70,7 @@ const MemberProfileWaitingListCard: React.FC<
                   Produkt-Wünsche
                   <ul>
                     {waitingListEntry.productWishes.map((wish) => (
-                      <li>
+                      <li key={wish.id}>
                         {wish.product.name} {"×"} {wish.quantity}
                       </li>
                     ))}

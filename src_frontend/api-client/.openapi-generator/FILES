@@ -2,6 +2,7 @@ apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
+apis/PaymentsApi.ts
 apis/PickupLocationsApi.ts
 apis/ProductsApi.ts
 apis/SubscriptionsApi.ts
@@ -43,6 +44,7 @@ models/EmailConfigurationDispatchRequest.ts
 models/EmailConfigurationRequest.ts
 models/EmailConfigurationVersion.ts
 models/EmailConfigurationVersionRequest.ts
+models/EmailConfigurationVersionStatusEnum.ts
 models/EmailDispatch.ts
 models/EmailDispatchRequest.ts
 models/EmailDispatchWithRetries.ts
@@ -97,6 +99,8 @@ models/PatchedStaticSegmentRequest.ts
 models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
 models/PatchedWaitingListEntryRequest.ts
+models/Payment.ts
+models/PaymentStatusEnum.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
 models/PersonalDataRequest.ts
@@ -135,7 +139,6 @@ models/StaticSegment.ts
 models/StaticSegmentRecipient.ts
 models/StaticSegmentRecipientRequest.ts
 models/StaticSegmentRequest.ts
-models/StatusEnum.ts
 models/StoredUpload.ts
 models/StoredUploadRequest.ts
 models/Subscription.ts

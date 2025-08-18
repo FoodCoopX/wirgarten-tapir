@@ -12,35 +12,17 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { StatusEnum } from './StatusEnum';
+import type { EmailConfiguration } from "./EmailConfiguration";
+import { EmailConfigurationFromJSON, EmailConfigurationToJSON } from "./EmailConfiguration";
+import type { SegmentData } from "./SegmentData";
+import { SegmentDataFromJSON, SegmentDataToJSON } from "./SegmentData";
+import type { TriggerData } from "./TriggerData";
+import { TriggerDataFromJSON, TriggerDataToJSON } from "./TriggerData";
+import type { EmailConfigurationVersionStatusEnum } from "./EmailConfigurationVersionStatusEnum";
 import {
-    StatusEnumFromJSON,
-    StatusEnumFromJSONTyped,
-    StatusEnumToJSON,
-    StatusEnumToJSONTyped,
-} from './StatusEnum';
-import type { EmailConfiguration } from './EmailConfiguration';
-import {
-    EmailConfigurationFromJSON,
-    EmailConfigurationFromJSONTyped,
-    EmailConfigurationToJSON,
-    EmailConfigurationToJSONTyped,
-} from './EmailConfiguration';
-import type { SegmentData } from './SegmentData';
-import {
-    SegmentDataFromJSON,
-    SegmentDataFromJSONTyped,
-    SegmentDataToJSON,
-    SegmentDataToJSONTyped,
-} from './SegmentData';
-import type { TriggerData } from './TriggerData';
-import {
-    TriggerDataFromJSON,
-    TriggerDataFromJSONTyped,
-    TriggerDataToJSON,
-    TriggerDataToJSONTyped,
-} from './TriggerData';
+  EmailConfigurationVersionStatusEnumFromJSON,
+  EmailConfigurationVersionStatusEnumToJSON
+} from "./EmailConfigurationVersionStatusEnum";
 
 /**
  * 
@@ -104,10 +86,10 @@ export interface EmailConfigurationVersion {
     subject?: string | null;
     /**
      * 
-     * @type {StatusEnum}
+     * @type {EmailConfigurationVersionStatusEnum}
      * @memberof EmailConfigurationVersion
      */
-    status?: StatusEnum;
+    status?: EmailConfigurationVersionStatusEnum;
 }
 
 
@@ -143,7 +125,7 @@ export function EmailConfigurationVersionFromJSONTyped(json: any, ignoreDiscrimi
         'updatedAt': (new Date(json['updated_at'])),
         'content': json['content'] == null ? undefined : json['content'],
         'subject': json['subject'] == null ? undefined : json['subject'],
-        'status': json['status'] == null ? undefined : StatusEnumFromJSON(json['status']),
+        'status': json['status'] == null ? undefined : EmailConfigurationVersionStatusEnumFromJSON(json['status']),
     };
 }
 
@@ -164,7 +146,7 @@ export function EmailConfigurationVersionFromJSONTyped(json: any, ignoreDiscrimi
         'segment_data': SegmentDataToJSON(value['segmentData']),
         'content': value['content'],
         'subject': value['subject'],
-        'status': StatusEnumToJSON(value['status']),
+        'status': EmailConfigurationVersionStatusEnumToJSON(value['status']),
     };
 }
 

@@ -16,6 +16,8 @@ from tapir.wirgarten.models import (
     GrowingPeriod,
     Member,
     TaxRate,
+    MandateReference,
+    Payment,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 from tapir.wirgarten.utils import get_today
@@ -29,7 +31,13 @@ class TapirCache:
             cache=cache, key=key, category="subscriptions"
         )
         return get_from_cache_or_compute(
-            cache, key, lambda: set(Subscription.objects.order_by("id"))
+            cache,
+            key,
+            lambda: set(
+                Subscription.objects.order_by("id").select_related(
+                    "member", "product", "product__type"
+                )
+            ),
         )
 
     @classmethod
@@ -393,6 +401,31 @@ class TapirCache:
                 rhythm_at_date = rhythm
 
         return rhythm_at_date
+
+    @classmethod
+    def get_payments_by_mandate_ref_and_product_type(
+        cls, cache: dict, product_type_name: str, mandate_ref: MandateReference
+    ):
+        def compute():
+            payments = Payment.objects.select_related("mandate_ref")
+            result = {}
+            for payment in payments:
+                if payment.mandate_ref not in result.keys():
+                    result[payment.mandate_ref] = {}
+                if payment.type not in result[payment.mandate_ref].keys():
+                    result[payment.mandate_ref][payment.type] = set()
+                result[payment.mandate_ref][payment.type].add(payment)
+            return result
+
+        payments_by_mandate_ref_and_product_type = get_from_cache_or_compute(
+            cache=cache,
+            key="payments_by_mandate_ref_and_product_type",
+            compute_function=compute,
+        )
+
+        return payments_by_mandate_ref_and_product_type.get(mandate_ref, {}).get(
+            product_type_name, {}
+        )
 
     @classmethod
     def get_product_type_tax_rates(cls, product_type: ProductType, cache: dict):

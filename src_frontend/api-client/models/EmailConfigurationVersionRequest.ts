@@ -12,35 +12,17 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { StatusEnum } from './StatusEnum';
+import type { SegmentDataRequest } from "./SegmentDataRequest";
+import { SegmentDataRequestFromJSON, SegmentDataRequestToJSON } from "./SegmentDataRequest";
+import type { TriggerDataRequest } from "./TriggerDataRequest";
+import { TriggerDataRequestFromJSON, TriggerDataRequestToJSON } from "./TriggerDataRequest";
+import type { EmailConfigurationVersionStatusEnum } from "./EmailConfigurationVersionStatusEnum";
 import {
-    StatusEnumFromJSON,
-    StatusEnumFromJSONTyped,
-    StatusEnumToJSON,
-    StatusEnumToJSONTyped,
-} from './StatusEnum';
-import type { SegmentDataRequest } from './SegmentDataRequest';
-import {
-    SegmentDataRequestFromJSON,
-    SegmentDataRequestFromJSONTyped,
-    SegmentDataRequestToJSON,
-    SegmentDataRequestToJSONTyped,
-} from './SegmentDataRequest';
-import type { TriggerDataRequest } from './TriggerDataRequest';
-import {
-    TriggerDataRequestFromJSON,
-    TriggerDataRequestFromJSONTyped,
-    TriggerDataRequestToJSON,
-    TriggerDataRequestToJSONTyped,
-} from './TriggerDataRequest';
-import type { EmailConfigurationRequest } from './EmailConfigurationRequest';
-import {
-    EmailConfigurationRequestFromJSON,
-    EmailConfigurationRequestFromJSONTyped,
-    EmailConfigurationRequestToJSON,
-    EmailConfigurationRequestToJSONTyped,
-} from './EmailConfigurationRequest';
+  EmailConfigurationVersionStatusEnumFromJSON,
+  EmailConfigurationVersionStatusEnumToJSON
+} from "./EmailConfigurationVersionStatusEnum";
+import type { EmailConfigurationRequest } from "./EmailConfigurationRequest";
+import { EmailConfigurationRequestFromJSON, EmailConfigurationRequestToJSON } from "./EmailConfigurationRequest";
 
 /**
  * 
@@ -86,10 +68,10 @@ export interface EmailConfigurationVersionRequest {
     subject?: string | null;
     /**
      * 
-     * @type {StatusEnum}
+     * @type {EmailConfigurationVersionStatusEnum}
      * @memberof EmailConfigurationVersionRequest
      */
-    status?: StatusEnum;
+    status?: EmailConfigurationVersionStatusEnum;
 }
 
 
@@ -119,7 +101,7 @@ export function EmailConfigurationVersionRequestFromJSONTyped(json: any, ignoreD
         'segmentData': SegmentDataRequestFromJSON(json['segment_data']),
         'content': json['content'] == null ? undefined : json['content'],
         'subject': json['subject'] == null ? undefined : json['subject'],
-        'status': json['status'] == null ? undefined : StatusEnumFromJSON(json['status']),
+        'status': json['status'] == null ? undefined : EmailConfigurationVersionStatusEnumFromJSON(json['status']),
     };
 }
 
@@ -140,7 +122,7 @@ export function EmailConfigurationVersionRequestFromJSONTyped(json: any, ignoreD
         'segment_data': SegmentDataRequestToJSON(value['segmentData']),
         'content': value['content'],
         'subject': value['subject'],
-        'status': StatusEnumToJSON(value['status']),
+        'status': EmailConfigurationVersionStatusEnumToJSON(value['status']),
     };
 }
 

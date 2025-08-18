@@ -172,24 +172,14 @@ def get_or_create_mandate_ref(
 
     member_id = resolve_member_id(member)
 
-    def get_from_subscriptions():
-        newest_subscription = (
-            get_active_and_future_subscriptions(reference_date=None, cache=cache)
-            .filter(member_id=member_id)
-            .order_by("-start_date")
-            .select_related("mandate_ref")
-            .first()
-        )
-        if newest_subscription:
-            return newest_subscription.mandate_ref
-        return None
+    def compute():
+        return {
+            mandate_ref.member_id: mandate_ref
+            for mandate_ref in MandateReference.objects.all()
+        }
 
-    mandate_ref_cache = get_from_cache_or_compute(
-        cache, "mandate_ref_cache", lambda: {}
-    )
-    mandate_ref = get_from_cache_or_compute(
-        mandate_ref_cache, member_id, get_from_subscriptions
-    )
+    mandate_ref_cache = get_from_cache_or_compute(cache, "mandate_ref_cache", compute)
+    mandate_ref = mandate_ref_cache.get(member_id, None)
     if mandate_ref:
         return mandate_ref
 

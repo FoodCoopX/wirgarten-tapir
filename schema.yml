@@ -732,6 +732,29 @@ paths:
       responses:
         '204':
           description: No response body
+  /payments/api/member_future_payments:
+    get:
+      operationId: payments_api_member_future_payments_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+          description: ''
   /pickup_locations/api/change_member_pickup_location:
     post:
       operationId: pickup_locations_api_change_member_pickup_location_create
@@ -5399,7 +5422,7 @@ components:
           nullable: true
           maxLength: 255
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/EmailConfigurationVersionStatusEnum'
       required:
       - can_be_deleted
       - created_at
@@ -5430,10 +5453,22 @@ components:
           nullable: true
           maxLength: 255
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/EmailConfigurationVersionStatusEnum'
       required:
       - email_configuration
       - segment_data
+    EmailConfigurationVersionStatusEnum:
+      enum:
+      - draft
+      - released
+      - archived
+      - error
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `released` - Released
+        * `archived` - Archived
+        * `error` - Error
     EmailDispatch:
       type: object
       properties:
@@ -6865,6 +6900,51 @@ components:
           type: string
           minLength: 1
           nullable: true
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        amount:
+          type: number
+          format: double
+        due_date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        edited:
+          type: boolean
+        type:
+          type: string
+          nullable: true
+          maxLength: 32
+        subscription_payment_range_start:
+          type: string
+          format: date
+          nullable: true
+        subscription_payment_range_end:
+          type: string
+          format: date
+          nullable: true
+        mandate_ref:
+          type: string
+        transaction:
+          type: string
+          nullable: true
+      required:
+      - amount
+      - due_date
+      - mandate_ref
+    PaymentStatusEnum:
+      enum:
+      - PAID
+      - DUE
+      type: string
+      description: |-
+        * `PAID` - Bezahlt
+        * `DUE` - Offen
     PdfExportModel:
       type: object
       properties:
@@ -7835,18 +7915,6 @@ components:
           maxLength: 255
       required:
       - name
-    StatusEnum:
-      enum:
-      - draft
-      - released
-      - archived
-      - error
-      type: string
-      description: |-
-        * `draft` - Draft
-        * `released` - Released
-        * `archived` - Archived
-        * `error` - Error
     StoredUpload:
       type: object
       properties:

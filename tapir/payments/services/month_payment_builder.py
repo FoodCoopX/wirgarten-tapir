@@ -40,7 +40,9 @@ from tapir.wirgarten.service.member import get_or_create_mandate_ref
 
 class MonthPaymentBuilder:
     @classmethod
-    def build_payments_for_month(cls, reference_date: datetime.date, cache: dict):
+    def build_payments_for_month(
+        cls, reference_date: datetime.date, cache: dict
+    ) -> list[Payment]:
         first_of_month = reference_date.replace(day=1)
 
         payments_to_create_trial = cls.build_payments_for_subscriptions_in_trial(
@@ -123,6 +125,7 @@ class MonthPaymentBuilder:
             range_end=last_day_of_rhythm_period,
             mandate_ref=mandate_ref,
             product_type_name=product_type.name,
+            cache=cache,
         )
         total_to_pay = cls.get_total_to_pay(
             range_start=first_day_of_rhythm_period,
@@ -186,12 +189,10 @@ class MonthPaymentBuilder:
         range_end: datetime.date,
         mandate_ref: MandateReference,
         product_type_name: str,
+        cache: dict,
     ) -> Decimal:
-        existing_payments = list(
-            Payment.objects.filter(
-                mandate_ref=mandate_ref,
-                type=product_type_name,
-            )
+        existing_payments = TapirCache.get_payments_by_mandate_ref_and_product_type(
+            cache=cache, mandate_ref=mandate_ref, product_type_name=product_type_name
         )
 
         payments_for_this_period = [
@@ -233,7 +234,7 @@ class MonthPaymentBuilder:
                 subscription=subscription, at_date=range_start, cache=cache
             )
         )
-        return full_months_price + single_deliveries_price
+        return full_months_price + float(single_deliveries_price)
 
     @classmethod
     def get_number_of_months_and_deliveries_to_pay(

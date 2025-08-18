@@ -105,7 +105,14 @@
                         <span class="visually-hidden">Loading...</span>
                     </span>
                 </span>
+                <span id="future_payments_card"
+                      data-member-id="{{ object.pk }}">
+                    <span class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                </span>
                 <div class="card">
+                    <h5 class="card-header">Nächste Zahlung (alt)</h5>
                     <a href="{% url 'wirgarten:member_payments' object.pk %}"
                        style="text-decoration:none;
                               color: #000000">

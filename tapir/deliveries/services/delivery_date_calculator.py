@@ -2,18 +2,18 @@ import datetime
 
 from tapir.deliveries.services.delivery_cycle_service import DeliveryCycleService
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.constants import NO_DELIVERY
-from tapir.wirgarten.models import PickupLocationOpeningTime
 
 
 class DeliveryDateCalculator:
     @classmethod
     def get_next_delivery_date_any_product(
-        cls, reference_date: datetime.date, pickup_location_id
+        cls, reference_date: datetime.date, pickup_location_id, cache: dict
     ):
-        opening_times = PickupLocationOpeningTime.objects.filter(
-            pickup_location_id=pickup_location_id
-        ).order_by("day_of_week")
+        opening_times = TapirCache.get_opening_times_by_pickup_location_id(
+            cache=cache, pickup_location_id=pickup_location_id
+        )
 
         delivery_date_this_week = (
             GetDeliveriesService.update_delivery_date_to_opening_times(
@@ -40,7 +40,9 @@ class DeliveryDateCalculator:
         cache: dict,
     ):
         delivery_date = cls.get_next_delivery_date_any_product(
-            reference_date=reference_date, pickup_location_id=pickup_location_id
+            reference_date=reference_date,
+            pickup_location_id=pickup_location_id,
+            cache=cache,
         )
         if delivery_cycle == NO_DELIVERY[0]:
             return delivery_date
@@ -51,6 +53,7 @@ class DeliveryDateCalculator:
             delivery_date = cls.get_next_delivery_date_any_product(
                 reference_date=delivery_date + datetime.timedelta(days=1),
                 pickup_location_id=pickup_location_id,
+                cache=cache,
             )
 
         return delivery_date
