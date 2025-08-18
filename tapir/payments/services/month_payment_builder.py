@@ -289,8 +289,9 @@ class MonthPaymentBuilder:
     def should_pay_full_month_price(
         cls, number_of_deliveries: int, delivery_cycle: str
     ):
-        return number_of_deliveries > cls.get_number_of_deliveries_for_full_month_price(
-            delivery_cycle
+        return (
+            number_of_deliveries
+            >= cls.get_number_of_deliveries_for_full_month_price(delivery_cycle)
         )
 
     @classmethod
