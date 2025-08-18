@@ -387,7 +387,7 @@ class MonthPaymentBuilder:
             member,
             subscriptions_by_product_type,
         ) in subscriptions_by_member_and_product_type.items():
-            for product_type, subscriptions in subscriptions_by_product_type:
+            for product_type, subscriptions in subscriptions_by_product_type.items():
                 payment = (
                     cls.build_payment_for_subscriptions_for_member_and_product_type(
                         member=member,
