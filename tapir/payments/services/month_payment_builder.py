@@ -272,6 +272,14 @@ class MonthPaymentBuilder:
         subscription: Subscription,
         first_of_month: datetime.date,
     ):
+        if not DateRangeOverlapChecker.do_ranges_overlap(
+            range_1_start=first_of_month,
+            range_1_end=get_last_day_of_month(first_of_month),
+            range_2_start=subscription.start_date,
+            range_2_end=subscription.end_date,
+        ):
+            return False
+
         if (
             first_of_month == subscription.start_date.replace(day=1)
             and subscription.start_date.day != 1
