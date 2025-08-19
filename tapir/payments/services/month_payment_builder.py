@@ -13,6 +13,9 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
+from tapir.subscriptions.services.automatic_subscription_renewal_service import (
+    AutomaticSubscriptionRenewalService,
+)
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
@@ -41,32 +44,57 @@ from tapir.wirgarten.service.member import get_or_create_mandate_ref
 class MonthPaymentBuilder:
     @classmethod
     def build_payments_for_month(
-        cls, reference_date: datetime.date, cache: dict
+        cls,
+        reference_date: datetime.date,
+        cache: dict,
+        generated_payments: list[Payment],
     ) -> list[Payment]:
         first_of_month = reference_date.replace(day=1)
 
         payments_to_create_trial = cls.build_payments_for_subscriptions_in_trial(
-            current_month=first_of_month, cache=cache
+            current_month=first_of_month,
+            cache=cache,
+            generated_payments=generated_payments,
         )
 
         payments_to_create_no_trial = cls.build_payments_for_subscriptions_not_in_trial(
-            current_month=first_of_month, cache=cache
+            current_month=first_of_month,
+            cache=cache,
+            generated_payments=generated_payments + payments_to_create_trial,
         )
 
         return payments_to_create_no_trial + payments_to_create_trial
 
+    @staticmethod
+    def filter_payments(payments):
+        return [p for p in payments if p.mandate_ref.member_id == "R0N9SF0xMb"]
+
     @classmethod
     def build_payments_for_subscriptions_not_in_trial(
-        cls, current_month: datetime.date, cache: dict
-    ):
-        all_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        cls,
+        current_month: datetime.date,
+        cache: dict,
+        generated_payments: list[Payment],
+    ) -> list[Payment]:
+        existing_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        planned_renewed_subscriptions = [
+            AutomaticSubscriptionRenewalService.renew_subscription(
+                subscription=subscription, cache=cache, persist=False
+            )
+            for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=current_month, cache=cache
+            )
+        ]
         subscriptions_not_in_trial = [
             subscription
-            for subscription in all_subscriptions
+            for subscription in existing_subscriptions.union(
+                planned_renewed_subscriptions
+            )
             if not TrialPeriodManager.is_subscription_in_trial(
                 subscription=subscription, reference_date=current_month, cache=cache
             )
         ]
+
         subscriptions_by_member_and_product_type = (
             cls.group_subscriptions_by_member_and_product_type(
                 subscriptions_not_in_trial
@@ -91,6 +119,7 @@ class MonthPaymentBuilder:
                         product_type=product_type,
                         rhythm=rhythm,
                         cache=cache,
+                        generated_payments=generated_payments,
                     )
                 )
                 if payment is not None:
@@ -107,6 +136,7 @@ class MonthPaymentBuilder:
         product_type: ProductType,
         rhythm: MemberPaymentRhythm,
         cache: dict,
+        generated_payments: list[Payment],
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -126,6 +156,7 @@ class MonthPaymentBuilder:
             mandate_ref=mandate_ref,
             product_type_name=product_type.name,
             cache=cache,
+            generated_payments=generated_payments,
         )
         total_to_pay = cls.get_total_to_pay(
             range_start=first_day_of_rhythm_period,
@@ -134,16 +165,18 @@ class MonthPaymentBuilder:
             cache=cache,
         )
 
-        new_payment_amount = total_to_pay - already_paid
+        new_payment_amount = total_to_pay - float(already_paid)
+        new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
         if new_payment_amount <= 0:
             return None
 
         payments_due_date = cls.get_payment_due_date_on_month(
             reference_date=first_of_month, cache=cache
         )
+
         return Payment(
             due_date=payments_due_date,
-            amount=Decimal(total_to_pay - already_paid).quantize(Decimal("0.01")),
+            amount=new_payment_amount,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
             type=product_type.name,
@@ -190,9 +223,19 @@ class MonthPaymentBuilder:
         mandate_ref: MandateReference,
         product_type_name: str,
         cache: dict,
+        generated_payments: list[Payment],
     ) -> Decimal:
         existing_payments = TapirCache.get_payments_by_mandate_ref_and_product_type(
             cache=cache, mandate_ref=mandate_ref, product_type_name=product_type_name
+        )
+
+        existing_payments = existing_payments.union(
+            [
+                payment
+                for payment in generated_payments
+                if payment.mandate_ref == mandate_ref
+                and payment.type == product_type_name
+            ]
         )
 
         payments_for_this_period = [
@@ -205,6 +248,7 @@ class MonthPaymentBuilder:
                 range_2_end=payment.subscription_payment_range_end,
             )
         ]
+
         return sum([payment.amount for payment in payments_for_this_period])
 
     @classmethod
@@ -367,17 +411,33 @@ class MonthPaymentBuilder:
 
     @classmethod
     def build_payments_for_subscriptions_in_trial(
-        cls, current_month: datetime.date, cache: dict
-    ):
+        cls,
+        current_month: datetime.date,
+        cache: dict,
+        generated_payments: list[Payment],
+    ) -> list[Payment]:
         previous_month = (current_month - relativedelta(months=1)).replace(day=1)
-        all_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+
+        existing_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+        planned_renewed_subscriptions = [
+            AutomaticSubscriptionRenewalService.renew_subscription(
+                subscription=subscription, cache=cache, persist=False
+            )
+            for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=previous_month, cache=cache
+            )
+        ]
+
         subscriptions_in_trial = [
             subscription
-            for subscription in all_subscriptions
+            for subscription in existing_subscriptions.union(
+                planned_renewed_subscriptions
+            )
             if TrialPeriodManager.is_subscription_in_trial(
                 subscription=subscription, reference_date=previous_month, cache=cache
             )
         ]
+
         subscriptions_by_member_and_product_type = (
             cls.group_subscriptions_by_member_and_product_type(subscriptions_in_trial)
         )
@@ -397,6 +457,7 @@ class MonthPaymentBuilder:
                         product_type=product_type,
                         rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                         cache=cache,
+                        generated_payments=generated_payments,
                     )
                 )
                 if payment is not None:
@@ -414,4 +475,4 @@ class MonthPaymentBuilder:
             return 2
         if delivery_cycle == EVERY_FOUR_WEEKS[0]:
             return 1
-        raise ImproperlyConfigured("Unknwon delivery cycle: " + delivery_cycle)
+        raise ImproperlyConfigured("Unknown delivery cycle: " + delivery_cycle)

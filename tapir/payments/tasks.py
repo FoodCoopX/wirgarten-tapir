@@ -14,6 +14,6 @@ def create_payments_for_this_month():
     cache = {}
     today = get_today(cache=cache)
     payments = MonthPaymentBuilder.build_payments_for_month(
-        reference_date=today, cache=cache
+        reference_date=today, cache=cache, generated_payments=[]
     )
     Payment.objects.bulk_create(payments)

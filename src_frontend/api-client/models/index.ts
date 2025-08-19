@@ -42,6 +42,7 @@ export * from './EmailTemplate';
 export * from './EmailTemplateRequest';
 export * from './ExportSegment';
 export * from './ExportSegmentColumn';
+export * from './ExtendedPayment';
 export * from './ExtendedProduct';
 export * from './ExtendedProductType';
 export * from './ExtendedProductTypeAndConfig';

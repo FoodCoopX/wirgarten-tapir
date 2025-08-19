@@ -180,11 +180,11 @@ def get_or_create_mandate_ref(
 
     mandate_ref_cache = get_from_cache_or_compute(cache, "mandate_ref_cache", compute)
     mandate_ref = mandate_ref_cache.get(member_id, None)
-    if mandate_ref:
+    if mandate_ref is not None:
         return mandate_ref
 
     mandate_ref = create_mandate_ref(member_id, cache)
-    if mandate_ref_cache:
+    if mandate_ref_cache is not None:
         mandate_ref_cache[member_id] = mandate_ref
     return mandate_ref
 

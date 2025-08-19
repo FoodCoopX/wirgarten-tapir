@@ -814,7 +814,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
     def import_definitions_bestellwizard(self):
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
-            label="BestellWizard in Warteiste-Modus",
+            label="BestellWizard in Warteliste-Modus",
             datatype=TapirParameterDatatype.BOOLEAN,
             initial_value=False,
             description="Wenn aktiviert, bestehende und neue Mitglieder können keine neue Produkt-Anteile buchen, egal ob es Kapazitäten gibt."

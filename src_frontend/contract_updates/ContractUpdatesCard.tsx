@@ -14,6 +14,7 @@ import TapirButton from "../components/TapirButton.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
 import ConfirmRevokeModal from "./ConfirmRevokeModal.tsx";
+import { getMinimumDate } from "../utils/getMinimumDate.ts";
 
 interface ContractUpdatesCardProps {
   csrfToken: string;
@@ -190,9 +191,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       return new Date();
     }
 
-    return dates.reduce(function (a, b) {
-      return a < b ? a : b;
-    });
+    return getMinimumDate(dates);
   }
 
   function getCreationIdsToConfirm() {

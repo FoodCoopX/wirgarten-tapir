@@ -753,7 +753,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Payment'
+                  $ref: '#/components/schemas/ExtendedPayment'
           description: ''
   /pickup_locations/api/change_member_pickup_location:
     post:
@@ -5693,6 +5693,23 @@ components:
       - description
       - display_name
       - id
+    ExtendedPayment:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/Payment'
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
+        coop_share_transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoopShareTransaction'
+      required:
+      - coop_share_transactions
+      - payment
+      - subscriptions
     ExtendedProduct:
       type: object
       properties:

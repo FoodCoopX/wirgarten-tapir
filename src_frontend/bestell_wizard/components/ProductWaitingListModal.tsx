@@ -29,7 +29,7 @@ const ProductWaitingListModal: React.FC<ProductWaitingListModalProps> = ({
         <p>
           {productType?.forceWaitingList
             ? "Du kannst dich auf die Warteliste setzen lassen."
-            : "Du kannst eine andere Größe wählen, oder dich auf die Warteliste setzen lassen."}
+            : "Du kannst eine andere Größe wählen, oder dich auf die Warteliste setzen lassen."}{" "}
           Dafür brauchen wir noch ein paar Angaben von dir.
         </p>
       </Modal.Body>

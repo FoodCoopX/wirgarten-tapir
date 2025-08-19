@@ -1,6 +1,5 @@
 import calendar
 import datetime
-from typing import Dict
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
@@ -8,6 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions import config as subscription_config
 from tapir.subscriptions.models import NoticePeriod
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import ProductType, GrowingPeriod, Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.utils import get_today
@@ -47,12 +47,11 @@ class NoticePeriodManager:
         cls,
         product_type: ProductType,
         growing_period: GrowingPeriod,
-        cache: Dict,
+        cache: dict,
     ):
-        notice_period = NoticePeriod.objects.filter(
-            product_type=product_type,
-            growing_period=growing_period,
-        ).first()
+        notice_period = TapirCache.get_notice_period_object(
+            product_type=product_type, growing_period=growing_period, cache=cache
+        )
         if notice_period:
             return notice_period.duration
 
@@ -61,7 +60,7 @@ class NoticePeriodManager:
         )
 
     @classmethod
-    def get_max_cancellation_date(cls, subscription: Subscription, cache: Dict):
+    def get_max_cancellation_date(cls, subscription: Subscription, cache: dict):
         notice_period_duration = subscription.notice_period_duration
         if notice_period_duration is None:
             notice_period_duration = cls.get_notice_period_duration(
@@ -92,7 +91,7 @@ class NoticePeriodManager:
 
     @classmethod
     def get_max_cancellation_date_unit_weeks(
-        cls, subscription: Subscription, notice_period_duration: int, cache: Dict
+        cls, subscription: Subscription, notice_period_duration: int, cache: dict
     ):
         if subscription.end_date is None:
             return get_today(cache=cache) + datetime.timedelta(
@@ -105,7 +104,7 @@ class NoticePeriodManager:
 
     @classmethod
     def get_max_cancellation_date_unit_months(
-        cls, subscription: Subscription, notice_period_duration: int, cache: Dict
+        cls, subscription: Subscription, notice_period_duration: int, cache: dict
     ):
         if subscription.end_date is None:
             return get_today(cache=cache) + relativedelta(months=notice_period_duration)

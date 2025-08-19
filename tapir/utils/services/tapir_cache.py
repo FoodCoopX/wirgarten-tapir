@@ -2,6 +2,7 @@ import datetime
 from typing import Dict, Set
 
 from tapir.payments.models import MemberPaymentRhythm
+from tapir.subscriptions.models import NoticePeriod
 from tapir.utils.services.tapir_cache_manager import TapirCacheManager
 from tapir.utils.shortcuts import get_from_cache_or_compute
 from tapir.wirgarten.models import (
@@ -35,7 +36,7 @@ class TapirCache:
             key,
             lambda: set(
                 Subscription.objects.order_by("id").select_related(
-                    "member", "product", "product__type"
+                    "member", "product", "product__type", "mandate_ref"
                 )
             ),
         )
@@ -405,7 +406,7 @@ class TapirCache:
     @classmethod
     def get_payments_by_mandate_ref_and_product_type(
         cls, cache: dict, product_type_name: str, mandate_ref: MandateReference
-    ):
+    ) -> set[Payment]:
         def compute():
             payments = Payment.objects.select_related("mandate_ref")
             result = {}
@@ -424,7 +425,7 @@ class TapirCache:
         )
 
         return payments_by_mandate_ref_and_product_type.get(mandate_ref, {}).get(
-            product_type_name, {}
+            product_type_name, set()
         )
 
     @classmethod
@@ -438,4 +439,31 @@ class TapirCache:
 
         return get_from_cache_or_compute(
             cache=tax_rates_by_product_type, key=product_type, compute_function=compute
+        )
+
+    @classmethod
+    def get_notice_period_object(
+        cls,
+        product_type: ProductType,
+        growing_period: GrowingPeriod,
+        cache: Dict,
+    ):
+        notice_period_by_product_type = get_from_cache_or_compute(
+            cache=cache,
+            key="notice_period_by_product_type",
+            compute_function=lambda: {},
+        )
+        notice_period_by_growing_period = get_from_cache_or_compute(
+            cache=notice_period_by_product_type,
+            key=product_type,
+            compute_function=lambda: {},
+        )
+
+        return get_from_cache_or_compute(
+            cache=notice_period_by_growing_period,
+            key=growing_period,
+            compute_function=lambda: NoticePeriod.objects.filter(
+                product_type=product_type,
+                growing_period=growing_period,
+            ).first(),
         )

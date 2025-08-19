@@ -52,6 +52,7 @@ models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
+models/ExtendedPayment.ts
 models/ExtendedProduct.ts
 models/ExtendedProductType.ts
 models/ExtendedProductTypeAndConfig.ts

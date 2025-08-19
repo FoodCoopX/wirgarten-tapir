@@ -60,7 +60,7 @@ class TestRenewSubscription(SimpleTestCase):
 
         cache = {}
         AutomaticSubscriptionRenewalService.renew_subscription(
-            subscription, cache=cache
+            subscription, cache=cache, persist=True
         )
 
         mock_get_next_growing_period.assert_called_once_with(cache=cache)

@@ -13,8 +13,8 @@
  */
 
 import * as runtime from "../runtime";
-import type { Payment } from "../models/index";
-import { PaymentFromJSON } from "../models/index";
+import type { ExtendedPayment } from "../models/index";
+import { ExtendedPaymentFromJSON } from "../models/index";
 
 export interface PaymentsApiMemberFuturePaymentsListRequest {
   memberId?: string;
@@ -29,7 +29,7 @@ export class PaymentsApi extends runtime.BaseAPI {
   async paymentsApiMemberFuturePaymentsListRaw(
     requestParameters: PaymentsApiMemberFuturePaymentsListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<Payment>>> {
+  ): Promise<runtime.ApiResponse<Array<ExtendedPayment>>> {
     const queryParameters: any = {};
 
     if (requestParameters["memberId"] != null) {
@@ -63,7 +63,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(PaymentFromJSON),
+      jsonValue.map(ExtendedPaymentFromJSON),
     );
   }
 
@@ -72,7 +72,7 @@ export class PaymentsApi extends runtime.BaseAPI {
   async paymentsApiMemberFuturePaymentsList(
     requestParameters: PaymentsApiMemberFuturePaymentsListRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<Payment>> {
+  ): Promise<Array<ExtendedPayment>> {
     const response = await this.paymentsApiMemberFuturePaymentsListRaw(
       requestParameters,
       initOverrides,
