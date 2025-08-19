@@ -3,6 +3,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from tapir_mail.service.segment import resolve_segments
 
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import (
     Filters,
     Segments,
@@ -20,7 +21,6 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
     mock_timezone,
-    set_bypass_keycloak,
 )
 from tapir.wirgarten.utils import get_today
 
@@ -30,7 +30,7 @@ class SegmentFilterTest(TapirIntegrationTest):
 
     def setUp(self):
         mock_timezone(self, self.NOW)
-        set_bypass_keycloak()
+        ParameterDefinitions().import_definitions()
 
         self.current_growing_period = GrowingPeriodFactory.create()
         next_start = self.current_growing_period.end_date + relativedelta(days=1)

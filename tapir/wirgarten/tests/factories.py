@@ -5,6 +5,7 @@ from datetime import timedelta
 import factory
 from dateutil.relativedelta import relativedelta
 
+from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.wirgarten.constants import NO_DELIVERY
 from tapir.wirgarten.models import (
     CoopShareTransaction,
@@ -45,6 +46,12 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
     def member_no(self: Member, create, member_no, **kwargs):
         if member_no is not None:
             self.member_no = member_no
+
+        if not create:
+            return
+
+        if create and member_no is not None:
+            self.save()
             return
 
         member_no = 1
@@ -58,6 +65,22 @@ class MemberFactory(factory.django.DjangoModelFactory[Member]):
 
         if create:
             self.save()
+
+    @factory.post_generation
+    def is_superuser(self: Member, create, is_superuser: bool, **kwargs):
+        if not create:
+            return
+
+        keycloak_client = KeycloakUserManager.get_keycloak_client(cache={})
+        group_id = None
+        for group in keycloak_client.get_groups():
+            if group["name"] == "superuser":
+                group_id = group["id"]
+                break
+        if is_superuser:
+            keycloak_client.group_user_add(self.keycloak_id, group_id)
+        else:
+            keycloak_client.group_user_remove(self.keycloak_id, group_id)
 
 
 class MemberWithCoopSharesFactory(MemberFactory):
@@ -222,9 +245,7 @@ class PaymentFactory(factory.django.DjangoModelFactory[Payment]):
         model = Payment
 
     due_date = TODAY + timedelta(weeks=1)
-    mandate_ref = factory.SubFactory(
-        MandateReferenceFactory, member=factory.SelfAttribute("..member")
-    )
+    mandate_ref = factory.SubFactory(MandateReferenceFactory)
     amount = 100
     status = "PAID"
     transaction = factory.SubFactory(PaymentTransactionFactory)

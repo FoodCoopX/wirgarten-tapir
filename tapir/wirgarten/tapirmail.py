@@ -307,7 +307,9 @@ def _register_triggers():
             "Vertragsliste": "contract_list",
             "Vertragsende": "contract_end_date",
         },
-        required=True,
+        required=lambda: get_parameter_value(
+            ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache={}
+        ),
     )
     TransactionalTrigger.register_action(
         "Beitritt zur Genossenschaft", Events.MEMBERSHIP_ENTRY

@@ -1,5 +1,6 @@
 import datetime
 
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.service.products import get_free_product_capacity
 from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
@@ -9,12 +10,13 @@ from tapir.wirgarten.tests.factories import (
     ProductPriceFactory,
     ProductFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, set_bypass_keycloak
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
 class TestGetFreeProductCapacity(TapirIntegrationTest):
-    def setUp(self):
-        set_bypass_keycloak()
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
 
     @staticmethod
     def create_growing_period_and_product_price_and_product_capacity():

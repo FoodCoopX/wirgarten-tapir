@@ -179,3 +179,19 @@ TAPIRMAIL_REACT_APP_BASENAME = TAPIR_MAIL_PATH
 
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", SITE_URL]
+
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "APPS": [
+            {
+                "provider_id": "keycloak",
+                "name": "Keycloak",
+                "client_id": KEYCLOAK_ADMIN_CONFIG["CLIENT_ID"],
+                "secret": KEYCLOAK_ADMIN_CONFIG["CLIENT_SECRET_KEY"],
+                "settings": {
+                    "server_url": f"{KEYCLOAK_ADMIN_CONFIG["SERVER_URL"]}/realms/{KEYCLOAK_ADMIN_CONFIG["REALM_NAME"]}/.well-known/openid-configuration",
+                },
+            }
+        ]
+    }
+}

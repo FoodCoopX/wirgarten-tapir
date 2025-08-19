@@ -24,7 +24,7 @@ from tapir.wirgarten.tests.factories import (
     TODAY,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
-from tapir.wirgarten.utils import format_date
+from tapir.wirgarten.utils import format_date, format_subscription_list_html
 
 
 class TestCancelSubscriptionsPostView(TapirIntegrationTest):
@@ -291,7 +291,9 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                         key=Events.CONTRACT_CANCELLED,
                         recipient_id_in_base_queryset=member.id,
                         token_data={
-                            "contract_list": [subscription],
+                            "contract_list": format_subscription_list_html(
+                                [subscription]
+                            ),
                             "contract_end_date": format_date(growing_period.end_date),
                         },
                     )

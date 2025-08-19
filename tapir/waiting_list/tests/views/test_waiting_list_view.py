@@ -16,17 +16,13 @@ class TestWaitingListView(TapirIntegrationTest):
             value=product.type_id
         )
 
-    def test_waitingListView_loggedInAsNormalUser_redirectsToUserProfile(self):
+    def test_waitingListView_loggedInAsNormalUser_returns403(self):
         member = MemberFactory.create()
         self.client.force_login(member)
 
         response = self.client.get(reverse("waiting_list:list"))
 
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(
-            response=response,
-            expected_url=reverse("wirgarten:member_detail", args=[member.id]),
-        )
+        self.assertStatusCode(response, 403)
 
     def test_waitingListView_loggedInAsAdmin_returns200(self):
         member = MemberFactory.create(is_superuser=True)

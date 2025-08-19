@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from tapir_mail.service.segment import resolve_segments
 
 from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.service.member import get_next_contract_start_date
 from tapir.wirgarten.tapirmail import Segments, _register_segments
 from tapir.wirgarten.tests.factories import (
@@ -15,16 +16,18 @@ from tapir.wirgarten.tests.factories import (
 from tapir.wirgarten.tests.test_utils import (
     TapirIntegrationTest,
     mock_timezone,
-    set_bypass_keycloak,
 )
 
 
 class SegmentTest(TapirIntegrationTest):
     NOW = datetime.datetime(2023, 4, 15, 12, 0, tzinfo=datetime.timezone.utc)
 
+    @classmethod
+    def setUpTestData(cls):
+        ParameterDefinitions().import_definitions()
+
     def setUp(self):
         mock_timezone(self, self.NOW)
-        set_bypass_keycloak()
 
         _register_segments()
 
