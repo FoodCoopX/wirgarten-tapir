@@ -64,7 +64,7 @@ class MemberPickupLocationService:
                 member_pickup_locations.sort(
                     key=lambda member_pickup_location: member_pickup_location.valid_from
                 )
-                if member_pickup_locations[0].pickup_location_id == pickup_location.id:
+                if member_pickup_locations[-1].pickup_location_id == pickup_location.id:
                     members_at_pickup_location.add(member_id)
             return members_at_pickup_location
 
