@@ -53,6 +53,7 @@ urlpatterns = [
     path("pickup_locations/", include("tapir.pickup_locations.urls")),
     path("utils/", include("tapir.utils.urls")),
     path("waiting_list/", include("tapir.waiting_list.urls")),
+    path("wirgarten/register", RedirectView.as_view(url="/tapir/register")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:
