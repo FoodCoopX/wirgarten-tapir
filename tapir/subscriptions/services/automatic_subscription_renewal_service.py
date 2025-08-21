@@ -85,9 +85,6 @@ class AutomaticSubscriptionRenewalService:
             admin_confirmed=subscription.admin_confirmed,
         )
 
-        if persist:
-            subscription.save()
-
         return subscription
 
     @classmethod

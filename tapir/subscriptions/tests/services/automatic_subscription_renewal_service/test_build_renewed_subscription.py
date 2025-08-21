@@ -7,7 +7,13 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
     AutomaticSubscriptionRenewalService,
 )
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
-from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.tests.factories import (
+    MemberFactory,
+    ProductFactory,
+    ProductTypeFactory,
+    GrowingPeriodFactory,
+    MandateReferenceFactory,
+)
 
 
 class TestBuildRenewedSubscription(SimpleTestCase):
@@ -15,34 +21,32 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         AutomaticSubscriptionRenewalService, "get_renewed_subscription_trial_data"
     )
     @patch.object(NoticePeriodManager, "get_notice_period_duration")
-    @patch.object(Subscription, "objects")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
     )
-    def test_buildRenewedSubscription_default_createsFutureSubscription(
+    def test_buildRenewedSubscription_default_buildsFutureSubscription(
         self,
         mock_get_next_growing_period: Mock,
-        mock_subscription_objects: Mock,
         mock_get_notice_period_duration: Mock,
         mock_get_renewed_subscription_trial_data: Mock,
     ):
-        product_type = Mock()
-        product = Mock()
+        product_type = ProductTypeFactory.build()
+        product = ProductFactory.build()
         product.type = product_type
 
-        subscription = Mock()
-        member = Mock()
-        subscription.member = member
-        subscription.product = product
-        subscription.quantity = 3
-        subscription.solidarity_price_percentage = 1.2
-        subscription.solidarity_price_absolute = Decimal("3.6")
-        mandate_ref = Mock()
-        subscription.mandate_ref = mandate_ref
+        original_subscription = Mock()
+        member = MemberFactory.build()
+        original_subscription.member = member
+        original_subscription.product = product
+        original_subscription.quantity = 3
+        original_subscription.solidarity_price_percentage = 1.2
+        original_subscription.solidarity_price_absolute = Decimal("3.6")
+        mandate_ref = MandateReferenceFactory.build(ref="test_ref")
+        original_subscription.mandate_ref = mandate_ref
         admin_confirmed = Mock()
-        subscription.admin_confirmed = admin_confirmed
+        original_subscription.admin_confirmed = admin_confirmed
 
-        next_growing_period = Mock()
+        next_growing_period = GrowingPeriodFactory.build()
         start_date = Mock()
         next_growing_period.start_date = start_date
         end_date = Mock()
@@ -59,8 +63,10 @@ class TestBuildRenewedSubscription(SimpleTestCase):
         )
 
         cache = {}
-        AutomaticSubscriptionRenewalService.build_renewed_subscription(
-            subscription, cache=cache
+        future_subscription = (
+            AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                original_subscription, cache=cache
+            )
         )
 
         mock_get_next_growing_period.assert_called_once_with(cache=cache)
@@ -68,18 +74,19 @@ class TestBuildRenewedSubscription(SimpleTestCase):
             product_type, next_growing_period, cache=cache
         )
 
-        mock_subscription_objects.create.assert_called_once_with(
-            member=member,
-            period=next_growing_period,
-            product=product,
-            quantity=3,
-            start_date=start_date,
-            end_date=end_date,
-            solidarity_price_percentage=1.2,
-            solidarity_price_absolute=Decimal("3.6"),
-            mandate_ref=mandate_ref,
-            trial_disabled=trial_disabled,
-            trial_end_date_override=trial_end_date_override,
-            notice_period_duration=4,
-            admin_confirmed=admin_confirmed,
+        self.assertEqual(member, future_subscription.member)
+        self.assertEqual(next_growing_period, future_subscription.period)
+        self.assertEqual(product, future_subscription.product)
+        self.assertEqual(3, future_subscription.quantity)
+        self.assertEqual(start_date, future_subscription.start_date)
+        self.assertEqual(end_date, future_subscription.end_date)
+        self.assertEqual(1.2, future_subscription.solidarity_price_percentage)
+        self.assertEqual(Decimal("3.6"), future_subscription.solidarity_price_absolute)
+        self.assertEqual(mandate_ref, future_subscription.mandate_ref)
+        self.assertEqual(trial_disabled, future_subscription.trial_disabled)
+        self.assertEqual(
+            trial_end_date_override, future_subscription.trial_end_date_override
         )
+        self.assertEqual(4, future_subscription.notice_period_duration)
+        self.assertEqual(admin_confirmed, future_subscription.admin_confirmed)
+        return

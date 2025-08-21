@@ -341,18 +341,22 @@ class TapirCache:
         )
 
     @classmethod
+    def get_all_growing_periods_ascending(cls, cache: dict):
+        return get_from_cache_or_compute(
+            cache,
+            "all_growing_periods",
+            lambda: GrowingPeriod.objects.order_by("start_date"),
+        )
+
+    @classmethod
     def get_growing_period_at_date(
-        cls, reference_date: datetime.date, cache: Dict
+        cls, reference_date: datetime.date, cache: dict
     ) -> GrowingPeriod | None:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
         def compute():
-            growing_periods = get_from_cache_or_compute(
-                cache,
-                "all_growing_periods",
-                lambda: set(GrowingPeriod.objects.order_by("start_date")),
-            )
+            growing_periods = cls.get_all_growing_periods_ascending(cache=cache)
             for growing_period in growing_periods:
                 if (
                     growing_period.start_date

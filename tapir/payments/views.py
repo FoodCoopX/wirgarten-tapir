@@ -32,10 +32,18 @@ class GetFutureMemberPaymentsApiView(APIView):
         member_id = request.query_params.get("member_id")
         check_permission_or_self(pk=member_id, request=request)
 
+        member_payments = self.get_due_and_future_payments(member_id)
+        extended_payments = self.build_extended_payments(
+            member_id=member_id, member_payments=member_payments
+        )
+
+        return Response(ExtendedPaymentSerializer(extended_payments, many=True).data)
+
+    def get_due_and_future_payments(self, member_id):
         mandate_ref_ids = MandateReference.objects.filter(
             member_id=member_id
         ).values_list("ref", flat=True)
-        member_payments = list(
+        member_payments = set(
             Payment.objects.filter(mandate_ref__ref__in=mandate_ref_ids).filter(
                 Q(
                     due_date__gte=get_today(cache=self.cache),
@@ -43,27 +51,28 @@ class GetFutureMemberPaymentsApiView(APIView):
                 | Q(status=Payment.PaymentStatus.DUE)
             )
         )
-
         current_month = get_today(cache=self.cache)
-        generated_payments = []
+        current_month = current_month.replace(day=1)
+        generated_payments = set()
         for _ in range(12):
-            current_month = get_first_of_next_month(current_month)
             payments = MonthPaymentBuilder.build_payments_for_month(
                 reference_date=current_month,
                 cache=self.cache,
                 generated_payments=generated_payments,
             )
-            generated_payments.extend(payments)
-            member_payments.extend(
+            member_payments.update(
                 [
                     payment
                     for payment in payments
                     if payment.mandate_ref_id in mandate_ref_ids
                 ]
             )
+            generated_payments.update(member_payments)
+            current_month = get_first_of_next_month(current_month)
+        return member_payments
 
+    def build_extended_payments(self, member_id, member_payments):
         extended_payments = []
-
         existing_subscriptions = [
             subscription
             for subscription in TapirCache.get_all_subscriptions(cache=self.cache)
@@ -77,8 +86,10 @@ class GetFutureMemberPaymentsApiView(APIView):
                     payment=payment
                 )
             else:
-                subscriptions = self.get_subscriptions(
-                    existing_subscriptions, member_id, payment, subscriptions
+                subscriptions = self.get_relevant_subscriptions(
+                    existing_subscriptions=existing_subscriptions,
+                    member_id=member_id,
+                    payment=payment,
                 )
             extended_payments.append(
                 {
@@ -87,12 +98,9 @@ class GetFutureMemberPaymentsApiView(APIView):
                     "coop_share_transactions": coop_share_transactions,
                 }
             )
+        return extended_payments
 
-        return Response(ExtendedPaymentSerializer(extended_payments, many=True).data)
-
-    def get_subscriptions(
-        self, existing_subscriptions, member_id, payment, subscriptions
-    ):
+    def get_relevant_subscriptions(self, existing_subscriptions, member_id, payment):
         planned_renewed_subscriptions = [
             AutomaticSubscriptionRenewalService.build_renewed_subscription(
                 subscription=subscription, cache=self.cache

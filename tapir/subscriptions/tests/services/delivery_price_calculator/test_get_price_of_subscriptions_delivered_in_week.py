@@ -50,7 +50,10 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
             2, mock_get_price_of_single_delivery_without_solidarity.call_count
         )
         mock_get_price_of_single_delivery_without_solidarity.assert_has_calls(
-            [call(subscription, reference_date) for subscription in subscriptions],
+            [
+                call(subscription, reference_date, cache=cache)
+                for subscription in subscriptions
+            ],
             any_order=True,
         )
 
@@ -93,5 +96,5 @@ class TestGetPriceOfSubscriptionsDeliveredInWeek(TapirIntegrationTest):
             member, reference_date, cache=cache
         )
         mock_get_price_of_single_delivery_without_solidarity.assert_called_once_with(
-            subscription_2, reference_date
+            subscription_2, reference_date, cache=cache
         )

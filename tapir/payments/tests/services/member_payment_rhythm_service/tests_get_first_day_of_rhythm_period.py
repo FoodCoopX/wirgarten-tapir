@@ -12,14 +12,16 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class TestsGetFirstDayOfRhythmPeriod(SimpleTestCase):
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getFirstDayOfRhythmPeriod_givenDayIsFirstDayOfRhythmPeriod_returnsSameDate(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=7, day=1),
-            end_date=datetime.date(year=2025, month=6, day=30),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=7, day=1),
+                end_date=datetime.date(year=2025, month=6, day=30),
+            )
+        ]
         cache = Mock()
 
         result = MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -29,18 +31,18 @@ class TestsGetFirstDayOfRhythmPeriod(SimpleTestCase):
         )
 
         self.assertEqual(datetime.date(year=2025, month=1, day=1), result)
-        mock_get_growing_period_at_date.assert_called_once_with(
-            reference_date=datetime.date(year=2025, month=1, day=1), cache=cache
-        )
+        mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getFirstDayOfRhythmPeriod_givenDayIsLastDayOfRhythmPeriod_returnsCorrectFirstDay(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=7, day=1),
-            end_date=datetime.date(year=2025, month=6, day=30),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=7, day=1),
+                end_date=datetime.date(year=2025, month=6, day=30),
+            )
+        ]
         cache = Mock()
 
         result = MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -50,23 +52,24 @@ class TestsGetFirstDayOfRhythmPeriod(SimpleTestCase):
         )
 
         self.assertEqual(datetime.date(year=2024, month=7, day=1), result)
-        mock_get_growing_period_at_date.assert_has_calls(
+        mock_get_all_growing_periods_ascending.assert_has_calls(
             [
                 call(
-                    reference_date=datetime.date(year=2024, month=12, day=1),
                     cache=cache,
                 )
             ]
         )
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getFirstDayOfRhythmPeriod_givenDayIsInTheMiddleOfRhythmPeriod_returnsCorrectFirstDay(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=3, day=1),
-            end_date=datetime.date(year=2025, month=2, day=28),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=3, day=1),
+                end_date=datetime.date(year=2025, month=2, day=28),
+            )
+        ]
         cache = Mock()
 
         result = MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -76,6 +79,4 @@ class TestsGetFirstDayOfRhythmPeriod(SimpleTestCase):
         )
 
         self.assertEqual(datetime.date(year=2024, month=3, day=1), result)
-        mock_get_growing_period_at_date.assert_has_calls(
-            [call(reference_date=datetime.date(year=2024, month=7, day=1), cache=cache)]
-        )
+        mock_get_all_growing_periods_ascending.assert_has_calls([call(cache=cache)])

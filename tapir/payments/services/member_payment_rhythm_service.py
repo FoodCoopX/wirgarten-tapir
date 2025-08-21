@@ -55,10 +55,16 @@ class MemberPaymentRhythmService:
         cls, reference_date: datetime.date, cache: dict
     ):
         reference_date = reference_date.replace(day=1)
-        growing_period = TapirCache.get_growing_period_at_date(
-            reference_date=reference_date, cache=cache
-        )
-        return relativedelta(reference_date, growing_period.start_date).months + 1
+        growing_periods = TapirCache.get_all_growing_periods_ascending(cache=cache)
+        last_growing_period = None
+        for growing_period in reversed(growing_periods):
+            if growing_period.start_date <= reference_date:
+                last_growing_period = growing_period
+                break
+
+        return (
+            relativedelta(reference_date, last_growing_period.start_date).months % 12
+        ) + 1
 
     @classmethod
     def get_number_of_months_paid_in_advance(cls, rhythm):

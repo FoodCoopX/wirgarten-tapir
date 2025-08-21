@@ -9,7 +9,7 @@ from tapir.wirgarten.parameter_keys import ParameterKeys
 
 
 class TestRenewSubscriptionIfNecessary(SimpleTestCase):
-    @patch.object(AutomaticSubscriptionRenewalService, "renew_subscription")
+    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
     @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_parameter_value"
@@ -18,7 +18,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         self,
         mock_get_parameter_value: Mock,
         mock_must_subscription_be_renewed: Mock,
-        mock_renew_subscription: Mock,
+        mock_build_renewed_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = False
 
@@ -29,9 +29,9 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         )
         mock_must_subscription_be_renewed.assert_not_called()
 
-        mock_renew_subscription.assert_not_called()
+        mock_build_renewed_subscription.assert_not_called()
 
-    @patch.object(AutomaticSubscriptionRenewalService, "renew_subscription")
+    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
     @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_active_subscriptions"
@@ -44,7 +44,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         mock_get_parameter_value: Mock,
         mock_get_active_subscriptions: Mock,
         mock_must_subscription_be_renewed: Mock,
-        mock_renew_subscription: Mock,
+        mock_build_renewed_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock
@@ -59,9 +59,9 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         mock_must_subscription_be_renewed.assert_called_once_with(
             subscription, cache=ANY
         )
-        mock_renew_subscription.assert_not_called()
+        mock_build_renewed_subscription.assert_not_called()
 
-    @patch.object(AutomaticSubscriptionRenewalService, "renew_subscription")
+    @patch.object(AutomaticSubscriptionRenewalService, "build_renewed_subscription")
     @patch.object(AutomaticSubscriptionRenewalService, "must_subscription_be_renewed")
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_active_subscriptions"
@@ -74,7 +74,7 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         mock_get_parameter_value: Mock,
         mock_get_active_subscriptions: Mock,
         mock_must_subscription_be_renewed: Mock,
-        mock_renew_subscription: Mock,
+        mock_build_renewed_subscription: Mock,
     ):
         mock_get_parameter_value.return_value = True
         subscription = Mock
@@ -89,4 +89,4 @@ class TestRenewSubscriptionIfNecessary(SimpleTestCase):
         mock_must_subscription_be_renewed.assert_called_once_with(
             subscription, cache=ANY
         )
-        mock_renew_subscription.assert_called_once_with(subscription, cache=ANY)
+        mock_build_renewed_subscription.assert_called_once_with(subscription, cache=ANY)

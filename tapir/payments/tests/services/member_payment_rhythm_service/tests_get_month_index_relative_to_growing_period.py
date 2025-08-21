@@ -11,14 +11,16 @@ from tapir.wirgarten.tests.factories import GrowingPeriodFactory
 
 
 class TestGetMonthIndexRelativeToGrowingPeriod(SimpleTestCase):
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnFirstMonth_returnsOne(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=7, day=1),
-            end_date=datetime.date(year=2025, month=6, day=30),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=7, day=1),
+                end_date=datetime.date(year=2025, month=6, day=30),
+            )
+        ]
         cache = Mock()
         reference_date = datetime.date(year=2024, month=7, day=15)
 
@@ -27,18 +29,18 @@ class TestGetMonthIndexRelativeToGrowingPeriod(SimpleTestCase):
         )
 
         self.assertEqual(1, result)
-        mock_get_growing_period_at_date.assert_called_once_with(
-            reference_date=reference_date.replace(day=1), cache=cache
-        )
+        mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnFifthMonth_returnsFive(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=1, day=1),
-            end_date=datetime.date(year=2024, month=12, day=31),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=1, day=1),
+                end_date=datetime.date(year=2024, month=12, day=31),
+            )
+        ]
         cache = Mock()
 
         result = MemberPaymentRhythmService.get_month_index_relative_to_growing_period(
@@ -46,18 +48,18 @@ class TestGetMonthIndexRelativeToGrowingPeriod(SimpleTestCase):
         )
 
         self.assertEqual(5, result)
-        mock_get_growing_period_at_date.assert_called_once_with(
-            reference_date=datetime.date(year=2024, month=5, day=1), cache=cache
-        )
+        mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)
 
-    @patch.object(TapirCache, "get_growing_period_at_date")
+    @patch.object(TapirCache, "get_all_growing_periods_ascending")
     def test_getMonthIndexRelativeToGrowingPeriod_givenDateIsOnTwelfthMonth_returnsTwelve(
-        self, mock_get_growing_period_at_date: Mock
+        self, mock_get_all_growing_periods_ascending: Mock
     ):
-        mock_get_growing_period_at_date.return_value = GrowingPeriodFactory.build(
-            start_date=datetime.date(year=2024, month=3, day=1),
-            end_date=datetime.date(year=2025, month=2, day=28),
-        )
+        mock_get_all_growing_periods_ascending.return_value = [
+            GrowingPeriodFactory.build(
+                start_date=datetime.date(year=2024, month=3, day=1),
+                end_date=datetime.date(year=2025, month=2, day=28),
+            )
+        ]
         cache = Mock()
 
         result = MemberPaymentRhythmService.get_month_index_relative_to_growing_period(
@@ -65,6 +67,4 @@ class TestGetMonthIndexRelativeToGrowingPeriod(SimpleTestCase):
         )
 
         self.assertEqual(12, result)
-        mock_get_growing_period_at_date.assert_called_once_with(
-            reference_date=datetime.date(year=2025, month=2, day=1), cache=cache
-        )
+        mock_get_all_growing_periods_ascending.assert_called_once_with(cache=cache)

@@ -47,7 +47,7 @@ class MonthPaymentBuilder:
         cls,
         reference_date: datetime.date,
         cache: dict,
-        generated_payments: list[Payment],
+        generated_payments: set[Payment],
     ) -> list[Payment]:
         first_of_month = reference_date.replace(day=1)
 
@@ -60,7 +60,7 @@ class MonthPaymentBuilder:
         payments_to_create_no_trial = cls.build_payments_for_subscriptions_not_in_trial(
             current_month=first_of_month,
             cache=cache,
-            generated_payments=generated_payments + payments_to_create_trial,
+            generated_payments=generated_payments.union(payments_to_create_trial),
         )
 
         return payments_to_create_no_trial + payments_to_create_trial
@@ -74,7 +74,7 @@ class MonthPaymentBuilder:
         cls,
         current_month: datetime.date,
         cache: dict,
-        generated_payments: list[Payment],
+        generated_payments: set[Payment],
     ) -> list[Payment]:
         subscriptions_not_in_trial = cls.get_current_and_renewed_subscriptions(
             cache=cache, first_of_month=current_month, is_in_trial=False
@@ -121,7 +121,7 @@ class MonthPaymentBuilder:
         product_type: ProductType,
         rhythm: MemberPaymentRhythm,
         cache: dict,
-        generated_payments: list[Payment],
+        generated_payments: set[Payment],
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -208,7 +208,7 @@ class MonthPaymentBuilder:
         mandate_ref: MandateReference,
         product_type_name: str,
         cache: dict,
-        generated_payments: list[Payment],
+        generated_payments: set[Payment],
     ) -> Decimal:
         existing_payments = TapirCache.get_payments_by_mandate_ref_and_product_type(
             cache=cache, mandate_ref=mandate_ref, product_type_name=product_type_name
@@ -399,7 +399,7 @@ class MonthPaymentBuilder:
         cls,
         current_month: datetime.date,
         cache: dict,
-        generated_payments: list[Payment],
+        generated_payments: set[Payment],
     ) -> list[Payment]:
         previous_month = (current_month - relativedelta(months=1)).replace(day=1)
 

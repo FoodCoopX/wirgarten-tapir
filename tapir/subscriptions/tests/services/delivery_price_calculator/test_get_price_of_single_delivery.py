@@ -38,6 +38,6 @@ class TestGetPriceOfSingleDelivery(SimpleTestCase):
 
         self.assertEqual(10 * 12 / 52, result)
 
-        mock_get_product_price.assert_called_once_with(product, date)
+        mock_get_product_price.assert_called_once_with(product, date, cache={})
         mock_get_number_of_months_in_growing_period.assert_not_called()
         mock_get_number_of_deliveries_in_growing_period.assert_not_called()
