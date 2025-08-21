@@ -147,9 +147,13 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
       dates = [...dates, ...data.subscriptionChanges.map(getEarliestChange)];
     }
 
+    if (dates.length === 0) {
+      return new Date();
+    }
+
     return dates.reduce(function (a, b) {
       return a < b ? a : b;
-    }, new Date());
+    });
   }
 
   function getCreationIdsToConfirm() {
