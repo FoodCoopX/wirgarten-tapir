@@ -52,6 +52,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         rhythm = Mock()
         cache = Mock()
+        generated_payments = Mock()
 
         payment = MonthPaymentBuilder.build_payment_for_subscriptions_for_member_and_product_type(
             member=member,
@@ -60,6 +61,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             product_type=product_type,
             rhythm=rhythm,
             cache=cache,
+            generated_payments=generated_payments,
         )
 
         self.assertIsNotNone(
@@ -87,6 +89,8 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             range_end=range_end,
             mandate_ref=mandate_ref,
             product_type_name="pt_test_name",
+            cache=cache,
+            generated_payments=generated_payments,
         )
         mock_get_total_to_pay.assert_called_once_with(
             range_start=range_start,
@@ -130,6 +134,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         rhythm = Mock()
         cache = Mock()
+        generated_payments = Mock()
 
         payment = MonthPaymentBuilder.build_payment_for_subscriptions_for_member_and_product_type(
             member=member,
@@ -138,6 +143,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             product_type=product_type,
             rhythm=rhythm,
             cache=cache,
+            generated_payments=generated_payments,
         )
 
         self.assertIsNone(
@@ -159,6 +165,8 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             range_end=range_end,
             mandate_ref=mandate_ref,
             product_type_name="pt_test_name",
+            cache=cache,
+            generated_payments=generated_payments,
         )
         mock_get_total_to_pay.assert_called_once_with(
             range_start=range_start,
@@ -200,6 +208,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         rhythm = Mock()
         cache = Mock()
+        generated_payments = Mock()
 
         payment = MonthPaymentBuilder.build_payment_for_subscriptions_for_member_and_product_type(
             member=member,
@@ -208,6 +217,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             product_type=product_type,
             rhythm=rhythm,
             cache=cache,
+            generated_payments=generated_payments,
         )
 
         self.assertIsNone(
@@ -229,6 +239,8 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             range_end=range_end,
             mandate_ref=mandate_ref,
             product_type_name="pt_test_name",
+            cache=cache,
+            generated_payments=generated_payments,
         )
         mock_get_total_to_pay.assert_called_once_with(
             range_start=range_start,

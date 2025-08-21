@@ -25,7 +25,7 @@ class TestGetNumberOfMonthsAndDeliveriesToPay(SimpleTestCase):
         cache = Mock()
 
         mock_get_number_of_deliveries_in_month.side_effect = (
-            lambda subscription_, first_of_month, cache_: (
+            lambda subscription, first_of_month, cache: (
                 4 if first_of_month.month == 1 else 3
             )
         )

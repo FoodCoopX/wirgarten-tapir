@@ -94,8 +94,8 @@ class GetFutureMemberPaymentsApiView(APIView):
         self, existing_subscriptions, member_id, payment, subscriptions
     ):
         planned_renewed_subscriptions = [
-            AutomaticSubscriptionRenewalService.renew_subscription(
-                subscription=subscription, cache=self.cache, persist=False
+            AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                subscription=subscription, cache=self.cache
             )
             for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
                 reference_date=payment.due_date, cache=self.cache

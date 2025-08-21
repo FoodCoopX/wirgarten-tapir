@@ -76,24 +76,9 @@ class MonthPaymentBuilder:
         cache: dict,
         generated_payments: list[Payment],
     ) -> list[Payment]:
-        existing_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
-        planned_renewed_subscriptions = [
-            AutomaticSubscriptionRenewalService.renew_subscription(
-                subscription=subscription, cache=cache, persist=False
-            )
-            for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=current_month, cache=cache
-            )
-        ]
-        subscriptions_not_in_trial = [
-            subscription
-            for subscription in existing_subscriptions.union(
-                planned_renewed_subscriptions
-            )
-            if not TrialPeriodManager.is_subscription_in_trial(
-                subscription=subscription, reference_date=current_month, cache=cache
-            )
-        ]
+        subscriptions_not_in_trial = cls.get_current_and_renewed_subscriptions(
+            cache=cache, first_of_month=current_month, is_in_trial=False
+        )
 
         subscriptions_by_member_and_product_type = (
             cls.group_subscriptions_by_member_and_product_type(
@@ -418,25 +403,9 @@ class MonthPaymentBuilder:
     ) -> list[Payment]:
         previous_month = (current_month - relativedelta(months=1)).replace(day=1)
 
-        existing_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
-        planned_renewed_subscriptions = [
-            AutomaticSubscriptionRenewalService.renew_subscription(
-                subscription=subscription, cache=cache, persist=False
-            )
-            for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
-                reference_date=previous_month, cache=cache
-            )
-        ]
-
-        subscriptions_in_trial = [
-            subscription
-            for subscription in existing_subscriptions.union(
-                planned_renewed_subscriptions
-            )
-            if TrialPeriodManager.is_subscription_in_trial(
-                subscription=subscription, reference_date=previous_month, cache=cache
-            )
-        ]
+        subscriptions_in_trial = cls.get_current_and_renewed_subscriptions(
+            cache=cache, first_of_month=previous_month, is_in_trial=True
+        )
 
         subscriptions_by_member_and_product_type = (
             cls.group_subscriptions_by_member_and_product_type(subscriptions_in_trial)
@@ -464,6 +433,32 @@ class MonthPaymentBuilder:
                     payments_to_create.append(payment)
 
         return payments_to_create
+
+    @classmethod
+    def get_current_and_renewed_subscriptions(
+        cls, cache: dict, first_of_month: datetime.date, is_in_trial: bool
+    ) -> list[Subscription]:
+        existing_subscriptions = TapirCache.get_all_subscriptions(cache=cache)
+
+        planned_renewed_subscriptions = [
+            AutomaticSubscriptionRenewalService.build_renewed_subscription(
+                subscription=subscription, cache=cache
+            )
+            for subscription in AutomaticSubscriptionRenewalService.get_subscriptions_that_will_be_renewed(
+                reference_date=first_of_month, cache=cache
+            )
+        ]
+        subscriptions_in_trial = [
+            subscription
+            for subscription in existing_subscriptions.union(
+                planned_renewed_subscriptions
+            )
+            if TrialPeriodManager.is_subscription_in_trial(
+                subscription=subscription, reference_date=first_of_month, cache=cache
+            )
+            == is_in_trial
+        ]
+        return subscriptions_in_trial
 
     @classmethod
     def get_number_of_deliveries_for_full_month_price(cls, delivery_cycle: str):

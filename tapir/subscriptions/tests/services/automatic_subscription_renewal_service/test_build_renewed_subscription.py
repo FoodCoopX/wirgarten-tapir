@@ -10,7 +10,7 @@ from tapir.subscriptions.services.notice_period_manager import NoticePeriodManag
 from tapir.wirgarten.models import Subscription
 
 
-class TestRenewSubscription(SimpleTestCase):
+class TestBuildRenewedSubscription(SimpleTestCase):
     @patch.object(
         AutomaticSubscriptionRenewalService, "get_renewed_subscription_trial_data"
     )
@@ -19,7 +19,7 @@ class TestRenewSubscription(SimpleTestCase):
     @patch(
         "tapir.subscriptions.services.automatic_subscription_renewal_service.get_next_growing_period"
     )
-    def test_renewSubscription_default_createsFutureSubscription(
+    def test_buildRenewedSubscription_default_createsFutureSubscription(
         self,
         mock_get_next_growing_period: Mock,
         mock_subscription_objects: Mock,
@@ -59,8 +59,8 @@ class TestRenewSubscription(SimpleTestCase):
         )
 
         cache = {}
-        AutomaticSubscriptionRenewalService.renew_subscription(
-            subscription, cache=cache, persist=True
+        AutomaticSubscriptionRenewalService.build_renewed_subscription(
+            subscription, cache=cache
         )
 
         mock_get_next_growing_period.assert_called_once_with(cache=cache)

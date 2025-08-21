@@ -25,7 +25,8 @@ class AutomaticSubscriptionRenewalService:
 
         for subscription in get_active_subscriptions():
             if cls.must_subscription_be_renewed(subscription, cache=cache):
-                cls.renew_subscription(subscription, cache=cache, persist=True)
+                subscription = cls.build_renewed_subscription(subscription, cache=cache)
+                subscription.save()
 
     @classmethod
     def must_subscription_be_renewed(
@@ -59,7 +60,7 @@ class AutomaticSubscriptionRenewalService:
         return True
 
     @classmethod
-    def renew_subscription(cls, subscription: Subscription, cache: Dict, persist: bool):
+    def build_renewed_subscription(cls, subscription: Subscription, cache: Dict):
         next_growing_period = get_next_growing_period(cache=cache)
 
         trial_disabled, trial_end_date_override = (
