@@ -412,11 +412,10 @@ class BestellWizardBaseDataApiView(APIView):
                 ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
             ),
             "payment_rhythm_choices": {
-                key: value
-                for [
-                    key,
-                    value,
-                ] in MemberPaymentRhythmService.get_allowed_rhythms_choices(
+                rhythm: MemberPaymentRhythmService.get_rhythm_display_name(
+                    rhythm=rhythm
+                )
+                for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
                     cache=self.cache
                 )
             },

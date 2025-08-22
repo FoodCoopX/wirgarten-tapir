@@ -51,7 +51,7 @@ class PersonalDataValidator:
             payment_rhythm, cache=cache
         ):
             raise ValidationError(
-                f"Diese Zahlungsintervall {payment_rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms_choices(cache=cache)}"
+                f"Diese Zahlungsintervall {payment_rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=cache)}"
             )
 
     @classmethod

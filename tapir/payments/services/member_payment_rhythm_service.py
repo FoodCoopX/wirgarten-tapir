@@ -122,7 +122,7 @@ class MemberPaymentRhythmService:
                 raise ValidationError(f"Ungültiges Intervall: {rhythm}")
 
     @classmethod
-    def get_allowed_rhythms_choices(cls, cache: dict):
+    def get_allowed_rhythms(cls, cache: dict):
         allowed_rhythms_as_display_name = get_parameter_value(
             key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS, cache=cache
         )
@@ -132,17 +132,14 @@ class MemberPaymentRhythmService:
             if name.strip() != ""
         ]
         return [
-            choice
+            choice[0]
             for choice in MemberPaymentRhythm.Rhythm.choices
             if str(choice[1]) in allowed_rhythms_as_display_name
         ]
 
     @classmethod
     def is_payment_rhythm_allowed(cls, rhythm: str, cache: dict) -> bool:
-        allowed_rhythms = [
-            choice[0] for choice in cls.get_allowed_rhythms_choices(cache=cache)
-        ]
-        return rhythm in allowed_rhythms
+        return rhythm in cls.get_allowed_rhythms(cache=cache)
 
     @classmethod
     def get_rhythm_display_name(cls, rhythm: str) -> str:
