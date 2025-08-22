@@ -11,4 +11,5 @@ export type PersonalData = {
   birthdate: Date;
   accountOwner: string;
   iban: string;
+  paymentRhythm: string;
 };

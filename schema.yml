@@ -4308,14 +4308,22 @@ components:
           type: string
         trial_period_length_in_weeks:
           type: integer
+        payment_rhythm_choices:
+          type: object
+          additionalProperties:
+            type: string
+        default_payment_rhythm:
+          type: string
       required:
       - allow_investing_membership
       - coop_step_text
+      - default_payment_rhythm
       - force_waiting_list
       - intro_enabled
       - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
+      - payment_rhythm_choices
       - price_of_a_share
       - product_types
       - revocation_rights_explanation
@@ -4368,9 +4376,13 @@ components:
           minLength: 1
         student_status_enabled:
           type: boolean
+        payment_rhythm:
+          type: string
+          minLength: 1
       required:
       - contract_accepted
       - nb_shares
+      - payment_rhythm
       - personal_data
       - sepa_allowed
       - shopping_cart
@@ -7497,6 +7509,9 @@ components:
           type: boolean
         number_of_coop_shares:
           type: integer
+        payment_rhythm:
+          type: string
+          minLength: 1
       required:
       - account_owner
       - birthdate
@@ -7505,6 +7520,7 @@ components:
       - iban
       - link_key
       - number_of_coop_shares
+      - payment_rhythm
       - sepa_allowed
     PublicPickupLocation:
       type: object
@@ -8466,6 +8482,8 @@ components:
         link:
           type: string
           format: uri
+        payment_rhythm:
+          type: string
       required:
       - city
       - comment

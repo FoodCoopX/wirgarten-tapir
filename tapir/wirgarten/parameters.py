@@ -92,6 +92,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             BasketSizeCapacitiesService,
         )
         from tapir.payments.models import MemberPaymentRhythm
+        from tapir.payments.services.member_payment_rhythm_service import (
+            MemberPaymentRhythmService,
+        )
 
         self.parameter_definition(
             key=ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL,
@@ -334,7 +337,20 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Zahlungsintervall das vorausgewählt ist im BestellWizard.",
             category=ParameterCategory.PAYMENT,
             meta=ParameterMeta(options=MemberPaymentRhythm.Rhythm.choices),
-            enabled=is_debug_instance(),
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS,
+            label="Erlaubte Zahlungsintervalle.",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value=", ".join(
+                [str(choice[1]) for choice in MemberPaymentRhythm.Rhythm.choices]
+            ),
+            description="Zahlungsintervalle die ausgewählt werden können, als Komma-getrennte liste. Beispiel: 'Monatlich, Vierteljährlich, Halbjährlich, Jährlich'.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(
+                validators=[MemberPaymentRhythmService.validate_rhythms]
+            ),
         )
 
         self.parameter_definition(

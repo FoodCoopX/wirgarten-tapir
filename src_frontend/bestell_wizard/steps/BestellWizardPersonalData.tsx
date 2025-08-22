@@ -44,6 +44,9 @@ interface BestellWizardPersonalDataProps {
   waitingListEntryDetails?: WaitingListEntryDetails;
   labelCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;
+  paymentRhythmChoices: {
+    [key: string]: string;
+  };
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -66,6 +69,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   waitingListEntryDetails,
   labelCheckboxSepaMandat,
   labelCheckboxContractPolicy,
+  paymentRhythmChoices,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -347,6 +351,29 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 />
               </Form.Group>
             </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group>
+                <Form.Label>Zahlungsintervall</Form.Label>
+                <Form.Select
+                  value={personalData.paymentRhythm}
+                  onChange={(event) => {
+                    personalData.paymentRhythm = event.target.value;
+                    updatePersonalData();
+                  }}
+                >
+                  {Object.entries(paymentRhythmChoices).map(
+                    ([rhythm, displayName]) => (
+                      <option key={rhythm} value={rhythm}>
+                        {displayName}
+                      </option>
+                    ),
+                  )}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col></Col>
           </Row>
           <Row className={"mt-4"}>
             <Col>

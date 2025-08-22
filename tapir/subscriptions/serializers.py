@@ -182,6 +182,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     nb_shares = serializers.IntegerField()
     pickup_location_id = serializers.CharField(required=False)
     student_status_enabled = serializers.BooleanField()
+    payment_rhythm = serializers.CharField()
 
 
 class OrderConfirmationResponseSerializer(serializers.Serializer):
@@ -216,6 +217,8 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     label_checkbox_contract_policy = serializers.CharField()
     revocation_rights_explanation = serializers.CharField()
     trial_period_length_in_weeks = serializers.IntegerField()
+    payment_rhythm_choices = serializers.DictField(child=serializers.CharField())
+    default_payment_rhythm = serializers.CharField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

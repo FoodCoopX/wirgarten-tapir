@@ -12,42 +12,19 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PickupLocation } from './PickupLocation';
+import type { PickupLocation } from "./PickupLocation";
+import { PickupLocationFromJSON, PickupLocationToJSON } from "./PickupLocation";
+import type { WaitingListProductWish } from "./WaitingListProductWish";
+import { WaitingListProductWishFromJSON, WaitingListProductWishToJSON } from "./WaitingListProductWish";
+import type { Product } from "./Product";
+import { ProductFromJSON, ProductToJSON } from "./Product";
+import type { Subscription } from "./Subscription";
+import { SubscriptionFromJSON, SubscriptionToJSON } from "./Subscription";
+import type { WaitingListPickupLocationWish } from "./WaitingListPickupLocationWish";
 import {
-    PickupLocationFromJSON,
-    PickupLocationFromJSONTyped,
-    PickupLocationToJSON,
-    PickupLocationToJSONTyped,
-} from './PickupLocation';
-import type { WaitingListProductWish } from './WaitingListProductWish';
-import {
-    WaitingListProductWishFromJSON,
-    WaitingListProductWishFromJSONTyped,
-    WaitingListProductWishToJSON,
-    WaitingListProductWishToJSONTyped,
-} from './WaitingListProductWish';
-import type { Product } from './Product';
-import {
-    ProductFromJSON,
-    ProductFromJSONTyped,
-    ProductToJSON,
-    ProductToJSONTyped,
-} from './Product';
-import type { Subscription } from './Subscription';
-import {
-    SubscriptionFromJSON,
-    SubscriptionFromJSONTyped,
-    SubscriptionToJSON,
-    SubscriptionToJSONTyped,
-} from './Subscription';
-import type { WaitingListPickupLocationWish } from './WaitingListPickupLocationWish';
-import {
-    WaitingListPickupLocationWishFromJSON,
-    WaitingListPickupLocationWishFromJSONTyped,
-    WaitingListPickupLocationWishToJSON,
-    WaitingListPickupLocationWishToJSONTyped,
-} from './WaitingListPickupLocationWish';
+  WaitingListPickupLocationWishFromJSON,
+  WaitingListPickupLocationWishToJSON
+} from "./WaitingListPickupLocationWish";
 
 /**
  * 
@@ -235,6 +212,12 @@ export interface WaitingListEntryDetails {
      * @memberof WaitingListEntryDetails
      */
     link?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WaitingListEntryDetails
+     */
+    paymentRhythm?: string;
 }
 
 /**
@@ -299,6 +282,7 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         'currentSubscriptions': json['current_subscriptions'] == null ? undefined : ((json['current_subscriptions'] as Array<any>).map(SubscriptionFromJSON)),
         'linkSentDate': json['link_sent_date'] == null ? undefined : (new Date(json['link_sent_date'])),
         'link': json['link'] == null ? undefined : json['link'],
+        'paymentRhythm': json['payment_rhythm'] == null ? undefined : json['payment_rhythm'],
     };
 }
 
@@ -343,6 +327,7 @@ export function WaitingListEntryDetailsFromJSONTyped(json: any, ignoreDiscrimina
         'current_subscriptions': value['currentSubscriptions'] == null ? undefined : ((value['currentSubscriptions'] as Array<any>).map(SubscriptionToJSON)),
         'link_sent_date': value['linkSentDate'] == null ? undefined : ((value['linkSentDate']).toISOString()),
         'link': value['link'],
+        'payment_rhythm': value['paymentRhythm'],
     };
 }
 

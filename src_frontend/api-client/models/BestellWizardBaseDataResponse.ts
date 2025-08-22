@@ -105,6 +105,18 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     trialPeriodLengthInWeeks: number;
+    /**
+     * 
+     * @type {{ [key: string]: string; }}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    paymentRhythmChoices: { [key: string]: string; };
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    defaultPaymentRhythm: string;
 }
 
 /**
@@ -125,6 +137,8 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('labelCheckboxContractPolicy' in value) || value['labelCheckboxContractPolicy'] === undefined) return false;
     if (!('revocationRightsExplanation' in value) || value['revocationRightsExplanation'] === undefined) return false;
     if (!('trialPeriodLengthInWeeks' in value) || value['trialPeriodLengthInWeeks'] === undefined) return false;
+    if (!('paymentRhythmChoices' in value) || value['paymentRhythmChoices'] === undefined) return false;
+    if (!('defaultPaymentRhythm' in value) || value['defaultPaymentRhythm'] === undefined) return false;
     return true;
 }
 
@@ -152,6 +166,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'labelCheckboxContractPolicy': json['label_checkbox_contract_policy'],
         'revocationRightsExplanation': json['revocation_rights_explanation'],
         'trialPeriodLengthInWeeks': json['trial_period_length_in_weeks'],
+        'paymentRhythmChoices': json['payment_rhythm_choices'],
+        'defaultPaymentRhythm': json['default_payment_rhythm'],
     };
 }
 
@@ -180,6 +196,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'label_checkbox_contract_policy': value['labelCheckboxContractPolicy'],
         'revocation_rights_explanation': value['revocationRightsExplanation'],
         'trial_period_length_in_weeks': value['trialPeriodLengthInWeeks'],
+        'payment_rhythm_choices': value['paymentRhythmChoices'],
+        'default_payment_rhythm': value['defaultPaymentRhythm'],
     };
 }
 

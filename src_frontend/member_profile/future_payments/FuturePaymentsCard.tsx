@@ -92,7 +92,7 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
               "d-flex flex-row justify-content-between align-items-center"
             }
           >
-            <h5 className={"mb-0"}>Nächste Zahlung (neu)</h5>
+            <h5 className={"mb-0"}>Nächste Zahlung</h5>
             <TapirButton
               variant={"outline-secondary"}
               text={"Zahlungen"}

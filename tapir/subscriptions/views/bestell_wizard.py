@@ -18,6 +18,10 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
+from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -109,6 +113,11 @@ class BestellWizardConfirmOrderApiView(APIView):
         with transaction.atomic():
             member = self.create_member(
                 personal_data=serializer.validated_data["personal_data"]
+            )
+            MemberPaymentRhythm.objects.create(
+                member=member,
+                rhythm=serializer.validated_data["payment_rhythm"],
+                valid_from=get_today(cache=self.cache),
             )
             subscriptions = self.create_subscriptions(
                 validated_data=serializer.validated_data,
@@ -216,6 +225,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             iban=validated_data["personal_data"]["iban"],
             cache=self.cache,
             check_waiting_list=True,
+            payment_rhythm=validated_data["payment_rhythm"],
         )
 
         if get_parameter_value(
@@ -400,6 +410,18 @@ class BestellWizardBaseDataApiView(APIView):
             ),
             "trial_period_length_in_weeks": get_parameter_value(
                 ParameterKeys.TRIAL_PERIOD_DURATION, cache=self.cache
+            ),
+            "payment_rhythm_choices": {
+                key: value
+                for [
+                    key,
+                    value,
+                ] in MemberPaymentRhythmService.get_allowed_rhythms_choices(
+                    cache=self.cache
+                )
+            },
+            "default_payment_rhythm": get_parameter_value(
+                ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache=self.cache
             ),
         }
 

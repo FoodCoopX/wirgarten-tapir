@@ -31,6 +31,10 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -273,6 +277,7 @@ class WaitingListApiView(APIView):
         birthdate = None
         account_owner = None
         iban = None
+        payment_rhythm = None
         if entry.member is not None:
             member_no = entry.member.member_no
             cls.fill_entry_with_personal_data(entry)
@@ -312,6 +317,9 @@ class WaitingListApiView(APIView):
             birthdate = entry.member.birthdate
             account_owner = entry.member.account_owner
             iban = entry.member.iban
+            payment_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=entry.member, reference_date=get_today(cache=cache), cache=cache
+            )
         link = None
         if settings.DEBUG and entry.confirmation_link_key:
             link = SendWaitingListLinkApiView.build_waiting_list_link(
@@ -353,6 +361,7 @@ class WaitingListApiView(APIView):
             "birthdate": birthdate,
             "account_owner": account_owner,
             "iban": iban,
+            "payment_rhythm": payment_rhythm,
         }
 
     @staticmethod
@@ -948,6 +957,12 @@ class PublicConfirmWaitingListEntryView(APIView):
                 actor=actor, user=member
             ).save()
 
+            MemberPaymentRhythm.objects.create(
+                member=member,
+                rhythm=serializer.validated_data["payment_rhythm"],
+                valid_from=get_today(cache=self.cache),
+            )
+
             subscriptions_existed_before_changes, new_subscriptions = (
                 self.apply_changes(
                     waiting_list_entry=waiting_list_entry,
@@ -991,6 +1006,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                 phone_number=str(waiting_list_entry.phone_number),
                 birthdate=validated_data["birthdate"],
                 iban=validated_data["iban"],
+                payment_rhythm=validated_data["payment_rhythm"],
                 cache=self.cache,
                 check_waiting_list=False,
             )

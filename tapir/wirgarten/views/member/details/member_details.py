@@ -11,6 +11,9 @@ from tapir.coop.services.membership_cancellation_manager import (
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -27,7 +30,6 @@ from tapir.wirgarten.models import (
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.payment import (
     get_active_subscriptions_grouped_by_product_type,
-    get_next_payment_date,
 )
 from tapir.wirgarten.service.products import (
     get_active_product_types,
@@ -37,10 +39,6 @@ from tapir.wirgarten.service.products import (
     get_next_growing_period,
 )
 from tapir.wirgarten.utils import format_date, get_today
-from tapir.wirgarten.views.member.list.member_payments import (
-    generate_future_payments,
-    get_previous_payments,
-)
 from tapir.wirgarten.views.mixin import PermissionOrSelfRequiredMixin
 
 
@@ -99,8 +97,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["coop_shares"] = share_ownerships
         context["coop_shares_total"] = self.object.coop_shares_quantity
 
-        base_product_type = BaseProductTypeService.get_base_product_type(cache=cache)
-
         context["available_product_types"] = {
             product_type.name: True
             for product_type in get_available_product_types(
@@ -114,29 +110,6 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
                 cache=cache
             )
         }
-
-        # FIXME: it should be easier than this to get the next payments, refactor to service somehow
-        next_due_date = get_next_payment_date(cache=cache)
-
-        persisted_payments = get_previous_payments(self.object.pk, cache=cache)
-        next_payments = persisted_payments.get(next_due_date, [])
-
-        projected = generate_future_payments(self.object.id, 2, cache=cache)
-        if len(projected) > 0:
-            projected = projected.get(next_due_date, [])
-            for p in projected:
-                if p["type"] not in [n["type"] for n in next_payments]:
-                    next_payments.append(p)
-
-        context["next_payment"] = (
-            {
-                "due_date": next_due_date,
-                "amount": sum([p["amount"] for p in next_payments]),
-                "mandate_ref": next_payments[0]["mandate_ref"],
-            }
-            if next_payments
-            else None
-        )
 
         subscription_automatic_renewal = get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
@@ -199,6 +172,12 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
         context["show_coop_shares"] = (
             get_parameter_value(ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache)
             == LEGAL_STATUS_COOPERATIVE
+        )
+
+        context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(
+            MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=self.object, reference_date=get_today(cache=cache), cache=cache
+            )
         )
 
         return context

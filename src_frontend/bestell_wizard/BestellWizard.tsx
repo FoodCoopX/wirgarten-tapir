@@ -157,6 +157,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     useState("");
   const [trialPeriodLengthInWeeks, setTrialPeriodLengthInWeeks] = useState(4);
   const [contractStartDate, setContractStartDate] = useState(new Date());
+  const [paymentRhythmChoices, setPaymentRhythmChoices] = useState<{
+    [key: string]: string;
+  }>({});
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -177,6 +180,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         setLabelCheckboxContractPolicy(data.labelCheckboxContractPolicy);
         setRevocationRightsExplanation(data.revocationRightsExplanation);
         setTrialPeriodLengthInWeeks(data.trialPeriodLengthInWeeks);
+        setPaymentRhythmChoices(data.paymentRhythmChoices);
+        personalData.paymentRhythm = data.defaultPaymentRhythm;
+        setPersonalData(Object.assign({}, personalData));
       })
       .catch((error) =>
         handleRequestError(
@@ -451,6 +457,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       country: "de",
       iban: waitingListEntryDetails.iban ?? "",
       accountOwner: waitingListEntryDetails.accountOwner ?? "",
+      paymentRhythm: waitingListEntryDetails.paymentRhythm ?? "",
     });
 
     setSelectedNumberOfCoopShares(waitingListEntryDetails.numberOfCoopShares);
@@ -651,6 +658,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             labelCheckboxSepaMandat={labelCheckboxSepaMandat}
             labelCheckboxContractPolicy={labelCheckboxContractPolicy}
+            paymentRhythmChoices={paymentRhythmChoices}
           />
         );
       case "summary":
@@ -718,6 +726,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             sepaAllowed: sepaAllowed,
             birthdate: personalData.birthdate,
             numberOfCoopShares: selectedNumberOfCoopShares,
+            paymentRhythm: personalData.paymentRhythm,
           },
         })
         .then((response) => {
@@ -786,6 +795,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               : undefined,
           shoppingCart: shoppingCart,
           studentStatusEnabled: studentStatusEnabled,
+          paymentRhythm: personalData.paymentRhythm,
         },
       })
       .then((response) => {

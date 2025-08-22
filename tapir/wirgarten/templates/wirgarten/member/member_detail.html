@@ -111,26 +111,6 @@
                         <span class="visually-hidden">Loading...</span>
                     </span>
                 </span>
-                <div class="card">
-                    <h5 class="card-header">Nächste Zahlung (alt)</h5>
-                    <a href="{% url 'wirgarten:member_payments' object.pk %}"
-                       style="text-decoration:none;
-                              color: #000000">
-                        <div class="card-body" style="text-align: center;">
-                            <div class="contract-tile-number">
-                                <strong>{{ next_payment.amount|format_currency }}</strong> €
-                            </div>
-                            <strong>Nächste Zahlung</strong>
-                            <br/>
-                            <small>
-                                am {{ next_payment.due_date|format_date }}
-                                <br/>
-                                {{ next_payment.mandate_ref.ref }}
-                            </small>
-                            <br/>
-                        </div>
-                    </a>
-                </div>
             </div>
             <div id="member-detail-right-column">
                 <div class="row">
@@ -288,6 +268,12 @@
                             {% else %}
                                 <span class="text-danger">{% translate "Missing" %}</span>
                             {% endif %}
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
+                        <div class="col-8" id="tapir_user_payment_rhythm">
+                            {{ payment_rhythm }}
                         </div>
                     </div>
                 </div>

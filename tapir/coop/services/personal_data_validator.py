@@ -7,6 +7,9 @@ from django.db.models import Q
 from localflavor.generic.validators import IBANValidator
 
 from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.wirgarten.models import Member, WaitingListEntry
 from tapir.wirgarten.utils import get_today
 
@@ -21,6 +24,7 @@ class PersonalDataValidator:
         iban: str,
         cache: dict,
         check_waiting_list: bool,
+        payment_rhythm: str,
     ):
         # format of the data defined by tapir.subscriptions.serializers.PersonalDataSerializer
         # checking that the required fields are filled and that the email is valid is already done by the serializer class
@@ -32,15 +36,23 @@ class PersonalDataValidator:
         cls.validate_personal_data_existing_member(
             birthdate=birthdate,
             iban=iban,
+            payment_rhythm=payment_rhythm,
             cache=cache,
         )
 
     @classmethod
     def validate_personal_data_existing_member(
-        cls, birthdate: datetime.date, iban: str, cache: dict
+        cls, birthdate: datetime.date, iban: str, payment_rhythm: str, cache: dict
     ):
         cls.validate_birthdate(birthdate, cache=cache)
         IBANValidator(iban)
+
+        if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
+            payment_rhythm, cache=cache
+        ):
+            raise ValidationError(
+                f"Diese Zahlungsintervall {payment_rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms_choices(cache=cache)}"
+            )
 
     @classmethod
     def validate_phone_number_is_valid(cls, phone_number: str):

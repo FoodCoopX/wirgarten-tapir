@@ -1,7 +1,7 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.payments.models import MemberPaymentRhythm
@@ -108,3 +108,45 @@ class MemberPaymentRhythmService:
             )
             - datetime.timedelta(days=1)
         )
+
+    @classmethod
+    def validate_rhythms(cls, rhythms_as_string: str):
+        valid_choices = [
+            str(choice[1]) for choice in MemberPaymentRhythm.Rhythm.choices
+        ]
+        for rhythm in rhythms_as_string.split(","):
+            rhythm = rhythm.strip()
+            if rhythm == "":
+                continue
+            if rhythm not in valid_choices:
+                raise ValidationError(f"Ungültiges Intervall: {rhythm}")
+
+    @classmethod
+    def get_allowed_rhythms_choices(cls, cache: dict):
+        allowed_rhythms_as_display_name = get_parameter_value(
+            key=ParameterKeys.PAYMENT_ALLOWED_RHYTHMS, cache=cache
+        )
+        allowed_rhythms_as_display_name = [
+            name.strip()
+            for name in allowed_rhythms_as_display_name.split(",")
+            if name.strip() != ""
+        ]
+        return [
+            choice
+            for choice in MemberPaymentRhythm.Rhythm.choices
+            if str(choice[1]) in allowed_rhythms_as_display_name
+        ]
+
+    @classmethod
+    def is_payment_rhythm_allowed(cls, rhythm: str, cache: dict) -> bool:
+        allowed_rhythms = [
+            choice[0] for choice in cls.get_allowed_rhythms_choices(cache=cache)
+        ]
+        return rhythm in allowed_rhythms
+
+    @classmethod
+    def get_rhythm_display_name(cls, rhythm: str) -> str:
+        for choice in MemberPaymentRhythm.Rhythm.choices:
+            if choice[0] == rhythm:
+                return choice[1]
+        return rhythm

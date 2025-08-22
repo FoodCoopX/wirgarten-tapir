@@ -33,6 +33,7 @@ class ParameterKeys:
     PICKING_BASKET_SIZES = f"{PREFIX}.picking.basket_sizes"
     PAYMENT_DUE_DAY = f"{PREFIX}.payment.due_date"
     PAYMENT_DEFAULT_RHYTHM = f"{PREFIX}.payment.default_rhythm"
+    PAYMENT_ALLOWED_RHYTHMS = f"{PREFIX}.payment.allowed_rhythms"
     DELIVERY_DAY = f"{PREFIX}.delivery.weekday"
     MEMBER_RENEWAL_ALERT_UNKOWN_HEADER = (
         f"{PREFIX}.member.dashboard.renewal_alert.unkown.header"

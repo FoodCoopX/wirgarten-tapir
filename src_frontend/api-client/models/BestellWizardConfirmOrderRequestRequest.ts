@@ -12,14 +12,8 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PersonalDataRequest } from './PersonalDataRequest';
-import {
-    PersonalDataRequestFromJSON,
-    PersonalDataRequestFromJSONTyped,
-    PersonalDataRequestToJSON,
-    PersonalDataRequestToJSONTyped,
-} from './PersonalDataRequest';
+import type { PersonalDataRequest } from "./PersonalDataRequest";
+import { PersonalDataRequestFromJSON, PersonalDataRequestToJSON } from "./PersonalDataRequest";
 
 /**
  * 
@@ -75,6 +69,12 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
     studentStatusEnabled: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    paymentRhythm: string;
 }
 
 /**
@@ -88,6 +88,7 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('statuteAccepted' in value) || value['statuteAccepted'] === undefined) return false;
     if (!('nbShares' in value) || value['nbShares'] === undefined) return false;
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
+    if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
     return true;
 }
 
@@ -109,6 +110,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'nbShares': json['nb_shares'],
         'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
         'studentStatusEnabled': json['student_status_enabled'],
+        'paymentRhythm': json['payment_rhythm'],
     };
 }
 
@@ -131,6 +133,7 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'nb_shares': value['nbShares'],
         'pickup_location_id': value['pickupLocationId'],
         'student_status_enabled': value['studentStatusEnabled'],
+        'payment_rhythm': value['paymentRhythm'],
     };
 }
 

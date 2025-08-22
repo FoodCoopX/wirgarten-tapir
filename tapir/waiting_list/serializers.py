@@ -61,6 +61,7 @@ class WaitingListEntryDetailsSerializer(serializers.Serializer):
     current_subscriptions = SubscriptionSerializer(many=True, required=False)
     link_sent_date = serializers.DateTimeField(required=False)
     link = serializers.URLField(required=False)
+    payment_rhythm = serializers.CharField(required=False)
 
 
 class OptionalWaitingListEntryDetailsSerializer(serializers.Serializer):
@@ -122,3 +123,4 @@ class PublicConfirmWaitingListEntryRequestSerializer(serializers.Serializer):
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
     number_of_coop_shares = serializers.IntegerField()
+    payment_rhythm = serializers.CharField()
