@@ -16,7 +16,7 @@ SECRET_KEY = env.str(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=False)
 if not DEBUG:
     print(
         f"Tapir Version: {TAPIR_VERSION}"
@@ -29,14 +29,12 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     "default": env.db(
-        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@localhost:5432/tapir"
+        "DATABASE_CONNECTION", default="postgresql://tapir:tapir@db:5432/tapir"
     ),
 }
 
-CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://localhost:6379")
-CELERY_RESULT_BACKEND = env.str(
-    "CELERY_RESULT_BACKEND", default="redis://localhost:6379"
-)
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default="redis://redis:6379")
+CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default="redis://redis:6379")
 CELERY_BEAT_SCHEDULE = {
     "execute_scheduled_tasks": {
         "task": "tapir.wirgarten.tasks.execute_scheduled_tasks",
@@ -137,7 +135,7 @@ SERVER_EMAIL = env("SERVER_EMAIL", default="tapir@foodcoopx.de")
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
 
 KEYCLOAK_ADMIN_CONFIG = dict(
-    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://localhost:8080"),
+    SERVER_URL=env.str("KEYCLOAK_ADMIN_SERVER_URL", default="http://keycloak:8080"),
     PUBLIC_URL=env.str("KEYCLOAK_PUBLIC_URL", default="http://localhost:8080"),
     CLIENT_ID=env.str("KEYCLOAK_CLIENT_ID", default="tapir-backend"),
     FRONTEND_CLIENT_ID=env.str("KEYCLOAK_FRONTEND_CLIENT_ID", default="tapir-frontend"),
