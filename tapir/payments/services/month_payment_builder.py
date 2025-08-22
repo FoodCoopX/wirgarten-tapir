@@ -277,6 +277,13 @@ class MonthPaymentBuilder:
         number_of_full_month_to_pay = 0
         number_of_single_deliveries_to_pay = 0
         while current_month < range_end:
+            if not DateRangeOverlapChecker.do_ranges_overlap(
+                range_1_start=range_start,
+                range_1_end=range_end,
+                range_2_start=subscription.start_date,
+                range_2_end=subscription.end_date,
+            ):
+                continue
             if cls.is_month_fully_covered_by_subscription(
                 subscription=subscription, first_of_month=current_month
             ):

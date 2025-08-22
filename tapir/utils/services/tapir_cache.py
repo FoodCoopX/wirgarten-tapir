@@ -345,7 +345,7 @@ class TapirCache:
         return get_from_cache_or_compute(
             cache,
             "all_growing_periods",
-            lambda: GrowingPeriod.objects.order_by("start_date"),
+            lambda: list(GrowingPeriod.objects.order_by("start_date")),
         )
 
     @classmethod

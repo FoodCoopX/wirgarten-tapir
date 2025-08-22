@@ -1,10 +1,13 @@
 import datetime
 
 from django.urls import reverse
+from icecream import ic
+from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.utils.shortcuts import get_last_day_of_month
+from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -12,6 +15,8 @@ from tapir.wirgarten.tests.factories import (
     SubscriptionFactory,
     GrowingPeriodFactory,
     ProductPriceFactory,
+    PaymentFactory,
+    MandateReferenceFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
@@ -166,17 +171,13 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         response = self.client.get(url)
 
         self.assertStatusCode(response, 200)
-
         response_content = response.json()
-
         response_content.sort(
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
-
         self.assertEqual(
             5,
             len(response_content),
-            "The should be a payment for each month of the growing period",
         )
 
         expected_due_dates = [
@@ -210,16 +211,418 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             self.assertEqual(1, len(extended_payment["subscriptions"]))
 
     def test_get_somePaymentsAlreadyExist_existingPaymentsTakenIntoAccount(self):
-        self.skipTest("TODO")
+        self.now = mock_timezone(
+            self, now=datetime.datetime(year=2020, month=11, day=7)
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=7, day=1),
+            end_date=datetime.date(year=2021, month=6, day=30),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=7, day=1),
+            end_date=datetime.date(year=2022, month=6, day=30),
+        )
+        mandate_ref = MandateReferenceFactory.create(member=member)
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0,
+            period=growing_period,
+            quantity=1,
+            mandate_ref=mandate_ref,
+        )
+
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.QUARTERLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        PaymentFactory.create(
+            mandate_ref=mandate_ref,
+            amount=12.5,
+            status="PAID",
+            due_date=datetime.date(year=2020, month=10, day=6),
+            subscription_payment_range_start=datetime.date(year=2020, month=10, day=1),
+            subscription_payment_range_end=datetime.date(year=2020, month=10, day=31),
+            type=subscription.product.type.name,
+        )
+
+        PaymentFactory.create(
+            mandate_ref=mandate_ref,
+            amount=30,
+            status="DUE",
+            due_date=datetime.date(year=2021, month=1, day=6),
+            subscription_payment_range_start=datetime.date(year=2021, month=1, day=1),
+            subscription_payment_range_end=datetime.date(year=2021, month=3, day=31),
+            type=subscription.product.type.name,
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        ic([exp["payment"]["due_date"] for exp in response_content])
+        self.assertEqual(
+            5,
+            len(response_content),
+        )
+
+        expected_amounts = [
+            17.5,  # in the first rhythm period, 12.5 have already been paid
+            30,  # in this rhythm period, the payment already exist and covers the full period.
+            30,
+            30,
+            30,
+        ]
+        expected_due_dates = [
+            "2020-11-06",
+            "2021-01-06",
+            "2021-04-06",
+            "2021-07-06",
+            "2021-10-06",
+        ]
+        expected_ranges = [
+            ("2020-10-01", "2020-12-31"),
+            ("2021-01-01", "2021-03-31"),
+            ("2021-04-01", "2021-06-30"),
+            ("2021-07-01", "2021-09-30"),
+            ("2021-10-01", "2021-12-31"),
+        ]
+
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(
+                expected_amounts[index], extended_payment["payment"]["amount"]
+            )
+            self.assertEqual(
+                expected_due_dates[index], extended_payment["payment"]["due_date"]
+            )
+            self.assertEqual(
+                expected_ranges[index],
+                (
+                    extended_payment["payment"]["subscription_payment_range_start"],
+                    extended_payment["payment"]["subscription_payment_range_end"],
+                ),
+            )
+            self.assertEqual([], extended_payment["coop_share_transactions"])
+            ic(
+                len(extended_payment["subscriptions"]),
+                extended_payment["payment"]["due_date"],
+            )
+            self.assertEqual(1, len(extended_payment["subscriptions"]))
 
     def test_get_subscriptionInTrial_trialPeriodGetsPaidMonthly(self):
-        self.skipTest("TODO")
+        self.now = mock_timezone(
+            self, now=datetime.datetime(year=2020, month=9, day=27)
+        )
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(value=6)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=True
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_DURATION).update(
+            value=6  # 6 weeks so that the trial period overlaps over 2 months
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2020, month=12, day=31),
+        )
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0,
+            period=growing_period,
+            quantity=1,
+            start_date=datetime.date(year=2020, month=9, day=1),
+            product__type__delivery_cycle=WEEKLY[0],
+        )
+
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            valid_from=datetime.date(year=2020, month=1, day=1),
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        self.assertEqual(
+            3,
+            len(response_content),
+        )
+
+        expected_amounts = [
+            10,
+            10,
+            20,
+        ]
+        expected_due_dates = [
+            "2020-09-06",
+            "2020-10-06",
+            "2020-11-06",
+        ]
+        expected_ranges = [
+            ("2020-09-01", "2020-09-30"),
+            ("2020-10-01", "2020-10-31"),
+            ("2020-07-01", "2020-12-31"),
+        ]
+
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(
+                expected_amounts[index], extended_payment["payment"]["amount"]
+            )
+            self.assertEqual(
+                expected_due_dates[index], extended_payment["payment"]["due_date"]
+            )
+            self.assertEqual(
+                expected_ranges[index],
+                (
+                    extended_payment["payment"]["subscription_payment_range_start"],
+                    extended_payment["payment"]["subscription_payment_range_end"],
+                ),
+            )
+            self.assertEqual([], extended_payment["coop_share_transactions"])
+            self.assertEqual(1, len(extended_payment["subscriptions"]))
 
     def test_get_subscriptionIsCancelled_noPaymentsGeneratedAfterEndDate(self):
-        self.skipTest("TODO")
+        self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
+            value=15
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2020, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1),
+            end_date=datetime.date(year=2021, month=12, day=31),
+        )
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0,
+            period=growing_period,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2020, month=6, day=16)
+            ),
+            end_date=datetime.date(year=2020, month=8, day=31),
+        )
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
+            valid_from=self.now.date(),
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()
+
+        self.assertEqual(
+            2,
+            len(response_content),
+        )
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        expected_due_dates = [
+            "2020-07-15",
+            "2020-08-15",
+        ]
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(10, extended_payment["payment"]["amount"])
+            self.assertEqual(
+                expected_due_dates[index],
+                extended_payment["payment"]["due_date"],
+            )
 
     def test_get_somePastPaymentsAreStillDue_includesThosePayments(self):
-        self.skipTest("TODO")
+        self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
+            value=15
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2020, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1),
+            end_date=datetime.date(year=2021, month=12, day=31),
+        )
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0,
+            period=growing_period,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2020, month=6, day=16)
+            ),
+            end_date=datetime.date(year=2020, month=8, day=31),
+        )
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
+            valid_from=self.now.date(),
+        )
+        PaymentFactory.create(
+            mandate_ref__member=member,
+            status="DUE",
+            due_date=datetime.date(year=2020, month=2, day=15),
+            amount=15,
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()
+
+        self.assertEqual(
+            3,
+            len(response_content),
+        )
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        expected_amounts = [
+            15,
+            10,
+            10,
+        ]
+        expected_due_dates = [
+            "2020-02-15",
+            "2020-07-15",
+            "2020-08-15",
+        ]
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(
+                expected_amounts[index], extended_payment["payment"]["amount"]
+            )
+            self.assertEqual(
+                expected_due_dates[index],
+                extended_payment["payment"]["due_date"],
+            )
 
     def test_get_coopSharePaymentsExisting_includesThosePayment(self):
-        self.skipTest("TODO")
+        self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=7, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
+            value=15
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2020, month=1, day=1),
+            end_date=datetime.date(year=2020, month=12, day=31),
+        )
+        GrowingPeriodFactory.create(
+            start_date=datetime.date(year=2021, month=1, day=1),
+            end_date=datetime.date(year=2021, month=12, day=31),
+        )
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0,
+            period=growing_period,
+            quantity=1,
+            product__type__delivery_cycle=WEEKLY[0],
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2020, month=6, day=16)
+            ),
+            end_date=datetime.date(year=2020, month=8, day=31),
+        )
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
+            valid_from=self.now.date(),
+        )
+        PaymentFactory.create(
+            mandate_ref__member=member,
+            status="DUE",
+            due_date=datetime.date(year=2020, month=10, day=15),
+            amount=50,
+            type="Genossenschaftsanteile",
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()
+
+        self.assertEqual(
+            3,
+            len(response_content),
+        )
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        expected_amounts = [10, 10, 50]
+        expected_due_dates = [
+            "2020-07-15",
+            "2020-08-15",
+            "2020-10-15",
+        ]
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(
+                expected_amounts[index], extended_payment["payment"]["amount"]
+            )
+            self.assertEqual(
+                expected_due_dates[index],
+                extended_payment["payment"]["due_date"],
+            )

@@ -62,6 +62,9 @@ class MemberPaymentRhythmService:
                 last_growing_period = growing_period
                 break
 
+        if last_growing_period is None:
+            last_growing_period = growing_periods[-1]
+
         return (
             relativedelta(reference_date, last_growing_period.start_date).months % 12
         ) + 1
