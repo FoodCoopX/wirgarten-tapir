@@ -14,5 +14,6 @@ export function getEmptyPersonalData(): PersonalData {
     birthdate: new Date(),
     accountOwner: "",
     iban: "",
+    paymentRhythm: "monthly",
   };
 }

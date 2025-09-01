@@ -14,5 +14,6 @@ export function getTestPersonalData(): PersonalData {
     accountOwner: "Max Mustermann",
     birthdate: new Date("1990-12-22"),
     iban: "DE89370400440532013000",
+    paymentRhythm: "monthly",
   };
 }
