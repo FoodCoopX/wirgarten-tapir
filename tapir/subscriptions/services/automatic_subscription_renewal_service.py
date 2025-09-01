@@ -112,9 +112,11 @@ class AutomaticSubscriptionRenewalService:
         if current_growing_period is None:
             return set()
 
-        current_subscriptions = TapirCache.get_subscriptions_active_at_date(
-            current_growing_period.start_date, cache
-        )
+        current_subscriptions = {
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache)
+            if subscription.period_id == current_growing_period.id
+        }
 
         members_ids_currently_subbed_to_product_type = {
             product.type_id: set() for product in TapirCache.get_all_products(cache)

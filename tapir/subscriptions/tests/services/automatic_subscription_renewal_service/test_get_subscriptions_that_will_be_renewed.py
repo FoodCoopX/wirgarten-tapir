@@ -79,6 +79,7 @@ class TestGetSubscriptionsThatWillBeRenewed(TapirIntegrationTest):
             period=GrowingPeriod.objects.get(start_date__year=2027),
             product__type=past_subscription.product.type,
             member=past_subscription.member,
+            start_date=datetime.date(year=2027, month=6, day=1),
         )
 
         result = (
