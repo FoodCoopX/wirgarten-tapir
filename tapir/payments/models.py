@@ -1,11 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from tapir.core.models import TapirModel
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import format_date
 
 
-class MemberPaymentRhythm(models.Model):
+class MemberPaymentRhythm(TapirModel):
     class Rhythm(models.TextChoices):
         MONTHLY = "monthly", _("Monatlich")
         QUARTERLY = "quarterly", _("Vierteljährlich")

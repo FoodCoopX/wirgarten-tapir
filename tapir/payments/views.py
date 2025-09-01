@@ -138,6 +138,8 @@ class GetFutureMemberPaymentsApiView(APIView):
 
 
 class GetMemberPaymentRhythmDataApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     def __init__(self):
         super().__init__()
         self.cache = {}
@@ -162,6 +164,7 @@ class GetMemberPaymentRhythmDataApiView(APIView):
                 cache=self.cache
             )
         }
+
         return Response(
             MemberPaymentRhythmDataSerializer(
                 {
