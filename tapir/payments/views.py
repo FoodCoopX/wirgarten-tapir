@@ -1,9 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.serializers import (
     ExtendedPaymentSerializer,
     MemberPaymentRhythmDataSerializer,
@@ -133,7 +136,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         return subscriptions
 
 
-class GetMemberPaymentRhythmData(APIView):
+class GetMemberPaymentRhythmDataApiView(APIView):
     def __init__(self):
         super().__init__()
         self.cache = {}
@@ -164,6 +167,45 @@ class GetMemberPaymentRhythmData(APIView):
                     "date_of_next_rhythm_change": date,
                     "current_rhythm": current_rhythm,
                     "allowed_rhythms": allowed_rhythms,
+                    "rhythm_history": MemberPaymentRhythm.objects.filter(
+                        member=member
+                    ).order_by("valid_from"),
                 }
             ).data
         )
+
+
+class SetMemberPaymentRhythmApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: str},
+        request=inline_serializer(
+            name="payment_rhythm_serializer",
+            fields={
+                "rhythm": serializers.CharField(),
+                "member_id": serializers.CharField(),
+            },
+        ),
+    )
+    def post(self, request):
+        member = get_object_or_404(Member, id=request.data["member_id"])
+
+        rhythm = request.data.get("rhythm")
+        if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
+            rhythm, cache=self.cache
+        ):
+            raise ValidationError(
+                f"Diese Zahlungsintervall {rhythm} is nicht erlaubt, erlaubt sind: {MemberPaymentRhythmService.get_allowed_rhythms(cache=self.cache)}"
+            )
+
+        valid_from = MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
+            member=member, reference_date=get_today(cache=self.cache), cache=self.cache
+        )
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member, rhythm=rhythm, valid_from=valid_from
+        )
+
+        return Response("OK")

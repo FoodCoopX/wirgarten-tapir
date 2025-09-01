@@ -13,10 +13,11 @@
  */
 
 import * as runtime from "../runtime";
-import type { ExtendedPayment, MemberPaymentRhythmData } from "../models/index";
+import type { ExtendedPayment, MemberPaymentRhythmData, PaymentRhythmSerializerRequest } from "../models/index";
 import {
   ExtendedPaymentFromJSON,
   MemberPaymentRhythmDataFromJSON,
+  PaymentRhythmSerializerRequestToJSON
 } from "../models/index";
 
 export interface PaymentsApiMemberFuturePaymentsListRequest {
@@ -25,6 +26,10 @@ export interface PaymentsApiMemberFuturePaymentsListRequest {
 
 export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
+}
+
+export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
+  paymentRhythmSerializerRequest: PaymentRhythmSerializerRequest;
 }
 
 /**
@@ -137,6 +142,72 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MemberPaymentRhythmData> {
     const response = await this.paymentsApiMemberPaymentRhythmDataRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiSetMemberPaymentRhythmCreateRaw(
+    requestParameters: PaymentsApiSetMemberPaymentRhythmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<string>> {
+    if (requestParameters["paymentRhythmSerializerRequest"] == null) {
+      throw new runtime.RequiredError(
+        "paymentRhythmSerializerRequest",
+        'Required parameter "paymentRhythmSerializerRequest" was null or undefined when calling paymentsApiSetMemberPaymentRhythmCreate().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    headerParameters["Content-Type"] = "application/json";
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/set_member_payment_rhythm`,
+        method: "POST",
+        headers: headerParameters,
+        query: queryParameters,
+        body: PaymentRhythmSerializerRequestToJSON(
+          requestParameters["paymentRhythmSerializerRequest"],
+        ),
+      },
+      initOverrides,
+    );
+
+    if (this.isJsonMime(response.headers.get("content-type"))) {
+      return new runtime.JSONApiResponse<string>(response);
+    } else {
+      return new runtime.TextApiResponse(response) as any;
+    }
+  }
+
+  /**
+   */
+  async paymentsApiSetMemberPaymentRhythmCreate(
+    requestParameters: PaymentsApiSetMemberPaymentRhythmCreateRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<string> {
+    const response = await this.paymentsApiSetMemberPaymentRhythmCreateRaw(
       requestParameters,
       initOverrides,
     );

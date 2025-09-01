@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts
@@ -70,6 +71,7 @@ models/Member.ts
 models/MemberCountry.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
+models/MemberPaymentRhythm.ts
 models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
 models/MinimumNumberOfSharesResponse.ts
@@ -102,6 +104,7 @@ models/PatchedStoredUploadRequest.ts
 models/PatchedTemporaryUploadRequest.ts
 models/PatchedWaitingListEntryRequest.ts
 models/Payment.ts
+models/PaymentRhythmSerializerRequest.ts
 models/PaymentStatusEnum.ts
 models/PdfExportModel.ts
 models/PdfExportModelRequest.ts
@@ -133,6 +136,7 @@ models/PublicSubscription.ts
 models/PublicWaitingListEntryExistingMemberCreateRequest.ts
 models/PublicWaitingListEntryNewMemberCreateRequest.ts
 models/RecipientRequest.ts
+models/RhythmEnum.ts
 models/SaveExtendedProductTypeRequest.ts
 models/SegmentData.ts
 models/SegmentDataRequest.ts

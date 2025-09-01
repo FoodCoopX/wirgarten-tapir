@@ -776,6 +776,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/MemberPaymentRhythmData'
           description: ''
+  /payments/api/set_member_payment_rhythm:
+    post:
+      operationId: payments_api_set_member_payment_rhythm_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/payment_rhythm_serializerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/payment_rhythm_serializerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/payment_rhythm_serializerRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /pickup_locations/api/change_member_pickup_location:
     post:
       operationId: pickup_locations_api_change_member_pickup_location_create
@@ -6274,6 +6302,24 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MemberPaymentRhythm:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rhythm:
+          $ref: '#/components/schemas/RhythmEnum'
+        valid_from:
+          type: string
+          format: date
+        member:
+          type: string
+      required:
+      - id
+      - member
+      - rhythm
+      - valid_from
     MemberPaymentRhythmData:
       type: object
       properties:
@@ -6286,10 +6332,15 @@ components:
           type: object
           additionalProperties:
             type: string
+        rhythm_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberPaymentRhythm'
       required:
       - allowed_rhythms
       - current_rhythm
       - date_of_next_rhythm_change
+      - rhythm_history
     MemberProfileCapacityCheckRequestRequest:
       type: object
       properties:
@@ -7801,6 +7852,18 @@ components:
             minLength: 1
       required:
       - recipients
+    RhythmEnum:
+      enum:
+      - monthly
+      - quarterly
+      - semiannually
+      - yearly
+      type: string
+      description: |-
+        * `monthly` - Monatlich
+        * `quarterly` - Vierteljährlich
+        * `semiannually` - Halbjährlich
+        * `yearly` - Jährlich
     SaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -8747,6 +8810,18 @@ components:
           $ref: '#/components/schemas/PublicPickupLocation'
       required:
       - has_location
+    payment_rhythm_serializerRequest:
+      type: object
+      properties:
+        rhythm:
+          type: string
+          minLength: 1
+        member_id:
+          type: string
+          minLength: 1
+      required:
+      - member_id
+      - rhythm
     send_link_serializerRequest:
       type: object
       properties:

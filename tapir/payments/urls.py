@@ -11,7 +11,12 @@ urlpatterns = [
     ),
     path(
         "api/member_payment_rhythm_data",
-        views.GetMemberPaymentRhythmData.as_view(),
+        views.GetMemberPaymentRhythmDataApiView.as_view(),
         name="member_payment_rhythm_data",
+    ),
+    path(
+        "api/set_member_payment_rhythm",
+        views.SetMemberPaymentRhythmApiView.as_view(),
+        name="set_member_payment_rhythm",
     ),
 ]

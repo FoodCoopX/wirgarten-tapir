@@ -26,7 +26,7 @@
                         <h4 class="alert-heading">Bitte bestätige deine neue Email Adresse</h4>
                         <p>
                             Wir haben dir eine Mail geschickt an <strong>{{ object.email }}</strong>.
-                            <br/>
+                            <br />
                             Bitte klicke den Link um deine Änderung wirksam zu machen.
                         </p>
                     </div>
@@ -39,27 +39,27 @@
                                     <strong>{{ coop_shares_total|default:'0' }}</strong> ×
                                 </div>
                                 <strong>Genossenschaftsanteile</strong>
-                                <hr/>
+                                <hr />
                                 <small>
                                     <table style="width:100%">
                                         {% for entry in coop_shares %}
-                                            <tr data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="{{ entry }}">
+                                            <tr data-bs-toggle="tooltip" data-bs-placement="top" title="{{ entry }}">
                                                 <td>
-                                                        <span class="material-icons" style="font-size:1em">
-                                                            {% if entry.transaction_type == 'purchase' %}
-                                                                add
-                                                            {% elif entry.transaction_type == 'cancellation' %}
-                                                                remove
-                                                            {% elif entry.transaction_type == 'transfer_in' %}
-                                                                login
-                                                            {% elif entry.transaction_type == 'transfer_out' %}
-                                                                logout
-                                                            {% endif %}
-                                                        </span>
+                                                    <span class="material-icons" style="font-size:1em">
+                                                        {% if entry.transaction_type == 'purchase' %}
+                                                            add
+                                                        {% elif entry.transaction_type == 'cancellation' %}
+                                                            remove
+                                                        {% elif entry.transaction_type == 'transfer_in' %}
+                                                            login
+                                                        {% elif entry.transaction_type == 'transfer_out' %}
+                                                            logout
+                                                        {% endif %}
+                                                    </span>
                                                 </td>
                                                 <td>{{ entry.valid_at|format_date }}</td>
-                                                <td style="text-align:right">{{ entry.total_price|format_currency }}
+                                                <td style="text-align:right">
+                                                    {{ entry.total_price|format_currency }}
                                                     €
                                                 </td>
                                             </tr>
@@ -69,23 +69,22 @@
                             </div>
                             <div class="card-footer d-flex justify-content-end">
                                 <div data-bs-toggle="tooltip" title="Anteile bearbeiten">
-                                    <button {% if object.is_in_coop_trial %} data-bs-toggle="modal"
-                                                                             data-bs-target="#cannotOrderMoreSharesModal" {% else %}
-                                                                             onclick="handleAddCoopShares();" {% endif %}
-                                                                             class="btn btn-outline-primary"
-                                                                             style="float:right">
+                                    <button {% if object.is_in_coop_trial %} data-bs-toggle="modal" data-bs-target="#cannotOrderMoreSharesModal" {% else %} onclick="handleAddCoopShares();" {% endif %}
+                                            class="btn btn-outline-primary"
+                                            style="float:right">
                                         <span class="material-icons">add</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
                     {% endif %}
-                    <div id="contract-tiles" data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
+                    <div id="contract-tiles"
+                         data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
                          data-member-id="{{ object.pk }}">
                         <div id="subscription_cards" data-member-id="{{ object.pk }}">
                             <span class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
+                                <span class="visually-hidden">Loading...</span>
+                            </span>
                         </div>
                         {% if subscriptionAutomaticRenewal %}
                             <div id="subscription_cancellation_card" data-member-id="{{ object.pk }}">
@@ -105,8 +104,7 @@
                         <span class="visually-hidden">Loading...</span>
                     </span>
                 </span>
-                <span id="future_payments_card"
-                      data-member-id="{{ object.pk }}">
+                <span id="future_payments_card" data-member-id="{{ object.pk }}">
                     <span class="spinner-border" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </span>
@@ -150,17 +148,19 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div id="member_profile_waiting_list_entry" data-member-id="{{ object.pk }}" data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
+                    <div id="member_profile_waiting_list_entry"
+                         data-member-id="{{ object.pk }}"
+                         data-admin-email="{{ 'wirgarten.site.admin_email'|parameter }}">
                         <span class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </span>
+                            <span class="visually-hidden">Loading...</span>
+                        </span>
                     </div>
                 </div>
             </div>
             <div id="member-personal-data"
                  class="card"
                  style="margin-bottom:1em;
-                    margin-top:1em">
+                        margin-top:1em">
                 <h5 class="card-header d-flex justify-content-between align-items-center">
                     {% translate "Persönliche Daten" %}
                     <button class="btn tapir-btn btn-outline-primary"
@@ -179,17 +179,17 @@
                         {% if email_change_request %}
                             <div class="col-8" id="tapir_user_changed_email">
                                 <span style="text-decoration: line-through; color:#6A6A6A">{{ object.email }}</span>
-                                <br/>
-                                <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span
-                                        class="badge bg-danger">Nicht verifiziert</span></span>
+                                <br />
+                                <span>{{ email_change_request.new_email }}&nbsp;&nbsp;&nbsp;<span class="badge bg-danger">Nicht verifiziert</span></span>
                                 {% if perms.accounts.manage %}
                                     <form method="POST" action="{% url 'accounts:admin_apply_mail_change' %}">
                                         {% csrf_token %}
-                                        <input type="hidden" name="user_id" value="{{ object.id }}"/>
+                                        <input type="hidden" name="user_id" value="{{ object.id }}" />
                                         <input type="hidden"
                                                name="new_email"
-                                               value="{{ email_change_request.new_email }}"/>
-                                        <button type="submit" class="btn tapir-btn btn-primary btn-sm">Als verifiziert
+                                               value="{{ email_change_request.new_email }}" />
+                                        <button type="submit" class="btn tapir-btn btn-primary btn-sm">
+                                            Als verifiziert
                                             markieren
                                         </button>
                                     </form>
@@ -231,11 +231,10 @@
                     </div>
                     {% if object.pk == request.user.pk %}
                         <div>
-                            <hr/>
+                            <hr />
                             <a style="float: right"
                                class="btn tapir-btn btn-outline-primary ms-1"
-                               href="{% url 'accounts:password_change' %}"><span
-                                    class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
+                               href="{% url 'accounts:password_change' %}"><span class="material-icons">vpn_key</span>{% translate "Passwort ändern" %}</a>
                         </div>
                     {% endif %}
                 </div>
@@ -273,7 +272,10 @@
                     <div class="row m-1">
                         <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
                         <div class="col-8" id="tapir_user_payment_rhythm">
-                            {{ payment_rhythm }} {% if perms.accounts.manage %}<span id="payment_rhythm_button" data-member-id="{{ object.id }}"></span>{% endif %}
+                            <div class="d-flex flex-row gap-2">
+                                {{ payment_rhythm }}
+                                {% if perms.accounts.manage %}<span id="payment_rhythm_button" data-member-id="{{ object.id }}"></span>{% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -302,7 +304,7 @@
             </div>
         {% endif %}
         {% if perms.accounts.manage %}
-            <hr/>
+            <hr />
             {% user_log_entry_list object %}
             <script>
                 const handleOpenEmail = (subject, contentUrl) => {

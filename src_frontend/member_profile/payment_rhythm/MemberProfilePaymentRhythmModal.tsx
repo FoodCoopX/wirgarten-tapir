@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "dayjs/locale/de";
-import { PaymentsApi } from "../../api-client";
+import { MemberPaymentRhythm, PaymentsApi } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import { ToastData } from "../../types/ToastData.ts";
 import { Form, Modal, Spinner } from "react-bootstrap";
@@ -28,6 +28,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
     [key: string]: string;
   }>({});
   const [saving, setSaving] = useState(false);
+  const [history, setHistory] = useState<MemberPaymentRhythm[]>([]);
 
   useEffect(() => {
     if (!show) return;
@@ -40,6 +41,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
         setDateOfNextChange(response.dateOfNextRhythmChange);
         setAllowedRhythms(response.allowedRhythms);
         setCurrentRhythm(response.currentRhythm);
+        setHistory(response.rhythmHistory);
 
         let found = false;
         for (const rhythm of Object.keys(response.allowedRhythms)) {
@@ -70,7 +72,33 @@ const MemberProfilePaymentRhythmModal: React.FC<
     return rhythm;
   }
 
-  function onSave() {}
+  function onSave() {
+    if (newRhythm === currentRhythm) {
+      return;
+    }
+
+    setSaving(true);
+
+    api
+      .paymentsApiSetMemberPaymentRhythmCreate({
+        paymentRhythmSerializerRequest: {
+          memberId: memberId,
+          rhythm: newRhythm,
+        },
+      })
+      .then(() => {
+        onHide();
+        window.location.reload();
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Speichern des Zahlungsintervalls",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setSaving(false));
+  }
 
   return (
     <Modal show={show} onHide={onHide} centered>
@@ -104,6 +132,26 @@ const MemberProfilePaymentRhythmModal: React.FC<
                 </Form.Text>
               </Form.Group>
             </div>
+            <div>
+              Historie der Zahlungsintervalle für dieses Mitglied:
+              {history.length > 0 ? (
+                <ul>
+                  {history.map((memberRhythm) => (
+                    <li key={memberRhythm.id}>
+                      {getDisplayName(memberRhythm.rhythm)} ab dem{" "}
+                      {formatDateNumeric(memberRhythm.validFrom)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul>
+                  <li>
+                    Keine Historie bekannt, dieses Mitglied nutzt das
+                    Standard-Intervall aus der Konfig
+                  </li>
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </Modal.Body>
@@ -113,6 +161,7 @@ const MemberProfilePaymentRhythmModal: React.FC<
           icon={"save"}
           text={"Zahlungsintervall speichern"}
           loading={saving}
+          onClick={onSave}
         />
       </Modal.Footer>
     </Modal>
