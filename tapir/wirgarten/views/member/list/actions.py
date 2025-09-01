@@ -330,7 +330,7 @@ def resend_verify_email(request, **kwargs):
     member_id = kwargs["pk"]
     member = Member.objects.get(id=member_id)
     try:
-        member.send_verify_email()
+        member.send_verify_email(cache={})
         result = "success"
     except Exception as e:
         result = str(e)
