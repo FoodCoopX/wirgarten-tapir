@@ -2,10 +2,11 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
-from rest_framework import serializers
+from rest_framework import serializers, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.serializers import (
     ExtendedPaymentSerializer,
@@ -176,6 +177,8 @@ class GetMemberPaymentRhythmDataApiView(APIView):
 
 
 class SetMemberPaymentRhythmApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
     def __init__(self):
         super().__init__()
         self.cache = {}
