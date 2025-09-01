@@ -17,3 +17,9 @@ class ExtendedPaymentSerializer(serializers.Serializer):
     payment = PaymentSerializer()
     subscriptions = SubscriptionSerializer(many=True)
     coop_share_transactions = CoopShareTransactionSerializer(many=True)
+
+
+class MemberPaymentRhythmDataSerializer(serializers.Serializer):
+    current_rhythm = serializers.CharField()
+    date_of_next_rhythm_change = serializers.DateField()
+    allowed_rhythms = serializers.DictField(child=serializers.CharField())

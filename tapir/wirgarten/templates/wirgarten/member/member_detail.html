@@ -273,7 +273,7 @@
                     <div class="row m-1">
                         <div class="col-4 fw-bold text-end">{% translate "Zahlungsintervall" %}:</div>
                         <div class="col-8" id="tapir_user_payment_rhythm">
-                            {{ payment_rhythm }}
+                            {{ payment_rhythm }} {% if perms.accounts.manage %}<span id="payment_rhythm_button" data-member-id="{{ object.id }}"></span>{% endif %}
                         </div>
                     </div>
                 </div>

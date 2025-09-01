@@ -755,6 +755,27 @@ paths:
                 items:
                   $ref: '#/components/schemas/ExtendedPayment'
           description: ''
+  /payments/api/member_payment_rhythm_data:
+    get:
+      operationId: payments_api_member_payment_rhythm_data_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberPaymentRhythmData'
+          description: ''
   /pickup_locations/api/change_member_pickup_location:
     post:
       operationId: pickup_locations_api_change_member_pickup_location_create
@@ -6253,6 +6274,22 @@ components:
       - used_joker_in_growing_period
       - used_jokers
       - weekday_limit
+    MemberPaymentRhythmData:
+      type: object
+      properties:
+        current_rhythm:
+          type: string
+        date_of_next_rhythm_change:
+          type: string
+          format: date
+        allowed_rhythms:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - allowed_rhythms
+      - current_rhythm
+      - date_of_next_rhythm_change
     MemberProfileCapacityCheckRequestRequest:
       type: object
       properties:

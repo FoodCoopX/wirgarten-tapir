@@ -147,3 +147,29 @@ class MemberPaymentRhythmService:
             if choice[0] == rhythm:
                 return choice[1]
         return rhythm
+
+    @classmethod
+    def get_date_of_next_payment_rhythm_change(
+        cls, member: Member, reference_date: datetime.date, cache: dict
+    ) -> datetime.date:
+        rhythm_object = TapirCache.get_member_payment_rhythm_object(
+            member=member, reference_date=reference_date, cache=cache
+        )
+        if rhythm_object is None:
+            return reference_date
+
+        last_day = MemberPaymentRhythmService.get_last_day_of_rhythm_period(
+            rhythm=rhythm_object.rhythm, reference_date=reference_date, cache=cache
+        )
+        return last_day + datetime.timedelta(days=1)
+
+    @classmethod
+    def assign_payment_rhythm_to_member(
+        cls, member: Member, rhythm: str, valid_from: datetime.date
+    ):
+        MemberPaymentRhythm.objects.filter(
+            member=member, valid_from__gte=valid_from
+        ).delete()
+        MemberPaymentRhythm.objects.create(
+            member=member, rhythm=rhythm, valid_from=valid_from
+        )

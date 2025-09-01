@@ -60,6 +60,7 @@ export * from './Member';
 export * from './MemberCountry';
 export * from './MemberDataToConfirm';
 export * from './MemberJokerInformation';
+export * from './MemberPaymentRhythmData';
 export * from './MemberProfileCapacityCheckRequestRequest';
 export * from './MinimumNumberOfSharesResponse';
 export * from './MissingTrigger';

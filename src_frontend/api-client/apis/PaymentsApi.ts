@@ -13,10 +13,17 @@
  */
 
 import * as runtime from "../runtime";
-import type { ExtendedPayment } from "../models/index";
-import { ExtendedPaymentFromJSON } from "../models/index";
+import type { ExtendedPayment, MemberPaymentRhythmData } from "../models/index";
+import {
+  ExtendedPaymentFromJSON,
+  MemberPaymentRhythmDataFromJSON,
+} from "../models/index";
 
 export interface PaymentsApiMemberFuturePaymentsListRequest {
+  memberId?: string;
+}
+
+export interface PaymentsApiMemberPaymentRhythmDataRetrieveRequest {
   memberId?: string;
 }
 
@@ -74,6 +81,62 @@ export class PaymentsApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<Array<ExtendedPayment>> {
     const response = await this.paymentsApiMemberFuturePaymentsListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMemberPaymentRhythmDataRetrieveRaw(
+    requestParameters: PaymentsApiMemberPaymentRhythmDataRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<MemberPaymentRhythmData>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["memberId"] != null) {
+      queryParameters["member_id"] = requestParameters["memberId"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/member_payment_rhythm_data`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberPaymentRhythmDataFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiMemberPaymentRhythmDataRetrieve(
+    requestParameters: PaymentsApiMemberPaymentRhythmDataRetrieveRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<MemberPaymentRhythmData> {
+    const response = await this.paymentsApiMemberPaymentRhythmDataRetrieveRaw(
       requestParameters,
       initOverrides,
     );

@@ -37,10 +37,6 @@ from tapir.wirgarten.views.member.list.actions import (
 )
 from tapir.wirgarten.views.member.list.member_deliveries import MemberDeliveriesView
 from tapir.wirgarten.views.member.list.member_list import MemberListView
-from tapir.wirgarten.views.member.list.member_payments import (
-    MemberPaymentsView,
-    get_payment_amount_edit_form,
-)
 from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_cancel_form,
     get_coop_share_transfer_form,
@@ -252,12 +248,6 @@ urlpatterns = [
         "contracts/<str:pk>/editdates",
         get_edit_dates_form,
         name="subscription_edit_dates",
-    ),
-    path("payments/<str:pk>", MemberPaymentsView.as_view(), name="member_payments"),
-    path(
-        "payments/<str:member_id>/edit/<str:mandate_ref_id>/<str:payment_due_date>",
-        get_payment_amount_edit_form,
-        name="member_payments_edit",
     ),
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(

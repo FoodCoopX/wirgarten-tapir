@@ -5,6 +5,7 @@ import SubscriptionCancellationCard from "./subscription_cancellation/Subscripti
 import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
+import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -83,4 +84,20 @@ if (domNodeFuturePaymentsCard) {
   );
 } else {
   console.error("Failed to render future payments card from React");
+}
+
+const domNodePaymentRhythmButton = document.getElementById(
+  "payment_rhythm_button",
+);
+if (domNodePaymentRhythmButton) {
+  const root = createRoot(domNodePaymentRhythmButton);
+
+  root.render(
+    <MemberProfilePaymentRhythmBase
+      memberId={domNodePaymentRhythmButton.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
+} else {
+  console.error("Failed to render payment rhythm button from React");
 }

@@ -18,7 +18,6 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 )
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
-from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -114,7 +113,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             member = self.create_member(
                 personal_data=serializer.validated_data["personal_data"]
             )
-            MemberPaymentRhythm.objects.create(
+            MemberPaymentRhythmService.assign_payment_rhythm_to_member(
                 member=member,
                 rhythm=serializer.validated_data["payment_rhythm"],
                 valid_from=get_today(cache=self.cache),

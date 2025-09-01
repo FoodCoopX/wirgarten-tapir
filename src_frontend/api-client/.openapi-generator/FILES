@@ -70,6 +70,7 @@ models/Member.ts
 models/MemberCountry.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
+models/MemberPaymentRhythmData.ts
 models/MemberProfileCapacityCheckRequestRequest.ts
 models/MinimumNumberOfSharesResponse.ts
 models/MissingTrigger.ts

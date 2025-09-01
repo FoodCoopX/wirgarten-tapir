@@ -31,7 +31,6 @@ from tapir.coop.services.minimum_number_of_shares_validator import (
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -957,7 +956,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                 actor=actor, user=member
             ).save()
 
-            MemberPaymentRhythm.objects.create(
+            MemberPaymentRhythmService.assign_payment_rhythm_to_member(
                 member=member,
                 rhythm=serializer.validated_data["payment_rhythm"],
                 valid_from=get_today(cache=self.cache),

@@ -1,9 +1,16 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.payments.serializers import ExtendedPaymentSerializer
+from tapir.payments.serializers import (
+    ExtendedPaymentSerializer,
+    MemberPaymentRhythmDataSerializer,
+)
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.subscriptions.services.automatic_subscription_renewal_service import (
     AutomaticSubscriptionRenewalService,
@@ -15,6 +22,7 @@ from tapir.wirgarten.models import (
     Payment,
     CoopShareTransaction,
     MandateReference,
+    Member,
 )
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
@@ -123,3 +131,39 @@ class GetFutureMemberPaymentsApiView(APIView):
             )
         ]
         return subscriptions
+
+
+class GetMemberPaymentRhythmData(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: MemberPaymentRhythmDataSerializer},
+        parameters=[OpenApiParameter(name="member_id", type=str)],
+    )
+    def get(self, request):
+        member = get_object_or_404(Member, id=request.query_params.get("member_id"))
+        date = MemberPaymentRhythmService.get_date_of_next_payment_rhythm_change(
+            member=member, reference_date=get_today(cache=self.cache), cache=self.cache
+        )
+        current_rhythm = MemberPaymentRhythmService.get_member_payment_rhythm(
+            member=member,
+            reference_date=get_today(cache=self.cache),
+            cache=self.cache,
+        )
+        allowed_rhythms = {
+            rhythm: MemberPaymentRhythmService.get_rhythm_display_name(rhythm=rhythm)
+            for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
+                cache=self.cache
+            )
+        }
+        return Response(
+            MemberPaymentRhythmDataSerializer(
+                {
+                    "date_of_next_rhythm_change": date,
+                    "current_rhythm": current_rhythm,
+                    "allowed_rhythms": allowed_rhythms,
+                }
+            ).data
+        )
