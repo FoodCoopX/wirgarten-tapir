@@ -47,7 +47,7 @@ class AutomaticSubscriptionRenewalService:
         if Subscription.objects.filter(
             member=subscription.member,
             period=next_growing_period,
-            product=subscription.product,
+            product__type_id=subscription.product.type_id,
         ).exists():
             return False
 
@@ -116,13 +116,13 @@ class AutomaticSubscriptionRenewalService:
             current_growing_period.start_date, cache
         )
 
-        members_ids_currently_subbed_to_product_id = {
-            product.id: set() for product in TapirCache.get_all_products(cache)
+        members_ids_currently_subbed_to_product_type = {
+            product.type_id: set() for product in TapirCache.get_all_products(cache)
         }
         for subscription in current_subscriptions:
-            members_ids_currently_subbed_to_product_id[subscription.product_id].add(
-                subscription.member_id
-            )
+            members_ids_currently_subbed_to_product_type[
+                subscription.product.type_id
+            ].add(subscription.member_id)
 
         end_of_previous_growing_period = (
             current_growing_period.start_date - datetime.timedelta(days=1)
@@ -138,7 +138,9 @@ class AutomaticSubscriptionRenewalService:
             for subscription in subscriptions_from_previous_growing_period
             if subscription.cancellation_ts is None
             and subscription.member_id
-            not in members_ids_currently_subbed_to_product_id[subscription.product_id]
+            not in members_ids_currently_subbed_to_product_type[
+                subscription.product.type_id
+            ]
         }
 
     @classmethod

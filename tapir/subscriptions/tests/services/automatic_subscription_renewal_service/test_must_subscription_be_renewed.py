@@ -111,7 +111,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
-            member=member, period=next_growing_period, product=product
+            member=member, period=next_growing_period, product__type_id=product.type_id
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
 
@@ -156,7 +156,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
-            member=member, period=next_growing_period, product=product
+            member=member, period=next_growing_period, product__type_id=product.type_id
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
         mock_get_max_cancellation_date.assert_called_once_with(
@@ -204,7 +204,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
-            member=member, period=next_growing_period, product=product
+            member=member, period=next_growing_period, product__type_id=product.type_id
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
         mock_get_max_cancellation_date.assert_called_once_with(
@@ -252,7 +252,7 @@ class TestMustSubscriptionBeRenewed(SimpleTestCase):
         )
         mock_get_next_growing_period.assert_called_once_with(cache=cache)
         mock_subscription_objects.filter.assert_called_once_with(
-            member=member, period=next_growing_period, product=product
+            member=member, period=next_growing_period, product__type_id=product.type_id
         )
         mock_subscription_objects.filter.return_value.exists.assert_called_once_with()
         mock_get_max_cancellation_date.assert_called_once_with(
