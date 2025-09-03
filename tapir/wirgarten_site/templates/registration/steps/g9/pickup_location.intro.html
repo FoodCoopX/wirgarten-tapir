@@ -1,0 +1,23 @@
+{% load tapir_static %}
+<div style="display:flex; flex-direction: row;">
+    <div>
+    <strong>Lieferung</strong>
+        <p>
+            Wir liefern deine Kiste direkt zu dir nach Hause oder an deine Wunschadresse im Liefergebiet. (Bitte hierzu separat die gewünschte Lieferadresse mitteilen)
+            Wenn du mal nicht da bist, kannst du eine Abstellmöglichkeit angeben oder die Kiste weitergeben – ganz unkompliziert.
+        </p>
+        <strong>Permakulturhof GrüneNeune</strong>
+        <p>
+            Du möchtest deine Kiste lieber selbst abholen? Kein Problem – nach kurzer Absprache (s. AGB) ist die Abholung direkt bei uns am Hof in Hammelburg möglich.
+        </p>
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field_errors in form.errors.values %}
+                        {% for error in field_errors %}<li>{{ error }}</li>{% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
