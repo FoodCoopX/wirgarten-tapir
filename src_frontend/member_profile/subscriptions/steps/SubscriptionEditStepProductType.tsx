@@ -43,6 +43,7 @@ const SubscriptionEditStepProductType: React.FC<
               shoppingCart={shoppingCart}
               setShoppingCart={setShoppingCart}
               waitingListLinkConfirmationModeEnabled={false}
+              showHintFutureContract={true}
             />
           </Col>
         </Row>

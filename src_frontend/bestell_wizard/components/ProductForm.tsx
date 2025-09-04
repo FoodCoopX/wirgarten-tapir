@@ -13,6 +13,7 @@ interface ProductFormProps {
   shoppingCart: ShoppingCart;
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
+  showHintFutureContract: boolean;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -20,6 +21,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   shoppingCart,
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
+  showHintFutureContract,
 }) => {
   function totalPriceForThisProductType() {
     let total = 0;
@@ -98,6 +100,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <Alert variant={"warning"}>
               Derzeit ausgebucht. Nur Wartelisteneintrag möglich
             </Alert>
+          </Col>
+        </Row>
+      )}
+      {showHintFutureContract && (
+        <Row>
+          <Col>
+            <div>
+              Bitte wähle aus, welchen Ernteanteil du in Zukunft beziehen
+              möchtest. Dein bisheriger Ernteanteils-Vertrag ist dann nicht mehr
+              gültig.
+            </div>
           </Col>
         </Row>
       )}

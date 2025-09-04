@@ -7,7 +7,7 @@ import {
   PublicProductType,
   PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi,
+  WaitingListApi
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -372,7 +372,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         size={"lg"}
       >
         <Modal.Header closeButton>
-          <h5 className={"mb-0"}>{productType.name} bearbeiten</h5>
+          <h5 className={"mb-0"}>Neuen {productType.name} bestellen</h5>
         </Modal.Header>
         <ListGroup variant={"flush"}>
           {waitingListModeEnabled && (

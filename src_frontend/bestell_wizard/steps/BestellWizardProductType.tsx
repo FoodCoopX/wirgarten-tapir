@@ -46,6 +46,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             waitingListLinkConfirmationModeEnabled={
               waitingListLinkConfirmationModeEnabled
             }
+            showHintFutureContract={false}
           />
         </Col>
       </Row>
