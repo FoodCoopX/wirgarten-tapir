@@ -103,6 +103,7 @@ class TestWaitingListAPIView(TapirIntegrationTest):
                 "member_already_exists": False,
                 "member_no": None,
                 "number_of_coop_shares": entry_3.number_of_coop_shares,
+                "payment_rhythm": None,
                 "phone_number": str(entry_3.phone_number),
                 "street": entry_3.street,
                 "street_2": entry_3.street_2,
