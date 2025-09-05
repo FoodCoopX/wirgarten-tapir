@@ -3,6 +3,149 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /bestell_wizard/api/bestell_wizard_base_data:
+    get:
+      operationId: bestell_wizard_api_bestell_wizard_base_data_retrieve
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardBaseDataResponse'
+          description: ''
+  /bestell_wizard/api/bestell_wizard_capacity_check:
+    post:
+      operationId: bestell_wizard_api_bestell_wizard_capacity_check_create
+      tags:
+      - bestell_wizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
+          description: ''
+  /bestell_wizard/api/bestell_wizard_delivery_dates:
+    post:
+      operationId: bestell_wizard_api_bestell_wizard_delivery_dates_create
+      tags:
+      - bestell_wizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
+          description: ''
+  /bestell_wizard/api/is_email_address_valid:
+    get:
+      operationId: bestell_wizard_api_is_email_address_valid_retrieve
+      parameters:
+      - in: query
+        name: email
+        schema:
+          type: string
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+          description: ''
+  /bestell_wizard/api/next_contract_start_date:
+    get:
+      operationId: bestell_wizard_api_next_contract_start_date_retrieve
+      parameters:
+      - in: query
+        name: waiting_list_entry_id
+        schema:
+          type: string
+      tags:
+      - bestell_wizard
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: date
+          description: ''
+  /bestell_wizard/bestell_wizard_confirm_order:
+    post:
+      operationId: bestell_wizard_bestell_wizard_confirm_order_create
+      tags:
+      - bestell_wizard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConfirmationResponse'
+          description: ''
   /coop/api/minimum_number_of_shares:
     get:
       operationId: coop_api_minimum_number_of_shares_retrieve
@@ -1139,78 +1282,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductTypesAndConfig'
           description: ''
-  /subscriptions/api/bestell_wizard_base_data:
-    get:
-      operationId: subscriptions_api_bestell_wizard_base_data_retrieve
-      tags:
-      - subscriptions
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardBaseDataResponse'
-          description: ''
-  /subscriptions/api/bestell_wizard_capacity_check:
-    post:
-      operationId: subscriptions_api_bestell_wizard_capacity_check_create
-      tags:
-      - subscriptions
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardCapacityCheckRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardCapacityCheckResponse'
-          description: ''
-  /subscriptions/api/bestell_wizard_delivery_dates:
-    post:
-      operationId: subscriptions_api_bestell_wizard_delivery_dates_create
-      tags:
-      - subscriptions
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BestellWizardDeliveryDatesForOrderResponse'
-          description: ''
   /subscriptions/api/confirm_subscription_changes:
     post:
       operationId: subscriptions_api_confirm_subscription_changes_create
@@ -1296,27 +1367,6 @@ paths:
               schema:
                 type: string
           description: ''
-  /subscriptions/api/is_email_address_valid:
-    get:
-      operationId: subscriptions_api_is_email_address_valid_retrieve
-      parameters:
-      - in: query
-        name: email
-        schema:
-          type: string
-      tags:
-      - subscriptions
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: boolean
-          description: ''
   /subscriptions/api/member_data_to_confirm:
     get:
       operationId: subscriptions_api_member_data_to_confirm_list
@@ -1386,28 +1436,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/PublicSubscription'
           description: ''
-  /subscriptions/api/next_contract_start_date:
-    get:
-      operationId: subscriptions_api_next_contract_start_date_retrieve
-      parameters:
-      - in: query
-        name: waiting_list_entry_id
-        schema:
-          type: string
-      tags:
-      - subscriptions
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: string
-                format: date
-          description: ''
   /subscriptions/api/revoke_changes:
     post:
       operationId: subscriptions_api_revoke_changes_create
@@ -1460,34 +1488,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UpdateSubscriptionsRequestRequest'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      - DrfForwardAuthentication: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderConfirmationResponse'
-          description: ''
-  /subscriptions/bestell_wizard_confirm_order:
-    post:
-      operationId: subscriptions_bestell_wizard_confirm_order_create
-      tags:
-      - subscriptions
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/BestellWizardConfirmOrderRequestRequest'
         required: true
       security:
       - tokenAuth: []
@@ -4428,7 +4428,14 @@ components:
         payment_rhythm:
           type: string
           minLength: 1
+        waiting_list_shopping_cart:
+          type: object
+          additionalProperties:
+            type: integer
+        become_member_now:
+          type: boolean
       required:
+      - become_member_now
       - contract_accepted
       - nb_shares
       - payment_rhythm
@@ -4437,6 +4444,7 @@ components:
       - shopping_cart
       - statute_accepted
       - student_status_enabled
+      - waiting_list_shopping_cart
     BestellWizardDeliveryDatesForOrderRequestRequest:
       type: object
       properties:

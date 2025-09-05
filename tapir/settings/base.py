@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "tapir.waiting_list",
     "tapir.payments",
     "tapir.products",
+    "tapir.bestell_wizard",
     "django_tables2",
     "django_filters",
     "django_select2",  # For autocompletion in form fields

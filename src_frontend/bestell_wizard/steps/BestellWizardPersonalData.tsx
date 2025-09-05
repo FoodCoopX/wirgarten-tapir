@@ -9,7 +9,7 @@ import { isEmailValid } from "../utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 import { useApi } from "../../hooks/useApi.ts";
-import { SubscriptionsApi, WaitingListEntryDetails } from "../../api-client";
+import { BestellWizardApi, WaitingListEntryDetails } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
@@ -74,7 +74,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
   const [innerDate, setInnerDate] = useState("");
-  const api = useApi(SubscriptionsApi, getCsrfToken());
+  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   useEffect(() => {
     setInnerDate(moment(personalData.birthdate).format("DD.MM.YYYY"));
@@ -104,8 +104,8 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
     const localController = new AbortController();
     setController(localController);
 
-    api
-      .subscriptionsApiIsEmailAddressValidRetrieve(
+    bestellWizardApi
+      .bestellWizardApiIsEmailAddressValidRetrieve(
         { email: emailAddress },
         { signal: localController.signal },
       )

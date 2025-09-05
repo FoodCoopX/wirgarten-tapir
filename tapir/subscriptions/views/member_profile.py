@@ -9,6 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.accounts.models import TapirUser
+from tapir.bestell_wizard.serializers import (
+    BestellWizardCapacityCheckResponseSerializer,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -20,7 +23,6 @@ from tapir.subscriptions.serializers import (
     PublicSubscriptionSerializer,
     UpdateSubscriptionsRequestSerializer,
     OrderConfirmationResponseSerializer,
-    BestellWizardCapacityCheckResponseSerializer,
     MemberProfileCapacityCheckRequestSerializer,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (

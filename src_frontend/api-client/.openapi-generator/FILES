@@ -1,3 +1,4 @@
+apis/BestellWizardApi.ts
 apis/CoopApi.ts
 apis/CoreApi.ts
 apis/DeliveriesApi.ts

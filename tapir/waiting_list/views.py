@@ -21,6 +21,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -51,7 +52,6 @@ from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.subscriptions.views.bestell_wizard import BestellWizardConfirmOrderApiView
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
 from tapir.waiting_list.serializers import (

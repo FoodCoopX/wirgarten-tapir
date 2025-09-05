@@ -57,6 +57,7 @@ urlpatterns = [
     path("waiting_list/", include("tapir.waiting_list.urls")),
     path("products/", include("tapir.products.urls")),
     path("payments/", include("tapir.payments.urls")),
+    path("bestell_wizard/", include("tapir.bestell_wizard.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.ENABLE_SILK_PROFILING:

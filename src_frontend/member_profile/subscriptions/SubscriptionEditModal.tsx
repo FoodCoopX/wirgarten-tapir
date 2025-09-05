@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { ListGroup, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
 import {
+  BestellWizardApi,
   PickupLocationsApi,
   PublicPickupLocation,
   PublicProductType,
   PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi
+  WaitingListApi,
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -51,6 +52,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   setToastDatas,
 }) => {
   const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
+  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
   const pickupLocationsApi = useApi(PickupLocationsApi, getCsrfToken());
   const waitingListApi = useApi(WaitingListApi, getCsrfToken());
 
@@ -113,8 +115,8 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         ),
       );
 
-    subscriptionsApi
-      .subscriptionsApiBestellWizardBaseDataRetrieve()
+    bestellWizardApi
+      .bestellWizardApiBestellWizardBaseDataRetrieve()
       .then((response) => {
         setForceWaitingList(response.forceWaitingList);
         setLabelCheckboxSepaMandat(response.labelCheckboxSepaMandat);
@@ -127,8 +129,8 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         ),
       );
 
-    subscriptionsApi
-      .subscriptionsApiNextContractStartDateRetrieve({
+    bestellWizardApi
+      .bestellWizardApiNextContractStartDateRetrieve({
         waitingListEntryId: undefined,
       })
       .then((result) => setContractStartDate(new Date(result)))

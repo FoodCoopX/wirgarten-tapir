@@ -11,6 +11,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.accounts.models import TapirUser
+from tapir.bestell_wizard.serializers import (
+    BestellWizardConfirmOrderRequestSerializer,
+    BestellWizardCapacityCheckResponseSerializer,
+    BestellWizardCapacityCheckRequestSerializer,
+    BestellWizardBaseDataResponseSerializer,
+    BestellWizardDeliveryDatesForOrderResponseSerializer,
+    BestellWizardDeliveryDatesForOrderRequestSerializer,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.minimum_number_of_shares_validator import (
@@ -25,13 +33,7 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.subscriptions.serializers import (
-    BestellWizardConfirmOrderRequestSerializer,
     OrderConfirmationResponseSerializer,
-    BestellWizardCapacityCheckRequestSerializer,
-    BestellWizardCapacityCheckResponseSerializer,
-    BestellWizardBaseDataResponseSerializer,
-    BestellWizardDeliveryDatesForOrderRequestSerializer,
-    BestellWizardDeliveryDatesForOrderResponseSerializer,
 )
 from tapir.subscriptions.services.apply_tapir_order_manager import (
     ApplyTapirOrderManager,
@@ -226,11 +228,6 @@ class BestellWizardConfirmOrderApiView(APIView):
             payment_rhythm=validated_data["payment_rhythm"],
         )
 
-        if get_parameter_value(
-            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
-        ):
-            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
-
         if not validated_data["sepa_allowed"]:
             raise ValidationError("SEPA-Mandat muss erlaubt sein")
 
@@ -240,6 +237,35 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_data["shopping_cart"], cache=self.cache
         )
+
+        self.validate_order(
+            validated_data=validated_data,
+            contract_start_date=contract_start_date,
+            order=order,
+        )
+
+        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
+            ordered_solidarity_factor=0,  # TODO
+            order=order,
+            start_date=contract_start_date,
+            cache=self.cache,
+        ):
+            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
+
+        if legal_status_is_cooperative(cache=self.cache):
+            self.validate_coop_content(validated_data=validated_data, order=order)
+
+    def validate_order(
+        self,
+        validated_data: dict,
+        contract_start_date: datetime.date,
+        order: TapirOrder,
+    ):
+
+        if len(order.keys()) > 0 and get_parameter_value(
+            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
+        ):
+            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
 
         pickup_location = None
         if OrderValidator.does_order_need_a_pickup_location(
@@ -265,17 +291,6 @@ class BestellWizardConfirmOrderApiView(APIView):
             order=order
         ):
             raise ValidationError("Manche Pflichtprodukte fehlen in der Bestellung")
-
-        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
-            ordered_solidarity_factor=0,  # TODO
-            order=order,
-            start_date=contract_start_date,
-            cache=self.cache,
-        ):
-            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
-
-        if legal_status_is_cooperative(cache=self.cache):
-            self.validate_coop_content(validated_data=validated_data, order=order)
 
     def validate_coop_content(self, validated_data: dict, order: TapirOrder):
         student_status_enabled = validated_data["student_status_enabled"]

@@ -1,9 +1,9 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from tapir.subscriptions.views import bestell_wizard, member_profile
 from tapir.subscriptions.views import cancellations
 from tapir.subscriptions.views import confirmations
+from tapir.subscriptions.views import member_profile
 from tapir.subscriptions.views import other
 
 app_name = "subscriptions"
@@ -34,31 +34,6 @@ urlpatterns = [
         name="member_data_to_confirm",
     ),
     path(
-        "api/bestell_wizard_capacity_check",
-        bestell_wizard.BestellWizardCapacityCheckApiView.as_view(),
-        name="bestell_wizard_capacity_check",
-    ),
-    path(
-        "api/bestell_wizard_base_data",
-        bestell_wizard.BestellWizardBaseDataApiView.as_view(),
-        name="bestell_wizard_base_data",
-    ),
-    path(
-        "api/bestell_wizard_delivery_dates",
-        bestell_wizard.BestellWizardDeliveryDatesForOrderApiView.as_view(),
-        name="bestell_wizard_delivery_dates",
-    ),
-    path(
-        "bestell_wizard",
-        bestell_wizard.BestellWizardView.as_view(),
-        name="bestell_wizard",
-    ),
-    path(
-        "bestell_wizard_confirm_order",
-        bestell_wizard.BestellWizardConfirmOrderApiView.as_view(),
-        name="bestell_wizard_confirm_order",
-    ),
-    path(
         "api/member_subscriptions",
         member_profile.GetMemberSubscriptionsApiView.as_view(),
         name="member_subscriptions",
@@ -77,16 +52,6 @@ urlpatterns = [
         "api/revoke_changes",
         confirmations.RevokeChangesApiView.as_view(),
         name="revoke_changes",
-    ),
-    path(
-        "api/is_email_address_valid",
-        bestell_wizard.PublicBestellWizardIsEmailAddressValidApiView.as_view(),
-        name="is_email_address_valid",
-    ),
-    path(
-        "api/next_contract_start_date",
-        bestell_wizard.GetNextContractStartDateApiView.as_view(),
-        name="next_contract_start_date",
     ),
 ]
 

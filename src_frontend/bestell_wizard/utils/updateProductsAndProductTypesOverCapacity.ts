@@ -1,6 +1,6 @@
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { useApi } from "../../hooks/useApi.ts";
-import { SubscriptionsApi } from "../../api-client";
+import { BestellWizardApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import React from "react";
@@ -13,12 +13,12 @@ export function updateProductsAndProductTypesOverCapacity(
   setCheckingCapacities: (enabled: boolean) => void,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
 ) {
-  const subscriptionsApi = useApi(SubscriptionsApi, getCsrfToken());
+  const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   setCheckingCapacities(true);
 
-  subscriptionsApi
-    .subscriptionsApiBestellWizardCapacityCheckCreate({
+  bestellWizardApi
+    .bestellWizardApiBestellWizardCapacityCheckCreate({
       bestellWizardCapacityCheckRequestRequest: {
         shoppingCart: shoppingCart,
       },

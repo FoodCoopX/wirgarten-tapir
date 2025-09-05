@@ -7,13 +7,14 @@ import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {
+  BestellWizardApi,
   OrderConfirmationResponse,
   PickupLocationsApi,
   PublicPickupLocation,
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +33,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -54,7 +55,7 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation
+  shouldIncludeStepPickupLocation,
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
@@ -70,6 +71,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 }) => {
   const [theme, setTheme] = useState<TapirTheme>();
   const subscriptionsApi = useApi(SubscriptionsApi, csrfToken);
+  const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const pickupLocationApi = useApi(PickupLocationsApi, csrfToken);
   const waitingListApi = useApi(WaitingListApi, csrfToken);
   const [selectedProductTypes, setSelectedProductTypes] = useState<
@@ -163,8 +165,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   useEffect(() => {
     setBaseDataLoading(true);
-    subscriptionsApi
-      .subscriptionsApiBestellWizardBaseDataRetrieve()
+    bestellWizardApi
+      .bestellWizardApiBestellWizardBaseDataRetrieve()
       .then((data) => {
         setTheme(data.theme as TapirTheme);
         setPublicProductTypes(sortProductTypes(data.productTypes));
@@ -467,8 +469,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [waitingListEntryDetails, publicProductTypes, pickupLocations]);
 
   useEffect(() => {
-    subscriptionsApi
-      .subscriptionsApiNextContractStartDateRetrieve({
+    bestellWizardApi
+      .bestellWizardApiNextContractStartDateRetrieve({
         waitingListEntryId: waitingListEntryDetails?.id,
       })
       .then((result) => {
@@ -784,8 +786,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       return;
     }
 
-    subscriptionsApi
-      .subscriptionsBestellWizardConfirmOrderCreate({
+    bestellWizardApi
+      .bestellWizardBestellWizardConfirmOrderCreate({
         bestellWizardConfirmOrderRequestRequest: {
           personalData: personalData,
           sepaAllowed: sepaAllowed,
@@ -799,6 +801,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           shoppingCart: shoppingCart,
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
+          becomeMemberNow: true,
+          waitingListShoppingCart: {},
         },
       })
       .then((response) => {

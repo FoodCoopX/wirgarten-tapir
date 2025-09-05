@@ -75,6 +75,18 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
     paymentRhythm: string;
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    waitingListShoppingCart: { [key: string]: number; };
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    becomeMemberNow: boolean;
 }
 
 /**
@@ -89,6 +101,8 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('nbShares' in value) || value['nbShares'] === undefined) return false;
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
     if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
+    if (!('waitingListShoppingCart' in value) || value['waitingListShoppingCart'] === undefined) return false;
+    if (!('becomeMemberNow' in value) || value['becomeMemberNow'] === undefined) return false;
     return true;
 }
 
@@ -111,6 +125,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
         'studentStatusEnabled': json['student_status_enabled'],
         'paymentRhythm': json['payment_rhythm'],
+        'waitingListShoppingCart': json['waiting_list_shopping_cart'],
+        'becomeMemberNow': json['become_member_now'],
     };
 }
 
@@ -134,6 +150,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'pickup_location_id': value['pickupLocationId'],
         'student_status_enabled': value['studentStatusEnabled'],
         'payment_rhythm': value['paymentRhythm'],
+        'waiting_list_shopping_cart': value['waitingListShoppingCart'],
+        'become_member_now': value['becomeMemberNow'],
     };
 }
 
