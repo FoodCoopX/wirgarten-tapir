@@ -8,6 +8,9 @@ from tapir.subscriptions.services.subscription_change_validator import (
 )
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator import (
+    WaitingListReservedCapacityCalculator,
+)
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
@@ -36,6 +39,7 @@ class GlobalCapacityChecker:
                 member_id=member_id,
                 subscription_start_date=subscription_start_date,
                 product_type_id=product_type_id,
+                check_waiting_list_entries=True,
                 cache=cache,
             )
             if not enough:
@@ -65,6 +69,7 @@ class GlobalCapacityChecker:
         member_id: str | None,
         subscription_start_date: datetime.date,
         product_type_id,
+        check_waiting_list_entries: bool,
         cache: dict,
     ):
         free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
@@ -90,7 +95,19 @@ class GlobalCapacityChecker:
             cache=cache,
         )
 
+        capacity_reserved_by_the_waiting_list_entries = 0
+        if check_waiting_list_entries:
+            capacity_reserved_by_the_waiting_list_entries = WaitingListReservedCapacityCalculator.calculate_capacity_reserved_by_the_waiting_list_entries(
+                product_type=TapirCache.get_product_type_by_id(
+                    cache=cache, product_type_id=product_type_id
+                ),
+                pickup_location=None,
+                reference_date=subscription_start_date,
+                cache=cache,
+            )
+
         return free_capacity >= (
             capacity_used_by_the_ordered_products
             - float(capacity_used_by_the_current_subscriptions)
+            + float(capacity_reserved_by_the_waiting_list_entries)
         )
