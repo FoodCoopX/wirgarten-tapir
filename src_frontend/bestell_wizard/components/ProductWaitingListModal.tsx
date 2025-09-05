@@ -22,10 +22,14 @@ const ProductWaitingListModal: React.FC<ProductWaitingListModalProps> = ({
         <h5 className={"mb-0"}>Warteliste</h5>
       </Modal.Header>
       <Modal.Body>
-        <p>
-          Derzeit ist deine gewünschte {productType?.name}-Größe nicht
-          verfügbar.
-        </p>
+        {productType && productType.products.length > 1 ? (
+          <p>
+            Derzeit ist deine gewünschte {productType?.name}-Größe nicht
+            verfügbar.
+          </p>
+        ) : (
+          <p>Derzeit ist dein gewünschtes Produkt nicht verfügbar</p>
+        )}
         <p>
           {productType?.forceWaitingList
             ? "Du kannst dich auf die Warteliste setzen lassen."

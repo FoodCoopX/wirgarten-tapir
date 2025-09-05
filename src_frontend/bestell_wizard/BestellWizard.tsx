@@ -13,7 +13,7 @@ import {
   type PublicProductType,
   SubscriptionsApi,
   WaitingListApi,
-  WaitingListEntryDetails,
+  WaitingListEntryDetails
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -54,7 +54,7 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation,
+  shouldIncludeStepPickupLocation
 } from "./utils/shouldIncludeStep.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import { ToastData } from "../types/ToastData.ts";
@@ -255,13 +255,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   useEffect(() => {
     if (publicProductTypes.length === 0) return;
 
-    let steps = [];
+    let newSteps = [];
 
     if (shouldIncludeStepIntro(introEnabled, waitingListEntryDetails)) {
-      steps.push("intro");
+      newSteps.push("intro");
     }
 
-    steps.push(...getRelevantProductSteps(true));
+    newSteps.push(...getRelevantProductSteps(true));
 
     if (
       shouldIncludeStepPickupLocation(
@@ -270,10 +270,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         waitingListEntryDetails,
       )
     ) {
-      steps.push("pickup_location");
+      newSteps.push("pickup_location");
     }
 
-    steps.push(...getRelevantProductSteps(false));
+    newSteps.push(...getRelevantProductSteps(false));
 
     if (
       shouldIncludeStepCoopShares(
@@ -282,23 +282,26 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         showCoopContent,
       )
     ) {
-      steps.push("coop_shares");
+      newSteps.push("coop_shares");
     }
 
     if (shouldIncludeStepPersonalData(waitingListEntryDetails)) {
-      steps.push("personal_data");
+      newSteps.push("personal_data");
     }
 
-    steps.push("summary", "end");
+    newSteps.push("summary", "end");
 
-    if (
-      !steps.includes(currentStep) ||
-      waitingListLinkConfirmationModeEnabled
-    ) {
-      setCurrentStep(steps[0]);
+    if (waitingListLinkConfirmationModeEnabled) {
+      setCurrentStep(newSteps[0]);
     }
 
-    setSteps(steps);
+    if (!newSteps.includes(currentStep)) {
+      let index = steps.indexOf(currentStep);
+      index = Math.min(index, newSteps.length - 1);
+      setCurrentStep(newSteps[index]);
+    }
+
+    setSteps(newSteps);
   }, [
     selectedProductTypes,
     shoppingCart,

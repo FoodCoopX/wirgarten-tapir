@@ -116,7 +116,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
               </span>
               {publicProductType.forceWaitingList && (
                 <Form.Text>
-                  Derzeit ausgebucht. Nur Wartelisteneintrag möglich.
+                  Derzeit nur Wartelisten-Eintragung möglich.
                 </Form.Text>
               )}
             </div>

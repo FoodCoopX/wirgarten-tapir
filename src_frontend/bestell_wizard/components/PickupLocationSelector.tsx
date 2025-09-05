@@ -78,18 +78,13 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
 
   function areListGroupItemsClickable() {
     if (waitingListLinkConfirmationModeEnabled) {
-      console.log("waitingListLinkConfirmationModeEnabled");
-      console.log(waitingListLinkConfirmationModeEnabled);
       return false;
     }
 
     if (!waitingListModeEnabled) {
-      console.log("waitingListModeEnabled");
-      console.log(waitingListModeEnabled);
       return true;
     }
 
-    console.log(selectedPickupLocations.length);
     return selectedPickupLocations.length === 0;
   }
 
