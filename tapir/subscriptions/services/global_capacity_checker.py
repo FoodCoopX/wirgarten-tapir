@@ -98,9 +98,7 @@ class GlobalCapacityChecker:
         capacity_reserved_by_the_waiting_list_entries = 0
         if check_waiting_list_entries:
             capacity_reserved_by_the_waiting_list_entries = WaitingListReservedCapacityCalculator.calculate_capacity_reserved_by_the_waiting_list_entries(
-                product_type=TapirCache.get_product_type_by_id(
-                    cache=cache, product_type_id=product_type_id
-                ),
+                product_type_id=product_type_id,
                 pickup_location=None,
                 reference_date=subscription_start_date,
                 cache=cache,

@@ -66,7 +66,7 @@ class TestWaitingListReservedCapacityCalculator(TapirIntegrationTest):
         self,
     ):
         result = WaitingListReservedCapacityCalculator.calculate_capacity_reserved_by_the_waiting_list_entries(
-            product_type=self.product_a.type,
+            product_type_id=self.product_a.type_id,
             pickup_location=None,
             reference_date=TODAY,
             cache={},
@@ -82,7 +82,7 @@ class TestWaitingListReservedCapacityCalculator(TapirIntegrationTest):
         self,
     ):
         result = WaitingListReservedCapacityCalculator.calculate_capacity_reserved_by_the_waiting_list_entries(
-            product_type=self.product_a.type,
+            product_type_id=self.product_a.type_id,
             pickup_location=self.pickup_location_a,
             reference_date=TODAY,
             cache={},

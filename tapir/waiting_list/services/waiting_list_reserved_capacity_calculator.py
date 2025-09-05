@@ -1,7 +1,6 @@
 import datetime
 
 from tapir.wirgarten.models import (
-    ProductType,
     PickupLocation,
     WaitingListProductWish,
     WaitingListEntry,
@@ -13,13 +12,13 @@ class WaitingListReservedCapacityCalculator:
     @classmethod
     def calculate_capacity_reserved_by_the_waiting_list_entries(
         cls,
-        product_type: ProductType,
+        product_type_id,
         pickup_location: PickupLocation | None,
         reference_date: datetime.date,
         cache: dict,
     ):
         product_wishes = WaitingListProductWish.objects.filter(
-            product__type=product_type
+            product__type_id=product_type_id
         ).select_related("product")
 
         if pickup_location is not None:
