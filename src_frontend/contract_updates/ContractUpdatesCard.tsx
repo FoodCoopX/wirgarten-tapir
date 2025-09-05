@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import {
-  MemberDataToConfirm,
-  type SubscriptionChange,
-  SubscriptionsApi,
-} from "../api-client";
+import { MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
@@ -20,7 +16,7 @@ interface ContractUpdatesCardProps {
   csrfToken: string;
 }
 
-type ContractFilter = "all" | "creations_only" | "cancellations_only";
+type ContractFilter = "all" | "includes_creations" | "includes_cancellations";
 
 const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   csrfToken,
@@ -309,13 +305,13 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     switch (filter) {
       case "all":
         return changesToConfirm;
-      case "cancellations_only":
-        return changesToConfirm.filter(
-          (change) => !doesChangeHaveCreations(change),
+      case "includes_cancellations":
+        return changesToConfirm.filter((change) =>
+          doesChangeHaveCancellations(change),
         );
-      case "creations_only":
-        return changesToConfirm.filter(
-          (change) => !doesChangeHaveOnlyCancellations(change),
+      case "includes_creations":
+        return changesToConfirm.filter((change) =>
+          doesChangeHaveCreations(change),
         );
     }
   }
@@ -328,12 +324,8 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     );
   }
 
-  function doesChangeHaveOnlyCancellations(change: MemberDataToConfirm) {
-    return (
-      change.subscriptionCreations.length === 0 &&
-      change.subscriptionChanges.length === 0 &&
-      change.subscriptionCancellations.length > 0
-    );
+  function doesChangeHaveCancellations(change: MemberDataToConfirm) {
+    return change.subscriptionCancellations.length > 0;
   }
 
   function doesSelectionContainChangesThatAreAlreadyValid(): boolean {
@@ -405,7 +397,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
             <ListGroup>
               <ListGroup.Item>
                 <div>
-                  {["all", "creations_only", "cancellations_only"].map(
+                  {["all", "includes_creations", "includes_cancellations"].map(
                     (filter) => (
                       <Form.Check id={filter} name={"filter"} key={filter}>
                         <Form.Check.Input
@@ -421,7 +413,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
                           <span>
                             {filter === "all"
                               ? "Alles Anzeigen"
-                              : filter === "creations_only"
+                              : filter === "includes_creations"
                                 ? "Nur Zeichnungen anzeigen"
                                 : "Nur Kündigungen Anzeigen"}{" "}
                           </span>
