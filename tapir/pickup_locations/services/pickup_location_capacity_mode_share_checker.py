@@ -117,7 +117,7 @@ class PickupLocationCapacityModeShareChecker:
             free_capacity
             + amount_used_by_member_before_changes
             - capacity_used_by_the_order
-            - reserved_capacity
+            - float(reserved_capacity)
             >= 0
         )
 
