@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Modal, Spinner } from "react-bootstrap";
 import {
-  PickingModeEnum,
-  PickupLocationCapacityByBasketSize,
   PickupLocationCapacityByShare,
   PickupLocationsApi,
 } from "../api-client";
@@ -30,12 +28,8 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locationName, setLocationName] = useState("");
-  const [pickingMode, setPickingMode] = useState<PickingModeEnum>();
   const [capacitiesByShare, setCapacitiesByShare] = useState<
     PickupLocationCapacityByShare[]
-  >([]);
-  const [capacitiesByBasketSize, setCapacitiesByBasketSize] = useState<
-    PickupLocationCapacityByBasketSize[]
   >([]);
 
   const URL_PARAMETER_PICKUP_LOCATION_ID = "selected";
@@ -56,15 +50,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
       })
       .then((response) => {
         setLocationName(response.pickupLocationName);
-        setPickingMode(response.pickingMode);
-        switch (response.pickingMode) {
-          case PickingModeEnum.Share:
-            setCapacitiesByShare(response.capacitiesByShares ?? []);
-            break;
-          case PickingModeEnum.Basket:
-            setCapacitiesByBasketSize(response.capacitiesByBasketSize ?? []);
-            break;
-        }
+        setCapacitiesByShare(response.capacitiesByShares);
       })
       .catch((error) =>
         handleRequestError(
@@ -87,19 +73,11 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
     api
       .pickupLocationsApiPickupLocationCapacitiesPartialUpdate({
         patchedPickupLocationCapacitiesRequest: {
-          pickingMode: pickingMode,
           pickupLocationId: getParameterFromUrl(
             URL_PARAMETER_PICKUP_LOCATION_ID,
           ),
           pickupLocationName: locationName,
-          capacitiesByShares:
-            pickingMode === PickingModeEnum.Share
-              ? capacitiesByShare
-              : undefined,
-          capacitiesByBasketSize:
-            pickingMode === PickingModeEnum.Basket
-              ? capacitiesByBasketSize
-              : undefined,
+          capacitiesByShares: capacitiesByShare,
         },
       })
       .then(() => location.reload())
@@ -170,55 +148,6 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
     );
   }
 
-  function onCapacityByBasketSizeChanged(
-    basketSizeName: string,
-    newCapacity: string,
-  ) {
-    const newCapacities = [...capacitiesByBasketSize];
-    for (const capacity of newCapacities) {
-      if (capacity.basketSizeName === basketSizeName) {
-        capacity.capacity = parseIntOrUndefined(newCapacity);
-        break;
-      }
-    }
-    setCapacitiesByBasketSize(newCapacities);
-  }
-
-  function getFormByBasketSize() {
-    return (
-      <>
-        <Form.Text>
-          Angaben in Anzahl an Kisten. <br />
-          0: Kistengröße kann nicht in der Verteilstation geliefert werden.
-          <br />
-          Feld leer: unbegrenzt.
-        </Form.Text>
-        {capacitiesByBasketSize.map((capacity) => {
-          return (
-            <Form.Group key={capacity.basketSizeName}>
-              <Form.Label>
-                Maximum Anzahl an {capacity.basketSizeName}
-              </Form.Label>
-              <Form.Control
-                type={"number"}
-                value={capacity.capacity ?? ""}
-                min={0}
-                step={1}
-                placeholder={"Unbegrenzt"}
-                onChange={(event) => {
-                  onCapacityByBasketSizeChanged(
-                    capacity.basketSizeName,
-                    event.target.value,
-                  );
-                }}
-              />
-            </Form.Group>
-          );
-        })}
-      </>
-    );
-  }
-
   function getModalBody() {
     if (dataLoading) {
       return (
@@ -230,11 +159,7 @@ const PickupLocationCapacityModal: React.FC<ProductModalProps> = ({
 
     return (
       <Modal.Body>
-        <Form id={"pickupLocationCapacityForm"}>
-          {pickingMode === PickingModeEnum.Basket
-            ? getFormByBasketSize()
-            : getFromByShare()}
-        </Form>
+        <Form id={"pickupLocationCapacityForm"}>{getFromByShare()}</Form>
       </Modal.Body>
     );
   }

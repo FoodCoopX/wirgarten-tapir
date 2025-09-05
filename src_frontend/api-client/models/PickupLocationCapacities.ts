@@ -12,28 +12,11 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PickupLocationCapacityByBasketSize } from './PickupLocationCapacityByBasketSize';
+import type { PickupLocationCapacityByShare } from "./PickupLocationCapacityByShare";
 import {
-    PickupLocationCapacityByBasketSizeFromJSON,
-    PickupLocationCapacityByBasketSizeFromJSONTyped,
-    PickupLocationCapacityByBasketSizeToJSON,
-    PickupLocationCapacityByBasketSizeToJSONTyped,
-} from './PickupLocationCapacityByBasketSize';
-import type { PickingModeEnum } from './PickingModeEnum';
-import {
-    PickingModeEnumFromJSON,
-    PickingModeEnumFromJSONTyped,
-    PickingModeEnumToJSON,
-    PickingModeEnumToJSONTyped,
-} from './PickingModeEnum';
-import type { PickupLocationCapacityByShare } from './PickupLocationCapacityByShare';
-import {
-    PickupLocationCapacityByShareFromJSON,
-    PickupLocationCapacityByShareFromJSONTyped,
-    PickupLocationCapacityByShareToJSON,
-    PickupLocationCapacityByShareToJSONTyped,
-} from './PickupLocationCapacityByShare';
+  PickupLocationCapacityByShareFromJSON,
+  PickupLocationCapacityByShareToJSON
+} from "./PickupLocationCapacityByShare";
 
 /**
  * 
@@ -41,12 +24,6 @@ import {
  * @interface PickupLocationCapacities
  */
 export interface PickupLocationCapacities {
-    /**
-     * 
-     * @type {PickingModeEnum}
-     * @memberof PickupLocationCapacities
-     */
-    pickingMode: PickingModeEnum;
     /**
      * 
      * @type {string}
@@ -64,24 +41,16 @@ export interface PickupLocationCapacities {
      * @type {Array<PickupLocationCapacityByShare>}
      * @memberof PickupLocationCapacities
      */
-    capacitiesByShares?: Array<PickupLocationCapacityByShare>;
-    /**
-     * 
-     * @type {Array<PickupLocationCapacityByBasketSize>}
-     * @memberof PickupLocationCapacities
-     */
-    capacitiesByBasketSize?: Array<PickupLocationCapacityByBasketSize>;
+    capacitiesByShares: Array<PickupLocationCapacityByShare>;
 }
-
-
 
 /**
  * Check if a given object implements the PickupLocationCapacities interface.
  */
 export function instanceOfPickupLocationCapacities(value: object): value is PickupLocationCapacities {
-    if (!('pickingMode' in value) || value['pickingMode'] === undefined) return false;
     if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
     if (!('pickupLocationName' in value) || value['pickupLocationName'] === undefined) return false;
+    if (!('capacitiesByShares' in value) || value['capacitiesByShares'] === undefined) return false;
     return true;
 }
 
@@ -95,11 +64,9 @@ export function PickupLocationCapacitiesFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'pickingMode': PickingModeEnumFromJSON(json['picking_mode']),
         'pickupLocationId': json['pickup_location_id'],
         'pickupLocationName': json['pickup_location_name'],
-        'capacitiesByShares': json['capacities_by_shares'] == null ? undefined : ((json['capacities_by_shares'] as Array<any>).map(PickupLocationCapacityByShareFromJSON)),
-        'capacitiesByBasketSize': json['capacities_by_basket_size'] == null ? undefined : ((json['capacities_by_basket_size'] as Array<any>).map(PickupLocationCapacityByBasketSizeFromJSON)),
+        'capacitiesByShares': ((json['capacities_by_shares'] as Array<any>).map(PickupLocationCapacityByShareFromJSON)),
     };
 }
 
@@ -114,11 +81,9 @@ export function PickupLocationCapacitiesFromJSONTyped(json: any, ignoreDiscrimin
 
     return {
         
-        'picking_mode': PickingModeEnumToJSON(value['pickingMode']),
         'pickup_location_id': value['pickupLocationId'],
         'pickup_location_name': value['pickupLocationName'],
-        'capacities_by_shares': value['capacitiesByShares'] == null ? undefined : ((value['capacitiesByShares'] as Array<any>).map(PickupLocationCapacityByShareToJSON)),
-        'capacities_by_basket_size': value['capacitiesByBasketSize'] == null ? undefined : ((value['capacitiesByBasketSize'] as Array<any>).map(PickupLocationCapacityByBasketSizeToJSON)),
+        'capacities_by_shares': ((value['capacitiesByShares'] as Array<any>).map(PickupLocationCapacityByShareToJSON)),
     };
 }
 

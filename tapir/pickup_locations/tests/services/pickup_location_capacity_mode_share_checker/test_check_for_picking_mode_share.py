@@ -15,12 +15,14 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 class TestCheckForPickingModeShare(TapirIntegrationTest):
 
     @patch.object(
-        PickupLocationCapacityModeShareChecker, "check_capacity_for_product_type"
+        PickupLocationCapacityModeShareChecker,
+        "check_capacity_for_product_type",
+        autospec=True,
     )
     def test_checkForPickingModeShare_capacityIsUnlimitedForSomeSizes_checkCapacityOnlyForProductTypesWithLimitedCapacity(
         self, mock_check_capacity_for_product_type: Mock
     ):
-        pickup_location = PickupLocationFactory()
+        pickup_location = PickupLocationFactory.create()
         product_type_1 = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
         PickupLocationCapabilityFactory.create(
             pickup_location=pickup_location,
@@ -57,6 +59,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
             pickup_location=pickup_location,
             subscription_start=subscription_start,
             ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+            check_waiting_list_entries=True,
             cache=cache,
         )
 
@@ -66,7 +69,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
     def test_checkForPickingModeShare_oneCapacityCheckFails_returnsFalse(
         self, mock_check_capacity_for_product_type: Mock
     ):
-        pickup_location = PickupLocationFactory()
+        pickup_location = PickupLocationFactory.create()
         product_type_1 = ProductTypeFactory.create(delivery_cycle=WEEKLY[0])
         PickupLocationCapabilityFactory.create(
             pickup_location=pickup_location,
@@ -105,6 +108,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    check_waiting_list_entries=True,
                     cache=cache,
                 ),
                 call(
@@ -113,6 +117,7 @@ class TestCheckForPickingModeShare(TapirIntegrationTest):
                     pickup_location=pickup_location,
                     subscription_start=subscription_start,
                     ordered_product_to_quantity_map=ordered_product_to_quantity_map,
+                    check_waiting_list_entries=True,
                     cache=cache,
                 ),
             ],

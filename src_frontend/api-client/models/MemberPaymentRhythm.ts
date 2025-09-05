@@ -23,10 +23,10 @@ import { RhythmEnumFromJSON, RhythmEnumToJSON } from "./RhythmEnum";
 export interface MemberPaymentRhythm {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof MemberPaymentRhythm
      */
-    readonly id: number;
+    id?: string;
     /**
      * 
      * @type {RhythmEnum}
@@ -53,7 +53,6 @@ export interface MemberPaymentRhythm {
  * Check if a given object implements the MemberPaymentRhythm interface.
  */
 export function instanceOfMemberPaymentRhythm(value: object): value is MemberPaymentRhythm {
-    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('rhythm' in value) || value['rhythm'] === undefined) return false;
     if (!('validFrom' in value) || value['validFrom'] === undefined) return false;
     if (!('member' in value) || value['member'] === undefined) return false;
@@ -70,7 +69,7 @@ export function MemberPaymentRhythmFromJSONTyped(json: any, ignoreDiscriminator:
     }
     return {
         
-        'id': json['id'],
+        'id': json['id'] == null ? undefined : json['id'],
         'rhythm': RhythmEnumFromJSON(json['rhythm']),
         'validFrom': (new Date(json['valid_from'])),
         'member': json['member'],
@@ -81,13 +80,14 @@ export function MemberPaymentRhythmFromJSONTyped(json: any, ignoreDiscriminator:
       return MemberPaymentRhythmToJSONTyped(json, false);
   }
 
-  export function MemberPaymentRhythmToJSONTyped(value?: Omit<MemberPaymentRhythm, 'id'> | null, ignoreDiscriminator: boolean = false): any {
+  export function MemberPaymentRhythmToJSONTyped(value?: MemberPaymentRhythm | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
+        'id': value['id'],
         'rhythm': RhythmEnumToJSON(value['rhythm']),
         'valid_from': ((value['validFrom']).toISOString().substring(0,10)),
         'member': value['member'],

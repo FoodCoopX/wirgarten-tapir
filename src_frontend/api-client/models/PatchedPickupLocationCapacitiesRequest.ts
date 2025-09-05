@@ -12,28 +12,11 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { PickupLocationCapacityByBasketSizeRequest } from './PickupLocationCapacityByBasketSizeRequest';
+import type { PickupLocationCapacityByShareRequest } from "./PickupLocationCapacityByShareRequest";
 import {
-    PickupLocationCapacityByBasketSizeRequestFromJSON,
-    PickupLocationCapacityByBasketSizeRequestFromJSONTyped,
-    PickupLocationCapacityByBasketSizeRequestToJSON,
-    PickupLocationCapacityByBasketSizeRequestToJSONTyped,
-} from './PickupLocationCapacityByBasketSizeRequest';
-import type { PickupLocationCapacityByShareRequest } from './PickupLocationCapacityByShareRequest';
-import {
-    PickupLocationCapacityByShareRequestFromJSON,
-    PickupLocationCapacityByShareRequestFromJSONTyped,
-    PickupLocationCapacityByShareRequestToJSON,
-    PickupLocationCapacityByShareRequestToJSONTyped,
-} from './PickupLocationCapacityByShareRequest';
-import type { PickingModeEnum } from './PickingModeEnum';
-import {
-    PickingModeEnumFromJSON,
-    PickingModeEnumFromJSONTyped,
-    PickingModeEnumToJSON,
-    PickingModeEnumToJSONTyped,
-} from './PickingModeEnum';
+  PickupLocationCapacityByShareRequestFromJSON,
+  PickupLocationCapacityByShareRequestToJSON
+} from "./PickupLocationCapacityByShareRequest";
 
 /**
  * 
@@ -41,12 +24,6 @@ import {
  * @interface PatchedPickupLocationCapacitiesRequest
  */
 export interface PatchedPickupLocationCapacitiesRequest {
-    /**
-     * 
-     * @type {PickingModeEnum}
-     * @memberof PatchedPickupLocationCapacitiesRequest
-     */
-    pickingMode?: PickingModeEnum;
     /**
      * 
      * @type {string}
@@ -65,15 +42,7 @@ export interface PatchedPickupLocationCapacitiesRequest {
      * @memberof PatchedPickupLocationCapacitiesRequest
      */
     capacitiesByShares?: Array<PickupLocationCapacityByShareRequest>;
-    /**
-     * 
-     * @type {Array<PickupLocationCapacityByBasketSizeRequest>}
-     * @memberof PatchedPickupLocationCapacitiesRequest
-     */
-    capacitiesByBasketSize?: Array<PickupLocationCapacityByBasketSizeRequest>;
 }
-
-
 
 /**
  * Check if a given object implements the PatchedPickupLocationCapacitiesRequest interface.
@@ -92,11 +61,9 @@ export function PatchedPickupLocationCapacitiesRequestFromJSONTyped(json: any, i
     }
     return {
         
-        'pickingMode': json['picking_mode'] == null ? undefined : PickingModeEnumFromJSON(json['picking_mode']),
         'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
         'pickupLocationName': json['pickup_location_name'] == null ? undefined : json['pickup_location_name'],
         'capacitiesByShares': json['capacities_by_shares'] == null ? undefined : ((json['capacities_by_shares'] as Array<any>).map(PickupLocationCapacityByShareRequestFromJSON)),
-        'capacitiesByBasketSize': json['capacities_by_basket_size'] == null ? undefined : ((json['capacities_by_basket_size'] as Array<any>).map(PickupLocationCapacityByBasketSizeRequestFromJSON)),
     };
 }
 
@@ -111,11 +78,9 @@ export function PatchedPickupLocationCapacitiesRequestFromJSONTyped(json: any, i
 
     return {
         
-        'picking_mode': PickingModeEnumToJSON(value['pickingMode']),
         'pickup_location_id': value['pickupLocationId'],
         'pickup_location_name': value['pickupLocationName'],
         'capacities_by_shares': value['capacitiesByShares'] == null ? undefined : ((value['capacitiesByShares'] as Array<any>).map(PickupLocationCapacityByShareRequestToJSON)),
-        'capacities_by_basket_size': value['capacitiesByBasketSize'] == null ? undefined : ((value['capacitiesByBasketSize'] as Array<any>).map(PickupLocationCapacityByBasketSizeRequestToJSON)),
     };
 }
 

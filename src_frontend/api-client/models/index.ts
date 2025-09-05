@@ -101,8 +101,6 @@ export * from './PersonalDataRequest';
 export * from './PickingModeEnum';
 export * from './PickupLocation';
 export * from './PickupLocationCapacities';
-export * from './PickupLocationCapacityByBasketSize';
-export * from './PickupLocationCapacityByBasketSizeRequest';
 export * from './PickupLocationCapacityByShare';
 export * from './PickupLocationCapacityByShareRequest';
 export * from './PickupLocationCapacityChangePoint';

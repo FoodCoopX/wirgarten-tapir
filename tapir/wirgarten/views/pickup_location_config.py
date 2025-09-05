@@ -6,7 +6,6 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
-from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.forms.pickup_location import (
     get_pickup_locations_map_data,
@@ -14,7 +13,6 @@ from tapir.wirgarten.forms.pickup_location import (
     PickupLocationEditForm,
 )
 from tapir.wirgarten.models import PickupLocation, PickupLocationCapability
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import get_active_pickup_location_capabilities
 from tapir.wirgarten.service.products import get_active_product_types
 from tapir.wirgarten.views.modal import get_form_modal
@@ -48,9 +46,6 @@ class PickupLocationCfgView(PermissionRequiredMixin, generic.TemplateView):
             cache=cache,
         )
 
-        context["picking_mode"] = get_parameter_value(
-            key=ParameterKeys.PICKING_MODE, cache=cache
-        )
         context["all_product_types"] = get_active_product_types(cache=cache).values(
             "name"
         )

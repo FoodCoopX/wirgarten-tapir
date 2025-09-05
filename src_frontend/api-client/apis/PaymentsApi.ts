@@ -13,11 +13,15 @@
  */
 
 import * as runtime from "../runtime";
-import type { ExtendedPayment, MemberPaymentRhythmData, PaymentRhythmSerializerRequest } from "../models/index";
+import type {
+  ExtendedPayment,
+  MemberPaymentRhythmData,
+  PaymentRhythmSerializerRequest,
+} from "../models/index";
 import {
   ExtendedPaymentFromJSON,
   MemberPaymentRhythmDataFromJSON,
-  PaymentRhythmSerializerRequestToJSON
+  PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
 
 export interface PaymentsApiMemberFuturePaymentsListRequest {

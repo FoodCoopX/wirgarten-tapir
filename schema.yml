@@ -6306,8 +6306,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          readOnly: true
+          type: string
+          maxLength: 10
         rhythm:
           $ref: '#/components/schemas/RhythmEnum'
         valid_from:
@@ -6316,7 +6316,6 @@ components:
         member:
           type: string
       required:
-      - id
       - member
       - rhythm
       - valid_from
@@ -6833,8 +6832,6 @@ components:
     PatchedPickupLocationCapacitiesRequest:
       type: object
       properties:
-        picking_mode:
-          $ref: '#/components/schemas/PickingModeEnum'
         pickup_location_id:
           type: string
           minLength: 1
@@ -6845,10 +6842,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShareRequest'
-        capacities_by_basket_size:
-          type: array
-          items:
-            $ref: '#/components/schemas/PickupLocationCapacityByBasketSizeRequest'
     PatchedSaveExtendedProductTypeRequest:
       type: object
       properties:
@@ -7278,8 +7271,6 @@ components:
     PickupLocationCapacities:
       type: object
       properties:
-        picking_mode:
-          $ref: '#/components/schemas/PickingModeEnum'
         pickup_location_id:
           type: string
         pickup_location_name:
@@ -7288,33 +7279,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PickupLocationCapacityByShare'
-        capacities_by_basket_size:
-          type: array
-          items:
-            $ref: '#/components/schemas/PickupLocationCapacityByBasketSize'
       required:
-      - picking_mode
+      - capacities_by_shares
       - pickup_location_id
       - pickup_location_name
-    PickupLocationCapacityByBasketSize:
-      type: object
-      properties:
-        basket_size_name:
-          type: string
-        capacity:
-          type: integer
-      required:
-      - basket_size_name
-    PickupLocationCapacityByBasketSizeRequest:
-      type: object
-      properties:
-        basket_size_name:
-          type: string
-          minLength: 1
-        capacity:
-          type: integer
-      required:
-      - basket_size_name
     PickupLocationCapacityByShare:
       type: object
       properties:
