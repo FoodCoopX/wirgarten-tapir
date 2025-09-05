@@ -15,6 +15,9 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 )
 from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.waiting_list.services.waiting_list_reserved_capacity_calculator import (
+    WaitingListReservedCapacityCalculator,
+)
 from tapir.wirgarten.models import (
     Member,
     PickupLocation,
@@ -56,6 +59,7 @@ class PickupLocationCapacityModeShareChecker:
                 pickup_location=pickup_location,
                 subscription_start=subscription_start,
                 ordered_product_to_quantity_map=order,
+                check_waiting_list_entries=True,
                 cache=cache,
             ):
                 return False
@@ -70,6 +74,7 @@ class PickupLocationCapacityModeShareChecker:
         pickup_location: PickupLocation,
         subscription_start: datetime.date,
         ordered_product_to_quantity_map: Dict[Product, int],
+        check_waiting_list_entries: bool,
         cache: Dict,
     ):
         capacity_used_by_the_order = (
@@ -99,10 +104,20 @@ class PickupLocationCapacityModeShareChecker:
             )
         )
 
+        reserved_capacity = 0
+        if check_waiting_list_entries:
+            reserved_capacity = WaitingListReservedCapacityCalculator.calculate_capacity_reserved_by_the_waiting_list_entries(
+                product_type_id=product_type.id,
+                pickup_location=pickup_location,
+                reference_date=subscription_start,
+                cache=cache,
+            )
+
         return (
             free_capacity
             + amount_used_by_member_before_changes
             - capacity_used_by_the_order
+            - reserved_capacity
             >= 0
         )
 
