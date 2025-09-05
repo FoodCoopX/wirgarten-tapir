@@ -2,7 +2,7 @@ import datetime
 import locale
 from typing import Dict
 
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -31,9 +31,6 @@ from tapir.pickup_locations.services.member_pickup_location_service import (
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
-)
-from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
-    PickupLocationCapacityModeBasketChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -222,13 +219,7 @@ class PickupLocationCapacityEvolutionView(APIView):
             PickupLocation, id=request.query_params.get("pickup_location_id")
         )
         cache = {}
-        picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache=cache)
-        if picking_mode == PICKING_MODE_BASKET:
-            data = self.build_data_for_picking_mode_basket(pickup_location, cache)
-        elif picking_mode == PICKING_MODE_SHARE:
-            data = self.build_data_for_picking_mode_shares(pickup_location, cache)
-        else:
-            raise ImproperlyConfigured(f"Unknown picking mode: {picking_mode}")
+        data = self.build_data_for_picking_mode_shares(pickup_location, cache)
 
         return Response(PickupLocationCapacityEvolutionSerializer(data).data)
 
@@ -276,52 +267,6 @@ class PickupLocationCapacityEvolutionView(APIView):
 
         return {
             "table_headers": product_types.values_list("name", flat=True),
-            "data_points": data_points,
-        }
-
-    @staticmethod
-    def build_data_for_picking_mode_basket(
-        pickup_location: PickupLocation, cache: Dict
-    ):
-        data_points = []
-        capacities_by_basket_size = (
-            BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-                pickup_location=pickup_location, cache=cache
-            )
-        )
-        max_date = PickupLocationHighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
-            pickup_location=pickup_location, cache=cache
-        )
-        current_date = get_today()
-        while current_date < max_date:
-            values = []
-            for basket_size, capacity in capacities_by_basket_size.items():
-                if capacity is None:
-                    values.append("Unbegrenzt")
-                else:
-                    values.append(
-                        locale.format_string(
-                            "%.2f",
-                            PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
-                                pickup_location=pickup_location,
-                                basket_size=basket_size,
-                                reference_date=current_date,
-                                cache=cache,
-                            ),
-                        )
-                    )
-            if len(data_points) == 0 or data_points[-1]["values"] != values:
-                data_points.append(
-                    {
-                        "date": current_date,
-                        "values": values,
-                    }
-                )
-
-            current_date = get_monday(current_date + datetime.timedelta(days=7))
-
-        return {
-            "table_headers": capacities_by_basket_size.keys(),
             "data_points": data_points,
         }
 

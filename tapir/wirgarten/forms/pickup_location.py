@@ -4,23 +4,16 @@ from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.core.exceptions import ValidationError, ImproperlyConfigured
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.pickup_locations.config import PICKING_MODE_SHARE, PICKING_MODE_BASKET
-from tapir.pickup_locations.services.basket_size_capacities_service import (
-    BasketSizeCapacitiesService,
-)
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_general_checker import (
     PickupLocationCapacityGeneralChecker,
-)
-from tapir.pickup_locations.services.pickup_location_capacity_mode_basket_checker import (
-    PickupLocationCapacityModeBasketChecker,
 )
 from tapir.pickup_locations.services.pickup_location_capacity_mode_share_checker import (
     PickupLocationCapacityModeShareChecker,
@@ -107,43 +100,6 @@ def build_capacity_dictionary_for_picking_mode_share(
     }
 
 
-def build_capabilities_for_picking_mode_basket(
-    pickup_location: PickupLocation, cache: Dict = None
-):
-    capacities_by_basket_size = (
-        BasketSizeCapacitiesService.get_basket_size_capacities_for_pickup_location(
-            pickup_location=pickup_location, cache=cache
-        )
-    )
-    usage_by_basket_size = {
-        size_name: PickupLocationCapacityModeBasketChecker.get_capacity_usage_at_date(
-            pickup_location=pickup_location,
-            basket_size=size_name,
-            reference_date=get_today(cache),
-            cache=cache,
-        )
-        for size_name in capacities_by_basket_size.keys()
-    }
-
-    return {
-        size_name: {
-            "capacity": capacities_by_basket_size[size_name],
-            "usage": usage_by_basket_size[size_name],
-            "free": (
-                PickupLocationCapacityModeBasketChecker.get_free_capacity_at_date(
-                    pickup_location=pickup_location,
-                    basket_size=size_name,
-                    reference_date=get_today(cache),
-                    cache=cache,
-                )
-                if capacities_by_basket_size[size_name] is not None
-                else "∞"
-            ),
-        }
-        for size_name in usage_by_basket_size.keys()
-    }
-
-
 def pickup_location_to_dict(
     location_capabilities, pickup_location: PickupLocation, cache: Dict = None
 ):
@@ -152,30 +108,22 @@ def pickup_location_to_dict(
     if cache is None:
         cache = {}
 
-    picking_mode = get_parameter_value(ParameterKeys.PICKING_MODE, cache)
-    if picking_mode == PICKING_MODE_BASKET:
-        capabilities_for_pickup_location = build_capabilities_for_picking_mode_basket(
-            pickup_location, cache
+    capabilities_for_pickup_location = [
+        build_capacity_dictionary_for_picking_mode_share(
+            capa=capa,
+            next_delivery_date=next_delivery_date,
+            next_month=next_month,
+            cache=cache,
         )
-    elif picking_mode == PICKING_MODE_SHARE:
-        capabilities_for_pickup_location = [
-            build_capacity_dictionary_for_picking_mode_share(
-                capa=capa,
-                next_delivery_date=next_delivery_date,
-                next_month=next_month,
-                cache=cache,
-            )
-            for capa in location_capabilities
-            if capa["pickup_location_id"] == pickup_location.id
-        ]
-        capabilities_for_pickup_location = list(
-            filter(
-                lambda capability: capability is not None,
-                capabilities_for_pickup_location,
-            )
+        for capa in location_capabilities
+        if capa["pickup_location_id"] == pickup_location.id
+    ]
+    capabilities_for_pickup_location = list(
+        filter(
+            lambda capability: capability is not None,
+            capabilities_for_pickup_location,
         )
-    else:
-        raise ImproperlyConfigured(f"Unknown picking mode: {picking_mode}")
+    )
 
     return {
         "id": pickup_location.id,
