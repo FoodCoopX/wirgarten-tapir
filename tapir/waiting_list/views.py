@@ -21,7 +21,9 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
-from tapir.bestell_wizard.views import BestellWizardConfirmOrderApiView
+from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
+    BestellWizardOrderFulfiller,
+)
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
@@ -45,12 +47,6 @@ from tapir.subscriptions.services.apply_tapir_order_manager import (
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
-from tapir.subscriptions.services.required_product_types_validator import (
-    RequiredProductTypesValidator,
-)
-from tapir.subscriptions.services.single_subscription_validator import (
-    SingleSubscriptionValidator,
-)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.models import WaitingListChangeConfirmedLogEntry
@@ -65,6 +61,15 @@ from tapir.waiting_list.serializers import (
 )
 from tapir.waiting_list.services.waiting_list_categories_service import (
     WaitingListCategoriesService,
+)
+from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
+    WaitingListEntryConfirmationEmailSender,
+)
+from tapir.waiting_list.services.waiting_list_entry_creator import (
+    WaitingListEntryCreator,
+)
+from tapir.waiting_list.services.waiting_list_entry_validator import (
+    WaitingListEntryValidator,
 )
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.mail_events import Events
@@ -462,7 +467,7 @@ class WaitingListEntryUpdateView(APIView):
         waiting_list_entry = get_object_or_404(
             WaitingListEntry, pk=serializer.validated_data["id"]
         )
-        self.set_personal_data_from_validated_data(
+        WaitingListEntryCreator.set_personal_data_from_validated_data(
             waiting_list_entry, serializer.validated_data
         )
 
@@ -474,64 +479,22 @@ class WaitingListEntryUpdateView(APIView):
         waiting_list_entry.save()
 
         waiting_list_entry.product_wishes.all().delete()
-        self.create_product_wishes_from_validated_data(
-            waiting_list_entry, serializer.validated_data
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            serializer.validated_data["shopping_cart"], cache=self.cache
+        )
+        WaitingListEntryCreator.create_product_wishes(
+            order=order, entry=waiting_list_entry
         )
 
         waiting_list_entry.pickup_location_wishes.all().delete()
-        self.create_pickup_location_wishes_from_validated_data(
-            waiting_list_entry, serializer.validated_data
+        WaitingListEntryCreator.create_pickup_location_wishes(
+            pickup_location_ids_in_priority_order=serializer.validated_data[
+                "pickup_location_ids"
+            ],
+            entry=waiting_list_entry,
         )
 
         return Response("OK", status=status.HTTP_200_OK)
-
-    @classmethod
-    def set_personal_data_from_validated_data(
-        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
-    ):
-        waiting_list_entry.first_name = validated_data["first_name"]
-        waiting_list_entry.last_name = validated_data["last_name"]
-        waiting_list_entry.email = validated_data["email"]
-        waiting_list_entry.phone_number = validated_data["phone_number"]
-        waiting_list_entry.street = validated_data["street"]
-        waiting_list_entry.street_2 = validated_data["street_2"]
-        waiting_list_entry.postcode = validated_data["postcode"]
-        waiting_list_entry.city = validated_data["city"]
-
-    @classmethod
-    def create_product_wishes_from_validated_data(
-        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
-    ):
-        product_wishes = []
-        for index, product_id in enumerate(validated_data["product_ids"]):
-            quantity = validated_data["product_quantities"][index]
-            if quantity == 0:
-                continue
-            product_wishes.append(
-                WaitingListProductWish(
-                    waiting_list_entry=waiting_list_entry,
-                    product_id=product_id,
-                    quantity=quantity,
-                )
-            )
-        WaitingListProductWish.objects.bulk_create(product_wishes)
-
-    @classmethod
-    def create_pickup_location_wishes_from_validated_data(
-        cls, waiting_list_entry: WaitingListEntry, validated_data: dict
-    ):
-        pickup_location_wishes = []
-        for index, pickup_location_id in enumerate(
-            validated_data["pickup_location_ids"]
-        ):
-            pickup_location_wishes.append(
-                WaitingListPickupLocationWish(
-                    waiting_list_entry=waiting_list_entry,
-                    pickup_location_id=pickup_location_id,
-                    priority=index + 1,
-                )
-            )
-        WaitingListPickupLocationWish.objects.bulk_create(pickup_location_wishes)
 
 
 class WaitingListCategoriesView(APIView):
@@ -563,7 +526,7 @@ class WaitingListShowsCoopContentView(APIView):
         )
 
 
-class PublicWaitingListCreateEntryNewMemberView(APIView):
+class PublicWaitingListCreateEntryPotentialMemberView(APIView):
     permission_classes = []
 
     def __init__(self, **kwargs):
@@ -578,78 +541,52 @@ class PublicWaitingListCreateEntryNewMemberView(APIView):
         serializer = PublicWaitingListEntryNewMemberCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        data = {"order_confirmed": True, "error": ""}
-        try:
-            self.validate(serializer.validated_data)
-            with transaction.atomic():
-                entry = self.create_entry(serializer.validated_data)
-                WaitingListCreateEntryExistingMemberView.send_confirmation_mail(
-                    entry=entry,
-                    future_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
-                        email=serializer.validated_data["email"],
-                        first_name=serializer.validated_data["first_name"],
-                        last_name=serializer.validated_data["last_name"],
-                    ),
-                )
-        except ValidationError as error:
-            data["order_confirmed"] = False
-            data["error"] = error.message
-
-        return Response(OrderConfirmationResponseSerializer(data).data)
-
-    def validate(self, validated_data: dict):
-        shopping_cart = {}
-        for index, product_id in enumerate(validated_data["product_ids"]):
-            shopping_cart[product_id] = validated_data["product_quantities"][index]
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=shopping_cart, cache=self.cache
+            shopping_cart=serializer.validated_data["shopping_cart"],
+            cache=self.cache,
         )
-        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
-        ):
-            raise ValidationError("Some required products have not been selected")
-
-        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
-            order=order, cache=self.cache
-        ):
-            raise ValidationError("Single subscription product ordered more than once")
-
-        if validated_data[
-            "number_of_coop_shares"
-        ] < MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
-            order=order, cache=self.cache
-        ):
-            raise ValidationError(
-                "The given number of coop shares is less than the required minimum."
+        try:
+            WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
+                order=order,
+                number_of_coop_shares=serializer.validated_data[
+                    "number_of_coop_shares"
+                ],
+                email=serializer.validated_data["email"],
+                cache=self.cache,
+            )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
             )
 
-        if WaitingListEntry.objects.filter(email=validated_data["email"]).exists():
-            raise ValidationError(
-                "Es gibt schon einen Warteliste-Eintrag mit dieser E-Mail-Adresse"
+        with transaction.atomic():
+            entry = WaitingListEntryCreator.create_entry_potential_member(
+                order=order,
+                pickup_location_ids_in_priority_order=serializer.validated_data[
+                    "pickup_location_ids"
+                ],
+                number_of_coop_shares=serializer.validated_data[
+                    "number_of_coop_shares"
+                ],
+                personal_data=serializer.validated_data,
+                cache=self.cache,
             )
-        if Member.objects.filter(email=validated_data["email"]).exists():
-            raise ValidationError(
-                "Es gibt schon einen Konto mit dieser E-Mail-Adresse. Wenn du deine Verträge anpassen möchtest, nutzt die Funktionen im Mitgliederbereich."
+            WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
+                entry=entry,
+                potential_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                    email=serializer.validated_data["email"],
+                    first_name=serializer.validated_data["first_name"],
+                    last_name=serializer.validated_data["last_name"],
+                ),
             )
 
-    def create_entry(self, validated_data: dict):
-        waiting_list_entry = WaitingListEntry(
-            privacy_consent=get_now(cache=self.cache),
-            number_of_coop_shares=validated_data["number_of_coop_shares"],
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": ""}
+            ).data
         )
-        WaitingListEntryUpdateView.set_personal_data_from_validated_data(
-            waiting_list_entry, validated_data
-        )
-        waiting_list_entry.save()
-
-        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
-            waiting_list_entry, validated_data
-        )
-        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
-            waiting_list_entry, validated_data
-        )
-
-        return waiting_list_entry
 
 
 class WaitingListCreateEntryExistingMemberView(APIView):
@@ -671,109 +608,42 @@ class WaitingListCreateEntryExistingMemberView(APIView):
 
         check_permission_or_self(serializer.validated_data["member_id"], request)
 
-        data = {"order_confirmed": True, "error": ""}
-        try:
-            self.validate(serializer.validated_data)
-            with transaction.atomic():
-                entry = self.create_entry(serializer.validated_data)
-                self.send_confirmation_mail(
-                    existing_member_id=serializer.validated_data["member_id"],
-                    entry=entry,
-                )
-        except ValidationError as error:
-            data["order_confirmed"] = False
-            data["error"] = error.message
-
-        return Response(OrderConfirmationResponseSerializer(data).data)
-
-    def validate(self, validated_data: dict):
-        if WaitingListEntry.objects.filter(
-            member_id=validated_data["member_id"]
-        ).exists():
-            raise ValidationError(
-                "Es gibt schon einen Warteliste-Eintrag für dieses Mitglied."
-            )
-
-        shopping_cart = {}
-        for index, product_id in enumerate(validated_data["product_ids"]):
-            shopping_cart[product_id] = validated_data["product_quantities"][index]
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=shopping_cart, cache=self.cache
-        )
-        if not SingleSubscriptionValidator.are_single_subscription_products_are_ordered_at_most_once(
-            order=order, cache=self.cache
-        ):
-            raise ValidationError("Single subscription product ordered more than once")
-
-    def create_entry(self, validated_data: dict):
-        waiting_list_entry = WaitingListEntry(
-            privacy_consent=get_now(cache=self.cache),
-            number_of_coop_shares=0,
-        )
-        waiting_list_entry.member_id = validated_data["member_id"]
-        waiting_list_entry.save()
-
-        WaitingListEntryUpdateView.create_product_wishes_from_validated_data(
-            waiting_list_entry, validated_data
-        )
-        WaitingListEntryUpdateView.create_pickup_location_wishes_from_validated_data(
-            waiting_list_entry, validated_data
+            shopping_cart=serializer.validated_data["shopping_cart"],
+            cache=self.cache,
         )
 
-        return waiting_list_entry
-
-    @staticmethod
-    def send_confirmation_mail(
-        entry: WaitingListEntry,
-        existing_member_id: str | None = None,
-        future_member_info: (
-            TransactionalTriggerData.RecipientOutsideOfBaseQueryset | None
-        ) = None,
-    ):
-        if (
-            existing_member_id is None
-            and future_member_info is None
-            or existing_member_id is not None
-            and future_member_info is not None
-        ):
-            raise ValueError(
-                f"Exactly one of `existing_member_id` or `future_member_info` must be provided. "
-                f"existing_member_id:{existing_member_id}, future_member_info:{future_member_info}"
+        try:
+            WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_an_existing_member(
+                member_id=serializer.validated_data["member_id"],
+                order=order,
+                cache=self.cache,
+            )
+        except ValidationError as error:
+            return Response(
+                OrderConfirmationResponseSerializer(
+                    {"order_confirmed": False, "error": error.message}
+                ).data
             )
 
-        contract_list = "</li><li>".join(
-            [
-                f"{product_wish.product.name} x {product_wish.quantity}"
-                for product_wish in entry.product_wishes.all().select_related("product")
-            ]
-        )
-        contract_list = f"<ul><li>{contract_list}</li></ul>"
+        with transaction.atomic():
+            entry = WaitingListEntryCreator.create_entry_existing_member(
+                order=order,
+                pickup_location_ids_in_priority_order=serializer.validated_data[
+                    "pickup_location_ids"
+                ],
+                member_id=serializer.validated_data["member_id"],
+                cache=self.cache,
+            )
+            WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
+                existing_member_id=serializer.validated_data["member_id"],
+                entry=entry,
+            )
 
-        pickup_location_list = "</li><li>".join(
-            [
-                f"{pickup_location_wish.pickup_location.name}"
-                for pickup_location_wish in entry.pickup_location_wishes.all()
-                .select_related("pickup_location")
-                .order_by("priority")
-            ]
-        )
-        pickup_location_list = f"<ol><li>{pickup_location_list}</li></ol>"
-
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST,
-                recipient_id_in_base_queryset=existing_member_id,
-                recipient_outside_of_base_queryset=future_member_info,
-                token_data={
-                    "contract_list": contract_list,
-                    "pickup_location_list": pickup_location_list,
-                    "desired_start_date": (
-                        entry.desired_start_date.strftime("%d.%m.%Y")
-                        if entry.desired_start_date is not None
-                        else "so früh wie möglich"
-                    ),
-                },
-            ),
+        return Response(
+            OrderConfirmationResponseSerializer(
+                {"order_confirmed": True, "error": ""}
+            ).data
         )
 
 
@@ -981,7 +851,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                 )
 
             if is_new_member:
-                BestellWizardConfirmOrderApiView.create_coop_shares(
+                BestellWizardOrderFulfiller.create_coop_shares(
                     member=member,
                     number_of_shares=serializer.validated_data["number_of_coop_shares"],
                     subscriptions=new_subscriptions,

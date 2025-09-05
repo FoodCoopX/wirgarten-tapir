@@ -137,7 +137,7 @@ class ApplyTapirOrderManager:
         actor: TapirUser,
         needs_admin_confirmation,
         cache: dict,
-    ) -> (bool, list[Subscription]):
+    ) -> tuple[bool, list[Subscription]]:
         orders_by_product_type = {}
         subscriptions_existed_before_changes = False
         new_subscriptions = []

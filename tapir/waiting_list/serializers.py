@@ -85,8 +85,7 @@ class WaitingListEntryUpdateSerializer(serializers.Serializer):
     postcode = serializers.CharField()
     city = serializers.CharField()
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
-    product_ids = serializers.ListField(child=serializers.CharField())
-    product_quantities = serializers.ListField(child=serializers.IntegerField())
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
     desired_start_date = serializers.DateField(required=False)
     comment = serializers.CharField(allow_blank=True)
     category = serializers.CharField(required=False, allow_blank=True)
@@ -102,15 +101,13 @@ class PublicWaitingListEntryNewMemberCreateSerializer(serializers.Serializer):
     postcode = serializers.CharField()
     city = serializers.CharField()
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
-    product_ids = serializers.ListField(child=serializers.CharField())
-    product_quantities = serializers.ListField(child=serializers.IntegerField())
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
     number_of_coop_shares = serializers.IntegerField()
 
 
 class PublicWaitingListEntryExistingMemberCreateSerializer(serializers.Serializer):
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
-    product_ids = serializers.ListField(child=serializers.CharField())
-    product_quantities = serializers.ListField(child=serializers.IntegerField())
+    shopping_cart = serializers.DictField(child=serializers.IntegerField())
     member_id = serializers.CharField()
 
 

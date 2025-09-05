@@ -1,5 +1,3 @@
-import datetime
-
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
@@ -10,7 +8,6 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tapir.accounts.models import TapirUser
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
@@ -19,24 +16,20 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardDeliveryDatesForOrderResponseSerializer,
     BestellWizardDeliveryDatesForOrderRequestSerializer,
 )
-from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
-from tapir.coop.services.minimum_number_of_shares_validator import (
-    MinimumNumberOfSharesValidator,
+from tapir.bestell_wizard.services.bestell_wizard_order_fulfiller import (
+    BestellWizardOrderFulfiller,
 )
+from tapir.bestell_wizard.services.bestell_wizard_order_validator import (
+    BestellWizardOrderValidator,
+)
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
-from tapir.pickup_locations.services.member_pickup_location_service import (
-    MemberPickupLocationService,
-)
 from tapir.subscriptions.serializers import (
     OrderConfirmationResponseSerializer,
-)
-from tapir.subscriptions.services.apply_tapir_order_manager import (
-    ApplyTapirOrderManager,
 )
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
@@ -46,29 +39,23 @@ from tapir.subscriptions.services.global_capacity_checker import (
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
-from tapir.subscriptions.services.required_product_types_validator import (
-    RequiredProductTypesValidator,
-)
-from tapir.subscriptions.services.solidarity_validator_new import SolidarityValidatorNew
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
-from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
-from tapir.subscriptions.types import TapirOrder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.waiting_list.services.waiting_list_entry_creator import (
+    WaitingListEntryCreator,
+)
+from tapir.waiting_list.services.waiting_list_entry_validator import (
+    WaitingListEntryValidator,
+)
 from tapir.wirgarten.models import (
-    Member,
-    Subscription,
     ProductType,
-    PickupLocation,
     WaitingListEntry,
+    Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.member import (
-    send_order_confirmation,
-)
 from tapir.wirgarten.service.products import get_active_and_future_subscriptions
 from tapir.wirgarten.utils import (
     get_today,
-    get_now,
     legal_status_is_cooperative,
 )
 
@@ -92,230 +79,132 @@ class BestellWizardConfirmOrderApiView(APIView):
         serializer = BestellWizardConfirmOrderRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        data = {
+            "order_confirmed": True,
+            "error": None,
+        }
+        try:
+            with transaction.atomic():
+                self.validate_everything_and_apply_all_changes(
+                    validated_serializer_data=serializer.validated_data, request=request
+                )
+        except ValidationError as error:
+            data = {
+                "order_confirmed": False,
+                "error": error.message,
+            }
+
+        return Response(OrderConfirmationResponseSerializer(data).data)
+
+    def validate_everything_and_apply_all_changes(
+        self, validated_serializer_data: dict, request
+    ):
+        if (
+            len(validated_serializer_data["shopping_cart"]) == 0
+            and len(validated_serializer_data["waiting_list_shopping_cart"]) == 0
+        ):
+            raise ValidationError("Bestellung ist leer")
+
+        member = None
+        if (
+            len(validated_serializer_data["shopping_cart"]) > 0
+            or validated_serializer_data["become_member_now"]
+        ):
+            member = self.validate_and_fulfill_order(
+                request=request, validated_serializer_data=validated_serializer_data
+            )
+
+        if len(validated_serializer_data["shopping_cart_waiting_list"]) > 0:
+            if member is None:
+                self.validate_and_create_waiting_list_entry_potential_member(
+                    validated_serializer_data=validated_serializer_data
+                )
+            else:
+                self.validate_and_create_waiting_list_entry_existing_member(
+                    member=member, validated_serializer_data=validated_serializer_data
+                )
+
+    def validate_and_fulfill_order(
+        self,
+        request,
+        validated_serializer_data: dict,
+    ) -> Member:
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
             reference_date=get_today(cache=self.cache),
             apply_buffer_time=True,
             cache=self.cache,
         )
 
-        try:
-            self.validate_everything(
-                validated_data=serializer.validated_data,
-                contract_start_date=contract_start_date,
-            )
-        except ValidationError as error:
-            data = {
-                "order_confirmed": False,
-                "error": error.message,
-            }
-            return Response(OrderConfirmationResponseSerializer(data).data)
+        BestellWizardOrderValidator.validate_complete_order(
+            validated_serializer_data=validated_serializer_data,
+            contract_start_date=contract_start_date,
+            cache=self.cache,
+        )
 
-        with transaction.atomic():
-            member = self.create_member(
-                personal_data=serializer.validated_data["personal_data"]
-            )
-            MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-                member=member,
-                rhythm=serializer.validated_data["payment_rhythm"],
-                valid_from=get_today(cache=self.cache),
-            )
-            subscriptions = self.create_subscriptions(
-                validated_data=serializer.validated_data,
-                member=member,
-                actor=request.user if request.user.is_authenticated else None,
-                contract_start_date=contract_start_date,
-            )
-            order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-                serializer.validated_data["shopping_cart"], cache=self.cache
-            )
-            if OrderValidator.does_order_need_a_pickup_location(
-                order=order, cache=self.cache
-            ):
-                MemberPickupLocationService.link_member_to_pickup_location(
-                    serializer.validated_data["pickup_location_id"],
-                    member=member,
-                    valid_from=contract_start_date,
-                    actor=request.user if request.user.is_authenticated else member,
-                    cache=self.cache,
-                )
-            if legal_status_is_cooperative(cache=self.cache):
-                self.create_coop_shares(
-                    number_of_shares=serializer.validated_data["nb_shares"],
-                    member=member,
-                    subscriptions=subscriptions,
-                    cache=self.cache,
-                )
-            send_order_confirmation(
-                member, subscriptions, cache=self.cache, from_waiting_list=False
-            )
+        return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
+            validated_serializer_data=validated_serializer_data,
+            contract_start_date=contract_start_date,
+            request=request,
+            cache=self.cache,
+        )
 
-        data = {
-            "order_confirmed": True,
-            "error": None,
-        }
-        return Response(OrderConfirmationResponseSerializer(data).data)
-
-    def create_member(self, personal_data):
-        now = get_now(cache=self.cache)
-        contracts_signed = {
-            contract: now
-            for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
-        }
-
-        return Member.objects.create(**personal_data, **contracts_signed)
-
-    @classmethod
-    def create_coop_shares(
-        cls,
-        number_of_shares: int,
-        member: Member,
-        subscriptions: list[Subscription],
-        cache: dict,
+    def validate_and_create_waiting_list_entry_potential_member(
+        self, validated_serializer_data: dict
     ):
-        shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache), apply_buffer_time=True, cache=cache
-        )
-        if len(subscriptions) > 0:
-            shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
-            for subscription in subscriptions:
-                shares_valid_at = min(
-                    shares_valid_at,
-                    TrialPeriodManager.get_end_of_trial_period(
-                        subscription=subscription, cache=cache
-                    ),
-                )
-
-        CoopSharePurchaseHandler.buy_cooperative_shares(
-            quantity=number_of_shares,
-            member=member,
-            shares_valid_at=shares_valid_at,
-            cache=cache,
-        )
-
-    def create_subscriptions(
-        self,
-        validated_data,
-        member: Member,
-        contract_start_date: datetime.date,
-        actor: TapirUser,
-    ):
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_data["shopping_cart"], cache=self.cache
-        )
-        _, subscriptions = (
-            ApplyTapirOrderManager.apply_order_with_several_product_types(
-                member=member,
-                order=order,
-                contract_start_date=contract_start_date,
-                actor=actor,
-                needs_admin_confirmation=True,
+        waiting_list_order = (
+            TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
                 cache=self.cache,
             )
         )
+        WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
+            order=waiting_list_order,
+            email=validated_serializer_data["personal_data"]["email"],
+            number_of_coop_shares=validated_serializer_data["personal_data"][
+                "nb_shares"
+            ],
+            cache=self.cache,
+        )
+        WaitingListEntryCreator.create_entry_potential_member(
+            order=waiting_list_order,
+            pickup_location_ids_in_priority_order=validated_serializer_data[
+                "pickup_location_ids"
+            ],
+            number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
+            personal_data=validated_serializer_data["personal_data"],
+            cache=self.cache,
+        )
 
-        return subscriptions
-
-    def validate_everything(
-        self, validated_data: dict, contract_start_date: datetime.date
+    def validate_and_create_waiting_list_entry_existing_member(
+        self, member: Member, validated_serializer_data: dict
     ):
-        PersonalDataValidator.validate_personal_data_new_member(
-            email=validated_data["personal_data"]["email"],
-            phone_number=validated_data["personal_data"]["phone_number"],
-            birthdate=validated_data["personal_data"]["birthdate"],
-            iban=validated_data["personal_data"]["iban"],
-            cache=self.cache,
-            check_waiting_list=True,
-            payment_rhythm=validated_data["payment_rhythm"],
-        )
-
-        if not validated_data["sepa_allowed"]:
-            raise ValidationError("SEPA-Mandat muss erlaubt sein")
-
-        if not validated_data["contract_accepted"]:
-            raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
-
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_data["shopping_cart"], cache=self.cache
-        )
-
-        self.validate_order(
-            validated_data=validated_data,
-            contract_start_date=contract_start_date,
-            order=order,
-        )
-
-        if not SolidarityValidatorNew.is_the_ordered_solidarity_allowed(
-            ordered_solidarity_factor=0,  # TODO
-            order=order,
-            start_date=contract_start_date,
-            cache=self.cache,
-        ):
-            raise ValidationError("Solidarbeitrag ungültig oder zu niedrig")
-
-        if legal_status_is_cooperative(cache=self.cache):
-            self.validate_coop_content(validated_data=validated_data, order=order)
-
-    def validate_order(
-        self,
-        validated_data: dict,
-        contract_start_date: datetime.date,
-        order: TapirOrder,
-    ):
-
-        if len(order.keys()) > 0 and get_parameter_value(
-            ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
-        ):
-            raise ValidationError("Nur Warteliste-Einträge sind erlaubt.")
-
-        pickup_location = None
-        if OrderValidator.does_order_need_a_pickup_location(
-            order=order, cache=self.cache
-        ):
-            if "pickup_location_id" not in validated_data:
-                raise ValidationError(
-                    "Diese Bestellung braucht eine Verteilstation, bitte wählt eine aus."
-                )
-            pickup_location = get_object_or_404(
-                PickupLocation, id=validated_data["pickup_location_id"]
+        waiting_list_order = (
+            TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
+                cache=self.cache,
             )
-
-        OrderValidator.validate_order_general(
-            order=order,
-            contract_start_date=contract_start_date,
-            cache=self.cache,
-            member=None,
-            pickup_location=pickup_location,
         )
-
-        if not RequiredProductTypesValidator.does_order_contain_all_required_product_types(
-            order=order
-        ):
-            raise ValidationError("Manche Pflichtprodukte fehlen in der Bestellung")
-
-    def validate_coop_content(self, validated_data: dict, order: TapirOrder):
-        student_status_enabled = validated_data["student_status_enabled"]
-        if student_status_enabled and not get_parameter_value(
-            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache=self.cache
-        ):
-            raise ValidationError("Studenten-Status ist nicht erlaubt")
-
-        nb_ordered_coop_shares = validated_data["nb_shares"]
-        if student_status_enabled:
-            if nb_ordered_coop_shares > 0:
-                raise ValidationError(
-                    "Studenten-Status aktiviert, es sollen keine Genossenschaftsanteilen bestellt werden."
-                )
-        else:
-            if not validated_data["statute_accepted"]:
-                raise ValidationError("Die Satzung muss akzeptiert werden.")
-
-            minimum_number_of_shares = MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_tapir_order(
-                order, cache=self.cache
+        WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_an_existing_member(
+            member_id=member.id, order=waiting_list_order, cache=self.cache
+        )
+        fulfilled_order = (
+            TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                validated_serializer_data["shopping_cart"], cache=self.cache
             )
-            if nb_ordered_coop_shares < minimum_number_of_shares:
-                raise ValidationError(
-                    f"Genossenschaftsanteile bestellt: {nb_ordered_coop_shares}, minimum: {minimum_number_of_shares}."
-                )
+        )
+        pickup_location_ids = []
+        if not OrderValidator.does_order_need_a_pickup_location(
+            fulfilled_order, cache=self.cache
+        ) and OrderValidator.does_order_need_a_pickup_location(
+            waiting_list_order, cache=self.cache
+        ):
+            pickup_location_ids = validated_serializer_data["pickup_location_ids"]
+        WaitingListEntryCreator.create_entry_existing_member(
+            order=waiting_list_order,
+            pickup_location_ids_in_priority_order=pickup_location_ids,
+            member_id=member.id,
+            cache=self.cache,
+        )
 
 
 class BestellWizardCapacityCheckApiView(APIView):
