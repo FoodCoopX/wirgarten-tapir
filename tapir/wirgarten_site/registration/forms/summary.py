@@ -2,7 +2,6 @@ from dateutil.relativedelta import relativedelta
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from tapir import settings
 from tapir.configuration.parameter import get_parameter_value
 from tapir.subscriptions.config import SOLIDARITY_UNIT_PERCENT
 from tapir.subscriptions.services.base_product_type_service import (
@@ -129,7 +128,9 @@ class SummaryForm(forms.Form):
             + relativedelta(days=delivery_date_offset)
         )
 
-        coop_share_price = settings.COOP_SHARE_PRICE
+        coop_share_price = get_parameter_value(
+            ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
+        )
         coop_shares_amount = int(
             initial["coop_shares"]["cooperative_shares"] / coop_share_price
         )

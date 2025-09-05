@@ -1,7 +1,6 @@
 import json
 
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Max, Sum
 from django.db.models.functions import ExtractYear
@@ -141,7 +140,7 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
                 .get("quantity", 0)
                 or 0
             )
-            * settings.COOP_SHARE_PRICE
+            * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
         ).replace(",00", "")
 
         context["cancellations_during_trial"] = len(
@@ -181,7 +180,8 @@ class AdminDashboardView(PermissionRequiredMixin, generic.TemplateView):
 
     def add_cancelled_coop_shares_context(self, context):
         cancellations = {
-            c["year"]: -c["total_quantity"] * settings.COOP_SHARE_PRICE
+            c["year"]: -c["total_quantity"]
+            * get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=self.cache)
             for c in (
                 CoopShareTransaction.objects.filter(
                     transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,

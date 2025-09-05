@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -349,7 +348,7 @@ def get_add_coop_shares_form(request, **kwargs):
     def handler(form):
         CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=form.cleaned_data["cooperative_shares"]
-            / settings.COOP_SHARE_PRICE,
+            / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache),
             member=member,
             shares_valid_at=today,
             cache=cache,

@@ -87,3 +87,11 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(
             key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES
         ).update(value=organization == Organization.WIRGARTEN)
+
+        coop_share_prices = {
+            Organization.BIOTOP: 150,
+            Organization.WIRGARTEN: 50,
+        }
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_SHARE_PRICE).update(
+            value=coop_share_prices.get(organization, 50)
+        )

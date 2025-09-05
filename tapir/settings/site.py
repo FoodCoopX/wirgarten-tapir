@@ -1,7 +1,5 @@
 BASE_PRODUCT_NAME = "Ernteanteile"
 
-COOP_SHARE_PRICE = 50.0
-
 # define the custom views from the site module
 VIEWS = {
     "draftuser_register": "tapir.wirgarten_site.registration.views.RegistrationView",

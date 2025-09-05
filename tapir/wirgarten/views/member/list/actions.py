@@ -1,7 +1,6 @@
 import csv
 import mimetypes
 
-from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Max, Q, Sum
 from django.http import HttpResponse, HttpResponseRedirect
@@ -10,8 +9,10 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 from django.views.generic import View
 
+from tapir.configuration.parameter import get_parameter_value
 from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import CoopShareTransaction, Member, Subscription
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.file_export import begin_csv_string
 from tapir.wirgarten.utils import (
     format_currency,
@@ -188,7 +189,10 @@ def export_coop_member_list(request, **kwargs):
 
         transfer_total_quantity = transfers.aggregate(total=Sum("quantity"))["total"]
         transfer_euro_string = (
-            format_currency(settings.COOP_SHARE_PRICE * transfer_total_quantity)
+            format_currency(
+                get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
+                * transfer_total_quantity
+            )
             if transfer_total_quantity
             else ""
         )
@@ -204,7 +208,9 @@ def export_coop_member_list(request, **kwargs):
         data[KEY_COOP_SHARES_TRANSFER_EURO] = transfer_euro_string
         data[KEY_COOP_SHARES_TRANSFER_FROM_TO] = "\n".join(
             map(
-                lambda x: f"Übertragung {format_currency(abs(x.quantity) * settings.COOP_SHARE_PRICE)} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.member_no})",
+                lambda x: f"Übertragung {format_currency(abs(x.quantity) * get_parameter_value(
+                    ParameterKeys.COOP_SHARE_PRICE, cache=cache
+                ))} € {get_transaction_verb(x)} {x.transfer_member.first_name} {x.transfer_member.last_name} (Nr. {x.transfer_member.member_no})",
                 transfers,
             )
         )

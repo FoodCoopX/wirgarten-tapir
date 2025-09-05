@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.db import transaction
 from django.db.models import (
     Subquery,
@@ -20,6 +19,7 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import TapirUser
+from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
 from tapir.deliveries.services.get_deliveries_service import GetDeliveriesService
@@ -41,6 +41,7 @@ from tapir.wirgarten.models import (
     WaitingListEntry,
     GrowingPeriod,
 )
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.delivery import (
     get_next_delivery_date,
 )
@@ -85,10 +86,11 @@ def transfer_coop_shares(
         quantity = origin_ownerships_quantity
 
     today = get_today()
+    cache = {}
     new_ownership = CoopShareTransaction.objects.create(
         member_id=target_member_id,
         quantity=quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache),
         valid_at=today,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
         transfer_member_id=origin_member_id,
@@ -97,7 +99,7 @@ def transfer_coop_shares(
     CoopShareTransaction.objects.create(
         member_id=origin_member_id,
         quantity=-quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache),
         valid_at=today,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT,
         transfer_member_id=target_member_id,
@@ -134,7 +136,7 @@ def cancel_coop_shares(
     CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=-quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={}),
         valid_at=valid_at,
         timestamp=cancellation_date,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,

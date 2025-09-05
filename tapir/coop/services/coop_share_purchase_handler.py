@@ -1,7 +1,6 @@
 import datetime
 
 from dateutil.relativedelta import relativedelta
-from django.conf import settings
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
@@ -38,7 +37,9 @@ class CoopSharePurchaseHandler:
         coop_share_tx = CoopShareTransaction.objects.create(
             member=member,
             quantity=quantity,
-            share_price=settings.COOP_SHARE_PRICE,
+            share_price=get_parameter_value(
+                key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+            ),
             valid_at=shares_valid_at,
             mandate_ref=mandate_ref,
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
@@ -67,7 +68,7 @@ class CoopSharePurchaseHandler:
         quantity: int,
         cache: dict,
     ) -> Payment:
-        share_price = settings.COOP_SHARE_PRICE
+        share_price = get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
         due_date = cls.get_payment_due_date(
             shares_valid_at=shares_valid_at, cache=cache
         )

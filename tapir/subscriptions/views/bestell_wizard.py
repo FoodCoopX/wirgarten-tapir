@@ -24,7 +24,6 @@ from tapir.payments.services.member_payment_rhythm_service import (
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
-from tapir.settings import COOP_SHARE_PRICE
 from tapir.subscriptions.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     OrderConfirmationResponseSerializer,
@@ -370,7 +369,9 @@ class BestellWizardBaseDataApiView(APIView):
     )
     def get(self, request):
         response_data = {
-            "price_of_a_share": COOP_SHARE_PRICE,
+            "price_of_a_share": get_parameter_value(
+                ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
+            ),
             "theme": get_parameter_value(
                 ParameterKeys.ORGANISATION_THEME, cache=self.cache
             ),

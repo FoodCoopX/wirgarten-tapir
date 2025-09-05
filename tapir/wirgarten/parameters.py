@@ -218,6 +218,21 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         self.parameter_definition(
+            key=ParameterKeys.COOP_SHARE_PRICE,
+            label="Preis für einer Anteil",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=50,
+            description="",
+            category=ParameterCategory.BUSINESS,
+            order_priority=999,
+            meta=ParameterMeta(
+                validators=[MinValueValidator(limit_value=0)],
+                show_only_when=legal_status_is_cooperative,
+            ),
+            enabled=is_debug_instance(),
+        )
+
+        self.parameter_definition(
             key=ParameterKeys.COOP_STATUTE_LINK,
             label="Link zur Satzung",
             datatype=TapirParameterDatatype.STRING,

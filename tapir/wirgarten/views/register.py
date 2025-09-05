@@ -442,9 +442,10 @@ class RegistrationWizardViewBase(CookieWizardView):
 
             mandate_ref = create_mandate_ref(member, cache=self.cache)
             if not member.is_student and STEP_COOP_SHARES in form_dict.keys():
-                number_of_shares = (
-                    form_dict[STEP_COOP_SHARES].cleaned_data["cooperative_shares"]
-                    / settings.COOP_SHARE_PRICE
+                number_of_shares = form_dict[STEP_COOP_SHARES].cleaned_data[
+                    "cooperative_shares"
+                ] / get_parameter_value(
+                    ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
                 )
                 CoopSharePurchaseHandler.buy_cooperative_shares(
                     quantity=number_of_shares,
