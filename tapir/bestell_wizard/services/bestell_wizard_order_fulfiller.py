@@ -63,7 +63,7 @@ class BestellWizardOrderFulfiller:
 
         if OrderValidator.does_order_need_a_pickup_location(order=order, cache=cache):
             MemberPickupLocationService.link_member_to_pickup_location(
-                validated_serializer_data["pickup_location_id"],
+                validated_serializer_data["pickup_location_ids"][0],
                 member=member,
                 valid_from=contract_start_date,
                 actor=request.user if request.user.is_authenticated else member,
@@ -72,7 +72,7 @@ class BestellWizardOrderFulfiller:
 
         if legal_status_is_cooperative(cache=cache):
             cls.create_coop_shares(
-                number_of_shares=validated_serializer_data["nb_shares"],
+                number_of_shares=validated_serializer_data["number_of_coop_shares"],
                 member=member,
                 subscriptions=subscriptions,
                 cache=cache,

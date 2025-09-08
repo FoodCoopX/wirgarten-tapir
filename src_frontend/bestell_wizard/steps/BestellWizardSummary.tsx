@@ -1,24 +1,25 @@
 import React, { Fragment } from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Col, Form, Row, Table } from "react-bootstrap";
-import { PublicPickupLocation, PublicProductType, WaitingListEntryDetails } from "../../api-client";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
 import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
 import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
 import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardSummaryProps {
-  theme: TapirTheme;
   shoppingCart: ShoppingCart;
   selectedNumberOfCoopShares: number;
-  productTypes: PublicProductType[];
   selectedPickupLocations: PublicPickupLocation[];
-  priceOfAShare: number;
   firstDeliveryDatesByProductType: { [key: string]: Date };
   updateOrderFromSummary: (productType: PublicProductType) => void;
   waitingListModeEnabled: boolean;
@@ -26,20 +27,15 @@ interface BestellWizardSummaryProps {
   setCancellationPolicyRead: (read: boolean) => void;
   privacyPolicyRead: boolean;
   setPrivacyPolicyRead: (read: boolean) => void;
-  waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails: WaitingListEntryDetails | undefined;
-  showCoopContent: boolean;
-  revocationRightsExplanation: string;
   contractStartDate: Date;
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
-  theme,
   shoppingCart,
   selectedNumberOfCoopShares,
-  productTypes,
   selectedPickupLocations,
-  priceOfAShare,
   firstDeliveryDatesByProductType,
   updateOrderFromSummary,
   waitingListModeEnabled,
@@ -47,11 +43,9 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   setCancellationPolicyRead,
   privacyPolicyRead,
   setPrivacyPolicyRead,
-  waitingListLinkConfirmationModeEnabled,
   waitingListEntryDetails,
-  showCoopContent,
-  revocationRightsExplanation,
   contractStartDate,
+  settings,
 }) => {
   function shouldShowPickupLocationSummary() {
     if (selectedPickupLocations.length === 0) {
@@ -71,7 +65,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           {shouldIncludeStepCoopShares(
             waitingListEntryDetails,
             waitingListModeEnabled,
-            showCoopContent,
+            settings.showCoopContent,
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
@@ -84,9 +78,9 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
                     <td>Deine Genossenschaftsanteile</td>
                     <td>
                       {selectedNumberOfCoopShares} *{" "}
-                      {formatCurrency(priceOfAShare)} ={" "}
+                      {formatCurrency(settings.priceOfAShare)} ={" "}
                       {formatCurrency(
-                        priceOfAShare * selectedNumberOfCoopShares,
+                        settings.priceOfAShare * selectedNumberOfCoopShares,
                       )}
                     </td>
                   </tr>
@@ -100,9 +94,9 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
               </Table>
             </>
           )}
-          {productTypes.map((productType) => {
+          {settings.productTypes.map((productType) => {
             if (
-              waitingListLinkConfirmationModeEnabled &&
+              waitingListEntryDetails !== undefined &&
               !isProductTypeOrdered(productType, shoppingCart)
             ) {
               return null;
@@ -123,7 +117,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
                 ) : (
                   <span>Dieses Produkt ist nicht bestellt worden</span>
                 )}
-                {!waitingListLinkConfirmationModeEnabled && (
+                {!waitingListEntryDetails !== undefined && (
                   <TapirButton
                     icon={"edit"}
                     text={"Bestellung anpassen"}
@@ -159,7 +153,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
               <Form.Text>
                 <span
                   dangerouslySetInnerHTML={{
-                    __html: revocationRightsExplanation,
+                    __html: settings.revocationRightsExplanation,
                   }}
                 />
               </Form.Text>

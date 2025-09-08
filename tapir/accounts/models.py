@@ -140,18 +140,16 @@ class KeycloakUser(AbstractUser):
             # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
             self.email = self_before_save.email
         else:
-            KeycloakUserManager.create_keycloak_user(
-                user=self,
-                keycloak_client=keycloak_client,
-                initial_password=initial_password,
-                cache=cache,
+            transaction.on_commit(
+                lambda: KeycloakUserManager.create_keycloak_user(
+                    user=self,
+                    keycloak_client=keycloak_client,
+                    initial_password=initial_password,
+                    cache=cache,
+                )
             )
 
         super().save(*args, **kwargs)
-        if not has_kc_account:
-            SocialAccount.objects.create(
-                user=self, provider="keycloak", uid=self.keycloak_id
-            )
 
     def delete(self, *args, **kwargs):
         kc = KeycloakUserManager.get_keycloak_client(cache=kwargs.pop("cache", {}))

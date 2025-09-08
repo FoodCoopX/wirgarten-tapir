@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, Form, Row, Spinner } from "react-bootstrap";
 import { PersonalData } from "../types/PersonalData.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
@@ -17,11 +16,11 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import moment from "moment";
 import "moment/dist/locale/de";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 moment.locale("de");
 
 interface BestellWizardPersonalDataProps {
-  theme: TapirTheme;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
   sepaAllowed: boolean;
@@ -42,15 +41,10 @@ interface BestellWizardPersonalDataProps {
     emailAddressAlreadyInUseLoading: boolean,
   ) => void;
   waitingListEntryDetails?: WaitingListEntryDetails;
-  labelCheckboxSepaMandat: string;
-  labelCheckboxContractPolicy: string;
-  paymentRhythmChoices: {
-    [key: string]: string;
-  };
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
-  theme,
   personalData,
   setPersonalData,
   sepaAllowed,
@@ -67,9 +61,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   emailAddressAlreadyInUseLoading,
   setEmailAddressAlreadyInUseLoading,
   waitingListEntryDetails,
-  labelCheckboxSepaMandat,
-  labelCheckboxContractPolicy,
-  paymentRhythmChoices,
+  settings,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -363,7 +355,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                     updatePersonalData();
                   }}
                 >
-                  {Object.entries(paymentRhythmChoices).map(
+                  {Object.entries(settings.paymentRhythmChoices).map(
                     ([rhythm, displayName]) => (
                       <option key={rhythm} value={rhythm}>
                         {displayName}
@@ -389,7 +381,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                     label={
                       <span
                         dangerouslySetInnerHTML={{
-                          __html: labelCheckboxSepaMandat,
+                          __html: settings.labelCheckboxSepaMandat,
                         }}
                       />
                     }
@@ -403,7 +395,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                     label={
                       <span
                         dangerouslySetInnerHTML={{
-                          __html: labelCheckboxContractPolicy,
+                          __html: settings.labelCheckboxContractPolicy,
                         }}
                       />
                     }

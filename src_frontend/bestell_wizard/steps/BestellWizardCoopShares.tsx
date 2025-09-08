@@ -1,39 +1,33 @@
 import React, { useEffect } from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardCoopSharesProps {
-  theme: TapirTheme;
   selectedNumberOfCoopShares: number;
   setSelectedNumberOfCoopShares: (nbShares: number) => void;
   statuteAccepted: boolean;
   setStatuteAccepted: (statuteRead: boolean) => void;
   minimumNumberOfShares: number;
-  priceOfAShare: number;
   waitingListModeEnabled: boolean;
-  studentStatusAllowed: boolean;
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
-  coopStepText: string;
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
-  theme,
   selectedNumberOfCoopShares,
   setSelectedNumberOfCoopShares,
   statuteAccepted,
   setStatuteAccepted,
   minimumNumberOfShares,
-  priceOfAShare,
   waitingListModeEnabled,
-  studentStatusAllowed,
   studentStatusEnabled,
   setStudentStatusEnabled,
   waitingListLinkConfirmationModeEnabled,
-  coopStepText,
+  settings,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -48,7 +42,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
     <>
       <Row>
         <Col>
-          <span dangerouslySetInnerHTML={{ __html: coopStepText }} />
+          <span dangerouslySetInnerHTML={{ __html: settings.coopStepText }} />
           <BestellWizardCardSubtitle
             text={
               "Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem Biotop beteiligen?"
@@ -56,7 +50,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
           />
           <p>
             Du musst mindestens {minimumNumberOfShares} Genossenschaftsanteil zu{" "}
-            {formatCurrency(priceOfAShare)} erwerben.
+            {formatCurrency(settings.priceOfAShare)} erwerben.
           </p>
         </Col>
       </Row>
@@ -75,10 +69,12 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 disabled={studentStatusEnabled}
               />
             </Form.Group>
-            <span> x {formatCurrency(priceOfAShare)} = </span>
+            <span> x {formatCurrency(settings.priceOfAShare)} = </span>
             <span>
               <strong>
-                {formatCurrency(selectedNumberOfCoopShares * priceOfAShare)}
+                {formatCurrency(
+                  selectedNumberOfCoopShares * settings.priceOfAShare,
+                )}
               </strong>{" "}
               einmalige Genossenschaftsanteile
             </span>
@@ -111,7 +107,7 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
               <Form.Text></Form.Text>
             </Col>
           </Row>
-          {studentStatusAllowed && (
+          {settings.studentStatusAllowed && (
             <Row>
               <Col>
                 <Form.Check

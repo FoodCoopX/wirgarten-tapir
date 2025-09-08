@@ -3,10 +3,9 @@ import { CoopApi } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 
-export function updateMinimumAndPriceOfShare(
+export function updateMinimumNumberOfShares(
   shoppingCart: ShoppingCart,
-  setMinimumNumberOfShares: (min: number) => void,
-  selectedNumberOfCoopShares: number,
+  setMinimumNumberOfShares: (num: number) => void,
   setSelectedNumberOfCoopShares: (num: number) => void,
 ) {
   const coopApi = useApi(CoopApi, getCsrfToken());
@@ -18,8 +17,6 @@ export function updateMinimumAndPriceOfShare(
     })
     .then((response) => {
       setMinimumNumberOfShares(response.minimumNumberOfShares);
-      if (selectedNumberOfCoopShares < response.minimumNumberOfShares) {
-        setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
-      }
+      setSelectedNumberOfCoopShares(response.minimumNumberOfShares);
     });
 }

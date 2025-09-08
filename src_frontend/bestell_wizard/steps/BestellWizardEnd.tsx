@@ -1,17 +1,12 @@
 import React from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { OrderConfirmationResponse } from "../../api-client";
 
 interface BestellWizardEndProps {
-  theme: TapirTheme;
   response: OrderConfirmationResponse;
 }
 
-const BestellWizardEnd: React.FC<BestellWizardEndProps> = ({
-  theme,
-  response,
-}) => {
+const BestellWizardEnd: React.FC<BestellWizardEndProps> = ({ response }) => {
   return (
     <>
       <BestellWizardCardTitle

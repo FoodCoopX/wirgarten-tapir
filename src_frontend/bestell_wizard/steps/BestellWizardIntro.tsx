@@ -1,39 +1,31 @@
 import React, { useEffect } from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { sortProductTypes } from "../utils/sortProductTypes.ts";
 import { Form, Spinner } from "react-bootstrap";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { buildEmptyShoppingCart } from "../types/buildEmptyShoppingCart.ts";
+import { buildEmptyShoppingCart } from "../utils/buildEmptyShoppingCart.ts";
 import { selectAllRequiredProductTypes } from "../utils/selectAllRequiredProductTypes.ts";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardIntroProps {
-  theme: TapirTheme;
   selectedProductTypes: PublicProductType[];
   setSelectedProductTypes: (selectedProductTypes: PublicProductType[]) => void;
-  publicProductTypes: PublicProductType[];
-  allowInvestingMembership: boolean;
   investingMembership: boolean;
   setInvestingMembership: (investing: boolean) => void;
   setShoppingCart: (cart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
-  introStepText: string;
-  showCoopContent: boolean;
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
-  theme,
   selectedProductTypes,
   setSelectedProductTypes,
-  publicProductTypes,
-  allowInvestingMembership,
   investingMembership,
   setInvestingMembership,
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
-  introStepText,
-  showCoopContent,
+  settings,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -42,10 +34,10 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
   useEffect(() => {
     if (investingMembership) {
       setSelectedProductTypes([]);
-      setShoppingCart(buildEmptyShoppingCart(publicProductTypes));
+      setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
     } else {
       selectAllRequiredProductTypes(
-        publicProductTypes,
+        settings.productTypes,
         selectedProductTypes,
         setSelectedProductTypes,
       );
@@ -74,15 +66,15 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
 
   return (
     <>
-      <span dangerouslySetInnerHTML={{ __html: introStepText }} />
+      <span dangerouslySetInnerHTML={{ __html: settings.introStepText }} />
       <BestellWizardCardSubtitle
         text={"Welche Mitgliedschaft(en) möchtest du?"}
       />
       <div className={"d-flex flex-column gap-3"}>
-        {publicProductTypes.length === 0 ? (
+        {settings.productTypes.length === 0 ? (
           <Spinner style={{ width: "10rem", height: "10rem" }} />
         ) : (
-          publicProductTypes.map((publicProductType) => (
+          settings.productTypes.map((publicProductType) => (
             <div
               key={publicProductType.id}
               className={"d-flex flex-column gap-2"}
@@ -122,7 +114,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
             </div>
           ))
         )}
-        {allowInvestingMembership && showCoopContent && (
+        {settings.allowInvestingMembership && settings.showCoopContent && (
           <div>
             <Form.Check
               id={"investingMembership"}

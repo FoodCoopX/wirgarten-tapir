@@ -1,5 +1,4 @@
 import React from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import { Col, Row } from "react-bootstrap";
 import {
   PublicPickupLocation,
@@ -11,10 +10,9 @@ import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.t
 import { formatDateText } from "../../utils/formatDateText.ts";
 import PickupLocationSelector from "../components/PickupLocationSelector.tsx";
 import PickupLocationWaitingListSelector from "../components/PickupLocationWaitingListSelector.tsx";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardPickupLocationProps {
-  theme: TapirTheme;
-  pickupLocations: PublicPickupLocation[];
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (
     selectedPickupLocations: PublicPickupLocation[],
@@ -23,16 +21,13 @@ interface BestellWizardPickupLocationProps {
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   firstDeliveryDatesByProductType: { [key: string]: Date };
-  waitingListLinkConfirmationModeEnabled: boolean;
   waitingListEntryDetails?: WaitingListEntryDetails;
-  trialPeriodLengthInWeeks: number;
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardPickupLocation: React.FC<
   BestellWizardPickupLocationProps
 > = ({
-  theme,
-  pickupLocations,
   selectedPickupLocations,
   setSelectedPickupLocations,
   waitingListModeEnabled,
@@ -40,8 +35,7 @@ const BestellWizardPickupLocation: React.FC<
   pickupLocationsWithCapacityFull,
   firstDeliveryDatesByProductType,
   waitingListEntryDetails,
-  waitingListLinkConfirmationModeEnabled,
-  trialPeriodLengthInWeeks,
+  settings,
 }) => {
   function getEarliestDeliveryDate() {
     return Object.values(firstDeliveryDatesByProductType).sort(
@@ -50,7 +44,7 @@ const BestellWizardPickupLocation: React.FC<
   }
 
   function shouldShowDeliveryInfo() {
-    if (waitingListLinkConfirmationModeEnabled) return true;
+    if (waitingListEntryDetails !== undefined) return true;
 
     if (waitingListModeEnabled) return false;
 
@@ -89,12 +83,12 @@ const BestellWizardPickupLocation: React.FC<
         <PickupLocationWaitingListSelector
           selectedPickupLocations={selectedPickupLocations}
           setSelectedPickupLocations={setSelectedPickupLocations}
-          pickupLocations={pickupLocations}
+          pickupLocations={settings.pickupLocations}
           pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
         />
       )}
       <PickupLocationSelector
-        pickupLocations={pickupLocations}
+        pickupLocations={settings.pickupLocations}
         selectedPickupLocations={selectedPickupLocations}
         setSelectedPickupLocations={setSelectedPickupLocations}
         waitingListModeEnabled={waitingListModeEnabled}
@@ -103,7 +97,7 @@ const BestellWizardPickupLocation: React.FC<
         }
         pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
         waitingListLinkConfirmationModeEnabled={
-          waitingListLinkConfirmationModeEnabled
+          waitingListEntryDetails !== undefined
         }
       />
       {shouldShowDeliveryInfo() && (
@@ -127,12 +121,13 @@ const BestellWizardPickupLocation: React.FC<
                 Bitte überprüfe ggf. deinen Spam-Ordner.
               </p>
               <p>
-                Deine {trialPeriodLengthInWeeks}-wöchige Probezeit beginnt erst,
-                nachdem du die erste Lieferung erhalten hast. Während der
-                Probezeit besteht keine Kündigungsfrist und Du kannst Deinen
-                Ernteanteil wöchentlich jeweils zum Freitag der Vorwoche
-                kündigen. Du zahlst nur die Anteile, die du erhalten hast. Nach
-                der Probezeit ist eine Kündigung nur zum Jahresende möglich.
+                Deine {settings.trialPeriodLengthInWeeks}-wöchige Probezeit
+                beginnt erst, nachdem du die erste Lieferung erhalten hast.
+                Während der Probezeit besteht keine Kündigungsfrist und Du
+                kannst Deinen Ernteanteil wöchentlich jeweils zum Freitag der
+                Vorwoche kündigen. Du zahlst nur die Anteile, die du erhalten
+                hast. Nach der Probezeit ist eine Kündigung nur zum Jahresende
+                möglich.
               </p>
             </>
           )}

@@ -114,7 +114,7 @@ class BestellWizardConfirmOrderApiView(APIView):
                 request=request, validated_serializer_data=validated_serializer_data
             )
 
-        if len(validated_serializer_data["shopping_cart_waiting_list"]) > 0:
+        if len(validated_serializer_data.get("shopping_cart_waiting_list", {})) > 0:
             if member is None:
                 self.validate_and_create_waiting_list_entry_potential_member(
                     validated_serializer_data=validated_serializer_data

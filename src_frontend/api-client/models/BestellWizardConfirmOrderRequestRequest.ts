@@ -56,13 +56,13 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @type {number}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    nbShares: number;
+    numberOfCoopShares: number;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    pickupLocationId?: string;
+    pickupLocationIds: Array<string>;
     /**
      * 
      * @type {boolean}
@@ -98,7 +98,8 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
     if (!('contractAccepted' in value) || value['contractAccepted'] === undefined) return false;
     if (!('statuteAccepted' in value) || value['statuteAccepted'] === undefined) return false;
-    if (!('nbShares' in value) || value['nbShares'] === undefined) return false;
+    if (!('numberOfCoopShares' in value) || value['numberOfCoopShares'] === undefined) return false;
+    if (!('pickupLocationIds' in value) || value['pickupLocationIds'] === undefined) return false;
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
     if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
     if (!('waitingListShoppingCart' in value) || value['waitingListShoppingCart'] === undefined) return false;
@@ -121,8 +122,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'sepaAllowed': json['sepa_allowed'],
         'contractAccepted': json['contract_accepted'],
         'statuteAccepted': json['statute_accepted'],
-        'nbShares': json['nb_shares'],
-        'pickupLocationId': json['pickup_location_id'] == null ? undefined : json['pickup_location_id'],
+        'numberOfCoopShares': json['number_of_coop_shares'],
+        'pickupLocationIds': json['pickup_location_ids'],
         'studentStatusEnabled': json['student_status_enabled'],
         'paymentRhythm': json['payment_rhythm'],
         'waitingListShoppingCart': json['waiting_list_shopping_cart'],
@@ -146,8 +147,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'sepa_allowed': value['sepaAllowed'],
         'contract_accepted': value['contractAccepted'],
         'statute_accepted': value['statuteAccepted'],
-        'nb_shares': value['nbShares'],
-        'pickup_location_id': value['pickupLocationId'],
+        'number_of_coop_shares': value['numberOfCoopShares'],
+        'pickup_location_ids': value['pickupLocationIds'],
         'student_status_enabled': value['studentStatusEnabled'],
         'payment_rhythm': value['paymentRhythm'],
         'waiting_list_shopping_cart': value['waitingListShoppingCart'],

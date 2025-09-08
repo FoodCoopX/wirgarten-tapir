@@ -1,5 +1,4 @@
 import React from "react";
-import { TapirTheme } from "../../types/TapirTheme.ts";
 import { PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { Col, Row } from "react-bootstrap";
@@ -7,7 +6,6 @@ import ProductForm from "../components/ProductForm.tsx";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 
 interface BestellWizardProductTypeProps {
-  theme: TapirTheme;
   productType: PublicProductType;
   shoppingCart: ShoppingCart;
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
@@ -15,7 +13,6 @@ interface BestellWizardProductTypeProps {
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
-  theme,
   productType,
   shoppingCart,
   setShoppingCart,

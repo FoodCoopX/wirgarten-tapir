@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from functools import partial
 from typing import TYPE_CHECKING
 
+from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
-from django.db import transaction
 from keycloak import KeycloakOpenIDConnection, KeycloakAdmin
 
 from tapir.utils.shortcuts import get_from_cache_or_compute
@@ -53,13 +52,17 @@ class KeycloakUserManager:
             return
 
         try:
-            transaction.on_commit(partial(user.send_verify_email, cache=cache))
+            user.send_verify_email(cache=cache)
         except Exception as e:
             print(
                 f"Failed to send verify email to new user: ",
                 e,
                 f" (email: '{user.email}', id: '{user.id}', keycloak_id: '{user.keycloak_id}'): ",
             )
+
+        SocialAccount.objects.create(
+            user=user, provider="keycloak", uid=user.keycloak_id
+        )
 
     @classmethod
     def update_keycloak_user(

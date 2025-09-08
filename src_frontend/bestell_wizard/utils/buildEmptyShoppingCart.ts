@@ -1,4 +1,4 @@
-import { ShoppingCart } from "./ShoppingCart.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { PublicProductType } from "../../api-client";
 
 export function buildEmptyShoppingCart(productTypes: PublicProductType[]) {

@@ -4026,9 +4026,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/WaitingListEntryDetails'
           description: ''
-  /waiting_list/api/public_waiting_list_create_entry_new_member:
+  /waiting_list/api/public_waiting_list_create_entry_potential_member:
     post:
-      operationId: waiting_list_api_public_waiting_list_create_entry_new_member_create
+      operationId: waiting_list_api_public_waiting_list_create_entry_potential_member_create
       tags:
       - waiting_list
       requestBody:
@@ -4418,11 +4418,13 @@ components:
           type: boolean
         statute_accepted:
           type: boolean
-        nb_shares:
+        number_of_coop_shares:
           type: integer
-        pickup_location_id:
-          type: string
-          minLength: 1
+        pickup_location_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
         student_status_enabled:
           type: boolean
         payment_rhythm:
@@ -4437,9 +4439,10 @@ components:
       required:
       - become_member_now
       - contract_accepted
-      - nb_shares
+      - number_of_coop_shares
       - payment_rhythm
       - personal_data
+      - pickup_location_ids
       - sepa_allowed
       - shopping_cart
       - statute_accepted
@@ -7744,14 +7747,9 @@ components:
           items:
             type: string
             minLength: 1
-        product_ids:
-          type: array
-          items:
-            type: string
-            minLength: 1
-        product_quantities:
-          type: array
-          items:
+        shopping_cart:
+          type: object
+          additionalProperties:
             type: integer
         member_id:
           type: string
@@ -7759,8 +7757,7 @@ components:
       required:
       - member_id
       - pickup_location_ids
-      - product_ids
-      - product_quantities
+      - shopping_cart
     PublicWaitingListEntryNewMemberCreateRequest:
       type: object
       properties:
@@ -7793,14 +7790,9 @@ components:
           items:
             type: string
             minLength: 1
-        product_ids:
-          type: array
-          items:
-            type: string
-            minLength: 1
-        product_quantities:
-          type: array
-          items:
+        shopping_cart:
+          type: object
+          additionalProperties:
             type: integer
         number_of_coop_shares:
           type: integer
@@ -7813,8 +7805,7 @@ components:
       - phone_number
       - pickup_location_ids
       - postcode
-      - product_ids
-      - product_quantities
+      - shopping_cart
       - street
       - street_2
     RecipientRequest:
@@ -8690,14 +8681,9 @@ components:
           items:
             type: string
             minLength: 1
-        product_ids:
-          type: array
-          items:
-            type: string
-            minLength: 1
-        product_quantities:
-          type: array
-          items:
+        shopping_cart:
+          type: object
+          additionalProperties:
             type: integer
         desired_start_date:
           type: string
@@ -8716,8 +8702,7 @@ components:
       - phone_number
       - pickup_location_ids
       - postcode
-      - product_ids
-      - product_quantities
+      - shopping_cart
       - street
       - street_2
     WaitingListPickupLocationWish:
