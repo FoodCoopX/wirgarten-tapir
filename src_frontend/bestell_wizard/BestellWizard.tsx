@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import { Card, Col, ListGroup, Row, Spinner } from "react-bootstrap";
+import { Card, Col, ListGroup, OverlayTrigger, Row, Spinner, Tooltip } from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
@@ -13,7 +13,7 @@ import {
   PublicPickupLocation,
   type PublicProductType,
   WaitingListApi,
-  WaitingListEntryDetails,
+  WaitingListEntryDetails
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -57,6 +57,11 @@ import { sortPickupLocationsByWaitingListWishes } from "./utils/sortPickupLocati
 import { buildSettings } from "./utils/buildSettings.ts";
 import { buildSteps } from "./utils/buildSteps.ts";
 import { setDataFromWaitingListEntry } from "./utils/setDataFromWaitingListEntry.ts";
+import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isWaitingListModeEnabled } from "./utils/isWaitingListModeEnabled.ts";
+import { isAtLeastOneProductOrdered } from "./utils/isAtLeastOneProductOrdered.ts";
+import { formatShoppingCart } from "./utils/formatShoppingCart.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -95,8 +100,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
 
-  // misc
-  const [waitingListModeEnabled, setWaitingListModeEnabled] = useState(false);
+  // calculated states
   const [
     pickupLocationsWithCapacityCheckLoading,
     setPickupLocationsWithCapacityCheckLoading,
@@ -196,13 +200,9 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       settings,
       waitingListEntryDetails,
       shoppingCartOrder,
-      waitingListModeEnabled,
+      shoppingCartWaitingList,
       selectedProductTypes,
     );
-
-    if (waitingListEntryDetails !== undefined) {
-      setCurrentStep(newSteps[0]);
-    }
 
     if (!newSteps.includes(currentStep)) {
       let index = steps.indexOf(currentStep);
@@ -214,8 +214,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [
     selectedProductTypes,
     shoppingCartOrder,
+    shoppingCartWaitingList,
     settings,
-    waitingListModeEnabled,
   ]);
 
   useEffect(() => {
@@ -235,31 +235,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       setSelectedNumberOfCoopShares,
     );
   }, [shoppingCartOrder]);
-
-  useEffect(() => {
-    if (waitingListEntryDetails !== undefined) return;
-
-    if (settings.forceWaitingList) {
-      setWaitingListModeEnabled(true);
-      return;
-    }
-    if (
-      productIdsOverCapacity.length === 0 &&
-      productTypeIdsOverCapacity.length === 0 &&
-      pickupLocationsWithCapacityCheckLoading.size === 0 &&
-      (selectedPickupLocations.length === 0 ||
-        !pickupLocationsWithCapacityFull.has(selectedPickupLocations[0]))
-    ) {
-      setWaitingListModeEnabled(false);
-    }
-  }, [
-    settings,
-    productIdsOverCapacity,
-    productTypeIdsOverCapacity,
-    selectedPickupLocations,
-    pickupLocationsWithCapacityCheckLoading,
-    pickupLocationsWithCapacityFull,
-  ]);
 
   useEffect(() => {
     if (
@@ -301,7 +276,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     if (settings.forceWaitingList) {
       setShowGeneralWaitingListModal(true);
-      setWaitingListModeEnabled(true);
     }
   }, [settings]);
 
@@ -341,21 +315,23 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }, [waitingListEntryDetails]);
 
   function onNextClicked() {
-    if (
-      !waitingListModeEnabled &&
-      shouldOpenProductWaitingListModal(shoppingCartOrder)
-    ) {
+    if (shouldOpenProductWaitingListModal()) {
       setProductWaitingListModalOpen(true);
       return;
     }
-    if (!waitingListModeEnabled && shouldOpenPickupLocationWaitingListModal()) {
+    if (shouldOpenPickupLocationWaitingListModal()) {
       setPickupLocationWaitingListModalOpen(true);
       return;
     }
     goToNextStep();
   }
+  function getCurrentProductType(): PublicProductType {
+    return settings.productTypes.find(
+      (productType) => productType.id === currentStep,
+    )!;
+  }
 
-  function shouldOpenProductWaitingListModal(shoppingCart: ShoppingCart) {
+  function shouldOpenProductWaitingListModal() {
     const productType = settings.productTypes.find(
       (productType) => productType.id === currentStep,
     );
@@ -363,31 +339,24 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       return false;
     }
 
-    let productTypeIsOrdered = false;
-    for (const [productId, quantity] of Object.entries(shoppingCart)) {
-      if (quantity === 0) continue;
-
-      for (const product of productType.products) {
-        if (product.id === productId) {
-          productTypeIsOrdered = true;
-          break;
-        }
-      }
-    }
-
-    if (!productTypeIsOrdered) {
+    if (!isProductTypeOrdered(productType, shoppingCartOrder)) {
       return false;
     }
 
-    if (productType.forceWaitingList) {
+    if (settings.forceWaitingList || productType.forceWaitingList) {
       return true;
     }
 
     if (productTypeIdsOverCapacity.includes(productType.id!)) {
       return true;
     }
+
     for (const product of productType.products) {
-      if (productIdsOverCapacity.includes(product.id!)) {
+      if (
+        Object.keys(shoppingCartOrder).includes(product.id!) &&
+        shoppingCartOrder[product.id!] > 0 &&
+        productIdsOverCapacity.includes(product.id!)
+      ) {
         return true;
       }
     }
@@ -397,6 +366,15 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   function shouldOpenPickupLocationWaitingListModal() {
     if (currentStep !== "pickup_location") {
+      return false;
+    }
+
+    if (
+      !isAtLeastOneOrderedProductWithDelivery(
+        shoppingCartOrder,
+        settings.productTypes,
+      )
+    ) {
       return false;
     }
 
@@ -452,13 +430,19 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             settings={settings}
             selectedPickupLocations={selectedPickupLocations}
             setSelectedPickupLocations={setSelectedPickupLocations}
-            waitingListModeEnabled={waitingListModeEnabled}
             pickupLocationsWithCapacityCheckLoading={
               pickupLocationsWithCapacityCheckLoading
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
             waitingListEntryDetails={waitingListEntryDetails}
+            waitingListModeEnabled={
+              settings.forceWaitingList ||
+              !isAtLeastOneOrderedProductWithDelivery(
+                shoppingCartOrder,
+                settings.productTypes,
+              )
+            }
           />
         );
       case "coop_shares":
@@ -469,7 +453,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
             minimumNumberOfShares={minimumNumberOfShares}
-            waitingListModeEnabled={waitingListModeEnabled}
+            waitingListModeEnabled={isWaitingListModeEnabled(
+              settings,
+              shoppingCartOrder,
+              shoppingCartWaitingList,
+            )}
             studentStatusEnabled={studentStatusEnabled}
             setStudentStatusEnabled={setStudentStatusEnabled}
             waitingListLinkConfirmationModeEnabled={
@@ -487,7 +475,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             setSepaAllowed={setSepaAllowed}
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
-            waitingListModeEnabled={waitingListModeEnabled}
+            waitingListModeEnabled={isWaitingListModeEnabled(
+              settings,
+              shoppingCartOrder,
+              shoppingCartWaitingList,
+            )}
             waitingListLinkConfirmationModeEnabled={
               waitingListEntryDetails !== undefined
             }
@@ -514,7 +506,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             selectedPickupLocations={selectedPickupLocations}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
             updateOrderFromSummary={updateOrderFromSummary}
-            waitingListModeEnabled={waitingListModeEnabled}
+            waitingListModeEnabled={isWaitingListModeEnabled(
+              settings,
+              shoppingCartOrder,
+              shoppingCartWaitingList,
+            )}
             cancellationPolicyRead={cancellationPolicyRead}
             setCancellationPolicyRead={setCancellationPolicyRead}
             privacyPolicyRead={privacyPolicyRead}
@@ -580,7 +576,13 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       return;
     }
 
-    if (waitingListModeEnabled) {
+    if (
+      isWaitingListModeEnabled(
+        settings,
+        shoppingCartOrder,
+        shoppingCartWaitingList,
+      )
+    ) {
       waitingListApi
         .waitingListApiPublicWaitingListCreateEntryPotentialMemberCreate({
           publicWaitingListEntryNewMemberCreateRequest: {
@@ -651,7 +653,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     if (currentStep === "summary") {
       return buildNextButtonForStepSummary(
         privacyPolicyRead,
-        waitingListModeEnabled,
+        isWaitingListModeEnabled(
+          settings,
+          shoppingCartOrder,
+          shoppingCartWaitingList,
+        ),
         cancellationPolicyRead,
         confirmOrderLoading,
         onConfirmOrder,
@@ -671,7 +677,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         params = buildNextButtonParametersForPickupLocation(
           selectedPickupLocations,
           pickupLocationsWithCapacityCheckLoading,
-          waitingListModeEnabled,
+          isWaitingListModeEnabled(
+            settings,
+            shoppingCartOrder,
+            shoppingCartWaitingList,
+          ),
         );
         break;
       case "coop_shares":
@@ -679,7 +689,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           statuteAccepted,
           selectedNumberOfCoopShares,
           minimumNumberOfShares,
-          waitingListModeEnabled,
+          isWaitingListModeEnabled(
+            settings,
+            shoppingCartOrder,
+            shoppingCartWaitingList,
+          ),
           studentStatusEnabled,
         );
         break;
@@ -688,7 +702,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           personalData,
           sepaAllowed,
           contractAccepted,
-          waitingListModeEnabled,
+          isWaitingListModeEnabled(
+            settings,
+            shoppingCartOrder,
+            shoppingCartWaitingList,
+          ),
           emailAddressAlreadyInUse,
         );
         break;
@@ -733,9 +751,25 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }
 
   function confirmEnableProductWaitingListMode() {
-    setWaitingListModeEnabled(true);
+    const productType = getCurrentProductType();
+    moveProductType(shoppingCartOrder, shoppingCartWaitingList, productType);
+    setShoppingCartOrder(Object.assign({}, shoppingCartOrder));
+    setShoppingCartWaitingList(Object.assign({}, shoppingCartWaitingList));
+
     setProductWaitingListModalOpen(false);
     goToNextStep();
+  }
+
+  function doesProductBelongsToProductType(
+    productId: string,
+    productType: PublicProductType,
+  ) {
+    for (const product of productType.products) {
+      if (product.id === productId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function cancelEnableProductWaitingListMode() {
@@ -743,8 +777,33 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }
 
   function confirmEnablePickupLocationWaitingListMode() {
-    setWaitingListModeEnabled(true);
+    console.log(shoppingCartOrder);
+    console.log(shoppingCartWaitingList);
+
+    for (const productType of settings.productTypes) {
+      if (productType.noDelivery) continue;
+
+      moveProductType(shoppingCartOrder, shoppingCartWaitingList, productType);
+    }
+
+    console.log(shoppingCartOrder);
+    console.log(shoppingCartWaitingList);
+    setShoppingCartOrder(Object.assign({}, shoppingCartOrder));
+    setShoppingCartWaitingList(Object.assign({}, shoppingCartWaitingList));
     setPickupLocationWaitingListModalOpen(false);
+  }
+
+  function moveProductType(
+    from: ShoppingCart,
+    to: ShoppingCart,
+    productType: PublicProductType,
+  ) {
+    for (const [productId, quantity] of Object.entries(from)) {
+      if (doesProductBelongsToProductType(productId, productType)) {
+        to[productId] = quantity;
+        from[productId] = 0;
+      }
+    }
   }
 
   function cancelEnablePickupLocationWaitingListMode() {
@@ -752,7 +811,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }
 
   function confirmEnableGeneralWaitingListMode() {
-    setWaitingListModeEnabled(true);
     setShowGeneralWaitingListModal(false);
   }
 
@@ -777,11 +835,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                 height: "100%",
               }}
             >
-              {waitingListModeEnabled && (
-                <ListGroup.Item className={"list-group-item-warning"}>
-                  <div className={"text-center"}>Warteliste-Eintrag</div>
-                </ListGroup.Item>
-              )}
               {waitingListEntryDetails !== undefined && (
                 <ListGroup.Item className={"list-group-item-warning"}>
                   <div className={"text-center"}>
@@ -824,6 +877,52 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                   </div>
                 )}
               </ListGroup.Item>
+              {(isAtLeastOneProductOrdered(shoppingCartOrder) ||
+                isAtLeastOneProductOrdered(shoppingCartWaitingList)) && (
+                <ListGroup.Item className={"list-group-item-dark"}>
+                  <Row>
+                    {isAtLeastOneProductOrdered(shoppingCartOrder) && (
+                      <Col>
+                        <OverlayTrigger
+                          overlay={
+                            <Tooltip id={"tooltip shopping cart"}>
+                              Im Warenkorb, wird bestellt.
+                            </Tooltip>
+                          }
+                        >
+                          <div className={"text-center"}>
+                            <span className={"material-icons"}>
+                              shopping_cart
+                            </span>{" "}
+                            {formatShoppingCart(shoppingCartOrder, settings)}
+                          </div>
+                        </OverlayTrigger>
+                      </Col>
+                    )}
+                    {isAtLeastOneProductOrdered(shoppingCartWaitingList) && (
+                      <Col>
+                        <OverlayTrigger
+                          overlay={
+                            <Tooltip id={"tooltip waiting list"}>
+                              Wird in der Warteliste eingetragen
+                            </Tooltip>
+                          }
+                        >
+                          <div className={"text-center"}>
+                            <span className={"material-icons"}>
+                              pending_actions
+                            </span>{" "}
+                            {formatShoppingCart(
+                              shoppingCartWaitingList,
+                              settings,
+                            )}
+                          </div>
+                        </OverlayTrigger>
+                      </Col>
+                    )}
+                  </Row>
+                </ListGroup.Item>
+              )}
             </ListGroup>
             <Card.Footer>
               <div className={"d-flex justify-content-between"}>

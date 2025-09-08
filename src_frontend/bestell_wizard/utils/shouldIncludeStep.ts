@@ -30,7 +30,8 @@ export function shouldIncludeStepPickupLocation(
 
 export function shouldIncludeStepCoopShares(
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
-  waitingListModeEnabled: boolean,
+  shoppingCartOrder: ShoppingCart,
+  shoppingCartWaitingList: ShoppingCart,
   showCoopContent: boolean,
 ) {
   if (!showCoopContent) {
@@ -38,7 +39,10 @@ export function shouldIncludeStepCoopShares(
   }
 
   if (waitingListEntryDetails === undefined) {
-    return !waitingListModeEnabled;
+    return (
+      Object.keys(shoppingCartOrder).length > 0 ||
+      Object.keys(shoppingCartWaitingList).length == 0
+    );
   }
 
   if (waitingListEntryDetails.memberAlreadyExists) {
