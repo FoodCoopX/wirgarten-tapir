@@ -22,7 +22,7 @@ from tapir.wirgarten.utils import legal_status_is_cooperative
 
 class BestellWizardOrderValidator:
     @classmethod
-    def validate_complete_order(
+    def validate_order_and_user_data(
         cls,
         validated_serializer_data: dict,
         contract_start_date: datetime.date,

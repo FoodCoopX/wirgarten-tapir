@@ -135,7 +135,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             cache=self.cache,
         )
 
-        BestellWizardOrderValidator.validate_complete_order(
+        BestellWizardOrderValidator.validate_order_and_user_data(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
             cache=self.cache,
