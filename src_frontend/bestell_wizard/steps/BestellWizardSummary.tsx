@@ -143,7 +143,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
               <div className={"mt-4"} key={productType.id}>
                 <BestellWizardCardSubtitle text={productType.name} />
                 {buildProductTypeSummary(productType)}
-                {!waitingListEntryDetails !== undefined && (
+                {waitingListEntryDetails !== undefined && (
                   <TapirButton
                     icon={"edit"}
                     text={"Bestellung anpassen"}

@@ -45,6 +45,7 @@ class ProductTypeLowestFreeCapacityAfterDateCalculator:
         capacity_object = TapirCache.get_product_type_capacity_at_date(
             cache=cache, product_type=product_type, reference_date=reference_date
         )
+
         if capacity_object is not None:
             total_capacity = capacity_object.capacity
 

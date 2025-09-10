@@ -367,7 +367,7 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             pickup_location_id=pickup_location_id,
         )
         if pickup_location is None:
-            raise Http404(f"Unknown pickup location")
+            raise Http404(f"Unknown pickup location: {pickup_location_id}")
 
         reference_date = get_today(cache=self.cache)
         waiting_list_entry_id = serializer.validated_data.get(

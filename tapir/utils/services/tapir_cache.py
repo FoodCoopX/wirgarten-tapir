@@ -328,6 +328,9 @@ class TapirCache:
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=reference_date, cache=cache
         )
+        product_type_capacities_by_product_type = get_from_cache_or_compute(
+            product_type_capacities_by_growing_period, growing_period, lambda: {}
+        )
 
         def compute():
             return ProductCapacity.objects.filter(
@@ -335,8 +338,8 @@ class TapirCache:
             ).first()
 
         return get_from_cache_or_compute(
-            product_type_capacities_by_growing_period,
-            growing_period,
+            product_type_capacities_by_product_type,
+            product_type,
             compute,
         )
 
