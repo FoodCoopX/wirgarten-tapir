@@ -1,9 +1,11 @@
 import datetime
+from functools import partial
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.models import (
     Member,
     MandateReference,
@@ -115,12 +117,15 @@ class CoopSharePurchaseHandler:
         if quantity < threshold:
             return
 
-        transaction.on_commit(
-            lambda: send_email(
-                to_email=[
-                    get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)
-                ],
-                subject=f"Warnung: es wurden mehr als {threshold} Genossenschaftsanteile gezeichnet- bitte prüfen",
-                content=f"Bestehendes Mitglied oder Neuanmeldung: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
-            )
+        _partial = partial(
+            send_email,
+            to_email=[
+                get_parameter_value(key=ParameterKeys.SITE_ADMIN_EMAIL, cache=cache)
+            ],
+            subject=f"Warnung: es wurden mehr als {threshold} Genossenschaftsanteile gezeichnet- bitte prüfen",
+            content=f"Bestehendes Mitglied oder Neuanmeldung: {member.get_display_name()} mit Mail-Adresse {member.email} hat gerade {quantity} Genossenschaftsanteile gezeichnet. Die Anteile sind ab dem {format_date(shares_valid_at)} gültig. Bitte an Vorstand zur Prüfung weiterleiten.",
         )
+        if is_running_tests():
+            _partial()
+        else:
+            transaction.on_commit(_partial)

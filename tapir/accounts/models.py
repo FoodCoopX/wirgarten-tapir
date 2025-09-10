@@ -19,6 +19,7 @@ from tapir.accounts.services.keycloak_user_manager import KeycloakUserManager
 from tapir.core.models import ID_LENGTH, TapirModel, generate_id
 from tapir.log.models import TextLogEntry, UpdateModelLogEntry
 from tapir.utils.models import CountryField
+from tapir.utils.shortcuts import is_running_tests
 from tapir.utils.user_utils import UserUtils
 
 log = logging.getLogger(__name__)
@@ -123,31 +124,40 @@ class KeycloakUser(AbstractUser):
 
         if has_kc_account:
             self_before_save = type(self).objects.get(id=self.id)
-            transaction.on_commit(
-                partial(
-                    KeycloakUserManager.update_keycloak_user,
-                    user=self,
-                    keycloak_client=keycloak_client,
-                    old_first_name=self_before_save.first_name,
-                    old_last_name=self_before_save.last_name,
-                    old_email=self_before_save.email,
-                    new_first_name=self.first_name,
-                    new_last_name=self.last_name,
-                    new_email=self.email,
-                    cache=cache,
-                )
+
+            _partial = partial(
+                KeycloakUserManager.update_keycloak_user,
+                user=self,
+                keycloak_client=keycloak_client,
+                old_first_name=self_before_save.first_name,
+                old_last_name=self_before_save.last_name,
+                old_email=self_before_save.email,
+                new_first_name=self.first_name,
+                new_last_name=self.last_name,
+                new_email=self.email,
+                cache=cache,
             )
+
             # important: reset the email to the original email before persisting. The actual change happens after the user click the confirmation link
             self.email = self_before_save.email
         else:
-            transaction.on_commit(
-                lambda: KeycloakUserManager.create_keycloak_user(
-                    user=self,
-                    keycloak_client=keycloak_client,
-                    initial_password=initial_password,
-                    cache=cache,
-                )
+            if self.id is None or not type(self).objects.filter(id=self.id).exists():
+                super().save(*args, **kwargs)
+                if "force_insert" in kwargs.keys():
+                    kwargs["force_insert"] = False
+
+            _partial = partial(
+                KeycloakUserManager.create_keycloak_user,
+                user=self,
+                keycloak_client=keycloak_client,
+                initial_password=initial_password,
+                cache=cache,
             )
+
+        if is_running_tests():
+            _partial()
+        else:
+            transaction.on_commit(_partial)
 
         super().save(*args, **kwargs)
 

@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 
 from tapir.configuration.models import TapirParameter
@@ -49,13 +51,17 @@ class TestWaitingListEntryUpdateView(TapirIntegrationTest):
             "postcode": "test_postcode",
             "city": "test_city",
             "pickup_location_ids": [pickup_location_2.id, pickup_location_1.id],
-            "product_ids": [product_1.id],
-            "product_quantities": [8],
+            "shopping_cart": {product_1.id: 8},
             "desired_start_date": "2026-11-05",
             "comment": "test_comment",
             "category": "cat2",
         }
-        response = self.client.post(reverse("waiting_list:update_entry"), data=data)
+
+        response = self.client.post(
+            reverse("waiting_list:update_entry"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
 
         self.assertEqual(response.status_code, 200)
 

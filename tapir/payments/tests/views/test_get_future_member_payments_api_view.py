@@ -1,7 +1,6 @@
 import datetime
 
 from django.urls import reverse
-from icecream import ic
 from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.models import TapirParameter
@@ -277,7 +276,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         response_content.sort(
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
-        ic([exp["payment"]["due_date"] for exp in response_content])
+
         self.assertEqual(
             5,
             len(response_content),
@@ -320,10 +319,6 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
                 ),
             )
             self.assertEqual([], extended_payment["coop_share_transactions"])
-            ic(
-                len(extended_payment["subscriptions"]),
-                extended_payment["payment"]["due_date"],
-            )
             self.assertEqual(1, len(extended_payment["subscriptions"]))
 
     def test_get_subscriptionInTrial_trialPeriodGetsPaidMonthly(self):

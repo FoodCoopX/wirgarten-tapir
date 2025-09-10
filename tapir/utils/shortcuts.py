@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import os
 from typing import Dict, Callable
 
 from django.shortcuts import redirect
@@ -52,3 +53,7 @@ def get_first_of_next_month(date: datetime.date):
 
 def get_last_day_of_month(date: datetime.date) -> datetime.date:
     return date.replace(day=calendar.monthrange(date.year, date.month)[1])
+
+
+def is_running_tests():
+    return "PYTEST_CURRENT_TEST" in os.environ
