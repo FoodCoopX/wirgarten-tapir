@@ -4,16 +4,19 @@ import {
   shouldIncludeStepCoopShares,
   shouldIncludeStepIntro,
   shouldIncludeStepPersonalData,
-  shouldIncludeStepPickupLocation
+  shouldIncludeStepPickupLocation,
 } from "./shouldIncludeStep.ts";
-import { type PublicProductType, WaitingListEntryDetails } from "../../api-client";
+import {
+  type PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 
 export function buildSteps(
   settings: BestellWizardSettings,
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
   shoppingCartOrder: ShoppingCart,
-  shoppingCartWaitingList: ShoppingCart,
   selectedProductTypes: PublicProductType[],
+  becomeMemberNow: boolean | null,
 ) {
   let newSteps = [];
 
@@ -52,9 +55,8 @@ export function buildSteps(
   if (
     shouldIncludeStepCoopShares(
       waitingListEntryDetails,
-      shoppingCartOrder,
-      shoppingCartWaitingList,
       settings.showCoopContent,
+      becomeMemberNow,
     )
   ) {
     newSteps.push("coop_shares");

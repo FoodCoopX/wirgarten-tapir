@@ -7,6 +7,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
@@ -41,6 +42,9 @@ from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
+    WaitingListEntryConfirmationEmailSender,
+)
 from tapir.waiting_list.services.waiting_list_entry_creator import (
     WaitingListEntryCreator,
 )
@@ -99,17 +103,11 @@ class BestellWizardConfirmOrderApiView(APIView):
     def validate_everything_and_apply_all_changes(
         self, validated_serializer_data: dict, request
     ):
-        if (
-            len(validated_serializer_data["shopping_cart"]) == 0
-            and len(validated_serializer_data["waiting_list_shopping_cart"]) == 0
-        ):
-            raise ValidationError("Bestellung ist leer")
-
         member = None
-        if (
-            len(validated_serializer_data["shopping_cart"]) > 0
-            or validated_serializer_data["become_member_now"]
-        ):
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            validated_serializer_data["shopping_cart_order"], cache=self.cache
+        )
+        if len(order) > 0 or validated_serializer_data["become_member_now"]:
             member = self.validate_and_fulfill_order(
                 request=request, validated_serializer_data=validated_serializer_data
             )
@@ -160,12 +158,10 @@ class BestellWizardConfirmOrderApiView(APIView):
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
             order=waiting_list_order,
             email=validated_serializer_data["personal_data"]["email"],
-            number_of_coop_shares=validated_serializer_data["personal_data"][
-                "nb_shares"
-            ],
+            number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             cache=self.cache,
         )
-        WaitingListEntryCreator.create_entry_potential_member(
+        entry = WaitingListEntryCreator.create_entry_potential_member(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=validated_serializer_data[
                 "pickup_location_ids"
@@ -173,6 +169,14 @@ class BestellWizardConfirmOrderApiView(APIView):
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             personal_data=validated_serializer_data["personal_data"],
             cache=self.cache,
+        )
+        WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
+            entry=entry,
+            potential_member_info=TransactionalTriggerData.RecipientOutsideOfBaseQueryset(
+                email=validated_serializer_data["personal_data"]["email"],
+                first_name=validated_serializer_data["personal_data"]["first_name"],
+                last_name=validated_serializer_data["personal_data"]["last_name"],
+            ),
         )
 
     def validate_and_create_waiting_list_entry_existing_member(
@@ -189,7 +193,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         )
         fulfilled_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-                validated_serializer_data["shopping_cart"], cache=self.cache
+                validated_serializer_data["shopping_cart_order"], cache=self.cache
             )
         )
         pickup_location_ids = []
@@ -199,11 +203,15 @@ class BestellWizardConfirmOrderApiView(APIView):
             waiting_list_order, cache=self.cache
         ):
             pickup_location_ids = validated_serializer_data["pickup_location_ids"]
-        WaitingListEntryCreator.create_entry_existing_member(
+        entry = WaitingListEntryCreator.create_entry_existing_member(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=pickup_location_ids,
             member_id=member.id,
             cache=self.cache,
+        )
+        WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
+            entry=entry,
+            existing_member_id=member.id,
         )
 
 

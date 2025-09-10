@@ -14,13 +14,14 @@ class PersonalDataSerializer(serializers.Serializer):
     city = serializers.CharField()
     country = serializers.CharField()
     birthdate = serializers.DateField()
-    account_owner = serializers.CharField()
-    iban = serializers.CharField()
+    account_owner = serializers.CharField(allow_blank=True)
+    iban = serializers.CharField(allow_blank=True)
 
 
 class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     # map of productId -> quantity ordered
-    shopping_cart = serializers.DictField(child=serializers.IntegerField())
+    shopping_cart_order = serializers.DictField(child=serializers.IntegerField())
+    shopping_cart_waiting_list = serializers.DictField(child=serializers.IntegerField())
     personal_data = PersonalDataSerializer()
     sepa_allowed = serializers.BooleanField()
     contract_accepted = serializers.BooleanField()
@@ -29,8 +30,7 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     pickup_location_ids = serializers.ListField(child=serializers.CharField())
     student_status_enabled = serializers.BooleanField()
     payment_rhythm = serializers.CharField()
-    waiting_list_shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    become_member_now = serializers.BooleanField()
+    become_member_now = serializers.BooleanField(allow_null=True)
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):

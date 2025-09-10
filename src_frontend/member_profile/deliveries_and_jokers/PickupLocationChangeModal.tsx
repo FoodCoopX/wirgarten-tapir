@@ -5,7 +5,7 @@ import {
   PublicPickupLocation,
   type PublicSubscription,
   SubscriptionsApi,
-  WaitingListApi
+  WaitingListApi,
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import PickupLocationWaitingListSelector from "../../bestell_wizard/components/PickupLocationWaitingListSelector.tsx";
@@ -171,8 +171,7 @@ const PickupLocationChangeModal: React.FC<PickupLocationChangeModalProps> = ({
             pickupLocationIds: selectedPickupLocations.map(
               (pickupLocations) => pickupLocations.id!,
             ),
-            productIds: [],
-            productQuantities: [],
+            shoppingCart: {},
           },
         })
         .then((result) => {

@@ -3,6 +3,9 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { Col, Form, Row } from "react-bootstrap";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
 
 interface BestellWizardCoopSharesProps {
   selectedNumberOfCoopShares: number;
@@ -10,11 +13,14 @@ interface BestellWizardCoopSharesProps {
   statuteAccepted: boolean;
   setStatuteAccepted: (statuteRead: boolean) => void;
   minimumNumberOfShares: number;
-  waitingListModeEnabled: boolean;
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
   settings: BestellWizardSettings;
+  becomeMemberNow: boolean | null;
+  setBecomeMemberNow: (becomeMemberNow: boolean) => void;
+  shoppingCartOrder: ShoppingCart;
+  shoppingCartWaitingList: ShoppingCart;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -23,11 +29,14 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   statuteAccepted,
   setStatuteAccepted,
   minimumNumberOfShares,
-  waitingListModeEnabled,
   studentStatusEnabled,
   setStudentStatusEnabled,
   waitingListLinkConfirmationModeEnabled,
   settings,
+  becomeMemberNow,
+  setBecomeMemberNow,
+  shoppingCartOrder,
+  shoppingCartWaitingList,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -38,7 +47,57 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
     setStatuteAccepted(false);
   }, [studentStatusEnabled]);
 
-  return (
+  function shouldConfirmMemberNow() {
+    return (
+      !isAtLeastOneProductOrdered(shoppingCartOrder) &&
+      isAtLeastOneProductOrdered(shoppingCartWaitingList) &&
+      becomeMemberNow === null
+    );
+  }
+
+  return shouldConfirmMemberNow() ? (
+    <>
+      <Row>
+        <Col>
+          <BestellWizardCardSubtitle
+            text={"Möchtest du sofort Mitglied werden?"}
+          />
+          <p>
+            Die wirst auf die Warteliste für deine Bestellung eingetragen. Du
+            kannst dich aber entscheiden sofort Mitglied der Genossenschaft zu
+            werden.
+          </p>
+        </Col>
+      </Row>
+      <Row>
+        <Col className={"d-flex flex-column align-items-center"}>
+          <TapirButton
+            text={"Sofort Mitglied werden"}
+            variant={"outline-primary"}
+            onClick={() => setBecomeMemberNow(true)}
+          />
+          <div className={"text-center"}>
+            Deine Bestellung geht auf der Warteliste bis ein Platz für dich frei
+            wird. Du kaufst aber gleich Genossenschaftsanteile. Du wirst sofort
+            Mitglied der Genossenschaft.
+          </div>
+        </Col>
+        <Col className={"d-flex flex-column align-items-center"}>
+          <TapirButton
+            text={"Erst Mitglied werden wenn die Bestellung bestätigt wird"}
+            variant={"outline-primary"}
+            onClick={() => setBecomeMemberNow(false)}
+          />
+          <div className={"text-center"}>
+            Deine Bestellung geht auf der Warteliste bis ein Platz für dich frei
+            wird. Erst wenn ein Platz für dich frei wird kaufst du
+            Genossenschaftsanteile. Erst dann wirst du Mitglied der
+            Genossenschaft.
+          </div>
+        </Col>
+      </Row>
+    </>
+  ) : (
     <>
       <Row>
         <Col>
@@ -81,57 +140,53 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
           </div>
         </Col>
       </Row>
-      {!waitingListModeEnabled && (
-        <>
-          <Row className={"mt-2"}>
-            <Col>
-              <Form.Check
-                id={"statute"}
-                checked={statuteAccepted}
-                onChange={(event) => setStatuteAccepted(event.target.checked)}
-                label={
-                  "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
-                }
-                disabled={studentStatusEnabled}
-              />
-              <Form.Text>
-                <a href={"https://biotop-oberland.de/satzung"}>
-                  https://biotop-oberland.de/satzung
-                </a>
-                <br />
-                Bitte beachte, dass deine Genossenschaftsanteile erst bei
-                Austritt aus der Genossenschaft und nach Verabschiedung des
-                Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen.
-                Siehe dazu Satzung § 10 und § 37.
-              </Form.Text>
-              <Form.Text></Form.Text>
-            </Col>
-          </Row>
-          {settings.studentStatusAllowed && (
-            <Row>
-              <Col>
-                <Form.Check
-                  label={
-                    "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
-                  }
-                  checked={studentStatusEnabled}
-                  onChange={(event) =>
-                    setStudentStatusEnabled(event.target.checked)
-                  }
-                  disabled={waitingListLinkConfirmationModeEnabled}
-                  id={"student"}
-                />
-                <Form.Text>
-                  Die Immatrikulationsbescheinigung muss per Mail an{" "}
-                  <a href="mailto:lueneburg@wirgarten.com">
-                    lueneburg@wirgarten.com
-                  </a>{" "}
-                  gesendet werden.
-                </Form.Text>
-              </Col>
-            </Row>
-          )}
-        </>
+      <Row className={"mt-2"}>
+        <Col>
+          <Form.Check
+            id={"statute"}
+            checked={statuteAccepted}
+            onChange={(event) => setStatuteAccepted(event.target.checked)}
+            label={
+              "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
+            }
+            disabled={studentStatusEnabled}
+          />
+          <Form.Text>
+            <a href={"https://biotop-oberland.de/satzung"}>
+              https://biotop-oberland.de/satzung
+            </a>
+            <br />
+            Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt
+            aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses
+            im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10
+            und § 37.
+          </Form.Text>
+          <Form.Text></Form.Text>
+        </Col>
+      </Row>
+      {settings.studentStatusAllowed && (
+        <Row>
+          <Col>
+            <Form.Check
+              label={
+                "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
+              }
+              checked={studentStatusEnabled}
+              onChange={(event) =>
+                setStudentStatusEnabled(event.target.checked)
+              }
+              disabled={waitingListLinkConfirmationModeEnabled}
+              id={"student"}
+            />
+            <Form.Text>
+              Die Immatrikulationsbescheinigung muss per Mail an{" "}
+              <a href="mailto:lueneburg@wirgarten.com">
+                lueneburg@wirgarten.com
+              </a>{" "}
+              gesendet werden.
+            </Form.Text>
+          </Col>
+        </Row>
       )}
     </>
   );

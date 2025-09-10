@@ -272,8 +272,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       waitingListApi
         .waitingListApiWaitingListCreateEntryExistingMemberCreate({
           publicWaitingListEntryExistingMemberCreateRequest: {
-            productIds: Object.keys(shoppingCart),
-            productQuantities: Object.values(shoppingCart),
+            shoppingCart: shoppingCart,
             pickupLocationIds: selectedPickupLocations.map(
               (pickupLocations) => pickupLocations.id!,
             ),

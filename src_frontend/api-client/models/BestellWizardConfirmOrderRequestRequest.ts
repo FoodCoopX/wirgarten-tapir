@@ -26,7 +26,13 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @type {{ [key: string]: number; }}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    shoppingCart: { [key: string]: number; };
+    shoppingCartOrder: { [key: string]: number; };
+    /**
+     * 
+     * @type {{ [key: string]: number; }}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    shoppingCartWaitingList: { [key: string]: number; };
     /**
      * 
      * @type {PersonalDataRequest}
@@ -77,23 +83,18 @@ export interface BestellWizardConfirmOrderRequestRequest {
     paymentRhythm: string;
     /**
      * 
-     * @type {{ [key: string]: number; }}
-     * @memberof BestellWizardConfirmOrderRequestRequest
-     */
-    waitingListShoppingCart: { [key: string]: number; };
-    /**
-     * 
      * @type {boolean}
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
-    becomeMemberNow: boolean;
+    becomeMemberNow: boolean | null;
 }
 
 /**
  * Check if a given object implements the BestellWizardConfirmOrderRequestRequest interface.
  */
 export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object): value is BestellWizardConfirmOrderRequestRequest {
-    if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
+    if (!('shoppingCartOrder' in value) || value['shoppingCartOrder'] === undefined) return false;
+    if (!('shoppingCartWaitingList' in value) || value['shoppingCartWaitingList'] === undefined) return false;
     if (!('personalData' in value) || value['personalData'] === undefined) return false;
     if (!('sepaAllowed' in value) || value['sepaAllowed'] === undefined) return false;
     if (!('contractAccepted' in value) || value['contractAccepted'] === undefined) return false;
@@ -102,7 +103,6 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('pickupLocationIds' in value) || value['pickupLocationIds'] === undefined) return false;
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
     if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
-    if (!('waitingListShoppingCart' in value) || value['waitingListShoppingCart'] === undefined) return false;
     if (!('becomeMemberNow' in value) || value['becomeMemberNow'] === undefined) return false;
     return true;
 }
@@ -117,7 +117,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
     }
     return {
         
-        'shoppingCart': json['shopping_cart'],
+        'shoppingCartOrder': json['shopping_cart_order'],
+        'shoppingCartWaitingList': json['shopping_cart_waiting_list'],
         'personalData': PersonalDataRequestFromJSON(json['personal_data']),
         'sepaAllowed': json['sepa_allowed'],
         'contractAccepted': json['contract_accepted'],
@@ -126,7 +127,6 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'pickupLocationIds': json['pickup_location_ids'],
         'studentStatusEnabled': json['student_status_enabled'],
         'paymentRhythm': json['payment_rhythm'],
-        'waitingListShoppingCart': json['waiting_list_shopping_cart'],
         'becomeMemberNow': json['become_member_now'],
     };
 }
@@ -142,7 +142,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
 
     return {
         
-        'shopping_cart': value['shoppingCart'],
+        'shopping_cart_order': value['shoppingCartOrder'],
+        'shopping_cart_waiting_list': value['shoppingCartWaitingList'],
         'personal_data': PersonalDataRequestToJSON(value['personalData']),
         'sepa_allowed': value['sepaAllowed'],
         'contract_accepted': value['contractAccepted'],
@@ -151,7 +152,6 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'pickup_location_ids': value['pickupLocationIds'],
         'student_status_enabled': value['studentStatusEnabled'],
         'payment_rhythm': value['paymentRhythm'],
-        'waiting_list_shopping_cart': value['waitingListShoppingCart'],
         'become_member_now': value['becomeMemberNow'],
     };
 }

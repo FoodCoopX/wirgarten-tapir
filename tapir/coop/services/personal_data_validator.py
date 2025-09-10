@@ -22,6 +22,7 @@ class PersonalDataValidator:
         phone_number: str,
         birthdate: datetime.date,
         iban: str,
+        account_owner: str,
         cache: dict,
         check_waiting_list: bool,
         payment_rhythm: str,
@@ -33,19 +34,11 @@ class PersonalDataValidator:
             email, cache=cache, check_waiting_list=check_waiting_list
         )
         cls.validate_phone_number_is_valid(phone_number)
-        cls.validate_personal_data_existing_member(
-            birthdate=birthdate,
-            iban=iban,
-            payment_rhythm=payment_rhythm,
-            cache=cache,
-        )
 
-    @classmethod
-    def validate_personal_data_existing_member(
-        cls, birthdate: datetime.date, iban: str, payment_rhythm: str, cache: dict
-    ):
         cls.validate_birthdate(birthdate, cache=cache)
         IBANValidator(iban)
+        if account_owner.strip() == "":
+            raise ValidationError("Das Feld 'Kontoinhaber*in' muss ausgefüllt sein")
 
         if not MemberPaymentRhythmService.is_payment_rhythm_allowed(
             payment_rhythm, cache=cache

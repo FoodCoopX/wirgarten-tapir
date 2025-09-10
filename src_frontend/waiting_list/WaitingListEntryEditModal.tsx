@@ -17,6 +17,7 @@ import WaitingListTabPersonalData from "./tabs/WaitingListTabPersonalData.tsx";
 import WaitingListTabWishes from "./tabs/WaitingListTabWishes.tsx";
 import WaitingListTabLink from "./tabs/WaitingListTabLink.tsx";
 import { ToastData } from "../types/ToastData.ts";
+import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 
 interface WaitingListEntryEditModalProps {
   csrfToken: string;
@@ -99,6 +100,12 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
       .finally(() => setLoading(false));
   }
 
+  function buildShoppingCart(): ShoppingCart {
+    const ids = productWishes.map((wish) => wish.product.id!);
+    const quantities = productWishes.map((wish) => wish.quantity);
+    return Object.fromEntries(ids.map((id, index) => [id, quantities[index]]));
+  }
+
   function onSave() {
     setLoading(true);
 
@@ -121,8 +128,7 @@ const WaitingListEntryEditModal: React.FC<WaitingListEntryEditModalProps> = ({
           pickupLocationIds: pickupLocationWishes.map(
             (wish) => wish.pickupLocation.id!,
           ),
-          productIds: productWishes.map((wish) => wish.product.id!),
-          productQuantities: productWishes.map((wish) => wish.quantity),
+          shoppingCart: buildShoppingCart(),
         },
       })
       .then(() => {

@@ -4406,7 +4406,11 @@ components:
     BestellWizardConfirmOrderRequestRequest:
       type: object
       properties:
-        shopping_cart:
+        shopping_cart_order:
+          type: object
+          additionalProperties:
+            type: integer
+        shopping_cart_waiting_list:
           type: object
           additionalProperties:
             type: integer
@@ -4430,12 +4434,9 @@ components:
         payment_rhythm:
           type: string
           minLength: 1
-        waiting_list_shopping_cart:
-          type: object
-          additionalProperties:
-            type: integer
         become_member_now:
           type: boolean
+          nullable: true
       required:
       - become_member_now
       - contract_accepted
@@ -4444,10 +4445,10 @@ components:
       - personal_data
       - pickup_location_ids
       - sepa_allowed
-      - shopping_cart
+      - shopping_cart_order
+      - shopping_cart_waiting_list
       - statute_accepted
       - student_status_enabled
-      - waiting_list_shopping_cart
     BestellWizardDeliveryDatesForOrderRequestRequest:
       type: object
       properties:

@@ -51,7 +51,7 @@ class BestellWizardOrderFulfiller:
         )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            validated_serializer_data["shopping_cart"], cache=cache
+            validated_serializer_data["shopping_cart_order"], cache=cache
         )
         subscriptions = cls.create_subscriptions(
             order=order,

@@ -25,7 +25,6 @@ class TapirModel(models.Model):
 
 class SidebarLinkGroup:
     name: str
-    links: []
 
     def __init__(self, name: str):
         self.name = name

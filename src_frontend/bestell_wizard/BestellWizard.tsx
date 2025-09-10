@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import { Card, Col, ListGroup, OverlayTrigger, Row, Spinner, Tooltip } from "react-bootstrap";
+import {
+  Card,
+  Col,
+  ListGroup,
+  OverlayTrigger,
+  Row,
+  Spinner,
+  Tooltip,
+} from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
@@ -13,7 +21,7 @@ import {
   PublicPickupLocation,
   type PublicProductType,
   WaitingListApi,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +40,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -62,6 +70,7 @@ import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrde
 import { isWaitingListModeEnabled } from "./utils/isWaitingListModeEnabled.ts";
 import { isAtLeastOneProductOrdered } from "./utils/isAtLeastOneProductOrdered.ts";
 import { formatShoppingCart } from "./utils/formatShoppingCart.ts";
+import { doesProductBelongsToProductType } from "./utils/doesProductBelongToProductType.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -144,6 +153,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   const [currentStep, setCurrentStep] = useState<BestellWizardStep | string>(
     "intro",
   );
+  const [becomeMemberNow, setBecomeMemberNow] = useState<boolean | null>(null);
 
   useEffect(() => {
     setBaseDataLoading(true);
@@ -200,8 +210,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       settings,
       waitingListEntryDetails,
       shoppingCartOrder,
-      shoppingCartWaitingList,
       selectedProductTypes,
+      becomeMemberNow,
     );
 
     if (!newSteps.includes(currentStep)) {
@@ -216,6 +226,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     shoppingCartOrder,
     shoppingCartWaitingList,
     settings,
+    becomeMemberNow,
   ]);
 
   useEffect(() => {
@@ -231,6 +242,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     updateMinimumNumberOfShares(
       shoppingCartOrder,
+      shoppingCartWaitingList,
       setMinimumNumberOfShares,
       setSelectedNumberOfCoopShares,
     );
@@ -453,17 +465,16 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
             minimumNumberOfShares={minimumNumberOfShares}
-            waitingListModeEnabled={isWaitingListModeEnabled(
-              settings,
-              shoppingCartOrder,
-              shoppingCartWaitingList,
-            )}
             studentStatusEnabled={studentStatusEnabled}
             setStudentStatusEnabled={setStudentStatusEnabled}
             waitingListLinkConfirmationModeEnabled={
               waitingListEntryDetails !== undefined
             }
             settings={settings}
+            becomeMemberNow={becomeMemberNow}
+            shoppingCartOrder={shoppingCartOrder}
+            shoppingCartWaitingList={shoppingCartWaitingList}
+            setBecomeMemberNow={setBecomeMemberNow}
           />
         );
       case "personal_data":
@@ -479,6 +490,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               settings,
               shoppingCartOrder,
               shoppingCartWaitingList,
+              becomeMemberNow,
             )}
             waitingListLinkConfirmationModeEnabled={
               waitingListEntryDetails !== undefined
@@ -501,7 +513,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       case "summary":
         return (
           <BestellWizardSummary
-            shoppingCart={shoppingCartOrder}
+            shoppingCartOrder={shoppingCartOrder}
+            shoppingCartWaitingList={shoppingCartWaitingList}
             selectedNumberOfCoopShares={selectedNumberOfCoopShares}
             selectedPickupLocations={selectedPickupLocations}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
@@ -510,6 +523,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               settings,
               shoppingCartOrder,
               shoppingCartWaitingList,
+              becomeMemberNow,
             )}
             cancellationPolicyRead={cancellationPolicyRead}
             setCancellationPolicyRead={setCancellationPolicyRead}
@@ -518,6 +532,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListEntryDetails={waitingListEntryDetails}
             contractStartDate={contractStartDate}
             settings={settings}
+            becomeMemberNow={becomeMemberNow}
           />
         );
       case "end":
@@ -576,47 +591,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
       return;
     }
 
-    if (
-      isWaitingListModeEnabled(
-        settings,
-        shoppingCartOrder,
-        shoppingCartWaitingList,
-      )
-    ) {
-      waitingListApi
-        .waitingListApiPublicWaitingListCreateEntryPotentialMemberCreate({
-          publicWaitingListEntryNewMemberCreateRequest: {
-            firstName: personalData.firstName,
-            lastName: personalData.lastName,
-            email: personalData.email,
-            phoneNumber: personalData.phoneNumber,
-            street: personalData.street,
-            street2: personalData.street2,
-            postcode: personalData.postcode,
-            city: personalData.city,
-            shoppingCart: shoppingCartOrder,
-            pickupLocationIds: selectedPickupLocations.map(
-              (pickupLocations) => pickupLocations.id!,
-            ),
-            numberOfCoopShares: selectedNumberOfCoopShares,
-          },
-        })
-        .then((response) => {
-          setCurrentStep("end");
-          setConfirmOrderResponse(response);
-        })
-        .catch((error) =>
-          handleRequestError(
-            error,
-            "Fehler bei der Erzeugung des Warteliste-Eintrags",
-            setToastDatas,
-          ),
-        )
-        .finally(() => setConfirmOrderLoading(false));
-
-      return;
-    }
-
     bestellWizardApi
       .bestellWizardBestellWizardConfirmOrderCreate({
         bestellWizardConfirmOrderRequestRequest: {
@@ -628,11 +602,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           pickupLocationIds: selectedPickupLocations.map(
             (locations) => locations.id!,
           ),
-          shoppingCart: shoppingCartOrder,
+          shoppingCartOrder: shoppingCartOrder,
+          shoppingCartWaitingList: shoppingCartWaitingList,
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
-          becomeMemberNow: true,
-          waitingListShoppingCart: {},
+          becomeMemberNow: becomeMemberNow !== false,
         },
       })
       .then((response) => {
@@ -657,6 +631,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           settings,
           shoppingCartOrder,
           shoppingCartWaitingList,
+          becomeMemberNow,
         ),
         cancellationPolicyRead,
         confirmOrderLoading,
@@ -681,6 +656,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             settings,
             shoppingCartOrder,
             shoppingCartWaitingList,
+            becomeMemberNow,
           ),
         );
         break;
@@ -693,6 +669,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             settings,
             shoppingCartOrder,
             shoppingCartWaitingList,
+            becomeMemberNow,
           ),
           studentStatusEnabled,
         );
@@ -706,6 +683,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             settings,
             shoppingCartOrder,
             shoppingCartWaitingList,
+            becomeMemberNow,
           ),
           emailAddressAlreadyInUse,
         );
@@ -758,18 +736,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     setProductWaitingListModalOpen(false);
     goToNextStep();
-  }
-
-  function doesProductBelongsToProductType(
-    productId: string,
-    productType: PublicProductType,
-  ) {
-    for (const product of productType.products) {
-      if (product.id === productId) {
-        return true;
-      }
-    }
-    return false;
   }
 
   function cancelEnableProductWaitingListMode() {

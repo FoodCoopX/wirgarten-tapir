@@ -17,7 +17,7 @@ class WaitingListEntryCreator:
         personal_data: dict,
         cache: dict,
     ):
-        cls._create_entry(
+        return cls._create_entry(
             order=order,
             pickup_location_ids_in_priority_order=pickup_location_ids_in_priority_order,
             number_of_coop_shares=number_of_coop_shares,
@@ -34,7 +34,7 @@ class WaitingListEntryCreator:
         member_id: str,
         cache: dict,
     ):
-        cls._create_entry(
+        return cls._create_entry(
             order=order,
             pickup_location_ids_in_priority_order=pickup_location_ids_in_priority_order,
             number_of_coop_shares=0,
@@ -75,13 +75,13 @@ class WaitingListEntryCreator:
     @classmethod
     def create_product_wishes(cls, order: TapirOrder, entry: WaitingListEntry):
         product_wishes = []
-        for product_id, quantity in order:
+        for product, quantity in order.items():
             if quantity == 0:
                 continue
             product_wishes.append(
                 WaitingListProductWish(
                     waiting_list_entry=entry,
-                    product_id=product_id,
+                    product_id=product.id,
                     quantity=quantity,
                 )
             )
@@ -110,7 +110,8 @@ class WaitingListEntryCreator:
     ):
         fields = [
             "first_name",
-            "last_name" "email",
+            "last_name",
+            "email",
             "phone_number",
             "street",
             "street_2",

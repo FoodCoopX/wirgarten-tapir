@@ -30,26 +30,18 @@ export function shouldIncludeStepPickupLocation(
 
 export function shouldIncludeStepCoopShares(
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
-  shoppingCartOrder: ShoppingCart,
-  shoppingCartWaitingList: ShoppingCart,
   showCoopContent: boolean,
+  becomeMemberNow: boolean | null,
 ) {
   if (!showCoopContent) {
     return false;
   }
 
-  if (waitingListEntryDetails === undefined) {
-    return (
-      Object.keys(shoppingCartOrder).length > 0 ||
-      Object.keys(shoppingCartWaitingList).length == 0
-    );
-  }
-
-  if (waitingListEntryDetails.memberAlreadyExists) {
+  if (waitingListEntryDetails?.memberAlreadyExists) {
     return waitingListEntryDetails.numberOfCoopShares > 0;
   }
 
-  return true;
+  return becomeMemberNow !== false;
 }
 
 export function shouldIncludeStepPersonalData(

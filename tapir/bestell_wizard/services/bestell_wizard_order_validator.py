@@ -33,6 +33,7 @@ class BestellWizardOrderValidator:
             phone_number=validated_serializer_data["personal_data"]["phone_number"],
             birthdate=validated_serializer_data["personal_data"]["birthdate"],
             iban=validated_serializer_data["personal_data"]["iban"],
+            account_owner=validated_serializer_data["personal_data"]["account_owner"],
             cache=cache,
             check_waiting_list=True,
             payment_rhythm=validated_serializer_data["payment_rhythm"],
@@ -45,7 +46,7 @@ class BestellWizardOrderValidator:
             raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            shopping_cart=validated_serializer_data["shopping_cart"], cache=cache
+            shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
         )
 
         cls.validate_order(

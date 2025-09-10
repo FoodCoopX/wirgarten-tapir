@@ -875,6 +875,7 @@ class PublicConfirmWaitingListEntryView(APIView):
                 phone_number=str(waiting_list_entry.phone_number),
                 birthdate=validated_data["birthdate"],
                 iban=validated_data["iban"],
+                account_owner=validated_data["account_owner"],
                 payment_rhythm=validated_data["payment_rhythm"],
                 cache=self.cache,
                 check_waiting_list=False,

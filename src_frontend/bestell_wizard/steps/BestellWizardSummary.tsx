@@ -15,9 +15,12 @@ import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
 import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
 import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { formatShoppingCart } from "../utils/formatShoppingCart.ts";
+import { doesProductBelongsToProductType } from "../utils/doesProductBelongToProductType.ts";
 
 interface BestellWizardSummaryProps {
-  shoppingCart: ShoppingCart;
+  shoppingCartOrder: ShoppingCart;
+  shoppingCartWaitingList: ShoppingCart;
   selectedNumberOfCoopShares: number;
   selectedPickupLocations: PublicPickupLocation[];
   firstDeliveryDatesByProductType: { [key: string]: Date };
@@ -30,10 +33,12 @@ interface BestellWizardSummaryProps {
   waitingListEntryDetails: WaitingListEntryDetails | undefined;
   contractStartDate: Date;
   settings: BestellWizardSettings;
+  becomeMemberNow: boolean | null;
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
-  shoppingCart,
+  shoppingCartOrder,
+  shoppingCartWaitingList,
   selectedNumberOfCoopShares,
   selectedPickupLocations,
   firstDeliveryDatesByProductType,
@@ -46,6 +51,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   waitingListEntryDetails,
   contractStartDate,
   settings,
+  becomeMemberNow,
 }) => {
   function shouldShowPickupLocationSummary() {
     if (selectedPickupLocations.length === 0) {
@@ -58,6 +64,38 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     );
   }
 
+  function buildProductTypeSummary(productType: PublicProductType) {
+    if (isProductTypeOrdered(productType, shoppingCartOrder)) {
+      return (
+        <SummaryProductTypeTable
+          productType={productType}
+          firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+          shoppingCart={shoppingCartOrder}
+          waitingListModeEnabled={waitingListModeEnabled}
+          contractStartDate={contractStartDate}
+        />
+      );
+    }
+
+    if (isProductTypeOrdered(productType, shoppingCartWaitingList)) {
+      return (
+        <span>
+          Du wirst auf der Warteliste eingetragen für:{" "}
+          {formatShoppingCart(
+            Object.fromEntries(
+              Object.entries(shoppingCartWaitingList).filter(([productId, _]) =>
+                doesProductBelongsToProductType(productId, productType),
+              ),
+            ),
+            settings,
+          )}
+        </span>
+      );
+    }
+
+    return <span>Dieses Produkt ist nicht bestellt worden</span>;
+  }
+
   return (
     <>
       <Row>
@@ -65,7 +103,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           {shouldIncludeStepCoopShares(
             waitingListEntryDetails,
             waitingListModeEnabled,
-            settings.showCoopContent,
+            becomeMemberNow,
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
@@ -97,26 +135,14 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           {settings.productTypes.map((productType) => {
             if (
               waitingListEntryDetails !== undefined &&
-              !isProductTypeOrdered(productType, shoppingCart)
+              !isProductTypeOrdered(productType, shoppingCartOrder)
             ) {
               return null;
             }
             return (
               <div className={"mt-4"} key={productType.id}>
                 <BestellWizardCardSubtitle text={productType.name} />
-                {isProductTypeOrdered(productType, shoppingCart) ? (
-                  <SummaryProductTypeTable
-                    productType={productType}
-                    firstDeliveryDatesByProductType={
-                      firstDeliveryDatesByProductType
-                    }
-                    shoppingCart={shoppingCart}
-                    waitingListModeEnabled={waitingListModeEnabled}
-                    contractStartDate={contractStartDate}
-                  />
-                ) : (
-                  <span>Dieses Produkt ist nicht bestellt worden</span>
-                )}
+                {buildProductTypeSummary(productType)}
                 {!waitingListEntryDetails !== undefined && (
                   <TapirButton
                     icon={"edit"}
@@ -137,7 +163,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           )}
         </Col>
       </Row>
-      <Row>
+      <Row className={"mt-2"}>
         <Col>
           {!waitingListModeEnabled && (
             <Form.Group controlId={"cancellation_policy"}>
