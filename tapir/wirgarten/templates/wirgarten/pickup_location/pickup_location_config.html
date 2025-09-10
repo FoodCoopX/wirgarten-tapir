@@ -62,7 +62,7 @@
                                         {% if picking_mode == "picking_mode_share" %}
                                             {% for cap in pl.capabilities %}
                                                 <img width="24em" title="{{ cap.name }}" src="{{ cap.icon }}" />
-                                                <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default:'∞' }}
+                                                <small> {{ cap.current_capacity }} / {{ cap.max_capacity|default_if_none:'∞' }}
                                                     {% if cap.capacity_percent %}
                                                         (
                                                         {{ cap.capacity_percent|format_percent }})
@@ -98,7 +98,7 @@
                                                                 <small>{{ data.usage }}</small>
                                                             </td>
                                                             <td>
-                                                                <small>{{ data.capacity|default:'∞' }}</small>
+                                                                <small>{{ data.capacity|default_if_none:'∞' }}</small>
                                                             </td>
                                                             <td>
                                                                 <small>{{ data.free }}</small>
