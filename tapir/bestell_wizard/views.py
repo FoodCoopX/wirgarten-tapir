@@ -90,7 +90,9 @@ class BestellWizardConfirmOrderApiView(APIView):
         try:
             with transaction.atomic():
                 self.validate_everything_and_apply_all_changes(
-                    validated_serializer_data=serializer.validated_data, request=request
+                    validated_serializer_data=serializer.validated_data,
+                    request=request,
+                    cache=self.cache,
                 )
         except ValidationError as error:
             data = {
@@ -100,70 +102,81 @@ class BestellWizardConfirmOrderApiView(APIView):
 
         return Response(OrderConfirmationResponseSerializer(data).data)
 
+    @classmethod
     def validate_everything_and_apply_all_changes(
-        self, validated_serializer_data: dict, request
+        cls, validated_serializer_data: dict, request, cache: dict
     ):
-        member = None
-        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-            validated_serializer_data["shopping_cart_order"], cache=self.cache
-        )
-
         if not validated_serializer_data["privacy_policy_read"]:
             raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
 
+        order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+            validated_serializer_data["shopping_cart_order"], cache=cache
+        )
+        member = None
+
         if len(order) > 0 or validated_serializer_data["become_member_now"]:
-            member = self.validate_and_fulfill_order(
-                request=request, validated_serializer_data=validated_serializer_data
+            member = cls.validate_and_fulfill_order(
+                request=request,
+                validated_serializer_data=validated_serializer_data,
+                cache=cache,
             )
 
-        if len(validated_serializer_data.get("shopping_cart_waiting_list", {})) > 0:
+        order_waiting_list = (
+            TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
+                validated_serializer_data["shopping_cart_waiting_list"],
+                cache=cache,
+            )
+        )
+        if len(order_waiting_list) > 0:
             if member is None:
-                self.validate_and_create_waiting_list_entry_potential_member(
-                    validated_serializer_data=validated_serializer_data
+                cls.validate_and_create_waiting_list_entry_potential_member(
+                    validated_serializer_data=validated_serializer_data, cache=cache
                 )
             else:
-                self.validate_and_create_waiting_list_entry_existing_member(
-                    member=member, validated_serializer_data=validated_serializer_data
+                cls.validate_and_create_waiting_list_entry_existing_member(
+                    member=member,
+                    validated_serializer_data=validated_serializer_data,
+                    cache=cache,
                 )
 
+    @classmethod
     def validate_and_fulfill_order(
-        self,
-        request,
-        validated_serializer_data: dict,
+        cls, request, validated_serializer_data: dict, cache: dict
     ) -> Member:
         contract_start_date = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache=self.cache),
+            reference_date=get_today(cache=cache),
             apply_buffer_time=True,
-            cache=self.cache,
+            cache=cache,
         )
 
         BestellWizardOrderValidator.validate_order_and_user_data(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
-            cache=self.cache,
+            cache=cache,
         )
 
         return BestellWizardOrderFulfiller.create_member_and_fulfill_order(
             validated_serializer_data=validated_serializer_data,
             contract_start_date=contract_start_date,
             request=request,
-            cache=self.cache,
+            cache=cache,
         )
 
+    @classmethod
     def validate_and_create_waiting_list_entry_potential_member(
-        self, validated_serializer_data: dict
+        cls, validated_serializer_data: dict, cache: dict
     ):
         waiting_list_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
-                cache=self.cache,
+                cache=cache,
             )
         )
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_a_potential_member(
             order=waiting_list_order,
             email=validated_serializer_data["personal_data"]["email"],
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
-            cache=self.cache,
+            cache=cache,
         )
         entry = WaitingListEntryCreator.create_entry_potential_member(
             order=waiting_list_order,
@@ -172,7 +185,7 @@ class BestellWizardConfirmOrderApiView(APIView):
             ],
             number_of_coop_shares=validated_serializer_data["number_of_coop_shares"],
             personal_data=validated_serializer_data["personal_data"],
-            cache=self.cache,
+            cache=cache,
         )
         WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
             entry=entry,
@@ -183,35 +196,36 @@ class BestellWizardConfirmOrderApiView(APIView):
             ),
         )
 
+    @classmethod
     def validate_and_create_waiting_list_entry_existing_member(
-        self, member: Member, validated_serializer_data: dict
+        cls, member: Member, validated_serializer_data: dict, cache: dict
     ):
         waiting_list_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
                 shopping_cart=validated_serializer_data["shopping_cart_waiting_list"],
-                cache=self.cache,
+                cache=cache,
             )
         )
         WaitingListEntryValidator.validate_creation_of_waiting_list_entry_for_an_existing_member(
-            member_id=member.id, order=waiting_list_order, cache=self.cache
+            member_id=member.id, order=waiting_list_order, cache=cache
         )
         fulfilled_order = (
             TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
-                validated_serializer_data["shopping_cart_order"], cache=self.cache
+                validated_serializer_data["shopping_cart_order"], cache=cache
             )
         )
         pickup_location_ids = []
         if not OrderValidator.does_order_need_a_pickup_location(
-            fulfilled_order, cache=self.cache
+            fulfilled_order, cache=cache
         ) and OrderValidator.does_order_need_a_pickup_location(
-            waiting_list_order, cache=self.cache
+            waiting_list_order, cache=cache
         ):
             pickup_location_ids = validated_serializer_data["pickup_location_ids"]
         entry = WaitingListEntryCreator.create_entry_existing_member(
             order=waiting_list_order,
             pickup_location_ids_in_priority_order=pickup_location_ids,
             member_id=member.id,
-            cache=self.cache,
+            cache=cache,
         )
         WaitingListEntryConfirmationEmailSender.send_confirmation_mail(
             entry=entry,
