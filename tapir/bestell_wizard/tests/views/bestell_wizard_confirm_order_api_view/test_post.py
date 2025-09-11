@@ -433,7 +433,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
                 1,
                 WaitingListPickupLocationWish.objects.filter(
                     waiting_list_entry=waiting_list_entry,
-                    pickup_location=self.pickup_location_1,
+                    pickup_location=pickup_location,
                     priority=index + 1,
                 ).count(),
             )
