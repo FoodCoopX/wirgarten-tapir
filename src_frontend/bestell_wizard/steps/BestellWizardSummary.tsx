@@ -80,7 +80,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     if (isProductTypeOrdered(productType, shoppingCartWaitingList)) {
       return (
         <span>
-          Du wirst auf der Warteliste eingetragen für:{" "}
+          Du wirst auf die Warteliste eingetragen für:{" "}
           {formatShoppingCart(
             Object.fromEntries(
               Object.entries(shoppingCartWaitingList).filter(([productId, _]) =>

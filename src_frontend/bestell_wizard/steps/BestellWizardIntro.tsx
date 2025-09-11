@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
-import { PublicProductType } from "../../api-client";
-import { sortProductTypes } from "../utils/sortProductTypes.ts";
-import { Form, Spinner } from "react-bootstrap";
+import React, {useEffect} from "react";
+import {PublicProductType} from "../../api-client";
+import {sortProductTypes} from "../utils/sortProductTypes.ts";
+import {Form, Spinner} from "react-bootstrap";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { buildEmptyShoppingCart } from "../utils/buildEmptyShoppingCart.ts";
-import { selectAllRequiredProductTypes } from "../utils/selectAllRequiredProductTypes.ts";
-import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import {ShoppingCart} from "../types/ShoppingCart.ts";
+import {buildEmptyShoppingCart} from "../utils/buildEmptyShoppingCart.ts";
+import {selectAllRequiredProductTypes} from "../utils/selectAllRequiredProductTypes.ts";
+import {BestellWizardSettings} from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardIntroProps {
   selectedProductTypes: PublicProductType[];
@@ -107,9 +107,7 @@ const BestellWizardIntro: React.FC<BestellWizardIntroProps> = ({
                 )}
               </span>
               {publicProductType.forceWaitingList && (
-                <Form.Text>
-                  Derzeit nur Wartelisten-Eintragung möglich.
-                </Form.Text>
+                <Form.Text>Derzeit nur Wartelisten-Eintrag möglich.</Form.Text>
               )}
             </div>
           ))

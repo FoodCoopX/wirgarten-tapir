@@ -23,9 +23,9 @@ const GeneralWaitingListModal: React.FC<GeneralWaitingListModalProps> = ({
       </Modal.Header>
       <Modal.Body>
         <p>
-          Derzeit sind keine Ernteanteile verfügbar. Du kannst dich aber auf die
-          Warteliste setzen lassen. Wir kontaktieren dich, sobald ein Platz
-          freigeworden ist.
+          Derzeit sind nur Wartelisteneinträge möglich. Du kannst dich aber auf
+          die Warteliste setzen lassen. Wir kontaktieren dich dann, sobald ein
+          Platz freigeworden ist.
         </p>
       </Modal.Body>
       <Modal.Footer>

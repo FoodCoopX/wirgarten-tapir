@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ListGroup, Modal } from "react-bootstrap";
+import React, {useEffect, useState} from "react";
+import {ListGroup, Modal} from "react-bootstrap";
 import "dayjs/locale/de";
 import {
   BestellWizardApi,
@@ -10,21 +10,20 @@ import {
   SubscriptionsApi,
   WaitingListApi,
 } from "../../api-client";
-import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { getCsrfToken } from "../../utils/getCsrfToken.ts";
-import { useApi } from "../../hooks/useApi.ts";
-import { handleRequestError } from "../../utils/handleRequestError.ts";
-import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import {ShoppingCart} from "../../bestell_wizard/types/ShoppingCart.ts";
+import {getCsrfToken} from "../../utils/getCsrfToken.ts";
+import {useApi} from "../../hooks/useApi.ts";
+import {handleRequestError} from "../../utils/handleRequestError.ts";
+import {isShoppingCartEmpty} from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import {checkPickupLocationCapacities} from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import SubscriptionEditStepPickupLocation from "./steps/SubscriptionEditStepPickupLocation.tsx";
 import SubscriptionEditStepProductType from "./steps/SubscriptionEditStepProductType.tsx";
 import PickupLocationWaitingListModal from "../../bestell_wizard/components/PickupLocationWaitingListModal.tsx";
 import ProductWaitingListModal from "../../bestell_wizard/components/ProductWaitingListModal.tsx";
 import SubscriptionEditStepSummary from "./steps/SubscriptionEditStepSummary.tsx";
-import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import {fetchFirstDeliveryDates} from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import SubscriptionEditStepConfirmation from "./steps/SubscriptionEditStepConfirmation.tsx";
-import { isSubscriptionActive } from "../../utils/isSubscriptionActive.ts";
-import { ToastData } from "../../types/ToastData.ts";
+import {ToastData} from "../../types/ToastData.ts";
 
 interface SubscriptionEditModalProps {
   show: boolean;
@@ -146,20 +145,6 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       setShowWaitingListConfirmModal(true);
     }
   }, [show]);
-
-  useEffect(() => {
-    if (!show) return;
-
-    const shoppingCart: ShoppingCart = Object.fromEntries(
-      productType.products.map((product) => [product.id, 0]),
-    );
-    for (const subscription of subscriptions) {
-      if (isSubscriptionActive(subscription)) {
-        shoppingCart[subscription.productId] = subscription.quantity;
-      }
-    }
-    setShoppingCart(shoppingCart);
-  }, [subscriptions, show]);
 
   useEffect(() => {
     if (!show) return;
