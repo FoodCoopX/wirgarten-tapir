@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.coop.services.personal_data_validator import PersonalDataValidator
 from tapir.subscriptions.services.required_product_types_validator import (
     RequiredProductTypesValidator,
 )
@@ -10,7 +11,7 @@ from tapir.subscriptions.services.single_subscription_validator import (
     SingleSubscriptionValidator,
 )
 from tapir.subscriptions.types import TapirOrder
-from tapir.wirgarten.models import WaitingListEntry, Member
+from tapir.wirgarten.models import WaitingListEntry
 
 
 class WaitingListEntryValidator:
@@ -38,14 +39,9 @@ class WaitingListEntryValidator:
                 "The given number of coop shares is less than the required minimum."
             )
 
-        if WaitingListEntry.objects.filter(email=email).exists():
-            raise ValidationError(
-                "Es gibt schon einen Warteliste-Eintrag mit dieser E-Mail-Adresse"
-            )
-        if Member.objects.filter(email=email).exists():
-            raise ValidationError(
-                "Es gibt schon einen Konto mit dieser E-Mail-Adresse. Wenn du deine Verträge anpassen möchtest, nutzt die Funktionen im Mitgliederbereich."
-            )
+        PersonalDataValidator.validate_email_address_not_in_use(
+            email=email, cache=cache, check_waiting_list=True
+        )
 
     @classmethod
     def validate_creation_of_waiting_list_entry_for_an_existing_member(

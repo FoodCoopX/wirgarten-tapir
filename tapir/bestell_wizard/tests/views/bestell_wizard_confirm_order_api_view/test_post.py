@@ -21,6 +21,9 @@ from tapir.wirgarten.models import (
     CoopShareTransaction,
     WaitingListEntry,
     ProductCapacity,
+    WaitingListProductWish,
+    WaitingListPickupLocationWish,
+    PickupLocation,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
@@ -36,27 +39,39 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
     # TODO
-    # validation waiting list potential member fails: 400
-    # validation waiting list potential member passes: 200, WLE created, member not created
-    # validation waiting list existing member fails: 400, member not created
-    # validation waiting list existing member passes: 200, member and WLE created
     # waiting list + member now: member created, WLE created
     # investing member, no waiting list: member created
+    # student status: 0 shares created
+    # on waiting list entry created: mail sent
 
     # DONE
+    # validation waiting list existing member fails: 400, member not created
+    # validation waiting list potential member passes: 200, WLE created, member not created
     # serializer invalid: 400
     # order valid: member created, WLE not created
     # order validation fails: 400
     # data new member validation fails: 400
+    # validation waiting list potential member fails: 400
+    # validation waiting list existing member passes: 200, member and WLE created
 
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
         configure_mail_module()
 
-        cls.product_1 = ProductFactory.create()
-        cls.product_2 = ProductFactory.create()
-        cls.pickup_location = PickupLocationFactory.create()
+        (cls.product_1, cls.product_2, cls.product_3) = ProductFactory.create_batch(
+            size=3
+        )
+        cls.product_3.type.single_subscription_only = True
+        cls.product_3.type.save()
+
+        (
+            cls.pickup_location_1,
+            cls.pickup_location_2,
+            cls.pickup_location_3,
+            cls.pickup_location_4,
+        ) = PickupLocationFactory.create_batch(size=4)
+
         ProductPriceFactory.create(product=cls.product_1, size=1)
         ProductPriceFactory.create(product=cls.product_2, size=1.6)
         cls.growing_period = GrowingPeriodFactory.create(
@@ -98,20 +113,267 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "Order not confirmed because: " + (response_content["error"] or "no error"),
         )
 
+        self.assert_order_applied_correctly(mock_fire_action)
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+        mock_fire_action.assert_called_once()
+
+    def test_post_requestDataIsInvalid_returns400(self):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        del data["sepa_allowed"]
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 400)
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    def test_post_orderValidationFails_returnOrderNotConfirmedAndDontCreateMember(self):
+        ProductCapacity.objects.filter(product_type=self.product_2.type).update(
+            capacity=2
+        )
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(
+                self.build_valid_post_data_for_an_order_without_waiting_list()
+            ),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn(
+            "Folgende Produkt-Typen haben nicht genug Kapazität für diese Bestellung:",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    def test_post_memberDataValidationFails_returnOrderNotConfirmedAndDontCreateMember(
+        self,
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["personal_data"]["iban"] = "invalid_iban"
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertIn(
+            "IBAN",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    def test_post_waitingListValidationFails_returnsOrderNotConfirmedAndDontCreateWaitingListEntry(
+        self,
+    ):
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+        data["number_of_coop_shares"] = 1  # default minimum is 2
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(response_content["order_confirmed"])
+        self.assertEqual(
+            "The given number of coop shares is less than the required minimum.",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_waitingListEntryIsValid_createsEntry(self, mock_fire_action: Mock):
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+        self.assertFalse(Member.objects.exists())
+
+        waiting_list_entry = self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
+            pickup_location_wishes=[
+                self.pickup_location_1,
+                self.pickup_location_2,
+                self.pickup_location_4,
+            ],
+            mock_fire_action=mock_fire_action,
+        )
+        self.assertEqual(2, waiting_list_entry.number_of_coop_shares)
+        self.assertIsNone(waiting_list_entry.member_id)
+        self.assert_personal_data_is_valid_waiting_list(waiting_list_entry)
+
+        mock_fire_action.assert_called_once()
+
+    def test_post_createNewMemberWithWaitingListEntryButWaitingListEntryIsInvalid_nothingCreated(
+        self,
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_waiting_list"][
+            self.product_3.id
+        ] = 2  # This product has single_subscription_only = True
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertFalse(
+            response_content["order_confirmed"],
+        )
+        self.assertEqual(
+            "Single subscription product ordered more than once",
+            response_content["error"],
+        )
+        self.assertFalse(Member.objects.exists())
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_createNewMemberWithOrderAndWaitingListEntry_memberAndWaitingListEntryCreated(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_waiting_list"][self.product_3.id] = 1
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"The order should have been confirmed, error: {response_content['error']}",
+        )
+
+        member = self.assert_order_applied_correctly(mock_fire_action)
+        waiting_list_entry = self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
+            pickup_location_wishes=[],
+            mock_fire_action=mock_fire_action,
+        )
+        self.assertEqual(2, mock_fire_action.call_count)
+
+        self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
+        self.assertEqual(member.id, waiting_list_entry.member_id)
+
+    @classmethod
+    def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
+        return {
+            "shopping_cart_order": {},
+            "shopping_cart_waiting_list": {cls.product_1.id: 1, cls.product_2.id: 2},
+            "personal_data": cls.build_valid_personal_data_waiting_list(),
+            "sepa_allowed": False,
+            "contract_accepted": False,
+            "statute_accepted": False,
+            "number_of_coop_shares": 2,
+            "pickup_location_ids": [
+                cls.pickup_location_1.id,
+                cls.pickup_location_2.id,
+                cls.pickup_location_4.id,
+            ],
+            "student_status_enabled": False,
+            "payment_rhythm": MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            "become_member_now": False,
+            "privacy_policy_read": True,
+            "cancellation_policy_read": False,
+        }
+
+    @classmethod
+    def build_valid_post_data_for_an_order_without_waiting_list(cls) -> dict[str, Any]:
+        return {
+            "shopping_cart_order": {cls.product_1.id: 1, cls.product_2.id: 2},
+            "shopping_cart_waiting_list": {},
+            "personal_data": cls.build_valid_personal_data_order(),
+            "sepa_allowed": True,
+            "contract_accepted": True,
+            "statute_accepted": True,
+            "number_of_coop_shares": 2,
+            "pickup_location_ids": [cls.pickup_location_1.id],
+            "student_status_enabled": False,
+            "payment_rhythm": MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
+            "become_member_now": None,
+            "privacy_policy_read": True,
+            "cancellation_policy_read": True,
+        }
+
+    @classmethod
+    def build_valid_personal_data_waiting_list(cls):
+        return {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@doe.de",
+            "phone_number": "017628244239",
+            "street": "Baker Street 221b",
+            "street_2": "2nd floor",
+            "postcode": "16321",
+            "city": "Berlin",
+            "country": "DE",
+            "birthdate": datetime.date.today().isoformat(),
+            "account_owner": "",
+            "iban": "",
+        }
+
+    @classmethod
+    def build_valid_personal_data_order(cls):
+        data = cls.build_valid_personal_data_waiting_list()
+        data.update(
+            {
+                "birthdate": "1990-12-21",
+                "account_owner": "John S. Doe",
+                "iban": "NL37RABO2067756052",
+            }
+        )
+        return data
+
+    def assert_personal_data_is_valid_waiting_list(self, obj: WaitingListEntry):
+        for field, value in self.build_valid_personal_data_waiting_list().items():
+            if field in ["birthdate", "account_owner", "iban"]:
+                continue
+            self.assertEqual(value, getattr(obj, field))
+
+    def assert_personal_data_is_valid_member(self, obj: Member):
+        for field, value in self.build_valid_personal_data_order().items():
+            if field == "birthdate":
+                value = datetime.date(year=1990, month=12, day=21)
+            self.assertEqual(value, getattr(obj, field))
+
+    def assert_order_applied_correctly(self, mock_fire_action: Mock):
         self.assertEqual(1, Member.objects.count())
         member = Member.objects.get()
-        self.assertEqual("John", member.first_name)
-        self.assertEqual("Doe", member.last_name)
-        self.assertEqual("john@doe.de", member.email)
-        self.assertEqual("017628244239", member.phone_number)
-        self.assertEqual("Baker Street 221b", member.street)
-        self.assertEqual("2nd floor", member.street_2)
-        self.assertEqual("16321", member.postcode)
-        self.assertEqual("Berlin", member.city)
-        self.assertEqual("DE", member.country)
-        self.assertEqual(datetime.date(year=1990, month=12, day=21), member.birthdate)
-        self.assertEqual("John S. Doe", member.account_owner)
-        self.assertEqual("NL37RABO2067756052", member.iban)
+        self.assert_personal_data_is_valid_member(member)
 
         self.assertEqual(2, Subscription.objects.count())
 
@@ -139,88 +401,65 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             ),
         )
 
-        mock_fire_action.assert_called_once()
-        trigger_data: TransactionalTriggerData = mock_fire_action.call_args[0][0]
-        self.assertEqual(Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION, trigger_data.key)
-        self.assertEqual(member.id, trigger_data.recipient_id_in_base_queryset)
-
-        self.assertFalse(WaitingListEntry.objects.exists())
-
-    def test_post_requestDataIsInvalid_returns400(self):
-        data = self.build_valid_post_data_for_an_order_without_waiting_list()
-        del data["sepa_allowed"]
-
-        response = self.client.post(
-            reverse("bestell_wizard:bestell_wizard_confirm_order"),
-            data=json.dumps(data),
-            content_type="application/json",
+        mock_fire_action.assert_called()
+        call_found = False
+        for call in mock_fire_action.mock_calls:
+            trigger_data: TransactionalTriggerData = call[1][0]
+            if trigger_data.key != Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION:
+                continue
+            call_found = True
+            self.assertEqual(member.id, trigger_data.recipient_id_in_base_queryset)
+        self.assertTrue(
+            call_found, f"Expected trigger not found in {mock_fire_action.mock_calls}"
         )
 
-        self.assertStatusCode(response, 400)
-        self.assertFalse(Member.objects.exists())
+        return member
 
-    def test_post_orderValidationFails_returnOrderNotConfirmedAndDontCreateMember(self):
-        ProductCapacity.objects.filter(product_type=self.product_2.type).update(
-            capacity=2
-        )
-
-        response = self.client.post(
-            reverse("bestell_wizard:bestell_wizard_confirm_order"),
-            data=json.dumps(
-                self.build_valid_post_data_for_an_order_without_waiting_list()
-            ),
-            content_type="application/json",
-        )
-
-        self.assertStatusCode(response, 200)
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertFalse(Member.objects.exists())
-
-    def test_post_memberDataValidationFails_returnOrderNotConfirmedAndDontCreateMember(
+    def assert_waiting_list_entry_is_correct(
         self,
+        shopping_cart_waiting_list: dict,
+        pickup_location_wishes: list[PickupLocation],
+        mock_fire_action: Mock,
     ):
-        data = self.build_valid_post_data_for_an_order_without_waiting_list()
-        data["personal_data"]["iban"] = "invalid_iban"
+        self.assertEqual(1, WaitingListEntry.objects.count())
+        waiting_list_entry = WaitingListEntry.objects.get()
+        self.assertEqual(self.now, waiting_list_entry.privacy_consent)
 
-        response = self.client.post(
-            reverse("bestell_wizard:bestell_wizard_confirm_order"),
-            data=json.dumps(data),
-            content_type="application/json",
+        self.assertEqual(
+            len(pickup_location_wishes), WaitingListPickupLocationWish.objects.count()
+        )
+        for index, pickup_location in enumerate(pickup_location_wishes):
+            self.assertEqual(
+                1,
+                WaitingListPickupLocationWish.objects.filter(
+                    waiting_list_entry=waiting_list_entry,
+                    pickup_location=self.pickup_location_1,
+                    priority=index + 1,
+                ).count(),
+            )
+
+        self.assertEqual(
+            len(shopping_cart_waiting_list), WaitingListProductWish.objects.count()
+        )
+        for product_id, quantity in shopping_cart_waiting_list.items():
+            self.assertEqual(
+                1,
+                WaitingListProductWish.objects.filter(
+                    waiting_list_entry=waiting_list_entry,
+                    product_id=product_id,
+                    quantity=quantity,
+                ).count(),
+            )
+
+        mock_fire_action.assert_called()
+        call_found = False
+        for call in mock_fire_action.mock_calls:
+            trigger_data: TransactionalTriggerData = call[1][0]
+            if trigger_data.key != Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST:
+                continue
+            call_found = True
+        self.assertTrue(
+            call_found, f"Expected trigger not found in {mock_fire_action.mock_calls}"
         )
 
-        self.assertStatusCode(response, 200)
-        self.assertFalse(response.json()["order_confirmed"])
-        self.assertFalse(Member.objects.exists())
-
-    @classmethod
-    def build_valid_post_data_for_an_order_without_waiting_list(cls) -> dict[str, Any]:
-        return {
-            "shopping_cart_order": {cls.product_1.id: 1, cls.product_2.id: 2},
-            "shopping_cart_waiting_list": {},
-            "personal_data": cls.build_valid_personal_data(),
-            "sepa_allowed": True,
-            "contract_accepted": True,
-            "statute_accepted": True,
-            "number_of_coop_shares": 2,
-            "pickup_location_ids": [cls.pickup_location.id],
-            "student_status_enabled": False,
-            "payment_rhythm": MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
-            "become_member_now": None,
-        }
-
-    @classmethod
-    def build_valid_personal_data(cls):
-        return {
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john@doe.de",
-            "phone_number": "017628244239",
-            "street": "Baker Street 221b",
-            "street_2": "2nd floor",
-            "postcode": "16321",
-            "city": "Berlin",
-            "country": "DE",
-            "birthdate": "1990-12-21",
-            "account_owner": "John S. Doe",
-            "iban": "NL37RABO2067756052",
-        }
+        return waiting_list_entry

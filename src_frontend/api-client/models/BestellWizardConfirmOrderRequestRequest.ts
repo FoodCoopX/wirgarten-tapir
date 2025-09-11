@@ -87,6 +87,18 @@ export interface BestellWizardConfirmOrderRequestRequest {
      * @memberof BestellWizardConfirmOrderRequestRequest
      */
     becomeMemberNow: boolean | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    privacyPolicyRead: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof BestellWizardConfirmOrderRequestRequest
+     */
+    cancellationPolicyRead: boolean;
 }
 
 /**
@@ -104,6 +116,8 @@ export function instanceOfBestellWizardConfirmOrderRequestRequest(value: object)
     if (!('studentStatusEnabled' in value) || value['studentStatusEnabled'] === undefined) return false;
     if (!('paymentRhythm' in value) || value['paymentRhythm'] === undefined) return false;
     if (!('becomeMemberNow' in value) || value['becomeMemberNow'] === undefined) return false;
+    if (!('privacyPolicyRead' in value) || value['privacyPolicyRead'] === undefined) return false;
+    if (!('cancellationPolicyRead' in value) || value['cancellationPolicyRead'] === undefined) return false;
     return true;
 }
 
@@ -128,6 +142,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'studentStatusEnabled': json['student_status_enabled'],
         'paymentRhythm': json['payment_rhythm'],
         'becomeMemberNow': json['become_member_now'],
+        'privacyPolicyRead': json['privacy_policy_read'],
+        'cancellationPolicyRead': json['cancellation_policy_read'],
     };
 }
 
@@ -153,6 +169,8 @@ export function BestellWizardConfirmOrderRequestRequestFromJSONTyped(json: any, 
         'student_status_enabled': value['studentStatusEnabled'],
         'payment_rhythm': value['paymentRhythm'],
         'become_member_now': value['becomeMemberNow'],
+        'privacy_policy_read': value['privacyPolicyRead'],
+        'cancellation_policy_read': value['cancellationPolicyRead'],
     };
 }
 

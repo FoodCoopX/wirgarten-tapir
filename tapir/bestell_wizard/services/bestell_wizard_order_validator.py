@@ -45,6 +45,9 @@ class BestellWizardOrderValidator:
         if not validated_serializer_data["contract_accepted"]:
             raise ValidationError("Vertragsgrundsätze müssen akzeptiert sein")
 
+        if not validated_serializer_data["cancellation_policy_read"]:
+            raise ValidationError("Die Widerrufsbelehrung muss akzeptiert sein")
+
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             shopping_cart=validated_serializer_data["shopping_cart_order"], cache=cache
         )

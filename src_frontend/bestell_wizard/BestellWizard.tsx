@@ -607,6 +607,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
           becomeMemberNow: becomeMemberNow !== false,
+          privacyPolicyRead: privacyPolicyRead,
+          cancellationPolicyRead: cancellationPolicyRead,
         },
       })
       .then((response) => {

@@ -31,6 +31,8 @@ class BestellWizardConfirmOrderRequestSerializer(serializers.Serializer):
     student_status_enabled = serializers.BooleanField()
     payment_rhythm = serializers.CharField()
     become_member_now = serializers.BooleanField(allow_null=True)
+    privacy_policy_read = serializers.BooleanField()
+    cancellation_policy_read = serializers.BooleanField()
 
 
 class BestellWizardCapacityCheckRequestSerializer(serializers.Serializer):

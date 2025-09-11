@@ -107,6 +107,10 @@ class BestellWizardConfirmOrderApiView(APIView):
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
             validated_serializer_data["shopping_cart_order"], cache=self.cache
         )
+
+        if not validated_serializer_data["privacy_policy_read"]:
+            raise ValidationError("Die Datenschutzklärung muss akzeptiert werden.")
+
         if len(order) > 0 or validated_serializer_data["become_member_now"]:
             member = self.validate_and_fulfill_order(
                 request=request, validated_serializer_data=validated_serializer_data

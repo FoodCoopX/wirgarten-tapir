@@ -4437,13 +4437,19 @@ components:
         become_member_now:
           type: boolean
           nullable: true
+        privacy_policy_read:
+          type: boolean
+        cancellation_policy_read:
+          type: boolean
       required:
       - become_member_now
+      - cancellation_policy_read
       - contract_accepted
       - number_of_coop_shares
       - payment_rhythm
       - personal_data
       - pickup_location_ids
+      - privacy_policy_read
       - sepa_allowed
       - shopping_cart_order
       - shopping_cart_waiting_list
@@ -7198,10 +7204,8 @@ components:
           format: date
         account_owner:
           type: string
-          minLength: 1
         iban:
           type: string
-          minLength: 1
       required:
       - account_owner
       - birthdate

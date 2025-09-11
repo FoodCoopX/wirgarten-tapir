@@ -36,7 +36,9 @@ class PersonalDataValidator:
         cls.validate_phone_number_is_valid(phone_number)
 
         cls.validate_birthdate(birthdate, cache=cache)
-        IBANValidator(iban)
+
+        IBANValidator()(iban)
+
         if account_owner.strip() == "":
             raise ValidationError("Das Feld 'Kontoinhaber*in' muss ausgefüllt sein")
 
@@ -68,19 +70,19 @@ class PersonalDataValidator:
 
         if duplicate_email_query.exists():
             raise ValidationError(
-                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen."
             )
 
         kc = KeycloakUserManager.get_keycloak_client(cache=cache)
         keycloak_id = kc.get_user_id(email)
         if keycloak_id is not None:
             raise ValidationError(
-                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+                "Diese E-Mail-Adresse ist schon ein anderes Benutzer zugewiesen."
             )
 
         if check_waiting_list and WaitingListEntry.objects.filter(email=email).exists():
             raise ValidationError(
-                "Diese E-Mail-Adresse ist schon ein anderes Mitglied zugewiesen"
+                "Diese E-Mail-Adresse ist schon ein anderes Warteliste-Eintrag zugewiesen."
             )
 
     @classmethod
