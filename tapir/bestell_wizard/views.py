@@ -95,7 +95,7 @@ class BestellWizardConfirmOrderApiView(APIView):
         except ValidationError as error:
             data = {
                 "order_confirmed": False,
-                "error": error.message,
+                "error": ",".join(error.messages),
             }
 
         return Response(OrderConfirmationResponseSerializer(data).data)

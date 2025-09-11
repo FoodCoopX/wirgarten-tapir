@@ -14,6 +14,10 @@ from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
+from tapir.wirgarten.constants import WEEKLY
 from tapir.wirgarten.mail_events import Events
 from tapir.wirgarten.models import (
     Member,
@@ -24,6 +28,7 @@ from tapir.wirgarten.models import (
     WaitingListProductWish,
     WaitingListPickupLocationWish,
     PickupLocation,
+    MemberPickupLocation,
 )
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tapirmail import configure_mail_module
@@ -38,29 +43,13 @@ from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
-    # TODO
-    # waiting list + member now: member created, WLE created
-    # investing member, no waiting list: member created
-    # student status: 0 shares created
-    # on waiting list entry created: mail sent
-
-    # DONE
-    # validation waiting list existing member fails: 400, member not created
-    # validation waiting list potential member passes: 200, WLE created, member not created
-    # serializer invalid: 400
-    # order valid: member created, WLE not created
-    # order validation fails: 400
-    # data new member validation fails: 400
-    # validation waiting list potential member fails: 400
-    # validation waiting list existing member passes: 200, member and WLE created
-
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions()
         configure_mail_module()
 
         (cls.product_1, cls.product_2, cls.product_3) = ProductFactory.create_batch(
-            size=3
+            size=3, type__delivery_cycle=WEEKLY[0]
         )
         cls.product_3.type.single_subscription_only = True
         cls.product_3.type.save()
@@ -113,7 +102,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             "Order not confirmed because: " + (response_content["error"] or "no error"),
         )
 
-        self.assert_order_applied_correctly(mock_fire_action)
+        self.assert_order_applied_correctly(mock_fire_action, is_student=False)
         self.assertFalse(WaitingListEntry.objects.exists())
 
         mock_fire_action.assert_called_once()
@@ -278,7 +267,7 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             f"The order should have been confirmed, error: {response_content['error']}",
         )
 
-        member = self.assert_order_applied_correctly(mock_fire_action)
+        member = self.assert_order_applied_correctly(mock_fire_action, is_student=False)
         waiting_list_entry = self.assert_waiting_list_entry_is_correct(
             shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
             pickup_location_wishes=[],
@@ -288,6 +277,125 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
 
         self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
         self.assertEqual(member.id, waiting_list_entry.member_id)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_waitingListEntryAndBecomeMemberNow_createsEntryAndCreatesMember(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_waiting_list"] = data["shopping_cart_order"]
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = [
+            self.pickup_location_1.id,
+            self.pickup_location_2.id,
+            self.pickup_location_4.id,
+        ]
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertEqual(1, Member.objects.count())
+        member = Member.objects.get()
+        self.assert_personal_data_is_valid_member(member)
+
+        self.assertEqual(1, CoopShareTransaction.objects.count())
+        coop_share_transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(member, coop_share_transaction.member)
+        self.assertEqual(2, coop_share_transaction.quantity)
+
+        self.assertFalse(Subscription.objects.exists())
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+        self.assertEqual(2, mock_fire_action.call_count)
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_ONLY
+        )
+
+        waiting_list_entry = self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list=data["shopping_cart_waiting_list"],
+            pickup_location_wishes=[
+                self.pickup_location_1,
+                self.pickup_location_2,
+                self.pickup_location_4,
+            ],
+            mock_fire_action=mock_fire_action,
+        )
+        self.assertEqual(0, waiting_list_entry.number_of_coop_shares)
+        self.assertEqual(member.id, waiting_list_entry.member_id)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMember_createsMember(self, mock_fire_action: Mock):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["shopping_cart_order"] = {}
+        data["become_member_now"] = True
+        data["pickup_location_ids"] = []
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertEqual(1, Member.objects.count())
+        member = Member.objects.get()
+        self.assert_personal_data_is_valid_member(member)
+
+        self.assertEqual(1, CoopShareTransaction.objects.count())
+        coop_share_transaction = CoopShareTransaction.objects.get()
+        self.assertEqual(member, coop_share_transaction.member)
+        self.assertEqual(2, coop_share_transaction.quantity)
+
+        self.assertFalse(Subscription.objects.exists())
+        self.assertFalse(MemberPickupLocation.objects.exists())
+
+        mock_fire_action.assert_called_once()
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_ONLY
+        )
+
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_orderingAsStudent_noCoopShareCreated(self, mock_fire_action: Mock):
+        data = self.build_valid_post_data_for_an_order_without_waiting_list()
+        data["student_status_enabled"] = True
+        data["number_of_coop_shares"] = 0
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order not confirmed because, error: {response_content['error']}",
+        )
+
+        self.assert_order_applied_correctly(mock_fire_action, is_student=True)
+        self.assertFalse(WaitingListEntry.objects.exists())
+
+        mock_fire_action.assert_called_once()
 
     @classmethod
     def build_valid_post_data_for_a_waiting_list_entry(cls) -> dict[str, Any]:
@@ -358,19 +466,21 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         )
         return data
 
-    def assert_personal_data_is_valid_waiting_list(self, obj: WaitingListEntry):
+    def assert_personal_data_is_valid_waiting_list(
+        self, waiting_list_entry: WaitingListEntry
+    ):
         for field, value in self.build_valid_personal_data_waiting_list().items():
             if field in ["birthdate", "account_owner", "iban"]:
                 continue
-            self.assertEqual(value, getattr(obj, field))
+            self.assertEqual(value, getattr(waiting_list_entry, field))
 
-    def assert_personal_data_is_valid_member(self, obj: Member):
+    def assert_personal_data_is_valid_member(self, member: Member):
         for field, value in self.build_valid_personal_data_order().items():
             if field == "birthdate":
                 value = datetime.date(year=1990, month=12, day=21)
-            self.assertEqual(value, getattr(obj, field))
+            self.assertEqual(value, getattr(member, field))
 
-    def assert_order_applied_correctly(self, mock_fire_action: Mock):
+    def assert_order_applied_correctly(self, mock_fire_action: Mock, is_student: bool):
         self.assertEqual(1, Member.objects.count())
         member = Member.objects.get()
         self.assert_personal_data_is_valid_member(member)
@@ -389,10 +499,15 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertLess(self.now.date(), subscription_2.start_date)
         self.assertEqual(self.growing_period.end_date, subscription_2.end_date)
 
-        self.assertEqual(1, CoopShareTransaction.objects.count())
-        coop_share_transaction = CoopShareTransaction.objects.get()
-        self.assertEqual(member, coop_share_transaction.member)
-        self.assertEqual(2, coop_share_transaction.quantity)
+        if is_student:
+            self.assertFalse(CoopShareTransaction.objects.exists())
+            self.assertTrue(member.is_student)
+        else:
+            self.assertFalse(member.is_student)
+            self.assertEqual(1, CoopShareTransaction.objects.count())
+            coop_share_transaction = CoopShareTransaction.objects.get()
+            self.assertEqual(member, coop_share_transaction.member)
+            self.assertEqual(2, coop_share_transaction.quantity)
 
         self.assertEqual(
             MemberPaymentRhythm.Rhythm.SEMIANNUALLY,
@@ -401,16 +516,15 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
             ),
         )
 
-        mock_fire_action.assert_called()
-        call_found = False
-        for call in mock_fire_action.mock_calls:
-            trigger_data: TransactionalTriggerData = call[1][0]
-            if trigger_data.key != Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION:
-                continue
-            call_found = True
-            self.assertEqual(member.id, trigger_data.recipient_id_in_base_queryset)
-        self.assertTrue(
-            call_found, f"Expected trigger not found in {mock_fire_action.mock_calls}"
+        self.assertEqual(
+            self.pickup_location_1.id,
+            MemberPickupLocationService.get_member_pickup_location_id(
+                member=member, reference_date=self.now.date()
+            ),
+        )
+
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.REGISTER_MEMBERSHIP_AND_SUBSCRIPTION
         )
 
         return member
@@ -451,15 +565,19 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
                 ).count(),
             )
 
-        mock_fire_action.assert_called()
-        call_found = False
-        for call in mock_fire_action.mock_calls:
-            trigger_data: TransactionalTriggerData = call[1][0]
-            if trigger_data.key != Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST:
-                continue
-            call_found = True
-        self.assertTrue(
-            call_found, f"Expected trigger not found in {mock_fire_action.mock_calls}"
+        self.assert_mail_event_has_been_triggered(
+            mock_fire_action, key=Events.CONFIRMATION_REGISTRATION_IN_WAITING_LIST
         )
 
         return waiting_list_entry
+
+    def assert_mail_event_has_been_triggered(self, mock_fire_action: Mock, key: str):
+        mock_fire_action.assert_called()
+        for call in mock_fire_action.mock_calls:
+            trigger_data: TransactionalTriggerData = call[1][0]
+            if trigger_data.key == key:
+                return
+
+        self.fail(
+            f"Expected trigger ({key}) not found in {mock_fire_action.mock_calls}"
+        )

@@ -188,15 +188,16 @@ class MemberPickupLocationService:
             user=member,
         ).save()
 
-        TransactionalTrigger.fire_action(
-            TransactionalTriggerData(
-                key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
-                recipient_id_in_base_queryset=member.id,
-                token_data={
-                    "pickup_location": TapirCache.get_pickup_location_by_id(
-                        cache=cache, pickup_location_id=pickup_location_id
-                    ).name,
-                    "pickup_location_start_date": valid_from,
-                },
-            ),
-        )
+        if old_pickup_location is not None:
+            TransactionalTrigger.fire_action(
+                TransactionalTriggerData(
+                    key=Events.MEMBERAREA_CHANGE_PICKUP_LOCATION,
+                    recipient_id_in_base_queryset=member.id,
+                    token_data={
+                        "pickup_location": TapirCache.get_pickup_location_by_id(
+                            cache=cache, pickup_location_id=pickup_location_id
+                        ).name,
+                        "pickup_location_start_date": valid_from,
+                    },
+                ),
+            )

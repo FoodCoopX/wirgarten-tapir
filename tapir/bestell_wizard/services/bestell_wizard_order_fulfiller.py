@@ -41,8 +41,11 @@ class BestellWizardOrderFulfiller:
         request,
         cache: dict,
     ):
+        is_student = validated_serializer_data["student_status_enabled"]
         member = cls.create_member(
-            personal_data=validated_serializer_data["personal_data"], cache=cache
+            personal_data=validated_serializer_data["personal_data"],
+            is_student=is_student,
+            cache=cache,
         )
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
@@ -70,7 +73,7 @@ class BestellWizardOrderFulfiller:
                 cache=cache,
             )
 
-        if legal_status_is_cooperative(cache=cache):
+        if legal_status_is_cooperative(cache=cache) and not is_student:
             cls.create_coop_shares(
                 number_of_shares=validated_serializer_data["number_of_coop_shares"],
                 member=member,
@@ -85,14 +88,16 @@ class BestellWizardOrderFulfiller:
         return member
 
     @classmethod
-    def create_member(cls, personal_data, cache: dict):
+    def create_member(cls, personal_data, is_student: bool, cache: dict):
         now = get_now(cache=cache)
         contracts_signed = {
             contract: now
             for contract in ["sepa_consent", "withdrawal_consent", "privacy_consent"]
         }
 
-        return Member.objects.create(**personal_data, **contracts_signed)
+        return Member.objects.create(
+            **personal_data, **contracts_signed, is_student=is_student
+        )
 
     @classmethod
     def create_coop_shares(
