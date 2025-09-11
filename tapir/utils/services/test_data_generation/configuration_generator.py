@@ -95,3 +95,8 @@ class ConfigurationGenerator:
         TapirParameter.objects.filter(key=ParameterKeys.COOP_SHARE_PRICE).update(
             value=coop_share_prices.get(organization, 50)
         )
+
+        coop_min_shares = {Organization.BIOTOP: 1}
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_MIN_SHARES).update(
+            value=coop_min_shares.get(organization, 2)
+        )
