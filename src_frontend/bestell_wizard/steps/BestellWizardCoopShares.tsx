@@ -6,6 +6,7 @@ import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
+import { PublicProductType } from "../../api-client";
 
 interface BestellWizardCoopSharesProps {
   selectedNumberOfCoopShares: number;
@@ -19,8 +20,8 @@ interface BestellWizardCoopSharesProps {
   settings: BestellWizardSettings;
   becomeMemberNow: boolean | null;
   setBecomeMemberNow: (becomeMemberNow: boolean) => void;
-  shoppingCartOrder: ShoppingCart;
-  shoppingCartWaitingList: ShoppingCart;
+  shoppingCart: ShoppingCart;
+  productsTypesInWaitingList: Set<PublicProductType>;
 }
 
 const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
@@ -35,8 +36,8 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   settings,
   becomeMemberNow,
   setBecomeMemberNow,
-  shoppingCartOrder,
-  shoppingCartWaitingList,
+  shoppingCart,
+  productsTypesInWaitingList,
 }) => {
   useEffect(() => {
     if (!studentStatusEnabled) {
@@ -49,8 +50,8 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
 
   function shouldConfirmMemberNow() {
     return (
-      !isAtLeastOneProductOrdered(shoppingCartOrder) &&
-      isAtLeastOneProductOrdered(shoppingCartWaitingList) &&
+      !isAtLeastOneProductOrdered(shoppingCart) &&
+      productsTypesInWaitingList.size > 0 &&
       becomeMemberNow === null
     );
   }

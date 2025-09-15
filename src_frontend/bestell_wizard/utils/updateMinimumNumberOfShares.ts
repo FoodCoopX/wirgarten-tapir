@@ -1,24 +1,22 @@
 import { useApi } from "../../hooks/useApi.ts";
-import { CoopApi } from "../../api-client";
+import { CoopApi, PublicProductType } from "../../api-client";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { buildFilteredShoppingCart } from "./buildFilteredShoppingCart.ts";
 
 export function updateMinimumNumberOfShares(
   shoppingCartOrder: ShoppingCart,
-  shoppingCartWaitingList: ShoppingCart,
+  productsTypesInWaitingList: Set<PublicProductType>,
   setMinimumNumberOfShares: (num: number) => void,
   setSelectedNumberOfCoopShares: (num: number) => void,
 ) {
   const coopApi = useApi(CoopApi, getCsrfToken());
 
-  const combinedCart = Object.assign({}, shoppingCartOrder);
-  for (const [productId, quantity] of Object.entries(shoppingCartWaitingList)) {
-    if (Object.keys(combinedCart).includes(productId)) {
-      combinedCart[productId] += quantity;
-    } else {
-      combinedCart[productId] = quantity;
-    }
-  }
+  const combinedCart = buildFilteredShoppingCart(
+    shoppingCartOrder,
+    false,
+    productsTypesInWaitingList,
+  );
 
   coopApi
     .coopApiMinimumNumberOfSharesRetrieve({

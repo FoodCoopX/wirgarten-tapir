@@ -57,6 +57,7 @@ export function buildSteps(
       waitingListEntryDetails,
       settings.showCoopContent,
       becomeMemberNow,
+      settings.forceWaitingList,
     )
   ) {
     newSteps.push("coop_shares");

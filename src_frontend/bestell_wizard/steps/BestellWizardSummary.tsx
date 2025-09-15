@@ -1,26 +1,22 @@
-import React, { Fragment } from "react";
+import React, {Fragment} from "react";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
-import { ShoppingCart } from "../types/ShoppingCart.ts";
+import {ShoppingCart} from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
-import { Col, Form, Row, Table } from "react-bootstrap";
-import {
-  PublicPickupLocation,
-  PublicProductType,
-  WaitingListEntryDetails,
-} from "../../api-client";
+import {Col, Form, Row, Table} from "react-bootstrap";
+import {PublicPickupLocation, PublicProductType, WaitingListEntryDetails,} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
-import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
+import {formatCurrency} from "../../utils/formatCurrency.ts";
+import {isProductTypeOrdered} from "../utils/isProductTypeOrdered.ts";
 import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
 import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
-import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
-import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
-import { formatShoppingCart } from "../utils/formatShoppingCart.ts";
-import { doesProductBelongsToProductType } from "../utils/doesProductBelongToProductType.ts";
+import {shouldIncludeStepCoopShares} from "../utils/shouldIncludeStep.ts";
+import {BestellWizardSettings} from "../types/BestellWizardSettings.ts";
+import {formatShoppingCart} from "../utils/formatShoppingCart.ts";
+import {doesProductBelongsToProductType} from "../utils/doesProductBelongToProductType.ts";
 
 interface BestellWizardSummaryProps {
-  shoppingCartOrder: ShoppingCart;
-  shoppingCartWaitingList: ShoppingCart;
+  shoppingCart: ShoppingCart;
+  productsTypesInWaitingList: Set<PublicProductType>;
   selectedNumberOfCoopShares: number;
   selectedPickupLocations: PublicPickupLocation[];
   firstDeliveryDatesByProductType: { [key: string]: Date };
@@ -37,8 +33,8 @@ interface BestellWizardSummaryProps {
 }
 
 const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
-  shoppingCartOrder,
-  shoppingCartWaitingList,
+  shoppingCart,
+  productsTypesInWaitingList,
   selectedNumberOfCoopShares,
   selectedPickupLocations,
   firstDeliveryDatesByProductType,
@@ -65,25 +61,17 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   }
 
   function buildProductTypeSummary(productType: PublicProductType) {
-    if (isProductTypeOrdered(productType, shoppingCartOrder)) {
-      return (
-        <SummaryProductTypeTable
-          productType={productType}
-          firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
-          shoppingCart={shoppingCartOrder}
-          waitingListModeEnabled={waitingListModeEnabled}
-          contractStartDate={contractStartDate}
-        />
-      );
+    if (!isProductTypeOrdered(productType, shoppingCart)) {
+      return <span>Dieses Produkt ist nicht bestellt worden</span>;
     }
 
-    if (isProductTypeOrdered(productType, shoppingCartWaitingList)) {
+    if (productsTypesInWaitingList.has(productType)) {
       return (
         <span>
           Du wirst auf die Warteliste eingetragen für:{" "}
           {formatShoppingCart(
             Object.fromEntries(
-              Object.entries(shoppingCartWaitingList).filter(([productId, _]) =>
+              Object.entries(shoppingCart).filter(([productId, _]) =>
                 doesProductBelongsToProductType(productId, productType),
               ),
             ),
@@ -93,7 +81,15 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
       );
     }
 
-    return <span>Dieses Produkt ist nicht bestellt worden</span>;
+    return (
+      <SummaryProductTypeTable
+        productType={productType}
+        firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+        shoppingCart={shoppingCart}
+        waitingListModeEnabled={waitingListModeEnabled}
+        contractStartDate={contractStartDate}
+      />
+    );
   }
 
   return (
@@ -104,6 +100,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             waitingListEntryDetails,
             waitingListModeEnabled,
             becomeMemberNow,
+            settings.forceWaitingList,
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
@@ -135,7 +132,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           {settings.productTypes.map((productType) => {
             if (
               waitingListEntryDetails !== undefined &&
-              !isProductTypeOrdered(productType, shoppingCartOrder)
+              !isProductTypeOrdered(productType, shoppingCart)
             ) {
               return null;
             }
