@@ -28,11 +28,14 @@ export function updateProductsAndProductTypesOverCapacity(
   setCheckingCapacities(true);
 
   bestellWizardApi
-    .bestellWizardApiBestellWizardCapacityCheckCreate({
-      bestellWizardCapacityCheckRequestRequest: {
-        shoppingCart: shoppingCart,
+    .bestellWizardApiBestellWizardCapacityCheckCreate(
+      {
+        bestellWizardCapacityCheckRequestRequest: {
+          shoppingCart: shoppingCart,
+        },
       },
-    })
+      { signal: localController.signal },
+    )
     .then((response) => {
       setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
       setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
