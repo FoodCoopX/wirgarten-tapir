@@ -27,5 +27,9 @@ export function buildSettings(
     paymentRhythmChoices: baseData.paymentRhythmChoices,
     studentStatusAllowed: baseData.studentStatusAllowed,
     introEnabled: baseData.introEnabled,
+    productTypeIdsThatAreAlreadyAtCapacity:
+      baseData.productTypeIdsThatAreAlreadyAtCapacity,
+    productIdsThatAreAlreadyAtCapacity:
+      baseData.productIdsThatAreAlreadyAtCapacity,
   };
 }

@@ -1,68 +1,76 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import {Card, Col, ListGroup, OverlayTrigger, Row, Spinner, Tooltip,} from "react-bootstrap";
+import {
+  Card,
+  Col,
+  ListGroup,
+  OverlayTrigger,
+  Row,
+  Spinner,
+  Tooltip,
+} from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
-import {useApi} from "../hooks/useApi.ts";
+import { useApi } from "../hooks/useApi.ts";
 import {
-    BestellWizardApi,
-    CoopApi,
-    OrderConfirmationResponse,
-    PickupLocationsApi,
-    PublicPickupLocation,
-    type PublicProductType,
-    WaitingListApi,
-    WaitingListEntryDetails,
+  BestellWizardApi,
+  CoopApi,
+  OrderConfirmationResponse,
+  PickupLocationsApi,
+  PublicPickupLocation,
+  type PublicProductType,
+  WaitingListApi,
+  WaitingListEntryDetails,
 } from "../api-client";
-import {handleRequestError} from "../utils/handleRequestError.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
-import {ShoppingCart} from "./types/ShoppingCart.ts";
+import { ShoppingCart } from "./types/ShoppingCart.ts";
 import BestellWizardPickupLocation from "./steps/BestellWizardPickupLocation.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import BestellWizardCoopShares from "./steps/BestellWizardCoopShares.tsx";
 import BestellWizardPersonalData from "./steps/BestellWizardPersonalData.tsx";
-import {PersonalData} from "./types/PersonalData.ts";
-import {getEmptyPersonalData} from "./utils/getEmptyPersonalData.ts";
+import { PersonalData } from "./types/PersonalData.ts";
+import { getEmptyPersonalData } from "./utils/getEmptyPersonalData.ts";
 import BestellWizardSummary from "./steps/BestellWizardSummary.tsx";
-import {getTestPersonalData} from "./utils/getTestPersonalData.ts";
+import { getTestPersonalData } from "./utils/getTestPersonalData.ts";
 import BestellWizardEnd from "./steps/BestellWizardEnd.tsx";
 import {
-    buildNextButtonParametersForCoopShares,
-    buildNextButtonParametersForIntro,
-    buildNextButtonParametersForPersonalData,
-    buildNextButtonParametersForPickupLocation,
-    buildNextButtonParametersForProductType,
+  buildNextButtonParametersForCoopShares,
+  buildNextButtonParametersForIntro,
+  buildNextButtonParametersForPersonalData,
+  buildNextButtonParametersForPickupLocation,
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
-import {NextButtonParameters} from "./types/NextButtonParameters.ts";
-import {isShoppingCartEmpty} from "./utils/isShoppingCartEmpty.ts";
+import { NextButtonParameters } from "./types/NextButtonParameters.ts";
+import { isShoppingCartEmpty } from "./utils/isShoppingCartEmpty.ts";
 import PickupLocationWaitingListModal from "./components/PickupLocationWaitingListModal.tsx";
-import {updateProductsAndProductTypesOverCapacity} from "./utils/updateProductsAndProductTypesOverCapacity.ts";
-import {updateMinimumNumberOfShares} from "./utils/updateMinimumNumberOfShares.ts";
-import {checkPickupLocationCapacities} from "./utils/checkPickupLocationCapacities.ts";
+import { updateProductsAndProductTypesOverCapacity } from "./utils/updateProductsAndProductTypesOverCapacity.ts";
+import { updateMinimumNumberOfShares } from "./utils/updateMinimumNumberOfShares.ts";
+import { checkPickupLocationCapacities } from "./utils/checkPickupLocationCapacities.ts";
 import GeneralWaitingListModal from "./components/GeneralWaitingListModal.tsx";
-import {fetchFirstDeliveryDates} from "./utils/fetchFirstDeliveryDates.ts";
+import { fetchFirstDeliveryDates } from "./utils/fetchFirstDeliveryDates.ts";
 import BestellWizardProgressIndicator from "./components/BestellWizardProgressIndicator.tsx";
-import {BestellWizardStep} from "./types/BestellWizardStep.ts";
-import {buildEmptyShoppingCart} from "./utils/buildEmptyShoppingCart.ts";
-import {selectAllRequiredProductTypes} from "./utils/selectAllRequiredProductTypes.ts";
-import {buildNextButtonForStepSummary} from "./utils/buildNextButtonForStepSummary.tsx";
+import { BestellWizardStep } from "./types/BestellWizardStep.ts";
+import { buildEmptyShoppingCart } from "./utils/buildEmptyShoppingCart.ts";
+import { selectAllRequiredProductTypes } from "./utils/selectAllRequiredProductTypes.ts";
+import { buildNextButtonForStepSummary } from "./utils/buildNextButtonForStepSummary.tsx";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import {ToastData} from "../types/ToastData.ts";
-import {BestellWizardSettings} from "./types/BestellWizardSettings.ts";
-import {buildEmptySettings} from "./utils/buildEmptySettings.ts";
-import {sortPickupLocationsByWaitingListWishes} from "./utils/sortPickupLocationsByWaitingListWishes.ts";
-import {buildSettings} from "./utils/buildSettings.ts";
-import {buildSteps} from "./utils/buildSteps.ts";
-import {setDataFromWaitingListEntry} from "./utils/setDataFromWaitingListEntry.ts";
-import {isProductTypeOrdered} from "./utils/isProductTypeOrdered.ts";
-import {isAtLeastOneOrderedProductWithDelivery} from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
-import {isWaitingListModeEnabled} from "./utils/isWaitingListModeEnabled.ts";
-import {isAtLeastOneProductOrdered} from "./utils/isAtLeastOneProductOrdered.ts";
-import {formatShoppingCart} from "./utils/formatShoppingCart.ts";
-import {buildFilteredShoppingCart} from "./utils/buildFilteredShoppingCart.ts";
+import { ToastData } from "../types/ToastData.ts";
+import { BestellWizardSettings } from "./types/BestellWizardSettings.ts";
+import { buildEmptySettings } from "./utils/buildEmptySettings.ts";
+import { sortPickupLocationsByWaitingListWishes } from "./utils/sortPickupLocationsByWaitingListWishes.ts";
+import { buildSettings } from "./utils/buildSettings.ts";
+import { buildSteps } from "./utils/buildSteps.ts";
+import { setDataFromWaitingListEntry } from "./utils/setDataFromWaitingListEntry.ts";
+import { isProductTypeOrdered } from "./utils/isProductTypeOrdered.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "./utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isWaitingListModeEnabled } from "./utils/isWaitingListModeEnabled.ts";
+import { isAtLeastOneProductOrdered } from "./utils/isAtLeastOneProductOrdered.ts";
+import { formatShoppingCart } from "./utils/formatShoppingCart.ts";
+import { buildFilteredShoppingCart } from "./utils/buildFilteredShoppingCart.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -582,6 +590,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             waitingListLinkConfirmationModeEnabled={
               waitingListEntryDetails !== undefined
             }
+            settings={settings}
           />
         );
     }

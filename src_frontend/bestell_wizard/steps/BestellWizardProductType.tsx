@@ -4,12 +4,14 @@ import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { Col, Row } from "react-bootstrap";
 import ProductForm from "../components/ProductForm.tsx";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 
 interface BestellWizardProductTypeProps {
   productType: PublicProductType;
   shoppingCart: ShoppingCart;
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
+  settings: BestellWizardSettings;
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
@@ -17,6 +19,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   shoppingCart,
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
+  settings,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -44,6 +47,7 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
               waitingListLinkConfirmationModeEnabled
             }
             showHintFutureContract={false}
+            settings={settings}
           />
         </Col>
       </Row>

@@ -5,6 +5,7 @@ import { PublicProductType } from "../../../api-client";
 import { ShoppingCart } from "../../../bestell_wizard/types/ShoppingCart.ts";
 import TapirButton from "../../../components/TapirButton.tsx";
 import { isShoppingCartEmpty } from "../../../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { BestellWizardSettings } from "../../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface SubscriptionEditStepProductTypeProps {
   productType: PublicProductType;
@@ -16,7 +17,7 @@ interface SubscriptionEditStepProductTypeProps {
   loading: boolean;
   checkingCapacities: boolean;
   onNextClicked: () => void;
-  labelCheckboxSepaMandat: string;
+  settings: BestellWizardSettings;
 }
 
 const SubscriptionEditStepProductType: React.FC<
@@ -31,7 +32,7 @@ const SubscriptionEditStepProductType: React.FC<
   loading,
   checkingCapacities,
   onNextClicked,
-  labelCheckboxSepaMandat,
+  settings,
 }) => {
   return (
     <>
@@ -44,6 +45,7 @@ const SubscriptionEditStepProductType: React.FC<
               setShoppingCart={setShoppingCart}
               waitingListLinkConfirmationModeEnabled={false}
               showHintFutureContract={true}
+              settings={settings}
             />
           </Col>
         </Row>
@@ -53,7 +55,9 @@ const SubscriptionEditStepProductType: React.FC<
               id={"sepa-mandat"}
               label={
                 <span
-                  dangerouslySetInnerHTML={{ __html: labelCheckboxSepaMandat }}
+                  dangerouslySetInnerHTML={{
+                    __html: settings.labelCheckboxSepaMandat,
+                  }}
                 />
               }
               checked={sepaAllowed}

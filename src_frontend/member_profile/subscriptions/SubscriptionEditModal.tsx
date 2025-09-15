@@ -1,34 +1,35 @@
-import React, {useEffect, useState} from "react";
-import {ListGroup, Modal} from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { ListGroup, Modal } from "react-bootstrap";
 import "dayjs/locale/de";
 import {
   BestellWizardApi,
   PickupLocationsApi,
   PublicPickupLocation,
   PublicProductType,
-  PublicSubscription,
   SubscriptionsApi,
   WaitingListApi,
 } from "../../api-client";
-import {ShoppingCart} from "../../bestell_wizard/types/ShoppingCart.ts";
-import {getCsrfToken} from "../../utils/getCsrfToken.ts";
-import {useApi} from "../../hooks/useApi.ts";
-import {handleRequestError} from "../../utils/handleRequestError.ts";
-import {isShoppingCartEmpty} from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import {checkPickupLocationCapacities} from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { getCsrfToken } from "../../utils/getCsrfToken.ts";
+import { useApi } from "../../hooks/useApi.ts";
+import { handleRequestError } from "../../utils/handleRequestError.ts";
+import { isShoppingCartEmpty } from "../../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { checkPickupLocationCapacities } from "../../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import SubscriptionEditStepPickupLocation from "./steps/SubscriptionEditStepPickupLocation.tsx";
 import SubscriptionEditStepProductType from "./steps/SubscriptionEditStepProductType.tsx";
 import PickupLocationWaitingListModal from "../../bestell_wizard/components/PickupLocationWaitingListModal.tsx";
 import ProductWaitingListModal from "../../bestell_wizard/components/ProductWaitingListModal.tsx";
 import SubscriptionEditStepSummary from "./steps/SubscriptionEditStepSummary.tsx";
-import {fetchFirstDeliveryDates} from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { fetchFirstDeliveryDates } from "../../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import SubscriptionEditStepConfirmation from "./steps/SubscriptionEditStepConfirmation.tsx";
-import {ToastData} from "../../types/ToastData.ts";
+import { ToastData } from "../../types/ToastData.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { buildEmptySettings } from "../../bestell_wizard/utils/buildEmptySettings.ts";
+import { buildSettings } from "../../bestell_wizard/utils/buildSettings.ts";
 
 interface SubscriptionEditModalProps {
   show: boolean;
   onHide: () => void;
-  subscriptions: PublicSubscription[];
   productType: PublicProductType;
   memberId: string;
   reloadSubscriptions: () => void;
@@ -44,7 +45,6 @@ export type SubscriptionEditStep =
 const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   show,
   onHide,
-  subscriptions,
   productType,
   memberId,
   reloadSubscriptions,
@@ -84,14 +84,14 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
-  const [forceWaitingList, setForceWaitingList] = useState(false);
   const [showWaitingListConfirmModal, setShowWaitingListConfirmModal] =
     useState(false);
   const [steps, setSteps] = useState<SubscriptionEditStep[]>([]);
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
-  const [labelCheckboxSepaMandat, setLabelCheckboxSepaMandat] = useState("");
   const [contractStartDate, setContractStartDate] = useState(new Date());
+  const [settings, setSettings] =
+    useState<BestellWizardSettings>(buildEmptySettings());
 
   useEffect(() => {
     if (!show) return;
@@ -117,8 +117,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
     bestellWizardApi
       .bestellWizardApiBestellWizardBaseDataRetrieve()
       .then((response) => {
-        setForceWaitingList(response.forceWaitingList);
-        setLabelCheckboxSepaMandat(response.labelCheckboxSepaMandat);
+        setSettings(buildSettings(response, []));
       })
       .catch((error) =>
         handleRequestError(
@@ -217,7 +216,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   }, [pickupLocations, show, needPickupLocation, shoppingCart]);
 
   useEffect(() => {
-    if (forceWaitingList) {
+    if (settings.forceWaitingList) {
       setWaitingListModeEnabled(true);
       return;
     }
@@ -232,7 +231,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
       setWaitingListModeEnabled(false);
     }
   }, [
-    forceWaitingList,
+    settings,
     productIdsOverCapacity,
     productTypeIdsOverCapacity,
     selectedPickupLocations,
@@ -377,7 +376,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
               setSepaAllowed={setSepaAllowed}
               onCancelClicked={onHide}
               onNextClicked={onNextClicked}
-              labelCheckboxSepaMandat={labelCheckboxSepaMandat}
+              settings={settings}
             />
           )}
           {currentStep == "pickup_location" && (

@@ -117,6 +117,18 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     defaultPaymentRhythm: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    productTypeIdsThatAreAlreadyAtCapacity: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    productIdsThatAreAlreadyAtCapacity: Array<string>;
 }
 
 /**
@@ -139,6 +151,8 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('trialPeriodLengthInWeeks' in value) || value['trialPeriodLengthInWeeks'] === undefined) return false;
     if (!('paymentRhythmChoices' in value) || value['paymentRhythmChoices'] === undefined) return false;
     if (!('defaultPaymentRhythm' in value) || value['defaultPaymentRhythm'] === undefined) return false;
+    if (!('productTypeIdsThatAreAlreadyAtCapacity' in value) || value['productTypeIdsThatAreAlreadyAtCapacity'] === undefined) return false;
+    if (!('productIdsThatAreAlreadyAtCapacity' in value) || value['productIdsThatAreAlreadyAtCapacity'] === undefined) return false;
     return true;
 }
 
@@ -168,6 +182,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'trialPeriodLengthInWeeks': json['trial_period_length_in_weeks'],
         'paymentRhythmChoices': json['payment_rhythm_choices'],
         'defaultPaymentRhythm': json['default_payment_rhythm'],
+        'productTypeIdsThatAreAlreadyAtCapacity': json['product_type_ids_that_are_already_at_capacity'],
+        'productIdsThatAreAlreadyAtCapacity': json['product_ids_that_are_already_at_capacity'],
     };
 }
 
@@ -198,6 +214,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'trial_period_length_in_weeks': value['trialPeriodLengthInWeeks'],
         'payment_rhythm_choices': value['paymentRhythmChoices'],
         'default_payment_rhythm': value['defaultPaymentRhythm'],
+        'product_type_ids_that_are_already_at_capacity': value['productTypeIdsThatAreAlreadyAtCapacity'],
+        'product_ids_that_are_already_at_capacity': value['productIdsThatAreAlreadyAtCapacity'],
     };
 }
 

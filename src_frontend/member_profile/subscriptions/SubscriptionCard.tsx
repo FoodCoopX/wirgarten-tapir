@@ -111,7 +111,6 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
       <SubscriptionEditModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
-        subscriptions={subscriptions}
         productType={productType}
         memberId={memberId}
         reloadSubscriptions={reloadSubscriptions}

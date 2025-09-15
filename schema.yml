@@ -4363,6 +4363,14 @@ components:
             type: string
         default_payment_rhythm:
           type: string
+        product_type_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
+        product_ids_that_are_already_at_capacity:
+          type: array
+          items:
+            type: string
       required:
       - allow_investing_membership
       - coop_step_text
@@ -4374,6 +4382,8 @@ components:
       - label_checkbox_sepa_mandat
       - payment_rhythm_choices
       - price_of_a_share
+      - product_ids_that_are_already_at_capacity
+      - product_type_ids_that_are_already_at_capacity
       - product_types
       - revocation_rights_explanation
       - show_coop_content

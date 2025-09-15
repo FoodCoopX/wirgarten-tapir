@@ -18,4 +18,6 @@ export type BestellWizardSettings = {
   paymentRhythmChoices: { [key: string]: string };
   studentStatusAllowed: boolean;
   introEnabled: boolean;
+  productTypeIdsThatAreAlreadyAtCapacity: string[];
+  productIdsThatAreAlreadyAtCapacity: string[];
 };

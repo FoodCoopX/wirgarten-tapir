@@ -7,6 +7,8 @@ import { type PublicProductType } from "../../api-client";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
 
 interface ProductFormProps {
   productType: PublicProductType;
@@ -14,6 +16,7 @@ interface ProductFormProps {
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
   showHintFutureContract: boolean;
+  settings: BestellWizardSettings;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -22,6 +25,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
   showHintFutureContract,
+  settings,
 }) => {
   function totalPriceForThisProductType() {
     let total = 0;
@@ -45,7 +49,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 {product.urlOfImageInBestellwizard !== "" && (
                   <img
                     src={product.urlOfImageInBestellwizard}
-                    style={{ maxWidth: "75%" }}
+                    style={{
+                      maxWidth: "75%",
+                      filter: shouldShowWarningProductNotAvailable(
+                        product,
+                        productType,
+                        settings,
+                      )
+                        ? "grayscale(1)"
+                        : "",
+                    }}
                     alt={"Photo von " + productType.name + " " + product.name}
                   />
                 )}
@@ -83,7 +96,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <div>
                 <Form.Text className={"text-center"} as={"p"}>
                   Basisbeitrag: {formatCurrency(product.price)} pro Monat inkl.
-                  MwSt.
+                  MwSt. <br />
+                  {shouldShowWarningProductNotAvailable(
+                    product,
+                    productType,
+                    settings,
+                  ) && (
+                    <span className={"text-danger"}>
+                      (nur Warteliste-Eintrag möglich)
+                    </span>
+                  )}
                 </Form.Text>
               </div>
               <div>

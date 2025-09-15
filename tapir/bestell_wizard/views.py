@@ -40,6 +40,9 @@ from tapir.subscriptions.services.global_capacity_checker import (
 )
 from tapir.subscriptions.services.order_validator import OrderValidator
 from tapir.subscriptions.services.product_capacity_checker import ProductCapacityChecker
+from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
+    ProductTypeLowestFreeCapacityAfterDateCalculator,
+)
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
@@ -57,7 +60,10 @@ from tapir.wirgarten.models import (
     Member,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
-from tapir.wirgarten.service.products import get_active_and_future_subscriptions
+from tapir.wirgarten.service.products import (
+    get_active_and_future_subscriptions,
+    get_product_price,
+)
 from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
@@ -298,6 +304,10 @@ class BestellWizardBaseDataApiView(APIView):
         responses={200: BestellWizardBaseDataResponseSerializer},
     )
     def get(self, request):
+        product_ids_that_are_already_at_capacity = (
+            self.build_product_ids_that_are_already_at_capacity(self.cache)
+        )
+
         response_data = {
             "price_of_a_share": get_parameter_value(
                 ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
@@ -352,9 +362,87 @@ class BestellWizardBaseDataApiView(APIView):
             "default_payment_rhythm": get_parameter_value(
                 ParameterKeys.PAYMENT_DEFAULT_RHYTHM, cache=self.cache
             ),
+            "product_type_ids_that_are_already_at_capacity": self.build_product_type_ids_that_are_already_at_capacity(
+                cache=self.cache,
+                product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
+            ),
+            "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+
+    @classmethod
+    def build_product_type_ids_that_are_already_at_capacity(
+        cls, cache: dict, product_ids_that_are_already_at_capacity: list[str]
+    ):
+        ids = []
+
+        subscription_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=cache),
+                apply_buffer_time=True,
+                cache=cache,
+            )
+        )
+
+        for product_type in TapirCache.get_product_types_in_standard_order(cache=cache):
+            lowest_free_capacity = ProductTypeLowestFreeCapacityAfterDateCalculator.get_lowest_free_capacity_after_date(
+                product_type=product_type,
+                reference_date=subscription_start_date,
+                cache=cache,
+            )
+            products = TapirCache.get_products_with_product_type(
+                cache=cache, product_type_id=product_type.id
+            )
+            smallest_size = min(
+                [
+                    get_product_price(
+                        product=product,
+                        reference_date=subscription_start_date,
+                        cache=cache,
+                    ).size
+                    for product in products
+                ]
+            )
+            if lowest_free_capacity < smallest_size:
+                ids.append(product_type.id)
+                continue
+
+            no_product_with_free_capacity = all(
+                [
+                    product.id in product_ids_that_are_already_at_capacity
+                    for product in products
+                ]
+            )
+
+            if no_product_with_free_capacity:
+                ids.append(product_type.id)
+
+        return ids
+
+    @classmethod
+    def build_product_ids_that_are_already_at_capacity(cls, cache: dict) -> list[str]:
+        ids = []
+
+        subscription_start_date = (
+            ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache=cache),
+                apply_buffer_time=True,
+                cache=cache,
+            )
+        )
+
+        for product in TapirCache.get_all_products(cache=cache):
+            if not ProductCapacityChecker.does_product_have_enough_free_capacity_to_add_order(
+                product=product,
+                ordered_quantity=1,
+                member_id=None,
+                subscription_start_date=subscription_start_date,
+                cache=cache,
+            ):
+                ids.append(product.id)
+
+        return ids
 
 
 class BestellWizardDeliveryDatesForOrderApiView(APIView):

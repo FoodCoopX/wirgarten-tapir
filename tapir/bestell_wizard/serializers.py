@@ -64,6 +64,12 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     trial_period_length_in_weeks = serializers.IntegerField()
     payment_rhythm_choices = serializers.DictField(child=serializers.CharField())
     default_payment_rhythm = serializers.CharField()
+    product_type_ids_that_are_already_at_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
+    product_ids_that_are_already_at_capacity = serializers.ListField(
+        child=serializers.CharField()
+    )
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
