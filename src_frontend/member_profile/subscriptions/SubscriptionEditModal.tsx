@@ -7,7 +7,7 @@ import {
   PublicPickupLocation,
   PublicProductType,
   SubscriptionsApi,
-  WaitingListApi,
+  WaitingListApi
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -377,6 +377,8 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
               onCancelClicked={onHide}
               onNextClicked={onNextClicked}
               settings={settings}
+              productIdsOverCapacity={productIdsOverCapacity}
+              productTypeIdsOverCapacity={productTypeIdsOverCapacity}
             />
           )}
           {currentStep == "pickup_location" && (

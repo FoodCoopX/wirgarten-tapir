@@ -591,6 +591,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
               waitingListEntryDetails !== undefined
             }
             settings={settings}
+            productIdsOverCapacity={productIdsOverCapacity}
+            productTypeIdsOverCapacity={productTypeIdsOverCapacity}
           />
         );
     }

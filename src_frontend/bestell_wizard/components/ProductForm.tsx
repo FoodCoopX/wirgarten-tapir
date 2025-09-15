@@ -8,7 +8,10 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
-import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
+import {
+  shouldShowWarningProductNotAvailable,
+  shouldShowWarningProductTypeNotAvailable,
+} from "../../utils/shouldShowWarningNotAvailable.ts";
 
 interface ProductFormProps {
   productType: PublicProductType;
@@ -17,6 +20,8 @@ interface ProductFormProps {
   waitingListLinkConfirmationModeEnabled: boolean;
   showHintFutureContract: boolean;
   settings: BestellWizardSettings;
+  productIdsOverCapacity: string[];
+  productTypeIdsOverCapacity: string[];
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -26,13 +31,43 @@ const ProductForm: React.FC<ProductFormProps> = ({
   waitingListLinkConfirmationModeEnabled,
   showHintFutureContract,
   settings,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
 }) => {
   function totalPriceForThisProductType() {
     let total = 0;
     for (const product of productType.products) {
-      total += product.price * shoppingCart[product.id!];
+      if (Object.keys(shoppingCart).includes(product.id!)) {
+        total += product.price * shoppingCart[product.id!];
+      }
     }
     return total;
+  }
+
+  function shouldShowWarningCurrentOrderIsOverCapacity() {
+    if (shouldShowWarningProductTypeNotAvailable(productType, settings)) {
+      return false;
+    }
+
+    if (productTypeIdsOverCapacity.includes(productType.id!)) {
+      return true;
+    }
+
+    for (const product of productType.products) {
+      if (!Object.keys(shoppingCart).includes(product.id!)) {
+        continue;
+      }
+
+      if (shoppingCart[product.id!] === 0) {
+        continue;
+      }
+
+      if (productIdsOverCapacity.includes(product.id!)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   return (
@@ -116,11 +151,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Col>
           ))}
       </Row>
-      {productType.forceWaitingList && (
+      {shouldShowWarningProductTypeNotAvailable(productType, settings) && (
         <Row className={"mt-4"}>
           <Col>
             <Alert variant={"warning"}>
               Derzeit ausgebucht. Nur Wartelisteneintrag möglich
+            </Alert>
+          </Col>
+        </Row>
+      )}
+      {shouldShowWarningCurrentOrderIsOverCapacity() && (
+        <Row>
+          <Col>
+            <Alert variant={"warning"}>
+              Derzeit ist deine gewünschte {productType?.name}-Größe nicht
+              verfügbar. Du kannst eine andere Größe wählen, oder dich auf die
+              Warteliste setzen lassen.
             </Alert>
           </Col>
         </Row>

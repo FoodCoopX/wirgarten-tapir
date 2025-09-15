@@ -18,6 +18,8 @@ interface SubscriptionEditStepProductTypeProps {
   checkingCapacities: boolean;
   onNextClicked: () => void;
   settings: BestellWizardSettings;
+  productIdsOverCapacity: string[];
+  productTypeIdsOverCapacity: string[];
 }
 
 const SubscriptionEditStepProductType: React.FC<
@@ -33,6 +35,8 @@ const SubscriptionEditStepProductType: React.FC<
   checkingCapacities,
   onNextClicked,
   settings,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
 }) => {
   return (
     <>
@@ -46,6 +50,8 @@ const SubscriptionEditStepProductType: React.FC<
               waitingListLinkConfirmationModeEnabled={false}
               showHintFutureContract={true}
               settings={settings}
+              productIdsOverCapacity={productIdsOverCapacity}
+              productTypeIdsOverCapacity={productTypeIdsOverCapacity}
             />
           </Col>
         </Row>

@@ -12,6 +12,8 @@ interface BestellWizardProductTypeProps {
   setShoppingCart: (shoppingCart: ShoppingCart) => void;
   waitingListLinkConfirmationModeEnabled: boolean;
   settings: BestellWizardSettings;
+  productIdsOverCapacity: string[];
+  productTypeIdsOverCapacity: string[];
 }
 
 const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
@@ -20,6 +22,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
   setShoppingCart,
   waitingListLinkConfirmationModeEnabled,
   settings,
+  productIdsOverCapacity,
+  productTypeIdsOverCapacity,
 }) => {
   function getHtmlDescription(description: string) {
     return { __html: description };
@@ -48,6 +52,8 @@ const BestellWizardProductType: React.FC<BestellWizardProductTypeProps> = ({
             }
             showHintFutureContract={false}
             settings={settings}
+            productIdsOverCapacity={productIdsOverCapacity}
+            productTypeIdsOverCapacity={productTypeIdsOverCapacity}
           />
         </Col>
       </Row>
