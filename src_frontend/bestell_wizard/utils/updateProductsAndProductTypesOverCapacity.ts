@@ -12,8 +12,18 @@ export function updateProductsAndProductTypesOverCapacity(
   setProductTypeIdsOverCapacity: (ids: string[]) => void,
   setCheckingCapacities: (enabled: boolean) => void,
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>,
+  checkingCapacitiesController: AbortController | undefined,
+  setCheckingCapacitiesController: React.Dispatch<
+    React.SetStateAction<AbortController | undefined>
+  >,
 ) {
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
+
+  if (checkingCapacitiesController) {
+    checkingCapacitiesController.abort();
+  }
+  const localController = new AbortController();
+  setCheckingCapacitiesController(localController);
 
   setCheckingCapacities(true);
 
@@ -26,13 +36,16 @@ export function updateProductsAndProductTypesOverCapacity(
     .then((response) => {
       setProductIdsOverCapacity(response.idsOfProductsOverCapacity);
       setProductTypeIdsOverCapacity(response.idsOfProductTypesOverCapacity);
+      setCheckingCapacities(false);
     })
-    .catch((error) =>
+    .catch((error) => {
+      if (error.cause && error.cause.name === "AbortError") return;
+
+      setCheckingCapacities(false);
       handleRequestError(
         error,
         "Fehler beim Laden der Produkt-Kapazitäten: " + error.message,
         setToastDatas,
-      ),
-    )
-    .finally(() => setCheckingCapacities(false));
+      );
+    });
 }
