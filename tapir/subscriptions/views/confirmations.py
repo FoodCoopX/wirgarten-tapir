@@ -54,15 +54,16 @@ class MemberDataToConfirmApiView(APIView):
     def get(self, request):
         cache = {}
         changes_by_member = self.build_changes_by_member(cache=cache)
+        member_data_to_confirm = [
+            self.build_data_to_confirm_for_member(
+                member=member,
+                changes_by_product_type=changes_by_product_type,
+                cache=cache,
+            )
+            for member, changes_by_product_type in changes_by_member.items()
+        ]
         data = MemberDataToConfirmSerializer(
-            [
-                self.build_data_to_confirm_for_member(
-                    member=member,
-                    changes_by_product_type=changes_by_product_type,
-                    cache=cache,
-                )
-                for member, changes_by_product_type in changes_by_member.items()
-            ],
+            member_data_to_confirm,
             many=True,
         ).data
 
@@ -83,7 +84,8 @@ class MemberDataToConfirmApiView(APIView):
         )
 
         unconfirmed_creations = Subscription.objects.filter(
-            admin_confirmed__isnull=True
+            admin_confirmed__isnull=True,
+            cancellation_ts__isnull=True,
         ).select_related("member", "product__type")
         cls.group_changes_by_member_and_product_type(
             subscriptions=unconfirmed_creations,
@@ -160,15 +162,47 @@ class MemberDataToConfirmApiView(APIView):
                 cache=cache, pickup_location_id=pickup_location_id
             )
 
+        classified_changes = cls.classify_changes(changes_by_product_type)
+
+        cancellation_types = []
+        show_warning = False
+        for cancellation in classified_changes["cancellations"]:
+            cancellation_type, cancellation_shows_warning = cls.get_cancellation_type(
+                cancellation, cache=cache
+            )
+            show_warning = show_warning or cancellation_shows_warning
+            cancellation_types.append(cancellation_type)
+
+        return {
+            "member": member,
+            "member_profile_url": reverse("wirgarten:member_detail", args=[member.id]),
+            "pickup_location": pickup_location,
+            "subscription_cancellations": classified_changes["cancellations"],
+            "cancellation_types": cancellation_types,
+            "show_warning": show_warning,
+            "subscription_creations": classified_changes["creations"],
+            "subscription_changes": classified_changes["changes"],
+            "subscriptions_deleted": changes_by_product_type.get("deleted", []),
+            "share_purchases": TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
+                cache=cache
+            ).get(
+                member.id, []
+            ),
+        }
+
+    @classmethod
+    def classify_changes(cls, changes_by_product_type: dict):
         creations = []
         cancellations = []
         changes = []
+
         for (
             product_type,
             changes_for_this_product_type,
         ) in changes_by_product_type.items():
             if product_type is None or product_type == "deleted":
                 continue
+
             creations_for_this_product_type = changes_for_this_product_type["creations"]
             cancellations_for_this_product_type = changes_for_this_product_type[
                 "cancellations"
@@ -195,31 +229,10 @@ class MemberDataToConfirmApiView(APIView):
                     "subscription_creations": creations_for_this_product_type,
                 }
             )
-
-        cancellation_types = []
-        show_warning = False
-        for cancellation in cancellations:
-            cancellation_type, cancellation_shows_warning = cls.get_cancellation_type(
-                cancellation, cache=cache
-            )
-            show_warning = show_warning or cancellation_shows_warning
-            cancellation_types.append(cancellation_type)
-
         return {
-            "member": member,
-            "member_profile_url": reverse("wirgarten:member_detail", args=[member.id]),
-            "pickup_location": pickup_location,
-            "subscription_cancellations": cancellations,
-            "cancellation_types": cancellation_types,
-            "show_warning": show_warning,
-            "subscription_creations": creations,
-            "subscription_changes": changes,
-            "subscriptions_deleted": changes_by_product_type.get("deleted", []),
-            "share_purchases": TapirCache.get_unconfirmed_coop_share_purchases_by_member_id(
-                cache=cache
-            ).get(
-                member.id, []
-            ),
+            "cancellations": cancellations,
+            "changes": changes,
+            "creations": creations,
         }
 
     @staticmethod
@@ -258,6 +271,9 @@ class ConfirmSubscriptionChangesView(APIView):
             OpenApiParameter(
                 name="confirm_purchase_ids", type=str, required=True, many=True
             ),
+            OpenApiParameter(
+                name="confirm_deletion_ids", type=int, required=True, many=True
+            ),
         ],
     )
     @transaction.atomic
@@ -272,6 +288,7 @@ class ConfirmSubscriptionChangesView(APIView):
             ids_to_confirm=confirm_cancellation_ids,
             confirmation_field="cancellation_admin_confirmed",
             cache=cache,
+            id_as_int=False,
         )
 
         confirm_creation_ids = request.query_params.getlist("confirm_creation_ids")
@@ -280,6 +297,7 @@ class ConfirmSubscriptionChangesView(APIView):
             ids_to_confirm=confirm_creation_ids,
             confirmation_field="admin_confirmed",
             cache=cache,
+            id_as_int=False,
         )
 
         confirm_purchase_ids = request.query_params.getlist("confirm_purchase_ids")
@@ -288,6 +306,16 @@ class ConfirmSubscriptionChangesView(APIView):
             ids_to_confirm=confirm_purchase_ids,
             confirmation_field="admin_confirmed",
             cache=cache,
+            id_as_int=False,
+        )
+
+        confirm_deletion_ids = request.query_params.getlist("confirm_deletion_ids")
+        self.apply_confirmation(
+            model=SubscriptionChangeLogEntry,
+            ids_to_confirm=confirm_deletion_ids,
+            confirmation_field="admin_confirmed",
+            cache=cache,
+            id_as_int=True,
         )
 
         OrderConfirmationMailSender.send_confirmation_mail_if_necessary(
@@ -300,15 +328,19 @@ class ConfirmSubscriptionChangesView(APIView):
     @staticmethod
     def apply_confirmation(
         model: Type[Model],
-        ids_to_confirm: list[str],
+        ids_to_confirm: list[str] | list[int],
         confirmation_field: str,
         cache: dict,
+        id_as_int: bool,
     ):
-        ids_to_confirm = [
-            id_to_confirm.strip()
-            for id_to_confirm in ids_to_confirm
-            if id_to_confirm.strip() != ""
-        ]
+        if id_as_int:
+            ids_to_confirm = [int(id_) for id_ in ids_to_confirm if id_.isnumeric()]
+        else:
+            ids_to_confirm = [
+                id_to_confirm.strip()
+                for id_to_confirm in ids_to_confirm
+                if id_to_confirm.strip() != ""
+            ]
 
         objects_to_confirm = model.objects.filter(id__in=ids_to_confirm).filter(
             **{f"{confirmation_field}__isnull": True}
@@ -497,7 +529,7 @@ class RevokeChangesApiView(APIView):
             .exclude(**{f"{field_start_date}__lte": get_today(cache=cache)})
             .select_related("member")
         )
-        found_ids = [obj.id for obj in objects_to_delete]
+        found_ids = [obj.pk for obj in objects_to_delete]
         ids_not_found = [
             object_id for object_id in ids_to_delete if object_id not in found_ids
         ]

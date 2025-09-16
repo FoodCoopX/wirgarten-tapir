@@ -238,6 +238,16 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
     return ids;
   }
 
+  function getDeletionIdsToConfirm() {
+    const ids = [];
+    for (const change of selectedChanges) {
+      ids.push(
+        ...change.subscriptionsDeleted.map((subscription) => subscription.id!),
+      );
+    }
+    return ids;
+  }
+
   function onConfirm() {
     setLoading(true);
 
@@ -246,6 +256,7 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
         confirmCreationIds: getCreationIdsToConfirm(),
         confirmCancellationIds: getCancellationIdsToConfirm(),
         confirmPurchaseIds: getSharePurchaseIdsToConfirm(),
+        confirmDeletionIds: getDeletionIdsToConfirm(),
       })
       .then(() => {
         setConfirmedChanges(new Set(selectedChanges));

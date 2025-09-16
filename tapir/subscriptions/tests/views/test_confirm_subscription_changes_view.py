@@ -6,7 +6,7 @@ from rest_framework import status
 from tapir.subscriptions.services.order_confirmation_mail_sender import (
     OrderConfirmationMailSender,
 )
-from tapir.wirgarten.models import Subscription
+from tapir.wirgarten.models import Subscription, SubscriptionChangeLogEntry
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -86,6 +86,29 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
             ).exists()
         )
 
+    def test_post_someDeletionIdsDontExist_returns404AndDontConfirmAnything(
+        self,
+    ):
+        self.client.force_login(MemberFactory.create(is_superuser=True))
+        subscription = SubscriptionFactory.create(admin_confirmed=None)
+        deletion = SubscriptionChangeLogEntry.objects.create(
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+            subscriptions="test",
+            admin_confirmed=self.now,
+            user=MemberFactory.create(),
+        )
+
+        url = reverse("subscriptions:confirm_subscription_changes")
+        url = f"{url}?confirm_creation_ids={subscription.id}&confirm_deletion_ids={deletion.id}"
+        response = self.client.post(url)
+
+        self.assertStatusCode(response, status.HTTP_404_NOT_FOUND)
+        self.assertFalse(
+            Subscription.objects.filter(
+                cancellation_admin_confirmed__isnull=False
+            ).exists()
+        )
+
     @patch.object(OrderConfirmationMailSender, "send_confirmation_mail_if_necessary")
     def test_post_default_confirmSelectionAndSendConfirmationMails(
         self, mock_send_confirmation_mail_if_necessary: Mock
@@ -97,18 +120,26 @@ class TestConfirmSubscriptionChangesView(TapirIntegrationTest):
         )
         subscription_2 = SubscriptionFactory.create()
         purchase = CoopShareTransactionFactory.create(admin_confirmed=None)
+        deletion = SubscriptionChangeLogEntry.objects.create(
+            change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.CANCELLED,
+            subscriptions="test",
+            admin_confirmed=None,
+            user=MemberFactory.create(),
+        )
 
         url = reverse("subscriptions:confirm_subscription_changes")
-        url = f"{url}?confirm_cancellation_ids={subscription_1.id}&confirm_creation_ids={subscription_2.id}&confirm_purchase_ids={purchase.id}"
+        url = f"{url}?confirm_cancellation_ids={subscription_1.id}&confirm_creation_ids={subscription_2.id}&confirm_purchase_ids={purchase.id}&confirm_deletion_ids={deletion.id}"
         response = self.client.post(url)
 
         self.assertStatusCode(response, status.HTTP_200_OK)
         subscription_1.refresh_from_db()
         self.assertEqual(self.now, subscription_1.cancellation_admin_confirmed)
         subscription_2.refresh_from_db()
-        self.assertIsNotNone(self.now, subscription_2.admin_confirmed)
+        self.assertEqual(self.now, subscription_2.admin_confirmed)
         purchase.refresh_from_db()
-        self.assertIsNotNone(self.now, purchase.admin_confirmed)
+        self.assertEqual(self.now, purchase.admin_confirmed)
+        deletion.refresh_from_db()
+        self.assertEqual(self.now, deletion.admin_confirmed)
 
         mock_send_confirmation_mail_if_necessary.assert_called_once_with(
             confirm_creation_ids=[subscription_2.id], confirm_purchase_ids=[purchase.id]

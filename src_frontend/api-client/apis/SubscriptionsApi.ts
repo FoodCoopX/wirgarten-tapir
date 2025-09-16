@@ -45,6 +45,7 @@ import {
 export interface SubscriptionsApiConfirmSubscriptionChangesCreateRequest {
   confirmCancellationIds: Array<string>;
   confirmCreationIds: Array<string>;
+  confirmDeletionIds: Array<number>;
   confirmPurchaseIds: Array<string>;
 }
 
@@ -116,6 +117,13 @@ export class SubscriptionsApi extends runtime.BaseAPI {
       );
     }
 
+    if (requestParameters["confirmDeletionIds"] == null) {
+      throw new runtime.RequiredError(
+        "confirmDeletionIds",
+        'Required parameter "confirmDeletionIds" was null or undefined when calling subscriptionsApiConfirmSubscriptionChangesCreate().',
+      );
+    }
+
     if (requestParameters["confirmPurchaseIds"] == null) {
       throw new runtime.RequiredError(
         "confirmPurchaseIds",
@@ -133,6 +141,11 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     if (requestParameters["confirmCreationIds"] != null) {
       queryParameters["confirm_creation_ids"] =
         requestParameters["confirmCreationIds"];
+    }
+
+    if (requestParameters["confirmDeletionIds"] != null) {
+      queryParameters["confirm_deletion_ids"] =
+        requestParameters["confirmDeletionIds"];
     }
 
     if (requestParameters["confirmPurchaseIds"] != null) {

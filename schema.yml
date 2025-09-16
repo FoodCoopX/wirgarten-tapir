@@ -1301,6 +1301,13 @@ paths:
             type: string
         required: true
       - in: query
+        name: confirm_deletion_ids
+        schema:
+          type: array
+          items:
+            type: integer
+        required: true
+      - in: query
         name: confirm_purchase_ids
         schema:
           type: array
