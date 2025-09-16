@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Card, Col, Form, ListGroup, Row, Table } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import {
-  MemberDataToConfirm,
-  type SubscriptionChange,
-  SubscriptionsApi,
-} from "../api-client";
+import { MemberDataToConfirm, type SubscriptionChange, SubscriptionsApi } from "../api-client";
 import { DEFAULT_PAGE_SIZE } from "../utils/pagination.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import PlaceholderTableRows from "../components/PlaceholderTableRows.tsx";
@@ -340,7 +336,10 @@ const ContractUpdatesCard: React.FC<ContractUpdatesCardProps> = ({
   }
 
   function doesChangeHaveCancellations(change: MemberDataToConfirm) {
-    return change.subscriptionCancellations.length > 0;
+    return (
+      change.subscriptionCancellations.length > 0 ||
+      change.subscriptionsDeleted.length > 0
+    );
   }
 
   function doesSelectionContainChangesThatAreAlreadyValid(): boolean {
