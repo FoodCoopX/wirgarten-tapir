@@ -258,6 +258,10 @@ def export_coop_member_list(request, **kwargs):
 
 
 class ExportMembersView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.cache = {}
+
     def get(self, request, *args, **kwargs):
         # Get queryset based on filters and ordering
         filter_class = MemberFilter
@@ -314,7 +318,8 @@ class ExportMembersView(View):
         return response
 
     def get_queryset(self):
-        return MemberListView.get_queryset(self)
+        queryset = Member.objects.all()
+        return MemberListView.annotate_queryset(queryset, self.cache)
 
     def get_filterset_class(self):
         return MemberFilter

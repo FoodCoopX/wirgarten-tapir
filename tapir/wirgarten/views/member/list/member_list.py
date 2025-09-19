@@ -247,9 +247,14 @@ class MemberListView(PermissionRequiredMixin, FilterView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        queryset = self.annotate_queryset(queryset, self.cache)
+
+        return queryset
+
+    @classmethod
+    def annotate_queryset(cls, queryset, cache: dict):
         queryset = annotate_member_queryset_with_coop_shares_total_value(queryset)
         queryset = annotate_member_queryset_with_monthly_payment(
-            queryset, get_today(cache=self.cache)
+            queryset, get_today(cache=cache)
         )
-
         return queryset
