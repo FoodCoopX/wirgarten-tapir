@@ -9,4 +9,9 @@ urlpatterns = [
         views.MinimumNumberOfSharesApiView.as_view(),
         name="minimum_number_of_shares",
     ),
+    path(
+        "api/existing_member_purchases_shares",
+        views.ExistingMemberPurchasesSharesApiView.as_view(),
+        name="existing_member_purchases_shares",
+    ),
 ]
