@@ -377,24 +377,21 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             )
         )
         self.assertEqual(
-            3,
+            2,
             len(response_content),
         )
 
         expected_amounts = [
             10,
-            20,
-            10,
+            30,  # combined: second month of trial period and the non-trial part of the range
         ]
         expected_due_dates = [
             "2020-10-06",
-            "2020-11-06",
             "2020-11-06",
         ]
         expected_ranges = [
             ("2020-09-01", "2020-09-30"),  # first month of trial
             ("2020-07-01", "2020-12-31"),  # range for the non-trial part
-            ("2020-10-01", "2020-10-31"),  # second month of trial
         ]
 
         for index, extended_payment in enumerate(response_content):

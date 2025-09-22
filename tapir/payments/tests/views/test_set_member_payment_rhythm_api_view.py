@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
 
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -60,6 +60,12 @@ class TestSetPaymentRhythmApiView(TapirIntegrationTest):
             MemberPaymentRhythm.Rhythm.YEARLY,
             MemberPaymentRhythm.objects.first().rhythm,
         )
+
+        self.assertEqual(1, MemberPaymentRhythmChangeLogEntry.objects.count())
+        log_entry = MemberPaymentRhythmChangeLogEntry.objects.get()
+        log_entry.new_rhythm = "yearly"
+        log_entry.user = other_member
+        log_entry.actor = member
 
     def test_post_adminSetsInvalidRhythm_raisesValidationError(self):
         member = MemberFactory.create(is_superuser=True)

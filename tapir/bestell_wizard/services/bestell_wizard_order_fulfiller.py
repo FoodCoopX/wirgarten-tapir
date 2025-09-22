@@ -51,6 +51,8 @@ class BestellWizardOrderFulfiller:
             member=member,
             rhythm=validated_serializer_data["payment_rhythm"],
             valid_from=get_today(cache=cache),
+            cache=cache,
+            actor=request.user if request.user.is_authenticated else None,
         )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(

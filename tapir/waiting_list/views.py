@@ -830,6 +830,8 @@ class PublicConfirmWaitingListEntryView(APIView):
                 member=member,
                 rhythm=serializer.validated_data["payment_rhythm"],
                 valid_from=get_today(cache=self.cache),
+                cache=self.cache,
+                actor=actor,
             )
 
             subscriptions_existed_before_changes, new_subscriptions = (
