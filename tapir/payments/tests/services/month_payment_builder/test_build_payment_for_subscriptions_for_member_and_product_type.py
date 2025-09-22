@@ -18,6 +18,7 @@ from tapir.wirgarten.tests.factories import (
 
 
 class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
+    @patch.object(MonthPaymentBuilder, "get_payment_range_start")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
     @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
@@ -32,6 +33,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
+        mock_get_payment_range_start: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -44,6 +46,9 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
+        mock_get_payment_range_start.return_value = datetime.date(
+            year=2026, month=7, day=24
+        )
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -73,7 +78,10 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         self.assertEqual(mandate_ref, payment.mandate_ref)
         self.assertEqual(Payment.PaymentStatus.DUE, payment.status)
         self.assertEqual("pt_test_name", payment.type)
-        self.assertEqual(range_start, payment.subscription_payment_range_start)
+        self.assertEqual(
+            datetime.date(year=2026, month=7, day=24),
+            payment.subscription_payment_range_start,
+        )
         self.assertEqual(range_end, payment.subscription_payment_range_end)
 
         mock_get_first_day_of_rhythm_period.assert_called_once_with(
@@ -101,6 +109,14 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=first_of_month, cache=cache
+        )
+        mock_get_payment_range_start.assert_called_once_with(
+            cache=cache,
+            first_day_of_rhythm_period=range_start,
+            generated_payments=generated_payments,
+            last_day_of_rhythm_period=range_end,
+            mandate_ref=mandate_ref,
+            product_type=product_type,
         )
 
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
@@ -253,6 +269,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         mock_get_payment_due_date_on_month.assert_not_called()
 
+    @patch.object(MonthPaymentBuilder, "get_payment_range_start")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
     @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
@@ -267,6 +284,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
+        mock_get_payment_range_start: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -279,6 +297,9 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_total_to_pay.return_value = 17.5
         due_date = datetime.date(year=2026, month=7, day=13)
         mock_get_payment_due_date_on_month.return_value = due_date
+        mock_get_payment_range_start.return_value = datetime.date(
+            year=2026, month=7, day=10
+        )
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -308,7 +329,10 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         self.assertEqual(mandate_ref, payment.mandate_ref)
         self.assertEqual(Payment.PaymentStatus.DUE, payment.status)
         self.assertEqual("pt_test_name", payment.type)
-        self.assertEqual(range_start, payment.subscription_payment_range_start)
+        self.assertEqual(
+            datetime.date(year=2026, month=7, day=10),
+            payment.subscription_payment_range_start,
+        )
         self.assertEqual(range_end, payment.subscription_payment_range_end)
 
         mock_get_first_day_of_rhythm_period.assert_called_once_with(
@@ -336,4 +360,12 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         )
         mock_get_payment_due_date_on_month.assert_called_once_with(
             reference_date=first_of_month, cache=cache
+        )
+        mock_get_payment_range_start.assert_called_once_with(
+            cache=cache,
+            first_day_of_rhythm_period=range_start,
+            generated_payments=generated_payments,
+            last_day_of_rhythm_period=range_end,
+            mandate_ref=mandate_ref,
+            product_type=product_type,
         )

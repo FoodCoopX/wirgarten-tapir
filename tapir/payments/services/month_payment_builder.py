@@ -167,15 +167,52 @@ class MonthPaymentBuilder:
             cache=cache,
         )
 
+        subscription_payment_range_start = cls.get_payment_range_start(
+            cache=cache,
+            first_day_of_rhythm_period=first_day_of_rhythm_period,
+            generated_payments=generated_payments,
+            last_day_of_rhythm_period=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            product_type=product_type,
+        )
+
         return Payment(
             due_date=payments_due_date,
             amount=new_payment_amount,
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
             type=product_type.name,
-            subscription_payment_range_start=first_day_of_rhythm_period,
+            subscription_payment_range_start=subscription_payment_range_start,
             subscription_payment_range_end=last_day_of_rhythm_period,
         )
+
+    @classmethod
+    def get_payment_range_start(
+        cls,
+        first_day_of_rhythm_period: datetime.date,
+        last_day_of_rhythm_period: datetime.date,
+        mandate_ref: MandateReference,
+        product_type: ProductType,
+        generated_payments: set[Payment],
+        cache: dict,
+    ):
+        relevant_past_payments = cls.get_relevant_past_payments(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            product_type_name=product_type.name,
+            generated_payments=generated_payments,
+            cache=cache,
+        )
+        if len(relevant_past_payments) == 0:
+            return first_day_of_rhythm_period
+
+        return max(
+            [
+                payment.subscription_payment_range_end
+                for payment in relevant_past_payments
+            ]
+        ) + datetime.timedelta(days=1)
 
     @classmethod
     def get_total_to_pay(
@@ -218,6 +255,27 @@ class MonthPaymentBuilder:
         cache: dict,
         generated_payments: set[Payment],
     ) -> Decimal:
+        relevant_payments = cls.get_relevant_past_payments(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            product_type_name=product_type_name,
+            cache=cache,
+            generated_payments=generated_payments,
+        )
+
+        return sum([payment.amount for payment in relevant_payments])
+
+    @classmethod
+    def get_relevant_past_payments(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        mandate_ref: MandateReference,
+        product_type_name: str,
+        cache: dict,
+        generated_payments: set[Payment],
+    ):
         existing_payments = TapirCache.get_payments_by_mandate_ref_and_product_type(
             cache=cache, mandate_ref=mandate_ref, product_type_name=product_type_name
         )
@@ -242,7 +300,7 @@ class MonthPaymentBuilder:
             )
         ]
 
-        return sum([payment.amount for payment in payments_for_this_period])
+        return payments_for_this_period
 
     @classmethod
     def get_amount_to_pay_for_subscription_within_range(
