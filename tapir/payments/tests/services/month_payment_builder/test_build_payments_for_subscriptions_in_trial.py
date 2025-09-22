@@ -53,10 +53,10 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
             subscription_member_2_product_type_1,
         }
 
-        mock_build_payment_for_subscriptions_for_member_and_product_type.side_effect = lambda member, first_of_month, subscriptions, product_type, rhythm, cache, generated_payments: (
+        mock_build_payment_for_subscriptions_for_member_and_product_type.side_effect = lambda member, first_of_month, subscriptions, product_type, rhythm, cache, generated_payments, in_trial: (
             None
             if subscription_member_1_product_type_2 in subscriptions
-            else PaymentFactory.create(
+            else PaymentFactory.build(
                 mandate_ref__member=member, type=product_type.name
             )
         )
@@ -99,6 +99,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                     cache=cache,
                     generated_payments=generated_payments,
+                    in_trial=True,
                 ),
                 call(
                     member=member_1,
@@ -108,6 +109,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                     cache=cache,
                     generated_payments=generated_payments,
+                    in_trial=True,
                 ),
                 call(
                     member=member_2,
@@ -117,6 +119,7 @@ class TestBuildPaymentsForSubscriptionsInTrial(TapirIntegrationTest):
                     rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                     cache=cache,
                     generated_payments=generated_payments,
+                    in_trial=True,
                 ),
             ],
             any_order=True,
