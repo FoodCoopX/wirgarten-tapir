@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Modal, Table } from "react-bootstrap";
+import { Badge, Form, Modal, Table } from "react-bootstrap";
 import "dayjs/locale/de";
 
 import "../../fixed_header.css";
@@ -88,6 +88,10 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        <Form.Text>
+          Es werden vorerst nur die vorhergesehenen Zahlungen für die nächsten
+          12 Monate angezeigt
+        </Form.Text>
         <Table striped hover responsive>
           <thead style={{ textAlign: "center" }}>
             <tr>
