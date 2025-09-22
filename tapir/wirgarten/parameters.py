@@ -351,7 +351,14 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value=MemberPaymentRhythm.Rhythm.MONTHLY,
             description="Zahlungsintervall das vorausgewählt ist im BestellWizard.",
             category=ParameterCategory.PAYMENT,
-            meta=ParameterMeta(options=MemberPaymentRhythm.Rhythm.choices),
+            meta=ParameterMeta(
+                options_callable=lambda: [
+                    (rhythm, MemberPaymentRhythmService.get_rhythm_display_name(rhythm))
+                    for rhythm in MemberPaymentRhythmService.get_allowed_rhythms(
+                        cache={}
+                    )
+                ]
+            ),
         )
 
         self.parameter_definition(
