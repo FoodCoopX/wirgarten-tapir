@@ -82,11 +82,13 @@ def transfer_coop_shares(
     if quantity > origin_ownerships_quantity:
         quantity = origin_ownerships_quantity
 
+    coop_share_price = get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={})
+
     today = get_today()
     new_ownership = CoopShareTransaction.objects.create(
         member_id=target_member_id,
         quantity=quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=coop_share_price,
         valid_at=today,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_IN,
         transfer_member_id=origin_member_id,
@@ -95,7 +97,7 @@ def transfer_coop_shares(
     CoopShareTransaction.objects.create(
         member_id=origin_member_id,
         quantity=-quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=coop_share_price,
         valid_at=today,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.TRANSFER_OUT,
         transfer_member_id=target_member_id,
@@ -132,7 +134,7 @@ def cancel_coop_shares(
     CoopShareTransaction.objects.create(
         member_id=member_id,
         quantity=-quantity,
-        share_price=settings.COOP_SHARE_PRICE,
+        share_price=get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache={}),
         valid_at=valid_at,
         timestamp=cancellation_date,
         transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
@@ -235,7 +237,7 @@ def buy_cooperative_shares(
     if mandate_ref is None:
         mandate_ref = get_or_create_mandate_ref(member_id, cache=cache)
 
-    share_price = settings.COOP_SHARE_PRICE
+    share_price = get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache)
     due_date = start_date + relativedelta(
         day=get_parameter_value(ParameterKeys.PAYMENT_DUE_DAY, cache=cache)
     )

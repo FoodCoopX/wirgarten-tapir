@@ -428,7 +428,8 @@ def get_add_coop_shares_form(request, **kwargs):
         request=request,
         form_class=CooperativeShareForm,
         handler=lambda x: buy_cooperative_shares(
-            x.cleaned_data["cooperative_shares"] / settings.COOP_SHARE_PRICE,
+            x.cleaned_data["cooperative_shares"]
+            / get_parameter_value(key=ParameterKeys.COOP_SHARE_PRICE, cache=cache),
             member_id,
             start_date=today,
         ),

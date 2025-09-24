@@ -4,8 +4,8 @@ const initSummary = (min_shares, share_price) => {
   if (!input) {
     input = document.getElementsByName("cooperative_shares")[0];
   }
-  input.step = 50;
-  input.min = 0; //input.value = min_shares * share_price;
+  input.step = share_price;
+  input.min = min_shares * share_price;
 
   input.addEventListener("change", (event) => {
     if (event.target.value < input.min) {
@@ -15,9 +15,9 @@ const initSummary = (min_shares, share_price) => {
 
   const handleChange = (evt) => {
     const value = evt.target.value;
-    const diff = value % 50;
+    const diff = value % share_price;
     if (diff > 0) {
-      const fallback = diff > 24 ? Number(value) + (50 - diff) : value - diff;
+      const fallback = diff > 24 ? Number(value) + (share_price - diff) : value - diff;
       input.value = Math.max(fallback, input.min);
     }
 

@@ -17,6 +17,7 @@ class ParameterKeys:
     SITE_PRIVACY_LINK = f"{PREFIX}.site.privacy_link"
     SITE_FAQ_LINK = f"{PREFIX}.site.faq_link"
     COOP_MIN_SHARES = f"{PREFIX}.coop.min_shares"
+    COOP_SHARE_PRICE = f"{PREFIX}.coop.share_price"
     COOP_STATUTE_LINK = f"{PREFIX}.coop.statute_link"
     COOP_INFO_LINK = f"{PREFIX}.coop.info_link"
     COOP_BASE_PRODUCT_TYPE = f"{PREFIX}.coop.base_product_type"

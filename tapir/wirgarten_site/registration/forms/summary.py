@@ -129,7 +129,9 @@ class SummaryForm(forms.Form):
             + relativedelta(days=delivery_date_offset)
         )
 
-        coop_share_price = settings.COOP_SHARE_PRICE
+        coop_share_price = get_parameter_value(
+            key=ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
+        )
         coop_shares_amount = int(
             initial["coop_shares"]["cooperative_shares"] / coop_share_price
         )

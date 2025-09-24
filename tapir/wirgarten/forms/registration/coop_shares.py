@@ -23,7 +23,9 @@ class CooperativeShareForm(forms.Form):
         self.intro_templates = initial.pop("intro_templates", None)
         self.outro_templates = initial.pop("outro_templates", None)
 
-        self.coop_share_price = settings.COOP_SHARE_PRICE
+        self.coop_share_price = get_parameter_value(
+            ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
+        )
 
         self.harvest_shares_products = list(
             HarvestShareProduct.objects.filter(
@@ -46,9 +48,7 @@ class CooperativeShareForm(forms.Form):
         self.fields["cooperative_shares"] = forms.IntegerField(
             required=False,
             label=_("Genossenschaftsanteile (€)"),
-            help_text=_(
-                f"Der Betrag muss durch {settings.COOP_SHARE_PRICE} teilbar sein."
-            ),
+            help_text=_(f"Der Betrag muss durch {self.coop_share_price} teilbar sein."),
             initial=self.min_amount,
         )
 
@@ -78,7 +78,7 @@ class CooperativeShareForm(forms.Form):
             return cleaned_data
 
         min_amount = (
-            settings.COOP_SHARE_PRICE if self.member_is_student else self.min_amount
+            self.coop_share_price if self.member_is_student else self.min_amount
         )
         if cleaned_data.get("cooperative_shares") < min_amount:
             self.add_error(

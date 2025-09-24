@@ -424,7 +424,9 @@ class RegistrationWizardViewBase(CookieWizardView):
                     quantity=form_dict[STEP_COOP_SHARES].cleaned_data[
                         "cooperative_shares"
                     ]
-                    / settings.COOP_SHARE_PRICE,
+                    / get_parameter_value(
+                        key=ParameterKeys.COOP_SHARE_PRICE, cache=self.cache
+                    ),
                     member=member,
                     start_date=actual_coop_start,
                     mandate_ref=mandate_ref,
