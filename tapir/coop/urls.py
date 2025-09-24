@@ -14,4 +14,9 @@ urlpatterns = [
         views.ExistingMemberPurchasesSharesApiView.as_view(),
         name="existing_member_purchases_shares",
     ),
+    path(
+        "api/get_coop_share_transactions",
+        views.GetCoopShareTransactionsApiView.as_view(),
+        name="get_coop_share_transactions",
+    ),
 ]

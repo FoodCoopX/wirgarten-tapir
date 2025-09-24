@@ -27,7 +27,7 @@ import type {
   WaitingListEntry,
   WaitingListEntryDetails,
   WaitingListEntryRequest,
-  WaitingListEntryUpdateRequest
+  WaitingListEntryUpdateRequest,
 } from "../models/index";
 import {
   CountsFromJSON,
@@ -43,7 +43,7 @@ import {
   WaitingListEntryDetailsFromJSON,
   WaitingListEntryFromJSON,
   WaitingListEntryRequestToJSON,
-  WaitingListEntryUpdateRequestToJSON
+  WaitingListEntryUpdateRequestToJSON,
 } from "../models/index";
 
 export interface WaitingListApiDisableWaitingListLinkCreateRequest {

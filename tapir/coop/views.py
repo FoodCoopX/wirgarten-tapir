@@ -11,6 +11,7 @@ from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHan
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
+from tapir.subscriptions.serializers import CoopShareTransactionSerializer
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -136,3 +137,27 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 f"The minimum final number of shares is {total_min_shares}, "
                 f"this member currently has {current_shares}, adding {number_of_shares_to_add} is not enough."
             )
+
+
+class GetCoopShareTransactionsApiView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: CoopShareTransactionSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="member_id", type=str, required=True),
+        ],
+    )
+    def get(self, request):
+        member_id = request.query_params.get("member_id")
+        check_permission_or_self(pk=member_id, request=request)
+        member = get_object_or_404(Member, id=member_id)
+
+        return Response(
+            CoopShareTransactionSerializer(
+                CoopShareTransaction.objects.filter(member=member).order_by("valid_at"),
+                many=True,
+            ).data
+        )

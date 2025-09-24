@@ -146,6 +146,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderConfirmationResponse'
           description: ''
+  /coop/api/existing_member_purchases_shares:
+    post:
+      operationId: coop_api_existing_member_purchases_shares_create
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: number_of_shares_to_add
+        schema:
+          type: integer
+        required: true
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /coop/api/get_coop_share_transactions:
+    get:
+      operationId: coop_api_get_coop_share_transactions_list
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - coop
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoopShareTransaction'
+          description: ''
   /coop/api/minimum_number_of_shares:
     get:
       operationId: coop_api_minimum_number_of_shares_retrieve

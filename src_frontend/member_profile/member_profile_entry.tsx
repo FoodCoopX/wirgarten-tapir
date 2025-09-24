@@ -6,6 +6,7 @@ import SubscriptionCards from "./subscriptions/SubscriptionCards.tsx";
 import MemberProfileWaitingListCard from "./waiting_list/MemberProfileWaitingListCard.tsx";
 import FuturePaymentsCard from "./future_payments/FuturePaymentsCard.tsx";
 import MemberProfilePaymentRhythmBase from "./payment_rhythm/MemberProfilePaymentRhythmBase.tsx";
+import CoopSharesCard from "./coop_shares/CoopSharesCard.tsx";
 
 const domNodeDeliveryListCard = document.getElementById("delivery_list_card");
 if (domNodeDeliveryListCard) {
@@ -100,4 +101,18 @@ if (domNodePaymentRhythmButton) {
   );
 } else {
   console.error("Failed to render payment rhythm button from React");
+}
+
+const domNodeCoopSharesCard = document.getElementById("coop_shares_card");
+if (domNodeCoopSharesCard) {
+  const root = createRoot(domNodeCoopSharesCard);
+
+  root.render(
+    <CoopSharesCard
+      memberId={domNodeCoopSharesCard.dataset.memberId!}
+      csrfToken={getCsrfToken()}
+    />,
+  );
+} else {
+  console.error("Failed to render coop shares from React");
 }
