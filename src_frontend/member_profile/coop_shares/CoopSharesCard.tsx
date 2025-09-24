@@ -6,6 +6,8 @@ import { CoopApi, CoopShareTransaction } from "../../api-client";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import CoopSharesModal from "./CoopSharesModal.tsx";
 
 interface CoopSharesCardProps {
   memberId: string;
@@ -19,8 +21,13 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
   const coopApi = useApi(CoopApi, csrfToken);
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<CoopShareTransaction[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    loadShareData();
+  }, []);
+
+  function loadShareData() {
     setLoading(true);
     coopApi
       .coopApiGetCoopShareTransactionsList({ memberId: memberId })
@@ -29,7 +36,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
         handleRequestError(error, "Fehler beim Laden der Geno-Anteile"),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }
 
   function getCurrentNumberOfShares(): number {
     return transactions.reduce(
@@ -50,6 +57,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
         return "logout";
     }
   }
+
   return (
     <>
       <Card style={{ marginBottom: "1rem", textAlign: "center" }}>
@@ -65,32 +73,58 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
               <hr />
               <small>
                 <table style={{ width: "100%" }}>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td>
-                        <span
-                          className="material-icons"
-                          style={{ fontSize: "1em" }}
-                        >
-                          {getTransactionIcon(transaction)}
-                        </span>
-                      </td>
-                      <td>{formatDateNumeric(transaction.validAt)}</td>
-                      <td style={{ textAlign: "right" }}>
-                        {formatCurrency(
-                          parseInt(transaction.sharePrice) *
-                            transaction.quantity,
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  <tbody>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id}>
+                        <td>
+                          <span
+                            className="material-icons"
+                            style={{ fontSize: "1em" }}
+                          >
+                            {getTransactionIcon(transaction)}
+                          </span>
+                        </td>
+                        <td>{formatDateNumeric(transaction.validAt)}</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(
+                            parseInt(transaction.sharePrice) *
+                              transaction.quantity,
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </small>
             </>
           )}
         </Card.Body>
-        TODO CARD FOOTER WITH PURCHASE SHARES MODAL
+        <Card.Footer>
+          <div
+            className={"d-flex justify-content-end"}
+            style={{ width: "100%" }}
+          >
+            <TapirButton
+              variant={"outline-primary"}
+              icon={"add"}
+              onClick={() => {
+                setShowModal(true);
+              }}
+            />
+          </div>
+        </Card.Footer>
       </Card>
+      <CoopSharesModal
+        show={showModal}
+        currentNumberOfShares={getCurrentNumberOfShares()}
+        csrfToken={csrfToken}
+        memberId={memberId}
+        onHide={() => setShowModal(false)}
+        onSharesPurchased={() => {
+          loadShareData();
+          setShowModal(false);
+        }}
+      />
     </>
   );
 };

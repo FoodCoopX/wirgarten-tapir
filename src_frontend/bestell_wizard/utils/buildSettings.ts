@@ -31,5 +31,7 @@ export function buildSettings(
       baseData.productTypeIdsThatAreAlreadyAtCapacity,
     productIdsThatAreAlreadyAtCapacity:
       baseData.productIdsThatAreAlreadyAtCapacity,
+    organizationName: baseData.organizationName,
+    coopStatuteLink: baseData.coopStatuteLink,
   };
 }

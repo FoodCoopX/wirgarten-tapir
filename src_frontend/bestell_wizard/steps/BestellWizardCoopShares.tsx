@@ -155,21 +155,20 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
             checked={statuteAccepted}
             onChange={(event) => setStatuteAccepted(event.target.checked)}
             label={
-              "Ich habe die Satzung der Biotop Oberland eG und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
+              "Ich habe die Satzung der" +
+              settings.organizationName +
+              " und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
             }
             disabled={studentStatusEnabled}
           />
           <Form.Text>
-            <a href={"https://biotop-oberland.de/satzung"}>
-              https://biotop-oberland.de/satzung
-            </a>
+            <a href={settings.coopStatuteLink}>{settings.coopStatuteLink}</a>
             <br />
             Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt
             aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses
             im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10
             und § 37.
           </Form.Text>
-          <Form.Text></Form.Text>
         </Col>
       </Row>
       {settings.studentStatusAllowed && (

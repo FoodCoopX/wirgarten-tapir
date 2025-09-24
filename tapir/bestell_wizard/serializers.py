@@ -70,6 +70,8 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     product_ids_that_are_already_at_capacity = serializers.ListField(
         child=serializers.CharField()
     )
+    coop_statute_link = serializers.CharField()
+    organization_name = serializers.CharField()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

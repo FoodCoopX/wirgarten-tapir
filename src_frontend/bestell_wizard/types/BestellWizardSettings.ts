@@ -20,4 +20,6 @@ export type BestellWizardSettings = {
   introEnabled: boolean;
   productTypeIdsThatAreAlreadyAtCapacity: string[];
   productIdsThatAreAlreadyAtCapacity: string[];
+  coopStatuteLink: string;
+  organizationName: string;
 };

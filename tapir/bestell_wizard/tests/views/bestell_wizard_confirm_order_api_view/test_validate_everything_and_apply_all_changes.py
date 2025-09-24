@@ -69,7 +69,7 @@ class TestValidateEverythingAndApplyAllChanges(SimpleTestCase):
         validated_serializer_data = {
             "privacy_policy_read": True,
             "shopping_cart_order": shopping_cart_order,
-            "become_member_now": False,
+            "become_member_now": None,
             "shopping_cart_waiting_list": {},
         }
 

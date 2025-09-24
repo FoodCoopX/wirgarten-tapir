@@ -96,6 +96,13 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
     );
   }
 
+  function getTextCoopMembership(): string {
+    if (settings.forceWaitingList || becomeMemberNow !== false) {
+      return "Deine zukünftige Mitgliedschaft in der Genossenschaft";
+    }
+    return "Deine Mitgliedschaft in der Genossenschaft";
+  }
+
   return (
     <>
       <Row>
@@ -107,9 +114,7 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
-              <BestellWizardCardSubtitle
-                text={"Deine Mitgliedschaft in der Genossenschaft"}
-              />
+              <BestellWizardCardSubtitle text={getTextCoopMembership()} />
               <Table bordered={true}>
                 <tbody>
                   <tr>

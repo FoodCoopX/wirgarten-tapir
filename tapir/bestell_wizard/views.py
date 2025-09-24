@@ -370,6 +370,12 @@ class BestellWizardBaseDataApiView(APIView):
                 product_ids_that_are_already_at_capacity=product_ids_that_are_already_at_capacity,
             ),
             "product_ids_that_are_already_at_capacity": product_ids_that_are_already_at_capacity,
+            "coop_statute_link": get_parameter_value(
+                key=ParameterKeys.COOP_STATUTE_LINK, cache=self.cache
+            ),
+            "organization_name": get_parameter_value(
+                key=ParameterKeys.SITE_NAME, cache=self.cache
+            ),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)

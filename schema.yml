@@ -4429,8 +4429,13 @@ components:
           type: array
           items:
             type: string
+        coop_statute_link:
+          type: string
+        organization_name:
+          type: string
       required:
       - allow_investing_membership
+      - coop_statute_link
       - coop_step_text
       - default_payment_rhythm
       - force_waiting_list
@@ -4438,6 +4443,7 @@ components:
       - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
+      - organization_name
       - payment_rhythm_choices
       - price_of_a_share
       - product_ids_that_are_already_at_capacity
