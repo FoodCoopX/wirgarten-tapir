@@ -10,6 +10,8 @@ export function buildNextButtonParametersForProductType(
   shoppingCart: ShoppingCart,
   checkingCapacities: boolean,
   currentStep: string,
+  productsTypesInWaitingList: Set<PublicProductType>,
+  productTypeIdsOverCapacity: string[],
 ): NextButtonParameters {
   const productType = publicProductTypes.find(
     (productType) => productType.id === currentStep,
@@ -34,10 +36,18 @@ export function buildNextButtonParametersForProductType(
   }
 
   if (isProductTypeOrdered(productType, shoppingCart)) {
+    let text = productType.name + " zur Bestellung hinzufügen";
+    if (
+      productsTypesInWaitingList.has(productType) ||
+      productTypeIdsOverCapacity.includes(productType.id!)
+    ) {
+      text = productType.name + " zum Wartelisten-Eintrag hinzufügen";
+    }
+
     return {
       disabled: false,
       loading: false,
-      text: productType.name + " zur Bestellung hinzufügen",
+      text: text,
       icon: "add_shopping_cart",
     };
   }

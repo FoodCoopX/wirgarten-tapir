@@ -211,7 +211,11 @@ class SetMemberPaymentRhythmApiView(APIView):
             member=member, reference_date=get_today(cache=self.cache), cache=self.cache
         )
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
-            member=member, rhythm=rhythm, valid_from=valid_from
+            member=member,
+            rhythm=rhythm,
+            valid_from=valid_from,
+            cache=self.cache,
+            actor=request.user,
         )
 
         return Response("OK")

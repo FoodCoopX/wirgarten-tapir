@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured
+from pygments.lexers import q
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.services.delivery_date_calculator import DeliveryDateCalculator
@@ -22,7 +23,7 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.subscriptions.services.trial_period_manager import TrialPeriodManager
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
-from tapir.utils.shortcuts import get_last_day_of_month
+from tapir.utils.shortcuts import get_last_day_of_month, get_first_of_next_month
 from tapir.wirgarten.constants import (
     NO_DELIVERY,
     WEEKLY,
@@ -63,7 +64,9 @@ class MonthPaymentBuilder:
             generated_payments=generated_payments.union(payments_to_create_trial),
         )
 
-        return payments_to_create_no_trial + payments_to_create_trial
+        return cls.combine_similar_payments(
+            payments_to_create_no_trial + payments_to_create_trial
+        )
 
     @staticmethod
     def filter_payments(payments):
@@ -105,6 +108,7 @@ class MonthPaymentBuilder:
                         rhythm=rhythm,
                         cache=cache,
                         generated_payments=generated_payments,
+                        in_trial=False,
                     )
                 )
                 if payment is not None:
@@ -122,6 +126,7 @@ class MonthPaymentBuilder:
         rhythm: MemberPaymentRhythm,
         cache: dict,
         generated_payments: set[Payment],
+        in_trial: bool,
     ) -> Payment | None:
         first_day_of_rhythm_period = (
             MemberPaymentRhythmService.get_first_day_of_rhythm_period(
@@ -156,7 +161,19 @@ class MonthPaymentBuilder:
             return None
 
         payments_due_date = cls.get_payment_due_date_on_month(
-            reference_date=first_of_month, cache=cache
+            reference_date=(
+                get_first_of_next_month(first_of_month) if in_trial else first_of_month
+            ),
+            cache=cache,
+        )
+
+        subscription_payment_range_start = cls.get_payment_range_start(
+            cache=cache,
+            first_day_of_rhythm_period=first_day_of_rhythm_period,
+            generated_payments=generated_payments,
+            last_day_of_rhythm_period=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            product_type=product_type,
         )
 
         return Payment(
@@ -165,9 +182,37 @@ class MonthPaymentBuilder:
             mandate_ref=mandate_ref,
             status=Payment.PaymentStatus.DUE,
             type=product_type.name,
-            subscription_payment_range_start=first_day_of_rhythm_period,
+            subscription_payment_range_start=subscription_payment_range_start,
             subscription_payment_range_end=last_day_of_rhythm_period,
         )
+
+    @classmethod
+    def get_payment_range_start(
+        cls,
+        first_day_of_rhythm_period: datetime.date,
+        last_day_of_rhythm_period: datetime.date,
+        mandate_ref: MandateReference,
+        product_type: ProductType,
+        generated_payments: set[Payment],
+        cache: dict,
+    ):
+        relevant_past_payments = cls.get_relevant_past_payments(
+            range_start=first_day_of_rhythm_period,
+            range_end=last_day_of_rhythm_period,
+            mandate_ref=mandate_ref,
+            product_type_name=product_type.name,
+            generated_payments=generated_payments,
+            cache=cache,
+        )
+        if len(relevant_past_payments) == 0:
+            return first_day_of_rhythm_period
+
+        return max(
+            [
+                payment.subscription_payment_range_end
+                for payment in relevant_past_payments
+            ]
+        ) + datetime.timedelta(days=1)
 
     @classmethod
     def get_total_to_pay(
@@ -210,6 +255,27 @@ class MonthPaymentBuilder:
         cache: dict,
         generated_payments: set[Payment],
     ) -> Decimal:
+        relevant_payments = cls.get_relevant_past_payments(
+            range_start=range_start,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            product_type_name=product_type_name,
+            cache=cache,
+            generated_payments=generated_payments,
+        )
+
+        return sum([payment.amount for payment in relevant_payments])
+
+    @classmethod
+    def get_relevant_past_payments(
+        cls,
+        range_start: datetime.date,
+        range_end: datetime.date,
+        mandate_ref: MandateReference,
+        product_type_name: str,
+        cache: dict,
+        generated_payments: set[Payment],
+    ):
         existing_payments = TapirCache.get_payments_by_mandate_ref_and_product_type(
             cache=cache, mandate_ref=mandate_ref, product_type_name=product_type_name
         )
@@ -234,7 +300,7 @@ class MonthPaymentBuilder:
             )
         ]
 
-        return sum([payment.amount for payment in payments_for_this_period])
+        return payments_for_this_period
 
     @classmethod
     def get_amount_to_pay_for_subscription_within_range(
@@ -434,6 +500,7 @@ class MonthPaymentBuilder:
                         rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
                         cache=cache,
                         generated_payments=generated_payments,
+                        in_trial=True,
                     )
                 )
                 if payment is not None:
@@ -478,3 +545,68 @@ class MonthPaymentBuilder:
         if delivery_cycle == EVERY_FOUR_WEEKS[0]:
             return 1
         raise ImproperlyConfigured("Unknown delivery cycle: " + delivery_cycle)
+
+    @classmethod
+    def combine_similar_payments(cls, payments: list[Payment]) -> list[Payment]:
+        grouped_payments = cls.group_payments_by_member_and_type_and_due_date(payments)
+
+        combined_payments = []
+
+        for member, payments_by_type in grouped_payments.items():
+            for type, payments_by_due_date in payments_by_type.items():
+                for due_date, payments in payments_by_due_date.items():
+                    if len(payments) == 1:
+                        combined_payments.append(payments[0])
+                    else:
+                        combined_payments.append(cls.combine_payments(payments))
+
+        return combined_payments
+
+    @classmethod
+    def group_payments_by_member_and_type_and_due_date(cls, payments: list[Payment]):
+        payments_by_member = {}
+        for payment in payments:
+            if payment.mandate_ref.member not in payments_by_member.keys():
+                payments_by_member[payment.mandate_ref.member] = {}
+            payments_by_type = payments_by_member[payment.mandate_ref.member]
+
+            if payment.type not in payments_by_type.keys():
+                payments_by_type[payment.type] = {}
+            payments_by_due_date = payments_by_type[payment.type]
+
+            if payment.due_date not in payments_by_due_date.keys():
+                payments_by_due_date[payment.due_date] = []
+            payments_by_due_date[payment.due_date].append(payment)
+
+        return payments_by_member
+
+    @classmethod
+    def combine_payments(cls, payments: list[Payment]) -> Payment:
+        due_date = payments[0].due_date
+        mandate_ref = payments[0].mandate_ref
+        status = payments[0].status
+        payment_type = payments[0].type
+
+        amount = 0
+        subscription_payment_range_start = payments[0].subscription_payment_range_start
+        subscription_payment_range_end = payments[0].subscription_payment_range_end
+
+        for payment in payments:
+            amount += payment.amount
+            subscription_payment_range_start = min(
+                subscription_payment_range_start,
+                payment.subscription_payment_range_start,
+            )
+            subscription_payment_range_end = max(
+                subscription_payment_range_end, payment.subscription_payment_range_end
+            )
+
+        return Payment(
+            due_date=due_date,
+            mandate_ref=mandate_ref,
+            status=status,
+            type=payment_type,
+            amount=amount,
+            subscription_payment_range_start=subscription_payment_range_start,
+            subscription_payment_range_end=subscription_payment_range_end,
+        )

@@ -23,11 +23,14 @@ const SubscriptionEditStepConfirmation: React.FC<
     <>
       <Modal.Body>
         {orderConfirmed ? (
-          <p>
-            {waitingListModeEnabled
-              ? "Warteliste-Eintrag bestätigt!"
-              : "Bestellung bestätigt!"}
-          </p>
+          <>
+            <p>
+              {waitingListModeEnabled
+                ? "Warteliste-Eintrag bestätigt!"
+                : "Bestellung bestätigt!"}
+            </p>
+            <p>Die Seite wird gleich automatisch neu geladen...</p>
+          </>
         ) : (
           <>
             <p>Die Bestellung könnte nicht bestätigt werden</p>

@@ -133,7 +133,10 @@ class BestellWizardConfirmOrderApiView(APIView):
                 cache=cache,
             )
         )
-        if len(order_waiting_list) > 0:
+        if (
+            len(order_waiting_list) > 0
+            or validated_serializer_data["become_member_now"] is False
+        ):
             if member is None:
                 cls.validate_and_create_waiting_list_entry_potential_member(
                     validated_serializer_data=validated_serializer_data, cache=cache

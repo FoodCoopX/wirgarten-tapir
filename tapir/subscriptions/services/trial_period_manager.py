@@ -49,9 +49,6 @@ class TrialPeriodManager:
         if reference_date is None:
             reference_date = get_today(cache=cache)
 
-        if subscription.cancellation_ts is not None:
-            return False
-
         end_of_trial_period = cls.get_end_of_trial_period(subscription, cache=cache)
         if end_of_trial_period is None:
             return False

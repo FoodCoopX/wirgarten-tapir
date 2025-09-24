@@ -4,9 +4,9 @@ import { Col, Form, Row } from "react-bootstrap";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
-import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProductType } from "../../api-client";
+import { areAllOrderedProductsInWaitingList } from "../utils/areAllOrderedProductsInWaitingList.ts";
 
 interface BestellWizardCoopSharesProps {
   selectedNumberOfCoopShares: number;
@@ -49,10 +49,17 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   }, [studentStatusEnabled]);
 
   function shouldConfirmMemberNow() {
-    return (
-      !isAtLeastOneProductOrdered(shoppingCart) &&
-      productsTypesInWaitingList.size > 0 &&
-      becomeMemberNow === null
+    if (becomeMemberNow !== null) {
+      return false;
+    }
+
+    if (settings.forceWaitingList) {
+      return false;
+    }
+
+    return areAllOrderedProductsInWaitingList(
+      shoppingCart,
+      productsTypesInWaitingList,
     );
   }
 

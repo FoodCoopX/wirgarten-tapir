@@ -65,6 +65,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
             value=15
         )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=False
+        )
 
         growing_period = GrowingPeriodFactory.create(
             start_date=self.now.date(),
@@ -297,7 +300,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             "2021-10-06",
         ]
         expected_ranges = [
-            ("2020-10-01", "2020-12-31"),
+            ("2020-11-01", "2020-12-31"),
             ("2021-01-01", "2021-03-31"),
             ("2021-04-01", "2021-06-30"),
             ("2021-07-01", "2021-09-30"),
@@ -368,27 +371,27 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         self.assertStatusCode(response, 200)
         response_content = response.json()
         response_content.sort(
-            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+            key=lambda extended_payment: (
+                extended_payment["payment"]["due_date"],
+                extended_payment["payment"]["subscription_payment_range_start"],
+            )
         )
         self.assertEqual(
-            3,
+            2,
             len(response_content),
         )
 
         expected_amounts = [
             10,
-            10,
-            20,
+            30,  # combined: second month of trial period and the non-trial part of the range
         ]
         expected_due_dates = [
-            "2020-09-06",
             "2020-10-06",
             "2020-11-06",
         ]
         expected_ranges = [
-            ("2020-09-01", "2020-09-30"),
-            ("2020-10-01", "2020-10-31"),
-            ("2020-07-01", "2020-12-31"),
+            ("2020-09-01", "2020-09-30"),  # first month of trial
+            ("2020-10-01", "2020-12-31"),  # range for the non-trial part
         ]
 
         for index, extended_payment in enumerate(response_content):

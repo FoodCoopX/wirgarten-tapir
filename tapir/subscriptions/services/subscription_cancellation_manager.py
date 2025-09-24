@@ -22,6 +22,11 @@ class SubscriptionCancellationManager:
             .filter(member=member, product=product)
             .order_by("end_date")
         )
+        subscriptions_for_this_product = [
+            subscription
+            for subscription in subscriptions_for_this_product
+            if subscription.cancellation_ts is None
+        ]
         earliest_subscription = subscriptions_for_this_product[0]
         if TrialPeriodManager.is_subscription_in_trial(earliest_subscription):
             return TrialPeriodManager.get_earliest_trial_cancellation_date(
@@ -43,7 +48,7 @@ class SubscriptionCancellationManager:
         cancelled_subscriptions = []
         deleted_subscriptions = []
         for subscription in get_active_and_future_subscriptions(cache=cache).filter(
-            member=member, product=product
+            member=member, product=product, cancellation_ts__isnull=True
         ):
             if (
                 not TrialPeriodManager.is_subscription_in_trial(subscription)

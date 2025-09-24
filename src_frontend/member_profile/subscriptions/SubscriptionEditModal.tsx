@@ -265,7 +265,9 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         })
         .then((response) => {
           setOrderConfirmed(response.orderConfirmed);
-          if (!response.orderConfirmed) {
+          if (response.orderConfirmed) {
+            window.location.reload();
+          } else {
             setOrderError(response.error!);
           }
           setCurrentStep("confirmation");
@@ -294,7 +296,9 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
         })
         .then((response) => {
           setOrderConfirmed(response.orderConfirmed);
-          if (!response.orderConfirmed) {
+          if (response.orderConfirmed) {
+            window.location.reload();
+          } else {
             setOrderError(response.error!);
           }
           setCurrentStep("confirmation");

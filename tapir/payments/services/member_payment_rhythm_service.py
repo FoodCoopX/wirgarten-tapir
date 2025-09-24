@@ -3,11 +3,13 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberPaymentRhythm, MemberPaymentRhythmChangeLogEntry
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.utils import get_today
 
 
 class MemberPaymentRhythmService:
@@ -165,8 +167,23 @@ class MemberPaymentRhythmService:
 
     @classmethod
     def assign_payment_rhythm_to_member(
-        cls, member: Member, rhythm: str, valid_from: datetime.date
+        cls,
+        member: Member,
+        rhythm: str,
+        valid_from: datetime.date,
+        cache: dict,
+        actor: TapirUser,
     ):
+        MemberPaymentRhythmChangeLogEntry().populate_rhythm(
+            old_rhythm=MemberPaymentRhythmService.get_member_payment_rhythm(
+                member=member, reference_date=get_today(cache=cache), cache=cache
+            ),
+            new_rhythm=rhythm,
+            valid_from=valid_from,
+            actor=actor,
+            user=member,
+        ).save()
+
         MemberPaymentRhythm.objects.filter(
             member=member, valid_from__gte=valid_from
         ).delete()

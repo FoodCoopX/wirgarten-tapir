@@ -11,6 +11,7 @@ from tapir.coop.services.membership_cancellation_manager import (
 )
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.core.config import LEGAL_STATUS_COOPERATIVE
+from tapir.payments.models import MemberPaymentRhythm
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
 )
@@ -176,9 +177,19 @@ class MemberDetailView(PermissionOrSelfRequiredMixin, generic.DetailView):
 
         context["payment_rhythm"] = MemberPaymentRhythmService.get_rhythm_display_name(
             MemberPaymentRhythmService.get_member_payment_rhythm(
-                member=self.object, reference_date=get_today(cache=cache), cache=cache
+                member=self.object, reference_date=today, cache=cache
             )
         )
+
+        future_rhythm = (
+            MemberPaymentRhythm.objects.filter(member=self.object, valid_from__gt=today)
+            .order_by("valid_from")
+            .first()
+        )
+        if future_rhythm is not None:
+            context["payment_rhythm"] = (
+                f"Aktuell: {context["payment_rhythm"]}. ab dem {format_date(future_rhythm.valid_from)}: {MemberPaymentRhythmService.get_rhythm_display_name(future_rhythm.rhythm)}"
+            )
 
         return context
 
