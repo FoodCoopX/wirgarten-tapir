@@ -937,6 +937,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
                               ),
                               settings,
                             )}
+                            {" (Wartelisten-Eintrag)"}
                           </div>
                         </OverlayTrigger>
                       </Col>

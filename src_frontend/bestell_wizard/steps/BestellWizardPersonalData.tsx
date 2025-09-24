@@ -6,7 +6,6 @@ import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.t
 import { isIbanValid } from "../utils/isIbanValid.ts";
 import { isEmailValid } from "../utils/isEmailValid.ts";
 import { isPhoneNumberValid } from "../utils/isPhoneNumberValid.ts";
-import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 import { useApi } from "../../hooks/useApi.ts";
 import { BestellWizardApi, WaitingListEntryDetails } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -17,6 +16,7 @@ import "react-datetime/css/react-datetime.css";
 import moment from "moment";
 import "moment/dist/locale/de";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 
 moment.locale("de");
 
@@ -276,17 +276,15 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
         <Col>
           {!waitingListModeEnabled && (
             <Form.Group>
-              <Form.Label>
-                <span
-                  className={
-                    personalData.birthdate !== undefined &&
-                    !isBirthdateValid(personalData.birthdate)
-                      ? "text-danger"
-                      : ""
-                  }
-                >
-                  Geburtsdatum
-                </span>
+              <Form.Label
+                className={
+                  personalData.birthdate !== undefined &&
+                  !isBirthdateValid(personalData.birthdate)
+                    ? "text-danger"
+                    : ""
+                }
+              >
+                <span>Geburtsdatum</span>
               </Form.Label>
               <Datetime
                 value={innerDate}
@@ -303,6 +301,11 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                 }}
                 inputProps={{
                   disabled: waitingListEntryDetails?.memberAlreadyExists,
+                  className:
+                    personalData.birthdate !== undefined &&
+                    !isBirthdateValid(personalData.birthdate)
+                      ? "text-danger"
+                      : "",
                 }}
               />
             </Form.Group>
