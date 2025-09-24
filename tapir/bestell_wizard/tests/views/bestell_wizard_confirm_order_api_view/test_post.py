@@ -374,10 +374,44 @@ class TestBestellWizardConfirmOrderApiViewPost(TapirIntegrationTest):
         self.assertFalse(WaitingListEntry.objects.exists())
 
     @patch.object(TransactionalTrigger, "fire_action", autospec=True)
+    def test_post_investingMemberOnWaitingList_createsWaitingListEntry(
+        self, mock_fire_action: Mock
+    ):
+        data = self.build_valid_post_data_for_a_waiting_list_entry()
+        data["shopping_cart_waiting_list"] = {}
+        data["pickup_location_ids"] = []
+        data["number_of_coop_shares"] = 7
+
+        response = self.client.post(
+            reverse("bestell_wizard:bestell_wizard_confirm_order"),
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        self.assertStatusCode(response, 200)
+        response_content = response.json()
+        self.assertTrue(
+            response_content["order_confirmed"],
+            f"Order should have been confirmed, error: {response_content["error"]}",
+        )
+
+        self.assertFalse(Member.objects.exists())
+
+        waiting_list_entry = self.assert_waiting_list_entry_is_correct(
+            shopping_cart_waiting_list={},
+            pickup_location_wishes=[],
+            mock_fire_action=mock_fire_action,
+        )
+        self.assertEqual(7, waiting_list_entry.number_of_coop_shares)
+        self.assertIsNone(waiting_list_entry.member_id)
+        self.assert_personal_data_is_valid_waiting_list(waiting_list_entry)
+
+    @patch.object(TransactionalTrigger, "fire_action", autospec=True)
     def test_post_orderingAsStudent_noCoopShareCreated(self, mock_fire_action: Mock):
         data = self.build_valid_post_data_for_an_order_without_waiting_list()
         data["student_status_enabled"] = True
         data["number_of_coop_shares"] = 0
+        data["statute_accepted"] = False
 
         response = self.client.post(
             reverse("bestell_wizard:bestell_wizard_confirm_order"),

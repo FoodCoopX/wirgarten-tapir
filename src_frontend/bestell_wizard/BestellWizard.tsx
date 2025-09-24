@@ -655,7 +655,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           ),
           studentStatusEnabled: studentStatusEnabled,
           paymentRhythm: personalData.paymentRhythm,
-          becomeMemberNow: becomeMemberNow !== false,
+          becomeMemberNow:
+            !settings.forceWaitingList && becomeMemberNow !== false,
           privacyPolicyRead: privacyPolicyRead,
           cancellationPolicyRead: cancellationPolicyRead,
         },

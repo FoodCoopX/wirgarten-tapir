@@ -32,7 +32,6 @@ export function shouldIncludeStepCoopShares(
   waitingListEntryDetails: WaitingListEntryDetails | undefined,
   showCoopContent: boolean,
   becomeMemberNow: boolean | null,
-  forceWaitingList: boolean,
 ) {
   if (!showCoopContent) {
     return false;
@@ -40,10 +39,6 @@ export function shouldIncludeStepCoopShares(
 
   if (waitingListEntryDetails?.memberAlreadyExists) {
     return waitingListEntryDetails.numberOfCoopShares > 0;
-  }
-
-  if (forceWaitingList) {
-    return false;
   }
 
   return becomeMemberNow !== false;

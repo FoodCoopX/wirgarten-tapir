@@ -1,18 +1,22 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
 import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
-import {ShoppingCart} from "../types/ShoppingCart.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
-import {Col, Form, Row, Table} from "react-bootstrap";
-import {PublicPickupLocation, PublicProductType, WaitingListEntryDetails,} from "../../api-client";
+import { Col, Form, Row, Table } from "react-bootstrap";
+import {
+  PublicPickupLocation,
+  PublicProductType,
+  WaitingListEntryDetails,
+} from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
-import {formatCurrency} from "../../utils/formatCurrency.ts";
-import {isProductTypeOrdered} from "../utils/isProductTypeOrdered.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
+import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
 import SummaryProductTypeTable from "../components/SummaryProductTypeTable.tsx";
 import SummaryPickupLocations from "../components/SummaryPickupLocations.tsx";
-import {shouldIncludeStepCoopShares} from "../utils/shouldIncludeStep.ts";
-import {BestellWizardSettings} from "../types/BestellWizardSettings.ts";
-import {formatShoppingCart} from "../utils/formatShoppingCart.ts";
-import {doesProductBelongsToProductType} from "../utils/doesProductBelongToProductType.ts";
+import { shouldIncludeStepCoopShares } from "../utils/shouldIncludeStep.ts";
+import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
+import { formatShoppingCart } from "../utils/formatShoppingCart.ts";
+import { doesProductBelongsToProductType } from "../utils/doesProductBelongToProductType.ts";
 
 interface BestellWizardSummaryProps {
   shoppingCart: ShoppingCart;
@@ -100,7 +104,6 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
             waitingListEntryDetails,
             waitingListModeEnabled,
             becomeMemberNow,
-            settings.forceWaitingList,
           ) && (
             <>
               <BestellWizardCardTitle text={"Übersicht"} />
