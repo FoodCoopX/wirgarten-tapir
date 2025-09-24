@@ -10,7 +10,7 @@ import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import {
   shouldShowWarningProductNotAvailable,
-  shouldShowWarningProductTypeNotAvailable,
+  shouldShowWarningProductTypeNotAvailable
 } from "../../utils/shouldShowWarningNotAvailable.ts";
 
 interface ProductFormProps {
@@ -85,7 +85,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <img
                     src={product.urlOfImageInBestellwizard}
                     style={{
-                      maxWidth: "75%",
+                      maxWidth: "80%",
+                      objectFit: "contain",
                       filter: shouldShowWarningProductNotAvailable(
                         product,
                         productType,
@@ -175,9 +176,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <Row>
           <Col>
             <div>
-              Bitte wähle aus, welchen Ernteanteil du in Zukunft beziehen
-              möchtest. Dein bisheriger Ernteanteils-Vertrag ist dann nicht mehr
-              gültig.
+              Bitte wähle aus, welchen {productType.name}(e) du in Zukunft
+              beziehen möchtest. Dein bisheriger {productType.name}-Vertrag ist
+              dann nicht mehr gültig.
             </div>
           </Col>
         </Row>
