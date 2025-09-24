@@ -20,5 +20,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     introEnabled: false,
     productTypeIdsThatAreAlreadyAtCapacity: [],
     productIdsThatAreAlreadyAtCapacity: [],
+    organizationName: "",
+    coopStatuteLink: "",
   };
 }
