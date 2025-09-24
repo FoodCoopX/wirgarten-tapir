@@ -30,6 +30,8 @@
                                     background-image: url({% static 'l2g/registration/confirmation.jpg' %});
                                     {% elif  "organisation.theme"|parameter == "mm" %}
                                     background-image: url({% static 'mm/registration/confirmation.jpg' %});
+                                {% elif  "organisation.theme"|parameter == "g9" %}
+                                    background-image: url({% static 'g9/registration/confirmation.webp' %});
                                 {% else %}
                                     background-image: url({% static 'lueneburg/registration/confirmation.jpg' %});
                                 {% endif %}

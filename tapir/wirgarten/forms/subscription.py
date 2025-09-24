@@ -118,12 +118,12 @@ class BaseProductForm(forms.Form):
         self.product_type = base_product_type
         self.products = (
             {
-                """harvest_shares_{variation}""".format(variation=p.product_ptr.name): p
+                """base_product_{variation}""".format(variation=p.product_ptr.name): p
                 for p in harvest_share_products
             }
             if type(harvest_share_products[0]) == HarvestShareProduct
             else {
-                """harvest_shares_{variation}""".format(variation=p.name): p
+                """base_product_{variation}""".format(variation=p.name): p
                 for p in harvest_share_products
             }
         )
