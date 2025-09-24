@@ -177,8 +177,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <Col>
             <div>
               Bitte wähle aus, welchen {productType.name}(e) du in Zukunft
-              beziehen möchtest. Dein bisheriger {productType.name}-Vertrag ist
-              dann nicht mehr gültig.
+              beziehen möchtest. Dein bisheriger {productType.name}(e) ist dann
+              nicht mehr gültig.
             </div>
           </Col>
         </Row>
