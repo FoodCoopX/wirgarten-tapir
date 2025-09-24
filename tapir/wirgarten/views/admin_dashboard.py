@@ -10,6 +10,7 @@ from django.views import generic
 from django.views.decorators.http import require_GET
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -31,11 +32,11 @@ from tapir.wirgarten.models import (
     QuestionaireTrafficSourceOption,
     QuestionaireTrafficSourceResponse,
     Subscription,
+    Payment,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.payment import (
     get_next_payment_date,
-    get_total_payment_amount,
 )
 from tapir.wirgarten.service.products import (
     get_active_product_capacities,
@@ -64,10 +65,35 @@ def get_cashflow_chart_data(request):
     while payment_dates[-1] < last_contract_end:
         payment_dates.append(payment_dates[-1] + relativedelta(months=1))
 
+    generated_payments = set()
+    monthly_sums = []
+    all_payments = Payment.objects.all()
+    for payment_date in payment_dates:
+        generated_payments_for_this_month = (
+            MonthPaymentBuilder.build_payments_for_month(
+                reference_date=payment_date,
+                cache=cache,
+                generated_payments=generated_payments,
+            )
+        )
+        generated_payments.update(generated_payments_for_this_month)
+
+        sum_for_this_month = sum(
+            [payment.amount for payment in generated_payments_for_this_month]
+        ) + sum(
+            [
+                payment.amount
+                for payment in all_payments
+                if payment.due_date.year == payment_date.year
+                and payment.due_date.month == payment_date.month
+            ]
+        )
+        monthly_sums.append(sum_for_this_month)
+
     return JsonResponse(
         {
             "labels": [format_date(x) for x in payment_dates],
-            "data": [get_total_payment_amount(x, cache=cache) for x in payment_dates],
+            "data": monthly_sums,
         },
         safe=True,
     )

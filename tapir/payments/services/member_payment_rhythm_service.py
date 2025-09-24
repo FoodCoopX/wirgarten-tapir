@@ -115,6 +115,9 @@ class MemberPaymentRhythmService:
             reference_date=start, cache=cache
         )  # check the end of the growing period in case it is not 12 month long
 
+        if growing_period is None:
+            return end
+
         return min(growing_period.end_date, end)
 
     @classmethod

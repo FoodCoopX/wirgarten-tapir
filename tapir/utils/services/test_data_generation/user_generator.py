@@ -11,6 +11,10 @@ from tapir_mail.service.shortcuts import make_timezone_aware
 
 from tapir.configuration.parameter import get_parameter_value
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.services.member_payment_rhythm_service import (
+    MemberPaymentRhythmService,
+)
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -205,6 +209,16 @@ class UserGenerator:
                 )
 
         cls.create_coop_shares_for_user(member, min_coop_shares, cache)
+        MemberPaymentRhythmService.assign_payment_rhythm_to_member(
+            member=member,
+            rhythm=random.choice(MemberPaymentRhythm.Rhythm.choices)[0],
+            valid_from=cls.get_random_date_in_range_biased_towards_lower_end(
+                lower_boundary=member.date_joined.date(),
+                upper_boundary=get_today(cache=cache),
+            ),
+            cache=cache,
+            actor=member,
+        )
 
     @classmethod
     def get_random_date_in_range_biased_towards_lower_end(
