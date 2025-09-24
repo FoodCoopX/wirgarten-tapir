@@ -103,13 +103,19 @@ class MemberPaymentRhythmService:
         start = cls.get_first_day_of_rhythm_period(
             rhythm=rhythm, reference_date=reference_date, cache=cache
         )
-        return (
+        end = (
             start
             + relativedelta(
                 months=cls.get_number_of_months_paid_in_advance(rhythm=rhythm)
             )
             - datetime.timedelta(days=1)
         )
+
+        growing_period = TapirCache.get_growing_period_at_date(
+            reference_date=start, cache=cache
+        )  # check the end of the growing period in case it is not 12 month long
+
+        return min(growing_period.end_date, end)
 
     @classmethod
     def validate_rhythms(cls, rhythms_as_string: str):
