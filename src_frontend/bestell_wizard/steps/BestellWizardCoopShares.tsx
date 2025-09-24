@@ -49,11 +49,17 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
   }, [studentStatusEnabled]);
 
   function shouldConfirmMemberNow() {
-    return (
-      areAllOrderedProductsInWaitingList(
-        shoppingCart,
-        productsTypesInWaitingList,
-      ) && becomeMemberNow === null
+    if (becomeMemberNow !== null) {
+      return false;
+    }
+
+    if (settings.forceWaitingList) {
+      return false;
+    }
+
+    return areAllOrderedProductsInWaitingList(
+      shoppingCart,
+      productsTypesInWaitingList,
     );
   }
 

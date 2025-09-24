@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import {
-  Card,
-  Col,
-  ListGroup,
-  OverlayTrigger,
-  Row,
-  Spinner,
-  Tooltip,
-} from "react-bootstrap";
+import { Card, Col, ListGroup, OverlayTrigger, Row, Spinner, Tooltip } from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
@@ -21,7 +13,7 @@ import {
   PublicPickupLocation,
   type PublicProductType,
   WaitingListApi,
-  WaitingListEntryDetails,
+  WaitingListEntryDetails
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -40,7 +32,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType,
+  buildNextButtonParametersForProductType
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -71,6 +63,7 @@ import { isWaitingListModeEnabled } from "./utils/isWaitingListModeEnabled.ts";
 import { isAtLeastOneProductOrdered } from "./utils/isAtLeastOneProductOrdered.ts";
 import { formatShoppingCart } from "./utils/formatShoppingCart.ts";
 import { buildFilteredShoppingCart } from "./utils/buildFilteredShoppingCart.ts";
+import { areAllOrderedProductsInWaitingList } from "./utils/areAllOrderedProductsInWaitingList.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -421,7 +414,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
     if (
       !isAtLeastOneOrderedProductWithDelivery(
-        shoppingCart,
+        buildFilteredShoppingCart(
+          shoppingCart,
+          false,
+          productsTypesInWaitingList,
+        ),
         settings.productTypes,
       )
     ) {
@@ -486,13 +483,10 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
             waitingListEntryDetails={waitingListEntryDetails}
-            waitingListModeEnabled={
-              settings.forceWaitingList ||
-              !isAtLeastOneOrderedProductWithDelivery(
-                shoppingCart,
-                settings.productTypes,
-              )
-            }
+            waitingListModeEnabled={areAllOrderedProductsInWaitingList(
+              shoppingCart,
+              productsTypesInWaitingList,
+            )}
           />
         );
       case "coop_shares":
@@ -746,6 +740,8 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           shoppingCart,
           checkingCapacities,
           currentStep,
+          productsTypesInWaitingList,
+          productTypeIdsOverCapacity,
         );
     }
 
@@ -806,6 +802,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
 
   function cancelEnablePickupLocationWaitingListMode() {
     setPickupLocationWaitingListModalOpen(false);
+
+    for (const productType of settings.productTypes) {
+      if (productType.noDelivery) continue;
+      productsTypesInWaitingList.add(productType);
+    }
   }
 
   function confirmEnableGeneralWaitingListMode() {
