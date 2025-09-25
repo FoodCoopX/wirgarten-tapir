@@ -256,19 +256,6 @@
                 {% endif %}
             }
 
-            const handleAddCoopShares = () => {
-                {% if object.iban %}
-                    FormModal.load(`{% url 'wirgarten:member_add_coop_shares' object.pk %}`,
-                        {% if 'wirgarten.coop.shares_independent'|parameter %} 'Genossenschaftsanteile zeichnen'
-                        {% else %}
-                            'Warteliste', 'Aktuell können leider keine Genossenschaftsanteile separat gezeichnet werden. Wenn du möchtest informieren wir dich sobald du wieder neue Anteile zeichnen kannst.', 'warning'
-                        {% endif %})
-                {% else %}
-                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>
-                        {% if not object.iban %}<br />-Bitte trage deine Bankverbindung ein.{% endif %}")
-                {% endif %}
-            }
-
             const handleTrialCancellation = () => {
                 FormModal.load(`{% url 'wirgarten:member_cancel_trial' object.pk %}`, 'Verträge kündigen')
             }
