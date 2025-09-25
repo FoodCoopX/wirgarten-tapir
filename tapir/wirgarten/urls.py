@@ -20,7 +20,6 @@ from tapir.wirgarten.views.member.details.actions import (
 )
 from tapir.wirgarten.views.member.details.member_details import MemberDetailView
 from tapir.wirgarten.views.member.details.modals import (
-    get_add_coop_shares_form,
     get_add_subscription_form,
     get_cancel_trial_form,
     get_cancellation_reason_form,
@@ -196,11 +195,6 @@ urlpatterns = [
         "members/<str:pk>/addsubscription",
         get_add_subscription_form,
         name="member_add_subscription",
-    ),
-    path(
-        "members/<str:pk>/addcoopshares",
-        get_add_coop_shares_form,
-        name="member_add_coop_shares",
     ),
     path(
         "members/<str:pk>/canceltrial",

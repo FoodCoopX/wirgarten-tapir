@@ -14,6 +14,7 @@ interface CoopSharesModalProps {
   onHide: () => void;
   onSharesPurchased: () => void;
   currentNumberOfShares: number;
+  canBuyMoreShares: boolean;
 }
 
 const CoopSharesModal: React.FC<CoopSharesModalProps> = ({
@@ -23,6 +24,7 @@ const CoopSharesModal: React.FC<CoopSharesModalProps> = ({
   onHide,
   onSharesPurchased,
   currentNumberOfShares,
+  canBuyMoreShares,
 }) => {
   const coopApi = useApi(CoopApi, csrfToken);
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
@@ -66,9 +68,21 @@ const CoopSharesModal: React.FC<CoopSharesModalProps> = ({
       .finally(() => setLoading(false));
   }
 
+  if (!canBuyMoreShares) {
+    return (
+      <Modal onHide={onHide} show={show} size={"lg"}>
+        <Modal.Header closeButton>Genossenschaftsanteile zeichnen</Modal.Header>
+        <Modal.Body>
+          Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal
+          Mitglied der Genossenschaft geworden bist.
+        </Modal.Body>
+      </Modal>
+    );
+  }
+
   return (
     <Modal onHide={onHide} show={show} size={"lg"}>
-      <Modal.Header>Genossenschaftsanteile zeichnen</Modal.Header>
+      <Modal.Header closeButton>Genossenschaftsanteile zeichnen</Modal.Header>
       <Modal.Body>
         <p>
           Du besitzt gerade {currentNumberOfShares} Genossenschaftsanteile. Wie

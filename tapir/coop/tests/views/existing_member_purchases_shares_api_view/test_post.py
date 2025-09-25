@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from rest_framework import status
@@ -6,8 +8,9 @@ from tapir.configuration.models import TapirParameter
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import MemberFactory
+from tapir.wirgarten.tests.factories import MemberFactory, CoopShareTransactionFactory
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.utils import get_today
 
 
 class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
@@ -78,7 +81,32 @@ class TestExistingMemberPurchasesSharesAPIView(TapirIntegrationTest):
         url = reverse("coop:existing_member_purchases_shares")
         url = f"{url}?member_id={member.id}&number_of_shares_to_add=1"
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as context_manager:
             self.client.post(url)
 
+        self.assertEqual(
+            "The minimum final number of shares is 5, this member currently has 0, adding 1 is not enough.",
+            context_manager.exception.message,
+        )
+
         self.assertFalse(CoopShareTransaction.objects.exists())
+
+    def test_post_userIsNotAMemberYet_cannotBuyShares(self):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+        self.assertFalse(CoopShareTransaction.objects.exists())
+        CoopShareTransactionFactory.create(
+            member=member, valid_at=get_today() + datetime.timedelta(days=1)
+        )
+
+        url = reverse("coop:existing_member_purchases_shares")
+        url = f"{url}?member_id={member.id}&number_of_shares_to_add=10"
+
+        with self.assertRaises(ValidationError) as context_manager:
+            self.client.post(url)
+
+        self.assertEqual(
+            "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist.",
+            context_manager.exception.message,
+        )
+        self.assertEqual(1, CoopShareTransaction.objects.count())

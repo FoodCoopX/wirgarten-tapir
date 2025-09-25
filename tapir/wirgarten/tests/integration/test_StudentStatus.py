@@ -43,54 +43,6 @@ class TestStudentStatus(TapirIntegrationTest):
     def setUp(self) -> None:
         configure_mail_module()
 
-    def test_cooperativeShareForm_fromTheMemberProfile_doesntShowStudentStatusField(
-        self,
-    ):
-        member = MemberFactory.create()
-        self.client.force_login(member)
-
-        url = reverse("wirgarten:member_add_coop_shares", args=[member.id])
-        response: TemplateResponse = self.client.get(url)
-
-        form_fields = response.context_data["form"].fields
-        self.assertNotIn("is_student", form_fields.keys())
-
-    def test_cooperativeShareForm_addSharesAsStudent_canAddLessThanTheMinimum(
-        self,
-    ):
-        member: Member = MemberFactory.create(is_student=True)
-        self.assertEqual(0, member.coop_shares_quantity)
-        self.client.force_login(member)
-
-        url = reverse("wirgarten:member_add_coop_shares", args=[member.id])
-        data = {
-            "cooperative_shares": 50,
-            "statute_consent": True,
-        }
-        response = self.client.post(url, data)
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(1, member.coop_shares_quantity)
-
-    def test_cooperativeShareForm_addZeroSharesAsStudent_formError(
-        self,
-    ):
-        member: Member = MemberFactory.create(is_student=True)
-        self.assertEqual(0, member.coop_shares_quantity)
-        self.client.force_login(member)
-
-        url = reverse("wirgarten:member_add_coop_shares", args=[member.id])
-        data = {
-            "cooperative_shares": 0,
-            "statute_consent": True,
-        }
-        response: TemplateResponse = self.client.post(url, data)
-
-        self.assertStatusCode(response, 200)
-        self.assertEqual(0, member.coop_shares_quantity)
-        form_errors = response.context_data["form"].errors
-        self.assertIn("cooperative_shares", form_errors.keys())
-
     def test_baseProductForm_asStudent_canAddSubscriptionWithoutShares(
         self,
     ):

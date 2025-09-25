@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
@@ -10,8 +9,6 @@ from tapir_mail.triggers.transactional_trigger import (
 )
 
 from tapir.accounts.models import UpdateTapirUserLogEntry
-from tapir.configuration.parameter import get_parameter_value
-from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.coop.services.membership_text_service import MembershipTextService
 from tapir.log.models import TextLogEntry
 from tapir.subscriptions.services.base_product_type_service import (
@@ -28,7 +25,6 @@ from tapir.wirgarten.forms.member import (
     TrialCancellationForm,
     WaitingListForm,
 )
-from tapir.wirgarten.forms.registration.coop_shares import CooperativeShareForm
 from tapir.wirgarten.forms.registration.payment_data import PaymentDataForm
 from tapir.wirgarten.forms.subscription import AdditionalProductForm, BaseProductForm
 from tapir.wirgarten.mail_events import Events
@@ -38,7 +34,6 @@ from tapir.wirgarten.models import (
     QuestionaireCancellationReasonResponse,
     SubscriptionChangeLogEntry,
 )
-from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
     create_wait_list_entry,
     send_contract_change_confirmation,
@@ -306,61 +301,6 @@ def get_add_subscription_form(request, **kwargs):
         form_class=form_type,
         handler=save,
         redirect_url_resolver=lambda _: member_detail_url(member_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-def get_add_coop_shares_form(request, **kwargs):
-    member_id = kwargs.pop("pk")
-
-    check_permission_or_self(member_id, request)
-    member = Member.objects.get(pk=member_id)
-    cache = {}
-    if not get_parameter_value(
-        ParameterKeys.COOP_SHARES_INDEPENDENT_FROM_HARVEST_SHARES, cache=cache
-    ):
-        # FIXME: better don't even show the form to a member, just one button to be added to the waitlist
-
-        wl_kwargs = kwargs.copy()
-        wl_kwargs["initial"] = {
-            "first_name": member.first_name,
-            "last_name": member.last_name,
-            "email": member.email,
-            "privacy_consent": (member.privacy_consent is not None),
-        }
-        return get_coop_shares_waiting_list_form(request, **wl_kwargs)
-
-    if member.is_in_coop_trial():
-        raise PermissionDenied(
-            "Mitglieder die im Probezeit sind dürfen keine weitere Anteile zeichnen"
-        )
-
-    today = get_today(cache=cache)
-    kwargs["initial"] = {
-        "outro_template": "wirgarten/registration/steps/coop_shares.validation.html"
-    }
-    kwargs["cache"] = cache
-
-    @transaction.atomic
-    def handler(form):
-        CoopSharePurchaseHandler.buy_cooperative_shares(
-            quantity=form.cleaned_data["cooperative_shares"]
-            / get_parameter_value(ParameterKeys.COOP_SHARE_PRICE, cache=cache),
-            member=member,
-            shares_valid_at=today,
-            cache=cache,
-        ),
-
-    return get_form_modal(
-        request=request,
-        form_class=CooperativeShareForm,
-        handler=handler,
-        redirect_url_resolver=lambda _: member_detail_url(member_id),
-        show_student_checkbox=False,
-        member_is_student=member.is_student,
         **kwargs,
     )
 

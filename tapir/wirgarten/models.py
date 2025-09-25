@@ -409,14 +409,6 @@ class Member(TapirUser):
 
         super().save(*args, **kwargs)
 
-    def is_in_coop_trial(self):
-        from tapir.coop.services.membership_cancellation_manager import (
-            MembershipCancellationManager,
-        )
-
-        entry_date = MembershipCancellationManager.get_coop_entry_date(self)
-        return entry_date is not None and entry_date > get_today()
-
     def coop_shares_total_value(self):
         today = get_today()
         return (

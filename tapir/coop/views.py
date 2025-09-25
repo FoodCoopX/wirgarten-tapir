@@ -8,6 +8,9 @@ from rest_framework.views import APIView
 
 from tapir.coop.serializers import MinimumNumberOfSharesResponseSerializer
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
+from tapir.coop.services.membership_cancellation_manager import (
+    MembershipCancellationManager,
+)
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
@@ -88,6 +91,11 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                 number_of_shares_to_add=number_of_shares_to_add,
                 cache=self.cache,
                 member=member,
+            )
+
+        if MembershipCancellationManager.is_in_coop_trial(member):
+            raise ValidationError(
+                "Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der Genossenschaft geworden bist."
             )
 
         with transaction.atomic():

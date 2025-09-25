@@ -34,50 +34,6 @@
                 <div id="member-contracts">
                     {% if show_coop_shares %}
                         <div id="coop_shares_card" data-member-id="{{ object.id }}"></div>
-                        <div class="card mb-3" id="coop-shares-card" style="text-align: center">
-                            <div class="card-body">
-                                <div class="contract-tile-number">
-                                    <strong>{{ coop_shares_total|default:'0' }}</strong> ×
-                                </div>
-                                <strong>Genossenschaftsanteile</strong>
-                                <hr />
-                                <small>
-                                    <table style="width:100%">
-                                        {% for entry in coop_shares %}
-                                            <tr data-bs-toggle="tooltip" data-bs-placement="top" title="{{ entry }}">
-                                                <td>
-                                                    <span class="material-icons" style="font-size:1em">
-                                                        {% if entry.transaction_type == 'purchase' %}
-                                                            add
-                                                        {% elif entry.transaction_type == 'cancellation' %}
-                                                            remove
-                                                        {% elif entry.transaction_type == 'transfer_in' %}
-                                                            login
-                                                        {% elif entry.transaction_type == 'transfer_out' %}
-                                                            logout
-                                                        {% endif %}
-                                                    </span>
-                                                </td>
-                                                <td>{{ entry.valid_at|format_date }}</td>
-                                                <td style="text-align:right">
-                                                    {{ entry.total_price|format_currency }}
-                                                    €
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </table>
-                                </small>
-                            </div>
-                            <div class="card-footer d-flex justify-content-end">
-                                <div data-bs-toggle="tooltip" title="Anteile bearbeiten">
-                                    <button {% if object.is_in_coop_trial %} data-bs-toggle="modal" data-bs-target="#cannotOrderMoreSharesModal" {% else %} onclick="handleAddCoopShares();" {% endif %}
-                                            class="btn btn-outline-primary"
-                                            style="float:right">
-                                        <span class="material-icons">add</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     {% endif %}
                     <div id="contract-tiles"
                          data-show-cancellation-card="{{ subscriptionAutomaticRenewal }}"
@@ -282,28 +238,6 @@
                 </div>
             </div>
         </div>
-        {% if object.is_in_coop_trial %}
-            <div class="modal fade" id="cannotOrderMoreSharesModal" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5">Probezeit</h1>
-                            <button type="button"
-                                    class="btn-close"
-                                    data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Du kannst weitere Genossenschaftsanteile erst zeichnen, wenn du formal Mitglied der
-                            Genossenschaft geworden bist
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
         {% if perms.accounts.manage %}
             <hr />
             {% user_log_entry_list object %}

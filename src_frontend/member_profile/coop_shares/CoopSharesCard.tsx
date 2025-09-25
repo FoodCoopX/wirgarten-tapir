@@ -58,6 +58,25 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
     }
   }
 
+  function canBuyMoreShares() {
+    if (transactions.length === 0) {
+      return true;
+    }
+
+    for (const transaction of transactions) {
+      if (
+        transaction.transactionType === "purchase" ||
+        transaction.transactionType === "transfer_in"
+      ) {
+        if (transaction.validAt < new Date()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   return (
     <>
       <Card style={{ marginBottom: "1rem", textAlign: "center" }}>
@@ -110,6 +129,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
               onClick={() => {
                 setShowModal(true);
               }}
+              loading={loading}
             />
           </div>
         </Card.Footer>
@@ -124,6 +144,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
           loadShareData();
           setShowModal(false);
         }}
+        canBuyMoreShares={canBuyMoreShares()}
       />
     </>
   );

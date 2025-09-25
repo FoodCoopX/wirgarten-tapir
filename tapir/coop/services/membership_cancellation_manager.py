@@ -48,3 +48,8 @@ class MembershipCancellationManager:
             transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
             valid_at__gte=reference_date,
         ).delete()
+
+    @classmethod
+    def is_in_coop_trial(cls, member: Member):
+        entry_date = cls.get_coop_entry_date(member)
+        return entry_date is not None and entry_date > get_today()
