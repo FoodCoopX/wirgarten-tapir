@@ -3,11 +3,7 @@ import BestellWizardCardTitle from "../components/BestellWizardCardTitle.tsx";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import BestellWizardCardSubtitle from "../components/BestellWizardCardSubtitle.tsx";
 import { Col, Form, Row, Table } from "react-bootstrap";
-import {
-  PublicPickupLocation,
-  PublicProductType,
-  WaitingListEntryDetails,
-} from "../../api-client";
+import { PublicPickupLocation, PublicProductType, WaitingListEntryDetails } from "../../api-client";
 import TapirButton from "../../components/TapirButton.tsx";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../utils/isProductTypeOrdered.ts";
@@ -97,8 +93,8 @@ const BestellWizardSummary: React.FC<BestellWizardSummaryProps> = ({
   }
 
   function getTextCoopMembership(): string {
-    if (settings.forceWaitingList || becomeMemberNow !== false) {
-      return "Deine zukünftige Mitgliedschaft in der Genossenschaft";
+    if (settings.forceWaitingList || becomeMemberNow === false) {
+      return "Dein Mitgliedschafts-Wunsch in der Genossenschaft";
     }
     return "Deine Mitgliedschaft in der Genossenschaft";
   }
