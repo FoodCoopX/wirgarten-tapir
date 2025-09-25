@@ -12,6 +12,7 @@ export * from './BounceTypeEnum';
 export * from './BuildCsvExportResponse';
 export * from './BundledEmailConfiguration';
 export * from './BundledEmailConfigurationRequest';
+export * from './CancelSubscriptionsRequestRequest';
 export * from './CancelSubscriptionsViewResponse';
 export * from './CancellationData';
 export * from './ChangeTypeEnum';

@@ -96,9 +96,13 @@ const SubscriptionCancellationModal: React.FC<
 
     api
       .subscriptionsCancelSubscriptionsCreate({
-        memberId: memberId,
-        productIds: productIds,
-        cancelCoopMembership: cancelCoopMembershipSelected,
+        cancelSubscriptionsRequestRequest: {
+          memberId: memberId,
+          productIds: productIds,
+          cancelCoopMembership: cancelCoopMembershipSelected,
+          cancellationReasons: selectedCancellationReasons,
+          customCancellationReason: customCancellationReason,
+        },
       })
       .then((response) => {
         if (response.subscriptionsCancelled) {

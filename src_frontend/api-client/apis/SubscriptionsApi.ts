@@ -17,6 +17,7 @@ import * as runtime from "../runtime";
 import type {
   BestellWizardCapacityCheckResponse,
   CancellationData,
+  CancelSubscriptionsRequestRequest,
   CancelSubscriptionsViewResponse,
   ExtendedProduct,
   MemberDataToConfirm,
@@ -31,6 +32,7 @@ import type {
 import {
   BestellWizardCapacityCheckResponseFromJSON,
   CancellationDataFromJSON,
+  CancelSubscriptionsRequestRequestToJSON,
   CancelSubscriptionsViewResponseFromJSON,
   ExtendedProductFromJSON,
   MemberDataToConfirmFromJSON,
@@ -77,9 +79,7 @@ export interface SubscriptionsApiUpdateSubscriptionCreateRequest {
 }
 
 export interface SubscriptionsCancelSubscriptionsCreateRequest {
-    cancelCoopMembership?: boolean;
-    memberId?: string;
-    productIds?: Array<string>;
+    cancelSubscriptionsRequestRequest: CancelSubscriptionsRequestRequest;
 }
 
 export interface SubscriptionsCancellationDataRetrieveRequest {
@@ -470,21 +470,18 @@ export class SubscriptionsApi extends runtime.BaseAPI {
     /**
      */
     async subscriptionsCancelSubscriptionsCreateRaw(requestParameters: SubscriptionsCancelSubscriptionsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CancelSubscriptionsViewResponse>> {
+        if (requestParameters['cancelSubscriptionsRequestRequest'] == null) {
+            throw new runtime.RequiredError(
+                'cancelSubscriptionsRequestRequest',
+                'Required parameter "cancelSubscriptionsRequestRequest" was null or undefined when calling subscriptionsCancelSubscriptionsCreate().'
+            );
+        }
+
         const queryParameters: any = {};
 
-        if (requestParameters['cancelCoopMembership'] != null) {
-            queryParameters['cancel_coop_membership'] = requestParameters['cancelCoopMembership'];
-        }
-
-        if (requestParameters['memberId'] != null) {
-            queryParameters['member_id'] = requestParameters['memberId'];
-        }
-
-        if (requestParameters['productIds'] != null) {
-            queryParameters['product_ids'] = requestParameters['productIds'];
-        }
-
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["Authorization"] = await this.configuration.apiKey("Authorization"); // tokenAuth authentication
@@ -498,6 +495,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: CancelSubscriptionsRequestRequestToJSON(requestParameters['cancelSubscriptionsRequestRequest']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => CancelSubscriptionsViewResponseFromJSON(jsonValue));
@@ -505,7 +503,7 @@ export class SubscriptionsApi extends runtime.BaseAPI {
 
     /**
      */
-    async subscriptionsCancelSubscriptionsCreate(requestParameters: SubscriptionsCancelSubscriptionsCreateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CancelSubscriptionsViewResponse> {
+    async subscriptionsCancelSubscriptionsCreate(requestParameters: SubscriptionsCancelSubscriptionsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CancelSubscriptionsViewResponse> {
         const response = await this.subscriptionsCancelSubscriptionsCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }

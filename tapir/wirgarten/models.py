@@ -1194,6 +1194,9 @@ class QuestionaireCancellationReasonResponse(TapirModel):
     custom = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
 
+    def __str__(self):
+        return f"{self.member} - {self.reason} - custom:{self.custom} - {format_date(self.timestamp)}"
+
 
 class ScheduledTask(TapirModel):
     """

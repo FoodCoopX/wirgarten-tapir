@@ -15,7 +15,10 @@ from tapir.subscriptions.services.subscription_cancellation_manager import (
     SubscriptionCancellationManager,
 )
 from tapir.wirgarten.mail_events import Events
-from tapir.wirgarten.models import SubscriptionChangeLogEntry
+from tapir.wirgarten.models import (
+    SubscriptionChangeLogEntry,
+    QuestionaireCancellationReasonResponse,
+)
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
@@ -53,12 +56,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             value=subscriptions[0].product.type_id
         )
 
+        post_data = {
+            "member_id": target.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={target.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 403)
         mock_cancel_subscriptions.assert_not_called()
@@ -77,12 +84,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             value=subscriptions[0].product.type_id
         )
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
@@ -101,12 +112,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             value=subscriptions[0].product.type_id
         )
 
+        post_data = {
+            "member_id": target.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={target.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(3, mock_cancel_subscriptions.call_count)
@@ -126,12 +141,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
 
         subscriptions = SubscriptionFactory.create_batch(size=3, member=member)
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=true"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(1, len(response.json()["errors"]))
@@ -157,12 +176,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             value=subscriptions[0].product.type_id
         )
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": True,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=true"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
@@ -188,12 +211,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             value=subscriptions[0].product.type_id
         )
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [f"product_ids={subscription.product_id}" for subscription in subscriptions]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
@@ -217,9 +244,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
         ).update(value=False)
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscriptions[0].product_id],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        url = f"{url}?member_id={member.id}&product_ids={subscriptions[0].product_id}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(1, len(response.json()["errors"]))
@@ -242,9 +276,16 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
         ).update(value=True)
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscriptions[0].product_id],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        url = f"{url}?member_id={member.id}&product_ids={subscriptions[0].product_id}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
@@ -253,7 +294,7 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
-    def test_post_default_sendsMailTriggerAndCreatesLogEntry(
+    def test_post_default_sendsMailTriggerAndCreatesLogEntryAndSavesCancellationReasons(
         self,
         mock_fire_action: Mock,
     ):
@@ -278,16 +319,22 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
         TapirParameter.objects.filter(
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
+        ).update(value="reason1 ;   reason2  ")
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [
+                subscription.product_id for subscription in subscriptions[:2]
+            ],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": ["reason1", "reason2"],
+            "custom_cancellation_reason": "reason3",
+        }
 
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [
-                f"product_ids={subscription.product_id}"
-                for subscription in subscriptions[:2]
-            ]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
@@ -313,6 +360,22 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                 subscriptions[:2]
             ),
             log_entry.subscriptions,
+        )
+        self.assertEqual(3, QuestionaireCancellationReasonResponse.objects.count())
+        self.assertTrue(
+            QuestionaireCancellationReasonResponse.objects.filter(
+                member=member, reason="reason1", custom=False, timestamp=NOW
+            ).exists()
+        )
+        self.assertTrue(
+            QuestionaireCancellationReasonResponse.objects.filter(
+                member=member, reason="reason2", custom=False, timestamp=NOW
+            ).exists()
+        )
+        self.assertTrue(
+            QuestionaireCancellationReasonResponse.objects.filter(
+                member=member, reason="reason3", custom=True, timestamp=NOW
+            ).exists()
         )
 
     @patch.object(TransactionalTrigger, "fire_action")
@@ -345,15 +408,18 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
             key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
         ).update(value=True)
 
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [
+                subscription.product_id for subscription in subscriptions[:2]
+            ],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "Test reason",
+        }
+
         url = reverse("subscriptions:cancel_subscriptions")
-        product_ids_as_parameters = "&".join(
-            [
-                f"product_ids={subscription.product_id}"
-                for subscription in subscriptions[:2]
-            ]
-        )
-        url = f"{url}?member_id={member.id}&{product_ids_as_parameters}&cancel_coop_membership=false"
-        response = self.client.post(url)
+        response = self.client.post(url, data=post_data)
 
         self.assertStatusCode(response, 200)
         self.assertEqual(0, len(response.json()["errors"]))
@@ -397,4 +463,169 @@ class TestCancelSubscriptionsPostView(TapirIntegrationTest):
                 [subscriptions[1]]
             ),
             log_entry.subscriptions,
+        )
+
+    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_cancellationReasonIsInvalid_returnsError(
+        self, mock_fire_action: Mock, mock_cancel_subscriptions: Mock
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=TODAY.replace(month=1, day=1),
+            end_date=TODAY.replace(month=12, day=31),
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3,
+            member=member,
+            period=growing_period,
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=subscriptions[0].product.type_id
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
+        ).update(value="reason1 ;   reason2  ")
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [
+                subscription.product_id for subscription in subscriptions[:2]
+            ],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": ["reason1", "reason4"],
+            "custom_cancellation_reason": "reason3",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        response_content = response.json()
+        self.assertStatusCode(response, 200)
+        self.assertEqual(1, len(response_content["errors"]))
+        self.assertEqual(
+            "Folgende Kündigungsgrund ist nicht gültig: reason4, gültige Gründe sind: ['reason1', 'reason2']",
+            response_content["errors"][0],
+        )
+        mock_fire_action.assert_not_called()
+        mock_cancel_subscriptions.assert_not_called()
+
+    @patch.object(SubscriptionCancellationManager, "cancel_subscriptions")
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_noCancellationReasonSent_returnsError(
+        self, mock_fire_action: Mock, mock_cancel_subscriptions: Mock
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=TODAY.replace(month=1, day=1),
+            end_date=TODAY.replace(month=12, day=31),
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3,
+            member=member,
+            period=growing_period,
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=subscriptions[0].product.type_id
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
+        ).update(value="reason1 ;   reason2  ")
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": [],
+            "custom_cancellation_reason": "",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        response_content = response.json()
+        self.assertStatusCode(response, 200)
+        self.assertEqual(1, len(response_content["errors"]))
+        self.assertEqual(
+            "Es muss mindestens 1 Kündigungsgrund angegeben werden.",
+            response_content["errors"][0],
+        )
+        mock_fire_action.assert_not_called()
+        mock_cancel_subscriptions.assert_not_called()
+
+    @patch.object(TransactionalTrigger, "fire_action")
+    def test_post_noCustomReasonSent_doesntCreateACustomObject(
+        self, mock_fire_action: Mock
+    ):
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=TODAY.replace(month=1, day=1),
+            end_date=TODAY.replace(month=12, day=31),
+        )
+        subscriptions = SubscriptionFactory.create_batch(
+            size=3,
+            member=member,
+            period=growing_period,
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.COOP_BASE_PRODUCT_TYPE).update(
+            value=subscriptions[0].product.type_id
+        )
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_ADDITIONAL_PRODUCT_ALLOWED_WITHOUT_BASE_PRODUCT
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL
+        ).update(value=True)
+        TapirParameter.objects.filter(
+            key=ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES
+        ).update(value="reason1 ;   reason2  ")
+
+        post_data = {
+            "member_id": member.id,
+            "product_ids": [subscription.product_id for subscription in subscriptions],
+            "cancel_coop_membership": False,
+            "cancellation_reasons": ["reason1"],
+            "custom_cancellation_reason": "",
+        }
+
+        url = reverse("subscriptions:cancel_subscriptions")
+        response = self.client.post(url, data=post_data)
+
+        response_content = response.json()
+        self.assertStatusCode(response, 200)
+        self.assertEqual(0, len(response_content["errors"]))
+
+        mock_fire_action.assert_called_once_with(
+            TransactionalTriggerData(
+                key=Events.CONTRACT_CANCELLED,
+                recipient_id_in_base_queryset=member.id,
+                token_data={
+                    "contract_list": format_subscription_list_html(subscriptions),
+                    "contract_end_date": format_date(growing_period.end_date),
+                },
+            )
+        )
+        self.assertEqual(1, QuestionaireCancellationReasonResponse.objects.count())
+        self.assertTrue(
+            QuestionaireCancellationReasonResponse.objects.filter(
+                member=member, reason="reason1", custom=False, timestamp=NOW
+            ).exists()
         )

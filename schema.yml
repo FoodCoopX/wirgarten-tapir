@@ -1561,23 +1561,20 @@ paths:
   /subscriptions/cancel_subscriptions:
     post:
       operationId: subscriptions_cancel_subscriptions_create
-      parameters:
-      - in: query
-        name: cancel_coop_membership
-        schema:
-          type: boolean
-      - in: query
-        name: member_id
-        schema:
-          type: string
-      - in: query
-        name: product_ids
-        schema:
-          type: array
-          items:
-            type: string
       tags:
       - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionsRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionsRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionsRequestRequest'
+        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -4645,6 +4642,32 @@ components:
       - content
       - name
       - release_status
+    CancelSubscriptionsRequestRequest:
+      type: object
+      properties:
+        member_id:
+          type: string
+          minLength: 1
+        product_ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        cancel_coop_membership:
+          type: boolean
+        cancellation_reasons:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        custom_cancellation_reason:
+          type: string
+          minLength: 1
+      required:
+      - cancel_coop_membership
+      - cancellation_reasons
+      - member_id
+      - product_ids
     CancelSubscriptionsViewResponse:
       type: object
       properties:

@@ -234,3 +234,13 @@ class UpdateSubscriptionsRequestSerializer(serializers.Serializer):
 class MemberProfileCapacityCheckRequestSerializer(serializers.Serializer):
     member_id = serializers.CharField()
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
+
+
+class CancelSubscriptionsRequestSerializer(serializers.Serializer):
+    member_id = serializers.CharField()
+    product_ids = serializers.ListField(child=serializers.CharField())
+    cancel_coop_membership = serializers.BooleanField()
+    cancellation_reasons = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
+    custom_cancellation_reason = serializers.CharField(required=False)

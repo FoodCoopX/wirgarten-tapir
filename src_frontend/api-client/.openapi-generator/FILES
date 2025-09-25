@@ -23,6 +23,7 @@ models/BounceTypeEnum.ts
 models/BuildCsvExportResponse.ts
 models/BundledEmailConfiguration.ts
 models/BundledEmailConfigurationRequest.ts
+models/CancelSubscriptionsRequestRequest.ts
 models/CancelSubscriptionsViewResponse.ts
 models/CancellationData.ts
 models/ChangeTypeEnum.ts

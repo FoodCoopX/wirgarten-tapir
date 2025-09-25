@@ -20,6 +20,7 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.subscriptions.serializers import (
     CancellationDataSerializer,
     CancelSubscriptionsViewResponseSerializer,
+    CancelSubscriptionsRequestSerializer,
 )
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
@@ -33,6 +34,7 @@ from tapir.wirgarten.models import (
     Member,
     Product,
     SubscriptionChangeLogEntry,
+    QuestionaireCancellationReasonResponse,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -113,25 +115,26 @@ class CancelSubscriptionsView(APIView):
 
     @extend_schema(
         responses={200: CancelSubscriptionsViewResponseSerializer()},
-        parameters=[
-            OpenApiParameter(name="member_id", type=str),
-            OpenApiParameter(name="product_ids", type=str, many=True),
-            OpenApiParameter(name="cancel_coop_membership", type=bool),
-        ],
+        request=CancelSubscriptionsRequestSerializer,
     )
     def post(self, request):
-        member = get_object_or_404(Member, id=request.query_params.get("member_id"))
+        serializer = CancelSubscriptionsRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
         check_permission_or_self(member.id, request)
 
-        product_ids = request.query_params.getlist("product_ids")
+        product_ids = serializer.validated_data["product_ids"]
         products_selected_for_cancellation = {
             get_object_or_404(Product, id=product_id)
             for product_id in product_ids
             if product_id != ""
         }
 
-        cancel_coop_membership = (
-            request.query_params.get("cancel_coop_membership") == "true"
+        cancel_coop_membership = serializer.validated_data["cancel_coop_membership"]
+        cancellation_reasons = serializer.validated_data.get("cancellation_reasons", [])
+        custom_cancellation_reason = serializer.validated_data.get(
+            "custom_cancellation_reason", None
         )
 
         try:
@@ -139,6 +142,8 @@ class CancelSubscriptionsView(APIView):
                 cancel_coop_membership=cancel_coop_membership,
                 member=member,
                 products_selected_for_cancellation=products_selected_for_cancellation,
+                cancellation_reasons=cancellation_reasons,
+                custom_cancellation_reason=custom_cancellation_reason,
             )
         except ValidationError as e:
             return self.build_response(
@@ -150,6 +155,8 @@ class CancelSubscriptionsView(APIView):
             member=member,
             products_selected_for_cancellation=products_selected_for_cancellation,
             actor=request.user,
+            cancellation_reasons=cancellation_reasons,
+            custom_cancellation_reason=custom_cancellation_reason,
         )
 
         return self.build_response(subscriptions_cancelled=True, errors=[])
@@ -161,6 +168,8 @@ class CancelSubscriptionsView(APIView):
         member,
         products_selected_for_cancellation,
         actor: TapirUser,
+        cancellation_reasons: list[str],
+        custom_cancellation_reason: str | None,
     ):
         all_cancelled_subscriptions = []
         all_deleted_subscriptions = []
@@ -218,11 +227,24 @@ class CancelSubscriptionsView(APIView):
                 member, cache=self.cache
             )
 
+        for reason in cancellation_reasons:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member=member, reason=reason, custom=False
+            )
+        if custom_cancellation_reason is not None:
+            QuestionaireCancellationReasonResponse.objects.create(
+                member=member,
+                reason=custom_cancellation_reason,
+                custom=True,
+            )
+
     def validate_everything(
         self,
         cancel_coop_membership: bool,
         member: Member,
         products_selected_for_cancellation: set[Product],
+        cancellation_reasons: list[str],
+        custom_cancellation_reason: str | None,
     ):
         if (
             cancel_coop_membership
@@ -263,6 +285,23 @@ class CancelSubscriptionsView(APIView):
         ):
             raise ValidationError(
                 "Du kannst keine Zusatzabos beziehen wenn du das Basis-Abo kündigst."
+            )
+
+        valid_cancellation_reasons = get_parameter_value(
+            ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES, cache=self.cache
+        ).split(";")
+        valid_cancellation_reasons = [
+            reason.strip() for reason in valid_cancellation_reasons
+        ]
+        for reason in cancellation_reasons:
+            if reason not in valid_cancellation_reasons:
+                raise ValidationError(
+                    f"Folgende Kündigungsgrund ist nicht gültig: {reason}, gültige Gründe sind: {valid_cancellation_reasons}"
+                )
+
+        if len(cancellation_reasons) == 0 and custom_cancellation_reason is None:
+            raise ValidationError(
+                "Es muss mindestens 1 Kündigungsgrund angegeben werden."
             )
 
     @staticmethod
