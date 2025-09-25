@@ -148,29 +148,31 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
           </div>
         </Col>
       </Row>
-      <Row className={"mt-2"}>
-        <Col>
-          <Form.Check
-            id={"statute"}
-            checked={statuteAccepted}
-            onChange={(event) => setStatuteAccepted(event.target.checked)}
-            label={
-              "Ich habe die Satzung der" +
-              settings.organizationName +
-              " und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
-            }
-            disabled={studentStatusEnabled}
-          />
-          <Form.Text>
-            <a href={settings.coopStatuteLink}>{settings.coopStatuteLink}</a>
-            <br />
-            Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt
-            aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses
-            im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10
-            und § 37.
-          </Form.Text>
-        </Col>
-      </Row>
+      {!settings.forceWaitingList && becomeMemberNow !== false && (
+        <Row className={"mt-2"}>
+          <Col>
+            <Form.Check
+              id={"statute"}
+              checked={statuteAccepted}
+              onChange={(event) => setStatuteAccepted(event.target.checked)}
+              label={
+                "Ich habe die Satzung der" +
+                settings.organizationName +
+                " und die Kündigungsfrist von 2 Monaten zum Jahresende zur Kenntnis genommen."
+              }
+              disabled={studentStatusEnabled}
+            />
+            <Form.Text>
+              <a href={settings.coopStatuteLink}>{settings.coopStatuteLink}</a>
+              <br />
+              Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt
+              aus der Genossenschaft und nach Verabschiedung des
+              Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe
+              dazu Satzung § 10 und § 37.
+            </Form.Text>
+          </Col>
+        </Row>
+      )}
       {settings.studentStatusAllowed && (
         <Row>
           <Col>
