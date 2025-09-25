@@ -4668,8 +4668,13 @@ components:
             $ref: '#/components/schemas/ProductForCancellation'
         legal_status:
           $ref: '#/components/schemas/LegalStatusEnum'
+        default_cancellation_reasons:
+          type: array
+          items:
+            type: string
       required:
       - can_cancel_coop_membership
+      - default_cancellation_reasons
       - legal_status
       - subscribed_products
     ChangeTypeEnum:

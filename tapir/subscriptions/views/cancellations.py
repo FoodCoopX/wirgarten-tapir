@@ -68,6 +68,12 @@ class GetCancellationDataView(APIView):
             "legal_status": get_parameter_value(
                 ParameterKeys.ORGANISATION_LEGAL_STATUS, cache=cache
             ),
+            "default_cancellation_reasons": [
+                reason.strip()
+                for reason in get_parameter_value(
+                    ParameterKeys.MEMBER_CANCELLATION_REASON_CHOICES, cache=cache
+                ).split(";")
+            ],
         }
 
         return Response(

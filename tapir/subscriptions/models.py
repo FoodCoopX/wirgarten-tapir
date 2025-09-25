@@ -1,7 +1,8 @@
 from django.db import models
 
+from tapir.core.models import TapirModel
 from tapir.log.models import LogEntry
-from tapir.wirgarten.models import ProductType, GrowingPeriod
+from tapir.wirgarten.models import ProductType, GrowingPeriod, Member, Subscription
 from tapir.wirgarten.utils import format_subscription_list_html
 
 

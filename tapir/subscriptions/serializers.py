@@ -38,6 +38,7 @@ class CancellationDataSerializer(serializers.Serializer):
     can_cancel_coop_membership = serializers.BooleanField()
     subscribed_products = ProductForCancellationSerializer(many=True)
     legal_status = serializers.ChoiceField(choices=LEGAL_STATUS_OPTIONS)
+    default_cancellation_reasons = serializers.ListField(child=serializers.CharField())
 
 
 class CancelSubscriptionsViewResponseSerializer(serializers.Serializer):

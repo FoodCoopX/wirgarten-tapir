@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Modal, Spinner } from "react-bootstrap";
+import { Modal, Spinner } from "react-bootstrap";
 import {
   LegalStatusEnum,
   ProductForCancellation,
@@ -7,11 +7,11 @@ import {
 } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import "dayjs/locale/de";
-import TapirButton from "../../components/TapirButton.tsx";
-import ConfirmModal from "../../components/ConfirmModal.tsx";
-import { formatDateText } from "../../utils/formatDateText.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
+import CancellationStepSubscriptions from "./steps/CancellationStepSubscriptions.tsx";
+import CancellationStepReasons from "./steps/CancellationStepReasons.tsx";
+import CancellationStepConfirmation from "./steps/CancellationStepConfirmation.tsx";
 
 interface SubscriptionCancellationModalProps {
   onHide: () => void;
@@ -20,6 +20,8 @@ interface SubscriptionCancellationModalProps {
   csrfToken: string;
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
 }
+
+type CancellationStep = "subscriptions" | "reasons" | "confirmation";
 
 const SubscriptionCancellationModal: React.FC<
   SubscriptionCancellationModalProps
@@ -39,55 +41,44 @@ const SubscriptionCancellationModal: React.FC<
     useState(false);
   const [confirmationLoading, setConfirmationLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [defaultCancellationReasons, setDefaultCancellationReasons] = useState<
+    string[]
+  >([]);
+  const [currentStep, setCurrentStep] =
+    useState<CancellationStep>("subscriptions");
+  const [selectedCancellationReasons, setSelectedCancellationReasons] =
+    useState<string[]>([]);
+  const [customCancellationReason, setCustomCancellationReason] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
+    if (!show) {
+      return;
+    }
+
     setSelectedProducts([]);
     setErrors([]);
+    setCurrentStep("subscriptions");
 
-    if (show) {
-      setLoading(true);
-      api
-        .subscriptionsCancellationDataRetrieve({ memberId: memberId })
-        .then((data) => {
-          setSubscribedProducts(data.subscribedProducts);
-          setCanCancelCoopMembership(data.canCancelCoopMembership);
-          setLegalStatus(data.legalStatus);
-        })
-        .catch((error) =>
-          handleRequestError(
-            error,
-            "Fehler beim Laden der Kündigungsdaten",
-            setToastDatas,
-          ),
-        )
-        .finally(() => setLoading(false));
-    }
+    setLoading(true);
+    api
+      .subscriptionsCancellationDataRetrieve({ memberId: memberId })
+      .then((data) => {
+        setSubscribedProducts(data.subscribedProducts);
+        setCanCancelCoopMembership(data.canCancelCoopMembership);
+        setLegalStatus(data.legalStatus);
+        setDefaultCancellationReasons(data.defaultCancellationReasons);
+      })
+      .catch((error) =>
+        handleRequestError(
+          error,
+          "Fehler beim Laden der Kündigungsdaten",
+          setToastDatas,
+        ),
+      )
+      .finally(() => setLoading(false));
   }, [show]);
-
-  function changeSelection(product: ProductForCancellation, selected: boolean) {
-    if (selected && !selectedProducts.includes(product)) {
-      setSelectedProducts([...selectedProducts, product]);
-    } else if (!selected && selectedProducts.includes(product)) {
-      setSelectedProducts(
-        selectedProducts.filter((p: ProductForCancellation) => p !== product),
-      );
-    }
-  }
-
-  function getCheckboxLabel(subscribedProduct: ProductForCancellation) {
-    let result =
-      subscribedProduct.product.type.name +
-      " (" +
-      subscribedProduct.product.name +
-      ") zum " +
-      formatDateText(subscribedProduct.cancellationDate) +
-      " kündigen";
-    if (subscribedProduct.isInTrial) {
-      result += " (Probezeit)";
-    }
-    result += ".";
-    return result;
-  }
 
   function getMembershipText() {
     if (legalStatus === LegalStatusEnum.Association) {
@@ -96,35 +87,13 @@ const SubscriptionCancellationModal: React.FC<
     return "Beitrittserklärung zur Genossenschaft";
   }
 
-  function buildConfirmationModalText() {
-    return (
-      <>
-        <p>Möchtest du wirklich folgenden Verträge kündigen?</p>
-        <ul>
-          {selectedProducts.map(
-            (productForCancellation: ProductForCancellation) => {
-              return (
-                <li>
-                  {productForCancellation.product.type.name +
-                    " (" +
-                    productForCancellation.product.name +
-                    ") zum " +
-                    formatDateText(productForCancellation.cancellationDate)}
-                </li>
-              );
-            },
-          )}
-          {cancelCoopMembershipSelected && <li>{getMembershipText()}</li>}
-        </ul>
-      </>
-    );
-  }
-
   function onConfirm() {
     setConfirmationLoading(true);
+
     const productIds = selectedProducts.map(
       (productForCancellation) => productForCancellation.product.id!,
     );
+
     api
       .subscriptionsCancelSubscriptionsCreate({
         memberId: memberId,
@@ -136,9 +105,9 @@ const SubscriptionCancellationModal: React.FC<
           location.reload();
           setShowConfirmationModal(false);
           onHide();
-          return;
+        } else {
+          setErrors(response.errors);
         }
-        setErrors(response.errors);
       })
       .catch((error) =>
         handleRequestError(error, "Fehler beim Kündigen", setToastDatas),
@@ -159,88 +128,56 @@ const SubscriptionCancellationModal: React.FC<
             <h4>Verträge kündigen</h4>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {loading ? (
-            <Spinner />
-          ) : (
-            <Form
-              className={"d-flex flex-column gap-2"}
-              id={"subscriptionCancellationModalForm"}
-            >
-              {errors.map((error, index) => (
-                <div className={"text-danger"} key={index}>
-                  {error}
-                </div>
-              ))}
-
-              <Form.Text>
-                Wenn du früher kündigen möchtest, wende dich bitte an unsere
-                Verwaltung.
-              </Form.Text>
-
-              {subscribedProducts.map(
-                (subscribedProduct: ProductForCancellation) => {
-                  return (
-                    <Form.Group
-                      key={subscribedProduct.product.id}
-                      controlId={subscribedProduct.product.id}
-                    >
-                      <Form.Check
-                        onChange={(event) =>
-                          changeSelection(
-                            subscribedProduct,
-                            event.target.checked,
-                          )
-                        }
-                        required={false}
-                        checked={selectedProducts.includes(subscribedProduct)}
-                        label={getCheckboxLabel(subscribedProduct)}
-                      />
-                    </Form.Group>
-                  );
-                },
-              )}
-              {canCancelCoopMembership && (
-                <Form.Group controlId="cancelCoopMembership">
-                  <Form.Check
-                    onChange={(event) =>
-                      setCancelCoopMembershipSelected(event.target.checked)
-                    }
-                    required={false}
-                    checked={cancelCoopMembershipSelected}
-                    label={getMembershipText() + " widerrufen"}
-                  />
-                </Form.Group>
-              )}
-            </Form>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <TapirButton
-            variant={"outline-danger"}
-            icon={"contract_delete"}
-            text={"Verträge kündigen"}
-            onClick={() => setShowConfirmationModal(true)}
-            disabled={
-              !cancelCoopMembershipSelected && selectedProducts.length === 0
-            }
-            loading={confirmationLoading}
-          />
-        </Modal.Footer>
+        {loading ? (
+          <>
+            <Modal.Body>
+              <Spinner />
+            </Modal.Body>
+            <Modal.Footer />
+          </>
+        ) : (
+          <>
+            {currentStep === "subscriptions" && (
+              <CancellationStepSubscriptions
+                errors={errors}
+                subscribedProducts={subscribedProducts}
+                selectedProducts={selectedProducts}
+                setSelectedProducts={setSelectedProducts}
+                canCancelCoopMembership={canCancelCoopMembership}
+                membershipText={getMembershipText()}
+                cancelCoopMembershipSelected={cancelCoopMembershipSelected}
+                setCancelCoopMembershipSelected={
+                  setCancelCoopMembershipSelected
+                }
+                goToNextStep={() => setCurrentStep("reasons")}
+              />
+            )}
+            {currentStep === "reasons" && (
+              <CancellationStepReasons
+                goToNextStep={() => setCurrentStep("confirmation")}
+                selectedCancellationReasons={selectedCancellationReasons}
+                setSelectedCancellationReasons={setSelectedCancellationReasons}
+                defaultCancellationReasons={defaultCancellationReasons}
+                customCancellationReason={customCancellationReason}
+                setCustomCancellationReason={setCustomCancellationReason}
+                goToPreviousStep={() => setCurrentStep("subscriptions")}
+              />
+            )}
+            {currentStep === "confirmation" && (
+              <CancellationStepConfirmation
+                selectedCancellationReasons={selectedCancellationReasons}
+                selectedProducts={selectedProducts}
+                onConfirm={onConfirm}
+                cancelCoopMembershipSelected={cancelCoopMembershipSelected}
+                membershipText={getMembershipText()}
+                customCancellationReasons={customCancellationReason}
+                goToPreviousStep={() => setCurrentStep("reasons")}
+                confirmationLoading={confirmationLoading}
+              />
+            )}
+          </>
+        )}
       </Modal>
-      <ConfirmModal
-        message={buildConfirmationModalText()}
-        onCancel={() => setShowConfirmationModal(false)}
-        confirmButtonIcon={"contract_delete"}
-        confirmButtonText={"Kündigung bestätigen"}
-        confirmButtonVariant={"danger"}
-        open={showConfirmationModal}
-        title={"Verträge kündigen bestätigen"}
-        loading={confirmationLoading}
-        onConfirm={() => {
-          onConfirm();
-        }}
-      />
     </>
   );
 };
