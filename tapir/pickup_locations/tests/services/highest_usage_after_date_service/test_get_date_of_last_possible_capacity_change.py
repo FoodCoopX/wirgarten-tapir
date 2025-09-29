@@ -10,7 +10,7 @@ from tapir.wirgarten.tests.factories import (
     MemberPickupLocationFactory,
     MemberFactory,
 )
-from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
+from tapir.wirgarten.tests.test_utils import TapirIntegrationTest, mock_timezone
 
 
 class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
@@ -93,3 +93,15 @@ class TestGetDateOfLastPossibleCapacityChange(TapirIntegrationTest):
         )
 
         self.assertEqual(datetime.date(year=2023, month=5, day=14), result)
+
+    def test_getDateOfLastPossibleCapacityChange_noRelevantChangeAvailable_returnsEndOfTheCurrentYear(
+        self,
+    ):
+        pickup_location = PickupLocationFactory.create()
+        mock_timezone(self, datetime.datetime(year=2022, month=7, day=8))
+
+        result = HighestUsageAfterDateService.get_date_of_last_possible_capacity_change(
+            pickup_location=pickup_location, cache={}
+        )
+
+        self.assertEqual(datetime.date(year=2022, month=12, day=31), result)
