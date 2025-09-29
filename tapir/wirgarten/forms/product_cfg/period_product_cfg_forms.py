@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.subscriptions.config import (
+    NOTICE_PERIOD_UNIT_WEEKS,
+)
 from tapir.subscriptions.services.notice_period_manager import NoticePeriodManager
 from tapir.utils.forms import DateInput
 from tapir.wirgarten.constants import NO_DELIVERY, DeliveryCycle
@@ -114,11 +117,19 @@ class ProductTypeForm(forms.Form):
         if get_parameter_value(
             ParameterKeys.SUBSCRIPTION_AUTOMATIC_RENEWAL, cache=cache
         ):
+            help_text = _("Anzahl an Monate")
+            if (
+                get_parameter_value(
+                    ParameterKeys.SUBSCRIPTION_DEFAULT_NOTICE_PERIOD_UNIT, cache=cache
+                )
+                == NOTICE_PERIOD_UNIT_WEEKS
+            ):
+                help_text = _("Anzahl an Wochen")
             self.fields["notice_period"] = forms.IntegerField(
                 initial=initial_notice_period,
                 required=True,
                 label=_("Kündigungsfrist"),
-                help_text=_("Anzahl an Monate"),
+                help_text=help_text,
             )
 
         self.fields["tax_rate"] = forms.FloatField(
