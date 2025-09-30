@@ -55,8 +55,10 @@
             {% endif %}
             {% include 'wirgarten/generic/action-button.html' with onclick='handleResendVerifyEmail()' disabled=True title='Email Verifizierungslink senden' type='primary' icon='mark_email_read' class='needs-member' %}
             <div style="width: 1em"></div>
-            <span id="subscription_cancellation_button"></span>
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleDeleteMember()' disabled=True title='Mitglied löschen' type='danger' icon='delete' class='needs-member' %}
+            <div class="d-flex gap-2">
+                <span id="subscription_cancellation_button"></span>
+                <span id="member_delete_button"></span>
+            </div>
         {% endif %}
     </span>
 {% endblock %}
@@ -214,12 +216,6 @@
             const url = "{% url 'wirgarten:member_resend_verify_email' pk='-----' %}".replace('/-----/', '/' + params.member + '/');
             const newParams = {next: window.location.pathname + Tapir.stringifyUrlParams(params)};
             window.location.replace(url + Tapir.stringifyUrlParams(newParams));
-        })
-    }
-
-    const handleDeleteMember = () => {
-        ConfirmationModal.open('Bist du dir sicher?', 'Möchtest du dieses Mitglied wirklich löschen?', 'Löschen', 'danger', () => {
-            alert("Not yet implemented!")
         })
     }
 

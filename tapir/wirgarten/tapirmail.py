@@ -378,9 +378,8 @@ def create_or_update_recipient(sender, instance, created, **kwargs):
 def delete_recipient(sender, instance, **kwargs):
     try:
         static_segment = StaticSegment.objects.get(name="Warteliste")
-        recipient = StaticSegmentRecipient.objects.get(
+        StaticSegmentRecipient.objects.filter(
             segment=static_segment, email=instance.email
-        )
-        recipient.delete()
+        ).delete()
     except (StaticSegment.DoesNotExist, StaticSegmentRecipient.DoesNotExist):
         pass

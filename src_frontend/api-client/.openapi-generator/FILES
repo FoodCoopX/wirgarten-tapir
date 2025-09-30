@@ -1,3 +1,4 @@
+apis/CoopApi.ts
 apis/DeliveriesApi.ts
 apis/GenericExportsApi.ts
 apis/PickupLocationsApi.ts

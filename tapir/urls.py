@@ -40,6 +40,7 @@ urlpatterns = [
     path("log/", include("tapir.log.urls")),
     path("config/", include("tapir.configuration.urls")),
     path("tapir/", include("tapir.wirgarten.urls")),
+    path("coop/", include("tapir.coop.urls")),
     path(
         "mailing/",
         TapirMailView.as_view(),

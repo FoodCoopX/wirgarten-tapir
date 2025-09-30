@@ -3,6 +3,44 @@ info:
   title: ''
   version: 0.0.0
 paths:
+  /coop/api/delete_member:
+    delete:
+      operationId: coop_api_delete_member_destroy
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
+  /coop/api/get_member_details:
+    get:
+      operationId: coop_api_get_member_details_retrieve
+      parameters:
+      - in: query
+        name: member_id
+        schema:
+          type: string
+      tags:
+      - coop
+      security:
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
   /deliveries/api/cancel_joker:
     post:
       operationId: deliveries_api_cancel_joker_create
@@ -3988,9 +4026,9 @@ components:
       description: |-
         * `no_delivery` - Keine Lieferung/Abholung
         * `weekly` - 1x pro Woche
-        * `odd_weeks` - 2x pro Monat (ungerade KW)
-        * `even_weeks` - 2x pro Monat (gerade KW)
-        * `every_four_weeks` - Jede 4. Woche (Startpunkt in der Konfig)
+        * `odd_weeks` - Jede 2. Woche (ungerade KW)
+        * `even_weeks` - Jede 2. Woche (gerade KW)
+        * `every_four_weeks` - Jede 4. Woche
     DeliveryDayAdjustment:
       type: object
       properties:
