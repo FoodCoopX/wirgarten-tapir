@@ -295,3 +295,41 @@ class TapirCache:
             return
         for key in cache["categories"][category]:
             del cache[key]
+
+    @classmethod
+    def get_all_coop_share_transactions_by_member_id(cls, cache: dict):
+        def compute():
+            transactions = CoopShareTransaction.objects.all()
+            transactions_by_member_id = {}
+            for transaction in transactions:
+                if transaction.member_id not in transactions_by_member_id.keys():
+                    transactions_by_member_id[transaction.member_id] = []
+                transactions_by_member_id[transaction.member_id].append(transaction)
+
+            return transactions_by_member_id
+
+        return get_from_cache_or_compute(
+            cache, "all_coop_share_transactions_by_member", compute
+        )
+
+    @classmethod
+    def get_number_of_shares_for_member_id_at_date(
+        cls, cache: dict, reference_date: datetime.date, member_id: str
+    ):
+        number_of_shares_by_member = get_from_cache_or_compute(
+            cache, "number_of_shares_by_member", lambda: {}
+        )
+
+        def compute():
+            transactions_for_this_member = (
+                cls.get_all_coop_share_transactions_by_member_id(cache=cache).get(
+                    member_id, []
+                )
+            )
+            return sum(
+                [transaction.quantity for transaction in transactions_for_this_member]
+            )
+
+        return get_from_cache_or_compute(
+            number_of_shares_by_member, reference_date, compute
+        )

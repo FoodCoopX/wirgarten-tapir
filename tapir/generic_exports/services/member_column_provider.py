@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Dict
 
 from icecream import ic
 
+from tapir.coop.services.membership_cancellation_manager import (
+    MembershipCancellationManager,
+)
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -15,7 +18,9 @@ from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
 from tapir.utils.services.tapir_cache import TapirCache
+from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.service.products import get_current_growing_period
+from tapir.wirgarten.utils import format_subscription_list_html
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import Member, Product
@@ -91,6 +96,36 @@ class MemberColumnProvider:
                 display_name="Abholort",
                 description="",
                 get_value=cls.get_value_member_pickup_location,
+            ),
+            ExportSegmentColumn(
+                id="member_post_address",
+                display_name="Post Adresse",
+                description="",
+                get_value=cls.get_value_member_post_address,
+            ),
+            ExportSegmentColumn(
+                id="member_entry_date",
+                display_name="Eintrittsdatum",
+                description="Eintrittsdatum in der Genossenschaft",
+                get_value=cls.get_value_member_entry_date,
+            ),
+            ExportSegmentColumn(
+                id="member_membership_status",
+                display_name="Mitgliedschaftsstatus",
+                description="Status der Mitgliedschaft in der Genossenschaft",
+                get_value=cls.get_value_member_membership_status,
+            ),
+            ExportSegmentColumn(
+                id="member_subscription_summary",
+                display_name="Produktanteile",
+                description="Zusammenfassung der aktueller Verträge",
+                get_value=cls.get_value_member_subscription_summary,
+            ),
+            ExportSegmentColumn(
+                id="member_payment_rhythm",
+                display_name="Zahlungsintervall",
+                description="",
+                get_value=cls.get_value_member_payment_rhythm,
             ),
         ]
         return base_columns + cls.build_product_columns()
@@ -227,3 +262,38 @@ class MemberColumnProvider:
         return TapirCache.get_pickup_location_by_id(
             cache=cache, pickup_location_id=pickup_location_id
         ).name
+
+    @classmethod
+    def get_value_member_post_address(cls, member: Member, _, __):
+        return UserUtils.build_display_address(
+            street=member.street,
+            street_2=member.street_2,
+            postcode=member.postcode,
+            city=member.city,
+        )
+
+    @classmethod
+    def get_value_member_entry_date(cls, member: Member, _, __):
+        return MembershipCancellationManager.get_coop_entry_date(member)
+
+    @classmethod
+    def get_value_member_membership_status(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        nb_shares = TapirCache.get_number_of_shares_for_member_id_at_date(
+            member_id=member.id, reference_date=reference_datetime.date(), cache=cache
+        )
+        if nb_shares == 0:
+            return "Inaktiv"
+        return "Aktiv"
+
+    @classmethod
+    def get_value_member_subscription_summary(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        return ", ".join(
+            [
+                f"{product.name}:{cls.get_value_amount_active_subscriptions(member=member, reference_datetime=reference_datetime, cache=cache, product=product)}"
+                for product in TapirCache.get_all_products(cache=cache)
+            ]
+        )
