@@ -2,22 +2,29 @@ from __future__ import annotations
 
 import datetime
 import locale
+from functools import partial
 from typing import TYPE_CHECKING, Dict
 
+from icecream import ic
+
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
+from tapir.pickup_locations.services.member_pickup_location_service import (
+    MemberPickupLocationService,
+)
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.service.products import get_current_growing_period
 
 if TYPE_CHECKING:
-    from tapir.wirgarten.models import Member
+    from tapir.wirgarten.models import Member, Product
 
 
 class MemberColumnProvider:
     @classmethod
     def get_member_columns(cls):
-        return [
+        base_columns = [
             ExportSegmentColumn(
                 id="member_first_name",
                 display_name="Vorname",
@@ -79,7 +86,52 @@ class MemberColumnProvider:
                 description="Gutschrift [Anzahl genutzte Joker] Joker in [Vertragsjahr]",
                 get_value=cls.get_value_member_joker_credit_details,
             ),
+            ExportSegmentColumn(
+                id="member_pickup_location",
+                display_name="Abholort",
+                description="",
+                get_value=cls.get_value_member_pickup_location,
+            ),
         ]
+        return base_columns + cls.build_product_columns()
+
+    @classmethod
+    def build_product_columns(cls):
+        from tapir.wirgarten.models import Product
+
+        columns = []
+        for product in Product.objects.all():
+            columns.append(
+                ExportSegmentColumn(
+                    id=f"member_product_type_{product.name}_{product.id}",
+                    display_name=f"Anzahl an {product.name}",
+                    description=f"Anzahl an Produktanteil für {product.name}, nur aktive Verträge",
+                    get_value=partial(
+                        cls.get_value_amount_active_subscriptions,
+                        product=product,
+                    ),
+                )
+            )
+        return columns
+
+    @classmethod
+    def get_value_amount_active_subscriptions(
+        cls,
+        member: Member,
+        reference_datetime: datetime.datetime,
+        cache: dict,
+        product: Product,
+    ):
+        subscriptions = [
+            subscription
+            for subscription in TapirCache.get_subscriptions_active_at_date(
+                reference_date=reference_datetime.date(), cache=cache
+            )
+            if subscription.member_id == member.id
+            and subscription.product_id == product.id
+        ]
+
+        return str(sum([subscription.quantity for subscription in subscriptions]))
 
     @classmethod
     def get_value_member_first_name(cls, member: Member, _, __):
@@ -157,3 +209,21 @@ class MemberColumnProvider:
         date_from = growing_period.start_date.strftime("%d.%m.%Y")
         date_to = reference_datetime.strftime("%d.%m.%Y")
         return f"Gutschrift {nb_jokers} genutzte Joker in Vertragsjahr {date_from}-{date_to}"
+
+    @classmethod
+    def get_value_member_pickup_location(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: Dict
+    ):
+        pickup_location_id = (
+            MemberPickupLocationService.get_member_pickup_location_id_from_cache(
+                member_id=member.id,
+                reference_date=reference_datetime.date(),
+                cache=cache,
+            )
+        )
+        if pickup_location_id is None:
+            return "Keine"
+
+        return TapirCache.get_pickup_location_by_id(
+            cache=cache, pickup_location_id=pickup_location_id
+        ).name

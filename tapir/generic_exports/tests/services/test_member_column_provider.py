@@ -6,12 +6,14 @@ from tapir.generic_exports.services.member_column_provider import MemberColumnPr
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.models import Member
+from tapir.wirgarten.models import Member, MemberPickupLocation
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,
     GrowingPeriodFactory,
+    PickupLocationFactory,
+    ProductFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -134,3 +136,91 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         self.assertEqual(
             "Gutschrift 2 genutzte Joker in Vertragsjahr 01.01.2025-03.01.2025", result
         )
+
+    def test_getValueMemberPickupLocation_default_returnsCorrectLocationName(self):
+        member = MemberFactory.create()
+        pickup_location_1 = PickupLocationFactory.create(name="correct location")
+        PickupLocationFactory.create(name="wrong location")
+        MemberPickupLocation.objects.create(
+            member=member,
+            pickup_location=pickup_location_1,
+            valid_from=datetime.date(year=2025, month=1, day=2),
+        )
+
+        result = MemberColumnProvider.get_value_member_pickup_location(
+            member, datetime.datetime(year=2025, month=1, day=3), {}
+        )
+
+        self.assertEqual("correct location", result)
+
+    def test_getValueAmountActiveSubscription_noSubscription_returns0(self):
+        member = MemberFactory.create()
+
+        result = MemberColumnProvider.get_value_amount_active_subscriptions(
+            member,
+            datetime.datetime(year=2025, month=1, day=3),
+            {},
+            product=ProductFactory.create(),
+        )
+
+        self.assertEqual("0", result)
+
+    def test_getValueAmountActiveSubscription_subscriptionInThePast_returns0(self):
+        member = MemberFactory.create()
+        product = ProductFactory.create()
+        SubscriptionFactory.create(
+            product=product,
+            member=member,
+            start_date=datetime.date(year=2024, month=1, day=3),
+            end_date=datetime.date(year=2025, month=1, day=2),
+        )
+
+        result = MemberColumnProvider.get_value_amount_active_subscriptions(
+            member,
+            datetime.datetime(year=2025, month=1, day=3),
+            {},
+            product=product,
+        )
+
+        self.assertEqual("0", result)
+
+    def test_getValueAmountActiveSubscription_subscriptionInTheFuture_returns0(self):
+        member = MemberFactory.create()
+        product = ProductFactory.create()
+        SubscriptionFactory.create(
+            product=product,
+            member=member,
+            start_date=datetime.date(year=2025, month=1, day=4),
+            end_date=datetime.date(year=2025, month=1, day=6),
+        )
+
+        result = MemberColumnProvider.get_value_amount_active_subscriptions(
+            member,
+            datetime.datetime(year=2025, month=1, day=3),
+            {},
+            product=product,
+        )
+
+        self.assertEqual("0", result)
+
+    def test_getValueAmountActiveSubscription_subscriptionActive_returnsCorrectQuantity(
+        self,
+    ):
+        member = MemberFactory.create()
+        product = ProductFactory.create()
+        SubscriptionFactory.create(
+            product=product,
+            member=member,
+            start_date=datetime.date(year=2024, month=1, day=3),
+            end_date=datetime.date(year=2025, month=1, day=2),
+            quantity=7,
+        )
+
+        result = MemberColumnProvider.get_value_amount_active_subscriptions(
+            member,
+            datetime.datetime(year=2025, month=1, day=1),
+            {},
+            product=product,
+        )
+
+        self.assertEqual("7", result)
