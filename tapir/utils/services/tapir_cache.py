@@ -299,8 +299,8 @@ class TapirCache:
     @classmethod
     def get_all_coop_share_transactions_by_member_id(cls, cache: dict):
         def compute():
-            transactions = CoopShareTransaction.objects.all()
-            transactions_by_member_id = {}
+            transactions = CoopShareTransaction.objects.order_by("valid_at")
+            transactions_by_member_id: dict[str, list[CoopShareTransaction]] = {}
             for transaction in transactions:
                 if transaction.member_id not in transactions_by_member_id.keys():
                     transactions_by_member_id[transaction.member_id] = []
@@ -327,7 +327,11 @@ class TapirCache:
                 )
             )
             return sum(
-                [transaction.quantity for transaction in transactions_for_this_member]
+                [
+                    transaction.quantity
+                    for transaction in transactions_for_this_member
+                    if transaction.valid_at <= reference_date
+                ]
             )
 
         return get_from_cache_or_compute(

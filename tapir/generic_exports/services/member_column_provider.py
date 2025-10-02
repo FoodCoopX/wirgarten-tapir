@@ -5,8 +5,6 @@ import locale
 from functools import partial
 from typing import TYPE_CHECKING, Dict
 
-from icecream import ic
-
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
@@ -20,7 +18,7 @@ from tapir.subscriptions.services.delivery_price_calculator import (
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.user_utils import UserUtils
 from tapir.wirgarten.service.products import get_current_growing_period
-from tapir.wirgarten.utils import format_subscription_list_html
+from tapir.wirgarten.utils import format_date
 
 if TYPE_CHECKING:
     from tapir.wirgarten.models import Member, Product
@@ -126,6 +124,30 @@ class MemberColumnProvider:
                 display_name="Zahlungsintervall",
                 description="",
                 get_value=cls.get_value_member_payment_rhythm,
+            ),
+            ExportSegmentColumn(
+                id="member_amount_to_pay",
+                display_name="Beitragshöhe",
+                description="",
+                get_value=cls.get_value_member_amount_to_pay,
+            ),
+            ExportSegmentColumn(
+                id="member_solidarity_contribution",
+                display_name="Solidarbeitrag",
+                description="",
+                get_value=cls.get_value_member_solidarity_contribution,
+            ),
+            ExportSegmentColumn(
+                id="member_membership_end_date",
+                display_name="Kündigungsdatum (Genossenschaft)",
+                description="",
+                get_value=cls.get_value_member_membership_end_date,
+            ),
+            ExportSegmentColumn(
+                id="member_subscription_end_dates",
+                display_name="Kündigungsdaten (Produkte)",
+                description="",
+                get_value=cls.get_value_member_subscription_end_dates,
             ),
         ]
         return base_columns + cls.build_product_columns()
@@ -291,9 +313,108 @@ class MemberColumnProvider:
     def get_value_member_subscription_summary(
         cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
+        product_to_quantity_map = {
+            product.name: cls.get_value_amount_active_subscriptions(
+                member=member,
+                reference_datetime=reference_datetime,
+                cache=cache,
+                product=product,
+            )
+            for product in TapirCache.get_all_products(cache=cache)
+        }
         return ", ".join(
             [
-                f"{product.name}:{cls.get_value_amount_active_subscriptions(member=member, reference_datetime=reference_datetime, cache=cache, product=product)}"
-                for product in TapirCache.get_all_products(cache=cache)
+                f"{product_name}:{quantity}"
+                for product_name, quantity in product_to_quantity_map.items()
+                if quantity != "0"
             ]
         )
+
+    @classmethod
+    def get_value_member_payment_rhythm(cls, _, __, ___):
+        # Temporary column before we merge the payment rhythm logic from the biotop-dev branch to this prod branch
+        return "Monatlich"
+
+    @classmethod
+    def get_value_member_amount_to_pay(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        subscriptions = [
+            subscription
+            for subscription in TapirCache.get_subscriptions_active_at_date(
+                reference_date=reference_datetime.date(), cache=cache
+            )
+            if subscription.member_id == member.id
+        ]
+
+        amount_to_pay = sum(
+            [
+                subscription.total_price(
+                    reference_date=reference_datetime.date(), cache=cache
+                )
+                for subscription in subscriptions
+            ]
+        )
+
+        return locale.format_string("%.2f", amount_to_pay)
+
+    @classmethod
+    def get_value_member_solidarity_contribution(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        # Temporary column, needs to be updated when we merge the solibeitrag story US 5.2.4 #618
+        return "0"
+
+    @classmethod
+    def get_value_member_membership_end_date(cls, member: Member, _, cache: dict):
+        transactions = TapirCache.get_all_coop_share_transactions_by_member_id(
+            cache=cache
+        ).get(member.id, None)
+        if transactions is None or len(transactions) == 0:
+            return ""
+
+        nb_shares_after_last_transaction = (
+            TapirCache.get_number_of_shares_for_member_id_at_date(
+                cache=cache,
+                member_id=member.id,
+                reference_date=transactions[-1].valid_at,
+            )
+        )
+        if nb_shares_after_last_transaction > 0:
+            return ""
+
+        return f"{format_date(transactions[-1].valid_at)}: {transactions[-1].quantity} Anteile"
+
+    @classmethod
+    def get_value_member_subscription_end_dates(cls, member: Member, _, cache: dict):
+        member_subscriptions = [
+            subscription
+            for subscription in TapirCache.get_all_subscriptions(cache=cache)
+            if subscription.member_id == member.id
+        ]
+
+        end_dates = []
+        for product in TapirCache.get_all_products(cache=cache):
+            product_subscriptions = [
+                subscription
+                for subscription in member_subscriptions
+                if subscription.product_id == product.id
+            ]
+            if len(product_subscriptions) == 0:
+                continue
+
+            all_subscriptions_cancelled = all(
+                [
+                    subscription.cancellation_ts is not None
+                    for subscription in product_subscriptions
+                ]
+            )
+            if not all_subscriptions_cancelled:
+                continue
+
+            max_end_date = max(
+                [subscription.end_date for subscription in product_subscriptions]
+            )
+            end_dates.append(f"{product.name}:{format_date(max_end_date)}")
+
+        return ", ".join(end_dates)

@@ -1,12 +1,14 @@
 import datetime
 from unittest.mock import patch, Mock, call
 
+from tapir_mail.service.shortcuts import make_timezone_aware
+
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.models import Member, MemberPickupLocation
+from tapir.wirgarten.models import Member, MemberPickupLocation, CoopShareTransaction
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -14,6 +16,8 @@ from tapir.wirgarten.tests.factories import (
     GrowingPeriodFactory,
     PickupLocationFactory,
     ProductFactory,
+    CoopShareTransactionFactory,
+    ProductPriceFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -224,3 +228,181 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         )
 
         self.assertEqual("7", result)
+
+    def test_getValueMemberMembershipStatus_memberHasShares_returnsActive(self):
+        member = MemberFactory.create()
+        CoopShareTransactionFactory.create(
+            member=member, valid_at=datetime.date(year=2025, month=1, day=3)
+        )
+
+        result = MemberColumnProvider.get_value_member_membership_status(
+            member,
+            datetime.datetime(year=2025, month=1, day=4),
+            {},
+        )
+
+        self.assertEqual("Aktiv", result)
+
+    def test_getValueMemberMembershipStatus_memberDoesntHaveShares_returnsInactive(
+        self,
+    ):
+        member = MemberFactory.create()
+        CoopShareTransactionFactory.create(
+            member=member, valid_at=datetime.date(year=2025, month=1, day=5)
+        )
+
+        result = MemberColumnProvider.get_value_member_membership_status(
+            member,
+            datetime.datetime(year=2025, month=1, day=4),
+            {},
+        )
+
+        self.assertEqual("Inaktiv", result)
+
+    def test_getValueMemberSubscriptionSummary_default_returnsCorrectSummary(self):
+        member = MemberFactory.create()
+        SubscriptionFactory.create(
+            member=member,
+            product__name="p1",
+            quantity=4,
+            start_date=datetime.date(year=2025, month=1, day=3),
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            product__name="p2",
+            quantity=7,
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            product__name="p3",
+            quantity=2,
+            start_date=datetime.date(year=2025, month=1, day=12),
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+
+        result = MemberColumnProvider.get_value_member_subscription_summary(
+            member,
+            datetime.datetime(year=2025, month=1, day=4),
+            {},
+        )
+
+        self.assertEqual("p1:4, p2:7", result)
+
+    def test_getValueMemberAmountToPay_default_returnsCorrectAmount(self):
+        member = MemberFactory.create()
+        product_1, product_2, product_3 = ProductFactory.create_batch(size=3)
+        SubscriptionFactory.create(
+            member=member,
+            product=product_1,
+            quantity=4,
+            start_date=datetime.date(year=2025, month=1, day=3),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            solidarity_price_percentage=0,
+        )
+        ProductPriceFactory.create(price=1.25, product=product_1)
+        SubscriptionFactory.create(
+            member=member,
+            product=product_2,
+            quantity=7,
+            start_date=datetime.date(year=2025, month=1, day=1),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            solidarity_price_percentage=0,
+        )
+        ProductPriceFactory.create(price=2.33, product=product_2)
+        SubscriptionFactory.create(
+            member=member,
+            product=product_3,
+            quantity=2,
+            start_date=datetime.date(year=2025, month=1, day=12),
+            end_date=datetime.date(year=2025, month=12, day=31),
+            solidarity_price_percentage=0,
+        )
+        ProductPriceFactory.create(price=28, product=product_3)
+
+        result = MemberColumnProvider.get_value_member_amount_to_pay(
+            member,
+            datetime.datetime(year=2025, month=1, day=4),
+            {},
+        )
+
+        self.assertEqual("21.31", result)
+
+    def test_getValueMemberMembershipEndDate_membershipDoesntEnd_returnsEmptyString(
+        self,
+    ):
+        member = MemberFactory.create()
+        CoopShareTransactionFactory.create(member=member)
+
+        result = MemberColumnProvider.get_value_member_membership_end_date(
+            member,
+            None,
+            {},
+        )
+
+        self.assertEqual("", result)
+
+    def test_getValueMemberMembershipEndDate_membershipEnds_returnsCorrectEndDate(
+        self,
+    ):
+        member = MemberFactory.create()
+        CoopShareTransactionFactory.create(
+            member=member, quantity=2, valid_at=datetime.date(year=2025, month=1, day=4)
+        )
+        CoopShareTransactionFactory.create(
+            member=member,
+            quantity=-2,
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.CANCELLATION,
+            valid_at=datetime.date(year=2025, month=1, day=28),
+        )
+
+        result = MemberColumnProvider.get_value_member_membership_end_date(
+            member,
+            datetime.datetime(year=2024, month=2, day=3),
+            {},
+        )
+
+        self.assertEqual("28.01.2025: -2 Anteile", result)
+
+    def test_getValueMemberSubscriptionEndDates_default_returnsCorrectEndDates(
+        self,
+    ):
+        member = MemberFactory.create()
+        product_1 = ProductFactory.create(name="p1")
+        product_2 = ProductFactory.create(name="p2")
+
+        # all cancelled: get the max end date
+        SubscriptionFactory.create(
+            member=member,
+            product=product_1,
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2025, month=1, day=12)
+            ),
+            end_date=datetime.date(year=2025, month=12, day=28),
+        )
+        SubscriptionFactory.create(
+            member=member,
+            product=product_1,
+            cancellation_ts=make_timezone_aware(
+                datetime.datetime(year=2025, month=1, day=12)
+            ),
+            end_date=datetime.date(year=2025, month=11, day=30),
+        )
+
+        # not cancelled: should not appear in the result
+        SubscriptionFactory.create(
+            member=member,
+            product=product_2,
+            cancellation_ts=None,
+            end_date=datetime.date(year=2025, month=12, day=31),
+        )
+
+        result = MemberColumnProvider.get_value_member_subscription_end_dates(
+            member,
+            datetime.datetime(year=2024, month=2, day=3),
+            {},
+        )
+
+        self.assertEqual("p1:28.12.2025", result)

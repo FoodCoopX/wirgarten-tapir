@@ -22,7 +22,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from tapir.accounts.models import (
     TapirUser,
-    KeycloakUserManager,
     KeycloakUserQuerySetManager,
 )
 from tapir.configuration.parameter import get_parameter_value
