@@ -151,7 +151,7 @@ class TapirCache:
     @classmethod
     def get_all_products(cls, cache: Dict):
         return get_from_cache_or_compute(
-            cache, "all_products", lambda: set(Product.objects.order_by("id"))
+            cache, "all_products", lambda: set(Product.objects.all())
         )
 
     @classmethod

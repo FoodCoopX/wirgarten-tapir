@@ -12,12 +12,12 @@ from tapir.wirgarten.service.products import get_available_product_types
 
 
 class CooperativeShareForm(forms.Form):
-    min_shares: int = 0
-
     def __init__(self, *args, **kwargs):
+        self.min_shares = 0
         show_student_checkbox = kwargs.pop("show_student_checkbox", True)
         self.member_is_student = kwargs.pop("member_is_student", False)
         self.cache = kwargs.pop("cache", {})
+        self.member = kwargs.pop("member", None)
         super().__init__(*args, **kwargs)
         initial = kwargs.get("initial", {})
         self.intro_templates = initial.pop("intro_templates", None)
@@ -33,15 +33,19 @@ class CooperativeShareForm(forms.Form):
             )
         )
 
+        if initial != {}:
+            for prod in self.harvest_shares_products:
+                key = BASE_PRODUCT_FIELD_PREFIX + prod.name
+                if key in initial and initial.get(key, 0) is not None:
+                    self.min_shares += initial.get(key, 0) * prod.min_coop_shares
+
         default_min_shares = get_parameter_value(
             ParameterKeys.COOP_MIN_SHARES, cache=self.cache
         )
-        for prod in self.harvest_shares_products:
-            key = BASE_PRODUCT_FIELD_PREFIX + prod.name
-            if key in initial and initial.get(key, 0) is not None:
-                self.min_shares += initial.get(key, 0) * prod.min_coop_shares
         if self.min_shares < default_min_shares:
             self.min_shares = default_min_shares
+        if self.member is not None:
+            self.min_shares -= self.member.coop_shares_quantity
 
         self.min_amount = self.min_shares * self.coop_share_price
 

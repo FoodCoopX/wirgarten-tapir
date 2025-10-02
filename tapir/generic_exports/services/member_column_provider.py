@@ -313,6 +313,9 @@ class MemberColumnProvider:
     def get_value_member_subscription_summary(
         cls, member: Member, reference_datetime: datetime.datetime, cache: dict
     ):
+        products = TapirCache.get_all_products(cache=cache)
+        products = sorted(products, key=lambda product: product.name)
+
         product_to_quantity_map = {
             product.name: cls.get_value_amount_active_subscriptions(
                 member=member,
@@ -320,7 +323,7 @@ class MemberColumnProvider:
                 cache=cache,
                 product=product,
             )
-            for product in TapirCache.get_all_products(cache=cache)
+            for product in products
         }
         return ", ".join(
             [
