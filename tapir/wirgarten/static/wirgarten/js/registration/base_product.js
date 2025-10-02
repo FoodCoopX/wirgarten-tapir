@@ -75,7 +75,7 @@ var initHarvestShareSummary = (
       customSoliElem.value = undefined;
     }
 
-    filterSoliPriceOptions(totalWithoutSoli, solidarity_total);
+    filterSoliPriceOptions(totalWithoutSoli, solidarity_total, solidarity_unit);
   };
 
   const handleChange = (event, max_shares) => {
@@ -95,16 +95,16 @@ var initHarvestShareSummary = (
       e.target.value = 0;
     }
 
-    if (e.target.value < 0) {
-      e.target.value = 0;
-    }
-
     e.target.value = parseFloat(e.target.value).toFixed(2);
 
     handleChange(e);
   });
 
-  const filterSoliPriceOptions = (shares_total, solidarity_total) => {
+  const filterSoliPriceOptions = (
+    shares_total,
+    solidarity_total,
+    solidarity_unit,
+  ) => {
     const selected = soliElem.value;
 
     options = [...origOptions].filter((o) => {
@@ -113,7 +113,15 @@ var initHarvestShareSummary = (
       }
 
       const value = parseFloat(o.value);
-      return value >= 0 || -value * shares_total < solidarity_total;
+      if (value >= 0) {
+        return true;
+      }
+
+      let usedSolidarity = -value;
+      if (solidarity_unit === "percentage") {
+        usedSolidarity = (-value / 100) * shares_total;
+      }
+      return usedSolidarity <= solidarity_total;
     });
 
     while (soliElem.firstChild) {
