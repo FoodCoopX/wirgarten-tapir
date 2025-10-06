@@ -109,18 +109,26 @@ class BestellWizardOrderFulfiller:
         subscriptions: list[Subscription],
         cache: dict,
     ):
-        shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
-            reference_date=get_today(cache), apply_buffer_time=True, cache=cache
-        )
+        shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
+        at_least_one_trial_period_found = False
         if len(subscriptions) > 0:
-            shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
             for subscription in subscriptions:
-                shares_valid_at = min(
-                    shares_valid_at,
-                    TrialPeriodManager.get_end_of_trial_period(
-                        subscription=subscription, cache=cache
-                    ),
+                end_of_trial_period = TrialPeriodManager.get_end_of_trial_period(
+                    subscription=subscription, cache=cache
                 )
+                if end_of_trial_period is not None:
+                    shares_valid_at = min(
+                        shares_valid_at,
+                        TrialPeriodManager.get_end_of_trial_period(
+                            subscription=subscription, cache=cache
+                        ),
+                    )
+                    at_least_one_trial_period_found = True
+
+        if not at_least_one_trial_period_found:
+            shares_valid_at = ContractStartDateCalculator.get_next_contract_start_date(
+                reference_date=get_today(cache), apply_buffer_time=True, cache=cache
+            )
 
         CoopSharePurchaseHandler.buy_cooperative_shares(
             quantity=number_of_shares,
