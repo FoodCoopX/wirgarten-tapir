@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
 from tapir.configuration.parameter import get_parameter_value
+from tapir.core.config import THEME_G9
 from tapir.wirgarten.forms.subscription import BASE_PRODUCT_FIELD_PREFIX
 from tapir.wirgarten.models import HarvestShareProduct
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -56,7 +57,9 @@ class CooperativeShareForm(forms.Form):
             initial=self.min_amount,
         )
 
-        if show_student_checkbox:
+        if show_student_checkbox and get_parameter_value(
+            ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES, cache=self.cache
+        ):
             self.fields["is_student"] = forms.BooleanField(
                 required=False,
                 label=_(
@@ -64,10 +67,20 @@ class CooperativeShareForm(forms.Form):
                 ),
                 help_text="Die Immatrikulationsbescheinigung muss per Mail an <a href='mailto:lueneburg@wirgarten.com'>lueneburg@wirgarten.com</a> gesendet werden.",
             )
+
+        label = _(
+            "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
+        )
+        if (
+            get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache=self.cache)
+            == THEME_G9
+        ):
+            label = _(
+                "Ja, ich habe die Satzung und die Kündigungsfrist von 4 Wochen zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
+            )
+
         self.fields["statute_consent"] = forms.BooleanField(
-            label=_(
-                "Ja, ich habe die Satzung und die Kündigungsfrist von einem Jahr zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
-            ),
+            label=label,
             help_text=f'<a href="{get_parameter_value(ParameterKeys.COOP_STATUTE_LINK, cache=self.cache)}" target="_blank">Satzung der Genossenschaft</a>',
             required=False,
         )

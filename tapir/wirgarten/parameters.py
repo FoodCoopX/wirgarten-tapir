@@ -766,6 +766,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             order_priority=3,
         )
 
+        parameter_definition(
+            key=ParameterKeys.ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES,
+            label="Studenten dürfen ohne Genossenschaft-Anteile Produkte bestellen",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=False,
+            description="Wenn aktiviert kommt ein extra Checkbox im Bestellwizard, die wenn angekreuzt erlaubt Studentinnen eine Bestellung abzuschliessen ohne Genossenschaft-Anteile.",
+            category=ParameterCategory.ORGANIZATION,
+            meta=ParameterMeta(show_only_when=legal_status_is_cooperative),
+        )
+
     @classmethod
     def import_definitions_solidarity(cls):
         from tapir.subscriptions.services.solidarity_validator import (

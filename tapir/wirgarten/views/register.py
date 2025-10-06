@@ -10,7 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G, THEME_G9
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -212,6 +212,14 @@ class RegistrationWizardViewBase(CookieWizardView):
                 "description"
             ] = "Abholort - Wo möchtest du dein Gemüse abholen?"
 
+        if (
+            get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache=cache)
+            == THEME_G9
+        ):
+            steps_kwargs["coop_shares"][
+                "description"
+            ] = "Genossenschaft - Mit wie vielen Anteilen möchtest du dich an deiner GrüneNeune Hammelburg beteiligen?"
+
         return super().as_view(
             *args,
             **kwargs,
@@ -279,7 +287,10 @@ class RegistrationWizardViewBase(CookieWizardView):
         elif self.steps.current == STEP_COOP_SHARES_NOT_AVAILABLE:
             return ["registration/steps/coop_shares_not_available.html"]
         elif self.steps.current == STEP_SUMMARY:
-            return ["registration/steps/summary.html"]
+            return [
+                f"registration/steps/{get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/summary.html",
+                "registration/steps/summary.html",
+            ]
         return ["wirgarten/registration/registration_form.html"]
 
     # gather data from dependent forms
