@@ -414,9 +414,15 @@ class RegistrationWizardViewBase(CookieWizardView):
             if self.growing_period and self.growing_period.start_date > get_today():
                 start_date = self.growing_period.start_date
             # coop membership starts after the cancellation period, so I call get_next_start_date() to add 1 month
-            actual_coop_start = get_next_contract_start_date(
-                ref_date=start_date, cache=self.cache
-            )
+
+            if get_parameter_value(
+                ParameterKeys.TRIAL_PERIOD_ENABLED, cache=self.cache
+            ):
+                actual_coop_start = get_next_contract_start_date(
+                    ref_date=start_date, cache=self.cache
+                )
+            else:
+                actual_coop_start = start_date
 
             mandate_ref = create_mandate_ref(member, cache=self.cache)
             if not member.is_student and STEP_COOP_SHARES in form_dict.keys():
