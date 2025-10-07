@@ -56,6 +56,11 @@ REGISTRATION_STEPS = {
         "description": "Willst du einen Leinöl-Zusatzanteil?",
         "intro_template": "registration/steps/oil.intro.html",
     },
+    "additional_product_Südfrüchte": {
+        "title": "Südfrüchte",
+        "description": "Südfrüchte",
+        "intro_template": "registration/steps/southfruits.intro.html",
+    },
     "pickup_location": {
         "title": "Abholort",
         "description": "Abholort - Wo möchtest du dein Gemüse abholen?",
