@@ -3,6 +3,7 @@ from unittest.mock import patch, Mock
 
 from django.test import SimpleTestCase
 
+from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.coop.services.coop_share_purchase_handler import CoopSharePurchaseHandler
 from tapir.wirgarten.models import CoopShareTransaction
 from tapir.wirgarten.parameter_keys import ParameterKeys
@@ -10,6 +11,7 @@ from tapir.wirgarten.tests.test_utils import mock_timezone
 
 
 class TestBuyCooperativeShares(SimpleTestCase):
+    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction")
     @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
     @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
     @patch.object(CoopShareTransaction, "objects")
@@ -22,6 +24,7 @@ class TestBuyCooperativeShares(SimpleTestCase):
         mock_coop_share_transaction_objects: Mock,
         mock_send_warning_mail_if_necessary: Mock,
         mock_get_parameter_value: Mock,
+        mock_populate_transaction: Mock,
     ):
         now = datetime.datetime(year=2024, month=1, day=17)
         now = mock_timezone(self, now)
@@ -36,9 +39,14 @@ class TestBuyCooperativeShares(SimpleTestCase):
         transaction = Mock()
         mock_coop_share_transaction_objects.create.return_value = transaction
         mock_get_parameter_value.return_value = 75
+        actor = Mock()
 
         result = CoopSharePurchaseHandler.buy_cooperative_shares(
-            quantity=12, member=member, shares_valid_at=shares_valid_at, cache=cache
+            quantity=12,
+            member=member,
+            shares_valid_at=shares_valid_at,
+            cache=cache,
+            actor=actor,
         )
 
         mock_get_or_create_mandate_ref.assert_called_once_with(
@@ -67,9 +75,13 @@ class TestBuyCooperativeShares(SimpleTestCase):
         mock_get_parameter_value.assert_called_once_with(
             key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
         )
+        mock_populate_transaction.assert_called_once_with(
+            coop_share_transaction=transaction, actor=actor, user=member
+        )
 
         self.assertEqual(result, transaction)
 
+    @patch.object(CoopSharesPurchasedLogEntry, "populate_transaction")
     @patch("tapir.coop.services.coop_share_purchase_handler.get_parameter_value")
     @patch.object(CoopSharePurchaseHandler, "send_warning_mail_if_necessary")
     @patch.object(CoopShareTransaction, "objects")
@@ -82,6 +94,7 @@ class TestBuyCooperativeShares(SimpleTestCase):
         mock_coop_share_transaction_objects: Mock,
         mock_send_warning_mail_if_necessary: Mock,
         mock_get_parameter_value: Mock,
+        mock_populate_transaction: Mock,
     ):
         now = datetime.datetime(year=2024, month=1, day=17)
         now = mock_timezone(self, now)
@@ -96,9 +109,14 @@ class TestBuyCooperativeShares(SimpleTestCase):
         transaction = Mock()
         mock_coop_share_transaction_objects.create.return_value = transaction
         mock_get_parameter_value.return_value = 75
+        actor = Mock()
 
         result = CoopSharePurchaseHandler.buy_cooperative_shares(
-            quantity=12, member=member, shares_valid_at=shares_valid_at, cache=cache
+            quantity=12,
+            member=member,
+            shares_valid_at=shares_valid_at,
+            cache=cache,
+            actor=actor,
         )
 
         mock_get_or_create_mandate_ref.assert_called_once_with(
@@ -125,6 +143,9 @@ class TestBuyCooperativeShares(SimpleTestCase):
         )
         mock_get_parameter_value.assert_called_once_with(
             key=ParameterKeys.COOP_SHARE_PRICE, cache=cache
+        )
+        mock_populate_transaction.assert_called_once_with(
+            coop_share_transaction=transaction, actor=actor, user=member
         )
 
         self.assertEqual(result, transaction)

@@ -403,6 +403,7 @@ class UserGenerator:
             member=member,
             shares_valid_at=member.date_joined.date(),
             cache=cache,
+            actor=None,
         )
 
     @classmethod

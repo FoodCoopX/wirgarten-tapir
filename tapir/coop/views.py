@@ -108,6 +108,7 @@ class ExistingMemberPurchasesSharesApiView(APIView):
                     cache=self.cache,
                 ),
                 cache=self.cache,
+                actor=request.user,
             )
 
         return Response("OK")

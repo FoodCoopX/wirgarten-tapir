@@ -452,6 +452,7 @@ class RegistrationWizardViewBase(CookieWizardView):
                     member=member,
                     shares_valid_at=actual_coop_start,
                     cache=self.cache,
+                    actor=member,
                 )
 
             if STEP_BASE_PRODUCT in form_dict and is_base_product_selected(

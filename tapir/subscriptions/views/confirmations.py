@@ -441,7 +441,7 @@ class RevokeChangesApiView(APIView):
                 subscriptions=member_subscriptions, actor=actor, user=member
             ).save()
 
-        share_transactions_by_member = {}
+        share_transactions_by_member: dict[Member, list[CoopShareTransaction]] = {}
         for share_transaction in share_transactions:
             if share_transaction.member not in share_transactions_by_member.keys():
                 share_transactions_by_member[share_transaction.member] = []

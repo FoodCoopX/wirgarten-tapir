@@ -41,18 +41,20 @@ class BestellWizardOrderFulfiller:
         request,
         cache: dict,
     ):
+
         is_student = validated_serializer_data["student_status_enabled"]
         member = cls.create_member(
             personal_data=validated_serializer_data["personal_data"],
             is_student=is_student,
             cache=cache,
         )
+        actor = request.user if request.user.is_authenticated else member
         MemberPaymentRhythmService.assign_payment_rhythm_to_member(
             member=member,
             rhythm=validated_serializer_data["payment_rhythm"],
             valid_from=get_today(cache=cache),
             cache=cache,
-            actor=request.user if request.user.is_authenticated else None,
+            actor=actor,
         )
 
         order = TapirOrderBuilder.build_tapir_order_from_shopping_cart_serializer(
@@ -61,7 +63,7 @@ class BestellWizardOrderFulfiller:
         subscriptions = cls.create_subscriptions(
             order=order,
             member=member,
-            actor=request.user if request.user.is_authenticated else None,
+            actor=actor,
             contract_start_date=contract_start_date,
             cache=cache,
         )
@@ -71,7 +73,7 @@ class BestellWizardOrderFulfiller:
                 validated_serializer_data["pickup_location_ids"][0],
                 member=member,
                 valid_from=contract_start_date,
-                actor=request.user if request.user.is_authenticated else member,
+                actor=actor,
                 cache=cache,
             )
 
@@ -81,6 +83,7 @@ class BestellWizardOrderFulfiller:
                 member=member,
                 subscriptions=subscriptions,
                 cache=cache,
+                actor=actor,
             )
 
         send_order_confirmation(
@@ -108,6 +111,7 @@ class BestellWizardOrderFulfiller:
         member: Member,
         subscriptions: list[Subscription],
         cache: dict,
+        actor: TapirUser,
     ):
         shares_valid_at = datetime.date(year=datetime.MAXYEAR, month=12, day=31)
         at_least_one_trial_period_found = False
@@ -135,6 +139,7 @@ class BestellWizardOrderFulfiller:
             member=member,
             shares_valid_at=shares_valid_at,
             cache=cache,
+            actor=actor,
         )
 
     @classmethod

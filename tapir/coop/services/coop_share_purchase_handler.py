@@ -4,7 +4,9 @@ from functools import partial
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
+from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
+from tapir.coop.models import CoopSharesPurchasedLogEntry
 from tapir.utils.shortcuts import is_running_tests
 from tapir.wirgarten.models import (
     Member,
@@ -26,6 +28,7 @@ class CoopSharePurchaseHandler:
         member: Member,
         shares_valid_at: datetime.date,
         cache: dict,
+        actor: TapirUser | None,
     ):
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 
@@ -36,7 +39,7 @@ class CoopSharePurchaseHandler:
             cache=cache,
         )
 
-        coop_share_tx = CoopShareTransaction.objects.create(
+        coop_share_transaction = CoopShareTransaction.objects.create(
             member=member,
             quantity=quantity,
             share_price=get_parameter_value(
@@ -60,7 +63,11 @@ class CoopSharePurchaseHandler:
             cache=cache,
         )
 
-        return coop_share_tx
+        CoopSharesPurchasedLogEntry.populate_transaction(
+            coop_share_transaction=coop_share_transaction, actor=actor, user=member
+        ).save()
+
+        return coop_share_transaction
 
     @classmethod
     def create_or_update_payment(

@@ -143,6 +143,7 @@ const CoopSharesCard: React.FC<CoopSharesCardProps> = ({
         onSharesPurchased={() => {
           loadShareData();
           setShowModal(false);
+          location.reload();
         }}
         canBuyMoreShares={canBuyMoreShares()}
       />
