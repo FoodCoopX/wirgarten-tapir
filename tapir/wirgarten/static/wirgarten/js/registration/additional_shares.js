@@ -1,15 +1,12 @@
 var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
-  console.log(additional_share_prices)
+  capacity_total = parseFloat(capacity_total);
   const calculatePrice = (chicken_share) => {
     const [key, price] = chicken_share.split(":");
-    const elem = document.querySelector(
-      `[name$='${key}']`
-    );
-    console.log(key, price, elem)
+    const elem = document.querySelector(`[name$='${key}']`);
 
     if (!elem) return 0;
     let value = 0;
-    if (elem.type == "checkbox") {
+    if (elem.type === "checkbox") {
       value = elem.checked ? 1 : 0;
     } else {
       value = elem.value;
@@ -27,7 +24,6 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
     if (event) {
       const value = parseInt(event.target.value);
       const max = parseInt(event.target.max || 100);
-      console.log(value)
       if (isNaN(value)) {
         event.target.value = event.target.checked ? 1 : 0;
       } else if (value < 0) {
@@ -37,8 +33,14 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
       }
     }
 
-    while (calculateTotal() > capacity_total) {
-      event.target.value--;
+    if (event.target.type === "checkbox") {
+      if (calculateTotal() > capacity_total) {
+        event.target.checked = false;
+      }
+    } else {
+      while (calculateTotal() > capacity_total) {
+        event.target.value--;
+      }
     }
 
     resultElem.innerText = calculateTotal().toFixed(2);
@@ -46,10 +48,8 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
 
   additional_share_prices.forEach((share) => {
     const [key, price] = share.split(":");
-    let input = document.querySelector(
-      `[name$='${key}']`
-    );
-    
+    let input = document.querySelector(`[name$='${key}']`);
+
     if (!input) return;
     if (input.max) {
       input.max = Math.max(0, Math.floor(capacity_total / price));

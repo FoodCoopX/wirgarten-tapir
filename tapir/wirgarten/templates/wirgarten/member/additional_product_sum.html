@@ -8,7 +8,7 @@
 <script>
   const growingPeriodSelect = document.getElementById("id_growing_period");
   if(!growingPeriodSelect) {
-      initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}})
+      initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}}[0])
   } else {
       growingPeriodSelect.addEventListener("change", function() {
         initAdditionalShareSummary('{{form.prices}}'.split(','), {{form.free_capacity | safe}}[growingPeriodSelect.selectedIndex])
