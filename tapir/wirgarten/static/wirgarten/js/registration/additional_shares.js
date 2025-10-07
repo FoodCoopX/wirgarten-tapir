@@ -33,16 +33,6 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
       }
     }
 
-    if (event.target.type === "checkbox") {
-      if (calculateTotal() > capacity_total) {
-        event.target.checked = false;
-      }
-    } else {
-      while (calculateTotal() > capacity_total) {
-        event.target.value--;
-      }
-    }
-
     resultElem.innerText = calculateTotal().toFixed(2);
   };
 
@@ -51,13 +41,7 @@ var initAdditionalShareSummary = (additional_share_prices, capacity_total) => {
     let input = document.querySelector(`[name$='${key}']`);
 
     if (!input) return;
-    if (input.max) {
-      input.max = Math.max(0, Math.floor(capacity_total / price));
 
-      if (input.max == 0) {
-        input.readOnly = true;
-      }
-    }
     input.addEventListener("change", handleChange);
   });
 
