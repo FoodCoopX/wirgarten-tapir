@@ -65,11 +65,15 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
-  const [innerDate, setInnerDate] = useState("");
+  const [innerDate, setInnerDate] = useState<string | undefined>();
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
 
   useEffect(() => {
-    setInnerDate(moment(personalData.birthdate).format("DD.MM.YYYY"));
+    if (personalData.birthdate === undefined) {
+      setInnerDate(undefined);
+    } else {
+      setInnerDate(moment(personalData.birthdate).format("DD.MM.YYYY"));
+    }
   }, [personalData]);
 
   useEffect(() => {
@@ -304,8 +308,9 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
                   className:
                     personalData.birthdate !== undefined &&
                     !isBirthdateValid(personalData.birthdate)
-                      ? "text-danger"
-                      : "",
+                      ? "form-control text-danger"
+                      : "form-control",
+                  placeholder: "TT.MM.JJJJ",
                 }}
               />
             </Form.Group>

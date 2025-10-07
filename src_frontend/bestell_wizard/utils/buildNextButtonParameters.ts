@@ -12,6 +12,7 @@ export function buildNextButtonParametersForProductType(
   currentStep: string,
   productsTypesInWaitingList: Set<PublicProductType>,
   productTypeIdsOverCapacity: string[],
+  productIdsOverCapacity: string[],
 ): NextButtonParameters {
   const productType = publicProductTypes.find(
     (productType) => productType.id === currentStep,
@@ -37,9 +38,19 @@ export function buildNextButtonParametersForProductType(
 
   if (isProductTypeOrdered(productType, shoppingCart)) {
     let text = productType.name + " zur Bestellung hinzufügen";
+
+    let hasProductOverCapacity = false;
+    for (const product of productType.products) {
+      if (productIdsOverCapacity.includes(product.id!)) {
+        hasProductOverCapacity = true;
+        break;
+      }
+    }
+
     if (
       productsTypesInWaitingList.has(productType) ||
-      productTypeIdsOverCapacity.includes(productType.id!)
+      productTypeIdsOverCapacity.includes(productType.id!) ||
+      hasProductOverCapacity
     ) {
       text = productType.name + " zum Wartelisten-Eintrag hinzufügen";
     }

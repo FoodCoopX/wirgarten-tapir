@@ -98,7 +98,7 @@ class TestGetCapacityUsageAtDate(TapirIntegrationTest):
             end_date=current_growing_period.start_date - datetime.timedelta(days=1),
         )
         Subscription.objects.update(
-            period=current_growing_period,
+            period=past_growing_period,
             start_date=past_growing_period.start_date,
             end_date=past_growing_period.end_date,
         )

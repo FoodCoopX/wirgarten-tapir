@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import BestellWizardIntro from "./steps/BestellWizardIntro.tsx";
-import { Card, Col, ListGroup, OverlayTrigger, Row, Spinner, Tooltip } from "react-bootstrap";
+import {
+  Card,
+  Col,
+  ListGroup,
+  OverlayTrigger,
+  Row,
+  Spinner,
+  Tooltip,
+} from "react-bootstrap";
 
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
@@ -13,7 +21,7 @@ import {
   PublicPickupLocation,
   type PublicProductType,
   WaitingListApi,
-  WaitingListEntryDetails
+  WaitingListEntryDetails,
 } from "../api-client";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import BestellWizardProductType from "./steps/BestellWizardProductType.tsx";
@@ -32,7 +40,7 @@ import {
   buildNextButtonParametersForIntro,
   buildNextButtonParametersForPersonalData,
   buildNextButtonParametersForPickupLocation,
-  buildNextButtonParametersForProductType
+  buildNextButtonParametersForProductType,
 } from "./utils/buildNextButtonParameters.ts";
 import BestellWizardNextButton from "./components/BestellWizardNextButton.tsx";
 import ProductWaitingListModal from "./components/ProductWaitingListModal.tsx";
@@ -593,6 +601,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }
 
   function onConfirmOrder() {
+    if (personalData.birthdate === undefined) {
+      alert("Die Geburtsdatum ist nicht gültig");
+      return;
+    }
+
     setConfirmOrderLoading(true);
 
     if (waitingListEntryDetails !== undefined) {
@@ -629,7 +642,20 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     bestellWizardApi
       .bestellWizardBestellWizardConfirmOrderCreate({
         bestellWizardConfirmOrderRequestRequest: {
-          personalData: personalData,
+          personalData: {
+            accountOwner: personalData.accountOwner,
+            birthdate: personalData.birthdate,
+            city: personalData.city,
+            country: personalData.country,
+            email: personalData.email,
+            iban: personalData.iban,
+            firstName: personalData.firstName,
+            lastName: personalData.firstName,
+            phoneNumber: personalData.phoneNumber,
+            postcode: personalData.postcode,
+            street: personalData.street,
+            street2: personalData.street2,
+          },
           sepaAllowed: sepaAllowed,
           contractAccepted: contractAccepted,
           statuteAccepted: statuteAccepted,
@@ -742,6 +768,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
           currentStep,
           productsTypesInWaitingList,
           productTypeIdsOverCapacity,
+          productIdsOverCapacity,
         );
     }
 
