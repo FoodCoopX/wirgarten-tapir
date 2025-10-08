@@ -102,10 +102,8 @@ class PdfExportBuilder:
         rendered_template = template_object.render(context)
         document = weasyprint.HTML(
             string=rendered_template,
-            base_url=settings.WEASYPRINT_BASEURL,
-            url_fetcher=django_url_fetcher,
         )
-        return document.render(font_config=cls._WEASYPRINT_FONT_CONFIG)
+        return document.render()
 
     @classmethod
     def build_template_object(cls, template_string):
