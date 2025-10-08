@@ -87,6 +87,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             validate_html,
             validate_iso_datetime,
             validate_base_product_type_exists,
+            validate_date_is_first_of_month,
         )
         from tapir.pickup_locations.services.basket_size_capacities_service import (
             BasketSizeCapacitiesService,
@@ -373,6 +374,16 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 validators=[MemberPaymentRhythmService.validate_rhythms]
             ),
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.PAYMENT_START_DATE,
+            label="Start-Datum für die Zahlungen",
+            datatype=TapirParameterDatatype.DATE,
+            initial_value=datetime.date.today().replace(day=1),
+            description="Ab welche Datum sollen Zahlungen eingezogen werden. Es ist relevant wenn Verträge in Tapir importiert werden wo außerhalb von Tapir Zahlungen schon eingezogen sind.",
+            category=ParameterCategory.PAYMENT,
+            meta=ParameterMeta(validators=[validate_date_is_first_of_month]),
         )
 
         self.parameter_definition(

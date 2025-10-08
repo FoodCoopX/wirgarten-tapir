@@ -138,6 +138,14 @@ class MonthPaymentBuilder:
                 rhythm=rhythm, reference_date=first_of_month, cache=cache
             )
         )
+
+        payment_start_date = get_parameter_value(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
+        first_day_of_rhythm_period = max(payment_start_date, first_day_of_rhythm_period)
+        if first_day_of_rhythm_period > last_day_of_rhythm_period:
+            return None
+
         mandate_ref = get_or_create_mandate_ref(member=member, cache=cache)
 
         already_paid = cls.get_already_paid_amount(

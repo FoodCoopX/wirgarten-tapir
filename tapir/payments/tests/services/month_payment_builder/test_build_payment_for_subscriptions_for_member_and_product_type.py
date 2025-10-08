@@ -9,6 +9,7 @@ from tapir.payments.services.member_payment_rhythm_service import (
 )
 from tapir.payments.services.month_payment_builder import MonthPaymentBuilder
 from tapir.wirgarten.models import Payment
+from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
     SubscriptionFactory,
@@ -18,6 +19,7 @@ from tapir.wirgarten.tests.factories import (
 
 
 class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
     @patch.object(MonthPaymentBuilder, "get_payment_range_start")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
@@ -34,6 +36,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_payment_range_start: Mock,
+        mock_get_parameter_value: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -49,6 +52,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_payment_range_start.return_value = datetime.date(
             year=2026, month=7, day=24
         )
+        mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -118,7 +122,11 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             mandate_ref=mandate_ref,
             product_type=product_type,
         )
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
 
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
     @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
@@ -133,6 +141,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
+        mock_get_parameter_value: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -143,6 +152,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_or_create_mandate_ref.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 17.5
         mock_get_total_to_pay.return_value = 17.5
+        mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -193,7 +203,11 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             cache=cache,
         )
         mock_get_payment_due_date_on_month.assert_not_called()
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
 
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
     @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
@@ -208,6 +222,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_already_paid_amount: Mock,
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
+        mock_get_parameter_value: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -218,6 +233,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_or_create_mandate_ref.return_value = mandate_ref
         mock_get_already_paid_amount.return_value = 20
         mock_get_total_to_pay.return_value = 17.5
+        mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -268,7 +284,11 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             cache=cache,
         )
         mock_get_payment_due_date_on_month.assert_not_called()
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
 
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
     @patch.object(MonthPaymentBuilder, "get_payment_range_start")
     @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
     @patch.object(MonthPaymentBuilder, "get_total_to_pay")
@@ -285,6 +305,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_total_to_pay: Mock,
         mock_get_payment_due_date_on_month: Mock,
         mock_get_payment_range_start: Mock,
+        mock_get_parameter_value: Mock,
     ):
         range_start = datetime.date(year=2026, month=7, day=1)
         mock_get_first_day_of_rhythm_period.return_value = range_start
@@ -300,6 +321,7 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
         mock_get_payment_range_start.return_value = datetime.date(
             year=2026, month=7, day=10
         )
+        mock_get_parameter_value.return_value = datetime.date(year=2026, month=6, day=1)
 
         first_of_month = Mock()
         product_type = ProductTypeFactory.build(name="pt_test_name")
@@ -368,4 +390,175 @@ class TestBuildPaymentForSubscriptionsForMemberAndProductType(SimpleTestCase):
             last_day_of_rhythm_period=range_end,
             mandate_ref=mandate_ref,
             product_type=product_type,
+        )
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
+
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
+    @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
+    @patch.object(MonthPaymentBuilder, "get_total_to_pay")
+    @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
+    @patch("tapir.payments.services.month_payment_builder.get_or_create_mandate_ref")
+    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
+    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    def test_buildPaymentForSubscriptionsForMemberAndProductType_rangeEndIsBeforePaymentsStart_returnsNone(
+        self,
+        mock_get_first_day_of_rhythm_period: Mock,
+        mock_get_last_day_of_rhythm_period: Mock,
+        mock_get_or_create_mandate_ref: Mock,
+        mock_get_already_paid_amount: Mock,
+        mock_get_total_to_pay: Mock,
+        mock_get_payment_due_date_on_month: Mock,
+        mock_get_parameter_value: Mock,
+    ):
+        range_start = datetime.date(year=2026, month=7, day=1)
+        mock_get_first_day_of_rhythm_period.return_value = range_start
+        range_end = datetime.date(year=2026, month=7, day=31)
+        mock_get_last_day_of_rhythm_period.return_value = range_end
+        member = MemberFactory.build()
+        mock_get_parameter_value.return_value = datetime.date(year=2026, month=8, day=1)
+
+        first_of_month = Mock()
+        rhythm = Mock()
+        cache = Mock()
+        generated_payments = Mock()
+
+        payment = MonthPaymentBuilder.build_payment_for_subscriptions_for_member_and_product_type(
+            member=member,
+            first_of_month=first_of_month,
+            subscriptions=Mock(),
+            product_type=Mock(),
+            rhythm=rhythm,
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=False,
+        )
+
+        self.assertIsNone(
+            payment,
+            "Payment should not have been built because the payment start date from the config is after the end of the interval",
+        )
+
+        mock_get_first_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_last_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_or_create_mandate_ref.assert_not_called()
+        mock_get_already_paid_amount.assert_not_called()
+        mock_get_total_to_pay.assert_not_called()
+        mock_get_payment_due_date_on_month.assert_not_called()
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
+        )
+
+    @patch("tapir.payments.services.month_payment_builder.get_parameter_value")
+    @patch.object(MonthPaymentBuilder, "get_payment_range_start")
+    @patch.object(MonthPaymentBuilder, "get_payment_due_date_on_month")
+    @patch.object(MonthPaymentBuilder, "get_total_to_pay")
+    @patch.object(MonthPaymentBuilder, "get_already_paid_amount")
+    @patch("tapir.payments.services.month_payment_builder.get_or_create_mandate_ref")
+    @patch.object(MemberPaymentRhythmService, "get_last_day_of_rhythm_period")
+    @patch.object(MemberPaymentRhythmService, "get_first_day_of_rhythm_period")
+    def test_buildPaymentForSubscriptionsForMemberAndProductType_paymentStartIsInsideTheRange_returnsPartialPayment(
+        self,
+        mock_get_first_day_of_rhythm_period: Mock,
+        mock_get_last_day_of_rhythm_period: Mock,
+        mock_get_or_create_mandate_ref: Mock,
+        mock_get_already_paid_amount: Mock,
+        mock_get_total_to_pay: Mock,
+        mock_get_payment_due_date_on_month: Mock,
+        mock_get_payment_range_start: Mock,
+        mock_get_parameter_value: Mock,
+    ):
+        range_start = datetime.date(year=2026, month=6, day=1)
+        mock_get_first_day_of_rhythm_period.return_value = range_start
+        range_end = datetime.date(year=2026, month=7, day=31)
+        mock_get_last_day_of_rhythm_period.return_value = range_end
+        member = MemberFactory.build()
+        mandate_ref = MandateReferenceFactory.build(member=member, ref="test_ref")
+        mock_get_or_create_mandate_ref.return_value = mandate_ref
+        mock_get_already_paid_amount.return_value = 0
+        mock_get_total_to_pay.return_value = 17.5
+        due_date = datetime.date(year=2026, month=6, day=5)
+        mock_get_payment_due_date_on_month.return_value = due_date
+        mock_get_payment_range_start.return_value = datetime.date(
+            year=2026, month=7, day=1
+        )
+        payment_start_date = datetime.date(year=2026, month=7, day=12)
+        mock_get_parameter_value.return_value = payment_start_date
+
+        first_of_month = Mock()
+        product_type = ProductTypeFactory.build(name="pt_test_name")
+        subscriptions = SubscriptionFactory.build_batch(
+            size=3, product__type=product_type, member=member, mandate_ref=mandate_ref
+        )
+        rhythm = Mock()
+        cache = Mock()
+        generated_payments = Mock()
+
+        payment = MonthPaymentBuilder.build_payment_for_subscriptions_for_member_and_product_type(
+            member=member,
+            first_of_month=first_of_month,
+            subscriptions=subscriptions,
+            product_type=product_type,
+            rhythm=rhythm,
+            cache=cache,
+            generated_payments=generated_payments,
+            in_trial=False,
+        )
+
+        self.assertIsNotNone(
+            payment,
+            "There should be a payment since the range end is after the payment start date from the config",
+        )
+        self.assertEqual(due_date, payment.due_date)
+        self.assertEqual(Decimal(17.5), payment.amount)
+        self.assertEqual(mandate_ref, payment.mandate_ref)
+        self.assertEqual(Payment.PaymentStatus.DUE, payment.status)
+        self.assertEqual("pt_test_name", payment.type)
+        self.assertEqual(
+            datetime.date(year=2026, month=7, day=1),
+            payment.subscription_payment_range_start,
+        )
+        self.assertEqual(range_end, payment.subscription_payment_range_end)
+
+        mock_get_first_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_last_day_of_rhythm_period.assert_called_once_with(
+            rhythm=rhythm, reference_date=first_of_month, cache=cache
+        )
+        mock_get_or_create_mandate_ref.assert_called_once_with(
+            member=member, cache=cache
+        )
+        mock_get_already_paid_amount.assert_called_once_with(
+            range_start=payment_start_date,
+            range_end=range_end,
+            mandate_ref=mandate_ref,
+            product_type_name="pt_test_name",
+            cache=cache,
+            generated_payments=generated_payments,
+        )
+        mock_get_total_to_pay.assert_called_once_with(
+            range_start=payment_start_date,
+            range_end=range_end,
+            subscriptions=subscriptions,
+            cache=cache,
+        )
+        mock_get_payment_due_date_on_month.assert_called_once_with(
+            reference_date=first_of_month, cache=cache
+        )
+        mock_get_payment_range_start.assert_called_once_with(
+            cache=cache,
+            first_day_of_rhythm_period=payment_start_date,
+            generated_payments=generated_payments,
+            last_day_of_rhythm_period=range_end,
+            mandate_ref=mandate_ref,
+            product_type=product_type,
+        )
+        mock_get_parameter_value.assert_called_once_with(
+            key=ParameterKeys.PAYMENT_START_DATE, cache=cache
         )

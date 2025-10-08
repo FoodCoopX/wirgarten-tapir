@@ -1,16 +1,16 @@
 import datetime
 import io
 import re
-from datetime import date
 
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from lxml import etree
 
 from tapir.wirgarten.models import GrowingPeriod, ProductType
+from tapir.wirgarten.utils import format_date
 
 
-def validate_growing_period_overlap(start_date: date, end_date: date):
+def validate_growing_period_overlap(start_date: datetime.date, end_date: datetime.date):
     """
     Validates if the given start and end dates would overlap with and existing GrowingPeriod.
 
@@ -28,7 +28,7 @@ def validate_growing_period_overlap(start_date: date, end_date: date):
         )
 
 
-def validate_date_range(start_date: date, end_date: date):
+def validate_date_range(start_date: datetime.date, end_date: datetime.date):
     """
     Validates if the given date range is valid.
 
@@ -102,4 +102,11 @@ def validate_base_product_type_exists(base_product_type_id: str):
     if not ProductType.objects.filter(id=base_product_type_id).exists():
         raise ValidationError(
             f"Ungültige ProduktTyp ID ({base_product_type_id}). Versuche die Seite neue zu laden. Wenn das Problem wieder auftaucht, kontaktiere bitte ein Admin."
+        )
+
+
+def validate_date_is_first_of_month(date: datetime.date):
+    if date.day != 1:
+        raise ValidationError(
+            f"Ungültiges Datum: {format_date(date)}, nur Monatserste sind erlaubt."
         )
