@@ -18,7 +18,7 @@ from tapir.wirgarten.utils import format_date, get_today
 @dataclass
 class Attachment:
     file_name: str
-    content: str
+    content: bytes
     mime_type: str
 
 

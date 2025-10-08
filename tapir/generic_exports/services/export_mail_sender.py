@@ -21,7 +21,7 @@ class ExportMailSender:
         attachments = [
             Attachment(
                 file_name=export_result.file.name,
-                content=export_result.file.file.decode("utf-8"),
+                content=export_result.file.file,
                 mime_type=mimetypes.guess_type(export_result.file.name)[0],
             )
             for export_result in export_results
