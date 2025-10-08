@@ -14,19 +14,19 @@ interface MemberProfilePaymentRhythmModalProps {
   setToastDatas: React.Dispatch<React.SetStateAction<ToastData[]>>;
   show: boolean;
   onHide: () => void;
+  allowedRhythms: {
+    [key: string]: string;
+  };
 }
 
 const MemberProfilePaymentRhythmModal: React.FC<
   MemberProfilePaymentRhythmModalProps
-> = ({ memberId, csrfToken, setToastDatas, show, onHide }) => {
+> = ({ memberId, csrfToken, setToastDatas, show, onHide, allowedRhythms }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [dateOfNextChange, setDateOfNextChange] = useState<Date>();
   const [loading, setLoading] = useState(true);
   const [currentRhythm, setCurrentRhythm] = useState("monthly");
   const [newRhythm, setNewRhythm] = useState("monthly");
-  const [allowedRhythms, setAllowedRhythms] = useState<{
-    [key: string]: string;
-  }>({});
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<MemberPaymentRhythm[]>([]);
 
@@ -39,7 +39,6 @@ const MemberProfilePaymentRhythmModal: React.FC<
       .paymentsApiMemberPaymentRhythmDataRetrieve({ memberId: memberId })
       .then((response) => {
         setDateOfNextChange(response.dateOfNextRhythmChange);
-        setAllowedRhythms(response.allowedRhythms);
         setCurrentRhythm(response.currentRhythm);
         setHistory(response.rhythmHistory);
 
