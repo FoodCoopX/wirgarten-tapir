@@ -17,6 +17,8 @@ import moment from "moment";
 import "moment/dist/locale/de";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
+import { ShoppingCart } from "../types/ShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
 
 moment.locale("de");
 
@@ -42,6 +44,7 @@ interface BestellWizardPersonalDataProps {
   ) => void;
   waitingListEntryDetails?: WaitingListEntryDetails;
   settings: BestellWizardSettings;
+  shoppingCart: ShoppingCart;
 }
 
 const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
@@ -62,6 +65,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   setEmailAddressAlreadyInUseLoading,
   waitingListEntryDetails,
   settings,
+  shoppingCart,
 }) => {
   const [emailAddress, setEmailAddress] = useState("");
   const [controller, setController] = useState<AbortController>();
@@ -352,29 +356,32 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
               </Form.Group>
             </Col>
           </Row>
-          <Row>
-            <Col>
-              <Form.Group>
-                <Form.Label>Zahlungsintervall</Form.Label>
-                <Form.Select
-                  value={personalData.paymentRhythm}
-                  onChange={(event) => {
-                    personalData.paymentRhythm = event.target.value;
-                    updatePersonalData();
-                  }}
-                >
-                  {Object.entries(settings.paymentRhythmChoices).map(
-                    ([rhythm, displayName]) => (
-                      <option key={rhythm} value={rhythm}>
-                        {displayName}
-                      </option>
-                    ),
-                  )}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col></Col>
-          </Row>
+          {Object.keys(settings.paymentRhythmChoices).length > 1 &&
+            isAtLeastOneProductOrdered(shoppingCart) && (
+              <Row>
+                <Col>
+                  <Form.Group>
+                    <Form.Label>Zahlungsintervall</Form.Label>
+                    <Form.Select
+                      value={personalData.paymentRhythm}
+                      onChange={(event) => {
+                        personalData.paymentRhythm = event.target.value;
+                        updatePersonalData();
+                      }}
+                    >
+                      {Object.entries(settings.paymentRhythmChoices).map(
+                        ([rhythm, displayName]) => (
+                          <option key={rhythm} value={rhythm}>
+                            {displayName}
+                          </option>
+                        ),
+                      )}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col></Col>
+              </Row>
+            )}
           <Row className={"mt-4"}>
             <Col>
               <Row>
