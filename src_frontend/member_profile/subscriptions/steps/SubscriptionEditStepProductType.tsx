@@ -48,7 +48,10 @@ const SubscriptionEditStepProductType: React.FC<
               shoppingCart={shoppingCart}
               setShoppingCart={setShoppingCart}
               waitingListLinkConfirmationModeEnabled={false}
-              showHintFutureContract={true}
+              showHintFutureContract={
+                productType.singleSubscriptionOnly !== undefined &&
+                !productType.singleSubscriptionOnly
+              }
               settings={settings}
               productIdsOverCapacity={productIdsOverCapacity}
               productTypeIdsOverCapacity={productTypeIdsOverCapacity}
