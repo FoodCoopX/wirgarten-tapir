@@ -29,30 +29,21 @@ const contractTilesElement = document.getElementById("contract-tiles");
 if (contractTilesElement) {
   const root = createRoot(contractTilesElement);
   const showCancellationCard =
-    contractTilesElement.dataset.showCancellationCard;
-  if (showCancellationCard) {
-    root.render(
-      <>
-        <SubscriptionCards
-          memberId={contractTilesElement.dataset.memberId!}
-          csrfToken={getCsrfToken()}
-        />
+    contractTilesElement.dataset.showCancellationCard === "True";
+  root.render(
+    <>
+      <SubscriptionCards
+        memberId={contractTilesElement.dataset.memberId!}
+        csrfToken={getCsrfToken()}
+      />
+      {showCancellationCard && (
         <SubscriptionCancellationCard
           memberId={contractTilesElement.dataset.memberId!}
           csrfToken={getCsrfToken()}
         />
-      </>,
-    );
-  } else {
-    root.render(
-      <>
-        <SubscriptionCards
-          memberId={contractTilesElement.dataset.memberId!}
-          csrfToken={getCsrfToken()}
-        />
-      </>,
-    );
-  }
+      )}
+    </>,
+  );
 }
 
 const domNodeWaitingListCard = document.getElementById(
