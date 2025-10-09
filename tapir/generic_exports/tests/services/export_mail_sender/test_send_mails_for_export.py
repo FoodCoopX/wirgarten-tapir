@@ -30,7 +30,8 @@ class TestSendMailForExport(SimpleTestCase):
         ]
         export_result.export_definition.name = "test_definition_name"
         export_result.file.name = "test_file_name"
-        export_result.file.file.decode.return_value = "test file content"
+        file_bytes = Mock()
+        export_result.file.file = file_bytes
         mock_mimetypes.guess_type.return_value = ("test mime type", "unused")
 
         ExportMailSender.send_mails_for_export([export_result])
@@ -45,11 +46,10 @@ class TestSendMailForExport(SimpleTestCase):
             attachments=[
                 Attachment(
                     file_name="test_file_name",
-                    content="test file content",
+                    content=file_bytes,
                     mime_type="test mime type",
                 )
             ],
         )
 
         mock_mimetypes.guess_type.assert_called_once_with("test_file_name")
-        export_result.file.file.decode.assert_called_once_with("utf-8")
