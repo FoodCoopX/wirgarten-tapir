@@ -24,6 +24,9 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
     @classmethod
     def setUpTestData(cls):
         ParameterDefinitions().import_definitions(bulk_create=True)
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_START_DATE).update(
+            value=datetime.date(year=2020, month=1, day=1)
+        )
 
     def test_get_normalMemberGetsOwnPayments_returns200(self):
         member = MemberFactory.create(is_superuser=False)
@@ -623,4 +626,88 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
             self.assertEqual(
                 expected_due_dates[index],
                 extended_payment["payment"]["due_date"],
+            )
+
+    def test_get_paymentStartDateIsInTheFuture_generatesPaymentsAfterStartDateOnly(
+        self,
+    ):
+        self.now = mock_timezone(self, now=datetime.datetime(year=2020, month=1, day=1))
+        member = MemberFactory.create()
+        self.client.force_login(member)
+
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_DUE_DAY).update(
+            value=15
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.TRIAL_PERIOD_ENABLED).update(
+            value=False
+        )
+        TapirParameter.objects.filter(key=ParameterKeys.PAYMENT_START_DATE).update(
+            value=datetime.date(year=2020, month=4, day=1)
+        )
+
+        growing_period = GrowingPeriodFactory.create(
+            start_date=self.now.date(),
+            end_date=datetime.date(year=2020, month=12, day=31),
+        )
+        subscription = SubscriptionFactory.create(
+            member=member,
+            solidarity_price_percentage=0.1,
+            period=growing_period,
+            quantity=1,
+        )
+        ProductPriceFactory.create(
+            product=subscription.product, price=10, valid_from=self.now.date()
+        )
+        MemberPaymentRhythm.objects.create(
+            member=member,
+            rhythm=MemberPaymentRhythm.Rhythm.MONTHLY,
+            valid_from=self.now.date(),
+        )
+
+        url = reverse("payments:member_future_payments")
+        url = f"{url}?member_id={member.id}"
+        response = self.client.get(url)
+
+        self.assertStatusCode(response, 200)
+
+        response_content = response.json()
+
+        self.assertEqual(
+            9,
+            len(response_content),
+            "The should be a payments for each month but starting from April",
+        )
+        response_content.sort(
+            key=lambda extended_payment: extended_payment["payment"]["due_date"]
+        )
+        for index, extended_payment in enumerate(response_content):
+            self.assertEqual(11, extended_payment["payment"]["amount"])
+            self.assertEqual(
+                datetime.date(
+                    year=2020, month=index + 1 + 3, day=15
+                ),  # +3 is the offset because we start in April
+                datetime.datetime.strptime(
+                    extended_payment["payment"]["due_date"], "%Y-%m-%d"
+                ).date(),
+            )
+            self.assertEqual(
+                datetime.date(year=2020, month=index + 1 + 3, day=1),
+                datetime.datetime.strptime(
+                    extended_payment["payment"]["subscription_payment_range_start"],
+                    "%Y-%m-%d",
+                ).date(),
+            )
+            self.assertEqual(
+                get_last_day_of_month(
+                    datetime.date(year=2020, month=index + 1 + 3, day=1)
+                ),
+                datetime.datetime.strptime(
+                    extended_payment["payment"]["subscription_payment_range_end"],
+                    "%Y-%m-%d",
+                ).date(),
+            )
+            self.assertEqual([], extended_payment["coop_share_transactions"])
+            self.assertEqual(1, len(extended_payment["subscriptions"]))
+            self.assertEqual(
+                subscription.id, extended_payment["subscriptions"][0]["id"]
             )
