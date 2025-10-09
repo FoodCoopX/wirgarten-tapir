@@ -138,6 +138,7 @@ export * from './StoredUploadRequest';
 export * from './Subscription';
 export * from './SubscriptionChange';
 export * from './SubscriptionChangeLogEntry';
+export * from './SubscriptionDateChangeRequest';
 export * from './TapirmailApiSegmentAvailableFiltersRetrieve200Response';
 export * from './TapirmailApiSegmentAvailableSegmentsRetrieve200Response';
 export * from './TapirmailApiSegmentCombineCreate200Response';

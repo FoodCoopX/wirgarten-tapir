@@ -11,7 +11,6 @@ from tapir.wirgarten.forms.member import (
 )
 from tapir.wirgarten.forms.subscription import (
     EditSubscriptionPriceForm,
-    EditSubscriptionDatesForm,
 )
 from tapir.wirgarten.service.member import cancel_coop_shares, transfer_coop_shares
 from tapir.wirgarten.views.modal import get_form_modal
@@ -76,24 +75,6 @@ def get_edit_price_form(request, **kwargs):
     return get_form_modal(
         request=request,
         form_class=EditSubscriptionPriceForm,
-        handler=lambda x: x.save(),
-        redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
-        + "?contract="
-        + str(contract_id),
-        **kwargs,
-    )
-
-
-@require_http_methods(["GET", "POST"])
-@login_required
-@csrf_protect
-@permission_required(Permission.Accounts.MANAGE)
-def get_edit_dates_form(request, **kwargs):
-    contract_id = kwargs["pk"]
-
-    return get_form_modal(
-        request=request,
-        form_class=EditSubscriptionDatesForm,
         handler=lambda x: x.save(),
         redirect_url_resolver=lambda x: reverse_lazy("wirgarten:subscription_list")
         + "?contract="

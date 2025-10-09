@@ -15,10 +15,12 @@
 import * as runtime from "../runtime";
 import type {
   CoopShareTransaction,
+  Member,
   MinimumNumberOfSharesResponse,
 } from "../models/index";
 import {
   CoopShareTransactionFromJSON,
+  MemberFromJSON,
   MinimumNumberOfSharesResponseFromJSON,
 } from "../models/index";
 
@@ -34,6 +36,10 @@ export interface CoopApiGetCoopShareTransactionsListRequest {
 export interface CoopApiMinimumNumberOfSharesRetrieveRequest {
   productIds?: Array<string>;
   quantities?: Array<number>;
+}
+
+export interface CoopMembersRetrieveRequest {
+  id: string;
 }
 
 /**
@@ -234,6 +240,115 @@ export class CoopApi extends runtime.BaseAPI {
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<MinimumNumberOfSharesResponse> {
     const response = await this.coopApiMinimumNumberOfSharesRetrieveRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopMembersListRaw(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Array<Member>>> {
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/members/`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(MemberFromJSON),
+    );
+  }
+
+  /**
+   */
+  async coopMembersList(
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<Member>> {
+    const response = await this.coopMembersListRaw(initOverrides);
+    return await response.value();
+  }
+
+  /**
+   */
+  async coopMembersRetrieveRaw(
+    requestParameters: CoopMembersRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<Member>> {
+    if (requestParameters["id"] == null) {
+      throw new runtime.RequiredError(
+        "id",
+        'Required parameter "id" was null or undefined when calling coopMembersRetrieve().',
+      );
+    }
+
+    const queryParameters: any = {};
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/coop/members/{id}/`.replace(
+          `{${"id"}}`,
+          encodeURIComponent(String(requestParameters["id"])),
+        ),
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      MemberFromJSON(jsonValue),
+    );
+  }
+
+  /**
+   */
+  async coopMembersRetrieve(
+    requestParameters: CoopMembersRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Member> {
+    const response = await this.coopMembersRetrieveRaw(
       requestParameters,
       initOverrides,
     );

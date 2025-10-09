@@ -41,7 +41,7 @@ export interface CancelSubscriptionsRequestRequest {
    * @type {Array<string>}
    * @memberof CancelSubscriptionsRequestRequest
    */
-  cancellationReasons: Array<string>;
+  cancellationReasons?: Array<string>;
   /**
    *
    * @type {string}
@@ -64,11 +64,6 @@ export function instanceOfCancelSubscriptionsRequestRequest(
     value["cancelCoopMembership"] === undefined
   )
     return false;
-  if (
-    !("cancellationReasons" in value) ||
-    value["cancellationReasons"] === undefined
-  )
-    return false;
   return true;
 }
 
@@ -89,7 +84,10 @@ export function CancelSubscriptionsRequestRequestFromJSONTyped(
     memberId: json["member_id"],
     productIds: json["product_ids"],
     cancelCoopMembership: json["cancel_coop_membership"],
-    cancellationReasons: json["cancellation_reasons"],
+    cancellationReasons:
+      json["cancellation_reasons"] == null
+        ? undefined
+        : json["cancellation_reasons"],
     customCancellationReason:
       json["custom_cancellation_reason"] == null
         ? undefined

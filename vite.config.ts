@@ -53,6 +53,10 @@ export default defineConfig(() => {
             INPUT_DIR,
             "/waiting_list/waiting_list_confirm_entry.tsx",
           ),
+          subscription_list: join(
+            INPUT_DIR,
+            "/subscription_list/subscription_list_entry.tsx",
+          ),
         },
       },
     },

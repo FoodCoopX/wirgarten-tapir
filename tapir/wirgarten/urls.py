@@ -41,7 +41,6 @@ from tapir.wirgarten.views.member.list.modals import (
     get_coop_share_transfer_form,
     get_edit_price_form,
     get_member_personal_data_create_form,
-    get_edit_dates_form,
 )
 from tapir.wirgarten.views.payments import PaymentTransactionListView
 from tapir.wirgarten.views.pickup_location_config import (
@@ -237,11 +236,6 @@ urlpatterns = [
         "contracts/<str:pk>/editprice",
         get_edit_price_form,
         name="subscription_edit_price",
-    ),
-    path(
-        "contracts/<str:pk>/editdates",
-        get_edit_dates_form,
-        name="subscription_edit_dates",
     ),
     path("sepa", PaymentTransactionListView.as_view(), name="payment_transactions"),
     path(

@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from tapir.coop import views
 
@@ -20,3 +21,11 @@ urlpatterns = [
         name="get_coop_share_transactions",
     ),
 ]
+
+router = DefaultRouter()
+router.register(
+    r"members",
+    views.MemberViewSet,
+    basename="members",
+)
+urlpatterns += router.urls

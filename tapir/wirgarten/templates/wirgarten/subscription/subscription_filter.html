@@ -4,15 +4,26 @@
 {% load wirgarten %}
 {% load tapir_static %}
 {% load django_bootstrap5 %}
+{% load django_vite %}
+{% load configuration %}
+
+{% block head %}
+    {{ block.super }}
+    <title>
+        {% block title %}Verträge - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
+    </title>
+    {% vite_asset 'subscription_list/subscription_list_entry.tsx' %}
+{% endblock head %}
+
 {% block card_header %}
     <h4>{{ total_contracts|default:0 }} {% translate 'Verträge' %}</h4>
     <span style="display: flex; flex-direction:row;">
+        <span id="subscription_change_dates_button" class="mx-1 p-0"></span>
         {% if perms.accounts.manage %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleEditDates()' disabled=True title='Laufzeit ändern' type='primary' icon='edit_calendar' class='needs-contract' %}
-            {% include 'wirgarten/generic/action-button.html' with onclick='handleEditPrice()' disabled=True title='Betrag ändern' type='primary' icon='edit' class='needs-contract' %}
+            {% include 'wirgarten/generic/action-button.html' with onclick='handleEditPrice()' disabled=True title='Betrag ändern' type='primary' icon='edit' class='needs-contract d-flex' %}
         {% endif %}
         <div style="width: 1em"></div>
-        {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
+        {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' class="d-flex"%}
     </span>
 {% endblock %}
 {% block table_head %}
@@ -123,14 +134,6 @@
 
         if(params.contract){
             FormModal.load(`/tapir/contracts/${params.contract}/editprice`, 'Betrag ändern')
-        }
-    }
-
-    const handleEditDates = () => {
-        const params = Tapir.getUrlParams();
-
-        if(params.contract){
-            FormModal.load(`/tapir/contracts/${params.contract}/editdates`, 'Laufzeit ändern')
         }
     }
 

@@ -2,7 +2,7 @@ from django.core.exceptions import BadRequest, ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,7 +14,11 @@ from tapir.coop.services.membership_cancellation_manager import (
 from tapir.coop.services.minimum_number_of_shares_validator import (
     MinimumNumberOfSharesValidator,
 )
-from tapir.subscriptions.serializers import CoopShareTransactionSerializer
+from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.subscriptions.serializers import (
+    CoopShareTransactionSerializer,
+    MemberSerializer,
+)
 from tapir.subscriptions.services.contract_start_date_calculator import (
     ContractStartDateCalculator,
 )
@@ -170,3 +174,9 @@ class GetCoopShareTransactionsApiView(APIView):
                 many=True,
             ).data
         )
+
+
+class MemberViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer

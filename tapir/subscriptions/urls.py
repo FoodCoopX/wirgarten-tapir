@@ -53,6 +53,11 @@ urlpatterns = [
         confirmations.RevokeChangesApiView.as_view(),
         name="revoke_changes",
     ),
+    path(
+        "api/dates_change",
+        other.SubscriptionDateChangeApiView.as_view(),
+        name="dates_change",
+    ),
 ]
 
 router = DefaultRouter()
@@ -65,5 +70,10 @@ router.register(
     r"public_product_types",
     other.PublicProductTypeViewSet,
     basename="public_product_types",
+)
+router.register(
+    r"subscriptions",
+    other.SubscriptionViewSet,
+    basename="subscriptions",
 )
 urlpatterns += router.urls
