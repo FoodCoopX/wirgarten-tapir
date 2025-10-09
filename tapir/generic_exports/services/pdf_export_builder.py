@@ -3,11 +3,8 @@ from typing import Dict
 
 import weasyprint
 from django.template import engines
-from django_weasyprint.utils import django_url_fetcher
 from weasyprint import Document
-from weasyprint.text.fonts import FontConfiguration
 
-from tapir import settings
 from tapir.generic_exports.models import PdfExport
 from tapir.generic_exports.services.csv_export_builder import CsvExportBuilder
 from tapir.generic_exports.services.export_segment_manager import (
@@ -18,7 +15,6 @@ from tapir.wirgarten.models import ExportedFile
 
 
 class PdfExportBuilder:
-    _WEASYPRINT_FONT_CONFIG = FontConfiguration()
 
     class PdfExportBuilderException(Exception):
         pass
@@ -70,16 +66,19 @@ class PdfExportBuilder:
         rendered_file_name = cls.build_template_object(pdf_export.file_name).render(
             context
         )
-        return ExportedFile.objects.create(
+        document = cls.render_pdf(
+            pdf_export.template,
+            context,
+        )
+        pdf_file = document.write_pdf()
+        exported_file = ExportedFile.objects.create(
             name=CsvExportBuilder.build_file_name(
                 rendered_file_name, reference_datetime, "pdf"
             ),
             type=ExportedFile.FileType.PDF,
-            file=cls.render_pdf(
-                pdf_export.template,
-                context,
-            ).write_pdf(),
+            file=pdf_file,
         )
+        return exported_file
 
     @classmethod
     def build_context_for_entry(
@@ -102,10 +101,8 @@ class PdfExportBuilder:
         rendered_template = template_object.render(context)
         document = weasyprint.HTML(
             string=rendered_template,
-            base_url=settings.WEASYPRINT_BASEURL,
-            url_fetcher=django_url_fetcher,
         )
-        return document.render(font_config=cls._WEASYPRINT_FONT_CONFIG)
+        return document.render()
 
     @classmethod
     def build_template_object(cls, template_string):
