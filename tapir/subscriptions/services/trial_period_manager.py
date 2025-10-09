@@ -110,7 +110,7 @@ class TrialPeriodManager:
         if not get_parameter_value(ParameterKeys.TRIAL_PERIOD_ENABLED, cache=cache):
             return []
 
-        subscriptions = get_active_subscriptions(cache=cache).filter(
+        subscriptions = get_active_and_future_subscriptions(cache=cache).filter(
             member_id=member_id,
         )
 

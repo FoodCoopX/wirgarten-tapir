@@ -112,7 +112,11 @@ class TestCancelDuringTrialPeriod(TapirIntegrationTest):
         self.assertEqual(
             earliest_trial_cancellation_date, renewed_subscription.end_date
         )
-        mock_get_earliest_trial_cancellation_date.assert_called_once()
+        self.assertEqual(
+            2,
+            mock_get_earliest_trial_cancellation_date.call_count,
+            "once the get the minimum trial end date, once when getting subscriptions in trial",
+        )
 
     @patch.object(TrialPeriodManager, "get_earliest_trial_cancellation_date")
     def test_trialCancellationForm_cancelSingleProductAfterRenewal_otherSubscriptionNotAffected(

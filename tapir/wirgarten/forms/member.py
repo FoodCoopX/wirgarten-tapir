@@ -458,9 +458,10 @@ class TrialCancellationForm(Form):
                 )
 
         if is_new_member():
+            valid_at = self.next_trial_end_date or get_today(cache=self.cache)
             self.share_ownership = self.member.coopsharetransaction_set.filter(
                 transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
-                valid_at__gt=self.next_trial_end_date,
+                valid_at__gt=valid_at,
             ).first()
 
             self.fields["cancel_coop"] = BooleanField(
