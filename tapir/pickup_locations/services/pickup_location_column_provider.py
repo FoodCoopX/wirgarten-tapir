@@ -32,12 +32,12 @@ class PickupLocationColumnProvider:
         ]
 
     @classmethod
-    def get_value_pickup_location_name(cls, location: PickupLocation, _):
+    def get_value_pickup_location_name(cls, location: PickupLocation, _, __):
         return location.name
 
     @classmethod
     def get_value_pickup_location_number_of_member(
-        cls, location: PickupLocation, reference_datetime: datetime.datetime
+        cls, location: PickupLocation, reference_datetime: datetime.datetime, _
     ):
 
         members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
@@ -52,7 +52,7 @@ class PickupLocationColumnProvider:
 
     @classmethod
     def get_value_pickup_location_member_ids(
-        cls, location: PickupLocation, reference_datetime: datetime.datetime
+        cls, location: PickupLocation, reference_datetime: datetime.datetime, _
     ):
 
         members_annotated_with_pickup_location = MemberPickupLocationService.annotate_member_queryset_with_pickup_location_id_at_date(
