@@ -54,11 +54,13 @@ models/EmailTemplate.ts
 models/EmailTemplateRequest.ts
 models/ExportSegment.ts
 models/ExportSegmentColumn.ts
+models/ExtendedMemberCredit.ts
 models/ExtendedPayment.ts
 models/ExtendedProduct.ts
 models/ExtendedProductType.ts
 models/ExtendedProductTypeAndConfig.ts
 models/ExtendedProductTypeRequest.ts
+models/FuturePaymentsResponse.ts
 models/GroupedEmailDispatch.ts
 models/GrowingPeriod.ts
 models/GrowingPeriodRequest.ts
@@ -70,6 +72,7 @@ models/LegalStatusEnum.ts
 models/LocaleEnum.ts
 models/Member.ts
 models/MemberCountry.ts
+models/MemberCredit.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
 models/MemberPaymentRhythm.ts

@@ -1,16 +1,19 @@
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.views.generic import TemplateView
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.payments.models import MemberPaymentRhythm
+from tapir.payments.models import MemberPaymentRhythm, MemberCredit
 from tapir.payments.serializers import (
-    ExtendedPaymentSerializer,
     MemberPaymentRhythmDataSerializer,
+    FuturePaymentsResponseSerializer,
+    ExtendedMemberCreditSerializer,
 )
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -22,12 +25,14 @@ from tapir.subscriptions.services.automatic_subscription_renewal_service import 
 from tapir.utils.services.date_range_overlap_checker import DateRangeOverlapChecker
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.utils.shortcuts import get_first_of_next_month
+from tapir.wirgarten.constants import Permission
 from tapir.wirgarten.models import (
     Payment,
     CoopShareTransaction,
     MandateReference,
     Member,
 )
+from tapir.wirgarten.service.member import get_or_create_mandate_ref
 from tapir.wirgarten.utils import check_permission_or_self, get_today
 
 
@@ -37,7 +42,7 @@ class GetFutureMemberPaymentsApiView(APIView):
         self.cache = {}
 
     @extend_schema(
-        responses={200: ExtendedPaymentSerializer(many=True)},
+        responses={200: FuturePaymentsResponseSerializer},
         parameters=[OpenApiParameter(name="member_id", type=str)],
     )
     def get(self, request):
@@ -49,7 +54,15 @@ class GetFutureMemberPaymentsApiView(APIView):
             member_id=member_id, member_payments=member_payments
         )
 
-        return Response(ExtendedPaymentSerializer(extended_payments, many=True).data)
+        member_credits = MemberCredit.objects.filter(
+            member_id=member_id, due_date__gte=get_today(cache=self.cache)
+        ).order_by("due_date")
+
+        return Response(
+            FuturePaymentsResponseSerializer(
+                {"payments": extended_payments, "credits": member_credits}
+            ).data
+        )
 
     def get_due_and_future_payments(self, member_id):
         mandate_ref_ids = MandateReference.objects.filter(
@@ -219,3 +232,50 @@ class SetMemberPaymentRhythmApiView(APIView):
         )
 
         return Response("OK")
+
+
+class MemberCreditTemplateView(PermissionRequiredMixin, TemplateView):
+    permission_required = Permission.Payments.VIEW
+    template_name = "payments/credit_list.html"
+
+
+class MemberCreditListApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(
+        responses={200: ExtendedMemberCreditSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="month_filter", type=int, required=False),
+            OpenApiParameter(name="year_filter", type=int, required=False),
+        ],
+    )
+    def get(self, request):
+        member_credits = MemberCredit.objects.order_by("-due_date")
+
+        month_filter = request.query_params.get("month_filter", None)
+        if month_filter is not None and int(month_filter) > 0:
+            member_credits = member_credits.filter(due_date__month=int(month_filter))
+
+        year_filter = request.query_params.get("year_filter", None)
+        if year_filter is not None:
+            member_credits = member_credits.filter(due_date__year=int(year_filter))
+
+        extended_credits = [
+            {
+                "credit": credit,
+                "member": credit.member,
+                "member_url": credit.member.get_absolute_url(),
+                "mandate_ref": get_or_create_mandate_ref(
+                    member=credit.member, cache=self.cache
+                ).ref,
+            }
+            for credit in member_credits
+        ]
+
+        return Response(
+            ExtendedMemberCreditSerializer(extended_credits, many=True).data
+        )

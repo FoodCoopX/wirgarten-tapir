@@ -19,4 +19,10 @@ urlpatterns = [
         views.SetMemberPaymentRhythmApiView.as_view(),
         name="set_member_payment_rhythm",
     ),
+    path("credit_list", views.MemberCreditTemplateView.as_view(), name="credit_list"),
+    path(
+        "api/credit_list_filtered",
+        views.MemberCreditListApiView.as_view(),
+        name="credit_list_filtered",
+    ),
 ]

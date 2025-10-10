@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PaymentsApi } from "../../api-client";
+import { ExtendedPayment, MemberCredit, PaymentsApi } from "../../api-client";
 import { useApi } from "../../hooks/useApi.ts";
 import { Card, Spinner } from "react-bootstrap";
 import dayjs from "dayjs";
@@ -9,9 +9,9 @@ import { ToastData } from "../../types/ToastData.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
-import { ExtendedPaymentsByDueDate } from "../../types/ExtendedPaymentsByDueDate.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import FuturePaymentsModal from "./FuturePaymentsModal.tsx";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 
 interface FuturePaymentsCardProps {
   memberId: string;
@@ -24,31 +24,47 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
 }) => {
   const api = useApi(PaymentsApi, csrfToken);
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
-  const [extendedPaymentsByDueDate, setExtendedPaymentsByDueDate] =
-    useState<ExtendedPaymentsByDueDate>({});
+  const [transactionsByDueDate, setTransactionsByDueDate] =
+    useState<TransactionsByDueDate>({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [extendedPayments, setExtendedPayments] = useState<ExtendedPayment[]>(
+    [],
+  );
 
   useEffect(() => {
     setLoading(true);
 
     api
-      .paymentsApiMemberFuturePaymentsList({ memberId: memberId })
+      .paymentsApiMemberFuturePaymentsRetrieve({ memberId: memberId })
       .then((response) => {
-        const extendedPayments = response.sort(
+        const groupedTransactions: TransactionsByDueDate = {};
+
+        const extendedPayments = response.payments.sort(
           (a, b) => a.payment.dueDate.getTime() - b.payment.dueDate.getTime(),
         );
-        const groupedPayments: ExtendedPaymentsByDueDate = {};
+        setExtendedPayments(extendedPayments);
         for (const extendedPayment of extendedPayments) {
           const dueDateAsAstring = dayjs(
             extendedPayment.payment.dueDate,
           ).format("YYYY-MM-DD");
-          if (!(dueDateAsAstring in groupedPayments)) {
-            groupedPayments[dueDateAsAstring] = [];
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
           }
-          groupedPayments[dueDateAsAstring].push(extendedPayment);
+          groupedTransactions[dueDateAsAstring].push(extendedPayment);
         }
-        setExtendedPaymentsByDueDate(groupedPayments);
+
+        for (const memberCredit of response.credits) {
+          const dueDateAsAstring = dayjs(memberCredit.dueDate).format(
+            "YYYY-MM-DD",
+          );
+          if (!(dueDateAsAstring in groupedTransactions)) {
+            groupedTransactions[dueDateAsAstring] = [];
+          }
+          groupedTransactions[dueDateAsAstring].push(memberCredit);
+        }
+
+        setTransactionsByDueDate(groupedTransactions);
       })
       .catch(async (error) => {
         await handleRequestError(
@@ -61,26 +77,30 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
   }, []);
 
   function getEarliestDueDateAsString() {
-    const dueDates = Object.keys(extendedPaymentsByDueDate).map(
-      (dueDateAsString) => new Date(dueDateAsString).getTime(),
+    const dueDates = extendedPayments.map((payment) =>
+      payment.payment.dueDate.getTime(),
     );
     const earliestDate = new Date(Math.min(...dueDates));
     return dayjs(earliestDate).format("YYYY-MM-DD");
   }
 
   function getSumOfNextPayments() {
-    const nextPayments =
-      extendedPaymentsByDueDate[getEarliestDueDateAsString()];
+    const nextPayments = transactionsByDueDate[getEarliestDueDateAsString()];
     return nextPayments.reduce(
-      (sum, extendedPayment) => sum + extendedPayment.payment.amount,
+      (sum, extendedPayment) => sum + getAmountIfPayment(extendedPayment),
       0,
     );
   }
 
+  function getAmountIfPayment(object: ExtendedPayment | MemberCredit) {
+    if ("payment" in object) {
+      return object.payment.amount;
+    }
+    return 0;
+  }
+
   function getMandateRefForNextPayments() {
-    const nextPayments =
-      extendedPaymentsByDueDate[getEarliestDueDateAsString()];
-    return nextPayments[0].payment.mandateRef;
+    return extendedPayments[0].payment.mandateRef;
   }
 
   return (
@@ -119,11 +139,11 @@ const FuturePaymentsCard: React.FC<FuturePaymentsCardProps> = ({
         </Card.Body>
       </Card>
       <FuturePaymentsModal
-        extendedPaymentsByDueDate={extendedPaymentsByDueDate}
+        transactionsByDueDate={transactionsByDueDate}
         show={showModal}
         onHide={() => setShowModal(false)}
         loading={loading}
-      ></FuturePaymentsModal>
+      />
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

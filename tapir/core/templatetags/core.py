@@ -99,8 +99,13 @@ def add_admin_links(groups, request, cache: dict):
     if request.user.has_perm(Permission.Payments.VIEW):
         admin_group.add_link(
             display_name=_("Lastschrift"),
-            material_icon="account_balance",
+            material_icon="euro",
             url=reverse_lazy("wirgarten:payment_transactions"),
+        )
+        admin_group.add_link(
+            display_name=_("Gutschriften"),
+            material_icon="euro",
+            url=reverse_lazy("payments:credit_list"),
         )
 
     if request.user.has_perm(Permission.Coop.MANAGE):

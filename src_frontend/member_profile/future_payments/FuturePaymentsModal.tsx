@@ -3,20 +3,20 @@ import { Badge, Form, Modal, Table } from "react-bootstrap";
 import "dayjs/locale/de";
 
 import "../../fixed_header.css";
-import { ExtendedPaymentsByDueDate } from "../../types/ExtendedPaymentsByDueDate.ts";
 import { formatDateText } from "../../utils/formatDateText.ts";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { ExtendedPayment, Payment } from "../../api-client";
+import { ExtendedPayment, MemberCredit, Payment } from "../../api-client";
 import formatSubscription from "../../utils/formatSubscription.ts";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import PlaceholderTableRows from "../../components/PlaceholderTableRows.tsx";
 import { getMinimumDate } from "../../utils/getMinimumDate.ts";
 import { getMaximumDate } from "../../utils/getMaximumDate.ts";
+import { TransactionsByDueDate } from "../../types/TransactionsByDueDate.ts";
 
 interface FuturePaymentsModalProps {
-  extendedPaymentsByDueDate: ExtendedPaymentsByDueDate;
+  transactionsByDueDate: TransactionsByDueDate;
   show: boolean;
   onHide: () => void;
   loading: boolean;
@@ -25,7 +25,7 @@ interface FuturePaymentsModalProps {
 const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
   onHide,
   show,
-  extendedPaymentsByDueDate,
+  transactionsByDueDate,
   loading,
 }) => {
   dayjs.extend(RelativeTime);
@@ -80,6 +80,55 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
     return latestSubscriptionEnd;
   }
 
+  function buildExtendedPayment(extendedPayment: ExtendedPayment) {
+    return (
+      <div
+        key={
+          extendedPayment.payment.dueDate.getTime() +
+          "_" +
+          extendedPayment.payment.type
+        }
+      >
+        <div className={"d-flex flex-column align-items-center"}>
+          <strong>{formatCurrency(extendedPayment.payment.amount)}</strong>
+          <span>{extendedPayment.payment.mandateRef}</span>
+          {extendedPayment.subscriptions.map((subscription) => (
+            <span key={subscription.id}>
+              {formatSubscription(subscription)}
+            </span>
+          ))}
+          {extendedPayment.subscriptions.length > 0 && (
+            <span>
+              {formatDateNumeric(getStartDate(extendedPayment))}
+              {" -> "}
+              {formatDateNumeric(getEndDate(extendedPayment))}
+            </span>
+          )}
+          {extendedPayment.coopShareTransactions.map((transaction) => (
+            <span key={transaction.id}>
+              {transaction.quantity}
+              {" × Genossenschaftsanteile"}
+            </span>
+          ))}
+          <Badge bg={getBadgeBackground(extendedPayment.payment)}>
+            {getBadgeText(extendedPayment.payment)}
+          </Badge>
+        </div>
+      </div>
+    );
+  }
+
+  function buildCredit(credit: MemberCredit) {
+    return (
+      <div key={credit.id}>
+        <div className={"d-flex flex-column align-items-center"}>
+          <strong>{formatCurrency(credit.amount)}</strong>
+          <Badge bg={"success"}>Gutschrift</Badge>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Modal onHide={onHide} show={show} centered={true} size={"lg"}>
       <Modal.Header closeButton>
@@ -103,8 +152,8 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
             {loading ? (
               <PlaceholderTableRows nbColumns={2} nbRows={12} size={"lg"} />
             ) : (
-              Object.entries(extendedPaymentsByDueDate).map(
-                ([dueDateAsString, extendedPayments]) => (
+              Object.entries(transactionsByDueDate).map(
+                ([dueDateAsString, objects]) => (
                   <tr key={dueDateAsString}>
                     <td style={{ textAlign: "center" }}>
                       <div className={"d-flex flex-column"}>
@@ -116,57 +165,11 @@ const FuturePaymentsModal: React.FC<FuturePaymentsModalProps> = ({
                     </td>
                     <td>
                       <div className={"d-flex flex-column"}>
-                        {extendedPayments.map((extendedPayment) => (
-                          <div
-                            key={
-                              extendedPayment.payment.dueDate.getTime() +
-                              "_" +
-                              extendedPayment.payment.type
-                            }
-                          >
-                            <div
-                              className={
-                                "d-flex flex-column align-items-center"
-                              }
-                            >
-                              <strong>
-                                {formatCurrency(extendedPayment.payment.amount)}
-                              </strong>
-                              <span>{extendedPayment.payment.mandateRef}</span>
-                              {extendedPayment.subscriptions.map(
-                                (subscription) => (
-                                  <span key={subscription.id}>
-                                    {formatSubscription(subscription)}
-                                  </span>
-                                ),
-                              )}
-                              {extendedPayment.subscriptions.length > 0 && (
-                                <span>
-                                  {formatDateNumeric(
-                                    getStartDate(extendedPayment),
-                                  )}
-                                  {" -> "}
-                                  {formatDateNumeric(
-                                    getEndDate(extendedPayment),
-                                  )}
-                                </span>
-                              )}
-                              {extendedPayment.coopShareTransactions.map(
-                                (transaction) => (
-                                  <span key={transaction.id}>
-                                    {transaction.quantity}
-                                    {" × Genossenschaftsanteile"}
-                                  </span>
-                                ),
-                              )}
-                              <Badge
-                                bg={getBadgeBackground(extendedPayment.payment)}
-                              >
-                                {getBadgeText(extendedPayment.payment)}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
+                        {objects.map((object) =>
+                          "payment" in object
+                            ? buildExtendedPayment(object)
+                            : buildCredit(object),
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -967,9 +967,36 @@ paths:
       responses:
         '204':
           description: No response body
+  /payments/api/credit_list_filtered:
+    get:
+      operationId: payments_api_credit_list_filtered_list
+      parameters:
+      - in: query
+        name: month_filter
+        schema:
+          type: integer
+      - in: query
+        name: year_filter
+        schema:
+          type: integer
+      tags:
+      - payments
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExtendedMemberCredit'
+          description: ''
   /payments/api/member_future_payments:
     get:
-      operationId: payments_api_member_future_payments_list
+      operationId: payments_api_member_future_payments_retrieve
       parameters:
       - in: query
         name: member_id
@@ -986,9 +1013,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExtendedPayment'
+                $ref: '#/components/schemas/FuturePaymentsResponse'
           description: ''
   /payments/api/member_payment_rhythm_data:
     get:
@@ -5983,6 +6008,23 @@ components:
       - description
       - display_name
       - id
+    ExtendedMemberCredit:
+      type: object
+      properties:
+        credit:
+          $ref: '#/components/schemas/MemberCredit'
+        member:
+          $ref: '#/components/schemas/Member'
+        member_url:
+          type: string
+          format: uri
+        mandate_ref:
+          type: string
+      required:
+      - credit
+      - mandate_ref
+      - member
+      - member_url
     ExtendedPayment:
       type: object
       properties:
@@ -6175,6 +6217,20 @@ components:
       - single_subscription_only
       - tax_rate
       - tax_rate_change_date
+    FuturePaymentsResponse:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtendedPayment'
+        credits:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberCredit'
+      required:
+      - credits
+      - payments
     GroupedEmailDispatch:
       type: object
       properties:
@@ -6468,6 +6524,36 @@ components:
       - last_name
       - password
       - username
+    MemberCredit:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 10
+        amount:
+          type: number
+          format: double
+        due_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        purpose:
+          type: string
+          maxLength: 1024
+        comment:
+          type: string
+        member:
+          type: string
+      required:
+      - amount
+      - comment
+      - created_at
+      - due_date
+      - member
+      - purpose
     MemberDataToConfirm:
       type: object
       properties:

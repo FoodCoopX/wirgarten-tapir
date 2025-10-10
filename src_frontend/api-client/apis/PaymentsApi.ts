@@ -14,17 +14,24 @@
 
 import * as runtime from "../runtime";
 import type {
-  ExtendedPayment,
+  ExtendedMemberCredit,
+  FuturePaymentsResponse,
   MemberPaymentRhythmData,
   PaymentRhythmSerializerRequest,
 } from "../models/index";
 import {
-  ExtendedPaymentFromJSON,
+  ExtendedMemberCreditFromJSON,
+  FuturePaymentsResponseFromJSON,
   MemberPaymentRhythmDataFromJSON,
   PaymentRhythmSerializerRequestToJSON,
 } from "../models/index";
 
-export interface PaymentsApiMemberFuturePaymentsListRequest {
+export interface PaymentsApiCreditListFilteredListRequest {
+  monthFilter?: number;
+  yearFilter?: number;
+}
+
+export interface PaymentsApiMemberFuturePaymentsRetrieveRequest {
   memberId?: string;
 }
 
@@ -42,10 +49,70 @@ export interface PaymentsApiSetMemberPaymentRhythmCreateRequest {
 export class PaymentsApi extends runtime.BaseAPI {
   /**
    */
-  async paymentsApiMemberFuturePaymentsListRaw(
-    requestParameters: PaymentsApiMemberFuturePaymentsListRequest,
+  async paymentsApiCreditListFilteredListRaw(
+    requestParameters: PaymentsApiCreditListFilteredListRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<Array<ExtendedPayment>>> {
+  ): Promise<runtime.ApiResponse<Array<ExtendedMemberCredit>>> {
+    const queryParameters: any = {};
+
+    if (requestParameters["monthFilter"] != null) {
+      queryParameters["month_filter"] = requestParameters["monthFilter"];
+    }
+
+    if (requestParameters["yearFilter"] != null) {
+      queryParameters["year_filter"] = requestParameters["yearFilter"];
+    }
+
+    const headerParameters: runtime.HTTPHeaders = {};
+
+    if (this.configuration && this.configuration.apiKey) {
+      headerParameters["Authorization"] =
+        await this.configuration.apiKey("Authorization"); // tokenAuth authentication
+    }
+
+    if (
+      this.configuration &&
+      (this.configuration.username !== undefined ||
+        this.configuration.password !== undefined)
+    ) {
+      headerParameters["Authorization"] =
+        "Basic " +
+        btoa(this.configuration.username + ":" + this.configuration.password);
+    }
+    const response = await this.request(
+      {
+        path: `/payments/api/credit_list_filtered`,
+        method: "GET",
+        headers: headerParameters,
+        query: queryParameters,
+      },
+      initOverrides,
+    );
+
+    return new runtime.JSONApiResponse(response, (jsonValue) =>
+      jsonValue.map(ExtendedMemberCreditFromJSON),
+    );
+  }
+
+  /**
+   */
+  async paymentsApiCreditListFilteredList(
+    requestParameters: PaymentsApiCreditListFilteredListRequest = {},
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<Array<ExtendedMemberCredit>> {
+    const response = await this.paymentsApiCreditListFilteredListRaw(
+      requestParameters,
+      initOverrides,
+    );
+    return await response.value();
+  }
+
+  /**
+   */
+  async paymentsApiMemberFuturePaymentsRetrieveRaw(
+    requestParameters: PaymentsApiMemberFuturePaymentsRetrieveRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction,
+  ): Promise<runtime.ApiResponse<FuturePaymentsResponse>> {
     const queryParameters: any = {};
 
     if (requestParameters["memberId"] != null) {
@@ -79,17 +146,17 @@ export class PaymentsApi extends runtime.BaseAPI {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      jsonValue.map(ExtendedPaymentFromJSON),
+      FuturePaymentsResponseFromJSON(jsonValue),
     );
   }
 
   /**
    */
-  async paymentsApiMemberFuturePaymentsList(
-    requestParameters: PaymentsApiMemberFuturePaymentsListRequest = {},
+  async paymentsApiMemberFuturePaymentsRetrieve(
+    requestParameters: PaymentsApiMemberFuturePaymentsRetrieveRequest = {},
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<Array<ExtendedPayment>> {
-    const response = await this.paymentsApiMemberFuturePaymentsListRaw(
+  ): Promise<FuturePaymentsResponse> {
+    const response = await this.paymentsApiMemberFuturePaymentsRetrieveRaw(
       requestParameters,
       initOverrides,
     );
