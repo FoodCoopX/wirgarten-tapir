@@ -390,7 +390,9 @@ class RegistrationWizardViewBase(CookieWizardView):
         member.iban = personal_details_form.cleaned_data["iban"]
 
         if STEP_COOP_SHARES in form_dict.keys():
-            member.is_student = form_dict[STEP_COOP_SHARES].cleaned_data["is_student"]
+            member.is_student = form_dict[STEP_COOP_SHARES].cleaned_data.get(
+                "is_student", False
+            )
 
         now = get_now()
         member.sepa_consent = now
