@@ -11,9 +11,12 @@ from rest_framework.views import APIView
 from tapir.configuration.parameter import get_parameter_value
 from tapir.deliveries.serializers import ProductSerializer, SubscriptionSerializer
 from tapir.generic_exports.permissions import HasCoopManagePermission
+from tapir.log.util import freeze_for_log
+from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.pickup_locations.services.basket_size_capacities_service import (
     BasketSizeCapacitiesService,
 )
+from tapir.subscriptions.models import SubscriptionChangedLogEntry
 from tapir.subscriptions.serializers import (
     ExtendedProductSerializer,
     PublicProductTypeSerializer,
@@ -32,7 +35,7 @@ from tapir.wirgarten.parameters import OPTIONS_WEEKDAYS
 from tapir.wirgarten.service.products import (
     get_product_price,
 )
-from tapir.wirgarten.utils import get_now
+from tapir.wirgarten.utils import get_now, get_today
 
 
 class ExtendedProductView(APIView):
@@ -169,6 +172,7 @@ class SubscriptionDateChangeApiView(APIView):
             )
 
         with transaction.atomic():
+            subscription_before = freeze_for_log(subscription)
             subscription.start_date = start_date
             if end_date != subscription.end_date:
                 subscription.cancellation_ts = get_now(cache=self.cache)
@@ -180,6 +184,22 @@ class SubscriptionDateChangeApiView(APIView):
 
             subscription.end_date = end_date
             subscription.save()
+
+            MemberCreditCreator.create_member_credit_if_necessary(
+                member=subscription.member,
+                product_type=subscription.product.type,
+                reference_date=get_today(cache=self.cache),
+                comment="Vertragsdaten vom Admin durch der Vertragsliste angepasst.",
+                cache=self.cache,
+                actor=request.user,
+            )
+
+            SubscriptionChangedLogEntry().populate(
+                old_frozen=subscription_before,
+                new_model=subscription,
+                user=subscription.member,
+                actor=request.user,
+            ).save()
 
         return Response(
             OrderConfirmationResponseSerializer(

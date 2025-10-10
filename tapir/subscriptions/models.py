@@ -1,7 +1,7 @@
 from django.db import models
 
 from tapir.core.models import TapirModel
-from tapir.log.models import LogEntry
+from tapir.log.models import LogEntry, UpdateModelLogEntry
 from tapir.wirgarten.models import ProductType, GrowingPeriod, Member, Subscription
 from tapir.wirgarten.utils import format_subscription_list_html
 
@@ -23,3 +23,7 @@ class SubscriptionsRevokedLogEntry(LogEntry):
         self.populate(actor, user)
         self.subscriptions = format_subscription_list_html(subscriptions)
         return self
+
+
+class SubscriptionChangedLogEntry(UpdateModelLogEntry):
+    template_name = "subscriptions/log/subscription_changed_log_entry.html"

@@ -3,8 +3,9 @@ import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from tapir.accounts.models import TapirUser
 from tapir.core.models import TapirModel
-from tapir.log.models import LogEntry
+from tapir.log.models import LogEntry, ModelLogEntry
 from tapir.wirgarten.models import Member
 from tapir.wirgarten.utils import format_date
 
@@ -60,3 +61,16 @@ class MemberPaymentRhythmChangeLogEntry(LogEntry):
         )
         context_data["valid_from"] = format_date(self.valid_from)
         return context_data
+
+
+class MemberCredit(TapirModel):
+    due_date = models.DateField()
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    amount = models.DecimalField(decimal_places=2, max_digits=8)
+    created_at = models.DateTimeField(auto_now_add=True)
+    purpose = models.CharField(max_length=1024)
+    comment = models.TextField()
+
+
+class MemberCreditCreatedLogEntry(ModelLogEntry):
+    template_name = "payments/log/member_credit_created_log_entry.html"

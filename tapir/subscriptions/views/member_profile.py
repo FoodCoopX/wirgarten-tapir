@@ -13,6 +13,7 @@ from tapir.bestell_wizard.serializers import (
     BestellWizardCapacityCheckResponseSerializer,
 )
 from tapir.configuration.parameter import get_parameter_value
+from tapir.payments.services.member_credit_creator import MemberCreditCreator
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
 )
@@ -306,6 +307,15 @@ class UpdateSubscriptionsApiView(APIView):
             new_subscriptions=new_subscriptions,
             cache=self.cache,
             from_waiting_list=False,
+        )
+
+        MemberCreditCreator.create_member_credit_if_necessary(
+            member=member,
+            actor=actor,
+            product_type=product_type,
+            reference_date=contract_start_date,
+            comment="Produkt-Anteil vom Admin durch dem Mitgliederbereich reduziert",
+            cache=self.cache,
         )
 
 
