@@ -48,7 +48,7 @@ class MemberCreditCreator:
         cls,
         member: Member,
         actor: TapirUser,
-        amount_to_credit: float,
+        amount_to_credit: Decimal,
         reference_date: datetime.date,
         comment: str,
     ):

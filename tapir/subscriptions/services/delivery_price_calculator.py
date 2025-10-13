@@ -67,7 +67,7 @@ class DeliveryPriceCalculator:
         ):
             delivery_price *= 2
         elif subscription.product.type.delivery_cycle == EVERY_FOUR_WEEKS[0]:
-            delivery_price += 4
+            delivery_price *= 4
         return delivery_price
 
     @classmethod
