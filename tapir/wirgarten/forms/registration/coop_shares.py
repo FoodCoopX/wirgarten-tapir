@@ -76,7 +76,7 @@ class CooperativeShareForm(forms.Form):
             == THEME_G9
         ):
             label = _(
-                "Ja, ich habe die Satzung und die Kündigungsfrist von 4 Wochen zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
+                "Ja, ich habe die Satzung und die Kündigungsfrist von 2 Jahren zum Jahresende zur Kenntnis genommen. Ich verpflichte mich, die nach Gesetz und Satzung geschuldete Einzahlungen auf die Geschäftsanteile zu leisten."
             )
 
         self.fields["statute_consent"] = forms.BooleanField(
