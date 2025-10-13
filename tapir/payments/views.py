@@ -9,11 +9,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tapir.generic_exports.permissions import HasCoopManagePermission
-from tapir.payments.models import MemberPaymentRhythm, MemberCredit
+from tapir.payments.models import (
+    MemberPaymentRhythm,
+    MemberCredit,
+    MemberCreditCreatedLogEntry,
+)
 from tapir.payments.serializers import (
     MemberPaymentRhythmDataSerializer,
     FuturePaymentsResponseSerializer,
     ExtendedMemberCreditSerializer,
+    MemberCreditCreateSerializer,
 )
 from tapir.payments.services.member_payment_rhythm_service import (
     MemberPaymentRhythmService,
@@ -279,3 +284,32 @@ class MemberCreditListApiView(APIView):
         return Response(
             ExtendedMemberCreditSerializer(extended_credits, many=True).data
         )
+
+
+class MemberCreditCreateApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated, HasCoopManagePermission]
+
+    def __init__(self):
+        super().__init__()
+        self.cache = {}
+
+    @extend_schema(responses={200: str}, request=MemberCreditCreateSerializer)
+    def post(self, request):
+        serializer = MemberCreditCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        member = get_object_or_404(Member, id=serializer.validated_data["member_id"])
+
+        member_credit = MemberCredit.objects.create(
+            due_date=serializer.validated_data["due_date"],
+            member=member,
+            amount=serializer.validated_data["amount"],
+            purpose=serializer.validated_data["purpose"],
+            comment=serializer.validated_data["comment"],
+        )
+
+        MemberCreditCreatedLogEntry().populate(
+            model=member_credit, user=member, actor=request.user
+        ).save()
+
+        return Response("OK")

@@ -9,6 +9,7 @@ import { handleRequestError } from "../utils/handleRequestError.ts";
 import CreditListTable from "./CreditListTable.tsx";
 import dayjs from "dayjs";
 import LocaleData from "dayjs/plugin/localeData";
+import CreateMemberCreditModal from "./CreateMemberCreditModal.tsx";
 
 interface CreditListProps {
   csrfToken: string;
@@ -23,11 +24,16 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
   >([]);
   const [monthFilter, setMonthFilter] = useState<number>(-1);
   const [yearFilter, setYearFilter] = useState<number | undefined>();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   dayjs.locale("de");
   dayjs.extend(LocaleData);
 
   useEffect(() => {
+    loadCredits();
+  }, [monthFilter, yearFilter]);
+
+  function loadCredits() {
     setLoading(true);
 
     api
@@ -44,7 +50,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
         ),
       )
       .finally(() => setLoading(false));
-  }, [monthFilter, yearFilter]);
+  }
 
   return (
     <>
@@ -62,9 +68,7 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
                   variant={"outline-primary"}
                   text={"Gutschrift erzeugen"}
                   icon={"add_circle"}
-                  onClick={() => {
-                    alert("TODO");
-                  }}
+                  onClick={() => setShowCreateModal(true)}
                 />
               </div>
             </Card.Header>
@@ -123,6 +127,15 @@ const CreditList: React.FC<CreditListProps> = ({ csrfToken }) => {
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}
       />
+      {showCreateModal && (
+        <CreateMemberCreditModal
+          csrfToken={csrfToken}
+          setToastDatas={setToastDatas}
+          onHide={() => setShowCreateModal(false)}
+          show={showCreateModal}
+          onCreditCreated={() => loadCredits()}
+        />
+      )}
     </>
   );
 };

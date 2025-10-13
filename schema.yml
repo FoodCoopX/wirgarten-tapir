@@ -994,6 +994,34 @@ paths:
                 items:
                   $ref: '#/components/schemas/ExtendedMemberCredit'
           description: ''
+  /payments/api/member_credit_create:
+    post:
+      operationId: payments_api_member_credit_create_create
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreditCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberCreditCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberCreditCreateRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - DrfForwardAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: ''
   /payments/api/member_future_payments:
     get:
       operationId: payments_api_member_future_payments_retrieve
@@ -6553,6 +6581,30 @@ components:
       - created_at
       - due_date
       - member
+      - purpose
+    MemberCreditCreateRequest:
+      type: object
+      properties:
+        due_date:
+          type: string
+          format: date
+        member_id:
+          type: string
+          minLength: 1
+        amount:
+          type: number
+          format: double
+        purpose:
+          type: string
+          minLength: 1
+        comment:
+          type: string
+          minLength: 1
+      required:
+      - amount
+      - comment
+      - due_date
+      - member_id
       - purpose
     MemberDataToConfirm:
       type: object

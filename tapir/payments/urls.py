@@ -25,4 +25,9 @@ urlpatterns = [
         views.MemberCreditListApiView.as_view(),
         name="credit_list_filtered",
     ),
+    path(
+        "api/member_credit_create",
+        views.MemberCreditCreateApiView.as_view(),
+        name="member_credit_create",
+    ),
 ]

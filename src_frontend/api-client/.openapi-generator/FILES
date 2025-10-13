@@ -73,6 +73,7 @@ models/LocaleEnum.ts
 models/Member.ts
 models/MemberCountry.ts
 models/MemberCredit.ts
+models/MemberCreditCreateRequest.ts
 models/MemberDataToConfirm.ts
 models/MemberJokerInformation.ts
 models/MemberPaymentRhythm.ts

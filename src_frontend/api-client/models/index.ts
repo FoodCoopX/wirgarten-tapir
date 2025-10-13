@@ -62,6 +62,7 @@ export * from './LocaleEnum';
 export * from './Member';
 export * from './MemberCountry';
 export * from './MemberCredit';
+export * from './MemberCreditCreateRequest';
 export * from './MemberDataToConfirm';
 export * from './MemberJokerInformation';
 export * from './MemberPaymentRhythm';

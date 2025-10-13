@@ -54,3 +54,10 @@ class MemberPaymentRhythmDataSerializer(serializers.Serializer):
     date_of_next_rhythm_change = serializers.DateField()
     allowed_rhythms = serializers.DictField(child=serializers.CharField())
     rhythm_history = MemberPaymentRhythmSerializer(many=True)
+
+class MemberCreditCreateSerializer(serializers.Serializer):
+    due_date = serializers.DateField()
+    member_id = serializers.CharField()
+    amount = serializers.FloatField()
+    purpose = serializers.CharField()
+    comment = serializers.CharField()
