@@ -23,7 +23,8 @@ var initMap = (
   };
 
   for (const [id, pl] of Object.entries(data)) {
-    const marker = L.marker(idToCoords(id)).addTo(map);
+    var defaultIcon = L.icon({iconUrl: "/static/wirgarten/images/leaflet/marker-icon.png", iconSize: [25, 41]})
+    const marker = L.marker(idToCoords(id), {icon:defaultIcon}).addTo(map);
 
     marker.bindPopup(`<div style="text-align: center">
         <strong>${pl.name}</strong>
