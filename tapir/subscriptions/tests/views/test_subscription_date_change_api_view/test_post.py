@@ -4,7 +4,11 @@ from django.urls import reverse
 
 from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameters import ParameterDefinitions
-from tapir.wirgarten.tests.factories import SubscriptionFactory, MemberFactory
+from tapir.wirgarten.tests.factories import (
+    SubscriptionFactory,
+    MemberFactory,
+    ProductPriceFactory,
+)
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
 
@@ -82,6 +86,10 @@ class TestPost(TapirIntegrationTest):
             product=subscription.product,
             member=subscription.member,
         )
+        ProductPriceFactory.create(
+            product=subscription.product,
+            valid_from=datetime.date(year=2025, month=1, day=1),
+        )
 
         response = self.client.post(
             reverse("subscriptions:dates_change"),
@@ -120,6 +128,10 @@ class TestPost(TapirIntegrationTest):
             end_date=datetime.date(year=2026, month=12, day=31),
             product=subscription.product,
             member=subscription.member,
+        )
+        ProductPriceFactory.create(
+            product=subscription.product,
+            valid_from=datetime.date(year=2025, month=1, day=1),
         )
 
         response = self.client.post(

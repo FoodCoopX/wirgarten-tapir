@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from tapir.accounts.models import TapirUser
 from tapir.configuration.parameter import get_parameter_value
@@ -119,5 +120,5 @@ class MemberCreditCreator:
             cache=cache,
         )
 
-        amount_to_credit = float(already_paid) - total_to_pay
-        return max(amount_to_credit, 0)
+        amount_to_credit = already_paid - total_to_pay
+        return max(amount_to_credit, Decimal(0))

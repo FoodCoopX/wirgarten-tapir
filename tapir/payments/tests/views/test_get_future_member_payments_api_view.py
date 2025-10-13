@@ -97,7 +97,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
-        response_content = response.json()
+        response_content = response.json()["payments"]
 
         self.assertEqual(
             12,
@@ -176,7 +176,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         response = self.client.get(url)
 
         self.assertStatusCode(response, 200)
-        response_content = response.json()
+        response_content = response.json()["payments"]
         response_content.sort(
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
@@ -278,7 +278,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         response = self.client.get(url)
 
         self.assertStatusCode(response, 200)
-        response_content = response.json()
+        response_content = response.json()["payments"]
         response_content.sort(
             key=lambda extended_payment: extended_payment["payment"]["due_date"]
         )
@@ -372,7 +372,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
         response = self.client.get(url)
 
         self.assertStatusCode(response, 200)
-        response_content = response.json()
+        response_content = response.json()["payments"]
         response_content.sort(
             key=lambda extended_payment: (
                 extended_payment["payment"]["due_date"],
@@ -457,7 +457,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
-        response_content = response.json()
+        response_content = response.json()["payments"]
 
         self.assertEqual(
             2,
@@ -526,7 +526,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
-        response_content = response.json()
+        response_content = response.json()["payments"]
 
         self.assertEqual(
             3,
@@ -604,7 +604,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
-        response_content = response.json()
+        response_content = response.json()["payments"]
 
         self.assertEqual(
             3,
@@ -670,7 +670,7 @@ class TestGetFutureMemberPaymentsAPIView(TapirIntegrationTest):
 
         self.assertStatusCode(response, 200)
 
-        response_content = response.json()
+        response_content = response.json()["payments"]
 
         self.assertEqual(
             9,

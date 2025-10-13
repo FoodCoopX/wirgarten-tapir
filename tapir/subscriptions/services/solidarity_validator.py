@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from functools import cmp_to_key
 
 from django.core.exceptions import ValidationError
@@ -179,20 +180,19 @@ class SolidarityValidator:
     @classmethod
     def get_solidarity_factor_of_subscription(
         cls, subscription: Subscription, reference_date: datetime.date, cache: dict
-    ) -> float:
+    ) -> Decimal:
         if subscription.solidarity_price_absolute is not None:
-            return float(subscription.solidarity_price_absolute)
+            return subscription.solidarity_price_absolute
 
         if subscription.solidarity_price_percentage is None:
-            return 0
+            return Decimal(0)
 
         product_price = get_product_price(
             product=subscription.product, reference_date=reference_date, cache=cache
         ).price
         total_subscription_price_without_solidarity = (
-            float(product_price) * subscription.quantity
+            product_price * subscription.quantity
         )
-        return (
-            total_subscription_price_without_solidarity
-            * subscription.solidarity_price_percentage
+        return total_subscription_price_without_solidarity * Decimal(
+            subscription.solidarity_price_percentage
         )

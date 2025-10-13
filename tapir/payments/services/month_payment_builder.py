@@ -163,7 +163,7 @@ class MonthPaymentBuilder:
             cache=cache,
         )
 
-        new_payment_amount = total_to_pay - float(already_paid)
+        new_payment_amount = total_to_pay - already_paid
         new_payment_amount = Decimal(new_payment_amount).quantize(Decimal("0.01"))
         if new_payment_amount <= 0:
             return None
@@ -229,7 +229,7 @@ class MonthPaymentBuilder:
         range_end: datetime.date,
         subscriptions: list[Subscription],
         cache: dict,
-    ):
+    ) -> Decimal:
         subscriptions_active_within_period = [
             subscription
             for subscription in subscriptions
@@ -317,7 +317,7 @@ class MonthPaymentBuilder:
         range_start: datetime.date,
         range_end: datetime.date,
         cache: dict,
-    ):
+    ) -> Decimal:
         number_of_full_month_to_pay, number_of_single_deliveries_to_pay = (
             cls.get_number_of_months_and_deliveries_to_pay(
                 range_start=range_start,
@@ -337,7 +337,7 @@ class MonthPaymentBuilder:
                 subscription=subscription, at_date=range_start, cache=cache
             )
         )
-        return full_months_price + float(single_deliveries_price)
+        return full_months_price + single_deliveries_price
 
     @classmethod
     def get_number_of_months_and_deliveries_to_pay(

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from django.test import SimpleTestCase
@@ -49,7 +50,9 @@ class TestGetSolidarityFactorOfSubscription(SimpleTestCase):
             subscription, reference_date=reference_date, cache=cache
         )
 
-        self.assertEqual(3, result)
+        self.assertEqual(
+            Decimal(3).quantize(Decimal("0.01")), result.quantize(Decimal("0.01"))
+        )
 
         mock_get_product_price.assert_called_once_with(
             product=product, reference_date=reference_date, cache=cache

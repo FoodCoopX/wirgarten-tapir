@@ -23,12 +23,12 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
   setToastDatas,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [dueDate, setDueDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState<Date>(getLastDayOfMonth(new Date()));
   const [memberId, setMemberId] = useState<string>();
   const [members, setMembers] = useState<Member[]>([]);
   const [amount, setAmount] = useState(0.01);
-  const [purpose, setPurpose] = useState("");
-  const [comment, setComment] = useState("");
+  const [purpose, setPurpose] = useState<string>();
+  const [comment, setComment] = useState<string>();
   const coopApi = useApi(CoopApi, csrfToken);
   const paymentsApi = useApi(PaymentsApi, csrfToken);
 
@@ -55,12 +55,22 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
   }, [show]);
 
   function onCreate() {
-    setLoading(true);
-
     if (memberId === undefined) {
       alert("Kein Mitglied ausgewählt");
       return;
     }
+
+    if (!purpose) {
+      alert("Verwendungszweck fehlt");
+      return;
+    }
+
+    if (!comment) {
+      alert("Kommentar fehlt");
+      return;
+    }
+
+    setLoading(true);
 
     paymentsApi
       .paymentsApiMemberCreditCreateCreate({
@@ -86,6 +96,10 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
       .finally(() => setLoading(false));
   }
 
+  function getLastDayOfMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  }
+
   return (
     <Modal show={show} onHide={onHide} centered={true}>
       <Modal.Header closeButton>
@@ -97,10 +111,15 @@ const CreateMemberCreditModal: React.FC<CreateMemberCreditModalProps> = ({
             <Form.Label>Fälligkeitsdatum</Form.Label>
             <Form.Control
               type={"date"}
-              onChange={(event) => setDueDate(new Date(event.target.value))}
+              onChange={(event) =>
+                setDueDate(getLastDayOfMonth(new Date(event.target.value)))
+              }
               required={true}
               value={dayjs(dueDate).format("YYYY-MM-DD")}
             />
+            <Form.Text>
+              Gutschriften können nur am letzte Tag im Monat erzeugt werden
+            </Form.Text>
           </Form.Group>
           <Form.Group className={"mt-2"}>
             <Form.Label>Mitglied</Form.Label>

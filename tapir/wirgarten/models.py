@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from functools import partial
 from typing import Dict
 
@@ -693,9 +694,9 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
             models.Index(fields=["member"]),
         ]
 
-    def total_price(self, reference_date=None, cache: Dict = None):
+    def total_price(self, reference_date=None, cache: Dict = None) -> Decimal:
         if self.price_override is not None:
-            return float(self.price_override)
+            return self.price_override
 
         if reference_date is None:
             reference_date = max(self.start_date, get_today(cache=cache))
@@ -705,7 +706,7 @@ class Subscription(TapirModel, Payable, AdminConfirmableMixin):
 
             price = get_product_price(self.product, reference_date, cache=cache).price
 
-            subscription_price_without_solidarity = float(self.quantity) * float(price)
+            subscription_price_without_solidarity = self.quantity * price
 
             from tapir.subscriptions.services.solidarity_validator import (
                 SolidarityValidator,
