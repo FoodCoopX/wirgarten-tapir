@@ -18,9 +18,4 @@ urlpatterns = [
         AdminApplyMailChangeView.as_view(),
         name="admin_apply_mail_change",
     ),
-    path(
-        "link_expired",
-        generic.TemplateView.as_view(template_name="accounts/link_expired.html"),
-        name="link_expired",
-    ),
 ]
