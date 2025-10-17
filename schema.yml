@@ -4593,6 +4593,11 @@ components:
           type: string
         organization_name:
           type: string
+        logo_url:
+          type: string
+          format: uri
+        strings:
+          $ref: '#/components/schemas/BestellWizardStrings'
       required:
       - allow_investing_membership
       - coop_statute_link
@@ -4603,6 +4608,7 @@ components:
       - intro_step_text
       - label_checkbox_contract_policy
       - label_checkbox_sepa_mandat
+      - logo_url
       - organization_name
       - payment_rhythm_choices
       - price_of_a_share
@@ -4611,6 +4617,7 @@ components:
       - product_types
       - revocation_rights_explanation
       - show_coop_content
+      - strings
       - student_status_allowed
       - theme
       - trial_period_length_in_weeks
@@ -4715,6 +4722,22 @@ components:
             format: date
       required:
       - product_type_id_to_next_delivery_date_map
+    BestellWizardStrings:
+      type: object
+      properties:
+        step1a_title:
+          type: string
+        step1a_text:
+          type: string
+        step1b_title:
+          type: string
+        step1b_text:
+          type: string
+      required:
+      - step1a_text
+      - step1a_title
+      - step1b_text
+      - step1b_title
     BlankEnum:
       enum:
       - ''

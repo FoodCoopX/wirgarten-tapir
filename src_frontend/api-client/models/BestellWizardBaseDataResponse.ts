@@ -20,6 +20,13 @@ import {
     PublicProductTypeToJSON,
     PublicProductTypeToJSONTyped,
 } from './PublicProductType';
+import type { BestellWizardStrings } from './BestellWizardStrings';
+import {
+    BestellWizardStringsFromJSON,
+    BestellWizardStringsFromJSONTyped,
+    BestellWizardStringsToJSON,
+    BestellWizardStringsToJSONTyped,
+} from './BestellWizardStrings';
 
 /**
  * 
@@ -147,6 +154,18 @@ export interface BestellWizardBaseDataResponse {
      * @memberof BestellWizardBaseDataResponse
      */
     organizationName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    logoUrl: string;
+    /**
+     * 
+     * @type {BestellWizardStrings}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    strings: BestellWizardStrings;
 }
 
 /**
@@ -173,6 +192,8 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('productIdsThatAreAlreadyAtCapacity' in value) || value['productIdsThatAreAlreadyAtCapacity'] === undefined) return false;
     if (!('coopStatuteLink' in value) || value['coopStatuteLink'] === undefined) return false;
     if (!('organizationName' in value) || value['organizationName'] === undefined) return false;
+    if (!('logoUrl' in value) || value['logoUrl'] === undefined) return false;
+    if (!('strings' in value) || value['strings'] === undefined) return false;
     return true;
 }
 
@@ -206,6 +227,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'productIdsThatAreAlreadyAtCapacity': json['product_ids_that_are_already_at_capacity'],
         'coopStatuteLink': json['coop_statute_link'],
         'organizationName': json['organization_name'],
+        'logoUrl': json['logo_url'],
+        'strings': BestellWizardStringsFromJSON(json['strings']),
     };
 }
 
@@ -240,6 +263,8 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'product_ids_that_are_already_at_capacity': value['productIdsThatAreAlreadyAtCapacity'],
         'coop_statute_link': value['coopStatuteLink'],
         'organization_name': value['organizationName'],
+        'logo_url': value['logoUrl'],
+        'strings': BestellWizardStringsToJSON(value['strings']),
     };
 }
 

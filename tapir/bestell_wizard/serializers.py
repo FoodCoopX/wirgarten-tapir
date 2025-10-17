@@ -47,6 +47,13 @@ class BestellWizardCapacityCheckResponseSerializer(serializers.Serializer):
     )
 
 
+class BestellWizardStringsSerializer(serializers.Serializer):
+    step1a_title = serializers.CharField()
+    step1a_text = serializers.CharField()
+    step1b_title = serializers.CharField()
+    step1b_text = serializers.CharField()
+
+
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
     theme = serializers.CharField()
@@ -72,6 +79,8 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     )
     coop_statute_link = serializers.CharField()
     organization_name = serializers.CharField()
+    logo_url = serializers.URLField()
+    strings = BestellWizardStringsSerializer()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

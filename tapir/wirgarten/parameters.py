@@ -952,13 +952,73 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
-            label="Erklärungstext unter dem Checkbox zur Widerrufsbelehrung ",
+            label="Erklärungstext unter dem Checkbox zur Widerrufsbelehrung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
             description="Kann HTML sein",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=0,
             meta=ParameterMeta(textarea=True),
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR,
+            label="Hintergrundfarbe im BestellWizard",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="#ffffff",
+            description="Typischerweise im Hexadecimal-Format, z.B. '#3AA551'",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-1,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_BACKGROUND_IMAGE,
+            label="Hintergrundbild im BestellWizard",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Als URL. Wenn nicht leer nimmt das Bild die Priorität über der Farbe.",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-2,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP1A_TITLE,
+            label="Seite 1A: Begrüßungsseite - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Schön, dass du Teil unserer Gemeinschaft werden willst!",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-3,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP1A_TEXT,
+            label="Seite 1A: Begrüßungsseite - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Starte mit dem Bestellformular, damit du bald frisches Gemüse von uns erhältst.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-4,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP1B_TITLE,
+            label="Seite 1B: Begrüßungsseite im Wartelistemodus - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Schön, dass du Teil unserer Gemeinschaft werden willst!",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-5,
+        )
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP1B_TEXT,
+            label="Seite 1B: Begrüßungsseite im Wartelistemodus - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Da wir derzeit keine freien Kapazitäten haben, kannst du dich nur auf die Warteliste setzen lassen. Wir kontaktieren dich dann, sobald ein passender Anteil freigeworden ist.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=-6,
         )
 
     def parameter_definition(

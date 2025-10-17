@@ -1,5 +1,9 @@
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  BestellWizardStrings,
+  PublicPickupLocation,
+  PublicProductType,
+} from "../../api-client";
 
 export type BestellWizardSettings = {
   theme: TapirTheme;
@@ -22,4 +26,6 @@ export type BestellWizardSettings = {
   productIdsThatAreAlreadyAtCapacity: string[];
   coopStatuteLink: string;
   organizationName: string;
+  logoUrl: string;
+  strings: BestellWizardStrings;
 };

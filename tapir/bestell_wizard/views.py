@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.templatetags.static import static
 from django.views.generic import TemplateView
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -71,7 +72,27 @@ from tapir.wirgarten.utils import (
 
 
 class BestellWizardView(TemplateView):
-    template_name = "subscriptions/bestell_wizard.html"
+    template_name = "bestell_wizard/bestell_wizard.html"
+
+
+class BestellWizardMobileView(TemplateView):
+    template_name = "bestell_wizard/bestell_wizard_mobile.html"
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        cache = {}
+        context_data["body_style"] = (
+            f"background-color: {get_parameter_value(key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR, cache=cache)}"
+        )
+        background_image_url = get_parameter_value(
+            key=ParameterKeys.BESTELLWIZARD_BACKGROUND_IMAGE, cache=cache
+        )
+        if background_image_url:
+            context_data["body_style"] = (
+                f"background-image: url({background_image_url}); background-repeat: repeat"
+            )
+        context_data["cache"] = cache
+        return context_data
 
 
 class BestellWizardConfirmOrderApiView(APIView):
@@ -376,9 +397,26 @@ class BestellWizardBaseDataApiView(APIView):
             "organization_name": get_parameter_value(
                 key=ParameterKeys.SITE_NAME, cache=self.cache
             ),
+            "logo_url": static(
+                f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
+            ),
+            "strings": self.build_strings_object(cache=self.cache),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
+
+    @classmethod
+    def build_strings_object(cls, cache: dict):
+        string_id_to_parameter_key_map = {
+            "step1a_title": ParameterKeys.BESTELLWIZARD_STEP1A_TITLE,
+            "step1a_text": ParameterKeys.BESTELLWIZARD_STEP1A_TEXT,
+            "step1b_title": ParameterKeys.BESTELLWIZARD_STEP1B_TITLE,
+            "step1b_text": ParameterKeys.BESTELLWIZARD_STEP1B_TEXT,
+        }
+        return {
+            string_id: get_parameter_value(key=parameter_key, cache=cache)
+            for string_id, parameter_key in string_id_to_parameter_key_map.items()
+        }
 
     @classmethod
     def build_product_type_ids_that_are_already_at_capacity(

@@ -1,0 +1,36 @@
+{% load django_vite %}
+{% load configuration %}
+{% load tapir_static %}
+{% load core %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="utf-8">
+    <title>
+        {% block title %}{% get_parameter_value_tag "wirgarten.site.name" cache %} - Tapir{% endblock %}
+    </title>
+    {% get_parameter_value_tag "organisation.theme" cache as theme %}
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}"/>
+    <link rel="stylesheet"
+          href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}"/>
+    {% javascript_environment_variables %}
+    {% vite_hmr_client %}
+    {% vite_react_refresh %}
+    {% vite_asset 'bestell_wizard_mobile/bestell_wizard_mobile_entry.tsx' %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          href="{% static 'core/bootstrap/5.1.3/css/bootstrap.min.css' %}">
+</head>
+{% get_parameter_value_tag "wirgarten.bestellwizard.background_color" cache as background_color %}
+<body style="{{ body_style }}; margin: 0">
+<div class="container-fluid" style="height: 100vh">
+    <main id="main-content" role="main" style="height: 100%">
+        {% csrf_token %}
+        <div id="bestell_wizard_mobile" style="height: 100%; max-width: 1000px; margin: auto">
+        </div>
+    </main>
+</div>
+</body>
+</html>

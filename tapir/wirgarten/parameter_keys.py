@@ -114,6 +114,12 @@ class ParameterKeys:
     BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION = (
         f"{PREFIX}.bestellwizard.revocation_rights_explanation"
     )
+    BESTELLWIZARD_BACKGROUND_COLOR = f"{PREFIX}.bestellwizard.background_color"
+    BESTELLWIZARD_BACKGROUND_IMAGE = f"{PREFIX}.bestellwizard.background_image"
+    BESTELLWIZARD_STEP1A_TITLE = f"{PREFIX}.bestellwizard.step1a.title"
+    BESTELLWIZARD_STEP1A_TEXT = f"{PREFIX}.bestellwizard.step1a.text"
+    BESTELLWIZARD_STEP1B_TITLE = f"{PREFIX}.bestellwizard.step1b.title"
+    BESTELLWIZARD_STEP1B_TEXT = f"{PREFIX}.bestellwizard.step1b.text"
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

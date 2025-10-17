@@ -25,6 +25,11 @@ urlpatterns = [
         name="bestell_wizard",
     ),
     path(
+        "bestell_wizard_mobile",
+        views.BestellWizardMobileView.as_view(),
+        name="bestell_wizard_mobile",
+    ),
+    path(
         "bestell_wizard_confirm_order",
         views.BestellWizardConfirmOrderApiView.as_view(),
         name="bestell_wizard_confirm_order",

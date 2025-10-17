@@ -22,5 +22,12 @@ export function buildEmptySettings(): BestellWizardSettings {
     productIdsThatAreAlreadyAtCapacity: [],
     organizationName: "",
     coopStatuteLink: "",
+    logoUrl: "",
+    strings: {
+      step1aTitle: "",
+      step1aText: "",
+      step1bTitle: "",
+      step1bText: "",
+    },
   };
 }
