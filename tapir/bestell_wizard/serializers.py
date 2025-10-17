@@ -54,6 +54,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step1b_text = serializers.CharField()
     step2_title = serializers.CharField()
     step2_text = serializers.CharField()
+    step3_title = serializers.CharField()
+    step3_text = serializers.CharField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):

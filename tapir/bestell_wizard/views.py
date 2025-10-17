@@ -414,6 +414,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step1b_text": ParameterKeys.BESTELLWIZARD_STEP1B_TEXT,
             "step2_title": ParameterKeys.BESTELLWIZARD_STEP2_TITLE,
             "step2_text": ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
+            "step3_title": ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
+            "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

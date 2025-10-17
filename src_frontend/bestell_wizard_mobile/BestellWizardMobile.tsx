@@ -15,6 +15,8 @@ import Step2FirstName from "./steps/Step2FirstName.tsx";
 import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
 import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
+import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../tapir/core/static/core/css/base.css";
 
 interface BestellWizardProps {
   csrfToken: string;

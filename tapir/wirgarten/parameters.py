@@ -1048,10 +1048,32 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
-            label="Seite 1B: Begrüßungsseite im Wartelistemodus - Text",
+            label="Seite 2: Vorname - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
             description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
+            label="Seite 3: Produktauswahl - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{vorname}, an welchen Anteilen hast du Interesse?",
+            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: '{vorname}, an welchen Anteilen hast du Interesse?'",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
+            label="Seite 3: Produktauswahl - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: '{vorname}, an welchen Anteilen hast du Interesse?'",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

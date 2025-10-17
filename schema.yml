@@ -4737,6 +4737,10 @@ components:
           type: string
         step2_text:
           type: string
+        step3_title:
+          type: string
+        step3_text:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4744,6 +4748,8 @@ components:
       - step1b_title
       - step2_text
       - step2_title
+      - step3_text
+      - step3_title
     BlankEnum:
       enum:
       - ''
