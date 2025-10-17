@@ -116,6 +116,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
+            settings={settings}
           />
         );
       case "3_product_type_choice":

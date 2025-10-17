@@ -28,6 +28,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step1aText: "",
       step1bTitle: "",
       step1bText: "",
+      step2Title: "",
+      step2Text: "",
     },
   };
 }

@@ -43,6 +43,18 @@ export interface BestellWizardStrings {
      * @memberof BestellWizardStrings
      */
     step1bText: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step2Title: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BestellWizardStrings
+     */
+    step2Text: string;
 }
 
 /**
@@ -53,6 +65,8 @@ export function instanceOfBestellWizardStrings(value: object): value is BestellW
     if (!('step1aText' in value) || value['step1aText'] === undefined) return false;
     if (!('step1bTitle' in value) || value['step1bTitle'] === undefined) return false;
     if (!('step1bText' in value) || value['step1bText'] === undefined) return false;
+    if (!('step2Title' in value) || value['step2Title'] === undefined) return false;
+    if (!('step2Text' in value) || value['step2Text'] === undefined) return false;
     return true;
 }
 
@@ -70,6 +84,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step1aText': json['step1a_text'],
         'step1bTitle': json['step1b_title'],
         'step1bText': json['step1b_text'],
+        'step2Title': json['step2_title'],
+        'step2Text': json['step2_text'],
     };
 }
 
@@ -88,6 +104,8 @@ export function BestellWizardStringsFromJSONTyped(json: any, ignoreDiscriminator
         'step1a_text': value['step1aText'],
         'step1b_title': value['step1bTitle'],
         'step1b_text': value['step1bText'],
+        'step2_title': value['step2Title'],
+        'step2_text': value['step2Text'],
     };
 }
 

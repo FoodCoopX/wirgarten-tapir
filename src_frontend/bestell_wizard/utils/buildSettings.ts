@@ -1,7 +1,10 @@
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { sortProductTypes } from "./sortProductTypes.ts";
-import { BestellWizardBaseDataResponse, PublicPickupLocation } from "../../api-client";
+import {
+  BestellWizardBaseDataResponse,
+  PublicPickupLocation,
+} from "../../api-client";
 
 export function buildSettings(
   baseData: BestellWizardBaseDataResponse,

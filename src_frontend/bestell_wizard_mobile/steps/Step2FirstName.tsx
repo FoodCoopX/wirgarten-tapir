@@ -2,17 +2,20 @@ import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 interface Step2FirstNameProps {
   goToNextStep: () => void;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
+  settings: BestellWizardSettings;
 }
 
 const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   goToNextStep,
   personalData,
   setPersonalData,
+  settings,
 }) => {
   return (
     <div
@@ -21,7 +24,8 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         "d-flex align-items-center justify-content-center gap-2 flex-column text-center"
       }
     >
-      <h1>Los geht's: Wie heißt du?</h1>
+      {settings.strings.step2Title && <h1>{settings.strings.step2Title}</h1>}
+      {settings.strings.step2Text && <p>{settings.strings.step2Text}</p>}
       <Form.Control
         placeholder={"Vorname"}
         style={{ maxWidth: "300px" }}
@@ -35,6 +39,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         variant={"outline-secondary"}
         text={"Weiter"}
         onClick={goToNextStep}
+        disabled={personalData.firstName.length === 0}
       />
     </div>
   );

@@ -861,6 +861,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
     def import_definitions_bestellwizard(self):
+        bestellwizard_parameter_order = 100
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST,
             label="BestellWizard in Warteliste-Modus",
@@ -869,8 +870,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, bestehende und neue Mitglieder können keine neue Produkt-Anteile buchen, egal ob es Kapazitäten gibt."
             "Wenn ausgeschaltet, Produkt-Anteile können gebucht werden wenn es genug Kapazitäten gibt.",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=10,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_SHOW_INTRO,
@@ -880,8 +882,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Wenn aktiviert, erscheint eine Intro-Seite, auf der der Benutzer auswählen kann, welche Produktanteile gezeichnet werden sollen. "
             "Wenn nicht aktiviert, werden alle Formularseiten zu allen Produktanteilen angezeigt.",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=5,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_INTRO_TEXT,
@@ -905,8 +908,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
                 ),
                 textarea=True,
             ),
-            order_priority=4,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_COOP_TEXT,
@@ -925,8 +929,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             meta=ParameterMeta(
                 show_only_when=legal_status_is_cooperative, textarea=True
             ),
-            order_priority=3,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
@@ -935,9 +940,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Ich ermächtige den Betrieb die monatlichen Beträge für weitere Verträge mittels Lastschrift von meinem Bankkonto einzuziehen. Zugleich weise ich mein Kreditinstitut an, die gezogene Lastschrift einzulösen.",
             description="Kann HTML sein",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=2,
+            order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_CONTRACT_POLICY_CHECKBOX_TEXT,
@@ -946,9 +952,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Ich habe die Vertragsgrundsätze/Gebührenordnung gelesen und akzeptiere diese.",
             description="Kann HTML sein",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=1,
+            order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_REVOCATION_RIGHTS_EXPLANATION,
@@ -957,9 +964,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Du kannst deine Verträge innerhalb von zwei Wochen in Textform (z.B. Brief, E-Mail) widerrufen. Die Frist beginnt spätestens mit Erhalt dieser Belehrung. Zur Wahrung der Widerrufsfrist genügt die rechtzeitige Absendung eines formlosen Widerrufsschreibens an der Verwaltung.",
             description="Kann HTML sein",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=0,
+            order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_COLOR,
@@ -968,8 +976,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="#ffffff",
             description="Typischerweise im Hexadecimal-Format, z.B. '#3AA551'",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-1,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_BACKGROUND_IMAGE,
@@ -978,8 +987,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="",
             description="Als URL. Wenn nicht leer nimmt das Bild die Priorität über der Farbe.",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-2,
+            order_priority=-bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP1A_TITLE,
@@ -988,8 +998,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Schön, dass du Teil unserer Gemeinschaft werden willst!",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-3,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP1A_TEXT,
@@ -998,8 +1009,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Starte mit dem Bestellformular, damit du bald frisches Gemüse von uns erhältst.",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-4,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP1B_TITLE,
@@ -1008,8 +1020,9 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Schön, dass du Teil unserer Gemeinschaft werden willst!",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-5,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP1B_TEXT,
@@ -1018,8 +1031,31 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="Da wir derzeit keine freien Kapazitäten haben, kannst du dich nur auf die Warteliste setzen lassen. Wir kontaktieren dich dann, sobald ein passender Anteil freigeworden ist.",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-6,
+            order_priority=bestellwizard_parameter_order,
         )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP2_TITLE,
+            label="Seite 2: Vorname - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Los geht’s: Wie heißt du?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
+            label="Seite 1B: Begrüßungsseite im Wartelistemodus - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
 
     def parameter_definition(
         self,

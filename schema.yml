@@ -4733,11 +4733,17 @@ components:
           type: string
         step1b_text:
           type: string
+        step2_title:
+          type: string
+        step2_text:
+          type: string
       required:
       - step1a_text
       - step1a_title
       - step1b_text
       - step1b_title
+      - step2_text
+      - step2_title
     BlankEnum:
       enum:
       - ''

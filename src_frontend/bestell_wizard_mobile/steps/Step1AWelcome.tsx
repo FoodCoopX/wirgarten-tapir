@@ -18,8 +18,8 @@ const Step1AWelcome: React.FC<Step1AIntroProps> = ({
         "d-flex align-items-center justify-content-center gap-2 flex-column text-center"
       }
     >
-      <h1>{settings.strings.step1aTitle}</h1>
-      <p>{settings.strings.step1aText}</p>
+      {settings.strings.step1aTitle && <h1>{settings.strings.step1aTitle}</h1>}
+      {settings.strings.step1aText && <p>{settings.strings.step1aText}</p>}
       <TapirButton
         variant={"outline-secondary"}
         text={"Starten"}
