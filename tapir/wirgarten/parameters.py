@@ -1073,7 +1073,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 3: Produktauswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
-            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: '{vorname}, an welchen Anteilen hast du Interesse?'",
+            description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ProductTypeAccordionInBestellWizard } from './ProductTypeAccordionInBestellWizard';
+import {
+    ProductTypeAccordionInBestellWizardFromJSON,
+    ProductTypeAccordionInBestellWizardFromJSONTyped,
+    ProductTypeAccordionInBestellWizardToJSON,
+    ProductTypeAccordionInBestellWizardToJSONTyped,
+} from './ProductTypeAccordionInBestellWizard';
 import type { PublicProduct } from './PublicProduct';
 import {
     PublicProductFromJSON,
@@ -87,6 +94,12 @@ export interface PublicProductType {
      * @memberof PublicProductType
      */
     forceWaitingList?: boolean;
+    /**
+     * 
+     * @type {Array<ProductTypeAccordionInBestellWizard>}
+     * @memberof PublicProductType
+     */
+    readonly accordions: Array<ProductTypeAccordionInBestellWizard>;
 }
 
 /**
@@ -96,6 +109,7 @@ export function instanceOfPublicProductType(value: object): value is PublicProdu
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('products' in value) || value['products'] === undefined) return false;
     if (!('noDelivery' in value) || value['noDelivery'] === undefined) return false;
+    if (!('accordions' in value) || value['accordions'] === undefined) return false;
     return true;
 }
 
@@ -119,6 +133,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'noDelivery': json['no_delivery'],
         'singleSubscriptionOnly': json['single_subscription_only'] == null ? undefined : json['single_subscription_only'],
         'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
+        'accordions': ((json['accordions'] as Array<any>).map(ProductTypeAccordionInBestellWizardFromJSON)),
     };
 }
 
@@ -126,7 +141,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
       return PublicProductTypeToJSONTyped(json, false);
   }
 
-  export function PublicProductTypeToJSONTyped(value?: Omit<PublicProductType, 'products'|'no_delivery'> | null, ignoreDiscriminator: boolean = false): any {
+  export function PublicProductTypeToJSONTyped(value?: Omit<PublicProductType, 'products'|'no_delivery'|'accordions'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

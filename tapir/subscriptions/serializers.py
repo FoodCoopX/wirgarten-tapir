@@ -3,6 +3,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
+from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.core.config import LEGAL_STATUS_OPTIONS
 from tapir.deliveries.serializers import (
     ProductSerializer,
@@ -12,6 +13,7 @@ from tapir.deliveries.serializers import (
 )
 from tapir.pickup_locations.config import OPTIONS_PICKING_MODE
 from tapir.pickup_locations.serializers import ProductBasketSizeEquivalenceSerializer
+from tapir.products.serializers import ProductTypeAccordionInBestellWizardSerializer
 from tapir.subscriptions.services.subscription_price_manager import (
     SubscriptionPriceManager,
 )
@@ -142,10 +144,12 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "no_delivery",
             "single_subscription_only",
             "force_waiting_list",
+            "accordions",
         ]
 
     products = SerializerMethodField()
     no_delivery = SerializerMethodField()
+    accordions = SerializerMethodField()
 
     @extend_schema_field(PublicProductSerializer(many=True))
     def get_products(self, product_type: ProductType):
@@ -156,6 +160,15 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_no_delivery(product_type: ProductType) -> bool:
         return product_type.delivery_cycle == NO_DELIVERY[0]
+
+    @extend_schema_field(ProductTypeAccordionInBestellWizardSerializer(many=True))
+    def get_accordions(self, product_type: ProductType):
+        return ProductTypeAccordionInBestellWizardSerializer(
+            ProductTypeAccordionInBestellWizard.objects.filter(
+                product_type=product_type
+            ),
+            many=True,
+        ).data
 
 
 class OrderConfirmationResponseSerializer(serializers.Serializer):

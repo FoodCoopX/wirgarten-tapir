@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Col, ProgressBar, Row, Spinner } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { BestellWizardApi } from "../api-client";
+import { BestellWizardApi, type PublicProductType } from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
@@ -17,6 +17,7 @@ import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalDa
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
+import Step4AProductTypeIntro from "./steps/Step4AProductTypeIntro.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -27,7 +28,8 @@ type Step =
   | "1b_welcome_waiting_list"
   | "2_first_name"
   | "3_product_type_choice"
-  | "loading";
+  | "loading"
+  | string;
 
 const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
@@ -40,6 +42,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [personalData, setPersonalData] = useState<PersonalData>(
     getEmptyPersonalData(),
   );
+  const [selectedProductTypes, setSelectedProductTypes] = useState<
+    PublicProductType[]
+  >([]);
 
   useEffect(() => {
     Promise.all([
@@ -49,6 +54,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         const newSettings = buildSettings(baseData, []);
         setSettings(newSettings);
         setSettingsLoaded(true);
+        setSelectedProductTypes(newSettings.productTypes);
       })
       .catch((error) =>
         handleRequestError(
@@ -60,17 +66,20 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, []);
 
   useEffect(() => {
-    document
-      .getElementById(currentStep)
-      ?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById(currentStep);
+    element?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [currentStep]);
 
   useEffect(() => {
     if (!settingsLoaded) return;
     const newSteps = buildSteps();
     setSteps(newSteps);
-    setCurrentStep(newSteps[0]);
-  }, [settings]);
+    if (!newSteps.includes(currentStep)) {
+      setCurrentStep(newSteps[0]);
+    }
+  }, [settings, selectedProductTypes]);
 
   function buildSteps() {
     const newSteps: Step[] = [];
@@ -81,6 +90,11 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     if (settings.introEnabled) {
       newSteps.push("3_product_type_choice");
     }
+
+    for (const productType of selectedProductTypes) {
+      newSteps.push(productType.id!);
+    }
+
     return newSteps;
   }
 
@@ -127,6 +141,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             goToNextStep={goToNextStep}
             settings={settings}
             firstName={personalData.firstName}
+            selectedProductTypes={selectedProductTypes}
+            setSelectedProductTypes={setSelectedProductTypes}
           />
         );
       case "loading":
@@ -137,6 +153,20 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           >
             <Spinner />
           </div>
+        );
+      default:
+        // If the step is not one of the predefined ones, then it's a product type step
+        const productType = settings.productTypes.find(
+          (productType) => productType.id === step,
+        );
+        if (productType === undefined) {
+          return <div>Fehler: ungültiges Schritt {step}</div>;
+        }
+        return (
+          <Step4AProductTypeIntro
+            productType={productType}
+            goToNextStep={goToNextStep}
+          />
         );
     }
   }
@@ -182,7 +212,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             <div className={"d-flex flex-row gap-2 align-items-center"}>
               <TapirButton
                 size={"sm"}
-                text={"zurück"}
+                icon={"first_page"}
+                variant={"outline-secondary"}
+                onClick={() => setCurrentStep(steps[0])}
+              />
+              <TapirButton
+                size={"sm"}
+                icon={"chevron_backward"}
                 variant={"outline-secondary"}
                 onClick={goToPreviousStep}
               />

@@ -148,9 +148,11 @@ class ExtendedProductTypeApiView(APIView):
                     product_type=product_type,
                     title=accordion_data["title"],
                     description=accordion_data["description"],
-                    order=accordion_data["order"],
+                    order=index,
                 )
-                for accordion_data in extended_data["accordions_in_bestell_wizard"]
+                for index, accordion_data in enumerate(
+                    extended_data["accordions_in_bestell_wizard"]
+                )
             ]
             ProductTypeAccordionInBestellWizard.objects.bulk_create(accordions)
 

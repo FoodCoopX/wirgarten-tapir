@@ -1,7 +1,11 @@
 import React from "react";
 import { Accordion, Col, Form, Row } from "react-bootstrap";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import { DeliveryCycleEnum, GrowingPeriod, type ProductTypeAccordionInBestellWizard } from "../api-client";
+import {
+  DeliveryCycleEnum,
+  GrowingPeriod,
+  type ProductTypeAccordionInBestellWizard,
+} from "../api-client";
 import dayjs from "dayjs";
 import TapirButton from "../components/TapirButton.tsx";
 
@@ -359,7 +363,10 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
         <Row className={"mt-2"}>
           <Accordion>
             {accordions.map((accordion, index) => (
-              <Accordion.Item eventKey={index.toString()}>
+              <Accordion.Item
+                eventKey={index.toString()}
+                key={index.toString()}
+              >
                 <Accordion.Header>{accordion.title}</Accordion.Header>
                 <Accordion.Body>
                   <Form.Group controlId={"accordion_title_" + index}>

@@ -8122,7 +8122,13 @@ components:
           title: Nur Einzelabonnement erlaubt
         force_waiting_list:
           type: boolean
+        accordions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
+          readOnly: true
       required:
+      - accordions
       - name
       - no_delivery
       - products

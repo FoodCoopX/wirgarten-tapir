@@ -48,7 +48,7 @@ def create_field(param: TapirParameter, cache: Dict):
         return forms.CharField(
             label=_(param.label),
             help_text=help_text,
-            required=True,
+            required=False,
             initial=param_value,
             validators=param_meta.validators,
             widget=Textarea if param_meta.textarea else None,
