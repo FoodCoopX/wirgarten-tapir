@@ -120,6 +120,8 @@ export * from './ProductBasketSizeEquivalence';
 export * from './ProductBasketSizeEquivalenceRequest';
 export * from './ProductForCancellation';
 export * from './ProductType';
+export * from './ProductTypeAccordionInBestellWizard';
+export * from './ProductTypeAccordionInBestellWizardRequest';
 export * from './ProductTypesAndConfig';
 export * from './PublicConfirmWaitingListEntryRequestRequest';
 export * from './PublicPickupLocation';

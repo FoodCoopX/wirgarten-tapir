@@ -1,8 +1,9 @@
 import React from "react";
-import { Col, Form, Row } from "react-bootstrap";
+import { Accordion, Col, Form, Row } from "react-bootstrap";
 import { formatDateNumeric } from "../utils/formatDateNumeric.ts";
-import { DeliveryCycleEnum, GrowingPeriod } from "../api-client";
+import { DeliveryCycleEnum, GrowingPeriod, type ProductTypeAccordionInBestellWizard } from "../api-client";
 import dayjs from "dayjs";
+import TapirButton from "../components/TapirButton.tsx";
 
 interface ProductTypeFormProps {
   name: string;
@@ -42,6 +43,8 @@ interface ProductTypeFormProps {
   setContractLink: (contractLink: string) => void;
   forceWaitingList: boolean;
   setForceWaitingList: (forceWaitingList: boolean) => void;
+  accordions: ProductTypeAccordionInBestellWizard[];
+  setAccordions: (accordions: ProductTypeAccordionInBestellWizard[]) => void;
 }
 
 const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
@@ -82,7 +85,37 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setContractLink,
   forceWaitingList,
   setForceWaitingList,
+  accordions,
+  setAccordions,
 }) => {
+  function setAccordionTitle(title: string, index: number) {
+    accordions[index].title = title;
+    setAccordions([...accordions]);
+  }
+
+  function setAccordionDescription(description: string, index: number) {
+    accordions[index].description = description;
+    setAccordions([...accordions]);
+  }
+
+  function moveAccordionUp(indexToMoveUp: number) {
+    swapAccordionIndexes(indexToMoveUp, indexToMoveUp - 1);
+  }
+
+  function moveAccordionDown(indexToMoveDown: number) {
+    swapAccordionIndexes(indexToMoveDown, indexToMoveDown + 1);
+  }
+
+  function swapAccordionIndexes(indexA: number, indexB: number) {
+    const accordionA = accordions[indexA];
+    const accordionB = accordions[indexB];
+
+    accordions[indexB] = accordionA;
+    accordions[indexA] = accordionB;
+
+    setAccordions([...accordions]);
+  }
+
   return (
     <Row>
       <Col>
@@ -322,6 +355,80 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               value={contractLink}
             />
           </Form.Group>
+        </Row>
+        <Row className={"mt-2"}>
+          <Accordion>
+            {accordions.map((accordion, index) => (
+              <Accordion.Item eventKey={index.toString()}>
+                <Accordion.Header>{accordion.title}</Accordion.Header>
+                <Accordion.Body>
+                  <Form.Group controlId={"accordion_title_" + index}>
+                    <Form.Label>Akkordeon {index + 1} - Title</Form.Label>
+                    <Form.Control
+                      type={"text"}
+                      onChange={(event) =>
+                        setAccordionTitle(event.target.value, index)
+                      }
+                      required={true}
+                      value={accordion.title}
+                    />
+                  </Form.Group>
+                  <Form.Group controlId={"accordion_description_" + index}>
+                    <Form.Label>Akkordeon {index + 1} - Text</Form.Label>
+                    <Form.Control
+                      type={"text"}
+                      onChange={(event) =>
+                        setAccordionDescription(event.target.value, index)
+                      }
+                      required={true}
+                      value={accordion.description}
+                    />
+                  </Form.Group>
+                  <div className={"mt-2 d-flex flew-row gap-2"}>
+                    <TapirButton
+                      variant={"outline-danger"}
+                      icon={"delete"}
+                      text={"Akkordeon entfernen"}
+                      onClick={() =>
+                        setAccordions(accordions.filter((a, i) => i !== index))
+                      }
+                    />
+                    <TapirButton
+                      icon={"arrow_drop_up"}
+                      variant={"outline-secondary"}
+                      disabled={index === 0}
+                      onClick={() => moveAccordionUp(index)}
+                    />
+                    <TapirButton
+                      icon={"arrow_drop_down"}
+                      variant={"outline-secondary"}
+                      disabled={index === accordions.length - 1}
+                      onClick={() => moveAccordionDown(index)}
+                    />
+                  </div>
+                </Accordion.Body>
+              </Accordion.Item>
+            ))}
+          </Accordion>
+          <Row className={"mt-2"}>
+            <Col>
+              <TapirButton
+                variant={"outline-secondary"}
+                text={"Akkordeon hinzufügen"}
+                icon={"add_circle"}
+                onClick={() =>
+                  setAccordions([
+                    ...accordions,
+                    {
+                      title: "Titel",
+                      description: "Beschreibung",
+                      order: accordions.length,
+                    },
+                  ])
+                }
+              />
+            </Col>
+          </Row>
         </Row>
       </Col>
     </Row>

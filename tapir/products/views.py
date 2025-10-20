@@ -7,6 +7,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.parameter import get_parameter_value
 from tapir.generic_exports.permissions import HasCoopManagePermission
 from tapir.products.serializers import (
@@ -139,6 +140,20 @@ class ExtendedProductTypeApiView(APIView):
                 tax_rate_change_date=extended_data["tax_rate_change_date"],
             )
 
+            ProductTypeAccordionInBestellWizard.objects.filter(
+                product_type=product_type
+            ).delete()
+            accordions = [
+                ProductTypeAccordionInBestellWizard(
+                    product_type=product_type,
+                    title=accordion_data["title"],
+                    description=accordion_data["description"],
+                    order=accordion_data["order"],
+                )
+                for accordion_data in extended_data["accordions_in_bestell_wizard"]
+            ]
+            ProductTypeAccordionInBestellWizard.objects.bulk_create(accordions)
+
     def build_extended_product_type_data(
         self, product_type: ProductType, growing_period: GrowingPeriod
     ):
@@ -166,6 +181,12 @@ class ExtendedProductTypeApiView(APIView):
         )
         data["tax_rate_change_date"] = growing_period.end_date + datetime.timedelta(
             days=1
+        )
+
+        data["accordions_in_bestell_wizard"] = (
+            ProductTypeAccordionInBestellWizard.objects.filter(
+                product_type=product_type
+            )
         )
 
         return data

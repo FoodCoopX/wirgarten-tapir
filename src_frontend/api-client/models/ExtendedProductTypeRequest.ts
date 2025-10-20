@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ProductTypeAccordionInBestellWizardRequest } from './ProductTypeAccordionInBestellWizardRequest';
+import {
+    ProductTypeAccordionInBestellWizardRequestFromJSON,
+    ProductTypeAccordionInBestellWizardRequestFromJSONTyped,
+    ProductTypeAccordionInBestellWizardRequestToJSON,
+    ProductTypeAccordionInBestellWizardRequestToJSONTyped,
+} from './ProductTypeAccordionInBestellWizardRequest';
 import type { DeliveryCycleEnum } from './DeliveryCycleEnum';
 import {
     DeliveryCycleEnumFromJSON,
@@ -123,6 +130,12 @@ export interface ExtendedProductTypeRequest {
      * @memberof ExtendedProductTypeRequest
      */
     forceWaitingList: boolean;
+    /**
+     * 
+     * @type {Array<ProductTypeAccordionInBestellWizardRequest>}
+     * @memberof ExtendedProductTypeRequest
+     */
+    accordionsInBestellWizard: Array<ProductTypeAccordionInBestellWizardRequest>;
 }
 
 
@@ -142,6 +155,7 @@ export function instanceOfExtendedProductTypeRequest(value: object): value is Ex
     if (!('mustBeSubscribedTo' in value) || value['mustBeSubscribedTo'] === undefined) return false;
     if (!('isAssociationMembership' in value) || value['isAssociationMembership'] === undefined) return false;
     if (!('forceWaitingList' in value) || value['forceWaitingList'] === undefined) return false;
+    if (!('accordionsInBestellWizard' in value) || value['accordionsInBestellWizard'] === undefined) return false;
     return true;
 }
 
@@ -171,6 +185,7 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'mustBeSubscribedTo': json['must_be_subscribed_to'],
         'isAssociationMembership': json['is_association_membership'],
         'forceWaitingList': json['force_waiting_list'],
+        'accordionsInBestellWizard': ((json['accordions_in_bestell_wizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardRequestFromJSON)),
     };
 }
 
@@ -201,6 +216,7 @@ export function ExtendedProductTypeRequestFromJSONTyped(json: any, ignoreDiscrim
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'is_association_membership': value['isAssociationMembership'],
         'force_waiting_list': value['forceWaitingList'],
+        'accordions_in_bestell_wizard': ((value['accordionsInBestellWizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardRequestToJSON)),
     };
 }
 

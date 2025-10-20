@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { ProductTypeAccordionInBestellWizard } from './ProductTypeAccordionInBestellWizard';
+import {
+    ProductTypeAccordionInBestellWizardFromJSON,
+    ProductTypeAccordionInBestellWizardFromJSONTyped,
+    ProductTypeAccordionInBestellWizardToJSON,
+    ProductTypeAccordionInBestellWizardToJSONTyped,
+} from './ProductTypeAccordionInBestellWizard';
 import type { DeliveryCycleEnum } from './DeliveryCycleEnum';
 import {
     DeliveryCycleEnumFromJSON,
@@ -123,6 +130,12 @@ export interface ExtendedProductType {
      * @memberof ExtendedProductType
      */
     forceWaitingList: boolean;
+    /**
+     * 
+     * @type {Array<ProductTypeAccordionInBestellWizard>}
+     * @memberof ExtendedProductType
+     */
+    accordionsInBestellWizard: Array<ProductTypeAccordionInBestellWizard>;
 }
 
 
@@ -142,6 +155,7 @@ export function instanceOfExtendedProductType(value: object): value is ExtendedP
     if (!('mustBeSubscribedTo' in value) || value['mustBeSubscribedTo'] === undefined) return false;
     if (!('isAssociationMembership' in value) || value['isAssociationMembership'] === undefined) return false;
     if (!('forceWaitingList' in value) || value['forceWaitingList'] === undefined) return false;
+    if (!('accordionsInBestellWizard' in value) || value['accordionsInBestellWizard'] === undefined) return false;
     return true;
 }
 
@@ -171,6 +185,7 @@ export function ExtendedProductTypeFromJSONTyped(json: any, ignoreDiscriminator:
         'mustBeSubscribedTo': json['must_be_subscribed_to'],
         'isAssociationMembership': json['is_association_membership'],
         'forceWaitingList': json['force_waiting_list'],
+        'accordionsInBestellWizard': ((json['accordions_in_bestell_wizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardFromJSON)),
     };
 }
 
@@ -201,6 +216,7 @@ export function ExtendedProductTypeFromJSONTyped(json: any, ignoreDiscriminator:
         'must_be_subscribed_to': value['mustBeSubscribedTo'],
         'is_association_membership': value['isAssociationMembership'],
         'force_waiting_list': value['forceWaitingList'],
+        'accordions_in_bestell_wizard': ((value['accordionsInBestellWizard'] as Array<any>).map(ProductTypeAccordionInBestellWizardToJSON)),
     };
 }
 

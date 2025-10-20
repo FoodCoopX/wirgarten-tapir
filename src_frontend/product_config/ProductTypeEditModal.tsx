@@ -5,6 +5,7 @@ import {
   DeliveryCycleEnum,
   GrowingPeriod,
   ProductsApi,
+  type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
@@ -61,6 +62,9 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [isAssociationMembership, setIsAssociationMembership] = useState(false);
   const [forceWaitingList, setForceWaitingList] = useState(false);
   const [growingPeriod, setGrowingPeriod] = useState<GrowingPeriod>();
+  const [accordions, setAccordions] = useState<
+    ProductTypeAccordionInBestellWizard[]
+  >([]);
 
   useEffect(() => {
     if (!show) return;
@@ -106,6 +110,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           result.extendedProductType.isAssociationMembership,
         );
         setForceWaitingList(result.extendedProductType.forceWaitingList);
+        setAccordions(result.extendedProductType.accordionsInBestellWizard);
       })
       .catch((error) =>
         handleRequestError(
@@ -153,6 +158,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             orderInBestellwizard: orderInBestellwizard,
             contractLink: contractLink,
             forceWaitingList: forceWaitingList,
+            accordionsInBestellWizard: accordions,
           },
         },
       })
@@ -216,6 +222,8 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           contractLink={contractLink}
           forceWaitingList={forceWaitingList}
           setForceWaitingList={setForceWaitingList}
+          accordions={accordions}
+          setAccordions={setAccordions}
         />
       </Modal.Body>
     );

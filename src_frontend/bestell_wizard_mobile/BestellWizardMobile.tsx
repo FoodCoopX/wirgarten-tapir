@@ -8,7 +8,7 @@ import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSett
 import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
 import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
-import Step3ProductTypeChoice from "./steps/Step3ProductTypeChoice.tsx";
+import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
@@ -123,7 +123,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         );
       case "3_product_type_choice":
         return (
-          <Step3ProductTypeChoice
+          <Step3ProductTypesChoice
             goToNextStep={goToNextStep}
             settings={settings}
             firstName={personalData.firstName}

@@ -11,7 +11,7 @@ interface Step3ProductTypeChoiceProps {
   firstName: string;
 }
 
-const Step3ProductTypeChoice: React.FC<Step3ProductTypeChoiceProps> = ({
+const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   settings,
   goToNextStep,
   firstName,
@@ -103,4 +103,4 @@ const Step3ProductTypeChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   );
 };
 
-export default Step3ProductTypeChoice;
+export default Step3ProductTypesChoice;

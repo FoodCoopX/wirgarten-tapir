@@ -6,6 +6,7 @@ import {
   GrowingPeriod,
   ProductsApi,
   ProductType,
+  type ProductTypeAccordionInBestellWizard,
 } from "../api-client";
 import { useApi } from "../hooks/useApi.ts";
 import TapirButton from "../components/TapirButton.tsx";
@@ -65,6 +66,9 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [selectedProductTypeId, setSelectedProductTypeId] = useState<
     string | undefined
   >();
+  const [accordions, setAccordions] = useState<
+    ProductTypeAccordionInBestellWizard[]
+  >([]);
 
   useEffect(() => {
     if (!getPeriodIdFromUrl() || !show) return;
@@ -156,6 +160,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
             iconLink: iconLink,
             name: name,
             forceWaitingList: forceWaitingList,
+            accordionsInBestellWizard: accordions,
           },
         },
       })
@@ -270,6 +275,8 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           contractLink={contractLink}
           forceWaitingList={forceWaitingList}
           setForceWaitingList={setForceWaitingList}
+          accordions={accordions}
+          setAccordions={setAccordions}
         />
       </Modal.Body>
     );

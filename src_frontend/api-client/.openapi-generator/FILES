@@ -131,6 +131,8 @@ models/ProductBasketSizeEquivalence.ts
 models/ProductBasketSizeEquivalenceRequest.ts
 models/ProductForCancellation.ts
 models/ProductType.ts
+models/ProductTypeAccordionInBestellWizard.ts
+models/ProductTypeAccordionInBestellWizardRequest.ts
 models/ProductTypesAndConfig.ts
 models/PublicConfirmWaitingListEntryRequestRequest.ts
 models/PublicPickupLocation.ts

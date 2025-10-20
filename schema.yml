@@ -6195,7 +6195,12 @@ components:
           type: boolean
         force_waiting_list:
           type: boolean
+        accordions_in_bestell_wizard:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
       required:
+      - accordions_in_bestell_wizard
       - capacity
       - delivery_cycle
       - force_waiting_list
@@ -6268,7 +6273,12 @@ components:
           type: boolean
         force_waiting_list:
           type: boolean
+        accordions_in_bestell_wizard:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductTypeAccordionInBestellWizardRequest'
       required:
+      - accordions_in_bestell_wizard
       - capacity
       - delivery_cycle
       - force_waiting_list
@@ -7921,6 +7931,34 @@ components:
           type: boolean
       required:
       - name
+    ProductTypeAccordionInBestellWizard:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+      required:
+      - description
+      - order
+      - title
+    ProductTypeAccordionInBestellWizardRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        order:
+          type: integer
+      required:
+      - description
+      - order
+      - title
     ProductTypesAndConfig:
       type: object
       properties:

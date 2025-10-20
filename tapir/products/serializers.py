@@ -4,6 +4,12 @@ from tapir.deliveries.serializers import ProductTypeSerializer
 from tapir.wirgarten.constants import DeliveryCycle
 
 
+class ProductTypeAccordionInBestellWizardSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    order = serializers.IntegerField()
+
+
 class ExtendedProductTypeSerializer(serializers.Serializer):
     name = serializers.CharField()
     description_bestellwizard_short = serializers.CharField(
@@ -25,6 +31,9 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     must_be_subscribed_to = serializers.BooleanField()
     is_association_membership = serializers.BooleanField()
     force_waiting_list = serializers.BooleanField()
+    accordions_in_bestell_wizard = ProductTypeAccordionInBestellWizardSerializer(
+        many=True
+    )
 
 
 class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):
