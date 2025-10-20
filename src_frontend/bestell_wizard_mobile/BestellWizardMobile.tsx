@@ -21,6 +21,7 @@ import Step4AProductTypeIntro from "./steps/Step4AProductTypeIntro.tsx";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
+import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -221,16 +222,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     <Row style={{ height: "100%" }}>
       <Col style={{ height: "100%" }}>
         <Row style={{ height: "10%" }}>
-          <div
-            style={{ width: "100%", height: "100%" }}
-            className={"d-flex justify-content-center align-items-center"}
-          >
-            <img
-              src={settings.logoUrl}
-              alt={"Logo"}
-              style={{ height: "70%" }}
-            />
-          </div>
+          <BestellWizardMobileHeader
+            settings={settings}
+            showShoppingCart={
+              steps.findIndex((step) => step === currentStep) > 2
+            }
+            shoppingCart={shoppingCart}
+          />
         </Row>
         <Row
           style={{

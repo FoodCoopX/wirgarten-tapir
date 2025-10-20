@@ -100,7 +100,10 @@ const CoopSharesModal: React.FC<CoopSharesModalProps> = ({
               }
             />
           </Form.Group>
-          <span> x {formatCurrency(priceOfAShare)} = </span>
+          <span>
+            {" × "}
+            {formatCurrency(priceOfAShare)} ={" "}
+          </span>
           <span>
             <strong>{formatCurrency(numberOfShares * priceOfAShare)}</strong>{" "}
             einmalige Genossenschaftsanteile

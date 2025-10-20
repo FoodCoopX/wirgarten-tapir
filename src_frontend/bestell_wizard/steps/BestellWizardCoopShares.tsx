@@ -136,7 +136,10 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
                 disabled={studentStatusEnabled}
               />
             </Form.Group>
-            <span> x {formatCurrency(settings.priceOfAShare)} = </span>
+            <span>
+              {" × "}
+              {formatCurrency(settings.priceOfAShare)} ={" "}
+            </span>
             <span>
               <strong>
                 {formatCurrency(
