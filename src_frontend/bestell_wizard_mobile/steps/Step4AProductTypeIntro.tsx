@@ -7,11 +7,13 @@ import { Accordion, AccordionBody } from "react-bootstrap";
 interface Step4AProductTypeIntroProps {
   productType: PublicProductType;
   goToNextStep: () => void;
+  skipProductType: (productType: PublicProductType) => void;
 }
 
 const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
   productType,
   goToNextStep,
+  skipProductType,
 }) => {
   return (
     <>
@@ -22,7 +24,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
         }
       >
         <h1 className={"text-center"}>Unser {productType.name}</h1>
-        <div style={{ maxHeight: "45vh", overflowY: "scroll" }}>
+        <div style={{ maxHeight: "40vh", overflowY: "scroll" }}>
           {productType.descriptionBestellwizardLong && (
             <p
               className={"text-center"}
@@ -51,12 +53,18 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
             </Accordion>
           )}
         </div>
-        <TapirButton
-          variant={"outline-secondary"}
-          text={"Weiter"}
-          onClick={goToNextStep}
-          disabled={true}
-        />
+        <div className={"d-flex flex-row gap-2"}>
+          <TapirButton
+            variant={"outline-secondary"}
+            text={"Ohne " + productType.name + " weiter"}
+            onClick={() => skipProductType(productType)}
+          />
+          <TapirButton
+            variant={"outline-secondary"}
+            text={"Mit " + productType.name + " weiter"}
+            onClick={goToNextStep}
+          />
+        </div>
       </div>
     </>
   );

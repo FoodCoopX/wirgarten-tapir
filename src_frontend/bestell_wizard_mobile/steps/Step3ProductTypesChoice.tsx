@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { Form } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -6,6 +6,9 @@ import { PublicProductType } from "../../api-client";
 import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
+import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -13,6 +16,9 @@ interface Step3ProductTypeChoiceProps {
   firstName: string;
   selectedProductTypes: PublicProductType[];
   setSelectedProductTypes: (types: PublicProductType[]) => void;
+  investingMembership: boolean;
+  setInvestingMembership: (investing: boolean) => void;
+  setShoppingCart: (cart: ShoppingCart) => void;
 }
 
 const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
@@ -21,9 +27,25 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   firstName,
   selectedProductTypes,
   setSelectedProductTypes,
+  investingMembership,
+  setInvestingMembership,
+  setShoppingCart,
 }) => {
   const [productTypeForModal, setProductTypeForModal] =
     useState<PublicProductType>();
+
+  useEffect(() => {
+    if (investingMembership) {
+      setSelectedProductTypes([]);
+      setShoppingCart(buildEmptyShoppingCart(settings.productTypes));
+    } else {
+      selectAllRequiredProductTypes(
+        settings.productTypes,
+        selectedProductTypes,
+        setSelectedProductTypes,
+      );
+    }
+  }, [investingMembership]);
 
   function insertFirstName(input: string) {
     return input.replace("{vorname}", firstName);
@@ -50,6 +72,9 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
   function updateSelection(productType: PublicProductType, selected: boolean) {
     let selection;
     if (selected) {
+      if (selectedProductTypes.includes(productType)) {
+        return;
+      }
       selection = [...selectedProductTypes, productType];
     } else {
       selection = selectedProductTypes.filter((pt) => productType.id !== pt.id);
@@ -88,6 +113,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                   onChange={(event) =>
                     updateSelection(productType, event.target.checked)
                   }
+                  disabled={productType.mustBeSubscribedTo}
                 />
                 <TapirButton
                   icon={"help"}
@@ -99,7 +125,11 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             </Form.Group>
           ))}
           <Form.Group controlId={"investing"}>
-            <Form.Check label={"Fördermitgliedschaft"} />
+            <Form.Check
+              label={"Fördermitgliedschaft"}
+              checked={investingMembership}
+              onChange={(event) => setInvestingMembership(event.target.checked)}
+            />
           </Form.Group>
         </div>
         <TapirButton
@@ -110,7 +140,10 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
         {productTypeForModal && (
           <ConfirmModal
             open={true}
-            onConfirm={() => alert("WIP")}
+            onConfirm={() => {
+              updateSelection(productTypeForModal, true);
+              setProductTypeForModal(undefined);
+            }}
             confirmButtonIcon={"select_check_box"}
             onCancel={() => setProductTypeForModal(undefined)}
             title={productTypeForModal.name}

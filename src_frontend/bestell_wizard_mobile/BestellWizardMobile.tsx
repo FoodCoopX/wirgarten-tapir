@@ -18,6 +18,9 @@ import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import Step4AProductTypeIntro from "./steps/Step4AProductTypeIntro.tsx";
+import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
+import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -45,6 +48,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [selectedProductTypes, setSelectedProductTypes] = useState<
     PublicProductType[]
   >([]);
+  const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
+  const [investingMembership, setInvestingMembership] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -55,6 +60,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(newSettings.productTypes);
+        setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
       })
       .catch((error) =>
         handleRequestError(
@@ -70,7 +76,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     element?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [currentStep]);
+  }, [currentStep, steps]);
+
+  function onWindowResize() {
+    const element = document.getElementById(currentStep);
+    element?.scrollIntoView({
+      behavior: "instant",
+    });
+  }
+
+  useEffect(() => {
+    window.addEventListener("resize", onWindowResize, { capture: false });
+  }, [onWindowResize]);
 
   useEffect(() => {
     if (!settingsLoaded) return;
@@ -92,7 +109,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     for (const productType of selectedProductTypes) {
-      newSteps.push(productType.id!);
+      newSteps.push(productType.id! + "_intro");
+      newSteps.push(productType.id! + "_order");
     }
 
     return newSteps;
@@ -114,6 +132,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
+  }
+
+  function skipProductType(productType: PublicProductType) {
+    setSelectedProductTypes(
+      selectedProductTypes.filter((pt) => pt.id !== productType.id),
+    );
+
+    setCurrentStep(steps[steps.indexOf(currentStep) + 2]);
   }
 
   function getStepComponent(step: Step) {
@@ -143,6 +169,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             firstName={personalData.firstName}
             selectedProductTypes={selectedProductTypes}
             setSelectedProductTypes={setSelectedProductTypes}
+            investingMembership={investingMembership}
+            setInvestingMembership={setInvestingMembership}
+            setShoppingCart={setShoppingCart}
           />
         );
       case "loading":
@@ -156,18 +185,35 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         );
       default:
         // If the step is not one of the predefined ones, then it's a product type step
+        const separatorIndex = step.lastIndexOf("_");
+        const productId = step.slice(0, separatorIndex);
+        const subStep = step.slice(separatorIndex + 1);
         const productType = settings.productTypes.find(
-          (productType) => productType.id === step,
+          (productType) => productType.id === productId,
         );
         if (productType === undefined) {
           return <div>Fehler: ungültiges Schritt {step}</div>;
         }
-        return (
-          <Step4AProductTypeIntro
-            productType={productType}
-            goToNextStep={goToNextStep}
-          />
-        );
+        switch (subStep) {
+          case "intro":
+            return (
+              <Step4AProductTypeIntro
+                productType={productType}
+                goToNextStep={goToNextStep}
+                skipProductType={skipProductType}
+              />
+            );
+          case "order":
+            return (
+              <Step4BProductTypeOrder
+                settings={settings}
+                productType={productType}
+                goToNextStep={goToNextStep}
+                shoppingCart={shoppingCart}
+                setShoppingCart={setShoppingCart}
+              />
+            );
+        }
     }
   }
 
