@@ -42,7 +42,7 @@ const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
           width: "300px",
           boxShadow: "inset 1px 0 0 rgba(0, 0, 0, .1)",
           backgroundColor: "rgba(var(--bs-light-rgb), 1)",
-          opacity: 1,
+          opacity: showOverlay ? 1 : 0,
           position: "absolute",
           right: showOverlay ? 0 : "-300px",
           transition: "0.1s",
