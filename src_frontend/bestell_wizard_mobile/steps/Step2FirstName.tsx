@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
@@ -9,6 +9,7 @@ interface Step2FirstNameProps {
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
   settings: BestellWizardSettings;
+  active: boolean;
 }
 
 const Step2FirstName: React.FC<Step2FirstNameProps> = ({
@@ -16,7 +17,14 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   personalData,
   setPersonalData,
   settings,
+  active,
 }) => {
+  useEffect(() => {
+    if (!active) return;
+
+    document.getElementById("first_name_input")?.focus();
+  }, [active]);
+
   return (
     <div
       style={{ height: "100%" }}
@@ -33,6 +41,10 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         onChange={(event) => {
           personalData.firstName = event.target.value;
           setPersonalData(Object.assign({}, personalData));
+        }}
+        id={"first_name_input"}
+        onKeyUp={(event) => {
+          if (event.key === "Enter") goToNextStep();
         }}
       />
       <TapirButton
