@@ -3,6 +3,7 @@ import datetime
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+from tapir.bestell_wizard.models import ProductTypeAccordionInBestellWizard
 from tapir.configuration.models import TapirParameter
 from tapir.pickup_locations.models import ProductBasketSizeEquivalence
 from tapir.utils.config import Organization
@@ -84,19 +85,37 @@ class ProductGenerator:
         ) as file:
             description_bestellwizard_short = file.read()
 
-        with open(
-            "tapir/utils/services/test_data_generation/product_descriptions/ernteanteile_long.html",
-            "r",
-        ) as file:
-            description_bestellwizard_long = file.read()
-
         ernteanteile = ProductType.objects.create(
             name="Ernteanteile",
             delivery_cycle=WEEKLY[0],
             is_affected_by_jokers=True,
             description_bestellwizard_short=description_bestellwizard_short,
-            description_bestellwizard_long=description_bestellwizard_long,
+            description_bestellwizard_long="Der Ernteanteil besteht aus regional angebautem Bio-Gemüse und wird in Form von Kisten je Mitglied aufgeteilt. Pro Jahr werden im Regelfall 50 Kisten geliefert.",
             order_in_bestellwizard=1,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Probezeit: Teste deinen Ernteanteil 6 Wochen",
+            description="Während der Probezeit besteht keine Kündigungsfrist und der Ernteanteil kann wöchentlich gekündigt werden. Du zahlst nur für die erhaltenen Anteile. Nach der Probezeit ist eine Kündigung nur zum Jahresende gewünscht. Die Probezeit beginnt mit deiner ersten Lieferung.",
+            order=1,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Zu je dem Anteil gibt es das ausgedruckte Wochenbladl",
+            description='Unsere wöchentliche "Erntepost" mit Rezepten, aktuelles aus der Gärtnerei und dem Hofpunkt, sowie Tipps und Tricks zum Gemüse.',
+            order=2,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Jokersystem: bis zu 4 mal Ernteanteil aussetzen pro Jahr",
+            description="Du kannst bis zu 4 mal im Jahr eine Kiste abbestellen (davon maximal 2 im Monat August). Diese Kisten werden nicht berechnet.",
+            order=3,
+        )
+        ProductTypeAccordionInBestellWizard.objects.create(
+            product_type=ernteanteile,
+            title="Der Inhalt deines Anteils variiert je nach Saison und Witterung",
+            description='Die Ernte wird unter allen Mitgliedern aufgeteilt. Im Sommer gibt es mehr, im Winter etwas weniger. Jede Woche gibt es aber mindestens 5 Kulturen, und im Winter nicht nur Kohl! Mehr Details findest du <a href="https://biotop-oberland.de/so-gehts/#ernteanteil">hier</a>.',
+            order=4,
         )
         TaxRate.objects.create(
             product_type=ernteanteile,

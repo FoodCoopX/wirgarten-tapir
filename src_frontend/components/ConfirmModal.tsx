@@ -13,6 +13,15 @@ interface ConfirmDeleteModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  size?: "sm" | "lg" | "xl";
+  fullscreen?:
+    | "sm-down"
+    | "md-down"
+    | "lg-down"
+    | "xl-down"
+    | "xxl-down"
+    | string
+    | true;
 }
 
 const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
@@ -25,9 +34,17 @@ const ConfirmModal: React.FC<ConfirmDeleteModalProps> = ({
   onConfirm,
   onCancel,
   loading,
+  size,
+  fullscreen,
 }) => {
   return (
-    <Modal show={open} onHide={onCancel} centered={true}>
+    <Modal
+      show={open}
+      onHide={onCancel}
+      centered={true}
+      size={size}
+      fullscreen={fullscreen}
+    >
       <Modal.Header closeButton>
         <Modal.Title>
           <h5>{title}</h5>

@@ -150,6 +150,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             message={getModalText()}
             confirmButtonText={"Ich habe Interesse"}
             confirmButtonVariant={"outline-secondary"}
+            fullscreen={"md-down"}
           />
         )}
       </div>

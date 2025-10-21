@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProduct, PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
-import { Form } from "react-bootstrap";
+import { Carousel, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import Step4BProductDetailModal from "../Components/Step4BProductDetailModal.tsx";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
+import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -25,6 +28,32 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
 }) => {
   const [productForDetailModal, setProductForDetailModal] =
     useState<PublicProduct>();
+  const [activeProductIndex, setActiveProductIndex] = useState(0);
+
+  useEffect(() => {
+    if (productType.products.length > 1) {
+      setActiveProductIndex(1);
+    } else {
+      setActiveProductIndex(0);
+    }
+  }, [productType]);
+
+  function handleSelect(index: number) {
+    setActiveProductIndex(index);
+  }
+
+  function getNextButtonText() {
+    if (!isProductTypeOrdered(productType, shoppingCart)) {
+      return "Weiter ohne " + productType.name;
+    }
+
+    const filteredShoppingCart = Object.fromEntries(
+      Object.entries(shoppingCart).filter(([productId, _]) =>
+        doesProductBelongsToProductType(productId, productType),
+      ),
+    );
+    return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
+  }
 
   return (
     <>
@@ -34,20 +63,19 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           "d-flex align-items-center justify-content-center gap-2 flex-column"
         }
       >
-        <div
-          className={
-            "d-flex flex-row align-items-center  justify-content-center flex-wrap"
-          }
-          style={{ gap: "0 .5rem" }}
+        <Carousel
+          activeIndex={activeProductIndex}
+          onSelect={handleSelect}
+          indicators={false}
+          controls={false}
+          interval={null}
+          touch={false}
+          style={{ width: "100%" }}
         >
           {productType.products
             .sort((a, b) => a.price - b.price)
             .map((product) => (
-              <div
-                key={product.id}
-                className={"d-flex align-items-center  flex-column"}
-                style={{ width: "40%" }}
-              >
+              <Carousel.Item key={product.id}>
                 <div className={"d-flex justify-content-center"}>
                   {product.urlOfImageInBestellwizard !== "" && (
                     <img
@@ -68,16 +96,14 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     />
                   )}
                 </div>
-                <div className={"d-flex flex-row gap-2"}>
+                <div className={"d-flex flex-row gap-2 justify-content-center"}>
                   <strong>{product.name}</strong>
-                  <TapirButton
-                    size={"sm"}
-                    icon={"help"}
-                    variant={"outline-secondary"}
-                    onClick={() => setProductForDetailModal(product)}
-                  />
                 </div>
-                <div className={"mt-1"}>
+                <div
+                  className={
+                    "mt-1 d-flex flex-row gap-2 justify-content-center"
+                  }
+                >
                   {productType.singleSubscriptionOnly ? (
                     <Form.Check
                       checked={shoppingCart[product.id!] > 0}
@@ -89,7 +115,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                       }}
                     />
                   ) : (
-                    <div className={"d-flex flex-row gap-2"}>
+                    <>
                       <TapirButton
                         variant={"outline-secondary"}
                         icon={"remove"}
@@ -102,20 +128,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                           setShoppingCart(Object.assign({}, shoppingCart));
                         }}
                       />
-                      <Form.Control
-                        type={"number"}
-                        min={0}
-                        onChange={(event) => {
-                          let newValue = parseInt(event.target.value);
-                          if (Number.isNaN(newValue)) {
-                            newValue = 0;
-                          }
-                          shoppingCart[product.id!] = newValue;
-                          setShoppingCart(Object.assign({}, shoppingCart));
-                        }}
-                        value={shoppingCart[product.id!]}
-                        size={"sm"}
-                      />
+                      <span>{shoppingCart[product.id!]}</span>
                       <TapirButton
                         variant={"outline-secondary"}
                         icon={"add"}
@@ -126,12 +139,19 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                           setShoppingCart(Object.assign({}, shoppingCart));
                         }}
                       />
-                    </div>
+                    </>
                   )}
                 </div>
                 <div>
                   <Form.Text className={"text-center"} as={"p"}>
                     Basisbeitrag: {formatCurrency(product.price)} pro Monat
+                    inkl. MwSt.
+                    {product.descriptionInBestellwizard && (
+                      <>
+                        <br />
+                        {product.descriptionInBestellwizard}
+                      </>
+                    )}
                     {shouldShowWarningProductNotAvailable(
                       product,
                       productType,
@@ -146,14 +166,40 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     )}
                   </Form.Text>
                 </div>
-              </div>
+              </Carousel.Item>
             ))}
+        </Carousel>
+        <div
+          className={
+            "d-flex flex-row " +
+            (productType.products.length > 1
+              ? "justify-content-between"
+              : "justify-content-center")
+          }
+          style={{ width: "100%" }}
+        >
+          {productType.products.length > 1 && (
+            <TapirButton
+              variant={"outline-secondary"}
+              text={"Kleiner"}
+              onClick={() => setActiveProductIndex(activeProductIndex - 1)}
+              disabled={activeProductIndex === 0}
+            />
+          )}
+          <TapirButton
+            variant={"outline-secondary"}
+            text={getNextButtonText()}
+            onClick={goToNextStep}
+          />
+          {productType.products.length > 1 && (
+            <TapirButton
+              variant={"outline-secondary"}
+              text={"Größer"}
+              onClick={() => setActiveProductIndex(activeProductIndex + 1)}
+              disabled={activeProductIndex === productType.products.length - 1}
+            />
+          )}
         </div>
-        <TapirButton
-          variant={"outline-secondary"}
-          text={"Weiter"}
-          onClick={goToNextStep}
-        />
       </div>
 
       {productForDetailModal && (
