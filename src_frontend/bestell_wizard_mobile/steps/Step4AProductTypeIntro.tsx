@@ -18,51 +18,58 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
   return (
     <>
       <div
-        style={{ height: "100%", overflowY: "hidden" }}
-        className={
-          "d-flex align-items-center justify-content-center gap-2 flex-column"
-        }
+        style={{ height: "80vh", display: "flex", flexDirection: "column" }}
+        className={"d-flex flex-column gap-2 mx-2"}
       >
-        <h1 className={"text-center"}>Unser {productType.name}</h1>
-        <div style={{ maxHeight: "40vh", overflowY: "scroll" }}>
-          {productType.descriptionBestellwizardLong && (
-            <p
-              className={"text-center"}
-              dangerouslySetInnerHTML={getHtmlDescription(
-                productType.descriptionBestellwizardLong,
+        <div
+          style={{
+            maxHeight: "70vh",
+            overflowY: "scroll",
+          }}
+        >
+          <div
+            className={
+              "d-flex align-items-center justify-content-center gap-2 flex-column"
+            }
+          >
+            <h1 className={"text-center"}>Unser {productType.name}</h1>
+            <div>
+              {productType.descriptionBestellwizardLong && (
+                <p
+                  className={"text-center"}
+                  dangerouslySetInnerHTML={getHtmlDescription(
+                    productType.descriptionBestellwizardLong,
+                  )}
+                ></p>
               )}
-            ></p>
-          )}
-          {productType.accordions.length > 0 && (
-            <Accordion>
-              {productType.accordions.map((accordion) => (
-                <Accordion.Item
-                  key={accordion.order}
-                  eventKey={accordion.order.toString()}
-                >
-                  <Accordion.Header>{accordion.title}</Accordion.Header>
-                  <AccordionBody>
-                    <div
-                      dangerouslySetInnerHTML={getHtmlDescription(
-                        accordion.description,
-                      )}
-                    />
-                  </AccordionBody>
-                </Accordion.Item>
-              ))}
-            </Accordion>
-          )}
+              {productType.accordions.length > 0 && (
+                <Accordion>
+                  {productType.accordions.map((accordion) => (
+                    <Accordion.Item
+                      key={accordion.order}
+                      eventKey={accordion.order.toString()}
+                    >
+                      <Accordion.Header>{accordion.title}</Accordion.Header>
+                      <AccordionBody>
+                        <div
+                          dangerouslySetInnerHTML={getHtmlDescription(
+                            accordion.description,
+                          )}
+                        />
+                      </AccordionBody>
+                    </Accordion.Item>
+                  ))}
+                </Accordion>
+              )}
+            </div>
+          </div>
         </div>
-        <div className={"d-flex flex-row gap-2"}>
+        <div className={"d-flex flex-row justify-content-center"}>
           <TapirButton
             variant={"outline-secondary"}
-            text={"Ohne " + productType.name + " weiter"}
-            onClick={() => skipProductType(productType)}
-          />
-          <TapirButton
-            variant={"outline-secondary"}
-            text={"Mit " + productType.name + " weiter"}
+            text={"Weiter"}
             onClick={goToNextStep}
+            size={"sm"}
           />
         </div>
       </div>

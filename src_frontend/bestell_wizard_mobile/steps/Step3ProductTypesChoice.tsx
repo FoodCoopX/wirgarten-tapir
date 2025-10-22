@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { Form } from "react-bootstrap";
+import { Form, Modal } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PublicProductType } from "../../api-client";
-import ConfirmModal from "../../components/ConfirmModal.tsx";
 import { sortProductTypes } from "../../bestell_wizard/utils/sortProductTypes.ts";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
@@ -46,6 +45,12 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       );
     }
   }, [investingMembership]);
+
+  useEffect(() => {
+    if (selectedProductTypes.length > 0) {
+      setInvestingMembership(false);
+    }
+  }, [selectedProductTypes]);
 
   function insertFirstName(input: string) {
     return input.replace("{vorname}", firstName);
@@ -137,22 +142,17 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           text={"Weiter"}
           onClick={goToNextStep}
         />
-        {productTypeForModal && (
-          <ConfirmModal
-            open={true}
-            onConfirm={() => {
-              updateSelection(productTypeForModal, true);
-              setProductTypeForModal(undefined);
-            }}
-            confirmButtonIcon={"select_check_box"}
-            onCancel={() => setProductTypeForModal(undefined)}
-            title={productTypeForModal.name}
-            message={getModalText()}
-            confirmButtonText={"Ich habe Interesse"}
-            confirmButtonVariant={"outline-secondary"}
-            fullscreen={"md-down"}
-          />
-        )}
+        <Modal
+          show={productTypeForModal !== undefined}
+          fullscreen={"md-down"}
+          centered={true}
+          onHide={() => setProductTypeForModal(undefined)}
+        >
+          <Modal.Header closeButton={true}>
+            {productTypeForModal?.name}
+          </Modal.Header>
+          <Modal.Body>{getModalText()}</Modal.Body>
+        </Modal>
       </div>
     </>
   );

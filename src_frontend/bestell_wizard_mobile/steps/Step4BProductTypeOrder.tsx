@@ -60,17 +60,18 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       <div
         style={{ height: "100%", overflowY: "hidden" }}
         className={
-          "d-flex align-items-center justify-content-center gap-2 flex-column"
+          "d-flex align-items-center justify-content-center gap-4 flex-column"
         }
       >
         <Carousel
           activeIndex={activeProductIndex}
           onSelect={handleSelect}
           indicators={false}
-          controls={false}
+          controls={productType.products.length > 0}
           interval={null}
           touch={false}
           style={{ width: "100%" }}
+          variant={"dark"}
         >
           {productType.products
             .sort((a, b) => a.price - b.price)
@@ -81,8 +82,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     <img
                       src={product.urlOfImageInBestellwizard}
                       style={{
-                        maxWidth: "80%",
-                        maxHeight: "23vh",
+                        maxHeight: "40vh",
                         objectFit: "contain",
                         filter: shouldShowWarningProductNotAvailable(
                           product,
@@ -171,7 +171,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         </Carousel>
         <div
           className={
-            "d-flex flex-row " +
+            "px-3 d-flex flex-row " +
             (productType.products.length > 1
               ? "justify-content-between"
               : "justify-content-center")
@@ -179,26 +179,36 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           style={{ width: "100%" }}
         >
           {productType.products.length > 1 && (
-            <TapirButton
-              variant={"outline-secondary"}
-              text={"Kleiner"}
-              onClick={() => setActiveProductIndex(activeProductIndex - 1)}
-              disabled={activeProductIndex === 0}
-            />
+            <>
+              <TapirButton
+                variant={"outline-secondary"}
+                text={"Kleiner"}
+                onClick={() => setActiveProductIndex(activeProductIndex - 1)}
+                disabled={activeProductIndex === 0}
+                size={"sm"}
+              />
+              <TapirButton
+                variant={"outline-secondary"}
+                text={"Größer"}
+                onClick={() => setActiveProductIndex(activeProductIndex + 1)}
+                disabled={
+                  activeProductIndex === productType.products.length - 1
+                }
+                size={"sm"}
+              />
+            </>
           )}
+        </div>
+        <div
+          className={"px-2 d-flex flex-row justify-content-center"}
+          style={{ width: "100%" }}
+        >
           <TapirButton
             variant={"outline-secondary"}
             text={getNextButtonText()}
             onClick={goToNextStep}
+            size={"sm"}
           />
-          {productType.products.length > 1 && (
-            <TapirButton
-              variant={"outline-secondary"}
-              text={"Größer"}
-              onClick={() => setActiveProductIndex(activeProductIndex + 1)}
-              disabled={activeProductIndex === productType.products.length - 1}
-            />
-          )}
         </div>
       </div>
 

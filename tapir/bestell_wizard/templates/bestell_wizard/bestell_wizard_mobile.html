@@ -24,13 +24,8 @@
           href="{% static 'core/bootstrap/5.1.3/css/bootstrap.min.css' %}">
 </head>
 {% get_parameter_value_tag "wirgarten.bestellwizard.background_color" cache as background_color %}
-<body style="{{ body_style }}; position: fixed; top: 0; left: 50%; max-width: 100vw; max-height: 100vh; transform: translate(-50%, 0);">
-<div class="container-fluid" style="height: 100vh;">
-    <main id="main-content" role="main" style="height: 100%">
-        {% csrf_token %}
-        <div id="bestell_wizard_mobile" style="height: 100%; max-width: 1000px; margin: auto">
-        </div>
-    </main>
-</div>
+<body style="{{ body_style }}; width: 100vw; height: 100vh;">
+{% csrf_token %}
+<div id="bestell_wizard_mobile" style="width: 100vw; height: 100vh"></div>
 </body>
 </html>

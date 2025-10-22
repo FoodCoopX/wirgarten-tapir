@@ -21,7 +21,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
   return (
     <>
       <div
-        style={{ width: "100%", height: "100%", position: "relative" }}
+        style={{ width: "100%", height: "100%" }}
         className={"d-flex justify-content-center align-items-center"}
       >
         <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />

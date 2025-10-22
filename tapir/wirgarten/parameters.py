@@ -987,7 +987,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="",
             description="Als URL. Wenn nicht leer nimmt das Bild die Priorität über der Farbe.",
             category=ParameterCategory.BESTELLWIZARD,
-            order_priority=-bestellwizard_parameter_order,
+            order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
 

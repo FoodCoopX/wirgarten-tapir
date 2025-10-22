@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Col, ProgressBar, Row, Spinner } from "react-bootstrap";
+import { ProgressBar, Spinner } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import { BestellWizardApi, type PublicProductType } from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
@@ -220,66 +220,88 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }
 
   return (
-    <Row style={{ height: "100%" }}>
-      <Col style={{ height: "100%" }}>
-        <Row style={{ height: "10%" }}>
-          <BestellWizardMobileHeader
-            settings={settings}
-            showShoppingCart={
-              steps.findIndex((step) => step === currentStep) > 2
-            }
-            shoppingCart={shoppingCart}
-          />
-        </Row>
-        <Row
-          style={{
-            height: "80%",
-            overflowY: "hidden",
-          }}
-          id={"scroll_container"}
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: "50%",
+        width: "100%",
+        maxWidth: "1000px",
+        height: "100vh",
+        transform: "translate(-50%, 0)",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          height: "10vh",
+          width: "100%",
+        }}
+      >
+        <BestellWizardMobileHeader
+          settings={settings}
+          showShoppingCart={steps.findIndex((step) => step === currentStep) > 2}
+          shoppingCart={shoppingCart}
+        />
+      </div>
+      <div
+        style={{
+          height: "80vh",
+          width: "100%",
+          overflowY: "hidden",
+        }}
+        id={"scroll_container"}
+      >
+        {steps.map((step) => {
+          return (
+            <div key={step} id={step} style={{ height: "80vh" }}>
+              {getStepComponent(step)}
+            </div>
+          );
+        })}
+      </div>
+      <div
+        style={{
+          height: "10vh",
+          width: "100%",
+        }}
+      >
+        <div
+          style={{ width: "100%", height: "100%", paddingBottom: "1rem" }}
+          className={"d-flex flex-column justify-content-end"}
         >
-          {steps.map((step) => {
-            return (
-              <div key={step} id={step} style={{ height: "75vh" }}>
-                {getStepComponent(step)}
-              </div>
-            );
-          })}
-        </Row>
-        <Row style={{ height: "10%" }}>
-          <div
-            style={{ width: "100%", height: "100%", paddingBottom: "1rem" }}
-            className={"d-flex flex-column justify-content-end"}
-          >
-            <div style={{ width: "100%", textAlign: "center" }}>
-              Schritt {steps.indexOf(currentStep) + 1} von {steps.length}
-            </div>
-            <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <TapirButton
-                size={"sm"}
-                icon={"first_page"}
-                variant={"outline-secondary"}
-                onClick={() => setCurrentStep(steps[0])}
-              />
-              <TapirButton
-                size={"sm"}
-                icon={"chevron_backward"}
-                variant={"outline-secondary"}
-                onClick={goToPreviousStep}
-              />
-              <ProgressBar
-                now={(100 * (steps.indexOf(currentStep) + 1)) / steps.length}
-                style={{ width: "100%" }}
-              />
-            </div>
+          <div style={{ width: "100%", textAlign: "center" }}>
+            Schritt {steps.indexOf(currentStep) + 1} von {steps.length}
           </div>
-        </Row>
-      </Col>
+          <div
+            className={"d-flex flex-row gap-2 align-items-center"}
+            style={{ marginRight: "1rem", marginLeft: "1rem" }}
+          >
+            <TapirButton
+              size={"sm"}
+              icon={"first_page"}
+              variant={"outline-secondary"}
+              onClick={() => setCurrentStep(steps[0])}
+            />
+            <TapirButton
+              size={"sm"}
+              icon={"chevron_backward"}
+              variant={"outline-secondary"}
+              onClick={goToPreviousStep}
+            />
+            <ProgressBar
+              now={(100 * (steps.indexOf(currentStep) + 1)) / steps.length}
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+      </div>
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}
       />
-    </Row>
+    </div>
   );
 };
 

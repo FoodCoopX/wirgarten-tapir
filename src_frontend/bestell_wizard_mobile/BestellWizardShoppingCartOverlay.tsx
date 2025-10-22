@@ -47,6 +47,7 @@ const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
           right: showOverlay ? 0 : "-300px",
           transition: "0.1s",
           zIndex: 1001,
+          top: 0,
         }}
         onClick={(event) => event.stopPropagation()}
       >
