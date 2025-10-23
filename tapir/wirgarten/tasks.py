@@ -339,7 +339,9 @@ def generate_member_numbers(print_results=True, cache: dict = None):
         Member.objects.bulk_update(members_to_update, ["member_no"])
         for member in members_to_update:
             TransactionalTrigger.fire_action(
-                trigger_data=TransactionalTriggerData(key=Events.MEMBERSHIP_ENTRY,recipient_id_in_base_queryset=member.id),
+                trigger_data=TransactionalTriggerData(
+                    key=Events.MEMBERSHIP_ENTRY, recipient_id_in_base_queryset=member.id
+                ),
             )
             if print_results:
                 print(
