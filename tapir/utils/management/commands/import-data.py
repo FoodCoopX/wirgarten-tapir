@@ -54,7 +54,7 @@ class Command(BaseCommand):
         delete_all = options["delete_all"]
 
         with open(filepath, "r") as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f,delimiter=";")
             if type == "members":
                 if delete_all:
                     Member.objects.all().delete()
@@ -85,11 +85,12 @@ class Command(BaseCommand):
                         privacy_consent=row["privacy_consent"],  # + "T12:00:00+0200",
                         # pickup_location=picloc
                     )
-                    mp = MemberPickupLocation(
-                        member=m,
-                        pickup_location=picloc,
-                        valid_from=row["AO_gueltig_ab"],
-                    )
+                    if picloc is not None:
+                        mp = MemberPickupLocation(
+                            member=m,
+                            pickup_location=picloc,
+                            valid_from=row["AO_gueltig_ab"],
+                        )
                     try:
                         m.save(bypass_keycloak=True)
                         if picloc is not None:
