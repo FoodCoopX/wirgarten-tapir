@@ -127,6 +127,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                           );
                           setShoppingCart(Object.assign({}, shoppingCart));
                         }}
+                        disabled={shoppingCart[product.id!] === 0}
                       />
                       <span>{shoppingCart[product.id!]}</span>
                       <TapirButton

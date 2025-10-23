@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ProgressBar, Spinner } from "react-bootstrap";
+import { Form, ProgressBar, Spinner } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import { BestellWizardApi, type PublicProductType } from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
@@ -35,6 +35,8 @@ type Step =
   | "loading"
   | string;
 
+type Phase = "loading" | "intro" | string;
+
 const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
   const [settings, setSettings] =
@@ -43,6 +45,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [toastDatas, setToastDatas] = useState<ToastData[]>([]);
   const [steps, setSteps] = useState<Step[]>(["loading"]);
   const [currentStep, setCurrentStep] = useState<Step>("loading");
+  const [phases, setPhases] = useState<Phase[]>([]);
+  const [currentPhase, setCurrentPhase] = useState<Phase>("loading");
   const [personalData, setPersonalData] = useState<PersonalData>(
     getEmptyPersonalData(),
   );
@@ -51,6 +55,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   >([]);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
   const [investingMembership, setInvestingMembership] = useState(false);
+  const [debugPhases, setDebugPhases] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -99,6 +104,32 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
   }, [settings, selectedProductTypes]);
 
+  useEffect(() => {
+    const newPhases: Phase[] = [];
+    for (const step of steps) {
+      const stepPhase = getPhase(step);
+      if (!newPhases.includes(stepPhase)) {
+        newPhases.push(stepPhase);
+      }
+    }
+    setPhases(newPhases);
+    setCurrentPhase(getPhase(currentStep));
+  }, [steps, currentStep]);
+
+  function getPhase(step: Step): Phase {
+    switch (step) {
+      case "loading":
+        return "loading";
+      case "1a_welcome":
+      case "1b_welcome_waiting_list":
+      case "2_first_name":
+        return "intro";
+      default:
+        const separatorIndex = step.lastIndexOf("_");
+        return step.slice(0, separatorIndex);
+    }
+  }
+
   function buildSteps() {
     const newSteps: Step[] = [];
     newSteps.push(
@@ -133,14 +164,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
-  }
-
-  function skipProductType(productType: PublicProductType) {
-    setSelectedProductTypes(
-      selectedProductTypes.filter((pt) => pt.id !== productType.id),
-    );
-
-    setCurrentStep(steps[steps.indexOf(currentStep) + 2]);
   }
 
   function getStepComponent(step: Step) {
@@ -218,6 +241,16 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
   }
 
+  function getPhaseName(phase: Phase) {
+    for (const productType of settings.productTypes) {
+      if (productType.id === phase) {
+        return productType.name;
+      }
+    }
+
+    return phase;
+  }
+
   return (
     <div
       style={{
@@ -270,9 +303,28 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           style={{ width: "100%", height: "100%", paddingBottom: "1rem" }}
           className={"d-flex flex-column justify-content-end"}
         >
-          <div style={{ width: "100%", textAlign: "center" }}>
-            Schritt {steps.indexOf(currentStep) + 1} von {steps.length}
+          <div
+            style={{ width: "100%", textAlign: "center" }}
+            className={"d-flex flex-row justify-content-center gap-2"}
+          >
+            <span>
+              Schritt {phases.indexOf(currentPhase) + 1} von {phases.length}
+            </span>
+            <Form.Check
+              checked={debugPhases}
+              onChange={(event) => setDebugPhases(event.target.checked)}
+            />
+            {debugPhases && <span>Debug enabled</span>}
           </div>
+          {debugPhases && (
+            <div className={"d-flex flex-row gap-2 justify-content-center"}>
+              {phases.map((phase) => (
+                <span className={currentPhase === phase ? "fw-bold" : ""}>
+                  {getPhaseName(phase)}
+                </span>
+              ))}
+            </div>
+          )}
           <div
             className={"d-flex flex-row gap-2 align-items-center"}
             style={{ marginRight: "1rem", marginLeft: "1rem" }}
