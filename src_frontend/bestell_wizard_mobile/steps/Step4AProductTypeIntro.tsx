@@ -29,6 +29,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
             className={
               "d-flex align-items-center justify-content-center gap-2 flex-column"
             }
+            style={{ minHeight: "70dvh" }}
           >
             <h1 className={"text-center"}>Unser {productType.name}</h1>
             <div>
