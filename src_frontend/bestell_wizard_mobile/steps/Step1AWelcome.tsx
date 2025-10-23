@@ -15,7 +15,7 @@ const Step1AWelcome: React.FC<Step1AIntroProps> = ({
     <div
       style={{ height: "100%" }}
       className={
-        "d-flex align-items-center justify-content-center gap-2 flex-column text-center"
+        "d-flex align-items-center justify-content-center gap-2 flex-column text-center px-4"
       }
     >
       {settings.strings.step1aTitle && <h1>{settings.strings.step1aTitle}</h1>}

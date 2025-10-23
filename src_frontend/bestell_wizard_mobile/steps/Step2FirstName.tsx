@@ -22,7 +22,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   useEffect(() => {
     if (!active) return;
 
-    document.getElementById("first_name_input")?.focus();
+    setTimeout(() => document.getElementById("first_name_input")?.focus(), 200);
   }, [active]);
 
   return (

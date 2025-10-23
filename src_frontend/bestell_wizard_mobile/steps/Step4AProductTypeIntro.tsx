@@ -7,13 +7,11 @@ import { Accordion, AccordionBody } from "react-bootstrap";
 interface Step4AProductTypeIntroProps {
   productType: PublicProductType;
   goToNextStep: () => void;
-  skipProductType: (productType: PublicProductType) => void;
 }
 
 const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
   productType,
   goToNextStep,
-  skipProductType,
 }) => {
   return (
     <>
@@ -44,6 +42,13 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
               )}
               {productType.accordions.length > 0 && (
                 <Accordion>
+                  <style>
+                    {`
+                      .accordion *, .accordion-button:not(.collapsed) {
+                        backgroundColor: transparent;
+                        background: transparent;
+                      }`}
+                  </style>
                   {productType.accordions.map((accordion) => (
                     <Accordion.Item
                       key={accordion.order}

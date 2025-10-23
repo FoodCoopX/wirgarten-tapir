@@ -202,7 +202,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               <Step4AProductTypeIntro
                 productType={productType}
                 goToNextStep={goToNextStep}
-                skipProductType={skipProductType}
               />
             );
           case "order":
@@ -227,7 +226,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         left: "50%",
         width: "100%",
         maxWidth: "1000px",
-        height: "100vh",
+        height: "100dvh",
         transform: "translate(-50%, 0)",
         display: "flex",
         flexDirection: "column",
@@ -235,7 +234,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     >
       <div
         style={{
-          height: "10vh",
+          height: "10dvh",
           width: "100%",
         }}
       >
@@ -247,7 +246,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       </div>
       <div
         style={{
-          height: "80vh",
+          height: "80dvh",
           width: "100%",
           overflowY: "hidden",
         }}
@@ -263,7 +262,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       </div>
       <div
         style={{
-          height: "10vh",
+          height: "10dvh",
           width: "100%",
         }}
       >

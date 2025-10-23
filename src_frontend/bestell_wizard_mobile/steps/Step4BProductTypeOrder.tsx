@@ -67,7 +67,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           activeIndex={activeProductIndex}
           onSelect={handleSelect}
           indicators={false}
-          controls={productType.products.length > 0}
+          controls={productType.products.length > 1}
           interval={null}
           touch={false}
           style={{ width: "100%" }}
@@ -152,53 +152,27 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                         {product.descriptionInBestellwizard}
                       </>
                     )}
-                    {shouldShowWarningProductNotAvailable(
-                      product,
-                      productType,
-                      settings,
-                    ) && (
-                      <>
-                        <br />
-                        <span className={"text-danger"}>
-                          (nur Warteliste-Eintrag möglich)
-                        </span>
-                      </>
-                    )}
+                    <br />
+                    <span
+                      className={"text-danger"}
+                      style={{
+                        opacity: shouldShowWarningProductNotAvailable(
+                          product,
+                          productType,
+                          settings,
+                        )
+                          ? 1
+                          : 0,
+                      }}
+                    >
+                      (nur Warteliste-Eintrag möglich)
+                    </span>
                   </Form.Text>
                 </div>
               </Carousel.Item>
             ))}
         </Carousel>
-        <div
-          className={
-            "px-3 d-flex flex-row " +
-            (productType.products.length > 1
-              ? "justify-content-between"
-              : "justify-content-center")
-          }
-          style={{ width: "100%" }}
-        >
-          {productType.products.length > 1 && (
-            <>
-              <TapirButton
-                variant={"outline-secondary"}
-                text={"Kleiner"}
-                onClick={() => setActiveProductIndex(activeProductIndex - 1)}
-                disabled={activeProductIndex === 0}
-                size={"sm"}
-              />
-              <TapirButton
-                variant={"outline-secondary"}
-                text={"Größer"}
-                onClick={() => setActiveProductIndex(activeProductIndex + 1)}
-                disabled={
-                  activeProductIndex === productType.products.length - 1
-                }
-                size={"sm"}
-              />
-            </>
-          )}
-        </div>
+
         <div
           className={"px-2 d-flex flex-row justify-content-center"}
           style={{ width: "100%" }}
