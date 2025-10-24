@@ -53,11 +53,39 @@ class Command(BaseCommand):
         type = options["type"][0]
         delete_all = options["delete_all"]
 
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f, delimiter=";")
             if type == "members":
                 if delete_all:
                     Member.objects.all().delete()
+                # validate columns
+                required_columns = [
+                    "Vorname",
+                    "Nachname",
+                    "Geburtstag/Gründungsdatum",
+                    "Straße",
+                    "Hausnr.",
+                    "PLZ",
+                    "Ort",
+                    "Mailadresse",
+                    "Telefon",
+                    "Nr",
+                    "IBAN",
+                    "Kontoinhaber",
+                    "consent_sepa",
+                    "privacy_consent",
+                    "Abholort",
+                    "AO_gueltig_ab",
+                ]
+                missing_columns = [
+                    col for col in required_columns if col not in reader.fieldnames
+                ]
+                if missing_columns:
+                    print(
+                        f"Error: Required columns missing in CSV: {', '.join(missing_columns)}"
+                    )
+                    return
+
                 for row in reader:
                     # identify pickup location ID
                     try:
@@ -98,9 +126,29 @@ class Command(BaseCommand):
                     except Exception as e:
                         print(e)
                         continue
+
             if type == "shares":
                 if delete_all:
                     CoopShareTransaction.objects.all().delete()
+                # validate columns
+                required_columns = [
+                    "Mitgliedsnummer",
+                    "Bewegungsart (Z,Ü,K)",
+                    "Datum",
+                    "Anzahl Anteile",
+                    "Wert Anteile",
+                    "Übertragungspartner",
+                    "Wirkung Kündigung",
+                ]
+                missing_columns = [
+                    col for col in required_columns if col not in reader.fieldnames
+                ]
+                if missing_columns:
+                    print(
+                        f"Error: Required columns missing in CSV: {', '.join(missing_columns)}"
+                    )
+                    return
+
                 for row in reader:
                     # print(row)
                     # {'Mitgliedsnummer': '1', 'Bewegungsart (Z, Ü, K)': 'Z', 'Datum': '2017-03-10', 'Anzahl Anteile': '2', 'Wert Anteile': '100', 'Übertragungspartner': '', 'Wirkung Kündigung': ''}
@@ -159,12 +207,34 @@ class Command(BaseCommand):
                     except ValidationError as e:
                         print(row)
                         print("Validation Error occured", e.messages)
+
             if type == "subscriptions":
                 if delete_all:
                     Subscription.objects.all().delete()
                     # identify current growing_period
-                # Growing Period handling
-                if options.get("growing_period_start"):
+                # validate columns
+                required_columns = [
+                    "Mitgliedernummer",
+                    "Email",
+                    "product",
+                    "Quantity",
+                    "Vertragsbeginn",
+                    "Vertragsende",
+                    "Solidarpreis in Prozent",
+                    "consent_vertragsgrundsätze",
+                    "consent_widerruf",
+                    "cancellation.ts",
+                ]
+                missing_columns = [
+                    col for col in required_columns if col not in reader.fieldnames
+                ]
+                if missing_columns:
+                    print(
+                        f"Error: Required columns missing in CSV: {', '.join(missing_columns)}"
+                    )
+                    return
+
+                    # Growing Period handling
                     start_date_str = options["growing_period_start"]
 
                     # Validiere Datumsformat
