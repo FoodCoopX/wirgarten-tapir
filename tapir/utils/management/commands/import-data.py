@@ -221,6 +221,7 @@ class Command(BaseCommand):
                     "Vertragsbeginn",
                     "Vertragsende",
                     "Solidarpreis in Prozent",
+                    "Solidarpreis in EUR",
                     "consent_vertragsgrundsätze",
                     "consent_widerruf",
                     "cancellation.ts",
@@ -233,47 +234,6 @@ class Command(BaseCommand):
                         f"Error: Required columns missing in CSV: {', '.join(missing_columns)}"
                     )
                     return
-
-                    # Growing Period handling
-                    start_date_str = options["growing_period_start"]
-
-                    # Validiere Datumsformat
-                    try:
-                        datetime.strptime(start_date_str, "%Y-%m-%d")
-                    except ValueError:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"Invalid date format '{start_date_str}'. Please use YYYY-MM-DD format (e.g., 2023-01-01)."
-                            )
-                        )
-                        return
-
-                    try:
-                        period = GrowingPeriod.objects.get(start_date=start_date_str)
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f"Using GrowingPeriod: ID={period.id}, Start={period.start_date}"
-                            )
-                        )
-                    except GrowingPeriod.DoesNotExist:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"GrowingPeriod with start_date='{options['growing_period_start']}' does not exist!"
-                            )
-                        )
-                        self.stdout.write("Available GrowingPeriods:")
-                        for gp in GrowingPeriod.objects.all():
-                            self.stdout.write(
-                                f"  - ID: {gp.id}, Start: {gp.start_date}, End: {gp.end_date}"
-                            )
-                        return
-                    except ValueError as e:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"Invalid date format '{options['growing_period_start']}'. Use YYYY-MM-DD format."
-                            )
-                        )
-                        return
                 else:
                     # Fallback: Ersten verfügbaren GrowingPeriod verwenden
                     period = GrowingPeriod.objects.first()
@@ -307,6 +267,13 @@ class Command(BaseCommand):
                                     row["Mitgliedernummer"],
                                     row["Email"],
                                 )
+                        # check solidarity prices
+                        if (row["Solidarpreis in Prozent"] != "") != (row["Solidarpreis in EUR"] <> ""):
+                            print(row)
+                            print(
+                                "Solidarity prices must be defined either in Prozent or EUR, not both!"
+                            )
+                            continue
                     except django.core.exceptions.ObjectDoesNotExist as e:
                         print(row)
                         print("Database Error: Member not found")
@@ -347,6 +314,7 @@ class Command(BaseCommand):
                             end_date=row["Vertragsende"],
                             cancellation_ts=ts_cancel,
                             solidarity_price_percentage=row["Solidarpreis in Prozent"],
+                            solidarity_price_absolute=row["Solidarpreis in EUR"],
                             mandate_ref_id=mref.ref,
                             period_id=period.id,
                             product_id=prod.id,
@@ -359,18 +327,18 @@ class Command(BaseCommand):
                     except django.db.Error as e:
                         print(row)
                         print(
-                            "Database Error occured with create subscription: ",
+                            "Database Error occurred with create subscription: ",
                             e.__cause__,
                         )
                         continue
                     except ValidationError as e:
                         print(row)
                         print(
-                            "Validation Error occured with create subscription: ",
+                            "Validation Error occurred with create subscription: ",
                             e.messages,
                         )
                         continue
                     except ValueError as e:
                         print(row)
-                        print("Value Error occured with create subscription: ", e)
+                        print("Value Error occurred with create subscription: ", e)
                         continue
