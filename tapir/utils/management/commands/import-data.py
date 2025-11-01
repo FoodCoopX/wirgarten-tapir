@@ -26,7 +26,7 @@ class Command(BaseCommand):
             "--type", nargs=1, choices=["members", "shares", "subscriptions"]
         )
         parser.add_argument("--file", nargs=1)
-        parser.add_argument("--delete-all", action="store_true")
+        parser.add_argument("bla", action="store_true")
         parser.add_argument("--reset-all", action="store_true")
         parser.add_argument(
             "--growing-period-start",
@@ -268,7 +268,9 @@ class Command(BaseCommand):
                                     row["Email"],
                                 )
                         # check solidarity prices
-                        if (row["Solidarpreis in Prozent"] != "") != (row["Solidarpreis in EUR"] != ""):
+                        if (row["Solidarpreis in Prozent"] != "") != (
+                            row["Solidarpreis in EUR"] != ""
+                        ):
                             print(row)
                             print(
                                 "Solidarity prices must be defined either in Prozent or EUR, not both!"
