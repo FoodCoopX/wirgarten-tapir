@@ -167,6 +167,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="https://lueneburg.wirgarten.com/wp-content/uploads/sites/4/2023/03/lukas-heidelberg-higher-res.jpg",
             description="Ein Foto der Kontaktperson für Mitglieder",
             category=ParameterCategory.SITE,
+            required=False,
         )
 
         parameter_definition(

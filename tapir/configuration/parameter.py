@@ -109,6 +109,7 @@ def parameter_definition(
     order_priority: int = -1,
     enabled: bool = True,
     debug: bool = False,
+    required: bool = True,
     meta: ParameterMeta = ParameterMeta(
         options=None, validators=[], vars_hint=None, textarea=False
     ),
@@ -116,15 +117,16 @@ def parameter_definition(
     __validate_initial_value(datatype, initial_value, key, meta.validators)
 
     param = __create_or_update_parameter(
-        category,
-        datatype,
-        description,
-        initial_value,
-        key,
-        label,
-        order_priority,
-        enabled,
-        debug,
+        category=category,
+        datatype=datatype,
+        description=description,
+        initial_value=initial_value,
+        key=key,
+        label=label,
+        order_priority=order_priority,
+        enabled=enabled,
+        debug=debug,
+        required=required,
     )
 
     meta_info.parameters[param.key] = meta
@@ -140,6 +142,7 @@ def __create_or_update_parameter(
     order_priority,
     enabled: bool,
     debug: bool,
+    required: bool,
 ):
     try:
         param = TapirParameter.objects.get(pk=key)
@@ -153,6 +156,7 @@ def __create_or_update_parameter(
         param.order_priority = order_priority
         param.enabled = enabled
         param.debug = debug
+        param.required = required
 
         # print("\t[update] ", key)
 
@@ -170,6 +174,7 @@ def __create_or_update_parameter(
             value=str(initial_value),
             enabled=enabled,
             debug=debug,
+            required=required,
         )
 
     return param

@@ -48,7 +48,7 @@ def create_field(param: TapirParameter, cache: Dict):
         return forms.CharField(
             label=_(param.label),
             help_text=help_text,
-            required=True,
+            required=param.required,
             initial=param_value,
             validators=param_meta.validators,
             widget=Textarea if param_meta.textarea else None,
@@ -58,7 +58,7 @@ def create_field(param: TapirParameter, cache: Dict):
         return forms.IntegerField(
             label=_(param.label),
             help_text=help_text,
-            required=True,
+            required=param.required,
             initial=param_value,
             validators=param_meta.validators,
             disabled=not param.enabled,
@@ -67,7 +67,7 @@ def create_field(param: TapirParameter, cache: Dict):
         return forms.DecimalField(
             label=_(param.label),
             help_text=help_text,
-            required=True,
+            required=param.required,
             initial=param_value,
             validators=param_meta.validators,
             disabled=not param.enabled,

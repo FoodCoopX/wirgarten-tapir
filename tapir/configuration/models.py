@@ -22,6 +22,7 @@ class TapirParameter(models.Model):
     value = models.CharField(max_length=4096, null=True)
     enabled = models.BooleanField(default=True)
     debug = models.BooleanField(default=False)
+    required = models.BooleanField(default=True)
     options: [tuple] = None
     validators: [callable] = []
 
