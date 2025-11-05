@@ -1,7 +1,9 @@
+import datetime
 from datetime import date
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
+from icecream import ic
 from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value
@@ -187,7 +189,6 @@ def generate_future_deliveries(member: Member, limit: int = None, cache: Dict = 
 
 def calculate_pickup_location_change_date(
     reference_date=None,
-    next_delivery_date=None,
     change_until_weekday=None,
     cache: Dict = None,
 ):
@@ -196,28 +197,14 @@ def calculate_pickup_location_change_date(
     """
     if reference_date is None:
         reference_date = get_today(cache=cache)
-    if next_delivery_date is None:
-        next_delivery_date = get_next_delivery_date(
-            reference_date=reference_date, cache=cache
-        )
     if change_until_weekday is None:
         change_until_weekday = get_parameter_value(
             ParameterKeys.MEMBER_PICKUP_LOCATION_CHANGE_UNTIL, cache=cache
         )
 
-    days_ahead = next_delivery_date.weekday() - change_until_weekday
-    if days_ahead <= 0:  # Target day already happened this week
-        days_ahead += 7
-    change_until_date = next_delivery_date - relativedelta(days=days_ahead)
+    change_date = reference_date + datetime.timedelta(days=1)
 
-    # If today is the same as next_delivery
-    if reference_date == next_delivery_date:
-        return next_delivery_date + relativedelta(days=1)
+    while change_date.weekday() != change_until_weekday:
+        change_date += datetime.timedelta(days=1)
 
-    # Otherwise, if today <= change_until_date, change happens today
-    elif reference_date <= change_until_date:
-        return reference_date
-
-    # If today > change_until_date, change happens after next_delivery
-    else:
-        return next_delivery_date + relativedelta(days=1)
+    return change_date
