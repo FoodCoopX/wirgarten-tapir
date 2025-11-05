@@ -168,6 +168,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="Ein Foto der Kontaktperson für Mitglieder",
             category=ParameterCategory.SITE,
             required=False,
+            meta=ParameterMeta(validators=[URLValidator()]),
         )
 
         parameter_definition(

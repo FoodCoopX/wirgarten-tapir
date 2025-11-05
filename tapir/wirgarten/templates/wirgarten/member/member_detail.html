@@ -216,9 +216,13 @@
                                            href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
                                            target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
                                     </div>
-                                    <img src="{{ 'wirgarten.site.admin_image'|parameter }}"
-                                         alt="{{ 'wirgarten.site.admin_name'|parameter }}"
-                                         style="max-width: 200px">
+                                    {% with 'wirgarten.site.admin_image'|parameter as image %}
+                                        {% if image %}
+                                        <img src="{{ image }}"
+                                             alt="{{ 'wirgarten.site.admin_name'|parameter }}"
+                                             style="max-width: 200px">
+                                        {% endif %}
+                                    {% endwith %}
                                 </div>
                             </div>
                         </div>
