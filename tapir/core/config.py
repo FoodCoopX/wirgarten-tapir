@@ -31,6 +31,7 @@ THEME_WIRGARTEN = "wirgarten"
 THEME_L2G = "l2g"
 THEME_MM = "mm"
 THEME_G9 = "g9"
+THEME_GKH = "gkh"
 
 THEME_OPTIONS = [
     (THEME_BIOTOP, "Biotop Oberland"),
@@ -38,4 +39,5 @@ THEME_OPTIONS = [
     (THEME_L2G, "L2G Dickendorf"),
     (THEME_MM, "Möllers Morgen"),
     (THEME_G9, "GrüneNeune"),
+    (THEME_GKH, "GemüseKollektiv Hebenshausen"),
 ]
