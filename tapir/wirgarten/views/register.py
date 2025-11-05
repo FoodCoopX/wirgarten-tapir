@@ -10,7 +10,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from formtools.wizard.views import CookieWizardView
 
 from tapir.configuration.parameter import get_parameter_value
-from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G, THEME_G9
+from tapir.core.config import LEGAL_STATUS_COOPERATIVE, THEME_L2G, THEME_G9, THEME_GKH
 from tapir.subscriptions.services.base_product_type_service import (
     BaseProductTypeService,
 )
@@ -219,6 +219,14 @@ class RegistrationWizardViewBase(CookieWizardView):
             steps_kwargs["coop_shares"][
                 "description"
             ] = "Genossenschaft - Mit wie vielen Anteilen möchtest du dich an deiner GrüneNeune Hammelburg beteiligen?"
+
+        if (
+            get_parameter_value(ParameterKeys.ORGANISATION_THEME, cache=cache)
+            == THEME_GKH
+        ):
+            steps_kwargs["base_product"][
+                "description"
+            ] = "Erntevertrag – Wie viele Ernteanteile Gemüse möchtest du jede Woche bekommen?"
 
         return super().as_view(
             *args,
