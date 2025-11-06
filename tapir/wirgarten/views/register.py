@@ -489,6 +489,13 @@ class RegistrationWizardViewBase(CookieWizardView):
             + member.id
         )
 
+    def get_context_data(self, form, **kwargs):
+        context_data = super().get_context_data(form, **kwargs)
+        context_data["coop_name"] = get_parameter_value(
+            key=ParameterKeys.SITE_NAME, cache=self.cache
+        )
+        return context_data
+
 
 @method_decorator(xframe_options_exempt, name="dispatch")
 class RegistrationWizardConfirmView(generic.TemplateView):
