@@ -98,7 +98,16 @@ class CooperativeShareForm(forms.Form):
         min_amount = (
             self.coop_share_price if self.member_is_student else self.min_amount
         )
-        if cleaned_data.get("cooperative_shares") < min_amount:
+        amount_given_by_user = cleaned_data.get("cooperative_shares")
+        if amount_given_by_user % self.coop_share_price != 0:
+            self.add_error(
+                "cooperative_shares",
+                ValidationError(
+                    _(f"Der Betrag muss durch {self.coop_share_price} teilbar sein.")
+                ),
+            )
+
+        if amount_given_by_user < min_amount:
             self.add_error(
                 "cooperative_shares",
                 ValidationError(
