@@ -47,6 +47,7 @@ class CooperativeShareForm(forms.Form):
             self.min_shares = default_min_shares
         if self.member is not None:
             self.min_shares -= self.member.coop_shares_quantity
+        self.min_shares = max(self.min_shares, 1)
 
         self.min_amount = self.min_shares * self.coop_share_price
 
