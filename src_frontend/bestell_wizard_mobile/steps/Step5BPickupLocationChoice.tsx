@@ -13,6 +13,7 @@ interface Step5BPickupLocationChoiceProps {
   pickupLocationsWithCapacityCheckLoading: Set<PublicPickupLocation>;
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   goToNextStep: () => void;
+  stepIsActive: boolean;
 }
 
 type PickupLocationTab = "wishes" | "list" | "map";
@@ -24,9 +25,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   pickupLocationsWithCapacityCheckLoading,
   pickupLocationsWithCapacityFull,
   goToNextStep,
+  stepIsActive,
 }) => {
   const tabs: PickupLocationTab[] = ["wishes", "list", "map"];
-  const [currentTab, setCurrentTab] = useState<PickupLocationTab>("list");
+  const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
 
   return (
     <>
@@ -86,7 +88,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
                 pickupLocationsWithCapacityCheckLoading
               }
               waitingListLinkConfirmationModeEnabled={false}
-              tabIsActive={currentTab === "list"}
+              tabIsActive={currentTab === "list" && stepIsActive}
             />
           </Carousel.Item>
           <Carousel.Item>
@@ -94,7 +96,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               pickupLocations={settings.pickupLocations}
               selectedPickupLocations={selectedPickupLocations}
               setSelectedPickupLocations={setSelectedPickupLocations}
-              tabIsActive={currentTab === "map"}
+              tabIsActive={currentTab === "map" && stepIsActive}
             />
           </Carousel.Item>
         </Carousel>

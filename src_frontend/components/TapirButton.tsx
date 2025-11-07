@@ -14,6 +14,7 @@ interface TapirButtonProps {
   fontSize?: number;
   tooltip?: string;
   iconPosition?: "left" | "right";
+  rotateIcon?: string;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -41,7 +42,15 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
     }
 
     return (
-      <span className={"material-icons"} style={{ fontSize: fontSize() }}>
+      <span
+        className={"material-icons"}
+        style={{
+          fontSize: fontSize(),
+          transform: props.rotateIcon
+            ? "rotate(" + props.rotateIcon + "deg)"
+            : "",
+        }}
+      >
         {props.icon}
       </span>
     );

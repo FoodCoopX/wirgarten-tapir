@@ -1,5 +1,4 @@
 import datetime
-import random
 
 from environ import ImproperlyConfigured
 
@@ -257,8 +256,8 @@ class PickupLocationGenerator:
     def generate_pickup_locations_for_biotop(cls):
         biodelikat = PickupLocationFactory.create(
             name="Biodelikat",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7603882,
+            coords_lat=11.5542721,
         )
         PickupLocationOpeningTime.objects.create(
             pickup_location=biodelikat,
@@ -291,8 +290,8 @@ class PickupLocationGenerator:
 
         zentrum = PickupLocationFactory.create(
             name="Reginriedstraße",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7574811,
+            coords_lat=11.569017,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -319,8 +318,8 @@ class PickupLocationGenerator:
 
         badeteil = PickupLocationFactory.create(
             name="Schützenweg",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7565423,
+            coords_lat=11.5483139,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -353,8 +352,8 @@ class PickupLocationGenerator:
 
         norden = PickupLocationFactory.create(
             name="Ludwig-Thoma-Straße",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7698548,
+            coords_lat=11.5626015,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -381,8 +380,8 @@ class PickupLocationGenerator:
 
         hofpunkt = PickupLocationFactory.create(
             name="Biotop-Hofpunkt",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.6946584,
+            coords_lat=11.5700489,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -421,8 +420,8 @@ class PickupLocationGenerator:
 
         warenhaus = PickupLocationFactory.create(
             name="Grünes Warenhaus",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.683342,
+            coords_lat=11.575253,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -455,8 +454,8 @@ class PickupLocationGenerator:
 
         hochalmstrasse = PickupLocationFactory.create(
             name="Hochalmstraße Lenggries",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.675942,
+            coords_lat=11.5773619,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -483,8 +482,8 @@ class PickupLocationGenerator:
 
         schlossweg = PickupLocationFactory.create(
             name="Greiling",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7628852,
+            coords_lat=11.6096926,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -517,8 +516,8 @@ class PickupLocationGenerator:
 
         hotel = PickupLocationFactory.create(
             name="Bad Heilbrunn",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.7452572,
+            coords_lat=11.4602164,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -545,8 +544,8 @@ class PickupLocationGenerator:
 
         penzberg = PickupLocationFactory.create(
             name="Penzberg",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.751751,
+            coords_lat=11.3762038,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",
@@ -573,8 +572,8 @@ class PickupLocationGenerator:
 
         tutzing = PickupLocationFactory.create(
             name="Tutzing",
-            coords_lon=47 + random.random(),
-            coords_lat=11 + random.random(),
+            coords_lon=47.9099578,
+            coords_lat=11.2804248,
         )
         PickupLocationBasketCapacity.objects.create(
             basket_size_name="kleine Kiste",

@@ -268,6 +268,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             }
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
+            stepIsActive={step === "5b_pickup_location_choice"}
           />
         );
       case "loading":
@@ -360,7 +361,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       >
         {steps.map((step) => {
           return (
-            <div key={step} id={step} style={{ height: "80vh" }}>
+            <div key={step} id={step} style={{ height: "80dvh" }}>
               {getStepComponent(step)}
             </div>
           );
@@ -405,13 +406,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             >
               <TapirButton
                 size={"sm"}
-                icon={"first_page"}
+                icon={"chevron_line_up"}
                 variant={"outline-secondary"}
                 onClick={() => setCurrentStep(steps[0])}
               />
               <TapirButton
                 size={"sm"}
-                icon={"chevron_backward"}
+                icon={"keyboard_arrow_up"}
                 variant={"outline-secondary"}
                 onClick={goToPreviousStep}
               />

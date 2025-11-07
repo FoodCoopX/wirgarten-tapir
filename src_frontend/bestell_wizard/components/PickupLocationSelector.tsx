@@ -83,7 +83,7 @@ const PickupLocationSelector: React.FC<PickupLocationSelectorProps> = ({
   return (
     <Row>
       <Col>
-        <ListGroup style={{ maxHeight: "50vh", overflow: "scroll" }}>
+        <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
           {pickupLocations.map((pickupLocation) => (
             <ListGroupItem
               key={pickupLocation.id}
