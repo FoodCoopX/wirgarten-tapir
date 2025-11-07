@@ -15,12 +15,12 @@ const Step5APickupLocationIntro: React.FC<Step5APickupLocationIntroProps> = ({
   return (
     <>
       <div
-        style={{ height: "80vh", display: "flex", flexDirection: "column" }}
+        style={{ height: "80dvh", display: "flex", flexDirection: "column" }}
         className={"d-flex flex-column gap-2 mx-2 px-4"}
       >
         <div
           style={{
-            maxHeight: "70vh",
+            maxHeight: "70dvh",
             overflowY: "scroll",
           }}
         >

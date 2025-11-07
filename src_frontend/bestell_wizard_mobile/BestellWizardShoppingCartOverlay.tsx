@@ -34,7 +34,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
           top: 0,
           left: 0,
           width: "100vw",
-          height: "100vh",
+          height: "100dvh",
           backgroundColor: "gray",
           opacity: showOverlay ? "0.5" : 0,
           zIndex: 1000,
@@ -45,7 +45,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
       />
       <div
         style={{
-          height: "100vh",
+          height: "100dvh",
           width: "300px",
           boxShadow: "inset 1px 0 0 rgba(0, 0, 0, .1)",
           backgroundColor: "rgba(var(--bs-light-rgb), 1)",

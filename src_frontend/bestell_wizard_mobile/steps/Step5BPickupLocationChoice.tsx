@@ -31,7 +31,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   return (
     <>
       <div
-        style={{ height: "80vh", display: "flex", flexDirection: "column" }}
+        style={{ height: "80dvh", display: "flex", flexDirection: "column" }}
         className={"d-flex flex-column gap-2 mx-4"}
       >
         <h4 className={"mx-4 text-center"}>

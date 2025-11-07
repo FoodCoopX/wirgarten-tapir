@@ -82,7 +82,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     <img
                       src={product.urlOfImageInBestellwizard}
                       style={{
-                        maxHeight: "40vh",
+                        maxHeight: "40dvh",
                         objectFit: "contain",
                         filter: shouldShowWarningProductNotAvailable(
                           product,
