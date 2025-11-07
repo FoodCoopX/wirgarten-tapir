@@ -117,7 +117,7 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
     bestellWizardApi
       .bestellWizardApiBestellWizardBaseDataRetrieve()
       .then((response) => {
-        setSettings(buildSettings(response, []));
+        setSettings(buildSettings(response));
       })
       .catch((error) =>
         handleRequestError(
