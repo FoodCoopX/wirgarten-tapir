@@ -36,10 +36,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         style={{ height: "80dvh", display: "flex", flexDirection: "column" }}
         className={"d-flex flex-column gap-2 mx-4"}
       >
-        <h4 className={"mx-4 text-center"}>
+        <h4 className={"mx-4 mb-0 text-center"}>
           An welcher Verteilstation möchtest du abholen?
         </h4>
-        <ButtonGroup className={"mt-2"}>
+        <ButtonGroup>
           {tabs.map((tab) => (
             <ToggleButton
               key={tab}
