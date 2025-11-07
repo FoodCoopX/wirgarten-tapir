@@ -4,17 +4,23 @@ import "../../tapir/core/static/core/css/base.css";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
+import { Phase } from "./types/Phase.ts";
+import { PublicPickupLocation } from "../api-client";
 
 interface BestellWizardProps {
   settings: BestellWizardSettings;
   showShoppingCart: boolean;
   shoppingCart: ShoppingCart;
+  phases: Phase[];
+  selectedPickupLocations: PublicPickupLocation[];
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
   settings,
   showShoppingCart,
   shoppingCart,
+  phases,
+  selectedPickupLocations,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -67,6 +73,8 @@ const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
         settings={settings}
         showOverlay={showOverlay}
         onHide={() => setShowOverlay(false)}
+        showPickupLocations={phases.includes("pickup_location")}
+        selectedPickupLocations={selectedPickupLocations}
       />
     </>
   );

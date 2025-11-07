@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Form, ProgressBar, Spinner } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
-import { BestellWizardApi, type PublicProductType } from "../api-client";
+import {
+  BestellWizardApi,
+  PublicPickupLocation,
+  type PublicProductType,
+} from "../api-client";
 import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
 import { handleRequestError } from "../utils/handleRequestError.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
@@ -22,6 +26,12 @@ import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
+import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import Step5APickupLocationIntro from "./steps/Step5APickupLocationIntro.tsx";
+import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
+import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import { Phase } from "./types/Phase.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -32,10 +42,10 @@ type Step =
   | "1b_welcome_waiting_list"
   | "2_first_name"
   | "3_product_type_choice"
+  | "5a_pickup_location_intro"
+  | "5b_pickup_location_choice"
   | "loading"
   | string;
-
-type Phase = "loading" | "intro" | string;
 
 const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
@@ -57,12 +67,22 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [investingMembership, setInvestingMembership] = useState(false);
   const [debugPhases, setDebugPhases] = useState(false);
 
+  const [selectedPickupLocations, setSelectedPickupLocations] = useState<
+    PublicPickupLocation[]
+  >([]);
+  const [
+    pickupLocationsWithCapacityCheckLoading,
+    setPickupLocationsWithCapacityCheckLoading,
+  ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
+    useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+
   useEffect(() => {
     Promise.all([
       bestellWizardApi.bestellWizardApiBestellWizardBaseDataRetrieve(),
     ])
       .then(([baseData]) => {
-        const newSettings = buildSettings(baseData, []);
+        const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(newSettings.productTypes);
@@ -102,7 +122,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     if (!newSteps.includes(currentStep)) {
       setCurrentStep(newSteps[0]);
     }
-  }, [settings, selectedProductTypes]);
+  }, [settings, selectedProductTypes, shoppingCart]);
 
   useEffect(() => {
     const newPhases: Phase[] = [];
@@ -114,7 +134,24 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
     setPhases(newPhases);
     setCurrentPhase(getPhase(currentStep));
-  }, [steps, currentStep]);
+  }, [steps, currentStep, shoppingCart, settings]);
+
+  useEffect(() => {
+    if (
+      settings.pickupLocations.length === 0 ||
+      isShoppingCartEmpty(shoppingCart)
+    ) {
+      return;
+    }
+
+    checkPickupLocationCapacities(
+      settings.pickupLocations,
+      shoppingCart,
+      setPickupLocationsWithCapacityCheckLoading,
+      setPickupLocationsWithCapacityFull,
+      setToastDatas,
+    );
+  }, [settings, shoppingCart]);
 
   function getPhase(step: Step): Phase {
     switch (step) {
@@ -124,6 +161,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "1b_welcome_waiting_list":
       case "2_first_name":
         return "intro";
+      case "5a_pickup_location_intro":
+      case "5b_pickup_location_choice":
+        return "pickup_location";
       default:
         const separatorIndex = step.lastIndexOf("_");
         return step.slice(0, separatorIndex);
@@ -143,6 +183,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     for (const productType of selectedProductTypes) {
       newSteps.push(productType.id! + "_intro");
       newSteps.push(productType.id! + "_order");
+    }
+
+    if (
+      settings.pickupLocations.length > 0 &&
+      isAtLeastOneOrderedProductWithDelivery(
+        shoppingCart,
+        settings.productTypes,
+      )
+    ) {
+      newSteps.push("5a_pickup_location_intro");
+      newSteps.push("5b_pickup_location_choice");
     }
 
     return newSteps;
@@ -197,6 +248,26 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+          />
+        );
+      case "5a_pickup_location_intro":
+        return (
+          <Step5APickupLocationIntro
+            settings={settings}
+            goToNextStep={goToNextStep}
+          />
+        );
+      case "5b_pickup_location_choice":
+        return (
+          <Step5BPickupLocationChoice
+            settings={settings}
+            selectedPickupLocations={selectedPickupLocations}
+            setSelectedPickupLocations={setSelectedPickupLocations}
+            pickupLocationsWithCapacityCheckLoading={
+              pickupLocationsWithCapacityCheckLoading
+            }
+            pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+            goToNextStep={goToNextStep}
           />
         );
       case "loading":
@@ -275,6 +346,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           settings={settings}
           showShoppingCart={steps.findIndex((step) => step === currentStep) > 2}
           shoppingCart={shoppingCart}
+          phases={phases}
+          selectedPickupLocations={selectedPickupLocations}
         />
       </div>
       <div
@@ -325,27 +398,29 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               ))}
             </div>
           )}
-          <div
-            className={"d-flex flex-row gap-2 align-items-center"}
-            style={{ marginRight: "1rem", marginLeft: "1rem" }}
-          >
-            <TapirButton
-              size={"sm"}
-              icon={"first_page"}
-              variant={"outline-secondary"}
-              onClick={() => setCurrentStep(steps[0])}
-            />
-            <TapirButton
-              size={"sm"}
-              icon={"chevron_backward"}
-              variant={"outline-secondary"}
-              onClick={goToPreviousStep}
-            />
-            <ProgressBar
-              now={(100 * (steps.indexOf(currentStep) + 1)) / steps.length}
-              style={{ width: "100%" }}
-            />
-          </div>
+          {currentStep !== "loading" && (
+            <div
+              className={"d-flex flex-row gap-2 align-items-center"}
+              style={{ marginRight: "1rem", marginLeft: "1rem" }}
+            >
+              <TapirButton
+                size={"sm"}
+                icon={"first_page"}
+                variant={"outline-secondary"}
+                onClick={() => setCurrentStep(steps[0])}
+              />
+              <TapirButton
+                size={"sm"}
+                icon={"chevron_backward"}
+                variant={"outline-secondary"}
+                onClick={goToPreviousStep}
+              />
+              <ProgressBar
+                now={(100 * (steps.indexOf(currentStep) + 1)) / steps.length}
+                style={{ width: "100%" }}
+              />
+            </div>
+          )}
         </div>
       </div>
       <TapirToastContainer

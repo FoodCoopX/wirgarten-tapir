@@ -1,18 +1,14 @@
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import { sortProductTypes } from "./sortProductTypes.ts";
-import {
-  BestellWizardBaseDataResponse,
-  PublicPickupLocation,
-} from "../../api-client";
+import { BestellWizardBaseDataResponse } from "../../api-client";
 
 export function buildSettings(
   baseData: BestellWizardBaseDataResponse,
-  pickupLocations: PublicPickupLocation[],
 ): BestellWizardSettings {
   return {
     theme: baseData.theme as TapirTheme,
-    pickupLocations: pickupLocations,
+    pickupLocations: baseData.pickupLocations,
     productTypes: sortProductTypes(baseData.productTypes),
     priceOfAShare: baseData.priceOfAShare,
     allowInvestingMembership: baseData.allowInvestingMembership,

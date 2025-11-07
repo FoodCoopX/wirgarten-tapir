@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
 from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
@@ -56,6 +57,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step2_text = serializers.CharField()
     step3_title = serializers.CharField()
     step3_text = serializers.CharField()
+    step5a_title = serializers.CharField()
+    step5a_text = serializers.CharField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
@@ -63,6 +66,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     theme = serializers.CharField()
     allow_investing_membership = serializers.BooleanField()
     product_types = PublicProductTypeSerializer(many=True)
+    pickup_locations = PublicPickupLocationSerializer(many=True)
     force_waiting_list = serializers.BooleanField()
     intro_enabled = serializers.BooleanField()
     student_status_allowed = serializers.BooleanField()

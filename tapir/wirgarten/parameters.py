@@ -1079,6 +1079,31 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
+            label="Seite 5A: Abholort Einführung - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Unsere Verteilstationen",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
+            label="Seite 5A: Abholort Einführung - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="<p>Auf der nächsten Seite kannst du dir eine Karte mit den Verteilstationen "
+            "bzw. eine Liste dieser anzeigen lassen.</p><p>Du kannst deine Station während der "
+            "Vertragslaufzeit im Mitgliederbereich auch wechseln z.B. wenn du umziehst.</p>",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

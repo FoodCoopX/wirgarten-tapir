@@ -59,6 +59,7 @@ from tapir.wirgarten.models import (
     ProductType,
     WaitingListEntry,
     Member,
+    PickupLocation,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
@@ -344,6 +345,7 @@ class BestellWizardBaseDataApiView(APIView):
                 cache=self.cache,
             ),
             "product_types": ProductType.objects.all(),
+            "pickup_locations": PickupLocation.objects.order_by("name"),
             "force_waiting_list": get_parameter_value(
                 ParameterKeys.BESTELLWIZARD_FORCE_WAITING_LIST, cache=self.cache
             ),
@@ -416,6 +418,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step2_text": ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
             "step3_title": ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
             "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
+            "step5a_title": ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
+            "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

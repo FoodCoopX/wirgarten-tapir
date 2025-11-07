@@ -4555,6 +4555,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicProductType'
+        pickup_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicPickupLocation'
         force_waiting_list:
           type: boolean
         intro_enabled:
@@ -4611,6 +4615,7 @@ components:
       - logo_url
       - organization_name
       - payment_rhythm_choices
+      - pickup_locations
       - price_of_a_share
       - product_ids_that_are_already_at_capacity
       - product_type_ids_that_are_already_at_capacity
@@ -4741,6 +4746,10 @@ components:
           type: string
         step3_text:
           type: string
+        step5a_title:
+          type: string
+        step5a_text:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4750,6 +4759,8 @@ components:
       - step2_title
       - step3_text
       - step3_title
+      - step5a_text
+      - step5a_title
     BlankEnum:
       enum:
       - ''

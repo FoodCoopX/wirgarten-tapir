@@ -13,7 +13,10 @@
  */
 
 import type { PreferredLanguageEnum } from "./PreferredLanguageEnum";
-import { PreferredLanguageEnumFromJSON, PreferredLanguageEnumToJSON } from "./PreferredLanguageEnum";
+import {
+  PreferredLanguageEnumFromJSON,
+  PreferredLanguageEnumToJSON,
+} from "./PreferredLanguageEnum";
 import type { MemberCountry } from "./MemberCountry";
 import { MemberCountryFromJSON, MemberCountryToJSON } from "./MemberCountry";
 

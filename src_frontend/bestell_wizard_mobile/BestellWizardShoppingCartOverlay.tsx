@@ -5,19 +5,26 @@ import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
 import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../bestell_wizard/utils/doesProductBelongToProductType.ts";
+import { PublicPickupLocation } from "../api-client";
 
-interface BestellWizardProps {
+interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;
   shoppingCart: ShoppingCart;
   showOverlay: boolean;
   onHide: () => void;
+  showPickupLocations: boolean;
+  selectedPickupLocations: PublicPickupLocation[];
 }
 
-const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
+const BestellWizardShoppingCartOverlay: React.FC<
+  BestellWizardShoppingCartOverlayProps
+> = ({
   settings,
   shoppingCart,
   showOverlay,
   onHide,
+  showPickupLocations,
+  selectedPickupLocations,
 }) => {
   return (
     <>
@@ -65,8 +72,8 @@ const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
         </div>
         <ul style={{ marginTop: "7vh" }}>
           {settings.productTypes.map((productType) => (
-            <>
-              <li key={productType.id}>{productType.name}</li>
+            <li key={productType.id}>
+              <span>{productType.name}</span>
               <ul>
                 {isProductTypeOrdered(productType, shoppingCart) ? (
                   <>
@@ -79,7 +86,7 @@ const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
                           ) && quantity > 0,
                       )
                       .map(([productId, quantity]) => (
-                        <li>
+                        <li key={productId}>
                           {
                             productType.products.find(
                               (product) => product.id == productId,
@@ -94,8 +101,24 @@ const BestellWizardShoppingCartOverlay: React.FC<BestellWizardProps> = ({
                   <li>Nicht bestellt</li>
                 )}
               </ul>
-            </>
+            </li>
           ))}
+          {showPickupLocations && (
+            <li>
+              <span>Verteilstation</span>
+              {selectedPickupLocations.length === 0 ? (
+                <ul>
+                  <li>Nicht ausgewählt</li>
+                </ul>
+              ) : (
+                <ol>
+                  {selectedPickupLocations.map((pickupLocation) => (
+                    <li>{pickupLocation.name}</li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          )}
         </ul>
       </div>
     </>

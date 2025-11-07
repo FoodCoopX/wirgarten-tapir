@@ -124,6 +124,8 @@ class ParameterKeys:
     BESTELLWIZARD_STEP2_TEXT = f"{PREFIX}.bestellwizard.step2.text"
     BESTELLWIZARD_STEP3_TITLE = f"{PREFIX}.bestellwizard.step3.title"
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
+    BESTELLWIZARD_STEP5A_TITLE = f"{PREFIX}.bestellwizard.step5a.title"
+    BESTELLWIZARD_STEP5A_TEXT = f"{PREFIX}.bestellwizard.step5a.text"
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )
