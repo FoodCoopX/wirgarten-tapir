@@ -129,6 +129,13 @@ class ParameterKeys:
     BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
     BESTELLWIZARD_STEP6B_TITLE = f"{PREFIX}.bestellwizard.step6b.title"
     BESTELLWIZARD_STEP6B_TEXT = f"{PREFIX}.bestellwizard.step6b.text"
+    BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
+        f"{PREFIX}.bestellwizard.step6c.checkbox_statute"
+    )
+    BESTELLWIZARD_STEP6C_TEXT_STATUTE = f"{PREFIX}.bestellwizard.step6c.text_statute"
+    BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT = (
+        f"{PREFIX}.bestellwizard.step6c.checkbox_commitment"
+    )
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

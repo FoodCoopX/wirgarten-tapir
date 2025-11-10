@@ -4759,6 +4759,12 @@ components:
           type: string
         step6b_text:
           type: string
+        step6c_checkbox_statute:
+          type: string
+        step6c_text_statute:
+          type: string
+        step6c_checkbox_commitment:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4774,6 +4780,9 @@ components:
       - step6a_title
       - step6b_text
       - step6b_title
+      - step6c_checkbox_commitment
+      - step6c_checkbox_statute
+      - step6c_text_statute
     BlankEnum:
       enum:
       - ''

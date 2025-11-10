@@ -63,6 +63,9 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step6a_text = serializers.CharField()
     step6b_title = serializers.CharField()
     step6b_text = serializers.CharField()
+    step6c_checkbox_statute = serializers.CharField()
+    step6c_text_statute = serializers.CharField()
+    step6c_checkbox_commitment = serializers.CharField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):

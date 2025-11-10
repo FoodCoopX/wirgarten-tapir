@@ -1130,6 +1130,39 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
+            label="Seite 6C: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich habe die Satzung der (Betriebsname) und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
+            label="Seite 6C: Genossenschaft - Rechtliches - Erklärtext Satzung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10 und § 37.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
+            label="Seite 6C: Genossenschaft - Rechtliches - Checkbox-Label Verpflichtung",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Ich verpflichte mich hiermit, die nach Gesetz und Satzung geschuldeten Einzahlungen auf die gezeichneten Geschäftsanteile zu leisten.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

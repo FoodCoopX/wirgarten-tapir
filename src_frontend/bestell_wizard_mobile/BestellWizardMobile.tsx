@@ -34,6 +34,7 @@ import { Phase } from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import Step6CCoopLegal from "./steps/Step6CCoopLegal.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -48,6 +49,7 @@ type Step =
   | "5b_pickup_location_choice"
   | "6a_coop_intro"
   | "6b_coop_shares"
+  | "6c_coop_legal"
   | "loading"
   | string;
 
@@ -138,7 +140,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     if (!newSteps.includes(currentStep)) {
       setCurrentStep(newSteps[0]);
     }
-  }, [settings, selectedProductTypes, shoppingCart]);
+  }, [settings, selectedProductTypes, shoppingCart, studentStatusEnabled]);
 
   useEffect(() => {
     const newPhases: Phase[] = [];
@@ -194,9 +196,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return "pickup_location";
       case "6a_coop_intro":
       case "6b_coop_shares":
+      case "6c_coop_legal":
         return "coop";
       default:
         const separatorIndex = step.lastIndexOf("_");
+        if (separatorIndex == -1) {
+          alert("Missing phase for step " + step);
+          return "unknown";
+        }
         return step.slice(0, separatorIndex);
     }
   }
@@ -230,6 +237,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     if (settings.showCoopContent) {
       newSteps.push("6a_coop_intro");
       newSteps.push("6b_coop_shares");
+      if (!studentStatusEnabled) {
+        newSteps.push("6c_coop_legal");
+      }
     }
 
     return newSteps;
@@ -330,6 +340,15 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             minimumNumberOfShares={minimumNumberOfShares}
             studentStatusEnabled={studentStatusEnabled}
             setStudentStatusEnabled={setStudentStatusEnabled}
+            statuteAccepted={statuteAccepted}
+            setStatuteAccepted={setStatuteAccepted}
+          />
+        );
+      case "6c_coop_legal":
+        return (
+          <Step6CCoopLegal
+            goToNextStep={goToNextStep}
+            settings={settings}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
           />
