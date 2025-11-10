@@ -1,16 +1,16 @@
 import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { PublicProductType } from "../../api-client";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { Accordion, AccordionBody } from "react-bootstrap";
+import { GenericIntroContent } from "../types/GenericIntroContent.ts";
 
-interface Step4AProductTypeIntroProps {
-  productType: PublicProductType;
+interface StepGenericIntroProps {
+  content: GenericIntroContent;
   goToNextStep: () => void;
 }
 
-const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
-  productType,
+const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
+  content,
   goToNextStep,
 }) => {
   return (
@@ -31,17 +31,15 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
             }
             style={{ minHeight: "70dvh" }}
           >
-            <h1 className={"text-center"}>Unser {productType.name}</h1>
+            <h1 className={"text-center"}>{content.title}</h1>
             <div>
-              {productType.descriptionBestellwizardLong && (
+              {content.text && (
                 <p
                   className={"text-center"}
-                  dangerouslySetInnerHTML={getHtmlDescription(
-                    productType.descriptionBestellwizardLong,
-                  )}
-                ></p>
+                  dangerouslySetInnerHTML={getHtmlDescription(content.text)}
+                />
               )}
-              {productType.accordions.length > 0 && (
+              {content.accordions && content.accordions.length > 0 && (
                 <Accordion>
                   <style>
                     {`
@@ -49,7 +47,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
                         background: rgb(255, 255, 255, 0.1);
                       }`}
                   </style>
-                  {productType.accordions.map((accordion) => (
+                  {content.accordions.map((accordion) => (
                     <Accordion.Item
                       key={accordion.order}
                       eventKey={accordion.order.toString()}
@@ -84,4 +82,4 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
   );
 };
 
-export default Step4AProductTypeIntro;
+export default StepGenericIntro;

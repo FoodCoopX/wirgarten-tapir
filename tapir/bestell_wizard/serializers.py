@@ -59,6 +59,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step3_text = serializers.CharField()
     step5a_title = serializers.CharField()
     step5a_text = serializers.CharField()
+    step6a_title = serializers.CharField()
+    step6a_text = serializers.CharField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
@@ -72,7 +74,6 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     student_status_allowed = serializers.BooleanField()
     show_coop_content = serializers.BooleanField()
     intro_step_text = serializers.CharField()
-    coop_step_text = serializers.CharField()
     label_checkbox_sepa_mandat = serializers.CharField()
     label_checkbox_contract_policy = serializers.CharField()
     revocation_rights_explanation = serializers.CharField()

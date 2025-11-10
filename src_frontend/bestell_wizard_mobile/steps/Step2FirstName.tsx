@@ -53,6 +53,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         onClick={goToNextStep}
         disabled={personalData.firstName.length === 0}
         icon={"keyboard_arrow_down"}
+        size={"sm"}
       />
     </div>
   );

@@ -4569,8 +4569,6 @@ components:
           type: boolean
         intro_step_text:
           type: string
-        coop_step_text:
-          type: string
         label_checkbox_sepa_mandat:
           type: string
         label_checkbox_contract_policy:
@@ -4605,7 +4603,6 @@ components:
       required:
       - allow_investing_membership
       - coop_statute_link
-      - coop_step_text
       - default_payment_rhythm
       - force_waiting_list
       - intro_enabled
@@ -4750,6 +4747,10 @@ components:
           type: string
         step5a_text:
           type: string
+        step6a_title:
+          type: string
+        step6a_text:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4761,6 +4762,8 @@ components:
       - step3_title
       - step5a_text
       - step5a_title
+      - step6a_text
+      - step6a_title
     BlankEnum:
       enum:
       - ''

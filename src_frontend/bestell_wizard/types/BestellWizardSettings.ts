@@ -13,7 +13,6 @@ export type BestellWizardSettings = {
   allowInvestingMembership: boolean;
   forceWaitingList: boolean;
   showCoopContent: boolean;
-  coopStepText: string;
   introStepText: string;
   labelCheckboxSepaMandat: string;
   labelCheckboxContractPolicy: string;

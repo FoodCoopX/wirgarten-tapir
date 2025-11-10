@@ -357,9 +357,6 @@ class BestellWizardBaseDataApiView(APIView):
                 cache=self.cache,
             ),
             "show_coop_content": legal_status_is_cooperative(cache=self.cache),
-            "coop_step_text": get_parameter_value(
-                ParameterKeys.BESTELLWIZARD_COOP_TEXT, cache=self.cache
-            ),
             "intro_step_text": get_parameter_value(
                 ParameterKeys.BESTELLWIZARD_INTRO_TEXT, cache=self.cache
             ),
@@ -420,6 +417,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
             "step5a_title": ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
             "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
+            "step6a_title": ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
+            "step6a_text": ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

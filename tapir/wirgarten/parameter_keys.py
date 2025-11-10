@@ -104,7 +104,6 @@ class ParameterKeys:
     BESTELLWIZARD_FORCE_WAITING_LIST = f"{PREFIX}.bestellwizard.force_waiting_list"
     BESTELLWIZARD_SHOW_INTRO = f"{PREFIX}.bestellwizard.show_intro"
     BESTELLWIZARD_INTRO_TEXT = f"{PREFIX}.bestellwizard.intro_text"
-    BESTELLWIZARD_COOP_TEXT = f"{PREFIX}.bestellwizard.coop_text"
     BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT = (
         f"{PREFIX}.bestellwizard.sepa_mandat_checkbox_text"
     )
@@ -126,6 +125,8 @@ class ParameterKeys:
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
     BESTELLWIZARD_STEP5A_TITLE = f"{PREFIX}.bestellwizard.step5a.title"
     BESTELLWIZARD_STEP5A_TEXT = f"{PREFIX}.bestellwizard.step5a.text"
+    BESTELLWIZARD_STEP6A_TITLE = f"{PREFIX}.bestellwizard.step6a.title"
+    BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

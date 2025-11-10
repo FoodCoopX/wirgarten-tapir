@@ -21,17 +21,16 @@ import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalDa
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
-import Step4AProductTypeIntro from "./steps/Step4AProductTypeIntro.tsx";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
 import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
 import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
-import Step5APickupLocationIntro from "./steps/Step5APickupLocationIntro.tsx";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
 import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import { Phase } from "./types/Phase.ts";
+import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -44,6 +43,8 @@ type Step =
   | "3_product_type_choice"
   | "5a_pickup_location_intro"
   | "5b_pickup_location_choice"
+  | "6a_coop_intro"
+  | "6b_coop_shares"
   | "loading"
   | string;
 
@@ -164,6 +165,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "5a_pickup_location_intro":
       case "5b_pickup_location_choice":
         return "pickup_location";
+      case "6a_coop_intro":
+      case "6b_coop_shares":
+        return "coop";
       default:
         const separatorIndex = step.lastIndexOf("_");
         return step.slice(0, separatorIndex);
@@ -194,6 +198,11 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     ) {
       newSteps.push("5a_pickup_location_intro");
       newSteps.push("5b_pickup_location_choice");
+    }
+
+    if (settings.showCoopContent) {
+      newSteps.push("6a_coop_intro");
+      newSteps.push("6b_coop_shares");
     }
 
     return newSteps;
@@ -252,8 +261,11 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         );
       case "5a_pickup_location_intro":
         return (
-          <Step5APickupLocationIntro
-            settings={settings}
+          <StepGenericIntro
+            content={{
+              title: settings.strings.step5aTitle,
+              text: settings.strings.step5aText,
+            }}
             goToNextStep={goToNextStep}
           />
         );
@@ -269,6 +281,16 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             stepIsActive={step === "5b_pickup_location_choice"}
+          />
+        );
+      case "6a_coop_intro":
+        return (
+          <StepGenericIntro
+            goToNextStep={goToNextStep}
+            content={{
+              title: settings.strings.step6aTitle,
+              text: settings.strings.step6aText,
+            }}
           />
         );
       case "loading":
@@ -294,8 +316,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         switch (subStep) {
           case "intro":
             return (
-              <Step4AProductTypeIntro
-                productType={productType}
+              <StepGenericIntro
+                content={{
+                  title: "Unser " + productType.name,
+                  text: productType.descriptionBestellwizardLong,
+                  accordions: productType.accordions,
+                }}
                 goToNextStep={goToNextStep}
               />
             );
@@ -377,7 +403,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           style={{ width: "100%", height: "100%", paddingBottom: "1rem" }}
           className={"d-flex flex-column justify-content-end"}
         >
-          <div
+          <small
             style={{ width: "100%", textAlign: "center" }}
             className={"d-flex flex-row justify-content-center gap-2"}
           >
@@ -389,15 +415,20 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               onChange={(event) => setDebugPhases(event.target.checked)}
             />
             {debugPhases && <span>Debug enabled</span>}
-          </div>
+          </small>
           {debugPhases && (
-            <div className={"d-flex flex-row gap-2 justify-content-center"}>
+            <small
+              className={
+                "d-flex flex-row gap-2 justify-content-center flex-wrap"
+              }
+              style={{ lineHeight: "1.1rem" }}
+            >
               {phases.map((phase) => (
                 <span className={currentPhase === phase ? "fw-bold" : ""}>
                   {getPhaseName(phase)}
                 </span>
               ))}
-            </div>
+            </small>
           )}
           {currentStep !== "loading" && (
             <div

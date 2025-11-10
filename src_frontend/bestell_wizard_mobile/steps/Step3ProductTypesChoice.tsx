@@ -142,6 +142,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           text={"Weiter"}
           onClick={goToNextStep}
           icon={"keyboard_arrow_down"}
+          size={"sm"}
         />
         <Modal
           show={productTypeForModal !== undefined}

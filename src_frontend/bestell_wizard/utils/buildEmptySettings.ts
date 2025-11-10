@@ -9,7 +9,6 @@ export function buildEmptySettings(): BestellWizardSettings {
     allowInvestingMembership: false,
     forceWaitingList: false,
     showCoopContent: false,
-    coopStepText: "",
     introStepText: "",
     labelCheckboxSepaMandat: "",
     labelCheckboxContractPolicy: "",
@@ -34,6 +33,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step3Text: "",
       step5aText: "",
       step5aTitle: "",
+      step6aText: "",
+      step6aTitle: "",
     },
   };
 }

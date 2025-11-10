@@ -109,7 +109,12 @@ const BestellWizardCoopShares: React.FC<BestellWizardCoopSharesProps> = ({
     <>
       <Row>
         <Col>
-          <span dangerouslySetInnerHTML={{ __html: settings.coopStepText }} />
+          <h3
+            dangerouslySetInnerHTML={{ __html: settings.strings.step6aTitle }}
+          />
+          <span
+            dangerouslySetInnerHTML={{ __html: settings.strings.step6aText }}
+          />
           <BestellWizardCardSubtitle
             text={
               "Mit wie vielen Genossenschaftsanteilen möchtest du dich an deinem Biotop beteiligen?"

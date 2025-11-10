@@ -913,27 +913,6 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
-            key=ParameterKeys.BESTELLWIZARD_COOP_TEXT,
-            label="Text im BestellWizard in der Genossenschaft-Seite Oben",
-            datatype=TapirParameterDatatype.STRING,
-            initial_value="""<h3 class='card-title'>Dieser Standard-Text soll in der Allgemein-Konfig angepasst werden</h3>
-<p>
-    Als Mitglied unserer Genossenschaft bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei! Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung.
-</p>
-<p>
-    Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.
-</p>
-""",
-            category=ParameterCategory.BESTELLWIZARD,
-            description="Kann Text oder HTML sein",
-            meta=ParameterMeta(
-                show_only_when=legal_status_is_cooperative, textarea=True
-            ),
-            order_priority=bestellwizard_parameter_order,
-        )
-        bestellwizard_parameter_order -= 1
-
-        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_SEPA_MANDAT_CHECKBOX_TEXT,
             label="Text zum Checkbox zum SEPA-Mandat bei der Persönliche-Daten-Seite",
             datatype=TapirParameterDatatype.STRING,
@@ -1097,6 +1076,30 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             initial_value="<p>Auf der nächsten Seite kannst du dir eine Karte mit den Verteilstationen "
             "bzw. eine Liste dieser anzeigen lassen.</p><p>Du kannst deine Station während der "
             "Vertragslaufzeit im Mitgliederbereich auch wechseln z.B. wenn du umziehst.</p>",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
+            label="Seite 6A: Genossenschaft Einführung - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Unsere Genossenschaft",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
+            label="Seite 6A: Genossenschaft Einführung - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="<p>Als Mitglied unserer Genossenschaft bist du gleichzeitig Miteigentümer*In deiner eigenen Gemüsegärtnerei! Du kannst somit bei allen Grundsatzentscheidungen mitbestimmen und hast ein Stimmrecht bei der Generalversammlung. </p><p>"
+            "Mit deinen Genossenschaftsanteilen ermöglichst du die gemeinsame Finanzierung wichtiger Investitionen für die Genossenschaft.</p>",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,

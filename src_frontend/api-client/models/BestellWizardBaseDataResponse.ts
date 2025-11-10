@@ -99,12 +99,6 @@ export interface BestellWizardBaseDataResponse {
    * @type {string}
    * @memberof BestellWizardBaseDataResponse
    */
-  coopStepText: string;
-  /**
-   *
-   * @type {string}
-   * @memberof BestellWizardBaseDataResponse
-   */
   labelCheckboxSepaMandat: string;
   /**
    *
@@ -205,8 +199,6 @@ export function instanceOfBestellWizardBaseDataResponse(
     return false;
   if (!("introStepText" in value) || value["introStepText"] === undefined)
     return false;
-  if (!("coopStepText" in value) || value["coopStepText"] === undefined)
-    return false;
   if (
     !("labelCheckboxSepaMandat" in value) ||
     value["labelCheckboxSepaMandat"] === undefined
@@ -284,7 +276,6 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     studentStatusAllowed: json["student_status_allowed"],
     showCoopContent: json["show_coop_content"],
     introStepText: json["intro_step_text"],
-    coopStepText: json["coop_step_text"],
     labelCheckboxSepaMandat: json["label_checkbox_sepa_mandat"],
     labelCheckboxContractPolicy: json["label_checkbox_contract_policy"],
     revocationRightsExplanation: json["revocation_rights_explanation"],
@@ -331,7 +322,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     student_status_allowed: value["studentStatusAllowed"],
     show_coop_content: value["showCoopContent"],
     intro_step_text: value["introStepText"],
-    coop_step_text: value["coopStepText"],
     label_checkbox_sepa_mandat: value["labelCheckboxSepaMandat"],
     label_checkbox_contract_policy: value["labelCheckboxContractPolicy"],
     revocation_rights_explanation: value["revocationRightsExplanation"],
