@@ -29,6 +29,7 @@ export function buildSettings(
     organizationName: baseData.organizationName,
     coopStatuteLink: baseData.coopStatuteLink,
     logoUrl: baseData.logoUrl,
+    contactMailAddress: baseData.contactMailAddress,
     strings: baseData.strings,
   };
 }

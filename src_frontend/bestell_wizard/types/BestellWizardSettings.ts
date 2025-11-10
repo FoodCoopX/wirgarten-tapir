@@ -26,5 +26,6 @@ export type BestellWizardSettings = {
   coopStatuteLink: string;
   organizationName: string;
   logoUrl: string;
+  contactMailAddress: string;
   strings: BestellWizardStrings;
 };

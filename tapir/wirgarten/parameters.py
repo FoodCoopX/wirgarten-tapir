@@ -1107,6 +1107,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,
+            label="Seite 6B: Genossenschaftsanteile - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Unsere Genossenschaft",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6B_TEXT,
+            label="Seite 6B: Genossenschaftsanteile - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="<p>Standardtext zu Genoanteile. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam faucibus enim vel quam commodo porta.</p>",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

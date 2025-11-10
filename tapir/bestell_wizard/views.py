@@ -399,6 +399,9 @@ class BestellWizardBaseDataApiView(APIView):
             "logo_url": static(
                 f"core/themes/{get_parameter_value(key=ParameterKeys.ORGANISATION_THEME, cache=self.cache)}/images/Logo_white.webp"
             ),
+            "contact_mail_address": get_parameter_value(
+                key=ParameterKeys.SITE_EMAIL, cache=self.cache
+            ),
             "strings": self.build_strings_object(cache=self.cache),
         }
 
@@ -419,6 +422,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
             "step6a_title": ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
             "step6a_text": ParameterKeys.BESTELLWIZARD_STEP6A_TEXT,
+            "step6b_title": ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,
+            "step6b_text": ParameterKeys.BESTELLWIZARD_STEP6B_TEXT,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

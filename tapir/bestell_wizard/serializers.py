@@ -61,6 +61,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step5a_text = serializers.CharField()
     step6a_title = serializers.CharField()
     step6a_text = serializers.CharField()
+    step6b_title = serializers.CharField()
+    step6b_text = serializers.CharField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
@@ -89,6 +91,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     coop_statute_link = serializers.CharField()
     organization_name = serializers.CharField()
     logo_url = serializers.URLField()
+    contact_mail_address = serializers.EmailField()
     strings = BestellWizardStringsSerializer()
 
 

@@ -3,6 +3,7 @@ import { Form, ProgressBar, Spinner } from "react-bootstrap";
 import { useApi } from "../hooks/useApi.ts";
 import {
   BestellWizardApi,
+  CoopApi,
   PublicPickupLocation,
   type PublicProductType,
 } from "../api-client";
@@ -31,6 +32,8 @@ import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty
 import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
 import { Phase } from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
+import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
+import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -50,6 +53,8 @@ type Step =
 
 const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
+  const coopApi = useApi(CoopApi, csrfToken);
+
   const [settings, setSettings] =
     useState<BestellWizardSettings>(buildEmptySettings());
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -77,17 +82,27 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   ] = useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
   const [pickupLocationsWithCapacityFull, setPickupLocationsWithCapacityFull] =
     useState<Set<PublicPickupLocation>>(new Set<PublicPickupLocation>());
+  const [selectedNumberOfCoopShares, setSelectedNumberOfCoopShares] =
+    useState(0);
+  const [statuteAccepted, setStatuteAccepted] = useState(false);
+  const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
+  const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
 
   useEffect(() => {
     Promise.all([
       bestellWizardApi.bestellWizardApiBestellWizardBaseDataRetrieve(),
+      coopApi.coopApiMinimumNumberOfSharesRetrieve({
+        productIds: [],
+        quantities: [],
+      }),
     ])
-      .then(([baseData]) => {
+      .then(([baseData, minNumberOfShares]) => {
         const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
         setSelectedProductTypes(newSettings.productTypes);
         setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
+        setMinimumNumberOfShares(minNumberOfShares.minimumNumberOfShares);
       })
       .catch((error) =>
         handleRequestError(
@@ -153,6 +168,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       setToastDatas,
     );
   }, [settings, shoppingCart]);
+
+  useEffect(() => {
+    updateMinimumNumberOfShares(
+      shoppingCart,
+      new Set(),
+      setMinimumNumberOfShares,
+      setSelectedNumberOfCoopShares,
+    );
+    console.warn(
+      "useEffect updateMinimumNumberOfShares is missing the products in waiting list",
+    );
+  }, [shoppingCart]);
 
   function getPhase(step: Step): Phase {
     switch (step) {
@@ -291,6 +318,20 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               title: settings.strings.step6aTitle,
               text: settings.strings.step6aText,
             }}
+          />
+        );
+      case "6b_coop_shares":
+        return (
+          <Step6BCoopShares
+            goToNextStep={goToNextStep}
+            settings={settings}
+            selectedNumberOfCoopShares={selectedNumberOfCoopShares}
+            setSelectedNumberOfCoopShares={setSelectedNumberOfCoopShares}
+            minimumNumberOfShares={minimumNumberOfShares}
+            studentStatusEnabled={studentStatusEnabled}
+            setStudentStatusEnabled={setStudentStatusEnabled}
+            statuteAccepted={statuteAccepted}
+            setStatuteAccepted={setStatuteAccepted}
           />
         );
       case "loading":

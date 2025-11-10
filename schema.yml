@@ -4598,10 +4598,14 @@ components:
         logo_url:
           type: string
           format: uri
+        contact_mail_address:
+          type: string
+          format: email
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
       required:
       - allow_investing_membership
+      - contact_mail_address
       - coop_statute_link
       - default_payment_rhythm
       - force_waiting_list
@@ -4751,6 +4755,10 @@ components:
           type: string
         step6a_text:
           type: string
+        step6b_title:
+          type: string
+        step6b_text:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4764,6 +4772,8 @@ components:
       - step5a_title
       - step6a_text
       - step6a_title
+      - step6b_text
+      - step6b_title
     BlankEnum:
       enum:
       - ''

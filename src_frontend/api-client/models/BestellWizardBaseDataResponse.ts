@@ -162,6 +162,12 @@ export interface BestellWizardBaseDataResponse {
   logoUrl: string;
   /**
    *
+   * @type {string}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  contactMailAddress: string;
+  /**
+   *
    * @type {BestellWizardStrings}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -244,6 +250,11 @@ export function instanceOfBestellWizardBaseDataResponse(
   if (!("organizationName" in value) || value["organizationName"] === undefined)
     return false;
   if (!("logoUrl" in value) || value["logoUrl"] === undefined) return false;
+  if (
+    !("contactMailAddress" in value) ||
+    value["contactMailAddress"] === undefined
+  )
+    return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
   return true;
 }
@@ -289,6 +300,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     coopStatuteLink: json["coop_statute_link"],
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
+    contactMailAddress: json["contact_mail_address"],
     strings: BestellWizardStringsFromJSON(json["strings"]),
   };
 }
@@ -335,6 +347,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     coop_statute_link: value["coopStatuteLink"],
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
+    contact_mail_address: value["contactMailAddress"],
     strings: BestellWizardStringsToJSON(value["strings"]),
   };
 }
