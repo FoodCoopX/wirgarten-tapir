@@ -35,6 +35,7 @@ import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step6CCoopLegal from "./steps/Step6CCoopLegal.tsx";
+import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -50,6 +51,7 @@ type Step =
   | "6a_coop_intro"
   | "6b_coop_shares"
   | "6c_coop_legal"
+  | "8_personal_data"
   | "loading"
   | string;
 
@@ -198,6 +200,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "6b_coop_shares":
       case "6c_coop_legal":
         return "coop";
+      case "8_personal_data":
+        return "personal_data";
       default:
         const separatorIndex = step.lastIndexOf("_");
         if (separatorIndex == -1) {
@@ -241,6 +245,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         newSteps.push("6c_coop_legal");
       }
     }
+
+    newSteps.push("8_personal_data");
 
     return newSteps;
   }
@@ -351,6 +357,15 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             settings={settings}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
+          />
+        );
+      case "8_personal_data":
+        return (
+          <Step8PersonalData
+            goToNextStep={goToNextStep}
+            personalData={personalData}
+            setPersonalData={setPersonalData}
+            settings={settings}
           />
         );
       case "loading":

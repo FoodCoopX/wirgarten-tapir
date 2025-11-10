@@ -427,6 +427,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step6c_checkbox_statute": ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
             "step6c_text_statute": ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
             "step6c_checkbox_commitment": ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
+            "step8_title": ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

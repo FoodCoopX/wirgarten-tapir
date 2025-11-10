@@ -8,7 +8,6 @@ export type PersonalData = {
   postcode: string;
   city: string;
   country: string;
-  birthdate: Date | undefined;
   accountOwner: string;
   iban: string;
   paymentRhythm: string;

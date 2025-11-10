@@ -1163,6 +1163,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
+            label="Seite 8: Persönliche Daten - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Fast geschafft, {{ vorname }}. Wir brauchen nur noch ein paar persönliche Daten von dir.",
+            description="Verfügbare Tokens: {{ vorname }}",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

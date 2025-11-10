@@ -1,7 +1,6 @@
 import { PersonalData } from "../types/PersonalData.ts";
 import { isIbanValid } from "./isIbanValid.ts";
 import { isEmailValid } from "./isEmailValid.ts";
-import { isBirthdateValid } from "./isBirthdateValid.ts";
 import { isPhoneNumberValid } from "./isPhoneNumberValid.ts";
 
 export function isPersonalDataValid(
@@ -20,16 +19,17 @@ export function isPersonalDataValid(
   if (!personalData.country) return false;
 
   if (!isPhoneNumberValid(personalData.phoneNumber)) {
+    return false;
   }
 
-  if (!isEmailValid(personalData.email)) return false;
+  if (!isEmailValid(personalData.email)) {
+    return false;
+  }
 
   if (!waitingListModeEnabled) {
-    if (!personalData.birthdate) return false;
     if (!personalData.accountOwner) return false;
     if (!personalData.iban) return false;
     if (!isIbanValid(personalData.iban)) return false;
-    if (!isBirthdateValid(personalData.birthdate)) return false;
   }
 
   return true;
