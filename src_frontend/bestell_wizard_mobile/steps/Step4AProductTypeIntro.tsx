@@ -46,8 +46,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
                   <style>
                     {`
                       .accordion *, .accordion-button:not(.collapsed) {
-                        backgroundColor: transparent;
-                        background: transparent;
+                        background: rgb(255, 255, 255, 0.1);
                       }`}
                   </style>
                   {productType.accordions.map((accordion) => (
@@ -58,6 +57,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
                       <Accordion.Header>{accordion.title}</Accordion.Header>
                       <AccordionBody>
                         <div
+                          style={{ background: "transparent" }}
                           dangerouslySetInnerHTML={getHtmlDescription(
                             accordion.description,
                           )}
@@ -76,6 +76,7 @@ const Step4AProductTypeIntro: React.FC<Step4AProductTypeIntroProps> = ({
             text={"Weiter"}
             onClick={goToNextStep}
             size={"sm"}
+            icon={"keyboard_arrow_down"}
           />
         </div>
       </div>

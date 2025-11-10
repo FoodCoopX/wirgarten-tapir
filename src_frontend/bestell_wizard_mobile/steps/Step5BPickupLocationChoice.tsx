@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { ButtonGroup, Carousel, ToggleButton } from "react-bootstrap";
+import {BestellWizardSettings} from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import {ButtonGroup, Carousel, ToggleButton} from "react-bootstrap";
 import Step5BPickupLocationList from "../Components/Step5BPickupLocationList.tsx";
-import { PublicPickupLocation } from "../../api-client";
+import {PublicPickupLocation} from "../../api-client";
 import Step5BPickupLocationMap from "../Components/Step5BPickupLocationMap.tsx";
 
 interface Step5BPickupLocationChoiceProps {
@@ -107,6 +107,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             onClick={goToNextStep}
             size={"sm"}
             disabled={selectedPickupLocations.length === 0}
+            icon={"keyboard_arrow_down"}
           />
         </div>
       </div>

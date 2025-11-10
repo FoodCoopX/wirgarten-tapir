@@ -44,6 +44,7 @@ const Step5APickupLocationIntro: React.FC<Step5APickupLocationIntroProps> = ({
             text={"Weiter"}
             onClick={goToNextStep}
             size={"sm"}
+            icon={"keyboard_arrow_down"}
           />
         </div>
       </div>

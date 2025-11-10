@@ -141,6 +141,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           variant={"outline-secondary"}
           text={"Weiter"}
           onClick={goToNextStep}
+          icon={"keyboard_arrow_down"}
         />
         <Modal
           show={productTypeForModal !== undefined}

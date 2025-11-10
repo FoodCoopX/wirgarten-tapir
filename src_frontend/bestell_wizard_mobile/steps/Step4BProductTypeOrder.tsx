@@ -183,6 +183,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
             text={getNextButtonText()}
             onClick={goToNextStep}
             size={"sm"}
+            icon={"keyboard_arrow_down"}
           />
         </div>
       </div>

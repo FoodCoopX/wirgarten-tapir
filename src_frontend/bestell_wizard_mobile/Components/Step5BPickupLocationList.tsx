@@ -63,24 +63,36 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       {pickupLocations.map((pickupLocation) => (
         <ListGroupItem
           key={pickupLocation.id}
-          style={{ cursor: "pointer" }}
+          style={{
+            cursor: "pointer",
+            lineHeight: "1.1rem",
+          }}
           onClick={() => setSelectedPickupLocations([pickupLocation])}
           className={getClassForPickupLocationListItem(pickupLocation)}
           id={pickupLocation.id}
         >
-          <strong>{pickupLocation.name}</strong>{" "}
-          {buildCapacityIndicator(pickupLocation)}
-          <br />
-          <small>
-            {formatAddress(
-              pickupLocation.street,
-              pickupLocation.street2,
-              pickupLocation.postcode,
-              pickupLocation.city,
-            )}
+          <style>
+            {`
+              .list-group-item:not(.active) {
+                background: rgb(255,255,255,0.2);
+              }
+            `}
+          </style>
+          <small style={{ lineHeight: "0" }}>
+            <strong>{pickupLocation.name}</strong>{" "}
+            {buildCapacityIndicator(pickupLocation)}
+            <br />
+            <small>
+              {formatAddress(
+                pickupLocation.street,
+                pickupLocation.street2,
+                pickupLocation.postcode,
+                pickupLocation.city,
+              )}
+            </small>
+            <br />
+            <small>{formatOpeningTimes(pickupLocation)}</small>
           </small>
-          <br />
-          <small>{formatOpeningTimes(pickupLocation)}</small>
         </ListGroupItem>
       ))}
     </ListGroup>
