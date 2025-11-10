@@ -11,7 +11,6 @@ export function getEmptyPersonalData(): PersonalData {
     postcode: "",
     city: "",
     country: "DE",
-    birthdate: undefined,
     accountOwner: "",
     iban: "",
     paymentRhythm: "monthly",

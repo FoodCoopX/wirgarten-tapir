@@ -1,8 +1,4 @@
-import {
-  PublicPickupLocation,
-  type PublicProductType,
-  WaitingListEntryDetails,
-} from "../../api-client";
+import { PublicPickupLocation, type PublicProductType, WaitingListEntryDetails } from "../../api-client";
 import { BestellWizardStep } from "../types/BestellWizardStep.ts";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
@@ -58,7 +54,6 @@ export function setDataFromWaitingListEntry(
     street2: waitingListEntryDetails.street2,
     postcode: waitingListEntryDetails.postcode,
     city: waitingListEntryDetails.city,
-    birthdate: waitingListEntryDetails.birthdate ?? new Date(),
     country: "de",
     iban: waitingListEntryDetails.iban ?? "",
     accountOwner: waitingListEntryDetails.accountOwner ?? "",
