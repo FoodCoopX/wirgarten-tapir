@@ -126,6 +126,12 @@ export interface BestellWizardStrings {
    * @memberof BestellWizardStrings
    */
   step8Title: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
+  step9Title: string;
 }
 
 /**
@@ -177,6 +183,8 @@ export function instanceOfBestellWizardStrings(
     return false;
   if (!("step8Title" in value) || value["step8Title"] === undefined)
     return false;
+  if (!("step9Title" in value) || value["step9Title"] === undefined)
+    return false;
   return true;
 }
 
@@ -210,6 +218,7 @@ export function BestellWizardStringsFromJSONTyped(
     step6cTextStatute: json["step6c_text_statute"],
     step6cCheckboxCommitment: json["step6c_checkbox_commitment"],
     step8Title: json["step8_title"],
+    step9Title: json["step9_title"],
   };
 }
 
@@ -244,5 +253,6 @@ export function BestellWizardStringsToJSONTyped(
     step6c_text_statute: value["step6cTextStatute"],
     step6c_checkbox_commitment: value["step6cCheckboxCommitment"],
     step8_title: value["step8Title"],
+    step9_title: value["step9Title"],
   };
 }

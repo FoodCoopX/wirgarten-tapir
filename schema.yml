@@ -4767,6 +4767,8 @@ components:
           type: string
         step8_title:
           type: string
+        step9_title:
+          type: string
       required:
       - step1a_text
       - step1a_title
@@ -4786,6 +4788,7 @@ components:
       - step6c_checkbox_statute
       - step6c_text_statute
       - step8_title
+      - step9_title
     BlankEnum:
       enum:
       - ''

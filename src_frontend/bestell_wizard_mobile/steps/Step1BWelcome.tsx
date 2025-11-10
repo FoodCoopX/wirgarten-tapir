@@ -24,6 +24,7 @@ const Step1BWelcome: React.FC<Step1AIntroProps> = ({
         variant={"outline-secondary"}
         text={"Starten"}
         onClick={goToNextStep}
+        icon={"keyboard_arrow_down"}
       />
     </div>
   );

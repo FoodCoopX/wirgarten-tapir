@@ -11,12 +11,10 @@ import { BestellWizardApi, WaitingListEntryDetails } from "../../api-client";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
 import { handleRequestError } from "../../utils/handleRequestError.ts";
 import { ToastData } from "../../types/ToastData.ts";
-import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import moment from "moment";
 import "moment/dist/locale/de";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
-import { isBirthdateValid } from "../utils/isBirthdateValid.ts";
 import { ShoppingCart } from "../types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../utils/isAtLeastOneProductOrdered.ts";
 
@@ -71,14 +69,6 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
   const [controller, setController] = useState<AbortController>();
   const [innerDate, setInnerDate] = useState<string | undefined>();
   const bestellWizardApi = useApi(BestellWizardApi, getCsrfToken());
-
-  useEffect(() => {
-    if (personalData.birthdate === undefined) {
-      setInnerDate(undefined);
-    } else {
-      setInnerDate(moment(personalData.birthdate).format("DD.MM.YYYY"));
-    }
-  }, [personalData]);
 
   useEffect(() => {
     setEmailAddress(personalData.email);
@@ -281,45 +271,7 @@ const BestellWizardPersonalData: React.FC<BestellWizardPersonalDataProps> = ({
             <Form.Control value={"Deutschland"} disabled={true} />
           </Form.Group>
         </Col>
-        <Col>
-          {!waitingListModeEnabled && (
-            <Form.Group>
-              <Form.Label
-                className={
-                  personalData.birthdate !== undefined &&
-                  !isBirthdateValid(personalData.birthdate)
-                    ? "text-danger"
-                    : ""
-                }
-              >
-                <span>Geburtsdatum</span>
-              </Form.Label>
-              <Datetime
-                value={innerDate}
-                timeFormat={false}
-                dateFormat={true}
-                onChange={(changedValue) => {
-                  if (moment.isMoment(changedValue)) {
-                    setInnerDate(changedValue.format("DD.MM.YYYY"));
-                    personalData.birthdate = changedValue.toDate();
-                    updatePersonalData();
-                  } else {
-                    setInnerDate(changedValue);
-                  }
-                }}
-                inputProps={{
-                  disabled: waitingListEntryDetails?.memberAlreadyExists,
-                  className:
-                    personalData.birthdate !== undefined &&
-                    !isBirthdateValid(personalData.birthdate)
-                      ? "form-control text-danger"
-                      : "form-control",
-                  placeholder: "TT.MM.JJJJ",
-                }}
-              />
-            </Form.Group>
-          )}
-        </Col>
+        <Col />
       </Row>
 
       {!waitingListModeEnabled && (

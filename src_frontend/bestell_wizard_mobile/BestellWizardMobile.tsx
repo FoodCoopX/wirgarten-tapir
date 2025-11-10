@@ -36,6 +36,7 @@ import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step6CCoopLegal from "./steps/Step6CCoopLegal.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
+import Step9BankingData from "./steps/Step9BankingData.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -52,6 +53,7 @@ type Step =
   | "6b_coop_shares"
   | "6c_coop_legal"
   | "8_personal_data"
+  | "9_banking_data"
   | "loading"
   | string;
 
@@ -91,6 +93,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [statuteAccepted, setStatuteAccepted] = useState(false);
   const [minimumNumberOfShares, setMinimumNumberOfShares] = useState(0);
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
+  const [sepaAllowed, setSepaAllowed] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -107,6 +111,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         setSelectedProductTypes(newSettings.productTypes);
         setShoppingCart(buildEmptyShoppingCart(newSettings.productTypes));
         setMinimumNumberOfShares(minNumberOfShares.minimumNumberOfShares);
+
+        personalData.paymentRhythm = baseData.defaultPaymentRhythm;
+        setPersonalData(Object.assign({}, personalData));
       })
       .catch((error) =>
         handleRequestError(
@@ -201,6 +208,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "6c_coop_legal":
         return "coop";
       case "8_personal_data":
+      case "9_banking_data":
         return "personal_data";
       default:
         const separatorIndex = step.lastIndexOf("_");
@@ -247,6 +255,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     newSteps.push("8_personal_data");
+    newSteps.push("9_banking_data");
 
     return newSteps;
   }
@@ -365,6 +374,19 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
+            settings={settings}
+          />
+        );
+      case "9_banking_data":
+        return (
+          <Step9BankingData
+            goToNextStep={goToNextStep}
+            personalData={personalData}
+            setPersonalData={setPersonalData}
+            sepaAllowed={sepaAllowed}
+            setSepaAllowed={setSepaAllowed}
+            contractAccepted={contractAccepted}
+            setContractAccepted={setContractAccepted}
             settings={settings}
           />
         );

@@ -602,11 +602,6 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
   }
 
   function onConfirmOrder() {
-    if (personalData.birthdate === undefined) {
-      alert("Die Geburtsdatum ist nicht gültig");
-      return;
-    }
-
     setConfirmOrderLoading(true);
 
     if (waitingListEntryDetails !== undefined) {
@@ -619,7 +614,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
             contractAccepted: contractAccepted,
             iban: personalData.iban,
             sepaAllowed: sepaAllowed,
-            birthdate: personalData.birthdate,
+            birthdate: new Date("01.01.1990"),
             numberOfCoopShares: selectedNumberOfCoopShares,
             paymentRhythm: personalData.paymentRhythm,
           },
@@ -645,7 +640,7 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
         bestellWizardConfirmOrderRequestRequest: {
           personalData: {
             accountOwner: personalData.accountOwner,
-            birthdate: personalData.birthdate,
+            birthdate: new Date("01.01.1990"),
             city: personalData.city,
             country: personalData.country,
             email: personalData.email,
