@@ -87,8 +87,10 @@ class SummaryForm(forms.Form):
                 get_parameter_value(ParameterKeys.SOLIDARITY_UNIT)
                 == SOLIDARITY_UNIT_PERCENT
             ):
-                solidarity_price = float(harvest_shares_total) * float(
-                    self.harvest_shares_info.get("solidarity_price_custom", 0)
+                solidarity_price = (
+                    float(harvest_shares_total)
+                    * float(self.harvest_shares_info.get("solidarity_price_custom", 0))
+                    * 0.01
                 )
             else:
                 solidarity_price = float(
