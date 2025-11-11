@@ -1,9 +1,9 @@
 import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { Form } from "react-bootstrap";
-import { formatCurrency } from "../../utils/formatCurrency.ts";
+import {getHtmlDescription} from "../../utils/getHtmlDescription.ts";
+import {BestellWizardSettings} from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import {Form} from "react-bootstrap";
+import {formatCurrency} from "../../utils/formatCurrency.ts";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -56,6 +56,19 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
               )}
             </div>
             <div className={"d-flex flex-row align-items-center gap-2"}>
+              <TapirButton
+                icon={"remove"}
+                variant={"outline-secondary"}
+                onClick={() => {
+                  setSelectedNumberOfCoopShares(
+                    Math.max(
+                      minimumNumberOfShares,
+                      selectedNumberOfCoopShares - 1,
+                    ),
+                  );
+                }}
+                disabled={selectedNumberOfCoopShares <= minimumNumberOfShares}
+              />
               <Form.Group style={{ maxWidth: "65px" }}>
                 <Form.Control
                   type={"number"}
@@ -68,6 +81,13 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                   disabled={studentStatusEnabled}
                 />
               </Form.Group>
+              <TapirButton
+                icon={"add"}
+                variant={"outline-secondary"}
+                onClick={() => {
+                  setSelectedNumberOfCoopShares(selectedNumberOfCoopShares + 1);
+                }}
+              />
               <span>
                 {" × "}
                 {formatCurrency(settings.priceOfAShare)} ={" "}
