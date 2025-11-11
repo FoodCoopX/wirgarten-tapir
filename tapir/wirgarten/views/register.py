@@ -33,6 +33,7 @@ from tapir.wirgarten.models import (
     ProductType,
     Subscription,
     Member,
+    SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.member import (
@@ -466,6 +467,13 @@ class RegistrationWizardViewBase(CookieWizardView):
                     mandate_ref=mandate_ref,
                     member_id=member.id,
                 )
+
+                SubscriptionChangeLogEntry().populate(
+                    actor=member,
+                    user=member,
+                    change_type=SubscriptionChangeLogEntry.SubscriptionChangeLogEntryType.ADDED,
+                    subscriptions=form_dict[STEP_BASE_PRODUCT].subscriptions,
+                ).save()
 
                 for dyn_step in self.dynamic_steps:
                     if self.has_step(dyn_step):
