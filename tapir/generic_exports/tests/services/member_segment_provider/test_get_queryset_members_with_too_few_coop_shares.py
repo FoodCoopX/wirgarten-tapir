@@ -160,3 +160,31 @@ class TestGetQuerysetMembersWithTooFewCoopShares(TapirIntegrationTest):
         )
 
         self.assertNotIn(member, queryset)
+
+    def test_getQuerysetMembersWithTooFewCoopShares_personIsNotAMemberYet_memberNotIncludedInQueryset(
+        self,
+    ):
+        member = MemberFactory.create(is_student=False)
+        member.member_no = None
+        member.save()
+
+        product = HarvestShareProduct.objects.create(
+            min_coop_shares=1,
+            type=ProductTypeFactory.create(),
+            name="test_product",
+            base=True,
+        )
+        SubscriptionFactory.create(
+            member=member,
+            product=product,
+            quantity=4,
+            period=GrowingPeriodFactory.create(
+                start_date=datetime.date(year=2024, month=1, day=1)
+            ),
+        )
+
+        queryset = MemberSegmentProvider.get_queryset_members_with_too_few_coop_shares(
+            datetime.datetime(year=2024, month=2, day=3)
+        )
+
+        self.assertNotIn(member, queryset)

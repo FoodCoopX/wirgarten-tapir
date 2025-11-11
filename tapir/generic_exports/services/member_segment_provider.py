@@ -104,7 +104,7 @@ class MemberSegmentProvider:
             )
 
         member_ids_to_include = []
-        for member in Member.objects.filter(is_student=False):
+        for member in Member.objects.filter(is_student=False, member_no__isnull=False):
             current_number_of_shares = (
                 TapirCache.get_number_of_shares_for_member_id_at_date(
                     cache=cache,
