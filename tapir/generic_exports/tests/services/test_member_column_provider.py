@@ -8,7 +8,12 @@ from tapir.generic_exports.services.member_column_provider import MemberColumnPr
 from tapir.subscriptions.services.delivery_price_calculator import (
     DeliveryPriceCalculator,
 )
-from tapir.wirgarten.models import Member, MemberPickupLocation, CoopShareTransaction
+from tapir.wirgarten.models import (
+    Member,
+    MemberPickupLocation,
+    CoopShareTransaction,
+    HarvestShareProduct,
+)
 from tapir.wirgarten.parameters import ParameterDefinitions
 from tapir.wirgarten.tests.factories import (
     MemberFactory,
@@ -18,6 +23,7 @@ from tapir.wirgarten.tests.factories import (
     ProductFactory,
     CoopShareTransactionFactory,
     ProductPriceFactory,
+    ProductTypeFactory,
 )
 from tapir.wirgarten.tests.test_utils import TapirIntegrationTest
 
@@ -406,3 +412,46 @@ class TestMemberColumnProvider(TapirIntegrationTest):
         )
 
         self.assertEqual("p1:28.12.2025", result)
+
+    def test_getValueMemberCurrentNumberOfCoopShares_default_returnsCorrectValue(self):
+        member = MemberFactory.create()
+        CoopShareTransaction.objects.create(
+            member=member,
+            share_price=100,
+            transaction_type=CoopShareTransaction.CoopShareTransactionType.PURCHASE,
+            quantity=2,
+            valid_at=datetime.date(year=2024, month=2, day=1),
+        )
+
+        result = MemberColumnProvider.get_value_member_current_number_of_coop_shares(
+            member,
+            datetime.datetime(year=2024, month=2, day=3),
+            {},
+        )
+
+        self.assertEqual("2", result)
+
+    def test_getValueMemberRequiredNumberOfCoopShares_default_returnsCorrectValue(self):
+        member = MemberFactory.create()
+        product = HarvestShareProduct.objects.create(
+            min_coop_shares=2,
+            type=ProductTypeFactory.create(),
+            name="test_product",
+            base=True,
+        )
+        SubscriptionFactory.create(
+            member=member,
+            product=product,
+            quantity=3,
+            period=GrowingPeriodFactory.create(
+                start_date=datetime.date(year=2024, month=1, day=1)
+            ),
+        )
+
+        result = MemberColumnProvider.get_value_member_required_number_of_coop_shares(
+            member,
+            datetime.datetime(year=2024, month=2, day=3),
+            {},
+        )
+
+        self.assertEqual("6", result)

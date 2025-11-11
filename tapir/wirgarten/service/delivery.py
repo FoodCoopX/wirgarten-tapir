@@ -3,7 +3,6 @@ from datetime import date
 from typing import Dict
 
 from dateutil.relativedelta import relativedelta
-from icecream import ic
 from typing_extensions import deprecated
 
 from tapir.configuration.parameter import get_parameter_value

@@ -10,6 +10,7 @@ from tapir.wirgarten.models import (
     PickupLocation,
     PickupLocationOpeningTime,
     CoopShareTransaction,
+    HarvestShareProduct,
 )
 from tapir.wirgarten.service.product_standard_order import product_type_order_by
 
@@ -316,8 +317,11 @@ class TapirCache:
     def get_number_of_shares_for_member_id_at_date(
         cls, cache: dict, reference_date: datetime.date, member_id: str
     ):
-        number_of_shares_by_member = get_from_cache_or_compute(
-            cache, "number_of_shares_by_member", lambda: {}
+        number_of_shares_by_member_and_date = get_from_cache_or_compute(
+            cache, "number_of_shares_by_member_and_date", lambda: {}
+        )
+        cache_for_this_member = get_from_cache_or_compute(
+            number_of_shares_by_member_and_date, member_id, lambda: {}
         )
 
         def compute():
@@ -334,6 +338,23 @@ class TapirCache:
                 ]
             )
 
-        return get_from_cache_or_compute(
-            number_of_shares_by_member, reference_date, compute
+        return get_from_cache_or_compute(cache_for_this_member, reference_date, compute)
+
+    @classmethod
+    def get_product_by_id(cls, cache: Dict, product_id):
+        if product_id is None:
+            return None
+
+        def compute():
+            products = {
+                product.id: product
+                for product in Product.objects.select_related("type")
+            }
+            for base_product in HarvestShareProduct.objects.select_related("type"):
+                products[base_product.id] = base_product
+            return products
+
+        product_by_id_cache = get_from_cache_or_compute(
+            cache, "product_by_id", lambda: compute()
         )
+        return product_by_id_cache.get(product_id, None)

@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING, Dict
 from tapir.coop.services.membership_cancellation_manager import (
     MembershipCancellationManager,
 )
+from tapir.coop.services.minimum_number_of_shares_validator import (
+    MinimumNumberOfSharesValidator,
+)
 from tapir.generic_exports.services.export_segment_manager import ExportSegmentColumn
 from tapir.pickup_locations.services.member_pickup_location_service import (
     MemberPickupLocationService,
@@ -148,6 +151,18 @@ class MemberColumnProvider:
                 display_name="Kündigungsdaten (Produkte)",
                 description="",
                 get_value=cls.get_value_member_subscription_end_dates,
+            ),
+            ExportSegmentColumn(
+                id="member_current_number_of_coop_shares",
+                display_name="Anzahl an Geno-Anteile (aktuell)",
+                description="",
+                get_value=cls.get_value_member_current_number_of_coop_shares,
+            ),
+            ExportSegmentColumn(
+                id="member_required_number_of_coop_shares",
+                display_name="Anzahl an Geno-Anteile (soll)",
+                description="",
+                get_value=cls.get_value_member_required_number_of_coop_shares,
             ),
         ]
         return base_columns + cls.build_product_columns()
@@ -421,3 +436,39 @@ class MemberColumnProvider:
             end_dates.append(f"{product.name}:{format_date(max_end_date)}")
 
         return ", ".join(end_dates)
+
+    @classmethod
+    def get_value_member_current_number_of_coop_shares(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        return str(
+            TapirCache.get_number_of_shares_for_member_id_at_date(
+                cache=cache,
+                member_id=member.id,
+                reference_date=reference_datetime.date(),
+            )
+        )
+
+    @classmethod
+    def get_value_member_required_number_of_coop_shares(
+        cls, member: Member, reference_datetime: datetime.datetime, cache: dict
+    ):
+        active_subscriptions = TapirCache.get_subscriptions_active_at_date(
+            cache=cache, reference_date=reference_datetime.date()
+        )
+
+        member_subscriptions = [
+            subscription
+            for subscription in active_subscriptions
+            if subscription.member_id == member.id
+        ]
+
+        return str(
+            MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
+                ordered_products_id_to_quantity_map={
+                    subscription.product_id: subscription.quantity
+                    for subscription in member_subscriptions
+                },
+                cache=cache,
+            )
+        )

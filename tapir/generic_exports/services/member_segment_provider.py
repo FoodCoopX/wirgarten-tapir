@@ -1,10 +1,13 @@
 import datetime
 
 from django.db.models import QuerySet
-
+from tapir.coop.services.minimum_number_of_shares_validator import (
+    MinimumNumberOfSharesValidator,
+)
 from tapir.deliveries.models import Joker
 from tapir.generic_exports.services.export_segment_manager import ExportSegment
 from tapir.generic_exports.services.member_column_provider import MemberColumnProvider
+from tapir.utils.services.tapir_cache import TapirCache
 from tapir.wirgarten.service.member import (
     annotate_member_queryset_with_coop_shares_total_value,
     annotate_member_queryset_with_monthly_payment,
@@ -37,6 +40,13 @@ class MemberSegmentProvider:
                 display_name="Mitglieder mit Joker",
                 description="Alle Mitglieder die in dem angegebenen Jahr mindestens ein Joker eingesetzt haben",
                 get_queryset=cls.get_queryset_members_with_joker_used,
+                get_available_columns=MemberColumnProvider.get_member_columns,
+            ),
+            ExportSegment(
+                id="members.with_too_few_coop_shares",
+                display_name="Mitglieder die nicht genug Geno-Anteile haben",
+                description="Mitglieder die nicht genug Geno-Anteile haben relativ zu der aus der Konfig minimum an Anteile und ggbf zu den minimum Geno-Anteile pro Produkt-Anteil",
+                get_queryset=cls.get_queryset_members_with_too_few_coop_shares,
                 get_available_columns=MemberColumnProvider.get_member_columns,
             ),
         ]
@@ -74,3 +84,55 @@ class MemberSegmentProvider:
         ).values_list("member_id")
 
         return Member.objects.filter(id__in=member_ids).order_by("member_no").distinct()
+
+    @classmethod
+    def get_queryset_members_with_too_few_coop_shares(
+        cls, reference_datetime: datetime.datetime
+    ) -> QuerySet:
+        from tapir.wirgarten.models import Member
+
+        cache = {}
+        active_subscriptions = TapirCache.get_subscriptions_active_at_date(
+            cache=cache, reference_date=reference_datetime.date()
+        )
+        active_subscriptions_by_member_id = {}
+        for subscription in active_subscriptions:
+            if subscription.member_id not in active_subscriptions_by_member_id.keys():
+                active_subscriptions_by_member_id[subscription.member_id] = []
+            active_subscriptions_by_member_id[subscription.member_id].append(
+                subscription
+            )
+
+        member_ids_to_include = []
+        for member in Member.objects.filter(is_student=False):
+            current_number_of_shares = (
+                TapirCache.get_number_of_shares_for_member_id_at_date(
+                    cache=cache,
+                    member_id=member.id,
+                    reference_date=reference_datetime.date(),
+                )
+            )
+
+            member_subscriptions = active_subscriptions_by_member_id.get(member.id, [])
+            if len(member_subscriptions) == 0 and current_number_of_shares == 0:
+                # that person is not a member
+                continue
+
+            minimum_number_of_shares = (
+                MinimumNumberOfSharesValidator.get_minimum_number_of_shares_for_order(
+                    ordered_products_id_to_quantity_map={
+                        subscription.product_id: subscription.quantity
+                        for subscription in member_subscriptions
+                    },
+                    cache=cache,
+                )
+            )
+
+            if minimum_number_of_shares > current_number_of_shares:
+                member_ids_to_include.append(member.id)
+
+        return (
+            Member.objects.filter(id__in=member_ids_to_include)
+            .order_by("member_no")
+            .distinct()
+        )
