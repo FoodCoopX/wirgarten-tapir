@@ -1111,8 +1111,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP6B_TITLE,
             label="Seite 6B: Genossenschaftsanteile - Titel",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Unsere Genossenschaft",
-            description="",
+            initial_value="Wieviele Anteile willst du zeichnen, {vorname}?",
+            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: 'Wieviele Anteile willst du zeichnen, {vorname}?'",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )
@@ -1167,8 +1167,8 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             key=ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
             label="Seite 8: Persönliche Daten - Titel",
             datatype=TapirParameterDatatype.STRING,
-            initial_value="Fast geschafft, {{ vorname }}. Wir brauchen nur noch ein paar persönliche Daten von dir.",
-            description="Verfügbare Tokens: {{ vorname }}",
+            initial_value="Fast geschafft, {vorname}. Wir brauchen nur noch ein paar persönliche Daten von dir.",
+            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: 'Fast geschafft, {vorname}'",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
         )

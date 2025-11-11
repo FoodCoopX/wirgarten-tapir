@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import {getHtmlDescription} from "../../utils/getHtmlDescription.ts";
-import {BestellWizardSettings} from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import {Form} from "react-bootstrap";
-import {formatCurrency} from "../../utils/formatCurrency.ts";
+import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { Form } from "react-bootstrap";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -15,6 +15,7 @@ interface Step6BCoopSharesProps {
   studentStatusEnabled: boolean;
   setStudentStatusEnabled: (status: boolean) => void;
   settings: BestellWizardSettings;
+  firstName: string;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -25,7 +26,29 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   studentStatusEnabled,
   setStudentStatusEnabled,
   settings,
+  firstName,
+  statuteAccepted,
+  setStatuteAccepted,
 }) => {
+  const [statuteRead, setStatuteRead] = useState(false);
+  const [commitmentChecked, setCommitmentChecked] = useState(false);
+
+  useEffect(() => {
+    setStatuteAccepted(statuteRead && commitmentChecked);
+  }, [statuteRead, commitmentChecked]);
+
+  function isGoNextButtonDisabled() {
+    if (studentStatusEnabled) {
+      return false;
+    }
+
+    if (!statuteAccepted) {
+      return true;
+    }
+
+    return selectedNumberOfCoopShares < minimumNumberOfShares;
+  }
+
   return (
     <>
       <div
@@ -44,7 +67,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             }
             style={{ minHeight: "70dvh" }}
           >
-            <h1 className={"text-center"}>{settings.strings.step6bTitle}</h1>
+            <h3 className={"text-center"}>
+              {settings.strings.step6bTitle.replace("{vorname}", firstName)}
+            </h3>
             <div>
               {settings.strings.step6bText && (
                 <p
@@ -55,7 +80,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                 />
               )}
             </div>
-            <div className={"d-flex flex-row align-items-center gap-2"}>
+            <small className={"d-flex flex-row align-items-center gap-2"}>
               <TapirButton
                 icon={"remove"}
                 variant={"outline-secondary"}
@@ -68,17 +93,18 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                   );
                 }}
                 disabled={selectedNumberOfCoopShares <= minimumNumberOfShares}
+                size={"sm"}
               />
-              <Form.Group style={{ maxWidth: "65px" }}>
+              <Form.Group style={{ maxWidth: "30px" }}>
                 <Form.Control
-                  type={"number"}
                   min={minimumNumberOfShares}
                   step={1}
                   value={selectedNumberOfCoopShares}
                   onChange={(event) =>
                     setSelectedNumberOfCoopShares(parseInt(event.target.value))
                   }
-                  disabled={studentStatusEnabled}
+                  disabled={true}
+                  size={"sm"}
                 />
               </Form.Group>
               <TapirButton
@@ -87,6 +113,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                 onClick={() => {
                   setSelectedNumberOfCoopShares(selectedNumberOfCoopShares + 1);
                 }}
+                size={"sm"}
               />
               <span>
                 {" × "}
@@ -99,7 +126,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                   )}
                 </strong>
               </span>
-            </div>
+            </small>
             {settings.studentStatusAllowed && (
               <div>
                 <Form.Check
@@ -115,15 +142,31 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
                     "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
                   }
                 />
-                <Form.Text>
-                  Die Immatrikulationsbescheinigung muss per Mail an{" "}
-                  <a href={"mailto:" + settings.contactMailAddress}>
-                    {settings.contactMailAddress}
-                  </a>{" "}
-                  gesendet werden.
-                </Form.Text>
+                {studentStatusEnabled && (
+                  <Form.Text>
+                    Die Immatrikulationsbescheinigung muss per Mail an{" "}
+                    <a href={"mailto:" + settings.contactMailAddress}>
+                      {settings.contactMailAddress}
+                    </a>{" "}
+                    gesendet werden.
+                  </Form.Text>
+                )}
               </div>
             )}
+            <Form.Check
+              id={"statuteRead"}
+              checked={statuteRead && !studentStatusEnabled}
+              onChange={(event) => setStatuteRead(event.target.checked)}
+              label={settings.strings.step6cCheckboxStatute}
+              disabled={studentStatusEnabled}
+            />
+            <Form.Check
+              id={"commitment"}
+              checked={commitmentChecked && !studentStatusEnabled}
+              onChange={(event) => setCommitmentChecked(event.target.checked)}
+              label={settings.strings.step6cCheckboxCommitment}
+              disabled={studentStatusEnabled}
+            />
           </div>
         </div>
         <div className={"d-flex flex-row justify-content-center"}>
@@ -133,6 +176,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             onClick={goToNextStep}
             size={"sm"}
             icon={"keyboard_arrow_down"}
+            disabled={isGoNextButtonDisabled()}
           />
         </div>
       </div>

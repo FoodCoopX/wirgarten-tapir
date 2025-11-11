@@ -79,7 +79,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
         {settings.strings.step8Title && (
           <h3 className={"text-center"}>
             {settings.strings.step8Title.replace(
-              "{{ vorname }}",
+              "{vorname}",
               personalData.firstName,
             )}
           </h3>

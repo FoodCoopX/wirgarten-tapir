@@ -34,7 +34,6 @@ import { Phase } from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
-import Step6CCoopLegal from "./steps/Step6CCoopLegal.tsx";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 
@@ -51,7 +50,6 @@ type Step =
   | "5b_pickup_location_choice"
   | "6a_coop_intro"
   | "6b_coop_shares"
-  | "6c_coop_legal"
   | "8_personal_data"
   | "9_banking_data"
   | "loading"
@@ -205,7 +203,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return "pickup_location";
       case "6a_coop_intro":
       case "6b_coop_shares":
-      case "6c_coop_legal":
         return "coop";
       case "8_personal_data":
       case "9_banking_data":
@@ -249,9 +246,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     if (settings.showCoopContent) {
       newSteps.push("6a_coop_intro");
       newSteps.push("6b_coop_shares");
-      if (!studentStatusEnabled) {
-        newSteps.push("6c_coop_legal");
-      }
     }
 
     newSteps.push("8_personal_data");
@@ -357,15 +351,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setStudentStatusEnabled={setStudentStatusEnabled}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
-          />
-        );
-      case "6c_coop_legal":
-        return (
-          <Step6CCoopLegal
-            goToNextStep={goToNextStep}
-            settings={settings}
-            statuteAccepted={statuteAccepted}
-            setStatuteAccepted={setStatuteAccepted}
+            firstName={personalData.firstName}
           />
         );
       case "8_personal_data":
