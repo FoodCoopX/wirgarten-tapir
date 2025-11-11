@@ -155,15 +155,6 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
           </Marker>
         ))}
       </MapContainer>
-      <div className={"d-flex justify-content-center mt-2"}>
-        <TapirButton
-          text={"Zentrieren"}
-          variant={"outline-secondary"}
-          onClick={setMapBoundaries}
-          size={"sm"}
-          icon={"center_focus_weak"}
-        />
-      </div>
     </>
   );
 };

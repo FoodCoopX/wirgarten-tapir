@@ -39,26 +39,28 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
                   dangerouslySetInnerHTML={getHtmlDescription(content.text)}
                 />
               )}
-              {content.accordions && content.accordions.length > 0 && (
-                <Accordion>
-                  {content.accordions.map((accordion) => (
-                    <Accordion.Item
-                      key={accordion.order}
-                      eventKey={accordion.order.toString()}
-                    >
-                      <Accordion.Header>{accordion.title}</Accordion.Header>
-                      <AccordionBody>
-                        <div
-                          style={{ background: "transparent" }}
-                          dangerouslySetInnerHTML={getHtmlDescription(
-                            accordion.description,
-                          )}
-                        />
-                      </AccordionBody>
-                    </Accordion.Item>
+              <div className={"d-flex flex-column gap-2"}>
+                {content.accordions &&
+                  content.accordions.length > 0 &&
+                  content.accordions.map((accordion) => (
+                    <Accordion>
+                      <Accordion.Item
+                        key={accordion.order}
+                        eventKey={accordion.order.toString()}
+                      >
+                        <Accordion.Header>{accordion.title}</Accordion.Header>
+                        <AccordionBody>
+                          <div
+                            style={{ background: "transparent" }}
+                            dangerouslySetInnerHTML={getHtmlDescription(
+                              accordion.description,
+                            )}
+                          />
+                        </AccordionBody>
+                      </Accordion.Item>
+                    </Accordion>
                   ))}
-                </Accordion>
-              )}
+              </div>
             </div>
           </div>
         </div>
