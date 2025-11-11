@@ -36,6 +36,8 @@ import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
 import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
+import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
+import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -52,6 +54,7 @@ type Step =
   | "6b_coop_shares"
   | "8_personal_data"
   | "9_banking_data"
+  | "10_summary"
   | "loading"
   | string;
 
@@ -93,6 +96,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [studentStatusEnabled, setStudentStatusEnabled] = useState(false);
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [contractStartDate, setContractStartDate] = useState(new Date());
+  const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
+    useState<{ [key: string]: Date }>({});
 
   useEffect(() => {
     Promise.all([
@@ -101,8 +107,11 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         productIds: [],
         quantities: [],
       }),
+      bestellWizardApi.bestellWizardApiNextContractStartDateRetrieve({
+        waitingListEntryId: undefined,
+      }),
     ])
-      .then(([baseData, minNumberOfShares]) => {
+      .then(([baseData, minNumberOfShares, contractStartDateAsString]) => {
         const newSettings = buildSettings(baseData);
         setSettings(newSettings);
         setSettingsLoaded(true);
@@ -112,6 +121,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
         personalData.paymentRhythm = baseData.defaultPaymentRhythm;
         setPersonalData(Object.assign({}, personalData));
+
+        setContractStartDate(new Date(contractStartDateAsString));
       })
       .catch((error) =>
         handleRequestError(
@@ -190,6 +201,23 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     );
   }, [shoppingCart]);
 
+  useEffect(() => {
+    if (
+      selectedPickupLocations.length === 0 ||
+      isShoppingCartEmpty(shoppingCart)
+    ) {
+      return;
+    }
+
+    fetchFirstDeliveryDates(
+      selectedPickupLocations,
+      shoppingCart,
+      setFirstDeliveryDatesByProductType,
+      setToastDatas,
+      undefined,
+    );
+  }, [selectedPickupLocations, shoppingCart]);
+
   function getPhase(step: Step): Phase {
     switch (step) {
       case "loading":
@@ -206,6 +234,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return "coop";
       case "8_personal_data":
       case "9_banking_data":
+      case "10_summary":
         return "personal_data";
       default:
         const separatorIndex = step.lastIndexOf("_");
@@ -250,6 +279,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
     newSteps.push("8_personal_data");
     newSteps.push("9_banking_data");
+    newSteps.push("10_summary");
 
     return newSteps;
   }
@@ -374,6 +404,22 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             settings={settings}
+          />
+        );
+      case "10_summary":
+        return (
+          <Step10OrderSummary
+            goToNextStep={goToNextStep}
+            personalData={personalData}
+            settings={settings}
+            studentStatusEnabled={studentStatusEnabled}
+            numberOfCoopShares={selectedNumberOfCoopShares}
+            shoppingCart={shoppingCart}
+            contractStartDate={contractStartDate}
+            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+            goToProductTypeStep={(productType) =>
+              setCurrentStep(productType.id + "_order")
+            }
           />
         );
       case "loading":

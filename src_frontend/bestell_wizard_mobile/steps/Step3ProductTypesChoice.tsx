@@ -8,6 +8,7 @@ import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptyShoppingCart.ts";
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { replaceTokens } from "../utils/replaceTokens.ts";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -52,10 +53,6 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
     }
   }, [selectedProductTypes]);
 
-  function insertFirstName(input: string) {
-    return input.replace("{vorname}", firstName);
-  }
-
   function getModalText() {
     if (productTypeForModal === undefined) {
       return "Kein Produkt ausgewählt";
@@ -97,12 +94,12 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       >
         {settings.strings.step3Title && (
           <h1 className={"text-center"}>
-            {insertFirstName(settings.strings.step3Title)}
+            {replaceTokens(settings.strings.step3Title, firstName)}
           </h1>
         )}
         {settings.strings.step3Text && (
           <p className={"text-center"}>
-            {insertFirstName(settings.strings.step3Text)}
+            {replaceTokens(settings.strings.step3Text, firstName)}
           </p>
         )}
         <div>

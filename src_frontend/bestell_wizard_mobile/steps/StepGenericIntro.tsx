@@ -43,11 +43,8 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
                 {content.accordions &&
                   content.accordions.length > 0 &&
                   content.accordions.map((accordion) => (
-                    <Accordion>
-                      <Accordion.Item
-                        key={accordion.order}
-                        eventKey={accordion.order.toString()}
-                      >
+                    <Accordion key={accordion.order}>
+                      <Accordion.Item eventKey={accordion.order.toString()}>
                         <Accordion.Header>{accordion.title}</Accordion.Header>
                         <AccordionBody>
                           <div

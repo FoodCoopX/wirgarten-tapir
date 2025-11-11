@@ -4769,7 +4769,10 @@ components:
           type: string
         step9_title:
           type: string
+        step10_title:
+          type: string
       required:
+      - step10_title
       - step1a_text
       - step1a_title
       - step1b_text

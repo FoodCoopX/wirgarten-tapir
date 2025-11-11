@@ -43,6 +43,7 @@ export function buildEmptySettings(): BestellWizardSettings {
       step6cCheckboxCommitment: "",
       step8Title: "",
       step9Title: "",
+      step10Title: "",
     },
   };
 }

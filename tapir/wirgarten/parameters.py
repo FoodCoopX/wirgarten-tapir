@@ -1041,9 +1041,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 3: Produktauswahl - Titel",
             datatype=TapirParameterDatatype.STRING,
             initial_value="{vorname}, an welchen Anteilen hast du Interesse?",
-            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: '{vorname}, an welchen Anteilen hast du Interesse?'",
+            description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1112,9 +1113,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 6B: Genossenschaftsanteile - Titel",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Wieviele Anteile willst du zeichnen, {vorname}?",
-            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: 'Wieviele Anteile willst du zeichnen, {vorname}?'",
+            description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1168,9 +1170,10 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 8: Persönliche Daten - Titel",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Fast geschafft, {vorname}. Wir brauchen nur noch ein paar persönliche Daten von dir.",
-            description="Die Vorname vom Seite 2 kann hier verwendet werden, Beispiel: 'Fast geschafft, {vorname}'",
+            description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1182,6 +1185,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
+            label="Seite 10: Zusammenfassung - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{vorname}, hier nochmal deine Bestellung auf einen Blick",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 

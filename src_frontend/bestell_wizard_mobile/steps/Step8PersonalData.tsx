@@ -4,6 +4,7 @@ import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import PersonalDataFormControl from "../Components/PersonalDataFormControl.tsx";
 import { Form } from "react-bootstrap";
+import { replaceTokens } from "../utils/replaceTokens.ts";
 
 interface Step8PersonalDataProps {
   goToNextStep: () => void;
@@ -78,10 +79,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
       >
         {settings.strings.step8Title && (
           <h3 className={"text-center"}>
-            {settings.strings.step8Title.replace(
-              "{vorname}",
-              personalData.firstName,
-            )}
+            {replaceTokens(settings.strings.step8Title, personalData.firstName)}
           </h3>
         )}
         <div className={"d-flex flex-column gap-2"}>
