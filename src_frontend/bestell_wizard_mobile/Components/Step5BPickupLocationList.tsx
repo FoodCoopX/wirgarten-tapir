@@ -71,13 +71,6 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
           className={getClassForPickupLocationListItem(pickupLocation)}
           id={pickupLocation.id}
         >
-          <style>
-            {`
-              .list-group-item:not(.active) {
-                background: rgb(255,255,255,0.2);
-              }
-            `}
-          </style>
           <small style={{ lineHeight: "0" }}>
             <strong>{pickupLocation.name}</strong>{" "}
             {buildCapacityIndicator(pickupLocation)}

@@ -41,12 +41,6 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
               )}
               {content.accordions && content.accordions.length > 0 && (
                 <Accordion>
-                  <style>
-                    {`
-                      .accordion *, .accordion-button:not(.collapsed) {
-                        background: rgb(255, 255, 255, 0.1);
-                      }`}
-                  </style>
                   {content.accordions.map((accordion) => (
                     <Accordion.Item
                       key={accordion.order}
