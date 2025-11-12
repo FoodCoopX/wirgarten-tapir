@@ -379,6 +379,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
             firstName={personalData.firstName}
+            active={step === currentStep}
           />
         );
       case "8_personal_data":
@@ -388,6 +389,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             personalData={personalData}
             setPersonalData={setPersonalData}
             settings={settings}
+            active={step === currentStep}
           />
         );
       case "9_banking_data":
@@ -420,6 +422,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               }
               setCurrentStep(productType.id + "_order");
             }}
+            active={currentStep === step}
           />
         );
       case "loading":

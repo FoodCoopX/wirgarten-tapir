@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -12,6 +12,7 @@ interface Step8PersonalDataProps {
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
   settings: BestellWizardSettings;
+  active: boolean;
 }
 
 const FIELDS: (keyof PersonalData)[] = [
@@ -30,8 +31,19 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   personalData,
   setPersonalData,
   settings,
+  active,
 }) => {
   const [isOver18, setIsOver18] = useState(false);
+
+  const scrollDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !scrollDiv.current) {
+      return;
+    }
+
+    scrollDiv.current.scrollTop = 0;
+  }, [active]);
 
   function getPlaceholder(key: keyof PersonalData) {
     switch (key) {
@@ -77,6 +89,7 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
           maxHeight: "70dvh",
           overflowY: "scroll",
         }}
+        ref={scrollDiv}
       >
         {settings.strings.step8Title && (
           <StepTitle

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -16,6 +16,7 @@ interface Step9BankingDataProps {
   contractAccepted: boolean;
   setContractAccepted: (contractRead: boolean) => void;
   settings: BestellWizardSettings;
+  active: boolean;
 }
 
 const Step9BankingData: React.FC<Step9BankingDataProps> = ({
@@ -27,8 +28,19 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   contractAccepted,
   setContractAccepted,
   settings,
+  active,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
+
+  const scrollDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !scrollDiv.current) {
+      return;
+    }
+
+    scrollDiv.current.scrollTop = 0;
+  }, [active]);
 
   useEffect(() => {
     if (accountOwnerSetManually) {
@@ -66,6 +78,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           maxHeight: "70dvh",
           overflowY: "scroll",
         }}
+        ref={scrollDiv}
       >
         {settings.strings.step9Title && (
           <StepTitle

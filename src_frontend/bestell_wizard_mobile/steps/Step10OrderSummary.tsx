@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -22,6 +22,7 @@ interface Step10OrderSummaryProps {
   contractStartDate: Date;
   firstDeliveryDatesByProductType: { [key: string]: Date };
   goToProductTypeStep: (pt: PublicProductType) => void;
+  active: boolean;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -34,7 +35,18 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   contractStartDate,
   firstDeliveryDatesByProductType,
   goToProductTypeStep,
+  active,
 }) => {
+  const scrollDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !scrollDiv.current) {
+      return;
+    }
+
+    scrollDiv.current.scrollTop = 0;
+  }, [active]);
+
   function getProductById(productType: PublicProductType, productId: string) {
     return productType.products.find((product) => product.id === productId);
   }
@@ -106,6 +118,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
             maxHeight: "70dvh",
             overflowY: "scroll",
           }}
+          ref={scrollDiv}
         >
           <div
             className={

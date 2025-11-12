@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -18,6 +18,7 @@ interface Step6BCoopSharesProps {
   setStudentStatusEnabled: (status: boolean) => void;
   settings: BestellWizardSettings;
   firstName: string;
+  active: boolean;
 }
 
 const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
@@ -31,9 +32,20 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   firstName,
   statuteAccepted,
   setStatuteAccepted,
+  active,
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
+
+  const scrollDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !scrollDiv.current) {
+      return;
+    }
+
+    scrollDiv.current.scrollTop = 0;
+  }, [active]);
 
   useEffect(() => {
     setStatuteAccepted(statuteRead && commitmentChecked);
@@ -62,6 +74,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             maxHeight: "70dvh",
             overflowY: "scroll",
           }}
+          ref={scrollDiv}
         >
           <div
             className={

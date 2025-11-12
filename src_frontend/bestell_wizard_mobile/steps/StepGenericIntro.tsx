@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { Accordion, AccordionBody } from "react-bootstrap";
@@ -8,12 +8,24 @@ import StepTitle from "../components/StepTitle.tsx";
 interface StepGenericIntroProps {
   content: GenericIntroContent;
   goToNextStep: () => void;
+  active: boolean;
 }
 
 const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
   content,
   goToNextStep,
+  active,
 }) => {
+  const scrollDiv = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!active || !scrollDiv.current) {
+      return;
+    }
+
+    scrollDiv.current.scrollTop = 0;
+  }, [active]);
+
   return (
     <>
       <div
@@ -25,6 +37,7 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
             maxHeight: "70dvh",
             overflowY: "scroll",
           }}
+          ref={scrollDiv}
         >
           <div
             className={
