@@ -1,43 +1,40 @@
-import React, { useEffect, useState } from "react";
-import { Form, ProgressBar, Spinner } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
-import {
-  BestellWizardApi,
-  CoopApi,
-  PublicPickupLocation,
-  type PublicProductType,
-} from "../api-client";
-import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../types/ToastData.ts";
+import React, {useEffect, useState} from "react";
+import {Form, ProgressBar, Spinner} from "react-bootstrap";
+import {useApi} from "../hooks/useApi.ts";
+import {BestellWizardApi, CoopApi, PublicPickupLocation, type PublicProductType,} from "../api-client";
+import {buildSettings} from "../bestell_wizard/utils/buildSettings.ts";
+import {handleRequestError} from "../utils/handleRequestError.ts";
+import {BestellWizardSettings} from "../bestell_wizard/types/BestellWizardSettings.ts";
+import {buildEmptySettings} from "../bestell_wizard/utils/buildEmptySettings.ts";
+import {ToastData} from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
-import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
-import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import {PersonalData} from "../bestell_wizard/types/PersonalData.ts";
+import {getEmptyPersonalData} from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
-import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
+import {buildEmptyShoppingCart} from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import {ShoppingCart} from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
-import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import {
+    isAtLeastOneOrderedProductWithDelivery
+} from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { Phase } from "./types/Phase.ts";
+import {isShoppingCartEmpty} from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import {checkPickupLocationCapacities} from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import {Phase} from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import {updateMinimumNumberOfShares} from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
-import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import {fetchFirstDeliveryDates} from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -417,9 +414,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             shoppingCart={shoppingCart}
             contractStartDate={contractStartDate}
             firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
-            goToProductTypeStep={(productType) =>
-              setCurrentStep(productType.id + "_order")
-            }
+            goToProductTypeStep={(productType) => {
+              if (!selectedProductTypes.includes(productType)) {
+                setSelectedProductTypes([...selectedProductTypes, productType]);
+              }
+              setCurrentStep(productType.id + "_order");
+            }}
           />
         );
       case "loading":
@@ -478,6 +478,18 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     return phase;
   }
 
+  function getTopPosition(step: Step) {
+    if (step === currentStep) {
+      return "10dvh";
+    }
+
+    if (steps.indexOf(step) < steps.indexOf(currentStep)) {
+      return "-80dvh";
+    }
+
+    return "100dvh";
+  }
+
   return (
     <div
       style={{
@@ -510,13 +522,24 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         style={{
           height: "80dvh",
           width: "100%",
-          overflowY: "hidden",
         }}
         id={"scroll_container"}
       >
         {steps.map((step) => {
           return (
-            <div key={step} id={step} style={{ height: "80dvh" }}>
+            <div
+              key={step}
+              id={step}
+              style={{
+                height: "80dvh",
+                transition: "all 0.3s ease-in-out",
+                opacity: currentStep === step ? 1 : 0,
+                position: "fixed",
+                top: getTopPosition(step),
+                width: "100%",
+                pointerEvents: currentStep === step ? "auto" : "none",
+              }}
+            >
               {getStepComponent(step)}
             </div>
           );
