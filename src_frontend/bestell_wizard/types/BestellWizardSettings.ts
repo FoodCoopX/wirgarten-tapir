@@ -27,5 +27,6 @@ export type BestellWizardSettings = {
   organizationName: string;
   logoUrl: string;
   contactMailAddress: string;
+  distributionChannels: string[];
   strings: BestellWizardStrings;
 };

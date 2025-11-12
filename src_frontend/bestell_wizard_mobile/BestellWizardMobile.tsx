@@ -40,6 +40,7 @@ import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
 import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import Step11Legal from "./steps/Step11Legal.tsx";
 import { Step } from "./types/Step.ts";
+import Step12Channel from "./steps/Step12Channel.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -88,6 +89,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     useState<{ [key: string]: Date }>({});
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
+  const [selectedDistributionChannels, setSelectedDistributionChannels] =
+    useState<Set<string>>(new Set<string>());
 
   useEffect(() => {
     Promise.all([
@@ -442,6 +445,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setPrivacyPolicyRead={setPrivacyPolicyRead}
             active={step === currentStep}
             firstName={personalData.firstName}
+          />
+        );
+      case "12_channel":
+        return (
+          <Step12Channel
+            goToNextStep={goToNextStep}
+            settings={settings}
+            active={step === currentStep}
+            firstName={personalData.firstName}
+            selectedDistributionChannels={selectedDistributionChannels}
+            setSelectedDistributionChannels={setSelectedDistributionChannels}
           />
         );
       case "loading":

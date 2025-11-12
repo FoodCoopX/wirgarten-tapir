@@ -402,6 +402,13 @@ class BestellWizardBaseDataApiView(APIView):
             "contact_mail_address": get_parameter_value(
                 key=ParameterKeys.SITE_EMAIL, cache=self.cache
             ),
+            "distribution_channels": [
+                channel.strip()
+                for channel in get_parameter_value(
+                    key=ParameterKeys.ORGANISATION_QUESTIONAIRE_SOURCES,
+                    cache=self.cache,
+                ).split(",")
+            ],
             "strings": self.build_strings_object(cache=self.cache),
         }
 
@@ -431,6 +438,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step9_title": ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
             "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
+            "step12_title": ParameterKeys.BESTELLWIZARD_STEP12_TITLE,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
         }
         return {

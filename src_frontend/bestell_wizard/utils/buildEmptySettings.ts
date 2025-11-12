@@ -23,6 +23,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     coopStatuteLink: "",
     logoUrl: "",
     contactMailAddress: "",
+    distributionChannels: [],
     strings: {
       step1aTitle: "",
       step1aText: "",
@@ -44,6 +45,9 @@ export function buildEmptySettings(): BestellWizardSettings {
       step8Title: "",
       step9Title: "",
       step10Title: "",
+      step11Title: "",
+      step12Title: "",
+      privacyPolicyUrl: "",
     },
   };
 }

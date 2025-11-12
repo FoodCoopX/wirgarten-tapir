@@ -168,6 +168,12 @@ export interface BestellWizardBaseDataResponse {
   contactMailAddress: string;
   /**
    *
+   * @type {Array<string>}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  distributionChannels: Array<string>;
+  /**
+   *
    * @type {BestellWizardStrings}
    * @memberof BestellWizardBaseDataResponse
    */
@@ -255,6 +261,11 @@ export function instanceOfBestellWizardBaseDataResponse(
     value["contactMailAddress"] === undefined
   )
     return false;
+  if (
+    !("distributionChannels" in value) ||
+    value["distributionChannels"] === undefined
+  )
+    return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
   return true;
 }
@@ -301,6 +312,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     organizationName: json["organization_name"],
     logoUrl: json["logo_url"],
     contactMailAddress: json["contact_mail_address"],
+    distributionChannels: json["distribution_channels"],
     strings: BestellWizardStringsFromJSON(json["strings"]),
   };
 }
@@ -348,6 +360,7 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     organization_name: value["organizationName"],
     logo_url: value["logoUrl"],
     contact_mail_address: value["contactMailAddress"],
+    distribution_channels: value["distributionChannels"],
     strings: BestellWizardStringsToJSON(value["strings"]),
   };
 }

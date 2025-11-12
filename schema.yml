@@ -4601,6 +4601,10 @@ components:
         contact_mail_address:
           type: string
           format: email
+        distribution_channels:
+          type: array
+          items:
+            type: string
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
       required:
@@ -4608,6 +4612,7 @@ components:
       - contact_mail_address
       - coop_statute_link
       - default_payment_rhythm
+      - distribution_channels
       - force_waiting_list
       - intro_enabled
       - intro_step_text
@@ -4773,6 +4778,8 @@ components:
           type: string
         step11_title:
           type: string
+        step12_title:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -4780,6 +4787,7 @@ components:
       - privacy_policy_url
       - step10_title
       - step11_title
+      - step12_title
       - step1a_text
       - step1a_title
       - step1b_text

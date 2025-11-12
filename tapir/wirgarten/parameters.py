@@ -1212,6 +1212,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP12_TITLE,
+            label="Seite 12: Vertriebskanal - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="{vorname}, hast du noch einen Moment? Dann verrate uns, wie du eigentlich auf uns aufmerksam geworden bist?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

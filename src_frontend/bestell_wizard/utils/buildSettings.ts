@@ -30,6 +30,7 @@ export function buildSettings(
     coopStatuteLink: baseData.coopStatuteLink,
     logoUrl: baseData.logoUrl,
     contactMailAddress: baseData.contactMailAddress,
+    distributionChannels: baseData.distributionChannels,
     strings: baseData.strings,
   };
 }
