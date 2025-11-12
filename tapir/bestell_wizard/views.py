@@ -430,6 +430,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step8_title": ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
             "step9_title": ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
+            "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
+            "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

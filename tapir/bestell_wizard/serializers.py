@@ -69,6 +69,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step8_title = serializers.CharField()
     step9_title = serializers.CharField()
     step10_title = serializers.CharField()
+    step11_title = serializers.CharField()
+    privacy_policy_url = serializers.URLField()
 
 
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):

@@ -139,6 +139,7 @@ class ParameterKeys:
     BESTELLWIZARD_STEP8_TITLE = f"{PREFIX}.bestellwizard.step8.title"
     BESTELLWIZARD_STEP9_TITLE = f"{PREFIX}.bestellwizard.step9.title"
     BESTELLWIZARD_STEP10_TITLE = f"{PREFIX}.bestellwizard.step10.title"
+    BESTELLWIZARD_STEP11_TITLE = f"{PREFIX}.bestellwizard.step11.title"
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

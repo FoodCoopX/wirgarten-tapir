@@ -4771,8 +4771,15 @@ components:
           type: string
         step10_title:
           type: string
+        step11_title:
+          type: string
+        privacy_policy_url:
+          type: string
+          format: uri
       required:
+      - privacy_policy_url
       - step10_title
+      - step11_title
       - step1a_text
       - step1a_title
       - step1b_text

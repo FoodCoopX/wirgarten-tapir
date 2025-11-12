@@ -1,59 +1,49 @@
-import React, {useEffect, useState} from "react";
-import {Form, ProgressBar, Spinner} from "react-bootstrap";
-import {useApi} from "../hooks/useApi.ts";
-import {BestellWizardApi, CoopApi, PublicPickupLocation, type PublicProductType,} from "../api-client";
-import {buildSettings} from "../bestell_wizard/utils/buildSettings.ts";
-import {handleRequestError} from "../utils/handleRequestError.ts";
-import {BestellWizardSettings} from "../bestell_wizard/types/BestellWizardSettings.ts";
-import {buildEmptySettings} from "../bestell_wizard/utils/buildEmptySettings.ts";
-import {ToastData} from "../types/ToastData.ts";
+import React, { useEffect, useState } from "react";
+import { Form, ProgressBar, Spinner } from "react-bootstrap";
+import { useApi } from "../hooks/useApi.ts";
+import {
+  BestellWizardApi,
+  CoopApi,
+  PublicPickupLocation,
+  type PublicProductType,
+} from "../api-client";
+import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
+import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
+import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import TapirButton from "../components/TapirButton.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
-import {PersonalData} from "../bestell_wizard/types/PersonalData.ts";
-import {getEmptyPersonalData} from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
+import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import {buildEmptyShoppingCart} from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
-import {ShoppingCart} from "../bestell_wizard/types/ShoppingCart.ts";
+import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
-import {
-    isAtLeastOneOrderedProductWithDelivery
-} from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import {isShoppingCartEmpty} from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import {checkPickupLocationCapacities} from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import {Phase} from "./types/Phase.ts";
+import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import { Phase } from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import {updateMinimumNumberOfShares} from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
-import {fetchFirstDeliveryDates} from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import Step11Legal from "./steps/Step11Legal.tsx";
+import { Step } from "./types/Step.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
 }
-
-type Step =
-  | "1a_welcome"
-  | "1b_welcome_waiting_list"
-  | "2_first_name"
-  | "3_product_type_choice"
-  | "5a_pickup_location_intro"
-  | "5b_pickup_location_choice"
-  | "6a_coop_intro"
-  | "6b_coop_shares"
-  | "8_personal_data"
-  | "9_banking_data"
-  | "10_summary"
-  | "loading"
-  | string;
 
 const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const bestellWizardApi = useApi(BestellWizardApi, csrfToken);
@@ -96,6 +86,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [contractStartDate, setContractStartDate] = useState(new Date());
   const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
     useState<{ [key: string]: Date }>({});
+  const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
+  const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -232,7 +224,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       case "8_personal_data":
       case "9_banking_data":
       case "10_summary":
+      case "11_legal":
         return "personal_data";
+      case "12_channel":
+      case "13_feedback":
+        return "feedback";
+      case "14_confirmation":
+        return "confirmation";
+
       default:
         const separatorIndex = step.lastIndexOf("_");
         if (separatorIndex == -1) {
@@ -277,6 +276,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     newSteps.push("8_personal_data");
     newSteps.push("9_banking_data");
     newSteps.push("10_summary");
+    newSteps.push("11_legal");
+    newSteps.push("12_channel");
+    newSteps.push("13_feedback");
+    newSteps.push("14_confirmation");
 
     return newSteps;
   }
@@ -340,6 +343,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               text: settings.strings.step5aText,
             }}
             goToNextStep={goToNextStep}
+            active={step === currentStep}
           />
         );
       case "5b_pickup_location_choice":
@@ -364,6 +368,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               title: settings.strings.step6aTitle,
               text: settings.strings.step6aText,
             }}
+            active={step === currentStep}
           />
         );
       case "6b_coop_shares":
@@ -403,6 +408,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             settings={settings}
+            active={step === currentStep}
           />
         );
       case "10_summary":
@@ -423,6 +429,19 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               setCurrentStep(productType.id + "_order");
             }}
             active={currentStep === step}
+          />
+        );
+      case "11_legal":
+        return (
+          <Step11Legal
+            goToNextStep={goToNextStep}
+            settings={settings}
+            cancellationPolicyRead={cancellationPolicyRead}
+            setCancellationPolicyRead={setCancellationPolicyRead}
+            privacyPolicyRead={privacyPolicyRead}
+            setPrivacyPolicyRead={setPrivacyPolicyRead}
+            active={step === currentStep}
+            firstName={personalData.firstName}
           />
         );
       case "loading":
@@ -455,6 +474,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                   accordions: productType.accordions,
                 }}
                 goToNextStep={goToNextStep}
+                active={step === currentStep}
               />
             );
           case "order":
@@ -519,6 +539,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           shoppingCart={shoppingCart}
           phases={phases}
           selectedPickupLocations={selectedPickupLocations}
+          steps={steps}
+          setCurrentStep={setCurrentStep}
         />
       </div>
       <div

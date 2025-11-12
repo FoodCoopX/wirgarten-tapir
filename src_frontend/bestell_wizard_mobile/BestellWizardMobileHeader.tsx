@@ -6,6 +6,7 @@ import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSett
 import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
 import { Phase } from "./types/Phase.ts";
 import { PublicPickupLocation } from "../api-client";
+import { Step } from "./types/Step.ts";
 
 interface BestellWizardProps {
   settings: BestellWizardSettings;
@@ -13,6 +14,8 @@ interface BestellWizardProps {
   shoppingCart: ShoppingCart;
   phases: Phase[];
   selectedPickupLocations: PublicPickupLocation[];
+  steps: Step[];
+  setCurrentStep: (step: Step) => void;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
@@ -21,6 +24,8 @@ const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
   shoppingCart,
   phases,
   selectedPickupLocations,
+  steps,
+  setCurrentStep,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -75,6 +80,8 @@ const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
         onHide={() => setShowOverlay(false)}
         showPickupLocations={phases.includes("pickup_location")}
         selectedPickupLocations={selectedPickupLocations}
+        steps={steps}
+        setCurrentStep={setCurrentStep}
       />
     </>
   );

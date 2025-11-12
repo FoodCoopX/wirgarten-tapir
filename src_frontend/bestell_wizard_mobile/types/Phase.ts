@@ -4,4 +4,6 @@ export type Phase =
   | "pickup_location"
   | "coop"
   | "personal_data"
+  | "feedback"
+  | "confirmation"
   | string;

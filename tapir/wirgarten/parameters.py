@@ -1200,6 +1200,18 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
+            label="Seite 11: Widerruf und Datenschutz - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du musst uns noch deine Zustimmung geben, damit wir dir bald frisches Gemüse liefern können",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

@@ -1,0 +1,18 @@
+export type Step =
+  | "1a_welcome"
+  | "1b_welcome_waiting_list"
+  | "2_first_name"
+  | "3_product_type_choice"
+  | "5a_pickup_location_intro"
+  | "5b_pickup_location_choice"
+  | "6a_coop_intro"
+  | "6b_coop_shares"
+  | "8_personal_data"
+  | "9_banking_data"
+  | "10_summary"
+  | "11_legal"
+  | "12_channel"
+  | "13_feedback"
+  | "14_confirmation"
+  | "loading"
+  | string;
