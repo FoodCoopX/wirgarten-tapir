@@ -10,6 +10,7 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -112,12 +113,12 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
             }
             style={{ minHeight: "70dvh" }}
           >
-            <h1 className={"text-center"}>
-              {replaceTokens(
+            <StepTitle
+              title={replaceTokens(
                 settings.strings.step10Title,
                 personalData.firstName,
               )}
-            </h1>
+            />
             <div>
               <div className={"d-flex flex-column gap-2"}>
                 {settings.productTypes.map((productType) => (

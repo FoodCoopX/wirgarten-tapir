@@ -9,6 +9,7 @@ import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptySho
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -93,9 +94,9 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
         }
       >
         {settings.strings.step3Title && (
-          <h1 className={"text-center"}>
-            {replaceTokens(settings.strings.step3Title, firstName)}
-          </h1>
+          <StepTitle
+            title={replaceTokens(settings.strings.step3Title, firstName)}
+          />
         )}
         {settings.strings.step3Text && (
           <p className={"text-center"}>

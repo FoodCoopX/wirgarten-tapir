@@ -6,7 +6,7 @@ import { Carousel, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import Step4BProductDetailModal from "../Components/Step4BProductDetailModal.tsx";
+import Step4BProductDetailModal from "../components/Step4BProductDetailModal.tsx";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";

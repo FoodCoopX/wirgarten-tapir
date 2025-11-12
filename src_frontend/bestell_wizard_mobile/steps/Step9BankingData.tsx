@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import PersonalDataFormControl from "../Components/PersonalDataFormControl.tsx";
+import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import { Form } from "react-bootstrap";
+import { replaceTokens } from "../utils/replaceTokens.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -65,8 +67,13 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           overflowY: "scroll",
         }}
       >
-        {settings.strings.step8Title && (
-          <h3 className={"text-center"}>{settings.strings.step9Title}</h3>
+        {settings.strings.step9Title && (
+          <StepTitle
+            title={replaceTokens(
+              settings.strings.step9Title,
+              personalData.firstName,
+            )}
+          />
         )}
         <div className={"d-flex flex-column gap-2"}>
           <PersonalDataFormControl

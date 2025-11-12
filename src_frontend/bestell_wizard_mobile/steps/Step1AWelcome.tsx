@@ -1,6 +1,7 @@
 import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step1AIntroProps {
   goToNextStep: () => void;
@@ -18,7 +19,9 @@ const Step1AWelcome: React.FC<Step1AIntroProps> = ({
         "d-flex align-items-center justify-content-center gap-2 flex-column text-center px-4"
       }
     >
-      {settings.strings.step1aTitle && <h1>{settings.strings.step1aTitle}</h1>}
+      {settings.strings.step1aTitle && (
+        <StepTitle title={settings.strings.step1aTitle} />
+      )}
       {settings.strings.step1aText && <p>{settings.strings.step1aText}</p>}
       <TapirButton
         variant={"outline-secondary"}

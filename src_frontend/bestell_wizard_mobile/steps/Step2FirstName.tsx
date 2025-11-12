@@ -3,6 +3,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step2FirstNameProps {
   goToNextStep: () => void;
@@ -32,7 +33,9 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         "d-flex align-items-center justify-content-center gap-2 flex-column text-center"
       }
     >
-      {settings.strings.step2Title && <h1>{settings.strings.step2Title}</h1>}
+      {settings.strings.step2Title && (
+        <StepTitle title={settings.strings.step1aTitle} />
+      )}
       {settings.strings.step2Text && <p>{settings.strings.step2Text}</p>}
       <Form.Control
         placeholder={"Vorname"}

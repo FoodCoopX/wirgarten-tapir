@@ -3,6 +3,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { getHtmlDescription } from "../../utils/getHtmlDescription.ts";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import { GenericIntroContent } from "../types/GenericIntroContent.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface StepGenericIntroProps {
   content: GenericIntroContent;
@@ -31,7 +32,7 @@ const StepGenericIntro: React.FC<StepGenericIntroProps> = ({
             }
             style={{ minHeight: "70dvh" }}
           >
-            <h1 className={"text-center"}>{content.title}</h1>
+            <StepTitle title={content.title} />
             <div>
               {content.text && (
                 <p

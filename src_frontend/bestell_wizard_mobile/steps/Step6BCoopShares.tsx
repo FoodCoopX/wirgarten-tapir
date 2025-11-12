@@ -5,6 +5,7 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
+import StepTitle from "../components/StepTitle.tsx";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -68,9 +69,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
             }
             style={{ minHeight: "70dvh" }}
           >
-            <h3 className={"text-center"}>
-              {replaceTokens(settings.strings.step6bTitle, firstName)}
-            </h3>
+            <StepTitle
+              title={replaceTokens(settings.strings.step6bTitle, firstName)}
+            />
             <div>
               {settings.strings.step6bText && (
                 <p
