@@ -11,6 +11,7 @@ import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOr
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import StepTitle from "../components/StepTitle.tsx";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -136,7 +137,10 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               <div className={"d-flex flex-column gap-2"}>
                 {settings.productTypes.map((productType) => (
                   <Accordion key={productType.id}>
-                    <Accordion.Item eventKey={productType.id!.toString()}>
+                    <Accordion.Item
+                      eventKey={productType.id!.toString()}
+                      onClick={scrollIntoView}
+                    >
                       <Accordion.Header>
                         {getProductTypeTitle(productType)}
                       </Accordion.Header>
@@ -188,7 +192,10 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                 ))}
                 {settings.showCoopContent && (
                   <Accordion>
-                    <Accordion.Item eventKey={"coop_shares"}>
+                    <Accordion.Item
+                      eventKey={"coop_shares"}
+                      onClick={scrollIntoView}
+                    >
                       <Accordion.Header>
                         {getCoopSharesTitle()}
                       </Accordion.Header>
