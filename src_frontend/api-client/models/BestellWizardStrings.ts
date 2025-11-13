@@ -155,6 +155,18 @@ export interface BestellWizardStrings {
    * @type {string}
    * @memberof BestellWizardStrings
    */
+  step13Title: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
+  step13Text: string;
+  /**
+   *
+   * @type {string}
+   * @memberof BestellWizardStrings
+   */
   privacyPolicyUrl: string;
 }
 
@@ -215,6 +227,10 @@ export function instanceOfBestellWizardStrings(
     return false;
   if (!("step12Title" in value) || value["step12Title"] === undefined)
     return false;
+  if (!("step13Title" in value) || value["step13Title"] === undefined)
+    return false;
+  if (!("step13Text" in value) || value["step13Text"] === undefined)
+    return false;
   if (!("privacyPolicyUrl" in value) || value["privacyPolicyUrl"] === undefined)
     return false;
   return true;
@@ -254,6 +270,8 @@ export function BestellWizardStringsFromJSONTyped(
     step10Title: json["step10_title"],
     step11Title: json["step11_title"],
     step12Title: json["step12_title"],
+    step13Title: json["step13_title"],
+    step13Text: json["step13_text"],
     privacyPolicyUrl: json["privacy_policy_url"],
   };
 }
@@ -293,6 +311,8 @@ export function BestellWizardStringsToJSONTyped(
     step10_title: value["step10Title"],
     step11_title: value["step11Title"],
     step12_title: value["step12Title"],
+    step13_title: value["step13Title"],
+    step13_text: value["step13Text"],
     privacy_policy_url: value["privacyPolicyUrl"],
   };
 }

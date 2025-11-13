@@ -1226,6 +1226,29 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP13_TITLE,
+            label="Seite 13: Feedback - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Hast du zum Abschluss noch ein Feedback für uns?",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP13_TEXT,
+            label="Seite 13: Feedback - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Deine Anregungen helfen uns weiter, unser Angebot stetig zu verbessern",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

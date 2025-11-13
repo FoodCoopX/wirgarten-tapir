@@ -4780,6 +4780,10 @@ components:
           type: string
         step12_title:
           type: string
+        step13_title:
+          type: string
+        step13_text:
+          type: string
         privacy_policy_url:
           type: string
           format: uri
@@ -4788,6 +4792,8 @@ components:
       - step10_title
       - step11_title
       - step12_title
+      - step13_text
+      - step13_title
       - step1a_text
       - step1a_title
       - step1b_text

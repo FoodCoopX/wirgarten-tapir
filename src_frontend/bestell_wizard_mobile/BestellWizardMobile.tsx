@@ -43,6 +43,7 @@ import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
 import StepBase from "./components/StepBase.tsx";
 import { getStepTitle } from "./utils/getStepTitle.ts";
+import Step13Feedback from "./steps/Step13Feedback.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -344,11 +345,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return (
           <StepGenericIntro
             content={{
-              title: settings.strings.step5aTitle,
               text: settings.strings.step5aText,
             }}
             goToNextStep={goToNextStep}
-            active={step === currentStep}
           />
         );
       case "5b_pickup_location_choice":
@@ -370,10 +369,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           <StepGenericIntro
             goToNextStep={goToNextStep}
             content={{
-              title: settings.strings.step6aTitle,
               text: settings.strings.step6aText,
             }}
-            active={step === currentStep}
           />
         );
       case "6b_coop_shares":
@@ -388,8 +385,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             setStudentStatusEnabled={setStudentStatusEnabled}
             statuteAccepted={statuteAccepted}
             setStatuteAccepted={setStatuteAccepted}
-            firstName={personalData.firstName}
-            active={step === currentStep}
           />
         );
       case "8_personal_data":
@@ -398,8 +393,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             goToNextStep={goToNextStep}
             personalData={personalData}
             setPersonalData={setPersonalData}
-            settings={settings}
-            active={step === currentStep}
           />
         );
       case "9_banking_data":
@@ -413,14 +406,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             settings={settings}
-            active={step === currentStep}
           />
         );
       case "10_summary":
         return (
           <Step10OrderSummary
             goToNextStep={goToNextStep}
-            personalData={personalData}
             settings={settings}
             studentStatusEnabled={studentStatusEnabled}
             numberOfCoopShares={selectedNumberOfCoopShares}
@@ -446,7 +437,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             privacyPolicyRead={privacyPolicyRead}
             setPrivacyPolicyRead={setPrivacyPolicyRead}
             active={step === currentStep}
-            firstName={personalData.firstName}
           />
         );
       case "12_channel":
@@ -454,11 +444,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           <Step12Channel
             goToNextStep={goToNextStep}
             settings={settings}
-            active={step === currentStep}
-            firstName={personalData.firstName}
             selectedDistributionChannels={selectedDistributionChannels}
             setSelectedDistributionChannels={setSelectedDistributionChannels}
           />
+        );
+      case "13_feedback":
+        return (
+          <Step13Feedback goToNextStep={goToNextStep} settings={settings} />
         );
       case "loading":
         return (
@@ -485,12 +477,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             return (
               <StepGenericIntro
                 content={{
-                  title: "Unser " + productType.name,
                   text: productType.descriptionBestellwizardLong,
                   accordions: productType.accordions,
                 }}
                 goToNextStep={goToNextStep}
-                active={step === currentStep}
               />
             );
           case "order":

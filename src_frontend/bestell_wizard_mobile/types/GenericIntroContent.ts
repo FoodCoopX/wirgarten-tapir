@@ -1,5 +1,4 @@
 export type GenericIntroContent = {
-  title: string;
   text?: string;
   accordions?: AccordionContent[];
 };

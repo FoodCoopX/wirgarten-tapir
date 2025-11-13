@@ -47,6 +47,8 @@ export function buildEmptySettings(): BestellWizardSettings {
       step10Title: "",
       step11Title: "",
       step12Title: "",
+      step13Title: "",
+      step13Text: "",
       privacyPolicyUrl: "",
     },
   };

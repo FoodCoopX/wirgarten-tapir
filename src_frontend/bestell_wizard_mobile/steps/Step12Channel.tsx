@@ -1,11 +1,10 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step12ChannelProps {
   settings: BestellWizardSettings;
-  active: boolean;
   goToNextStep: () => void;
   selectedDistributionChannels: Set<string>;
   setSelectedDistributionChannels: (set: Set<string>) => void;
@@ -13,21 +12,10 @@ interface Step12ChannelProps {
 
 const Step12Channel: React.FC<Step12ChannelProps> = ({
   settings,
-  active,
   goToNextStep,
   selectedDistributionChannels,
   setSelectedDistributionChannels,
 }) => {
-  const scrollDiv = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!active || !scrollDiv.current) {
-      return;
-    }
-
-    scrollDiv.current.scrollTop = 0;
-  }, [active]);
-
   function updateSelection(channel: string, selected: boolean) {
     if (selected) {
       selectedDistributionChannels.add(channel);

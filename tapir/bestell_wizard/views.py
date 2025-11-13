@@ -8,8 +8,6 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
-
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
@@ -70,6 +68,7 @@ from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
 )
+from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 
 class BestellWizardView(TemplateView):
@@ -439,6 +438,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
             "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             "step12_title": ParameterKeys.BESTELLWIZARD_STEP12_TITLE,
+            "step13_title": ParameterKeys.BESTELLWIZARD_STEP13_TITLE,
+            "step13_text": ParameterKeys.BESTELLWIZARD_STEP13_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
         }
         return {
