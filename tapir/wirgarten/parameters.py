@@ -8,7 +8,6 @@ from django.core.validators import (
     URLValidator,
 )
 from django.utils.translation import gettext_lazy as _
-
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
@@ -1067,6 +1066,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1092,6 +1092,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1185,6 +1186,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
         )
         bestellwizard_parameter_order -= 1
 

@@ -41,6 +41,8 @@ import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliv
 import Step11Legal from "./steps/Step11Legal.tsx";
 import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
+import StepBase from "./components/StepBase.tsx";
+import { getStepTitle } from "./utils/getStepTitle.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -579,7 +581,12 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 pointerEvents: currentStep === step ? "auto" : "none",
               }}
             >
-              {getStepComponent(step)}
+              <StepBase
+                title={getStepTitle(step, settings)}
+                firstName={personalData.firstName}
+                active={step === currentStep}
+                content={getStepComponent(step)}
+              />
             </div>
           );
         })}

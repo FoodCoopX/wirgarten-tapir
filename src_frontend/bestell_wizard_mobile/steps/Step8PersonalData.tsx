@@ -1,18 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
+import React, { useState } from "react";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import { Form } from "react-bootstrap";
-import { replaceTokens } from "../utils/replaceTokens.ts";
-import StepTitle from "../components/StepTitle.tsx";
+import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step8PersonalDataProps {
   goToNextStep: () => void;
   personalData: PersonalData;
   setPersonalData: (personalData: PersonalData) => void;
-  settings: BestellWizardSettings;
-  active: boolean;
 }
 
 const FIELDS: (keyof PersonalData)[] = [
@@ -30,20 +25,8 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   goToNextStep,
   personalData,
   setPersonalData,
-  settings,
-  active,
 }) => {
   const [isOver18, setIsOver18] = useState(false);
-
-  const scrollDiv = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!active || !scrollDiv.current) {
-      return;
-    }
-
-    scrollDiv.current.scrollTop = 0;
-  }, [active]);
 
   function getPlaceholder(key: keyof PersonalData) {
     switch (key) {
@@ -80,57 +63,29 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
   }
 
   return (
-    <div
-      style={{ height: "80dvh", display: "flex", flexDirection: "column" }}
-      className={"d-flex flex-column gap-2 mx-4"}
-    >
-      <div
-        style={{
-          maxHeight: "70dvh",
-          overflowY: "scroll",
-        }}
-        ref={scrollDiv}
-      >
-        {settings.strings.step8Title && (
-          <StepTitle
-            title={replaceTokens(
-              settings.strings.step8Title,
-              personalData.firstName,
-            )}
+    <>
+      <div className={"d-flex flex-column gap-2"}>
+        {FIELDS.map((field) => (
+          <PersonalDataFormControl
+            personalData={personalData}
+            setPersonalData={setPersonalData}
+            key={field}
+            field={field}
+            placeholder={getPlaceholder(field)}
+            type={getType(field)}
           />
-        )}
-        <div className={"d-flex flex-column gap-2"}>
-          {FIELDS.map((field) => (
-            <PersonalDataFormControl
-              personalData={personalData}
-              setPersonalData={setPersonalData}
-              key={field}
-              field={field}
-              placeholder={getPlaceholder(field)}
-              type={getType(field)}
-            />
-          ))}
-          <Form.Group controlId={"over18"}>
-            <Form.Check
-              onChange={(event) => setIsOver18(event.target.checked)}
-              required={true}
-              checked={isOver18}
-              label={"Ich bin über 18 Jahre alt"}
-            />
-          </Form.Group>
-        </div>
+        ))}
+        <Form.Group controlId={"over18"}>
+          <Form.Check
+            onChange={(event) => setIsOver18(event.target.checked)}
+            required={true}
+            checked={isOver18}
+            label={"Ich bin über 18 Jahre alt"}
+          />
+        </Form.Group>
       </div>
-      <div className={"d-flex flex-row justify-content-center"}>
-        <TapirButton
-          variant={"outline-secondary"}
-          text={"Weiter"}
-          onClick={goToNextStep}
-          disabled={!isOver18}
-          icon={"keyboard_arrow_down"}
-          size={"sm"}
-        />
-      </div>
-    </div>
+      <NextStepButton disabled={!isOver18} onClick={goToNextStep} />
+    </>
   );
 };
 

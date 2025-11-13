@@ -15,6 +15,7 @@ interface TapirButtonProps {
   tooltip?: string;
   iconPosition?: "left" | "right";
   rotateIcon?: string;
+  className?: string;
 }
 
 const TapirButton: React.FC<TapirButtonProps> = (props) => {
@@ -70,6 +71,7 @@ const TapirButton: React.FC<TapirButtonProps> = (props) => {
       disabled={props.disabled || props.loading}
       type={props.type ?? "button"}
       title={props.tooltip}
+      className={props.className}
     >
       {(props.iconPosition === "left" || !props.iconPosition) && buildIcon()}
       {props.text &&

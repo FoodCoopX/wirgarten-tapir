@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import StepTitle from "../components/StepTitle.tsx";
+import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step2FirstNameProps {
   goToNextStep: () => void;
@@ -27,15 +26,7 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   }, [active]);
 
   return (
-    <div
-      style={{ height: "100%" }}
-      className={
-        "d-flex align-items-center justify-content-center gap-2 flex-column text-center"
-      }
-    >
-      {settings.strings.step2Title && (
-        <StepTitle title={settings.strings.step1aTitle} />
-      )}
+    <>
       {settings.strings.step2Text && <p>{settings.strings.step2Text}</p>}
       <Form.Control
         placeholder={"Vorname"}
@@ -50,15 +41,11 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
           if (event.key === "Enter") goToNextStep();
         }}
       />
-      <TapirButton
-        variant={"outline-secondary"}
-        text={"Weiter"}
+      <NextStepButton
         onClick={goToNextStep}
         disabled={personalData.firstName.length === 0}
-        icon={"keyboard_arrow_down"}
-        size={"sm"}
       />
-    </div>
+    </>
   );
 };
 

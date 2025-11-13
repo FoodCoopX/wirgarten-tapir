@@ -9,7 +9,7 @@ import { buildEmptyShoppingCart } from "../../bestell_wizard/utils/buildEmptySho
 import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/selectAllRequiredProductTypes.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
-import StepTitle from "../components/StepTitle.tsx";
+import NextStepButton from "../components/NextStepButton.tsx";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -87,73 +87,55 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
 
   return (
     <>
-      <div
-        style={{ height: "100%" }}
-        className={
-          "d-flex align-items-center justify-content-center gap-2 flex-column"
-        }
-      >
-        {settings.strings.step3Title && (
-          <StepTitle
-            title={replaceTokens(settings.strings.step3Title, firstName)}
-          />
-        )}
-        {settings.strings.step3Text && (
-          <p className={"text-center"}>
-            {replaceTokens(settings.strings.step3Text, firstName)}
-          </p>
-        )}
-        <div>
-          {settings.productTypes.map((productType) => (
-            <Form.Group
-              key={"checkbox_" + productType.id}
-              controlId={"control_" + productType.id}
-            >
-              <div className={"d-flex flex-row gap-2 align-items-center"}>
-                <Form.Check
-                  label={productType.name}
-                  checked={selectedProductTypes.includes(productType)}
-                  onChange={(event) =>
-                    updateSelection(productType, event.target.checked)
-                  }
-                  disabled={productType.mustBeSubscribedTo}
-                />
-                <TapirButton
-                  icon={"help"}
-                  variant={"outline-secondary"}
-                  size={"sm"}
-                  onClick={() => setProductTypeForModal(productType)}
-                />
-              </div>
-            </Form.Group>
-          ))}
-          <Form.Group controlId={"investing"}>
-            <Form.Check
-              label={"Fördermitgliedschaft"}
-              checked={investingMembership}
-              onChange={(event) => setInvestingMembership(event.target.checked)}
-            />
+      {settings.strings.step3Text && (
+        <p className={"text-center"}>
+          {replaceTokens(settings.strings.step3Text, firstName)}
+        </p>
+      )}
+      <div>
+        {settings.productTypes.map((productType) => (
+          <Form.Group
+            key={"checkbox_" + productType.id}
+            controlId={"control_" + productType.id}
+          >
+            <div className={"d-flex flex-row gap-2 align-items-center"}>
+              <Form.Check
+                label={productType.name}
+                checked={selectedProductTypes.includes(productType)}
+                onChange={(event) =>
+                  updateSelection(productType, event.target.checked)
+                }
+                disabled={productType.mustBeSubscribedTo}
+              />
+              <TapirButton
+                icon={"help"}
+                variant={"outline-secondary"}
+                size={"sm"}
+                onClick={() => setProductTypeForModal(productType)}
+              />
+            </div>
           </Form.Group>
-        </div>
-        <TapirButton
-          variant={"outline-secondary"}
-          text={"Weiter"}
-          onClick={goToNextStep}
-          icon={"keyboard_arrow_down"}
-          size={"sm"}
-        />
-        <Modal
-          show={productTypeForModal !== undefined}
-          fullscreen={"md-down"}
-          centered={true}
-          onHide={() => setProductTypeForModal(undefined)}
-        >
-          <Modal.Header closeButton={true}>
-            {productTypeForModal?.name}
-          </Modal.Header>
-          <Modal.Body>{getModalText()}</Modal.Body>
-        </Modal>
+        ))}
+        <Form.Group controlId={"investing"}>
+          <Form.Check
+            label={"Fördermitgliedschaft"}
+            checked={investingMembership}
+            onChange={(event) => setInvestingMembership(event.target.checked)}
+          />
+        </Form.Group>
       </div>
+      <NextStepButton onClick={goToNextStep} />
+      <Modal
+        show={productTypeForModal !== undefined}
+        fullscreen={"md-down"}
+        centered={true}
+        onHide={() => setProductTypeForModal(undefined)}
+      >
+        <Modal.Header closeButton={true}>
+          {productTypeForModal?.name}
+        </Modal.Header>
+        <Modal.Body>{getModalText()}</Modal.Body>
+      </Modal>
     </>
   );
 };
