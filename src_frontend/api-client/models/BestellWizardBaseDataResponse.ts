@@ -27,6 +27,11 @@ import {
   PublicPickupLocationFromJSON,
   PublicPickupLocationToJSON,
 } from "./PublicPickupLocation";
+import type { BestellWizardImages } from "./BestellWizardImages";
+import {
+  BestellWizardImagesFromJSON,
+  BestellWizardImagesToJSON,
+} from "./BestellWizardImages";
 
 /**
  *
@@ -178,6 +183,12 @@ export interface BestellWizardBaseDataResponse {
    * @memberof BestellWizardBaseDataResponse
    */
   strings: BestellWizardStrings;
+  /**
+   *
+   * @type {BestellWizardImages}
+   * @memberof BestellWizardBaseDataResponse
+   */
+  images: BestellWizardImages;
 }
 
 /**
@@ -267,6 +278,7 @@ export function instanceOfBestellWizardBaseDataResponse(
   )
     return false;
   if (!("strings" in value) || value["strings"] === undefined) return false;
+  if (!("images" in value) || value["images"] === undefined) return false;
   return true;
 }
 
@@ -314,6 +326,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(
     contactMailAddress: json["contact_mail_address"],
     distributionChannels: json["distribution_channels"],
     strings: BestellWizardStringsFromJSON(json["strings"]),
+    images: BestellWizardImagesFromJSON(json["images"]),
   };
 }
 
@@ -362,5 +375,6 @@ export function BestellWizardBaseDataResponseToJSONTyped(
     contact_mail_address: value["contactMailAddress"],
     distribution_channels: value["distributionChannels"],
     strings: BestellWizardStringsToJSON(value["strings"]),
+    images: BestellWizardImagesToJSON(value["images"]),
   };
 }

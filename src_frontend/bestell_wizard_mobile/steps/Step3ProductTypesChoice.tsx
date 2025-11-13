@@ -10,6 +10,7 @@ import { selectAllRequiredProductTypes } from "../../bestell_wizard/utils/select
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { replaceTokens } from "../utils/replaceTokens.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step3ProductTypeChoiceProps {
   settings: BestellWizardSettings;
@@ -109,7 +110,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
               />
               <TapirButton
                 icon={"help"}
-                variant={"outline-secondary"}
+                variant={BUTTON_VARIANT}
                 size={"sm"}
                 onClick={() => setProductTypeForModal(productType)}
               />

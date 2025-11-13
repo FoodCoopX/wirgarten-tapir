@@ -10,6 +10,7 @@ import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/does
 import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -137,7 +138,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   <TapirButton
                     icon={"edit"}
                     text={"Bestellung anpassen"}
-                    variant={"outline-secondary"}
+                    variant={BUTTON_VARIANT}
                     size={"sm"}
                     onClick={() => goToProductTypeStep(productType)}
                   />

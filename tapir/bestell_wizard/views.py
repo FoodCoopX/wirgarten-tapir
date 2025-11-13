@@ -409,6 +409,7 @@ class BestellWizardBaseDataApiView(APIView):
                 ).split(",")
             ],
             "strings": self.build_strings_object(cache=self.cache),
+            "images": self.build_images_object(cache=self.cache),
         }
 
         return Response(BestellWizardBaseDataResponseSerializer(response_data).data)
@@ -443,6 +444,27 @@ class BestellWizardBaseDataApiView(APIView):
             "step14_title": ParameterKeys.BESTELLWIZARD_STEP14_TITLE,
             "step14_text": ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
             "privacy_policy_url": ParameterKeys.SITE_PRIVACY_LINK,
+        }
+        return {
+            string_id: get_parameter_value(key=parameter_key, cache=cache)
+            for string_id, parameter_key in string_id_to_parameter_key_map.items()
+        }
+
+    @classmethod
+    def build_images_object(cls, cache: dict):
+        string_id_to_parameter_key_map = {
+            "step1_background_image": ParameterKeys.BESTELLWIZARD_STEP1_BACKGROUND_IMAGE,
+            "step2_background_image": ParameterKeys.BESTELLWIZARD_STEP2_BACKGROUND_IMAGE,
+            "step3_background_image": ParameterKeys.BESTELLWIZARD_STEP3_BACKGROUND_IMAGE,
+            "step5_background_image": ParameterKeys.BESTELLWIZARD_STEP5_BACKGROUND_IMAGE,
+            "step6_background_image": ParameterKeys.BESTELLWIZARD_STEP6_BACKGROUND_IMAGE,
+            "step8_background_image": ParameterKeys.BESTELLWIZARD_STEP8_BACKGROUND_IMAGE,
+            "step9_background_image": ParameterKeys.BESTELLWIZARD_STEP9_BACKGROUND_IMAGE,
+            "step10_background_image": ParameterKeys.BESTELLWIZARD_STEP10_BACKGROUND_IMAGE,
+            "step11_background_image": ParameterKeys.BESTELLWIZARD_STEP11_BACKGROUND_IMAGE,
+            "step12_background_image": ParameterKeys.BESTELLWIZARD_STEP12_BACKGROUND_IMAGE,
+            "step13_background_image": ParameterKeys.BESTELLWIZARD_STEP13_BACKGROUND_IMAGE,
+            "step14_background_image": ParameterKeys.BESTELLWIZARD_STEP14_BACKGROUND_IMAGE,
         }
         return {
             string_id: get_parameter_value(key=parameter_key, cache=cache)

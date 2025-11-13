@@ -10,6 +10,7 @@ import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOr
 import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCart.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -105,7 +106,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                 ) : (
                   <>
                     <TapirButton
-                      variant={"outline-secondary"}
+                      variant={BUTTON_VARIANT}
                       icon={"remove"}
                       size={"sm"}
                       onClick={() => {
@@ -119,7 +120,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     />
                     <span>{shoppingCart[product.id!]}</span>
                     <TapirButton
-                      variant={"outline-secondary"}
+                      variant={BUTTON_VARIANT}
                       icon={"add"}
                       size={"sm"}
                       onClick={() => {

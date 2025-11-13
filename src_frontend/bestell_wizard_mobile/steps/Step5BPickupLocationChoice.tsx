@@ -5,6 +5,7 @@ import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx
 import { PublicPickupLocation } from "../../api-client";
 import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -39,7 +40,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             id={tab}
             value={tab}
             type={"radio"}
-            variant={"outline-secondary"}
+            variant={BUTTON_VARIANT}
             name={"tabs"}
             checked={currentTab === tab}
             onChange={(event) =>

@@ -8,6 +8,7 @@ import L from "leaflet";
 import "./map.css";
 import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -146,7 +147,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
                   variant={
                     selectedPickupLocations.includes(pickupLocation)
                       ? "outline-success"
-                      : "outline-secondary"
+                      : BUTTON_VARIANT
                   }
                   onClick={() => updateSelection(pickupLocation)}
                 />

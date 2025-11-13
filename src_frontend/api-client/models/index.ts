@@ -7,6 +7,7 @@ export * from './BestellWizardCapacityCheckResponse';
 export * from './BestellWizardConfirmOrderRequestRequest';
 export * from './BestellWizardDeliveryDatesForOrderRequestRequest';
 export * from './BestellWizardDeliveryDatesForOrderResponse';
+export * from './BestellWizardImages';
 export * from './BestellWizardStrings';
 export * from './BlankEnum';
 export * from './BounceTypeEnum';

@@ -5,6 +5,7 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import { Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -63,7 +64,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
       <small className={"d-flex flex-row align-items-center gap-2"}>
         <TapirButton
           icon={"remove"}
-          variant={"outline-secondary"}
+          variant={BUTTON_VARIANT}
           onClick={() => {
             setSelectedNumberOfCoopShares(
               Math.max(minimumNumberOfShares, selectedNumberOfCoopShares - 1),
@@ -86,7 +87,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
         </Form.Group>
         <TapirButton
           icon={"add"}
-          variant={"outline-secondary"}
+          variant={BUTTON_VARIANT}
           onClick={() => {
             setSelectedNumberOfCoopShares(selectedNumberOfCoopShares + 1);
           }}

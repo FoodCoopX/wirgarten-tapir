@@ -8,6 +8,7 @@ interface StepBaseProps {
   firstName: string;
   active: boolean;
   content: ReactNode;
+  backgroundImageUrl: string | undefined;
 }
 
 const StepBase: React.FC<StepBaseProps> = ({
@@ -15,6 +16,7 @@ const StepBase: React.FC<StepBaseProps> = ({
   firstName,
   active,
   content,
+  backgroundImageUrl,
 }) => {
   const [showScrollHint, setShowScrollHint] = useState(false);
   const scrollDiv = useRef<HTMLDivElement>(null);
@@ -59,8 +61,26 @@ const StepBase: React.FC<StepBaseProps> = ({
         height: "80dvh",
         width: "auto",
       }}
-      className={"d-flex flex-column gap-2 mx-4"}
+      className={"d-flex flex-column gap-2 mx-4 test1 " + backgroundImageUrl}
     >
+      {backgroundImageUrl && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundImage: "url(" + backgroundImageUrl + ")",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+            maskImage:
+              "linear-gradient(0deg,rgba(255, 255, 255, 0) 0%,rgba(255, 255, 255, 1) 5%, rgba(255, 255, 255, 1) 95%, rgba(255, 255, 255, 0) 100%)",
+            zIndex: -1,
+            opacity: 0.2,
+          }}
+        />
+      )}
       <div
         style={{
           height: "80dvh",
@@ -68,6 +88,7 @@ const StepBase: React.FC<StepBaseProps> = ({
         }}
         ref={scrollDiv}
         onScroll={updateScrollState}
+        className={"test2"}
       >
         <div
           className={

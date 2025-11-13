@@ -45,6 +45,8 @@ import StepBase from "./components/StepBase.tsx";
 import { getStepTitle } from "./utils/getStepTitle.ts";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
 import Step14Confirmation from "./steps/Step14Confirmation.tsx";
+import { getStepBackground } from "./utils/getStepBackground.ts";
+import { BUTTON_VARIANT } from "./utils/BUTTON_VARIANT.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -579,6 +581,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 firstName={personalData.firstName}
                 active={step === currentStep}
                 content={getStepComponent(step)}
+                backgroundImageUrl={getStepBackground(step, settings)}
               />
             </div>
           );
@@ -629,13 +632,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               <TapirButton
                 size={"sm"}
                 icon={"chevron_line_up"}
-                variant={"outline-secondary"}
+                variant={BUTTON_VARIANT}
                 onClick={() => setCurrentStep(steps[0])}
               />
               <TapirButton
                 size={"sm"}
                 icon={"keyboard_arrow_up"}
-                variant={"outline-secondary"}
+                variant={BUTTON_VARIANT}
                 onClick={goToPreviousStep}
               />
               <ProgressBar

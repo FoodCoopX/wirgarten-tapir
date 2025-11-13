@@ -32,5 +32,6 @@ export function buildSettings(
     contactMailAddress: baseData.contactMailAddress,
     distributionChannels: baseData.distributionChannels,
     strings: baseData.strings,
+    images: baseData.images,
   };
 }

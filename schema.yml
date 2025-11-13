@@ -4607,6 +4607,8 @@ components:
             type: string
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
+        images:
+          $ref: '#/components/schemas/BestellWizardImages'
       required:
       - allow_investing_membership
       - contact_mail_address
@@ -4614,6 +4616,7 @@ components:
       - default_payment_rhythm
       - distribution_channels
       - force_waiting_list
+      - images
       - intro_enabled
       - intro_step_text
       - label_checkbox_contract_policy
@@ -4733,6 +4736,58 @@ components:
             format: date
       required:
       - product_type_id_to_next_delivery_date_map
+    BestellWizardImages:
+      type: object
+      properties:
+        step1_background_image:
+          type: string
+          format: uri
+        step2_background_image:
+          type: string
+          format: uri
+        step3_background_image:
+          type: string
+          format: uri
+        step5_background_image:
+          type: string
+          format: uri
+        step6_background_image:
+          type: string
+          format: uri
+        step8_background_image:
+          type: string
+          format: uri
+        step9_background_image:
+          type: string
+          format: uri
+        step10_background_image:
+          type: string
+          format: uri
+        step11_background_image:
+          type: string
+          format: uri
+        step12_background_image:
+          type: string
+          format: uri
+        step13_background_image:
+          type: string
+          format: uri
+        step14_background_image:
+          type: string
+          format: uri
+      required:
+      - step10_background_image
+      - step11_background_image
+      - step12_background_image
+      - step13_background_image
+      - step14_background_image
+      - step1_background_image
+      - step2_background_image
+      - step3_background_image
+      - step5_background_image
+      - step6_background_image
+      - step8_background_image
+      - step9_background_image
     BestellWizardStrings:
       type: object
       properties:

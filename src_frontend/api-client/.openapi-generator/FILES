@@ -18,6 +18,7 @@ models/BestellWizardCapacityCheckResponse.ts
 models/BestellWizardConfirmOrderRequestRequest.ts
 models/BestellWizardDeliveryDatesForOrderRequestRequest.ts
 models/BestellWizardDeliveryDatesForOrderResponse.ts
+models/BestellWizardImages.ts
 models/BestellWizardStrings.ts
 models/BlankEnum.ts
 models/BounceTypeEnum.ts

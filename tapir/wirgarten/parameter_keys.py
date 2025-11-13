@@ -117,16 +117,31 @@ class ParameterKeys:
     BESTELLWIZARD_BACKGROUND_IMAGE = f"{PREFIX}.bestellwizard.background_image"
     BESTELLWIZARD_STEP1A_TITLE = f"{PREFIX}.bestellwizard.step1a.title"
     BESTELLWIZARD_STEP1A_TEXT = f"{PREFIX}.bestellwizard.step1a.text"
+    BESTELLWIZARD_STEP1_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step1.background_image"
+    )
     BESTELLWIZARD_STEP1B_TITLE = f"{PREFIX}.bestellwizard.step1b.title"
     BESTELLWIZARD_STEP1B_TEXT = f"{PREFIX}.bestellwizard.step1b.text"
     BESTELLWIZARD_STEP2_TITLE = f"{PREFIX}.bestellwizard.step2.title"
     BESTELLWIZARD_STEP2_TEXT = f"{PREFIX}.bestellwizard.step2.text"
+    BESTELLWIZARD_STEP2_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step2.background_image"
+    )
     BESTELLWIZARD_STEP3_TITLE = f"{PREFIX}.bestellwizard.step3.title"
     BESTELLWIZARD_STEP3_TEXT = f"{PREFIX}.bestellwizard.step3.text"
+    BESTELLWIZARD_STEP3_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step3.background_image"
+    )
     BESTELLWIZARD_STEP5A_TITLE = f"{PREFIX}.bestellwizard.step5a.title"
     BESTELLWIZARD_STEP5A_TEXT = f"{PREFIX}.bestellwizard.step5a.text"
+    BESTELLWIZARD_STEP5_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step5.background_image"
+    )
     BESTELLWIZARD_STEP6A_TITLE = f"{PREFIX}.bestellwizard.step6a.title"
     BESTELLWIZARD_STEP6A_TEXT = f"{PREFIX}.bestellwizard.step6a.text"
+    BESTELLWIZARD_STEP6_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step6.background_image"
+    )
     BESTELLWIZARD_STEP6B_TITLE = f"{PREFIX}.bestellwizard.step6b.title"
     BESTELLWIZARD_STEP6B_TEXT = f"{PREFIX}.bestellwizard.step6b.text"
     BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE = (
@@ -137,14 +152,35 @@ class ParameterKeys:
         f"{PREFIX}.bestellwizard.step6c.checkbox_commitment"
     )
     BESTELLWIZARD_STEP8_TITLE = f"{PREFIX}.bestellwizard.step8.title"
+    BESTELLWIZARD_STEP8_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step8.background_image"
+    )
     BESTELLWIZARD_STEP9_TITLE = f"{PREFIX}.bestellwizard.step9.title"
+    BESTELLWIZARD_STEP9_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step9.background_image"
+    )
     BESTELLWIZARD_STEP10_TITLE = f"{PREFIX}.bestellwizard.step10.title"
+    BESTELLWIZARD_STEP10_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step10.background_image"
+    )
     BESTELLWIZARD_STEP11_TITLE = f"{PREFIX}.bestellwizard.step11.title"
+    BESTELLWIZARD_STEP11_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step11.background_image"
+    )
     BESTELLWIZARD_STEP12_TITLE = f"{PREFIX}.bestellwizard.step12.title"
+    BESTELLWIZARD_STEP12_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step12.background_image"
+    )
     BESTELLWIZARD_STEP13_TITLE = f"{PREFIX}.bestellwizard.step13.title"
     BESTELLWIZARD_STEP13_TEXT = f"{PREFIX}.bestellwizard.step13.text"
+    BESTELLWIZARD_STEP13_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step13.background_image"
+    )
     BESTELLWIZARD_STEP14_TITLE = f"{PREFIX}.bestellwizard.step14.title"
     BESTELLWIZARD_STEP14_TEXT = f"{PREFIX}.bestellwizard.step14.text"
+    BESTELLWIZARD_STEP14_BACKGROUND_IMAGE = (
+        f"{PREFIX}.bestellwizard.step14.background_image"
+    )
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )

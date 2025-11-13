@@ -78,6 +78,21 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     privacy_policy_url = serializers.URLField()
 
 
+class BestellWizardImagesSerializer(serializers.Serializer):
+    step1_background_image = serializers.URLField()
+    step2_background_image = serializers.URLField()
+    step3_background_image = serializers.URLField()
+    step5_background_image = serializers.URLField()
+    step6_background_image = serializers.URLField()
+    step8_background_image = serializers.URLField()
+    step9_background_image = serializers.URLField()
+    step10_background_image = serializers.URLField()
+    step11_background_image = serializers.URLField()
+    step12_background_image = serializers.URLField()
+    step13_background_image = serializers.URLField()
+    step14_background_image = serializers.URLField()
+
+
 class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     price_of_a_share = serializers.FloatField()
     theme = serializers.CharField()
@@ -107,6 +122,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     contact_mail_address = serializers.EmailField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
     strings = BestellWizardStringsSerializer()
+    images = BestellWizardImagesSerializer()
 
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):

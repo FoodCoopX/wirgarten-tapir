@@ -992,6 +992,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP1_BACKGROUND_IMAGE,
+            label="Seite 1A & B: Begrüßungsseite - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="/static/lueneburg/registration/confirmation_1.jpg",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP1B_TITLE,
             label="Seite 1B: Begrüßungsseite im Wartelistemodus - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1036,6 +1047,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP2_BACKGROUND_IMAGE,
+            label="Seite 2: Vorname - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="/static/lueneburg/registration/confirmation_2.jpg",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
             label="Seite 3: Produktauswahl - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1052,6 +1074,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 3: Produktauswahl - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP3_BACKGROUND_IMAGE,
+            label="Seite 3: Produktauswahl - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="/static/lueneburg/registration/confirmation_3.jpg",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
@@ -1085,6 +1118,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP5_BACKGROUND_IMAGE,
+            label="Seite 5 A&B: Abholort - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="/static/lueneburg/registration/pickup-location.jpg",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
             label="Seite 6A: Genossenschaft Einführung - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1106,6 +1150,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(textarea=True),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP6_BACKGROUND_IMAGE,
+            label="Seite 6 A&B: Genossenschaftsanteile - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
 
@@ -1135,7 +1190,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_STATUTE,
-            label="Seite 6C: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
+            label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Satzung gelesen",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich habe die Satzung der (Betriebsname) und die Kündigungsfrist von (2) Jahren zum Jahresende zur Kenntnis genommen.",
             description="",
@@ -1146,7 +1201,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_TEXT_STATUTE,
-            label="Seite 6C: Genossenschaft - Rechtliches - Erklärtext Satzung",
+            label="Seite 6B: Genossenschaft - Rechtliches - Erklärtext Satzung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Bitte beachte, dass deine Genossenschaftsanteile erst bei Austritt aus der Genossenschaft und nach Verabschiedung des Jahresabschlusses im Folgejahr zurückgezahlt werden dürfen. Siehe dazu Satzung § 10 und § 37.",
             description="",
@@ -1157,7 +1212,7 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
-            label="Seite 6C: Genossenschaft - Rechtliches - Checkbox-Label Verpflichtung",
+            label="Seite 6B: Genossenschaft - Rechtliches - Checkbox-Label Verpflichtung",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Ich verpflichte mich hiermit, die nach Gesetz und Satzung geschuldeten Einzahlungen auf die gezeichneten Geschäftsanteile zu leisten.",
             description="",
@@ -1179,6 +1234,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP8_BACKGROUND_IMAGE,
+            label="Seite 8: Persönliche Daten - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
             label="Seite 9: Bankverbindung - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1187,6 +1253,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP9_BACKGROUND_IMAGE,
+            label="Seite 9: Bankverbindung - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
 
@@ -1203,6 +1280,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP10_BACKGROUND_IMAGE,
+            label="Seite 10: Zusammenfassung - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             label="Seite 11: Widerruf und Datenschutz - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1215,6 +1303,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP11_BACKGROUND_IMAGE,
+            label="Seite 11: Widerruf und Datenschutz - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP12_TITLE,
             label="Seite 12: Vertriebskanal - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1223,6 +1322,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
             meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP12_BACKGROUND_IMAGE,
+            label="Seite 12: Vertriebskanal - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
         )
         bestellwizard_parameter_order -= 1
 
@@ -1250,6 +1360,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP13_BACKGROUND_IMAGE,
+            label="Seite 13: Feedback - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP14_TITLE,
             label="Seite 14: Abschluss - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1263,10 +1384,21 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
 
         self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
-            label="Seite 14: Feedback - Text",
+            label="Seite 14: Abschluss - Text",
             datatype=TapirParameterDatatype.STRING,
             initial_value="Du erhälst im Anschluss zwei Emails. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter "
             + settings.DEFAULT_FROM_EMAIL,
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14_BACKGROUND_IMAGE,
+            label="Seite 14: Abschluss - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="/static/lueneburg/registration/confirmation.jpg",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,

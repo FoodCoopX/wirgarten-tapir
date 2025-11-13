@@ -53,5 +53,19 @@ export function buildEmptySettings(): BestellWizardSettings {
       step14Text: "",
       privacyPolicyUrl: "",
     },
+    images: {
+      step1BackgroundImage: "",
+      step2BackgroundImage: "",
+      step3BackgroundImage: "",
+      step5BackgroundImage: "",
+      step6BackgroundImage: "",
+      step8BackgroundImage: "",
+      step9BackgroundImage: "",
+      step10BackgroundImage: "",
+      step11BackgroundImage: "",
+      step12BackgroundImage: "",
+      step13BackgroundImage: "",
+      step14BackgroundImage: "",
+    },
   };
 }

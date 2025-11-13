@@ -1,5 +1,6 @@
 import { TapirTheme } from "../../types/TapirTheme.ts";
 import {
+  BestellWizardImages,
   BestellWizardStrings,
   PublicPickupLocation,
   PublicProductType,
@@ -29,4 +30,5 @@ export type BestellWizardSettings = {
   contactMailAddress: string;
   distributionChannels: string[];
   strings: BestellWizardStrings;
+  images: BestellWizardImages;
 };

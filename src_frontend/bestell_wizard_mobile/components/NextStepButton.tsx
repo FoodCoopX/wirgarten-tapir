@@ -1,5 +1,6 @@
 import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface NextButtonProps {
   onClick: () => void;
@@ -18,7 +19,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
       className={"d-flex flex-column align-items-center justify-content-center"}
     >
       <TapirButton
-        variant={"outline-secondary"}
+        variant={BUTTON_VARIANT}
         text={text ?? "Weiter"}
         onClick={onClick}
         size={"sm"}
