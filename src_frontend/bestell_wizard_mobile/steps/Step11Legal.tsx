@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { Form } from "react-bootstrap";
+import { Accordion, Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { scrollIntoView } from "../utils/scrollIntoView.ts";
 
 interface Step11LegalProps {
   settings: BestellWizardSettings;
@@ -34,41 +35,64 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
 
   return (
     <>
-      <Form.Group controlId={"cancellation"}>
-        <Form.Check
-          onChange={(event) => setCancellationPolicyRead(event.target.checked)}
-          required={true}
-          checked={cancellationPolicyRead}
-          label={"Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."}
-        />
-        {settings.revocationRightsExplanation && (
-          <Form.Text>
+      <Accordion>
+        <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
+          <Accordion.Header>
+            <Form.Group
+              controlId={"cancellation"}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Form.Check
+                onChange={(event) => {
+                  setCancellationPolicyRead(event.target.checked);
+                }}
+                required={true}
+                checked={cancellationPolicyRead}
+                label={
+                  "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
+                }
+              />
+            </Form.Group>
+          </Accordion.Header>
+          <Accordion.Body>
             <span
               dangerouslySetInnerHTML={{
                 __html: settings.revocationRightsExplanation,
               }}
             />
-          </Form.Text>
-        )}
-      </Form.Group>
-      <Form.Group controlId={"privacy"}>
-        <Form.Check
-          onChange={(event) => setPrivacyPolicyRead(event.target.checked)}
-          required={true}
-          checked={privacyPolicyRead}
-          label={"Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."}
-        />
-        {settings.revocationRightsExplanation && (
-          <Form.Text>
+          </Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
+      <Accordion>
+        <Accordion.Item eventKey={"privacy"} onClick={scrollIntoView}>
+          <Accordion.Header>
+            <Form.Group
+              controlId={"privacy"}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Form.Check
+                onChange={(event) => {
+                  setPrivacyPolicyRead(event.target.checked);
+                }}
+                required={true}
+                checked={privacyPolicyRead}
+                label={
+                  "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
+                }
+              />
+            </Form.Group>
+          </Accordion.Header>
+          <Accordion.Body>
             Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen
             der Mitgliederverwaltung und geben sie nicht an Dritte weiter.
             Unsere Datenschutzerklärung kannst du hier einsehen:{" "}
             <a href={settings.strings.privacyPolicyUrl} target="_blank">
               Datenschutzerklärung
             </a>
-          </Form.Text>
-        )}
-      </Form.Group>
+          </Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
+
       <NextStepButton
         onClick={goToNextStep}
         disabled={!cancellationPolicyRead || !privacyPolicyRead}
