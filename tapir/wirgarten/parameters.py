@@ -1249,6 +1249,30 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
         bestellwizard_parameter_order -= 1
 
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14_TITLE,
+            label="Seite 14: Abschluss - Titel",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Schön, dass du nun mit dabei bist {vorname}",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP14_TEXT,
+            label="Seite 14: Feedback - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Du erhälst im Anschluss zwei Emails. Schau bitte auch in dein SPAM-Posteingang. Sofern du innerhalb von 24 Stunden keine Mails erhalten hast, dann wende dich an unser Support unter "
+            + settings.DEFAULT_FROM_EMAIL,
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
     def parameter_definition(
         self,
         key: str,

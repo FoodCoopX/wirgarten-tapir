@@ -44,6 +44,7 @@ import Step12Channel from "./steps/Step12Channel.tsx";
 import StepBase from "./components/StepBase.tsx";
 import { getStepTitle } from "./utils/getStepTitle.ts";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
+import Step14Confirmation from "./steps/Step14Confirmation.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -452,6 +453,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         return (
           <Step13Feedback goToNextStep={goToNextStep} settings={settings} />
         );
+      case "14_confirmation":
+        return <Step14Confirmation settings={settings} />;
       case "loading":
         return (
           <div

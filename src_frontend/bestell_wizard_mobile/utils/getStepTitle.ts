@@ -34,6 +34,8 @@ export function getStepTitle(
       return settings.strings.step12Title;
     case "13_feedback":
       return settings.strings.step13Title;
+    case "14_confirmation":
+      return settings.strings.step14Title;
   }
 
   // If the step is not one of the predefined ones, then it's a product type step
