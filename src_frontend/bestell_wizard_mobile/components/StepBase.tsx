@@ -34,7 +34,6 @@ const StepBase: React.FC<StepBaseProps> = ({
 
     const resizeObserver = new ResizeObserver(() => {
       updateScrollState();
-      console.log("RESIZE");
     });
     resizeObserver.observe(scrollDiv.current);
 
