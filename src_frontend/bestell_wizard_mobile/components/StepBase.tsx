@@ -1,6 +1,6 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, {ReactNode, useEffect, useRef, useState} from "react";
 import StepTitle from "./StepTitle.tsx";
-import { replaceTokens } from "../utils/replaceTokens.ts";
+import {replaceTokens} from "../utils/replaceTokens.ts";
 import "./bounce.css";
 
 interface StepBaseProps {
@@ -51,7 +51,7 @@ const StepBase: React.FC<StepBaseProps> = ({
     }
 
     setShowScrollHint(
-      scrollDiv.current.clientHeight < scrollDiv.current.scrollHeight,
+      scrollDiv.current.clientHeight + 20 < scrollDiv.current.scrollHeight,
     );
   }
 
