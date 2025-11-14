@@ -1,5 +1,5 @@
-import { Step } from "../types/Step.ts";
-import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import {Step} from "../types/Step.ts";
+import {BestellWizardSettings} from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 export function getStepTitle(
   step: Step,
@@ -36,6 +36,8 @@ export function getStepTitle(
       return settings.strings.step13Title;
     case "14_confirmation":
       return settings.strings.step14Title;
+    case "loading":
+      return "";
   }
 
   // If the step is not one of the predefined ones, then it's a product type step
