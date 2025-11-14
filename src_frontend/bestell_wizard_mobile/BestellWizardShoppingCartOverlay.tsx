@@ -38,7 +38,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
           position: "absolute",
           top: 0,
           left: 0,
-          width: "100vw",
+          width: "100dvw",
           height: "100dvh",
           backgroundColor: "gray",
           opacity: showOverlay ? "0.5" : 0,

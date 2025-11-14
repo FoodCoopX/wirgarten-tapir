@@ -60,6 +60,7 @@ const StepBase: React.FC<StepBaseProps> = ({
       style={{
         height: "80dvh",
         width: "auto",
+        overflowWrap: "anywhere",
       }}
       className={"d-flex flex-column gap-2 mx-4 test1 " + backgroundImageUrl}
     >

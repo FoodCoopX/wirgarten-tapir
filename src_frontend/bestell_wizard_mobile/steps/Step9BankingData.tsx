@@ -56,7 +56,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
 
   return (
     <>
-      <div className={"d-flex flex-column gap-2"}>
+      <div className={"d-flex flex-column gap-2"} style={{ width: "100%" }}>
         <PersonalDataFormControl
           personalData={personalData}
           setPersonalData={(newData) => {
@@ -104,7 +104,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
             onChange={(event) => setContractAccepted(event.target.checked)}
             required={true}
             checked={contractAccepted}
-            label={settings.labelCheckboxContractPolicy}
+            label={<span>{settings.labelCheckboxContractPolicy}</span>}
           />
         </Form.Group>
       </div>
