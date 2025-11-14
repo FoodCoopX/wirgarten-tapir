@@ -30,7 +30,7 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
           placeholder={"Dein Feedback"}
         />
       </Form.Group>
-      <NextStepButton onClick={goToNextStep} text={"Bestellung Bestätigen"} />
+      <NextStepButton onClick={goToNextStep} text={"Bestellung bestätigen"} />
     </>
   );
 };
