@@ -35,7 +35,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
 
   return (
     <>
-      <Accordion>
+      <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
           <Accordion.Header>
             <Form.Group
@@ -63,7 +63,7 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>
-      <Accordion>
+      <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"privacy"} onClick={scrollIntoView}>
           <Accordion.Header>
             <Form.Group
