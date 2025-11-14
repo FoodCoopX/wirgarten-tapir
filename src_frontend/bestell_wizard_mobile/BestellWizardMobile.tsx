@@ -45,6 +45,7 @@ import {getStepBackground} from "./utils/getStepBackground.ts";
 import BestellWizardMobileFooter from "./components/BestellWizardMobileFooter.tsx";
 import {getPhase} from "./utils/getPhase.ts";
 import {getProductTypeFromStep} from "./utils/getProductTypeFromStep.ts";
+import {CONTENT_HEIGHT, HEADER_HEIGHT} from "./utils/DIMENSIONS.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -452,11 +453,11 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
 
   function getTopPosition(step: Step) {
     if (step === currentStep) {
-      return "10dvh";
+      return HEADER_HEIGHT + "dvh";
     }
 
     if (steps.indexOf(step) < steps.indexOf(currentStep)) {
-      return "-80dvh";
+      return -CONTENT_HEIGHT + "dvh";
     }
 
     return "100dvh";
@@ -478,7 +479,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     >
       <div
         style={{
-          height: "10dvh",
+          height: HEADER_HEIGHT + "dvh",
           width: "100%",
         }}
       >
@@ -494,7 +495,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       </div>
       <div
         style={{
-          height: "80dvh",
+          height: CONTENT_HEIGHT + "dvh",
           width: "100%",
         }}
         id={"scroll_container"}
@@ -505,7 +506,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               key={step}
               id={step}
               style={{
-                height: "80dvh",
+                height: CONTENT_HEIGHT + "dvh",
                 transition: "all 0.3s ease-in-out",
                 opacity: currentStep === step ? 1 : 0,
                 position: "fixed",

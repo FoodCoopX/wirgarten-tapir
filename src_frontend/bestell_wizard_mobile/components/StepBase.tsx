@@ -1,7 +1,8 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import StepTitle from "./StepTitle.tsx";
-import {replaceTokens} from "../utils/replaceTokens.ts";
+import { replaceTokens } from "../utils/replaceTokens.ts";
 import "./bounce.css";
+import { CONTENT_HEIGHT } from "../utils/DIMENSIONS.ts";
 
 interface StepBaseProps {
   title?: string;
@@ -58,7 +59,7 @@ const StepBase: React.FC<StepBaseProps> = ({
   return (
     <div
       style={{
-        height: "80dvh",
+        height: CONTENT_HEIGHT + "dvh",
         width: "auto",
         overflowWrap: "anywhere",
       }}
@@ -84,7 +85,7 @@ const StepBase: React.FC<StepBaseProps> = ({
       )}
       <div
         style={{
-          height: "80dvh",
+          height: CONTENT_HEIGHT + "dvh",
           overflowY: "scroll",
         }}
         ref={scrollDiv}
@@ -95,7 +96,7 @@ const StepBase: React.FC<StepBaseProps> = ({
           className={
             "d-flex align-items-center justify-content-center gap-2 flex-column"
           }
-          style={{ minHeight: "80dvh" }}
+          style={{ minHeight: CONTENT_HEIGHT + "dvh" }}
         >
           {title && <StepTitle title={replaceTokens(title, firstName)} />}
           {content}

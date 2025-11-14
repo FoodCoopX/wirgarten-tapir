@@ -8,6 +8,7 @@ import { getPhase } from "../utils/getPhase.ts";
 import { Badge } from "react-bootstrap";
 import { Phase } from "../types/Phase.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { FOOTER_HEIGHT } from "../utils/DIMENSIONS.ts";
 
 interface BestellWizardMobileFooterProps {
   steps: Step[];
@@ -42,6 +43,21 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   }
 
   function getPhaseName(phase: Phase) {
+    switch (phase) {
+      case "intro":
+        return "Intro";
+      case "coop":
+        return "Genossenschaft";
+      case "pickup_location":
+        return "Verteilstation";
+      case "personal_data":
+        return "Persönliche Daten";
+      case "feedback":
+        return "Feedback";
+      case "confirmation":
+        return "Bestätigung";
+    }
+
     for (const productType of settings.productTypes) {
       if (productType.id === phase) {
         return productType.name;
@@ -54,7 +70,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
   return (
     <div
       style={{
-        height: "10dvh",
+        height: FOOTER_HEIGHT + "dvh",
         width: "100%",
       }}
     >
@@ -82,7 +98,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         </div>
         <small
           className={
-            "d-flex flex-row flex-wrap gap-1 justify-content-between align-items-center"
+            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
           }
           style={{ width: "100%" }}
         >
