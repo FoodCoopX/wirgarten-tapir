@@ -1,12 +1,12 @@
 import React from "react";
-import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
-import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { isProductTypeOrdered } from "../bestell_wizard/utils/isProductTypeOrdered.ts";
-import { doesProductBelongsToProductType } from "../bestell_wizard/utils/doesProductBelongToProductType.ts";
-import { PublicPickupLocation } from "../api-client";
-import { Step } from "./types/Step.ts";
+import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../../tapir/core/static/core/css/base.css";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
+import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
+import { PublicPickupLocation } from "../../api-client";
+import { Step } from "../types/Step.ts";
 
 interface BestellWizardShoppingCartOverlayProps {
   settings: BestellWizardSettings;

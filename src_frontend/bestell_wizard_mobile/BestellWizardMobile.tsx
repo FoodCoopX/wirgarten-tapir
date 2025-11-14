@@ -1,52 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { Form, ProgressBar, Spinner } from "react-bootstrap";
-import { useApi } from "../hooks/useApi.ts";
-import {
-  BestellWizardApi,
-  CoopApi,
-  PublicPickupLocation,
-  type PublicProductType,
-} from "../api-client";
-import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
-import { handleRequestError } from "../utils/handleRequestError.ts";
-import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
-import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
-import { ToastData } from "../types/ToastData.ts";
+import React, {useEffect, useState} from "react";
+import {Spinner} from "react-bootstrap";
+import {useApi} from "../hooks/useApi.ts";
+import {BestellWizardApi, CoopApi, PublicPickupLocation, type PublicProductType,} from "../api-client";
+import {buildSettings} from "../bestell_wizard/utils/buildSettings.ts";
+import {handleRequestError} from "../utils/handleRequestError.ts";
+import {BestellWizardSettings} from "../bestell_wizard/types/BestellWizardSettings.ts";
+import {buildEmptySettings} from "../bestell_wizard/utils/buildEmptySettings.ts";
+import {ToastData} from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
-import TapirButton from "../components/TapirButton.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
-import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
-import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import {PersonalData} from "../bestell_wizard/types/PersonalData.ts";
+import {getEmptyPersonalData} from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
-import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import BestellWizardMobileHeader from "./BestellWizardMobileHeader.tsx";
-import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import {buildEmptyShoppingCart} from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import {ShoppingCart} from "../bestell_wizard/types/ShoppingCart.ts";
+import BestellWizardMobileHeader from "./components/BestellWizardMobileHeader.tsx";
+import {
+    isAtLeastOneOrderedProductWithDelivery
+} from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import { Phase } from "./types/Phase.ts";
+import {isShoppingCartEmpty} from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import {checkPickupLocationCapacities} from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import {Phase} from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import {updateMinimumNumberOfShares} from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
-import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import {fetchFirstDeliveryDates} from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import Step11Legal from "./steps/Step11Legal.tsx";
-import { Step } from "./types/Step.ts";
+import {Step} from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
 import StepBase from "./components/StepBase.tsx";
-import { getStepTitle } from "./utils/getStepTitle.ts";
+import {getStepTitle} from "./utils/getStepTitle.ts";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
 import Step14Confirmation from "./steps/Step14Confirmation.tsx";
-import { getStepBackground } from "./utils/getStepBackground.ts";
-import { BUTTON_VARIANT } from "./utils/BUTTON_VARIANT.ts";
+import {getStepBackground} from "./utils/getStepBackground.ts";
+import BestellWizardMobileFooter from "./components/BestellWizardMobileFooter.tsx";
+import {getPhase} from "./utils/getPhase.ts";
+import {getProductTypeFromStep} from "./utils/getProductTypeFromStep.ts";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -72,7 +70,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   >([]);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCart>({});
   const [investingMembership, setInvestingMembership] = useState(false);
-  const [debugPhases, setDebugPhases] = useState(false);
 
   const [selectedPickupLocations, setSelectedPickupLocations] = useState<
     PublicPickupLocation[]
@@ -216,41 +213,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     );
   }, [selectedPickupLocations, shoppingCart]);
 
-  function getPhase(step: Step): Phase {
-    switch (step) {
-      case "loading":
-        return "loading";
-      case "1a_welcome":
-      case "1b_welcome_waiting_list":
-      case "2_first_name":
-        return "intro";
-      case "5a_pickup_location_intro":
-      case "5b_pickup_location_choice":
-        return "pickup_location";
-      case "6a_coop_intro":
-      case "6b_coop_shares":
-        return "coop";
-      case "8_personal_data":
-      case "9_banking_data":
-      case "10_summary":
-      case "11_legal":
-        return "personal_data";
-      case "12_channel":
-      case "13_feedback":
-        return "feedback";
-      case "14_confirmation":
-        return "confirmation";
-
-      default:
-        const separatorIndex = step.lastIndexOf("_");
-        if (separatorIndex == -1) {
-          alert("Missing phase for step " + step);
-          return "unknown";
-        }
-        return step.slice(0, separatorIndex);
-    }
-  }
-
   function buildSteps() {
     const newSteps: Step[] = [];
     newSteps.push(
@@ -300,15 +262,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     setCurrentStep(steps[steps.indexOf(currentStep) + 1]);
-  }
-
-  function goToPreviousStep() {
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex - 1 < 0) {
-      return;
-    }
-
-    setCurrentStep(steps[steps.indexOf(currentStep) - 1]);
   }
 
   function getStepComponent(step: Step) {
@@ -468,12 +421,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
         );
       default:
         // If the step is not one of the predefined ones, then it's a product type step
-        const separatorIndex = step.lastIndexOf("_");
-        const productId = step.slice(0, separatorIndex);
-        const subStep = step.slice(separatorIndex + 1);
-        const productType = settings.productTypes.find(
-          (productType) => productType.id === productId,
-        );
+        const [productType, subStep] = getProductTypeFromStep(step, settings);
         if (productType === undefined) {
           return <div>Fehler: ungültiges Schritt {step}</div>;
         }
@@ -500,16 +448,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             );
         }
     }
-  }
-
-  function getPhaseName(phase: Phase) {
-    for (const productType of settings.productTypes) {
-      if (productType.id === phase) {
-        return productType.name;
-      }
-    }
-
-    return phase;
   }
 
   function getTopPosition(step: Step) {
@@ -587,68 +525,14 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           );
         })}
       </div>
-      <div
-        style={{
-          height: "10dvh",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{ width: "100%", height: "100%", paddingBottom: "1rem" }}
-          className={"d-flex flex-column justify-content-end"}
-        >
-          <small
-            style={{ width: "100%", textAlign: "center" }}
-            className={"d-flex flex-row justify-content-center gap-2"}
-          >
-            <span>
-              Schritt {phases.indexOf(currentPhase) + 1} von {phases.length}
-            </span>
-            <Form.Check
-              checked={debugPhases}
-              onChange={(event) => setDebugPhases(event.target.checked)}
-            />
-            {debugPhases && <span>Debug enabled</span>}
-          </small>
-          {debugPhases && (
-            <small
-              className={
-                "d-flex flex-row gap-2 justify-content-center flex-wrap"
-              }
-              style={{ lineHeight: "1.1rem" }}
-            >
-              {phases.map((phase) => (
-                <span className={currentPhase === phase ? "fw-bold" : ""}>
-                  {getPhaseName(phase)}
-                </span>
-              ))}
-            </small>
-          )}
-          {currentStep !== "loading" && (
-            <div
-              className={"d-flex flex-row gap-2 align-items-center"}
-              style={{ marginRight: "1rem", marginLeft: "1rem" }}
-            >
-              <TapirButton
-                size={"sm"}
-                icon={"chevron_line_up"}
-                variant={BUTTON_VARIANT}
-                onClick={() => setCurrentStep(steps[0])}
-              />
-              <TapirButton
-                size={"sm"}
-                icon={"keyboard_arrow_up"}
-                variant={BUTTON_VARIANT}
-                onClick={goToPreviousStep}
-              />
-              <ProgressBar
-                now={(100 * (steps.indexOf(currentStep) + 1)) / steps.length}
-                style={{ width: "100%" }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      {currentStep !== "loading" && (
+        <BestellWizardMobileFooter
+          steps={steps}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          settings={settings}
+        />
+      )}
       <TapirToastContainer
         toastDatas={toastDatas}
         setToastDatas={setToastDatas}

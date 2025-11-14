@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
-import "../../tapir/core/static/core/css/base.css";
-import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
-import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
+import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../../tapir/core/static/core/css/base.css";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay.tsx";
-import { Phase } from "./types/Phase.ts";
-import { PublicPickupLocation } from "../api-client";
-import { Step } from "./types/Step.ts";
+import { Phase } from "../types/Phase.ts";
+import { PublicPickupLocation } from "../../api-client";
+import { Step } from "../types/Step.ts";
 
-interface BestellWizardProps {
+interface BestellWizardMobileHeaderProps {
   settings: BestellWizardSettings;
   showShoppingCart: boolean;
   shoppingCart: ShoppingCart;
@@ -18,7 +18,7 @@ interface BestellWizardProps {
   setCurrentStep: (step: Step) => void;
 }
 
-const BestellWizardMobileHeader: React.FC<BestellWizardProps> = ({
+const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   settings,
   showShoppingCart,
   shoppingCart,
