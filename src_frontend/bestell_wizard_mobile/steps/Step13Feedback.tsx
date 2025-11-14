@@ -24,8 +24,9 @@ const Step13Feedback: React.FC<Step13FeedbackProps> = ({
             "<br />Ist gerade nur als Platzhalder da, der Auswahl wird nicht gespeichert",
         )}
       />
-      <Form.Group>
+      <Form.Group style={{ width: "100%" }}>
         <Form.Control
+          as={"textarea"}
           onChange={(event) => setFeedback(event.target.value)}
           placeholder={"Dein Feedback"}
         />
