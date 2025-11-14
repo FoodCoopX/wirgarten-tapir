@@ -1,6 +1,6 @@
 import React from "react";
 import TapirButton from "../../components/TapirButton.tsx";
-import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import {BUTTON_VARIANT} from "../utils/BUTTON_VARIANT.ts";
 
 interface NextButtonProps {
   onClick: () => void;
@@ -22,7 +22,6 @@ const NextStepButton: React.FC<NextButtonProps> = ({
         variant={BUTTON_VARIANT}
         text={text ?? "Weiter"}
         onClick={onClick}
-        size={"sm"}
         icon={"keyboard_arrow_down"}
         disabled={disabled ?? false}
         className={"nextStepButton"}
