@@ -234,7 +234,7 @@ def _register_triggers():
             "Vertragsende": "contract_end_date",
             "Erste Abholung am": "first_pickup_date",
         },
-        required=lambda: legal_status_is_cooperative(cache={}),
+        required=True,
     )
     TransactionalTrigger.register_action(
         "BestellWizard: Nur Geno-Mitgliedschaft", Events.REGISTER_MEMBERSHIP_ONLY
