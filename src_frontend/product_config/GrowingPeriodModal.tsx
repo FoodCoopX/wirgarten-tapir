@@ -28,6 +28,8 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
   const [jokersEnabled, setJokersEnabled] = useState(false);
   const [maxJokersPerMember, setMaxJokersPerMember] = useState(0);
   const [jokerRestrictions, setJokerRestrictions] = useState("");
+  const [isAvailableInBestellWizard, setIsAvailableInBestellWizard] =
+    useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -50,6 +52,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
         setJokersEnabled(response.jokersEnabled);
         setMaxJokersPerMember(response.maxJokersPerMember);
         setJokerRestrictions(response.jokerRestrictions);
+        setIsAvailableInBestellWizard(response.isAvailableInBestellWizard);
       })
       .catch(handleRequestError)
       .finally(() => setDataLoading(false));
@@ -73,6 +76,7 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
           adjustments: adjustments,
           jokerRestrictions: jokerRestrictions,
           maxJokersPerMember: maxJokersPerMember,
+          isAvailableInBestellWizard: isAvailableInBestellWizard,
         },
       })
       .then(() => location.reload())
@@ -165,6 +169,29 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                     required={true}
                     value={dayjs(endDate).format("YYYY-MM-DD")}
                   />
+                </Form.Group>
+              </Col>
+            </Row>
+          </ListGroup.Item>
+          <ListGroup.Item>
+            <Row>
+              <Col>
+                <Form.Group controlId={"available_in_bw"}>
+                  <Form.Check
+                    label={"Wird im BestellWizard angezeigt"}
+                    checked={isAvailableInBestellWizard}
+                    onChange={(event) =>
+                      setIsAvailableInBestellWizard(event.target.checked)
+                    }
+                  />
+                  <Form.Text>
+                    Im BestellWizard kurz vor Vertragsperiode-Wechsel wird ein
+                    Auswahl angezeigt, ob der Vertrags in der Aktuelle oder
+                    kommende Vertragsperiode starten soll. Standardweise werden
+                    beide Perioden angezeigt. Soll dieses Checkbox ausgeschaltet
+                    sein taucht die hier ausgewählte Periode in der Auswahl
+                    nicht auf.
+                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>

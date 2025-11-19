@@ -4527,6 +4527,8 @@ components:
         joker_restrictions:
           type: string
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - end_date
       - start_date
@@ -4557,6 +4559,8 @@ components:
           type: string
           minLength: 1
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - end_date
       - start_date
@@ -4586,12 +4590,15 @@ components:
         jokers_enabled:
           type: boolean
           readOnly: true
+        is_available_in_bestell_wizard:
+          type: boolean
       required:
       - adjustments
       - growing_period_end_date
       - growing_period_id
       - growing_period_start_date
       - growing_period_weeks_without_delivery
+      - is_available_in_bestell_wizard
       - joker_restrictions
       - jokers_enabled
       - max_jokers_per_member
@@ -5217,6 +5224,8 @@ components:
           type: string
           minLength: 1
           maxLength: 1024
+        is_available_in_bestell_wizard:
+          type: boolean
     PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest:
       type: object
       properties:
@@ -5242,6 +5251,8 @@ components:
         joker_restrictions:
           type: string
           minLength: 1
+        is_available_in_bestell_wizard:
+          type: boolean
     PatchedPdfExportModelRequest:
       type: object
       properties:

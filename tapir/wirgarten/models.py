@@ -152,6 +152,7 @@ class GrowingPeriod(TapirModel):
     )
     max_jokers_per_member = models.IntegerField(default=4)
     joker_restrictions = models.CharField(default="disabled", max_length=1024)
+    is_available_in_bestell_wizard = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{format_date(self.start_date)} - {format_date(self.end_date)}"

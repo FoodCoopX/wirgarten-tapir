@@ -115,3 +115,4 @@ class GrowingPeriodWithDeliveryDayAdjustmentsSerializer(serializers.Serializer):
         validators=[JokerManagementService.validate_joker_restrictions]
     )
     jokers_enabled = serializers.BooleanField(read_only=True)
+    is_available_in_bestell_wizard = serializers.BooleanField()

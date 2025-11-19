@@ -69,6 +69,12 @@ export interface PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest {
      * @memberof PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest
      */
     jokerRestrictions?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequest
+     */
+    isAvailableInBestellWizard?: boolean;
 }
 
 /**
@@ -95,6 +101,7 @@ export function PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestFromJSONTyp
         'adjustments': json['adjustments'] == null ? undefined : ((json['adjustments'] as Array<any>).map(DeliveryDayAdjustmentRequestFromJSON)),
         'maxJokersPerMember': json['max_jokers_per_member'] == null ? undefined : json['max_jokers_per_member'],
         'jokerRestrictions': json['joker_restrictions'] == null ? undefined : json['joker_restrictions'],
+        'isAvailableInBestellWizard': json['is_available_in_bestell_wizard'] == null ? undefined : json['is_available_in_bestell_wizard'],
     };
 }
 
@@ -116,6 +123,7 @@ export function PatchedGrowingPeriodWithDeliveryDayAdjustmentsRequestFromJSONTyp
         'adjustments': value['adjustments'] == null ? undefined : ((value['adjustments'] as Array<any>).map(DeliveryDayAdjustmentRequestToJSON)),
         'max_jokers_per_member': value['maxJokersPerMember'],
         'joker_restrictions': value['jokerRestrictions'],
+        'is_available_in_bestell_wizard': value['isAvailableInBestellWizard'],
     };
 }
 
