@@ -88,7 +88,7 @@ class BaseProductForm(forms.Form):
             self.choose_growing_period = (
                 next_growing_period
                 and (next_growing_period.start_date - get_today(cache=self.cache)).days
-                <= 61
+                <= get_parameter_value(key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE, cache=self.cache)
             )
 
         super().__init__(*args, **kwargs)

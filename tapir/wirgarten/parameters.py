@@ -637,6 +637,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         )
 
         parameter_definition(
+            key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE,
+            label="Schwelle zu Vertragsperiode-Auswahl",
+            datatype=TapirParameterDatatype.INTEGER,
+            initial_value=61,
+            description="Wie viele Tage vor eine neue Vertragsperiode wird der Auswahl angezeigt im Bestellwizard in welche Vertragsperiode der Vertrags gültig ist.",
+            category=ParameterCategory.SUBSCRIPTIONS,
+            order_priority=0,
+        )
+
+
+        parameter_definition(
             key=ParameterKeys.TRIAL_PERIOD_ENABLED,
             label="Probezeit einschalten",
             datatype=TapirParameterDatatype.BOOLEAN,

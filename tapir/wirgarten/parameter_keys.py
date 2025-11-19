@@ -97,3 +97,4 @@ class ParameterKeys:
     ALLOW_STUDENT_TO_ORDER_WITHOUT_COOP_SHARES = (
         f"{PREFIX}.coop.allow_students_to_order_without_coop_shares"
     )
+    ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE = f"{PREFIX}.subscriptions.days_before_growing_period_choice"
