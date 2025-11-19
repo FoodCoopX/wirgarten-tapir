@@ -190,7 +190,9 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                     kommende Vertragsperiode starten soll. Standardweise werden
                     beide Perioden angezeigt. Soll dieses Checkbox ausgeschaltet
                     sein taucht die hier ausgewählte Periode in der Auswahl
-                    nicht auf.
+                    nicht auf. <br />
+                    Wenn der Auswahl nicht angezeigt wird hat dieses Parameter
+                    kein Effekt.
                   </Form.Text>
                 </Form.Group>
               </Col>
