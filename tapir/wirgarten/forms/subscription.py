@@ -85,10 +85,11 @@ class BaseProductForm(forms.Form):
 
         if initial and not self.choose_growing_period:
             next_growing_period = get_next_growing_period(cache=self.cache)
-            self.choose_growing_period = (
-                next_growing_period
-                and (next_growing_period.start_date - get_today(cache=self.cache)).days
-                <= get_parameter_value(key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE, cache=self.cache)
+            self.choose_growing_period = next_growing_period and (
+                next_growing_period.start_date - get_today(cache=self.cache)
+            ).days <= get_parameter_value(
+                key=ParameterKeys.ENABLE_GROWING_PERIOD_CHOICE_DAYS_BEFORE,
+                cache=self.cache,
             )
 
         super().__init__(*args, **kwargs)
@@ -143,7 +144,7 @@ class BaseProductForm(forms.Form):
 
         if self.choose_growing_period:
             available_growing_periods = GrowingPeriod.objects.filter(
-                end_date__gte=self.start_date,
+                end_date__gte=self.start_date, is_available_in_bestell_wizard=True
             ).order_by("start_date")
 
             self.solidarity_total = []
