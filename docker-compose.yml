@@ -15,7 +15,7 @@ services:
     build: .
     command: bash -c "poetry lock && poetry install && poetry run python manage.py collectstatic --noinput &&
                       poetry run python manage.py compilemessages --ignore \".venv\" &&
-                      poetry run python manage.py runserver_plus 0.0.0.0:80 --reloader-type=stat"
+                      poetry run python manage.py runserver_plus 0.0.0.0:8000 --reloader-type=stat"
     volumes:
       - .:/app
     environment:
@@ -24,24 +24,10 @@ services:
       DJANGO_VITE_DEBUG: True
     depends_on:
       - db
-      - selenium
       - keycloak
       - redis
-      - nginx-proxy
-
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./docker/nginx/certs:/etc/nginx/certs:ro
-      - ./docker/nginx/vhost.d:/etc/nginx/vhost.d:ro
-      - ./docker/nginx/client_auth_certs:/etc/nginx/client_auth_certs:ro
     ports:
-      - "8000:80"
-      - "8001:443"
-    environment:
-      HTTPS_METHOD: noredirect
-      DEFAULT_HOST: localhost
+      - "8000:8000"
 
   db:
     image: postgres:14
@@ -51,12 +37,6 @@ services:
       - POSTGRES_USER=tapir
     ports:
       - '5432:5432'
-
-  selenium:
-    image: selenium/standalone-firefox-debug:latest
-    shm_size: '2gb'
-    ports:
-      - 5900:5900 # VNC
 
   # Backend for Celery task queue
   redis:

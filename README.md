@@ -44,12 +44,6 @@ Then, run the tests.
 
     docker-compose run web poetry run pytest
 
-
-#### Selenium Tests
-
-You can connect to the selenium container via VNC for debugging purpose. The address is localhost:5900, password :
-secret
-
 ### Model
 
 [![models.png](models.png)](https://raw.githubusercontent.com/FoodCoopX/wirgarten-tapir/master/models.png)
