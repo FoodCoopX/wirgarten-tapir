@@ -8,6 +8,7 @@ from django.core.validators import (
     URLValidator,
 )
 from django.utils.translation import gettext_lazy as _
+
 from tapir.configuration.models import (
     TapirParameterDatatype,
     TapirParameterDefinitionImporter,
@@ -1085,6 +1086,40 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             label="Seite 3: Produktauswahl - Hintergrundbild",
             datatype=TapirParameterDatatype.STRING,
             initial_value="/static/lueneburg/registration/confirmation_3.jpg",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
+            label="Seite 4D: Solidarbeitrag - Title",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Solidarbeitrag",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(vars_hint=["vorname"]),
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
+            label="Seite 4D: Solidarbeitrag - Text",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Mit einer solidarischen Zahlung erlaubst du weniger finanzstarken Mitgliedern ebenfalls Mitgliedschaften in der Genossenschaft abzuschließen.",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP4D_BACKGROUND_IMAGE,
+            label="Seite 4D: Solidarbeitrag - Hintergrundbild",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="",
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,

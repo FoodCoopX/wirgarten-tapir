@@ -1,5 +1,5 @@
-import {Step} from "../types/Step.ts";
-import {BestellWizardSettings} from "../../bestell_wizard/types/BestellWizardSettings.ts";
+import { Step } from "../types/Step.ts";
+import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 
 export function getStepTitle(
   step: Step,
@@ -14,6 +14,8 @@ export function getStepTitle(
       return settings.strings.step2Title;
     case "3_product_type_choice":
       return settings.strings.step3Title;
+    case "4d_solidarity_contribution":
+      return settings.strings.step4dTitle;
     case "5a_pickup_location_intro":
       return settings.strings.step5aTitle;
     case "5b_pickup_location_choice":

@@ -19,7 +19,7 @@ from tapir.wirgarten.models import Subscription
 from tapir.wirgarten.parameter_keys import ParameterKeys
 from tapir.wirgarten.service.products import (
     get_product_price,
-    get_active_and_future_subscriptions,
+    get_active_subscriptions,
 )
 
 
@@ -163,7 +163,7 @@ class SolidarityValidator:
         cls,
         reference_date: datetime.date,
         cache: dict,
-    ) -> float:
+    ) -> Decimal:
         return sum(
             [
                 cls.get_solidarity_factor_of_subscription(
@@ -171,10 +171,11 @@ class SolidarityValidator:
                     reference_date=reference_date,
                     cache=cache,
                 )
-                for subscription in get_active_and_future_subscriptions(
+                for subscription in get_active_subscriptions(
                     reference_date=reference_date, cache=cache
                 ).select_related("product")
-            ]
+            ],
+            Decimal(0),
         )
 
     @classmethod
@@ -195,4 +196,25 @@ class SolidarityValidator:
         )
         return total_subscription_price_without_solidarity * Decimal(
             subscription.solidarity_price_percentage
+        )
+
+    @classmethod
+    def get_solidarity_contribution_minimum(
+        cls, reference_date: datetime.date, cache: dict
+    ) -> float | None:
+        enabled = get_parameter_value(
+            key=ParameterKeys.HARVEST_NEGATIVE_SOLIPRICE_ENABLED, cache=cache
+        )
+        if enabled == SOLIDARITY_MODE_NEGATIVE_ALWAYS_ALLOWED:
+            return None
+        if enabled == SOLIDARITY_MODE_ONLY_POSITIVE:
+            return 0.0
+
+        return min(
+            0.0,
+            -float(
+                cls.get_solidarity_excess(
+                    reference_date=reference_date, cache=cache
+                ).quantize(Decimal("0.01"))
+            ),
         )

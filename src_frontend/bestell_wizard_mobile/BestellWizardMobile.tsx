@@ -1,51 +1,55 @@
-import React, {useEffect, useState} from "react";
-import {Spinner} from "react-bootstrap";
-import {useApi} from "../hooks/useApi.ts";
-import {BestellWizardApi, CoopApi, PublicPickupLocation, type PublicProductType,} from "../api-client";
-import {buildSettings} from "../bestell_wizard/utils/buildSettings.ts";
-import {handleRequestError} from "../utils/handleRequestError.ts";
-import {BestellWizardSettings} from "../bestell_wizard/types/BestellWizardSettings.ts";
-import {buildEmptySettings} from "../bestell_wizard/utils/buildEmptySettings.ts";
-import {ToastData} from "../types/ToastData.ts";
+import React, { useEffect, useState } from "react";
+import { Spinner } from "react-bootstrap";
+import { useApi } from "../hooks/useApi.ts";
+import {
+  BestellWizardApi,
+  CoopApi,
+  PublicPickupLocation,
+  type PublicProductType,
+} from "../api-client";
+import { buildSettings } from "../bestell_wizard/utils/buildSettings.ts";
+import { handleRequestError } from "../utils/handleRequestError.ts";
+import { BestellWizardSettings } from "../bestell_wizard/types/BestellWizardSettings.ts";
+import { buildEmptySettings } from "../bestell_wizard/utils/buildEmptySettings.ts";
+import { ToastData } from "../types/ToastData.ts";
 import TapirToastContainer from "../components/TapirToastContainer.tsx";
 import Step3ProductTypesChoice from "./steps/Step3ProductTypesChoice.tsx";
 import Step1AWelcome from "./steps/Step1AWelcome.tsx";
 import Step2FirstName from "./steps/Step2FirstName.tsx";
-import {PersonalData} from "../bestell_wizard/types/PersonalData.ts";
-import {getEmptyPersonalData} from "../bestell_wizard/utils/getEmptyPersonalData.ts";
+import { PersonalData } from "../bestell_wizard/types/PersonalData.ts";
+import { getEmptyPersonalData } from "../bestell_wizard/utils/getEmptyPersonalData.ts";
 import Step1BWelcome from "./steps/Step1BWelcome.tsx";
 import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import Step4BProductTypeOrder from "./steps/Step4BProductTypeOrder.tsx";
-import {buildEmptyShoppingCart} from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
-import {ShoppingCart} from "../bestell_wizard/types/ShoppingCart.ts";
+import { buildEmptyShoppingCart } from "../bestell_wizard/utils/buildEmptyShoppingCart.ts";
+import { ShoppingCart } from "../bestell_wizard/types/ShoppingCart.ts";
 import BestellWizardMobileHeader from "./components/BestellWizardMobileHeader.tsx";
-import {
-    isAtLeastOneOrderedProductWithDelivery
-} from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
+import { isAtLeastOneOrderedProductWithDelivery } from "../bestell_wizard/utils/isAtLeastOneOrderedProductWithDelivery.ts";
 import Step5BPickupLocationChoice from "./steps/Step5BPickupLocationChoice.tsx";
-import {isShoppingCartEmpty} from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
-import {checkPickupLocationCapacities} from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
-import {Phase} from "./types/Phase.ts";
+import { isShoppingCartEmpty } from "../bestell_wizard/utils/isShoppingCartEmpty.ts";
+import { checkPickupLocationCapacities } from "../bestell_wizard/utils/checkPickupLocationCapacities.ts";
+import { Phase } from "./types/Phase.ts";
 import StepGenericIntro from "./steps/StepGenericIntro.tsx";
 import Step6BCoopShares from "./steps/Step6BCoopShares.tsx";
-import {updateMinimumNumberOfShares} from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
+import { updateMinimumNumberOfShares } from "../bestell_wizard/utils/updateMinimumNumberOfShares.ts";
 import Step8PersonalData from "./steps/Step8PersonalData.tsx";
 import Step9BankingData from "./steps/Step9BankingData.tsx";
 import Step10OrderSummary from "./steps/Step10OrderSummary.tsx";
-import {fetchFirstDeliveryDates} from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
+import { fetchFirstDeliveryDates } from "../bestell_wizard/utils/fetchFirstDeliveryDates.ts";
 import Step11Legal from "./steps/Step11Legal.tsx";
-import {Step} from "./types/Step.ts";
+import { Step } from "./types/Step.ts";
 import Step12Channel from "./steps/Step12Channel.tsx";
 import StepBase from "./components/StepBase.tsx";
-import {getStepTitle} from "./utils/getStepTitle.ts";
+import { getStepTitle } from "./utils/getStepTitle.ts";
 import Step13Feedback from "./steps/Step13Feedback.tsx";
 import Step14Confirmation from "./steps/Step14Confirmation.tsx";
-import {getStepBackground} from "./utils/getStepBackground.ts";
+import { getStepBackground } from "./utils/getStepBackground.ts";
 import BestellWizardMobileFooter from "./components/BestellWizardMobileFooter.tsx";
-import {getPhase} from "./utils/getPhase.ts";
-import {getProductTypeFromStep} from "./utils/getProductTypeFromStep.ts";
-import {CONTENT_HEIGHT, HEADER_HEIGHT} from "./utils/DIMENSIONS.ts";
+import { getPhase } from "./utils/getPhase.ts";
+import { getProductTypeFromStep } from "./utils/getProductTypeFromStep.ts";
+import { CONTENT_HEIGHT, HEADER_HEIGHT } from "./utils/DIMENSIONS.ts";
+import Step4DSolidarityContribution from "./steps/Step4DSolidarityContribution.tsx";
 
 interface BestellWizardProps {
   csrfToken: string;
@@ -225,8 +229,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     }
 
     for (const productType of selectedProductTypes) {
-      newSteps.push(productType.id! + "_intro");
-      newSteps.push(productType.id! + "_order");
+      if (!productType.noDelivery) {
+        newSteps.push(productType.id! + "_intro");
+        newSteps.push(productType.id! + "_order");
+      }
+    }
+
+    const atLeastOneProductWithoutDelivery =
+      selectedProductTypes.filter((productType) => productType.noDelivery)
+        .length > 0;
+    if (!atLeastOneProductWithoutDelivery) {
+      newSteps.push("4d_solidarity_contribution");
     }
 
     if (
@@ -238,6 +251,17 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     ) {
       newSteps.push("5a_pickup_location_intro");
       newSteps.push("5b_pickup_location_choice");
+    }
+
+    for (const productType of selectedProductTypes) {
+      if (productType.noDelivery) {
+        newSteps.push(productType.id! + "_intro");
+        newSteps.push(productType.id! + "_order");
+      }
+    }
+
+    if (atLeastOneProductWithoutDelivery) {
+      newSteps.push("4d_solidarity_contribution");
     }
 
     if (settings.showCoopContent) {
@@ -296,6 +320,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             investingMembership={investingMembership}
             setInvestingMembership={setInvestingMembership}
             setShoppingCart={setShoppingCart}
+          />
+        );
+      case "4d_solidarity_contribution":
+        return (
+          <Step4DSolidarityContribution
+            settings={settings}
+            goToNextStep={goToNextStep}
           />
         );
       case "5a_pickup_location_intro":

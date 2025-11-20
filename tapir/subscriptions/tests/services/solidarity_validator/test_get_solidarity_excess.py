@@ -7,19 +7,17 @@ from tapir.subscriptions.services.solidarity_validator import SolidarityValidato
 
 class TestGetSolidarityExcess(SimpleTestCase):
     @patch.object(SolidarityValidator, "get_solidarity_factor_of_subscription")
-    @patch(
-        "tapir.subscriptions.services.solidarity_validator.get_active_and_future_subscriptions"
-    )
+    @patch("tapir.subscriptions.services.solidarity_validator.get_active_subscriptions")
     def test_getSolidarityExcess_default_returnsSumOfSoliFactors(
         self,
-        mock_get_active_and_future_subscriptions: Mock,
+        mock_get_active_subscriptions: Mock,
         mock_get_solidarity_factor_of_subscription: Mock,
     ):
         subscription_1 = Mock()
         subscription_2 = Mock()
         subscription_3 = Mock()
 
-        mock_get_active_and_future_subscriptions.return_value.select_related.return_value = [
+        mock_get_active_subscriptions.return_value.select_related.return_value = [
             subscription_1,
             subscription_2,
             subscription_3,
@@ -44,7 +42,7 @@ class TestGetSolidarityExcess(SimpleTestCase):
 
         self.assertEqual(result, 22)
 
-        mock_get_active_and_future_subscriptions.assert_called_once_with(
+        mock_get_active_subscriptions.assert_called_once_with(
             reference_date=reference_date, cache=cache
         )
         mock_get_solidarity_factor_of_subscription.assert_has_calls(

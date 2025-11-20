@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from tapir.pickup_locations.serializers import PublicPickupLocationSerializer
+from tapir.subscriptions.config import SOLIDARITY_UNIT_OPTIONS
 from tapir.subscriptions.serializers import PublicProductTypeSerializer
 
 
@@ -57,6 +58,8 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step2_text = serializers.CharField()
     step3_title = serializers.CharField()
     step3_text = serializers.CharField()
+    step4d_title = serializers.CharField()
+    step4d_text = serializers.CharField()
     step5a_title = serializers.CharField()
     step5a_text = serializers.CharField()
     step6a_title = serializers.CharField()
@@ -82,6 +85,7 @@ class BestellWizardImagesSerializer(serializers.Serializer):
     step1_background_image = serializers.URLField()
     step2_background_image = serializers.URLField()
     step3_background_image = serializers.URLField()
+    step4d_background_image = serializers.URLField()
     step5_background_image = serializers.URLField()
     step6_background_image = serializers.URLField()
     step8_background_image = serializers.URLField()
@@ -121,6 +125,13 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
     logo_url = serializers.URLField()
     contact_mail_address = serializers.EmailField()
     distribution_channels = serializers.ListField(child=serializers.CharField())
+    solidarity_contribution_unit = serializers.ChoiceField(
+        choices=SOLIDARITY_UNIT_OPTIONS
+    )
+    solidarity_contribution_choices = serializers.ListField(
+        child=serializers.CharField()
+    )
+    solidarity_contribution_minimum = serializers.FloatField(allow_null=True)
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
 

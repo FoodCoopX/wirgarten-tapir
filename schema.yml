@@ -4605,6 +4605,16 @@ components:
           type: array
           items:
             type: string
+        solidarity_contribution_unit:
+          $ref: '#/components/schemas/SolidarityContributionUnitEnum'
+        solidarity_contribution_choices:
+          type: array
+          items:
+            type: string
+        solidarity_contribution_minimum:
+          type: number
+          format: double
+          nullable: true
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -4631,6 +4641,9 @@ components:
       - product_types
       - revocation_rights_explanation
       - show_coop_content
+      - solidarity_contribution_choices
+      - solidarity_contribution_minimum
+      - solidarity_contribution_unit
       - strings
       - student_status_allowed
       - theme
@@ -4748,6 +4761,9 @@ components:
         step3_background_image:
           type: string
           format: uri
+        step4d_background_image:
+          type: string
+          format: uri
         step5_background_image:
           type: string
           format: uri
@@ -4784,6 +4800,7 @@ components:
       - step1_background_image
       - step2_background_image
       - step3_background_image
+      - step4d_background_image
       - step5_background_image
       - step6_background_image
       - step8_background_image
@@ -4806,6 +4823,10 @@ components:
         step3_title:
           type: string
         step3_text:
+          type: string
+        step4d_title:
+          type: string
+        step4d_text:
           type: string
         step5a_title:
           type: string
@@ -4863,6 +4884,8 @@ components:
       - step2_title
       - step3_text
       - step3_title
+      - step4d_text
+      - step4d_title
       - step5a_text
       - step5a_title
       - step6a_text
@@ -8467,6 +8490,14 @@ components:
       - remove_segments
       - static_segments
       - static_segments_subtractive
+    SolidarityContributionUnitEnum:
+      enum:
+      - percentage
+      - absolute
+      type: string
+      description: |-
+        * `percentage` - Prozent
+        * `absolute` - Absolut
     StaticSegment:
       type: object
       properties:

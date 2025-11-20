@@ -13,6 +13,8 @@ export function getStepBackground(
       return settings.images.step2BackgroundImage;
     case "3_product_type_choice":
       return settings.images.step3BackgroundImage;
+    case "4d_solidarity_contribution":
+      return settings.images.step4dBackgroundImage;
     case "5a_pickup_location_intro":
     case "5b_pickup_location_choice":
       return settings.images.step5BackgroundImage;

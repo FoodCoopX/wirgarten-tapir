@@ -50,6 +50,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         return "Genossenschaft";
       case "pickup_location":
         return "Verteilstation";
+      case "solidarity":
+        return "Solidarity";
       case "personal_data":
         return "Persönliche Daten";
       case "feedback":

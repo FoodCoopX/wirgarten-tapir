@@ -1,5 +1,11 @@
 import { TapirTheme } from "../../types/TapirTheme.ts";
-import { BestellWizardImages, BestellWizardStrings, PublicPickupLocation, PublicProductType } from "../../api-client";
+import {
+  BestellWizardImages,
+  BestellWizardStrings,
+  PublicPickupLocation,
+  PublicProductType,
+  SolidarityContributionUnitEnum,
+} from "../../api-client";
 
 export type BestellWizardSettings = {
   theme: TapirTheme;
@@ -24,6 +30,9 @@ export type BestellWizardSettings = {
   logoUrl: string;
   contactMailAddress: string;
   distributionChannels: string[];
+  solidarityContributionUnit: SolidarityContributionUnitEnum;
+  solidarityContributionChoices: string[];
+  solidarityContributionMinimum: number | null;
   strings: BestellWizardStrings;
   images: BestellWizardImages;
 };

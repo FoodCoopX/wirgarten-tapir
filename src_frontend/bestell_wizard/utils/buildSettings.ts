@@ -31,6 +31,9 @@ export function buildSettings(
     logoUrl: baseData.logoUrl,
     contactMailAddress: baseData.contactMailAddress,
     distributionChannels: baseData.distributionChannels,
+    solidarityContributionUnit: baseData.solidarityContributionUnit,
+    solidarityContributionChoices: baseData.solidarityContributionChoices,
+    solidarityContributionMinimum: baseData.solidarityContributionMinimum,
     strings: baseData.strings,
     images: baseData.images,
   };

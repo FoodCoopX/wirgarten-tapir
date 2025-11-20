@@ -31,6 +31,13 @@ const BestellWizardShoppingCartOverlay: React.FC<
   steps,
   setCurrentStep,
 }) => {
+  function getStepName(step: string) {
+    for (const productType of settings.productTypes) {
+      step = step.replace(productType.id!, productType.name);
+    }
+    return step;
+  }
+
   return (
     <>
       <div
@@ -130,7 +137,7 @@ const BestellWizardShoppingCartOverlay: React.FC<
               <ul>
                 {steps.map((step) => (
                   <li key={step} onClick={() => setCurrentStep(step)}>
-                    {step}
+                    {getStepName(step)}
                   </li>
                 ))}
               </ul>

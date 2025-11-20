@@ -8,6 +8,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
+
 from tapir.bestell_wizard.serializers import (
     BestellWizardConfirmOrderRequestSerializer,
     BestellWizardCapacityCheckResponseSerializer,
@@ -42,6 +44,7 @@ from tapir.subscriptions.services.product_capacity_checker import ProductCapacit
 from tapir.subscriptions.services.product_type_lowest_free_capacity_after_date_generic import (
     ProductTypeLowestFreeCapacityAfterDateCalculator,
 )
+from tapir.subscriptions.services.solidarity_validator import SolidarityValidator
 from tapir.subscriptions.services.tapir_order_builder import TapirOrderBuilder
 from tapir.utils.services.tapir_cache import TapirCache
 from tapir.waiting_list.services.waiting_list_entry_confirmation_email_sender import (
@@ -68,7 +71,6 @@ from tapir.wirgarten.utils import (
     get_today,
     legal_status_is_cooperative,
 )
-from tapir_mail.triggers.transactional_trigger import TransactionalTriggerData
 
 
 class BestellWizardView(TemplateView):
@@ -408,6 +410,20 @@ class BestellWizardBaseDataApiView(APIView):
                     cache=self.cache,
                 ).split(",")
             ],
+            "solidarity_contribution_unit": get_parameter_value(
+                key=ParameterKeys.SOLIDARITY_UNIT, cache=self.cache
+            ),
+            "solidarity_contribution_choices": SolidarityValidator.get_solidarity_dropdown_values(
+                cache=self.cache
+            ),
+            "solidarity_contribution_minimum": SolidarityValidator.get_solidarity_contribution_minimum(
+                reference_date=ContractStartDateCalculator.get_next_contract_start_date(
+                    reference_date=get_today(cache=self.cache),
+                    apply_buffer_time=True,
+                    cache=self.cache,
+                ),
+                cache=self.cache,
+            ),
             "strings": self.build_strings_object(cache=self.cache),
             "images": self.build_images_object(cache=self.cache),
         }
@@ -425,6 +441,8 @@ class BestellWizardBaseDataApiView(APIView):
             "step2_text": ParameterKeys.BESTELLWIZARD_STEP2_TEXT,
             "step3_title": ParameterKeys.BESTELLWIZARD_STEP3_TITLE,
             "step3_text": ParameterKeys.BESTELLWIZARD_STEP3_TEXT,
+            "step4d_title": ParameterKeys.BESTELLWIZARD_STEP4D_TITLE,
+            "step4d_text": ParameterKeys.BESTELLWIZARD_STEP4D_TEXT,
             "step5a_title": ParameterKeys.BESTELLWIZARD_STEP5A_TITLE,
             "step5a_text": ParameterKeys.BESTELLWIZARD_STEP5A_TEXT,
             "step6a_title": ParameterKeys.BESTELLWIZARD_STEP6A_TITLE,
@@ -456,6 +474,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step1_background_image": ParameterKeys.BESTELLWIZARD_STEP1_BACKGROUND_IMAGE,
             "step2_background_image": ParameterKeys.BESTELLWIZARD_STEP2_BACKGROUND_IMAGE,
             "step3_background_image": ParameterKeys.BESTELLWIZARD_STEP3_BACKGROUND_IMAGE,
+            "step4d_background_image": ParameterKeys.BESTELLWIZARD_STEP4D_BACKGROUND_IMAGE,
             "step5_background_image": ParameterKeys.BESTELLWIZARD_STEP5_BACKGROUND_IMAGE,
             "step6_background_image": ParameterKeys.BESTELLWIZARD_STEP6_BACKGROUND_IMAGE,
             "step8_background_image": ParameterKeys.BESTELLWIZARD_STEP8_BACKGROUND_IMAGE,

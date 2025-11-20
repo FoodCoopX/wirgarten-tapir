@@ -10,6 +10,8 @@ export function getPhase(step: Step): Phase {
     case "2_first_name":
     case "3_product_type_choice":
       return "intro";
+    case "4d_solidarity_contribution":
+      return "solidarity";
     case "5a_pickup_location_intro":
     case "5b_pickup_location_choice":
       return "pickup_location";
