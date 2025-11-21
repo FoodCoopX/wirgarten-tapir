@@ -1,7 +1,5 @@
 {% extends "wirgarten/registration/registration_wizard.html" %}
-{% load wirgarten %}
-{% load i18n %}
-{% load django_bootstrap5 %}
+{% load django_bootstrap5 i18n wirgarten %}
 {% block cardbody %}
     <div id="warning_no_harvest_shares"
          style="text-align: center;
@@ -39,4 +37,4 @@
     });
 
 </script>
-{% endblock %}
+{% endblock cardbody %}

@@ -2,7 +2,8 @@
 {% load core %}
 {% block head %}
     {% javascript_environment_variables %}
-{% endblock %}
+{% endblock head %}
+
 {% block content %}
     {% csrf_token %}
     <div
@@ -27,7 +28,7 @@
                 subpage = "";
             }
 
-            iframe.src = "{{TAPIR_MAIL_PATH}}" + subpage;
+            iframe.src = "{{ TAPIR_MAIL_PATH }}" + subpage;
 
             const checkIframeUrl = () => {
                 try {
@@ -56,4 +57,4 @@
         });
     </script>
 
-{% endblock %}
+{% endblock content %}

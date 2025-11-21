@@ -1,21 +1,17 @@
 {% extends "core/base.html" %}
 
-{% load django_bootstrap5 %}
-{% load tapir_static %}
-{% load i18n %}
-{% load wirgarten %}
+{% load django_bootstrap5 i18n tapir_static wirgarten %}
 
 
 {% block content %}
 <div style="margin:2em" class="container">
     <div class="card">
         <div class="card-header">
-            <h5>Lieferungen - {{member.first_name}} {{member.last_name}}</h5>
+            <h5>Lieferungen - {{ member.first_name }} {{ member.last_name }}</h5>
         </div>
         <div class="card-body">
             {% include 'wirgarten/member/member_deliveries_table.html' with member=member deliveries=deliveries %}
         </div>
     </div>
 </div>
-{% endblock %}
-
+{% endblock content %}

@@ -1,10 +1,9 @@
-{% load tapir_static %}
-{% load i18n %}
+{% load i18n tapir_static %}
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'wirgarten/css/form-modal.css' %}">
 <link rel="stylesheet" href="{% static 'wirgarten/css/loading-spinner.css' %}">
-{% endblock %}
+{% endblock head %}
 
 <div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel"
      aria-hidden="true">

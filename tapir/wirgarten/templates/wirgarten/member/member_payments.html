@@ -1,9 +1,5 @@
 {% extends "core/base.html" %}
-{% load django_bootstrap5 %}
-{% load tapir_static %}
-{% load i18n %}
-{% load wirgarten %}
-{% load accounts %}
+{% load accounts django_bootstrap5 i18n tapir_static wirgarten %}
 {% block content %}
     <div style="margin:2em" class="container">
         <div class="card">
@@ -146,10 +142,10 @@
     let diff, date;
 
     {% for payment in payments %}
-    date = moment("{{payment.due_date|date:'Y-m-d'}}");
+        date = moment("{{ payment.due_date|date:'Y-m-d' }}");
     diff = now.to(date);
-    document.getElementById("datediff-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = diff;
-    document.getElementById("date-{{payment.due_date|date:'Y-m-d'}}-{{payment.mandate_ref}}").innerText = date.format("LL");
+        document.getElementById("datediff-{{ payment.due_date|date:'Y-m-d' }}-{{ payment.mandate_ref }}").innerText = diff;
+        document.getElementById("date-{{ payment.due_date|date:'Y-m-d' }}-{{ payment.mandate_ref }}").innerText = date.format("LL");
     {% endfor %}
 
     const loadEditForm = (memberId, mandateRefId, paymentDueDate, calculatedAmount, memberFullName, paymentType) => {
@@ -201,4 +197,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     </script>
-{% endblock %}
+{% endblock content %}

@@ -968,6 +968,28 @@ files = [
 ]
 
 [[package]]
+name = "djade"
+version = "1.6.0"
+description = "A Django template formatter."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    { file = "djade-1.6.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:e43eb2227a02599df038ba64b7a0c8599d6cef9d0de978ac635592d58299d477" },
+    { file = "djade-1.6.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:fe820c5be3d08952ad42ea9ee5475e1c60d32326fae57ee98a4887e99d2d1765" },
+    { file = "djade-1.6.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4dd8a7919f1fa953e332548aeb3b793dea0563fc5e9f89017da6fe7318b603a2" },
+    { file = "djade-1.6.0-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:113a8db4657bd488ecf383c3db0953530012afbccb596302a294c7b629573269" },
+    { file = "djade-1.6.0-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:53511e1d3d55ff408fe11edc7bc982b0af53ab6225870d031804e209ec0515d8" },
+    { file = "djade-1.6.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e9ed89688c9baa733cbf4ec08b8cc0102bdd1b539bd0775f5ad5be98e20ab934" },
+    { file = "djade-1.6.0-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:4c4c42d86f317742ad1d33f4ca85d4d507530b7cfbfc9b2dc015dda4d06199ad" },
+    { file = "djade-1.6.0-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:a99661ad8b155c3aa62ac2fdb3879df0e5a5bcb1c66f8a142f3964cd2a0bb1cb" },
+    { file = "djade-1.6.0-py3-none-win32.whl", hash = "sha256:4555387841d0ef6290ff8221ebea48321262ff1011874debd30010e5deba0ff3" },
+    { file = "djade-1.6.0-py3-none-win_amd64.whl", hash = "sha256:d6111763d133a7a85db0f6f0e59586fdbbd08e6c22238e84de730bb1a21cbab4" },
+    { file = "djade-1.6.0-py3-none-win_arm64.whl", hash = "sha256:c52efaa5d64572ddc4a986d74202195c8574f969877fcfbdbea3a41718334804" },
+    { file = "djade-1.6.0.tar.gz", hash = "sha256:a7f173d6949ce248ee538ab85676e3277b4b4ae956c3383f96348355ab8983b7" },
+]
+
+[[package]]
 name = "django"
 version = "5.2.1"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
@@ -4094,4 +4116,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "55a52eb7e82418d01b413f762e0bbf6adfcbe0e9ad78955a6b1e4cc4c0de8074"
+content-hash = "0d18faf68b2da51abd5c7e04fb31b333c4666012ee1cc684f2bcadf2ddd3299b"

@@ -1,5 +1,4 @@
-{% load configuration %}
-{% load wirgarten %}
+{% load configuration wirgarten %}
 <div id="cancellation-confirmation"
      style="display:none"
      class="alert alert-success">
@@ -236,7 +235,7 @@
    };
 
     const handleCancellation = () => {
-        ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{contract_end_date}}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
+        ConfirmationModal.open('Möchtest du deinen Ernteanteil wirklich nicht verlängern?', 'Dein Vertrag läuft noch bis zum <b>{{ contract_end_date }}</b> und wird nicht weiter verlängert.', 'Ernteanteil nicht verlängern', 'danger', () => {
             window.location.replace("{% url 'wirgarten:member_cancel_contract' pk=member.id %}");
         })
     }
@@ -244,7 +243,7 @@
     const handleRenewal = () => {
         {% if next_available_product_types %}
         const renewalModal = new bootstrap.Modal(document.getElementById("renew-modal"));
-        if ({{next_available_product_types|safe}}.includes("{{base_product_type_name}}")) {
+            if ({{ next_available_product_types|safe }}.includes("{{ base_product_type_name }}")) {
             renewalModal.show()
         }
         else {

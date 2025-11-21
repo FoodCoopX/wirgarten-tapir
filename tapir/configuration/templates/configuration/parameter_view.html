@@ -1,8 +1,5 @@
 {% extends "core/base.html" %}
-{% load configuration %}
-{% load django_bootstrap5 %}
-{% load i18n %}
-{% load tapir_static %}
+{% load configuration django_bootstrap5 i18n tapir_static %}
 {% block content %}
     <div style="margin-top: 1em;">
         <form id="form" method="post">
@@ -94,4 +91,4 @@ divElement.addEventListener("scroll", function() {
 
     </script>
     <script src="{% static 'configuration/js/search.js' %}"></script>
-{% endblock %}
+{% endblock content %}

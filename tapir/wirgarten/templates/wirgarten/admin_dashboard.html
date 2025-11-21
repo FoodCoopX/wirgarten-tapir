@@ -1,8 +1,5 @@
 {% extends "core/base.html" %}
-{% load django_vite %}
-{% load i18n %}
-{% load wirgarten %}
-{% load tapir_static %}
+{% load django_vite i18n tapir_static wirgarten %}
 {% block head %}
     <title xmlns="http://www.w3.org/1999/html">
         {% block title %}Admin Dashboard{% endblock %}
@@ -11,7 +8,8 @@
           href="{% static 'wirgarten/css/admin_dashboard.css' %}">
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     {% vite_asset "dashboard/dashboard_entry.tsx" %}
-{% endblock %}
+{% endblock head %}
+
 {% block content %}
     {% if no_growing_period %}
         <div style="justify-content: center; display: flex">
@@ -283,23 +281,22 @@
     })
 
 
-
-  const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{ cancellations_other_reasons| safe}}.map((reason) => `<li>${reason}</li>`).join(''))
+  const showOtherCancellationReasons = () => ConfirmationModal.open('Sonstige Kündigungsgründe', {{ cancellations_other_reasons|safe }}.map((reason) => `<li>${reason}</li>`).join(''))
 
   new Chart(document.getElementById('product-capacity-chart'), {
     type: 'bar',
     data: {
-      links: {{ current_capacity_links | safe}},
-    labels: {{ current_capacity_labels | safe}},
+        links: {{ current_capacity_links|safe }},
+        labels: {{ current_capacity_labels|safe }},
     datasets: [
     {
       label: 'Vergeben',
-      data: {{ current_used_capacity | safe}},
+        data: {{ current_used_capacity|safe }},
     backgroundColor: COLORS[4]
         },
     {
       label: 'Noch Frei',
-      data: {{ current_free_capacity | safe}},
+        data: {{ current_free_capacity|safe }},
     backgroundColor: COLORS[0]
             },
   ]
@@ -349,17 +346,17 @@
   new Chart(document.getElementById('next-period-product-capacity-chart'), {
     type: 'bar',
     data: {
-      links: {{ next_capacity_links | safe}},
-    labels: {{ next_capacity_labels | safe}},
+        links: {{ next_capacity_links|safe }},
+        labels: {{ next_capacity_labels|safe }},
     datasets: [
     {
       label: 'Vergeben',
-      data: {{ next_used_capacity | safe}},
+        data: {{ next_used_capacity|safe }},
     backgroundColor: COLORS[4]
         },
     {
       label: 'Verfügbar',
-      data: {{ next_free_capacity | safe}},
+        data: {{ next_free_capacity|safe }},
     backgroundColor: COLORS[0]
             },
   ]
@@ -409,8 +406,8 @@
   new Chart(document.getElementById('traffic-source-chart'), {
     type: 'bar',
     data: {
-      labels: {{ traffic_source_labels | safe}},
-    datasets: {{ traffic_source_data | safe}}.map((data, index) => {
+        labels: {{ traffic_source_labels|safe }},
+        datasets: {{ traffic_source_data|safe }}.map((data, index) => {
       return {
         label: data.label,
         data: data.data,
@@ -449,8 +446,8 @@
   new Chart(document.getElementById('cancellations-chart'), {
     type: 'bar',
     data: {
-      labels: {{ cancellations_labels | safe}},
-    datasets: {{ cancellations_data | safe}}.map((data, index) => {
+        labels: {{ cancellations_labels|safe }},
+        datasets: {{ cancellations_data|safe }}.map((data, index) => {
       return {
         label: data.label,
         data: data.data,
@@ -466,10 +463,10 @@
   new Chart(document.getElementById('cancellation-reason-chart'), {
     type: 'bar',
     data: {
-      labels: {{ cancellation_reason_labels | safe}},
+        labels: {{ cancellation_reason_labels|safe }},
     datasets: [{
       label: "Kündigungsgrund %",
-      data: {{ cancellation_reason_data | safe}},
+        data: {{ cancellation_reason_data|safe }},
     backgroundColor: COLORS
       }]
     },
@@ -492,9 +489,9 @@
   new Chart(document.getElementById('harvest-share-variants-chart'), {
     type: 'doughnut',
     data: {
-      labels: {{ harvest_share_variants_labels | safe}},
+        labels: {{ harvest_share_variants_labels|safe }},
     datasets: [{
-      data: {{ harvest_share_variants_data | safe}},
+        data: {{ harvest_share_variants_data|safe }},
     backgroundColor: COLORS
       }]
     }
@@ -503,10 +500,10 @@
   new Chart(document.getElementById('cancellation-coop-shares'), {
     type: 'bar',
     data: {
-      labels: {{ cancelled_coop_shares_labels | safe}},
+        labels: {{ cancelled_coop_shares_labels|safe }},
     datasets: [{
       label: "Gekündigtes Geschäftsguthaben",
-      data: {{ cancelled_coop_shares_data | safe}},
+        data: {{ cancelled_coop_shares_data|safe }},
     backgroundColor: COLORS.reverse()
       }]
     },
@@ -529,10 +526,10 @@
   new Chart(document.getElementById('cancellation-association_memberships'), {
       type: 'bar',
       data: {
-          labels: {{ cancelled_association_memberships_labels | safe}},
+          labels: {{ cancelled_association_memberships_labels|safe }},
           datasets: [{
               label: "Gekündigte Mitgliedschaften pro Jahr (Anzahl)",
-              data: {{ cancelled_association_memberships_data | safe}},
+              data: {{ cancelled_association_memberships_data|safe }},
               backgroundColor: COLORS.reverse()
           }]
       },
@@ -554,4 +551,4 @@
 
         </script>
     {% endif %}
-{% endblock %}
+{% endblock content %}

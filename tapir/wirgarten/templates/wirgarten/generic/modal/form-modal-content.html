@@ -1,9 +1,6 @@
 {% extends 'wirgarten/base.html' %}
 
-{% load django_bootstrap5 %}
-{% load i18n %}
-{% load tapir_static %}
-{% load wirgarten %}
+{% load django_bootstrap5 i18n tapir_static wirgarten %}
 
 {% block content %}
     <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
@@ -19,11 +16,11 @@
             <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
                  class="form-fields">
                 {% for field in form %}
-                    <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field"
+                    <div style="grid-column:span {{ form.colspans|get_value:field.name|default:1 }}" class="form-field"
                          id="{{ field.name }}">
                         {% if field.name == 'member' or field.name == 'member__pickup_location' or field.name == 'product' or field.name == 'product__type' or field.name == 'receiver' %}
                             <div class="mb-3 searchable-select">
-                                <label class="form-label" for="id_{{field.name}}">{{field.label}}</label>
+                                <label class="form-label" for="id_{{ field.name }}">{{ field.label }}</label>
                                 {{ field }}
                             </div>
                         {% else %}
@@ -43,9 +40,9 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal" onclick="closeModal()">
-                {% translate 'Abbrechen'%}
+                {% translate 'Abbrechen' %}
             </button>
-            <button id="submit-btn" type="submit" class="btn btn-primary"> {% translate 'Speichern'%}</button>
+            <button id="submit-btn" type="submit" class="btn btn-primary"> {% translate 'Speichern' %}</button>
         </div>
     </form>
 
@@ -65,5 +62,4 @@
         }
     </script>
 
-{% endblock %}
-
+{% endblock content %}

@@ -1,13 +1,9 @@
 {% extends "core/base.html" %}
-{% load django_bootstrap5 %}
-{% load django_vite %}
-{% load i18n %}
-{% load tapir_static %}
-{% load wirgarten %}
-{% load configuration %}
+{% load configuration django_bootstrap5 django_vite i18n tapir_static wirgarten %}
 {% block head %}
     {% vite_asset 'product_config/product_config_entry.tsx' %}
 {% endblock head %}
+
 {% block content %}
     {% csrf_token %}
     <div style="margin-top: 2em;
@@ -185,32 +181,32 @@
             </div>
             <div id="list_details_growing_periods">
                 {% for period in growing_periods %}
-                <div id="details_growing_period_{{period.id}}" style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr" class="card-body">
+                <div id="details_growing_period_{{ period.id }}" style="display:none; grid-column-gap: 1em; grid-template-rows: 0fr 1fr" class="card-body">
                     <div style="padding-bottom: 1em; display: grid; grid-template-columns: 10em 10em 1fr">
                         <div style="grid-column: 1/2">{% translate 'Vertragsperiode' %}</div>
                         <div style="grid-column: 2/3">{% translate 'Von' %}: <strong>
-                            {{period|get_value:'start_date' }}</strong></div>
+                            {{ period|get_value:'start_date' }}</strong></div>
                         <div style="grid-column: 3/4">{% translate 'Bis' %}: <strong>
-                            {{period|get_value:'end_date' }}</strong></div>
+                            {{ period|get_value:'end_date' }}</strong></div>
                     </div>
                     <div style="overflow: auto;" class="list_details_product_types">
                         {% for product_type in product_types %}
-                        <div id="details_product_type_{{product_type.id}}{{period.id}}" style="display:none; grid-template-columns: 1fr 1fr">
+                        <div id="details_product_type_{{ product_type.id }}{{ period.id }}" style="display:none; grid-template-columns: 1fr 1fr">
                             <div>
                                 <div style="grid-column: 1/2; display: grid;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                     <p style="grid-area: 1/1/2/2">Product Type:</p>
                                     <strong style="grid-area: 1/2/2/3">{{ product_type.name }}</strong>
                                     <p style="grid-area: 2/1/3/2">Liefer-/Abholzyklus:</p>
-                                    <strong style="grid-column: 2/2/3/3">{{product_type.delivery_cycle}}</strong>
+                                    <strong style="grid-column: 2/2/3/3">{{ product_type.delivery_cycle }}</strong>
                                     <p style="grid-column: 3/2/4/3">Tax-Rate:</p>
-                                    <strong style="grid-column: 3/2/4/3">{{tax_rates|get_value:product_type.id}}
+                                    <strong style="grid-column: 3/2/4/3">{{ tax_rates|get_value:product_type.id }}
                                         %</strong>
                                 </div>
                             </div>
                             <div class="list_details_products" style="grid-column: 2/3; flex-direction: column">
                                 {% for product in products %}
                                 {% if product.type.id == product_type.id %}
-                                <div id="details_product_{{product.id}}{{period.id}}" style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
+                                <div id="details_product_{{ product.id }}{{ period.id }}" style="display: none;grid-template-rows: 4fr 4fr; grid-template-columns: 1fr 1fr">
                                     <p style="grid-area: 1/1/2/2">Product:</p>
                                     <strong style="grid-area: 1/2/2/3">{{ product.name }}</strong>
                                     <p style="grid-column: 2/1/3/2">Price:</p>
@@ -236,10 +232,10 @@
     </div>
     <script src="{% static 'wirgarten/js/product_cfg/period_product_cfg.js' %}"></script>
     <script>
-    const allowedActions = JSON.parse('{{ buttons | safe }}');
-    init('{{ c_p_map | safe }}', '{{ pe_c_map | safe }}');
+        const allowedActions = JSON.parse('{{ buttons|safe }}');
+        init('{{ c_p_map|safe }}', '{{ pe_c_map|safe }}');
 
 
 
     </script>
-{% endblock %}
+{% endblock content %}

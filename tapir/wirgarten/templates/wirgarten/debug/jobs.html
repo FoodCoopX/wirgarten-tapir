@@ -3,8 +3,8 @@
 {% load wirgarten %}
 
 {% block card_header %}
-<h4>{{jobs | length}} Jobs</h4>
-{% endblock %}
+    <h4>{{ jobs|length }} Jobs</h4>
+{% endblock card_header %}
 
 {% block table_head %}
 <tr>
@@ -13,21 +13,21 @@
     <th>Schedule</th>
     <th></th>
 </tr>
-{% endblock %}
+{% endblock table_head %}
 
 {% block table_body %}
 {% for job in jobs %}
 
-<tr id="job-{{job.name}}" class="tr-clickable">
+    <tr id="job-{{ job.name }}" class="tr-clickable">
     <td>{{ job.name }}</td>
     <td>{{ job.task }}</td>
     <td>{{ job.schedule }}</td>
-    <td style="text-align: right"><span onclick="handleRun('{{job.name}}', '{{job.task}}')"
+        <td style="text-align: right"><span onclick="handleRun('{{ job.name }}', '{{ job.task }}')"
             class="material-icons">play_circle_outline</span></td>
 </tr>
 
 {% endfor %}
-{% endblock %}
+{% endblock table_body %}
 
 {% block script %}
 <script>
@@ -48,4 +48,4 @@
         })
     }
 </script>
-{% endblock %}
+{% endblock script %}

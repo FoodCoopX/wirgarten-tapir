@@ -54,10 +54,10 @@
     let diff, date;
 
     {% for delivery in deliveries %}
-    date = moment("{{delivery.delivery_date}}");
+        date = moment("{{ delivery.delivery_date }}");
     diff = now.to(date);
-    document.getElementById("datediff-{{delivery.delivery_date}}").innerText = diff;
-    document.getElementById("date-{{delivery.delivery_date}}").innerText = date.format("LL");
+        document.getElementById("datediff-{{ delivery.delivery_date }}").innerText = diff;
+        document.getElementById("date-{{ delivery.delivery_date }}").innerText = date.format("LL");
     {% endfor %}
 
     </script>

@@ -1,23 +1,19 @@
 {% extends "wirgarten/base.html" %}
-{% load django_bootstrap5 %}
-{% load i18n %}
-{% load tapir_static %}
-{% load wirgarten %}
-{% load register %}
-{% load configuration %}
+{% load configuration django_bootstrap5 i18n register tapir_static wirgarten %}
 {% block head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'wirgarten/css/summary.css' %}">
     <link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}">
     <link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}">
-    {% with "organisation.theme"|parameter as theme %}
+    {% with theme="organisation.theme"|parameter %}
         <link rel="stylesheet"
               href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}" />
     {% endwith %}
     <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
     {{ wizard.form.media }}
     {{ form.media }}
-{% endblock %}
+{% endblock head %}
+
 {% block content %}
     <form action="" method="post">
         {% csrf_token %}
@@ -97,4 +93,4 @@
         })
     }
     </script>
-{% endblock %}
+{% endblock content %}

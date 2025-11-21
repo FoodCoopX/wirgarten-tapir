@@ -1,6 +1,4 @@
-{% load django_bootstrap5 %}
-{% load tapir_static %}
-{% load wirgarten %}
+{% load django_bootstrap5 tapir_static wirgarten %}
 
 <div>
     <strong><a target="_blank" href="https://maps.google.com">1) Suche den Ort auf Google Maps</a></strong><br/>
@@ -20,7 +18,7 @@
 <div style="display: grid; grid-column-gap: 1em; grid-template-columns:repeat({{ form.n_columns|default:'1' }}, 1fr);"
      class="form-fields">
     {% for field in form %}
-    <div style="grid-column:span {{form.colspans|get_value:field.name|default:1}}" class="form-field"
+        <div style="grid-column:span {{ form.colspans|get_value:field.name|default:1 }}" class="form-field"
          id="{{ field.name }}">
         {% bootstrap_field field %}
     </div>
@@ -28,4 +26,4 @@
 </div>
 <script src="{% static 'wirgarten/js/pickup-location-edit-form.js' %}">
 </script>
-<script>initCapas({{form.product_types|safe}})</script>
+<script>initCapas({{ form.product_types|safe }})</script>

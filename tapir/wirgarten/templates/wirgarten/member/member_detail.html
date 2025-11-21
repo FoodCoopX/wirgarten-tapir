@@ -1,23 +1,18 @@
 {% extends "core/base.html" %}
-{% load django_vite %}
-{% load tapir_static %}
-{% load i18n %}
-{% load log %}
-{% load accounts %}
-{% load wirgarten %}
-{% load configuration %}
+{% load accounts configuration django_vite i18n log tapir_static wirgarten %}
 {% block head %}
     {{ block.super }}
     <title>
-        {% block title %}Mitgliederbereich - {{ 'wirgarten.site.name' | parameter }}{% endblock %}
+        {% block title %}Mitgliederbereich - {{ 'wirgarten.site.name'|parameter }}{% endblock %}
     </title>
     <link rel="stylesheet"
           href="{% static 'wirgarten/css/member_detail.css' %}">
     {% vite_asset 'member_profile/member_profile_entry.tsx' %}
 {% endblock head %}
+
 {% block content %}
     {% csrf_token %}
-    {% with False as lock_functions %}
+    {% with lock_functions=False %}
         <div id="member-detail-container">
             <div id="member-detail-left-column">
                 {% include 'wirgarten/member/member_detail_alert.html' with renewal_status=renewal_status contract_end_date=contract_end_date member=object next_period=next_period show_trial_period_notice=show_trial_period_notice next_trial_end_date=next_trial_end_date show_renewal_warning=show_renewal_warning base_product_type_name=base_product_type_name %}
@@ -77,7 +72,7 @@
                             </div>
                         {% endif %}
                         {% for product_type_name in subscriptions.keys %}
-                            {% with product_types_by_name|get_value:product_type_name as product_type %}
+                            {% with product_type=product_types_by_name|get_value:product_type_name %}
                                 <div class="card">
                                     <div class="card-body">
                                         {% if not product_type.single_subscription_only %}
@@ -122,7 +117,7 @@
                                     <div class="card-footer"
                                          style="display:flex;
                                                 justify-content:space-between">
-                                        {% with sub_totals|get_value:product_type_name|default:0 as sub_total %}
+                                        {% with sub_total=sub_totals|get_value:product_type_name|default:0 %}
                                             <span><strong>{{ sub_total|format_currency }}&nbsp;</strong><small>€ / Monat</small>
                                             </span>
                                         {% endwith %}
@@ -196,7 +191,7 @@
                                     <h5>Bei Fragen wende dich gerne an:</h5>
                                     <a class="btn tapir-btn btn-warning"
                                        target="_blank"
-                                       href="{{ 'wirgarten.site.faq_link' | parameter }}">
+                                       href="{{ 'wirgarten.site.faq_link'|parameter }}">
                                         <span class="material-icons">link</span>{% translate 'Zum FAQ' %}
                                     </a>
                                 </div>
@@ -216,7 +211,7 @@
                                            href="mailto:{{ 'wirgarten.site.admin_email'|parameter }}"
                                            target="_blank">📧&nbsp;&nbsp;{{ 'wirgarten.site.admin_email'|parameter }}</a>
                                     </div>
-                                    {% with 'wirgarten.site.admin_image'|parameter as image %}
+                                    {% with image='wirgarten.site.admin_image'|parameter %}
                                         {% if image %}
                                         <img src="{{ image }}"
                                              alt="{{ 'wirgarten.site.admin_name'|parameter }}"
@@ -378,7 +373,7 @@
                 {% if object.iban and object.pickup_location %}
                     FormModal.load(`{% url 'wirgarten:member_add_subscription' object.pk %}?productType=` + productType, waitlist ? "Warteliste" : productType + ' bearbeiten');
                 {% else %}
-                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br />- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br />- Bitte wähle einen Abholort aus.{%endif%}")
+                    ConfirmationModal.open("Bitte vervollständige deine Daten", "<strong>Fehler:</strong>{% if not object.iban %}<br />- Bitte trage deine Bankverbindung ein.{% endif %}{% if not object.pickup_location %}<br />- Bitte wähle einen Abholort aus.{% endif %}")
                 {% endif %}
             }
 

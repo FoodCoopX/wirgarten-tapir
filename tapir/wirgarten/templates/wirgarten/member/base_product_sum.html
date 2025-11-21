@@ -1,5 +1,4 @@
-{% load configuration %}
-{% load tapir_static %}
+{% load configuration tapir_static %}
 <div style="width: 100%; text-align: right; font-size: 1.25rem">
     = <strong><span id="harvest_shares_total">0.00</span> €</strong> inkl. MwSt /
     Monat
@@ -8,21 +7,21 @@
 <script>
     var originalTotal = 0;
     document.addEventListener("DOMContentLoaded", () => {
-        const basePrices = "{{form.harvest_shares}}".split(';')[0]
+        const basePrices = "{{ form.harvest_shares }}".split(';')[0]
         originalTotal = basePrices.split(',').map(calculatePrice).reduce((a, b) => a + b);
         let growingPeriodSelect = document.getElementById("id_growing_period");
         if (!growingPeriodSelect) {
             growingPeriodSelect = document.getElementById("id_base_product-growing_period");
         }
         if (!growingPeriodSelect) {
-            initHarvestShareSummary(basePrices, {{ form.solidarity_total | safe }}[0], "{{form.solidarity_unit}}")
+            initHarvestShareSummary(basePrices, {{ form.solidarity_total|safe }}[0], "{{ form.solidarity_unit }}")
         } else {
             growingPeriodSelect.addEventListener("change", function () {
-                const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
-                initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], "{{form.solidarity_unit}}")
+                const prices = "{{ form.harvest_shares }}".split(';')[growingPeriodSelect.selectedIndex]
+                initHarvestShareSummary(prices, {{ form.solidarity_total|safe }}[growingPeriodSelect.selectedIndex], "{{ form.solidarity_unit }}")
             });
-            const prices = "{{form.harvest_shares}}".split(';')[growingPeriodSelect.selectedIndex]
-            initHarvestShareSummary(prices, {{ form.solidarity_total | safe }}[growingPeriodSelect.selectedIndex], "{{form.solidarity_unit}}")
+            const prices = "{{ form.harvest_shares }}".split(';')[growingPeriodSelect.selectedIndex]
+            initHarvestShareSummary(prices, {{ form.solidarity_total|safe }}[growingPeriodSelect.selectedIndex], "{{ form.solidarity_unit }}")
         }
     })
 </script>

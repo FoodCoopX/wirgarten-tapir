@@ -1,7 +1,5 @@
 {% extends 'core/base.html' %}
-{% load django_bootstrap5 %}
-{% load wirgarten %}
-{% load tapir_static %}
+{% load django_bootstrap5 tapir_static wirgarten %}
 {% block content %}
     <div style="margin-top: 1em">
         <div class="card">
@@ -221,4 +219,4 @@
         </div>
     </div>
     <script src="{% static 'wirgarten/js/new_contracts_overview.js' %}"></script>
-{% endblock %}
+{% endblock content %}

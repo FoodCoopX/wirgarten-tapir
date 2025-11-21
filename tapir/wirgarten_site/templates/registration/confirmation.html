@@ -1,13 +1,9 @@
-{% extends "wirgarten/base.html" %} {% load django_bootstrap5 %}
-{% load i18n %}
-{% load tapir_static %}
-{% load wirgarten %}
-{% load configuration %}
+{% extends "wirgarten/base.html" %} {% load configuration django_bootstrap5 i18n tapir_static wirgarten %}
 {% block head %}
     {{ wizard.form.media }}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'wirgarten/css/wizard.css' %}"/>
-    {% with "organisation.theme"|parameter as theme %}
+    {% with theme="organisation.theme"|parameter %}
         <link
                 rel="stylesheet"
                 href="{% static 'core/themes/'|add:theme|add:'/css/custom.css' %}"
@@ -15,7 +11,8 @@
     {% endwith %}
     <link rel="stylesheet" href="{% static 'wirgarten/css/form.css' %}"/>
     <script src="{% static 'core/js/url-functions.js' %}"></script>
-{% endblock %}
+{% endblock head %}
+
 {% block content %}
     <div style="margin-top: 4em" class="container wizard-container">
         <div class="card m-2">
@@ -28,11 +25,11 @@
                         style="
                                 {% if "organisation.theme"|parameter == "l2g" %}
                                     background-image: url({% static 'l2g/registration/confirmation.jpg' %});
-                                    {% elif  "organisation.theme"|parameter == "mm" %}
+                                {% elif "organisation.theme"|parameter == "mm" %}
                                     background-image: url({% static 'mm/registration/confirmation.jpg' %});
-                                {% elif  "organisation.theme"|parameter == "g9" %}
+                                {% elif "organisation.theme"|parameter == "g9" %}
                                     background-image: url({% static 'g9/registration/confirmation.webp' %});
-                                {% elif  "organisation.theme"|parameter == "gkh" %}
+                                {% elif "organisation.theme"|parameter == "gkh" %}
                                     background-image: url({% static 'gkh/registration/confirmation.webp' %});
                                 {% else %}
                                     background-image: url({% static 'lueneburg/registration/confirmation.jpg' %});
@@ -117,4 +114,4 @@
             };
         });
     </script>
-{% endblock %}
+{% endblock content %}

@@ -1,9 +1,5 @@
 {% extends 'wirgarten/generic/filter-list.html' %}
-{% load i18n %}
-{% load core %}
-{% load wirgarten %}
-{% load tapir_static %}
-{% load django_bootstrap5 %}
+{% load core django_bootstrap5 i18n tapir_static wirgarten %}
 {% block card_header %}
     <h4>{{ total_contracts|default:0 }} {% translate 'Verträge' %}</h4>
     <span style="display: flex; flex-direction:row;">
@@ -14,7 +10,8 @@
         <div style="width: 1em"></div>
         {% include 'wirgarten/generic/action-button.html' with onclick='handleExport()' title='Gefilterte Liste exportieren' type='success' icon='download' %}
     </span>
-{% endblock %}
+{% endblock card_header %}
+
 {% block table_head %}
     <tr>
         <th></th>
@@ -31,7 +28,8 @@
         <th style="text-align:center">{% translate "Betrag" %}</th>
         <th style="text-align:center">{% translate "Abholort" %}</th>
     </tr>
-{% endblock %}
+{% endblock table_head %}
+
 {% block table_body %}
     {% for entry in object_list %}
         {% create_range entry.quantity as range %}
@@ -83,14 +81,15 @@
              color: var(--bs-warning)"
       class="material-icons">warning</span></span>&nbsp;
                         {% endif %}
-                        {{ entry.total_price | format_currency }} €
+                        {{ entry.total_price|format_currency }} €
                     {% endif %}
                 </td>
                 <td style="text-align:center">{{ entry.member.pickup_location.name }}</td>
             </tr>
         {% endfor %}
     {% endfor %}
-{% endblock %}
+{% endblock table_body %}
+
 {% block script %}
     <script>
     const handleExport = () => {
@@ -150,4 +149,4 @@
 
     activateRow()
     </script>
-{% endblock %}
+{% endblock script %}

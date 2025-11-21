@@ -1,12 +1,11 @@
-{% load tapir_static %}
-{% load configuration %}
+{% load configuration tapir_static %}
 {% block head %}
     <title>
         {% block title %}Tapir{% endblock %}
     </title>
     <link rel="stylesheet"
           href="{% static 'core/bootstrap/5.1.3/css/bootstrap.min.css' %}">
-    {% with "organisation.theme"|parameter as theme %}
+    {% with theme="organisation.theme"|parameter %}
         <link rel="shortcut icon"
               type="image/png"
               href="{% static 'core/themes/'|add:theme|add:'/favicon.ico' %}" />
@@ -18,7 +17,7 @@
     <link rel="stylesheet"
           href="{% static 'core/css/selectize.default.min.css' %}" />
     <script src="{% static 'core/jQuery/jquery-3.5.1.min.js' %}"></script>
-{% endblock %}
+{% endblock head %}
 {% include 'wirgarten/generic/modal/form-modal.html' %}
 {% block content %}{% endblock %}
 <script src="{% static 'core/bootstrap/5.1.3/js/bootstrap.bundle.min.js' %}"></script>

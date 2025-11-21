@@ -3,6 +3,7 @@
 {% block head %}
     {% vite_asset 'waiting_list/waiting_list_entry.tsx' %}
 {% endblock head %}
+
 {% block content %}
     {% csrf_token %}
     <span id="waiting_list"></span>
