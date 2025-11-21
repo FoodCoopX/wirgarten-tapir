@@ -1,35 +1,53 @@
 {% load tapir_static %}
 <p>
-    Dein Erntevertrag läuft 12 Monate, Start ist Anfang April.
-    Damit verschaffst du dem Gemüsekollektiv Planungssicherheit: Unser Team weiß so bereits ein Jahr im
-    Voraus, dass die Betriebskosten gedeckt sind und die Ernte garantiert abgenommen wird.
-    So können wir das Gemüse viel nachhaltiger anbauen und nichts wird weggeschmissen.
+    Schön, dass du Teil unserer Solidarischen Landwirtschaft wirst. Dein
+    Erntevertrag läuft 12 Monate, Start ist Anfang April. Damit verschaffst du dem
+    Gemüsekollektiv Planungssicherheit: Unser Team weiß so bereits ein Jahr im
+    Voraus, dass die Betriebskosten gedeckt sind und die Ernte garantiert
+    abgenommen wird. So können wir das Gemüse viel nachhaltiger anbauen und nichts
+    wird weggeschmissen.
 </p>
 <p>
-    Ein Ernteanteil beinhaltet in der Regel etwa 4 - 6 kg Gemüse. Beispiele für die Zusammensetzung findet ihr hier:
-    <a href="https://gemuesekollektiv.org/gemuese.html">https://gemuesekollektiv.org/gemuese.html</a>.
-    Kleinere Anteile oder halbe Anteile werden nicht vergeben, du kannst dir den Anteil aber gerne selbstorganisert
-    mit Freund*innen oder Nachbar*innen teilen.
+    Ein Ernteanteil beinhaltet in der Regel etwa 4 - 6 kg Gemüse. Beispiele für
+    die Zusammensetzung findet ihr hier:
+    <a href="https://gemuesekollektiv.org/gemuese.html"
+    >https://gemuesekollektiv.org/gemuese.html</a
+    >. Kleinere Anteile oder halbe Anteile werden nicht vergeben, du kannst dir
+    den Anteil aber gerne selbstorganisert mit Freund_innen oder Nachbar_innen
+    teilen.
 </p>
 <p>
-    Wenn du Fragen dazu hast, schreib uns eine Mail an <a href="mailto:kontakt@gemuesekollektiv.org">kontakt@gemuesekollektiv.org</a>
+    Du kannst unten deinen finanziellen Beitrag selber festlegen. Der Richtwert
+    für die neue Saison beträgt 100 €/Monat. Wir werden uns im Laufe des März
+    melden, wenn unser Budget nicht gedeckt ist.
 </p>
-<div style="display:grid;
-            grid-template-columns: repeat(1, fit-content(40%));
-            grid-template-rows: auto;
-            grid-gap: 1em; justify-content: center;">
-    <div style="display:flex;flex-direction:column">
-        <img class="img-fluid" src="{% static 'gkh/registration/harvest_share.webp' %}"/>
-        <div style="margin: 1em; text-align:center">
+<p>
+    Wenn du Fragen dazu hast, schreib uns eine Mail an
+    <a href="mailto:kontakt@gemuesekollektiv.org">kontakt@gemuesekollektiv.org</a>
+</p>
+<div
+        style="
+    display: grid;
+    grid-template-columns: repeat(1, fit-content(40%));
+    grid-template-rows: auto;
+    grid-gap: 1em;
+    justify-content: center;
+  "
+>
+    <div style="display: flex; flex-direction: column">
+        <img
+                class="img-fluid"
+                src="{% static 'gkh/registration/harvest_share.webp' %}"
+        />
+        <div style="margin: 1em; text-align: center">
             <h5>ca. 4–6 kg Gemüse / Woche¹</h5>
         </div>
     </div>
 </div>
-<div class="alert alert-warning"
-     id="no-capacity-warning"
-     style="display:none">
+<div class="alert alert-warning" id="no-capacity-warning" style="display: none">
     <strong>Schade,</strong>
     aktuell sind leider keine Ernteanteile verfügbar.
     <br/>
-    Wir informieren dich sobald wir die Kapazitäten erhöhen bzw. bevor die nächste Anbausaison beginnt.
+    Wir informieren dich sobald wir die Kapazitäten erhöhen bzw. bevor die nächste
+    Anbausaison beginnt.
 </div>
