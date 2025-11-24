@@ -185,14 +185,13 @@ const GrowingPeriodModal: React.FC<GrowingPeriodModalProps> = ({
                     }
                   />
                   <Form.Text>
-                    Im BestellWizard kurz vor Vertragsperiode-Wechsel wird ein
-                    Auswahl angezeigt, ob der Vertrags in der Aktuelle oder
-                    kommende Vertragsperiode starten soll. Standardweise werden
-                    beide Perioden angezeigt. Soll dieses Checkbox ausgeschaltet
-                    sein taucht die hier ausgewählte Periode in der Auswahl
-                    nicht auf. <br />
-                    Wenn der Auswahl nicht angezeigt wird hat dieses Parameter
-                    kein Effekt.
+                    Im BestellWizard werden in Abhängigkeit von dem Parameter
+                    "Schwelle zu Vertragsperioden-Auswahl" ggf. sowohl die
+                    aktuelle als auch anstehende Vertragsperiode-angezeigt. Dann
+                    können Neumitglieder auswählen, für welche Vertragsperiode
+                    sie einen Vertrag schließen wollen. Über die Checkbox kann
+                    gesteuert werden, ob die Vertragsperiode im Bestellwizard
+                    angezeit werden soll.
                   </Form.Text>
                 </Form.Group>
               </Col>
