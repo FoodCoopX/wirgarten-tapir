@@ -41,6 +41,9 @@ from tapir.wirgarten.service.delivery import (
     get_active_pickup_location_capabilities,
     get_next_delivery_date,
 )
+from tapir.wirgarten.service.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.wirgarten.service.member import (
     change_pickup_location,
     get_next_contract_start_date,
@@ -143,9 +146,11 @@ class BaseProductForm(forms.Form):
             self.colspans[prod_field] = self.n_columns // len(self.products)
 
         if self.choose_growing_period:
-            available_growing_periods = GrowingPeriod.objects.filter(
-                end_date__gte=self.start_date, is_available_in_bestell_wizard=True
-            ).order_by("start_date")
+            available_growing_periods = (
+                GrowingPeriodChoiceProvider.get_available_growing_periods(
+                    end_date_after=self.start_date
+                )
+            )
 
             self.solidarity_total = []
             self.free_capacity = []

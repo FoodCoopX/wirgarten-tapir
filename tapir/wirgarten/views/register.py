@@ -36,6 +36,9 @@ from tapir.wirgarten.models import (
     SubscriptionChangeLogEntry,
 )
 from tapir.wirgarten.parameter_keys import ParameterKeys
+from tapir.wirgarten.service.growing_period_choice_provider import (
+    GrowingPeriodChoiceProvider,
+)
 from tapir.wirgarten.service.member import (
     buy_cooperative_shares,
     create_mandate_ref,
@@ -249,6 +252,10 @@ class RegistrationWizardViewBase(CookieWizardView):
             BaseProductTypeService.get_base_product_type(cache=self.cache),
             reference_date=self.start_date,
             cache=self.cache,
+        ) and len(
+            GrowingPeriodChoiceProvider.get_available_growing_periods(
+                end_date_after=self.start_date
+            )
         )
 
         if legal_status_is_cooperative(cache=self.cache):
