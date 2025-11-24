@@ -64,8 +64,7 @@ class MailChangeService:
     @transaction.atomic
     def apply_mail_change(cls, user: TapirUser, new_email: str, cache: Dict):
         # token is valid -> actually change email
-        orig_email = user.email
-        user.change_email(new_email)
+        user.change_email(new_email, cache=cache)
 
         # delete other change requests for this user
         EmailChangeRequest.objects.filter(user_id=user.id).delete()
