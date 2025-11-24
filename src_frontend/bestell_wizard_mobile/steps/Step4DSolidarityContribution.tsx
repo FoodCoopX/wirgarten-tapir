@@ -79,7 +79,19 @@ const Step4DSolidarityContribution: React.FC<
           ))}
         </Form.Select>
         {selectedValue === "custom" && (
-          <Form.Group>
+          <Form.Group className={"d-flex flex-column gap-2 align-items-center"}>
+            {settings.solidarityContributionUnit === "percentage" && (
+              <Form.Text>
+                Bitte ein Prozentzahl eingeben. Beispiel: '5' eingeben um 5%
+                extra beizutragen.
+              </Form.Text>
+            )}
+            {settings.solidarityContributionUnit === "absolute" && (
+              <Form.Text>
+                Bitte ein Zahl eingeben. Beispiel: '5' eingeben um 5€ extra
+                beizutragen, oder '-10' um 10€ weniger zu zahlen.
+              </Form.Text>
+            )}
             <Form.Control
               placeholder={"Personalisierter Beitrag"}
               type={"number"}
@@ -87,13 +99,8 @@ const Step4DSolidarityContribution: React.FC<
               min={settings.solidarityContributionMinimum ?? undefined}
               value={customValue}
               onChange={(event) => setCustomValue(event.target.value)}
+              style={{ maxWidth: "300px" }}
             />
-            {settings.solidarityContributionUnit === "percentage" && (
-              <Form.Text>
-                Bitte ein Prozentzahl eingeben. Beispiel: '5' eingeben um 5%
-                extra beizutragen.
-              </Form.Text>
-            )}
             {showMinimumWarning() && (
               <Alert variant={"danger"}>
                 Der Solidartopf reicht gerade nur für{" "}
