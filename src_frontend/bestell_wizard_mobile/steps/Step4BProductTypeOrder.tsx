@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
-import { Carousel, Form } from "react-bootstrap";
+import { Button, Carousel, Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
@@ -54,13 +54,69 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
     return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
   }
 
+  function getIndexWithinRange(index: number) {
+    index = index % productType.products.length;
+    if (index < 0) {
+      index += productType.products.length;
+    }
+    return index;
+  }
+  function goToIndex(index: number) {
+    setActiveProductIndex(getIndexWithinRange(index));
+  }
+
+  function buildImageAtIndex(index: number, isBeforeButton: boolean) {
+    if (index < 0 || index >= productType.products.length) return;
+
+    const product = productType.products[index];
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: isBeforeButton ? "2dvw" : undefined,
+          right: isBeforeButton ? undefined : "2dvw",
+          top: "47%",
+          transform: "translate(0, -50%)",
+          cursor: "pointer",
+        }}
+        className={"d-flex flex-column align-items-center"}
+        onClick={() => goToIndex(index)}
+      >
+        <Button variant={"outline-dark"} style={{ padding: 0 }}>
+          {product.urlOfImageInBestellwizard ? (
+            <img
+              src={product.urlOfImageInBestellwizard}
+              style={{
+                maxWidth: "8dvh",
+                objectFit: "contain",
+                filter: shouldShowWarningProductNotAvailable(
+                  product,
+                  productType,
+                  settings,
+                )
+                  ? "grayscale(1)"
+                  : "",
+              }}
+              alt={"Photo von " + productType.name + " " + product.name}
+            />
+          ) : (
+            <span className={"material-icons"}>
+              {isBeforeButton ? "chevron_left" : "chevron_right"}
+            </span>
+          )}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
       <Carousel
         activeIndex={activeProductIndex}
         onSelect={handleSelect}
         indicators={false}
-        controls={productType.products.length > 1}
+        controls={false}
         interval={null}
         touch={false}
         style={{ width: "100%" }}
@@ -68,14 +124,20 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       >
         {productType.products
           .sort((a, b) => a.price - b.price)
-          .map((product) => (
+          .map((product, index) => (
             <Carousel.Item key={product.id}>
-              <div className={"d-flex justify-content-center"}>
-                {product.urlOfImageInBestellwizard !== "" && (
+              <div
+                className={
+                  "d-flex flex-row align-items-center justify-content-center"
+                }
+              >
+                {productType.products.length > 1 &&
+                  buildImageAtIndex(index - 1, true)}
+                {product.urlOfImageInBestellwizard ? (
                   <img
                     src={product.urlOfImageInBestellwizard}
                     style={{
-                      maxHeight: "40dvh",
+                      maxHeight: "30dvh",
                       objectFit: "contain",
                       filter: shouldShowWarningProductNotAvailable(
                         product,
@@ -87,7 +149,11 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                     }}
                     alt={"Photo von " + productType.name + " " + product.name}
                   />
+                ) : (
+                  <div style={{ height: "10dvh" }}></div>
                 )}
+                {productType.products.length > 1 &&
+                  buildImageAtIndex(index + 1, false)}
               </div>
               <div className={"d-flex flex-row gap-2 justify-content-center"}>
                 <strong>{product.name}</strong>
