@@ -27,6 +27,7 @@ export function buildEmptySettings(): BestellWizardSettings {
     solidarityContributionChoices: [],
     solidarityContributionMinimum: 0,
     solidarityContributionUnit: "absolute",
+    feedbackStepEnabled: false,
     strings: {
       step1aTitle: "",
       step1aText: "",

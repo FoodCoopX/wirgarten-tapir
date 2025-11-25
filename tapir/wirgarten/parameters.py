@@ -1383,6 +1383,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP13_ENABLED,
+            label="Seite 13: Feedback - aktiviert",
+            datatype=TapirParameterDatatype.BOOLEAN,
+            initial_value=True,
+            description="Ob die Feedback-Seite aktiviert ist oder nicht",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP13_TITLE,
             label="Seite 13: Feedback - Titel",
             datatype=TapirParameterDatatype.STRING,
@@ -1390,7 +1401,12 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
-            meta=ParameterMeta(vars_hint=["vorname"]),
+            meta=ParameterMeta(
+                vars_hint=["vorname"],
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=cache
+                ),
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1402,6 +1418,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=cache
+                ),
+            ),
         )
         bestellwizard_parameter_order -= 1
 
@@ -1413,6 +1434,11 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
             description="",
             category=ParameterCategory.BESTELLWIZARD,
             order_priority=bestellwizard_parameter_order,
+            meta=ParameterMeta(
+                show_only_when=lambda cache: get_parameter_value(
+                    ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=cache
+                ),
+            ),
         )
         bestellwizard_parameter_order -= 1
 

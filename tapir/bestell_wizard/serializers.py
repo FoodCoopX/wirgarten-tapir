@@ -133,6 +133,7 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
         child=serializers.CharField()
     )
     solidarity_contribution_minimum = serializers.FloatField(allow_null=True)
+    feedback_step_enabled = serializers.BooleanField()
     strings = BestellWizardStringsSerializer()
     images = BestellWizardImagesSerializer()
 

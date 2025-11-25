@@ -267,7 +267,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
     newSteps.push("10_summary");
     newSteps.push("11_legal");
     newSteps.push("12_channel");
-    newSteps.push("13_feedback");
+    if (settings.feedbackStepEnabled) {
+      newSteps.push("13_feedback");
+    }
     newSteps.push("14_confirmation");
 
     return newSteps;

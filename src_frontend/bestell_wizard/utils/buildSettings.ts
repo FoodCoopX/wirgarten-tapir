@@ -34,6 +34,7 @@ export function buildSettings(
     solidarityContributionUnit: baseData.solidarityContributionUnit,
     solidarityContributionChoices: baseData.solidarityContributionChoices,
     solidarityContributionMinimum: baseData.solidarityContributionMinimum,
+    feedbackStepEnabled: baseData.feedbackStepEnabled,
     strings: baseData.strings,
     images: baseData.images,
   };

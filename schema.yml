@@ -4615,6 +4615,8 @@ components:
           type: number
           format: double
           nullable: true
+        feedback_step_enabled:
+          type: boolean
         strings:
           $ref: '#/components/schemas/BestellWizardStrings'
         images:
@@ -4625,6 +4627,7 @@ components:
       - coop_statute_link
       - default_payment_rhythm
       - distribution_channels
+      - feedback_step_enabled
       - force_waiting_list
       - images
       - intro_enabled

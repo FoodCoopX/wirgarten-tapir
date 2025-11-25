@@ -213,6 +213,12 @@ export interface BestellWizardBaseDataResponse {
     solidarityContributionMinimum: number | null;
     /**
      * 
+     * @type {boolean}
+     * @memberof BestellWizardBaseDataResponse
+     */
+    feedbackStepEnabled: boolean;
+    /**
+     * 
      * @type {BestellWizardStrings}
      * @memberof BestellWizardBaseDataResponse
      */
@@ -257,6 +263,7 @@ export function instanceOfBestellWizardBaseDataResponse(value: object): value is
     if (!('solidarityContributionUnit' in value) || value['solidarityContributionUnit'] === undefined) return false;
     if (!('solidarityContributionChoices' in value) || value['solidarityContributionChoices'] === undefined) return false;
     if (!('solidarityContributionMinimum' in value) || value['solidarityContributionMinimum'] === undefined) return false;
+    if (!('feedbackStepEnabled' in value) || value['feedbackStepEnabled'] === undefined) return false;
     if (!('strings' in value) || value['strings'] === undefined) return false;
     if (!('images' in value) || value['images'] === undefined) return false;
     return true;
@@ -298,6 +305,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'solidarityContributionUnit': SolidarityContributionUnitEnumFromJSON(json['solidarity_contribution_unit']),
         'solidarityContributionChoices': json['solidarity_contribution_choices'],
         'solidarityContributionMinimum': json['solidarity_contribution_minimum'],
+        'feedbackStepEnabled': json['feedback_step_enabled'],
         'strings': BestellWizardStringsFromJSON(json['strings']),
         'images': BestellWizardImagesFromJSON(json['images']),
     };
@@ -340,6 +348,7 @@ export function BestellWizardBaseDataResponseFromJSONTyped(json: any, ignoreDisc
         'solidarity_contribution_unit': SolidarityContributionUnitEnumToJSON(value['solidarityContributionUnit']),
         'solidarity_contribution_choices': value['solidarityContributionChoices'],
         'solidarity_contribution_minimum': value['solidarityContributionMinimum'],
+        'feedback_step_enabled': value['feedbackStepEnabled'],
         'strings': BestellWizardStringsToJSON(value['strings']),
         'images': BestellWizardImagesToJSON(value['images']),
     };

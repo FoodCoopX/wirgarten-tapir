@@ -425,6 +425,9 @@ class BestellWizardBaseDataApiView(APIView):
                 ),
                 cache=self.cache,
             ),
+            "feedback_step_enabled": get_parameter_value(
+                key=ParameterKeys.BESTELLWIZARD_STEP13_ENABLED, cache=self.cache
+            ),
             "strings": self.build_strings_object(cache=self.cache),
             "images": self.build_images_object(cache=self.cache),
         }

@@ -33,6 +33,7 @@ export type BestellWizardSettings = {
   solidarityContributionUnit: SolidarityContributionUnitEnum;
   solidarityContributionChoices: string[];
   solidarityContributionMinimum: number | null;
+  feedbackStepEnabled: boolean;
   strings: BestellWizardStrings;
   images: BestellWizardImages;
 };
