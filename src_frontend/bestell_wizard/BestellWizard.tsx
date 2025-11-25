@@ -275,9 +275,11 @@ const BestellWizard: React.FC<BestellWizardProps> = ({
     }
 
     fetchFirstDeliveryDates(
-      selectedPickupLocations,
       shoppingCart,
-      setFirstDeliveryDatesByProductType,
+      (data) =>
+        setFirstDeliveryDatesByProductType(
+          data[selectedPickupLocations[0].id!],
+        ),
       setToastDatas,
       waitingListEntryDetails?.id,
     );

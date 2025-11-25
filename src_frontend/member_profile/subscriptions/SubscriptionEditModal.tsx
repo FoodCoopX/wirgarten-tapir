@@ -7,7 +7,7 @@ import {
   PublicPickupLocation,
   PublicProductType,
   SubscriptionsApi,
-  WaitingListApi
+  WaitingListApi,
 } from "../../api-client";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { getCsrfToken } from "../../utils/getCsrfToken.ts";
@@ -240,10 +240,15 @@ const SubscriptionEditModal: React.FC<SubscriptionEditModalProps> = ({
   ]);
 
   useEffect(() => {
+    if (selectedPickupLocations.length === 0) {
+      return;
+    }
     fetchFirstDeliveryDates(
-      selectedPickupLocations,
       shoppingCart,
-      setFirstDeliveryDatesByProductType,
+      (data) =>
+        setFirstDeliveryDatesByProductType(
+          data[selectedPickupLocations[0].id!],
+        ),
       setToastDatas,
       undefined,
     );
