@@ -417,6 +417,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             }}
             active={currentStep === step}
             selectedPickupLocations={selectedPickupLocations}
+            solidarityContribution={solidarityContribution}
+            personalData={personalData}
           />
         );
       case "11_legal":

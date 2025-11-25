@@ -12,6 +12,9 @@ import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import formatAddress from "../../utils/formatAddress.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import { getProductByIdGlobal } from "../utils/getProductByIdGlobal.ts";
+import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -26,6 +29,8 @@ interface Step10OrderSummaryProps {
   goToProductTypeStep: (pt: PublicProductType) => void;
   active: boolean;
   selectedPickupLocations: PublicPickupLocation[];
+  solidarityContribution: number;
+  personalData: PersonalData;
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -38,6 +43,8 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   firstDeliveryDatesByPickupLocationAndProductType,
   goToProductTypeStep,
   selectedPickupLocations,
+  solidarityContribution,
+  personalData,
 }) => {
   function getProductById(productType: PublicProductType, productId: string) {
     return productType.products.find((product) => product.id === productId);
@@ -80,6 +87,20 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
+  function getPaymentsTitle() {
+    let monthlyPayment = solidarityContribution;
+    for (const [productId, quantity] of Object.entries(shoppingCart)) {
+      for (const productType of settings.productTypes) {
+        const product = getProductById(productType, productId);
+        if (!product) {
+          continue;
+        }
+        monthlyPayment += product.price * quantity;
+      }
+    }
+    return "Zahlungen: " + formatCurrency(monthlyPayment) + " / Monat";
+  }
+
   function buildProductDetails(
     productId: string,
     quantity: number,
@@ -120,6 +141,21 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
         productTypeId
       ],
     );
+  }
+
+  function getPaymentRhythmDisplay(givenRhythm: string) {
+    for (const [rhythm, display] of Object.entries(
+      settings.paymentRhythmChoices,
+    )) {
+      if (rhythm === givenRhythm) {
+        if (rhythm === "monthly") {
+          return display.slice(0, display.indexOf("("));
+        }
+        return display;
+      }
+    }
+
+    return "Unbekannt";
   }
 
   return (
@@ -205,6 +241,57 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                       formatCurrency(
                         numberOfCoopShares * settings.priceOfAShare,
                       )}
+                </AccordionBody>
+              </Accordion.Item>
+            </Accordion>
+          )}
+          {(solidarityContribution > 0 ||
+            isAtLeastOneProductOrdered(shoppingCart)) && (
+            <Accordion>
+              <Accordion.Item eventKey={"payments"} onClick={scrollIntoView}>
+                <Accordion.Header>{getPaymentsTitle()}</Accordion.Header>
+                <AccordionBody>
+                  <ul>
+                    {Object.entries(shoppingCart)
+                      .filter(([_, quantity]) => quantity > 0)
+                      .map(([productId, quantity]) => (
+                        <li>
+                          {
+                            getProductByIdGlobal(
+                              productId,
+                              settings.productTypes,
+                            )?.name
+                          }
+                          :{" "}
+                          {formatCurrency(
+                            (getProductByIdGlobal(
+                              productId,
+                              settings.productTypes,
+                            )?.price ?? 0) * quantity,
+                          )}
+                        </li>
+                      ))}
+                    {solidarityContribution !== 0 && (
+                      <li>
+                        Solidarbeitrag: {formatCurrency(solidarityContribution)}
+                      </li>
+                    )}
+                  </ul>
+                  <p>
+                    Zahlungsintervall:{" "}
+                    {getPaymentRhythmDisplay(personalData.paymentRhythm)}
+                  </p>
+                  {numberOfCoopShares > 0 &&
+                    !studentStatusEnabled &&
+                    settings.showCoopContent && (
+                      <p>
+                        Einmalig:{" "}
+                        {formatCurrency(
+                          numberOfCoopShares * settings.priceOfAShare,
+                        )}{" "}
+                        (Genossenschaftsanteile)
+                      </p>
+                    )}
                 </AccordionBody>
               </Accordion.Item>
             </Accordion>
