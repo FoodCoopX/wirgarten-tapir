@@ -17,6 +17,9 @@ interface Step5BPickupLocationChoiceProps {
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   goToNextStep: () => void;
   stepIsActive: boolean;
+  firstDeliveryDatesByPickupLocationAndProductType: {
+    [key: string]: { [key: string]: Date };
+  };
 }
 
 type PickupLocationTab = "wishes" | "list" | "map";
@@ -29,6 +32,7 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   pickupLocationsWithCapacityFull,
   goToNextStep,
   stepIsActive,
+  firstDeliveryDatesByPickupLocationAndProductType,
 }) => {
   const tabs: PickupLocationTab[] = ["wishes", "list", "map"];
   const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
@@ -106,6 +110,9 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             }
             waitingListLinkConfirmationModeEnabled={false}
             tabIsActive={currentTab === "list" && stepIsActive}
+            firstDeliveryDatesByPickupLocationAndProductType={
+              firstDeliveryDatesByPickupLocationAndProductType
+            }
           />
         </Carousel.Item>
         <Carousel.Item style={{ position: "absolute", inset: 0 }}>
@@ -117,6 +124,10 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
               tabIsActive={currentTab === "map" && stepIsActive}
               mapRef={mapRef}
               setMapRef={setMapRef}
+              pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
+              firstDeliveryDatesByPickupLocationAndProductType={
+                firstDeliveryDatesByPickupLocationAndProductType
+              }
             />
           </div>
         </Carousel.Item>

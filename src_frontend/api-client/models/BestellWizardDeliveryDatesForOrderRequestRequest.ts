@@ -30,12 +30,6 @@ export interface BestellWizardDeliveryDatesForOrderRequestRequest {
      * @type {string}
      * @memberof BestellWizardDeliveryDatesForOrderRequestRequest
      */
-    pickupLocationId: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BestellWizardDeliveryDatesForOrderRequestRequest
-     */
     waitingListEntryId?: string;
 }
 
@@ -44,7 +38,6 @@ export interface BestellWizardDeliveryDatesForOrderRequestRequest {
  */
 export function instanceOfBestellWizardDeliveryDatesForOrderRequestRequest(value: object): value is BestellWizardDeliveryDatesForOrderRequestRequest {
     if (!('shoppingCart' in value) || value['shoppingCart'] === undefined) return false;
-    if (!('pickupLocationId' in value) || value['pickupLocationId'] === undefined) return false;
     return true;
 }
 
@@ -59,7 +52,6 @@ export function BestellWizardDeliveryDatesForOrderRequestRequestFromJSONTyped(js
     return {
         
         'shoppingCart': json['shopping_cart'],
-        'pickupLocationId': json['pickup_location_id'],
         'waitingListEntryId': json['waiting_list_entry_id'] == null ? undefined : json['waiting_list_entry_id'],
     };
 }
@@ -76,7 +68,6 @@ export function BestellWizardDeliveryDatesForOrderRequestRequestFromJSONTyped(js
     return {
         
         'shopping_cart': value['shoppingCart'],
-        'pickup_location_id': value['pickupLocationId'],
         'waiting_list_entry_id': value['waitingListEntryId'],
     };
 }

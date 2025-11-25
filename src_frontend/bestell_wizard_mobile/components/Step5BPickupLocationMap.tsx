@@ -9,6 +9,7 @@ import "./map.css";
 import "leaflet/dist/leaflet.css";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 
 interface Step5BPickupLocationMapProps {
   pickupLocations: PublicPickupLocation[];
@@ -17,6 +18,10 @@ interface Step5BPickupLocationMapProps {
   tabIsActive: boolean;
   mapRef: MapRef;
   setMapRef: (mr: MapRef) => void;
+  pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
+  firstDeliveryDatesByPickupLocationAndProductType: {
+    [key: string]: { [key: string]: Date };
+  };
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -26,6 +31,8 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   tabIsActive,
   mapRef,
   setMapRef,
+  pickupLocationsWithCapacityFull,
+  firstDeliveryDatesByPickupLocationAndProductType,
 }) => {
   const [firstRender, setFirstRender] = useState(true);
 
@@ -102,7 +109,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
           parseFloat(pickupLocations[0].coordsLat),
         ]}
         zoom={13}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         ref={setMapRef}
         style={{ position: "absolute", top: 0, bottom: 0, right: 0, left: 0 }}
       >
@@ -117,7 +124,11 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
               parseFloat(pickupLocation.coordsLat),
             ]}
             icon={L.icon({
-              iconUrl: "/static/subscriptions/marker-icon.png",
+              iconUrl:
+                "/static/subscriptions/" +
+                (pickupLocationsWithCapacityFull.has(pickupLocation)
+                  ? "marker-icon-red.png"
+                  : "marker-icon.png"),
               shadowUrl: "/static/subscriptions/marker-shadow.png",
               iconAnchor: [13, 35],
               popupAnchor: [0, -33],
@@ -125,8 +136,22 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
             key={pickupLocation.id}
           >
             <Popup>
-              <div className={"d-flex flex-column gap-2 align-items-center"}>
+              <div
+                className={
+                  "d-flex flex-column gap-2 align-items-center text-center"
+                }
+              >
                 <strong>{pickupLocation.name}</strong>
+                {pickupLocationsWithCapacityFull.has(pickupLocation) ? (
+                  <span className={"text-danger"}>Ausgelastet</span>
+                ) : (
+                  <span className={"text-success"}>
+                    {getFirstDelivery(
+                      pickupLocation.id!,
+                      firstDeliveryDatesByPickupLocationAndProductType,
+                    )}
+                  </span>
+                )}
                 <div>
                   {formatAddress(
                     pickupLocation.street,

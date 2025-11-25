@@ -138,11 +138,10 @@ class BestellWizardBaseDataResponseSerializer(serializers.Serializer):
 
 class BestellWizardDeliveryDatesForOrderRequestSerializer(serializers.Serializer):
     shopping_cart = serializers.DictField(child=serializers.IntegerField())
-    pickup_location_id = serializers.CharField()
     waiting_list_entry_id = serializers.CharField(required=False)
 
 
 class BestellWizardDeliveryDatesForOrderResponseSerializer(serializers.Serializer):
-    product_type_id_to_next_delivery_date_map = serializers.DictField(
-        child=serializers.DateField()
+    delivery_date_by_pickup_location_id_and_product_type_id = serializers.DictField(
+        child=serializers.DictField(child=serializers.DateField())
     )

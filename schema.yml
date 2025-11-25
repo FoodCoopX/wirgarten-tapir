@@ -4730,25 +4730,23 @@ components:
           type: object
           additionalProperties:
             type: integer
-        pickup_location_id:
-          type: string
-          minLength: 1
         waiting_list_entry_id:
           type: string
           minLength: 1
       required:
-      - pickup_location_id
       - shopping_cart
     BestellWizardDeliveryDatesForOrderResponse:
       type: object
       properties:
-        product_type_id_to_next_delivery_date_map:
+        delivery_date_by_pickup_location_id_and_product_type_id:
           type: object
           additionalProperties:
-            type: string
-            format: date
+            type: object
+            additionalProperties:
+              type: string
+              format: date
       required:
-      - product_type_id_to_next_delivery_date_map
+      - delivery_date_by_pickup_location_id_and_product_type_id
     BestellWizardImages:
       type: object
       properties:

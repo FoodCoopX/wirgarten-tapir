@@ -21,17 +21,17 @@ import { mapValues } from '../runtime';
 export interface BestellWizardDeliveryDatesForOrderResponse {
     /**
      * 
-     * @type {{ [key: string]: Date; }}
+     * @type {{ [key: string]: { [key: string]: Date; }; }}
      * @memberof BestellWizardDeliveryDatesForOrderResponse
      */
-    productTypeIdToNextDeliveryDateMap: { [key: string]: Date; };
+    deliveryDateByPickupLocationIdAndProductTypeId: { [key: string]: { [key: string]: Date; }; };
 }
 
 /**
  * Check if a given object implements the BestellWizardDeliveryDatesForOrderResponse interface.
  */
 export function instanceOfBestellWizardDeliveryDatesForOrderResponse(value: object): value is BestellWizardDeliveryDatesForOrderResponse {
-    if (!('productTypeIdToNextDeliveryDateMap' in value) || value['productTypeIdToNextDeliveryDateMap'] === undefined) return false;
+    if (!('deliveryDateByPickupLocationIdAndProductTypeId' in value) || value['deliveryDateByPickupLocationIdAndProductTypeId'] === undefined) return false;
     return true;
 }
 
@@ -45,7 +45,7 @@ export function BestellWizardDeliveryDatesForOrderResponseFromJSONTyped(json: an
     }
     return {
         
-        'productTypeIdToNextDeliveryDateMap': json['product_type_id_to_next_delivery_date_map'],
+        'deliveryDateByPickupLocationIdAndProductTypeId': json['delivery_date_by_pickup_location_id_and_product_type_id'],
     };
 }
 
@@ -60,7 +60,7 @@ export function BestellWizardDeliveryDatesForOrderResponseFromJSONTyped(json: an
 
     return {
         
-        'product_type_id_to_next_delivery_date_map': value['productTypeIdToNextDeliveryDateMap'],
+        'delivery_date_by_pickup_location_id_and_product_type_id': value['deliveryDateByPickupLocationIdAndProductTypeId'],
     };
 }
 

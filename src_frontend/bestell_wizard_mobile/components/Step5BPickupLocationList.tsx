@@ -3,6 +3,7 @@ import { PublicPickupLocation } from "../../api-client";
 import { ListGroup, ListGroupItem, Spinner } from "react-bootstrap";
 import formatAddress from "../../utils/formatAddress.ts";
 import { formatOpeningTimes } from "../../bestell_wizard/utils/formatOpeningTimes.ts";
+import { getFirstDelivery } from "../utils/getFirstDelivery.ts";
 
 interface Step5BPickupLocationListProps {
   pickupLocations: PublicPickupLocation[];
@@ -12,6 +13,9 @@ interface Step5BPickupLocationListProps {
   pickupLocationsWithCapacityFull: Set<PublicPickupLocation>;
   waitingListLinkConfirmationModeEnabled: boolean;
   tabIsActive: boolean;
+  firstDeliveryDatesByPickupLocationAndProductType: {
+    [key: string]: { [key: string]: Date };
+  };
 }
 
 const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
@@ -22,6 +26,7 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
   pickupLocationsWithCapacityFull,
   waitingListLinkConfirmationModeEnabled,
   tabIsActive,
+  firstDeliveryDatesByPickupLocationAndProductType,
 }) => {
   function getClassForPickupLocationListItem(
     pickupLocation: PublicPickupLocation,
@@ -46,7 +51,11 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       return <span className={"text-danger"}>Ausgelastet</span>;
     }
 
-    return <span className={"text-success"}>Kapazität frei</span>;
+    let dateAsString = getFirstDelivery(
+      pickupLocation.id!,
+      firstDeliveryDatesByPickupLocationAndProductType,
+    );
+    return <span className={"text-success"}>{dateAsString}</span>;
   }
 
   useEffect(() => {
@@ -72,7 +81,8 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
           id={pickupLocation.id}
         >
           <small style={{ lineHeight: "0" }}>
-            <strong>{pickupLocation.name}</strong>{" "}
+            <strong>{pickupLocation.name}</strong>
+            <br />
             {buildCapacityIndicator(pickupLocation)}
             <br />
             <small>

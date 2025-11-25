@@ -20,7 +20,9 @@ interface Step10OrderSummaryProps {
   studentStatusEnabled: boolean;
   goToNextStep: () => void;
   contractStartDate: Date;
-  firstDeliveryDatesByProductType: { [key: string]: Date };
+  firstDeliveryDatesByPickupLocationAndProductType: {
+    [key: string]: { [key: string]: Date };
+  };
   goToProductTypeStep: (pt: PublicProductType) => void;
   active: boolean;
   selectedPickupLocations: PublicPickupLocation[];
@@ -33,7 +35,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   studentStatusEnabled,
   goToNextStep,
   contractStartDate,
-  firstDeliveryDatesByProductType,
+  firstDeliveryDatesByPickupLocationAndProductType,
   goToProductTypeStep,
   selectedPickupLocations,
 }) => {
@@ -97,6 +99,29 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
     );
   }
 
+  function getFirstDelivery(pickupLocationId: string, productTypeId: string) {
+    if (
+      !(pickupLocationId in firstDeliveryDatesByPickupLocationAndProductType)
+    ) {
+      return "";
+    }
+
+    if (
+      !(
+        productTypeId in
+        firstDeliveryDatesByPickupLocationAndProductType[pickupLocationId]
+      )
+    ) {
+      return "";
+    }
+
+    return formatDateNumeric(
+      firstDeliveryDatesByPickupLocationAndProductType[pickupLocationId][
+        productTypeId
+      ],
+    );
+  }
+
   return (
     <>
       <div>
@@ -132,9 +157,11 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         <>
                           <li>
                             Erste Lieferung:{" "}
-                            {formatDateNumeric(
-                              firstDeliveryDatesByProductType[productType.id!],
-                            )}
+                            {selectedPickupLocations.length > 0 &&
+                              getFirstDelivery(
+                                selectedPickupLocations[0].id!,
+                                productType.id!,
+                              )}
                           </li>
                           <li>
                             Verteilstation:{" "}

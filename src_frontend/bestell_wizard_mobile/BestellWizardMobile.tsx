@@ -66,7 +66,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [steps, setSteps] = useState<Step[]>(["loading"]);
   const [currentStep, setCurrentStep] = useState<Step>("loading");
   const [phases, setPhases] = useState<Phase[]>([]);
-  const [currentPhase, setCurrentPhase] = useState<Phase>("loading");
   const [personalData, setPersonalData] = useState<PersonalData>(
     getEmptyPersonalData(),
   );
@@ -93,8 +92,10 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [sepaAllowed, setSepaAllowed] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
   const [contractStartDate, setContractStartDate] = useState(new Date());
-  const [firstDeliveryDatesByProductType, setFirstDeliveryDatesByProductType] =
-    useState<{ [key: string]: Date }>({});
+  const [
+    firstDeliveryDatesByPickupLocationAndProductType,
+    setFirstDeliveryDatesByPickupLocationAndProductType,
+  ] = useState<{ [key: string]: { [key: string]: Date } }>({});
   const [cancellationPolicyRead, setCancellationPolicyRead] = useState(false);
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [selectedDistributionChannels, setSelectedDistributionChannels] =
@@ -170,7 +171,6 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
       }
     }
     setPhases(newPhases);
-    setCurrentPhase(getPhase(currentStep));
   }, [steps, currentStep, shoppingCart, settings]);
 
   useEffect(() => {
@@ -203,21 +203,13 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   }, [shoppingCart]);
 
   useEffect(() => {
-    if (
-      selectedPickupLocations.length === 0 ||
-      isShoppingCartEmpty(shoppingCart)
-    ) {
-      return;
-    }
-
     fetchFirstDeliveryDates(
-      selectedPickupLocations,
       shoppingCart,
-      setFirstDeliveryDatesByProductType,
+      setFirstDeliveryDatesByPickupLocationAndProductType,
       setToastDatas,
       undefined,
     );
-  }, [selectedPickupLocations, shoppingCart]);
+  }, [shoppingCart]);
 
   function buildSteps() {
     const newSteps: Step[] = [];
@@ -352,6 +344,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             pickupLocationsWithCapacityFull={pickupLocationsWithCapacityFull}
             goToNextStep={goToNextStep}
             stepIsActive={step === "5b_pickup_location_choice"}
+            firstDeliveryDatesByPickupLocationAndProductType={
+              firstDeliveryDatesByPickupLocationAndProductType
+            }
           />
         );
       case "6a_coop_intro":
@@ -409,7 +404,9 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             numberOfCoopShares={selectedNumberOfCoopShares}
             shoppingCart={shoppingCart}
             contractStartDate={contractStartDate}
-            firstDeliveryDatesByProductType={firstDeliveryDatesByProductType}
+            firstDeliveryDatesByPickupLocationAndProductType={
+              firstDeliveryDatesByPickupLocationAndProductType
+            }
             goToProductTypeStep={(productType) => {
               if (!selectedProductTypes.includes(productType)) {
                 setSelectedProductTypes([...selectedProductTypes, productType]);

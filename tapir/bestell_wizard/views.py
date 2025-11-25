@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
 from django.views.generic import TemplateView
@@ -586,14 +585,6 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
         )
         product_type_ids = {product.type_id for product in order.keys()}
 
-        pickup_location_id = serializer.validated_data["pickup_location_id"]
-        pickup_location = TapirCache.get_pickup_location_by_id(
-            cache=self.cache,
-            pickup_location_id=pickup_location_id,
-        )
-        if pickup_location is None:
-            raise Http404(f"Unknown pickup location: {pickup_location_id}")
-
         reference_date = get_today(cache=self.cache)
         waiting_list_entry_id = serializer.validated_data.get(
             "waiting_list_entry_id", None
@@ -621,8 +612,10 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
             apply_buffer_time=waiting_list_entry_id is None,
             cache=self.cache,
         )
-        response_data = {
-            "product_type_id_to_next_delivery_date_map": {
+
+        response_data = {}
+        for pickup_location_id in PickupLocation.objects.values_list("id", flat=True):
+            response_data[pickup_location_id] = {
                 product_type_id: DeliveryDateCalculator.get_next_delivery_date_for_delivery_cycle(
                     reference_date=contract_start_date,
                     pickup_location_id=pickup_location_id,
@@ -632,11 +625,14 @@ class BestellWizardDeliveryDatesForOrderApiView(APIView):
                     cache=self.cache,
                 )
                 for product_type_id in product_type_ids
-            },
-        }
+            }
 
         return Response(
-            BestellWizardDeliveryDatesForOrderResponseSerializer(response_data).data
+            BestellWizardDeliveryDatesForOrderResponseSerializer(
+                {
+                    "delivery_date_by_pickup_location_id_and_product_type_id": response_data
+                }
+            ).data
         )
 
 
