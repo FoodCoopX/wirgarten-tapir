@@ -116,7 +116,7 @@ def get_debug_now(cache: Dict | None = None) -> datetime.datetime:
 
 
 def format_subscription_list_html(subs):
-    return f"{'<br/>'.join(map(lambda x: '- ' + x.long_str(), subs))}"
+    return f"{'<br/>'.join(map(lambda x: x.long_str(), subs))}"
 
 
 def legal_status_is_cooperative(cache):
