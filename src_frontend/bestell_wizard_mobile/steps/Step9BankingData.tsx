@@ -4,6 +4,8 @@ import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardS
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
 import { Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
+import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
+import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -14,6 +16,8 @@ interface Step9BankingDataProps {
   contractAccepted: boolean;
   setContractAccepted: (contractRead: boolean) => void;
   settings: BestellWizardSettings;
+  shoppingCart: ShoppingCart;
+  solidarityContribution: number;
 }
 
 const Step9BankingData: React.FC<Step9BankingDataProps> = ({
@@ -25,6 +29,8 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   contractAccepted,
   setContractAccepted,
   settings,
+  shoppingCart,
+  solidarityContribution,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
 
@@ -74,23 +80,26 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           placeholder={getPlaceholder("iban")}
           type={"text"}
         />
-        <Form.FloatingLabel label={"Zahlungsintervall"}>
-          <Form.Select
-            value={personalData.paymentRhythm}
-            onChange={(event) => {
-              personalData.paymentRhythm = event.target.value;
-              setPersonalData(Object.assign({}, personalData));
-            }}
-          >
-            {Object.entries(settings.paymentRhythmChoices).map(
-              ([rhythm, displayName]) => (
-                <option key={rhythm} value={rhythm}>
-                  {displayName}
-                </option>
-              ),
-            )}
-          </Form.Select>
-        </Form.FloatingLabel>
+        {(isAtLeastOneProductOrdered(shoppingCart) ||
+          solidarityContribution > 0) && (
+          <Form.FloatingLabel label={"Zahlungsintervall"}>
+            <Form.Select
+              value={personalData.paymentRhythm}
+              onChange={(event) => {
+                personalData.paymentRhythm = event.target.value;
+                setPersonalData(Object.assign({}, personalData));
+              }}
+            >
+              {Object.entries(settings.paymentRhythmChoices).map(
+                ([rhythm, displayName]) => (
+                  <option key={rhythm} value={rhythm}>
+                    {displayName}
+                  </option>
+                ),
+              )}
+            </Form.Select>
+          </Form.FloatingLabel>
+        )}
         <Form.Group controlId={"sepa"}>
           <Form.Check
             onChange={(event) => setSepaAllowed(event.target.checked)}

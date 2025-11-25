@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { Alert, Form } from "react-bootstrap";
@@ -7,13 +7,26 @@ import { formatCurrency } from "../../utils/formatCurrency.ts";
 interface Step4DSolidarityContributionProps {
   goToNextStep: () => void;
   settings: BestellWizardSettings;
+  setSolidarityContribution: (c: number) => void;
 }
 
 const Step4DSolidarityContribution: React.FC<
   Step4DSolidarityContributionProps
-> = ({ goToNextStep, settings }) => {
+> = ({ goToNextStep, settings, setSolidarityContribution }) => {
   const [selectedValue, setSelectedValue] = useState<number | "custom">(0);
   const [customValue, setCustomValue] = useState("");
+
+  useEffect(() => {
+    if (selectedValue !== "custom") {
+      setSolidarityContribution(selectedValue);
+      return;
+    }
+    const customContribution = parseFloat(customValue);
+    if (isNaN(customContribution)) {
+      return;
+    }
+    setSolidarityContribution(customContribution);
+  }, [selectedValue, customValue]);
 
   function getValues(): (number | "custom")[] {
     return settings.solidarityContributionChoices.map((choiceAsString) =>

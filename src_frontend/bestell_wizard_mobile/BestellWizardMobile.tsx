@@ -99,6 +99,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
   const [privacyPolicyRead, setPrivacyPolicyRead] = useState(false);
   const [selectedDistributionChannels, setSelectedDistributionChannels] =
     useState<Set<string>>(new Set<string>());
+  const [solidarityContribution, setSolidarityContribution] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -327,6 +328,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           <Step4DSolidarityContribution
             settings={settings}
             goToNextStep={goToNextStep}
+            setSolidarityContribution={setSolidarityContribution}
           />
         );
       case "5a_pickup_location_intro":
@@ -394,6 +396,8 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             contractAccepted={contractAccepted}
             setContractAccepted={setContractAccepted}
             settings={settings}
+            shoppingCart={shoppingCart}
+            solidarityContribution={solidarityContribution}
           />
         );
       case "10_summary":
