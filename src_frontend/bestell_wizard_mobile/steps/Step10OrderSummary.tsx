@@ -3,7 +3,7 @@ import TapirButton from "../../components/TapirButton.tsx";
 import { Accordion, AccordionBody } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
-import { PublicProductType } from "../../api-client";
+import { PublicPickupLocation, PublicProductType } from "../../api-client";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import { isProductTypeOrdered } from "../../bestell_wizard/utils/isProductTypeOrdered.ts";
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
@@ -11,6 +11,7 @@ import { formatDateNumeric } from "../../utils/formatDateNumeric.ts";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import formatAddress from "../../utils/formatAddress.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -22,6 +23,7 @@ interface Step10OrderSummaryProps {
   firstDeliveryDatesByProductType: { [key: string]: Date };
   goToProductTypeStep: (pt: PublicProductType) => void;
   active: boolean;
+  selectedPickupLocations: PublicPickupLocation[];
 }
 
 const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
@@ -33,6 +35,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   contractStartDate,
   firstDeliveryDatesByProductType,
   goToProductTypeStep,
+  selectedPickupLocations,
 }) => {
   function getProductById(productType: PublicProductType, productId: string) {
     return productType.products.find((product) => product.id === productId);
@@ -126,12 +129,27 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                         Vertragsstart: {formatDateNumeric(contractStartDate)}
                       </li>
                       {!productType.noDelivery && (
-                        <li>
-                          Erste Lieferung:{" "}
-                          {formatDateNumeric(
-                            firstDeliveryDatesByProductType[productType.id!],
-                          )}
-                        </li>
+                        <>
+                          <li>
+                            Erste Lieferung:{" "}
+                            {formatDateNumeric(
+                              firstDeliveryDatesByProductType[productType.id!],
+                            )}
+                          </li>
+                          <li>
+                            Verteilstation:{" "}
+                            {selectedPickupLocations.length > 0 &&
+                              selectedPickupLocations[0].name +
+                                " (" +
+                                formatAddress(
+                                  selectedPickupLocations[0].street,
+                                  selectedPickupLocations[0].street2,
+                                  selectedPickupLocations[0].postcode,
+                                  selectedPickupLocations[0].city,
+                                ) +
+                                ")"}
+                          </li>
+                        </>
                       )}
                     </ul>
                   )}

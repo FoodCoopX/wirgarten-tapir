@@ -413,6 +413,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
               setCurrentStep(productType.id + "_order");
             }}
             active={currentStep === step}
+            selectedPickupLocations={selectedPickupLocations}
           />
         );
       case "11_legal":

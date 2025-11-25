@@ -106,6 +106,7 @@ const StepBase: React.FC<StepBaseProps> = ({
               bottom: 0,
               opacity: showScrollHint ? 0.5 : 0,
               transition: "opacity 300ms",
+              pointerEvents: "none",
             }}
             className={"material-icons bounce"}
           >
