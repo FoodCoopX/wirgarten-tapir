@@ -40,6 +40,7 @@ class ExtendedProductTypeApiView(APIView):
         "must_be_subscribed_to",
         "is_association_membership",
         "force_waiting_list",
+        "title_bestellwizard_product_choice",
     ]
 
     def __init__(self):

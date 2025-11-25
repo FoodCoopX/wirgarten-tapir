@@ -69,6 +69,10 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
   const [accordions, setAccordions] = useState<
     ProductTypeAccordionInBestellWizard[]
   >([]);
+  const [
+    titleBestellWizardProductChoices,
+    setTitleBestellWizardProductChoices,
+  ] = useState("");
 
   useEffect(() => {
     if (!getPeriodIdFromUrl() || !show) return;
@@ -161,6 +165,7 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
             name: name,
             forceWaitingList: forceWaitingList,
             accordionsInBestellWizard: accordions,
+            titleBestellwizardProductChoice: titleBestellWizardProductChoices,
           },
         },
       })
@@ -277,6 +282,10 @@ const ProductTypeCreateModal: React.FC<ProductTypeCreateModalProps> = ({
           setForceWaitingList={setForceWaitingList}
           accordions={accordions}
           setAccordions={setAccordions}
+          titleBestellWizardProductChoices={titleBestellWizardProductChoices}
+          setTitleBestellWizardProductChoices={
+            setTitleBestellWizardProductChoices
+          }
         />
       </Modal.Body>
     );

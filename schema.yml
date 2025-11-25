@@ -6346,6 +6346,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
+        title_bestellwizard_product_choice:
+          type: string
       required:
       - accordions_in_bestell_wizard
       - capacity
@@ -6359,6 +6361,7 @@ components:
       - single_subscription_only
       - tax_rate
       - tax_rate_change_date
+      - title_bestellwizard_product_choice
     ExtendedProductTypeAndConfig:
       type: object
       properties:
@@ -6424,6 +6427,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizardRequest'
+        title_bestellwizard_product_choice:
+          type: string
       required:
       - accordions_in_bestell_wizard
       - capacity
@@ -6437,6 +6442,7 @@ components:
       - single_subscription_only
       - tax_rate
       - tax_rate_change_date
+      - title_bestellwizard_product_choice
     FuturePaymentsResponse:
       type: object
       properties:
@@ -8076,6 +8082,9 @@ components:
           title: Reihenfolge im BestellWizard (kleiner ist früher)
         force_waiting_list:
           type: boolean
+        title_bestellwizard_product_choice:
+          type: string
+          maxLength: 512
       required:
       - name
     ProductTypeAccordionInBestellWizard:
@@ -8274,6 +8283,9 @@ components:
           items:
             $ref: '#/components/schemas/ProductTypeAccordionInBestellWizard'
           readOnly: true
+        title_bestellwizard_product_choice:
+          type: string
+          maxLength: 512
       required:
       - accordions
       - name

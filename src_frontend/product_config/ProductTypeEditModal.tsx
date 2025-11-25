@@ -65,6 +65,10 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
   const [accordions, setAccordions] = useState<
     ProductTypeAccordionInBestellWizard[]
   >([]);
+  const [
+    titleBestellWizardProductChoices,
+    setTitleBestellWizardProductChoices,
+  ] = useState("");
 
   useEffect(() => {
     if (!show) return;
@@ -111,6 +115,9 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
         );
         setForceWaitingList(result.extendedProductType.forceWaitingList);
         setAccordions(result.extendedProductType.accordionsInBestellWizard);
+        setTitleBestellWizardProductChoices(
+          result.extendedProductType.titleBestellwizardProductChoice,
+        );
       })
       .catch((error) =>
         handleRequestError(
@@ -159,6 +166,7 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
             contractLink: contractLink,
             forceWaitingList: forceWaitingList,
             accordionsInBestellWizard: accordions,
+            titleBestellwizardProductChoice: titleBestellWizardProductChoices,
           },
         },
       })
@@ -224,6 +232,10 @@ const ProductTypeEditModal: React.FC<ProductTypeEditModalProps> = ({
           setForceWaitingList={setForceWaitingList}
           accordions={accordions}
           setAccordions={setAccordions}
+          titleBestellWizardProductChoices={titleBestellWizardProductChoices}
+          setTitleBestellWizardProductChoices={
+            setTitleBestellWizardProductChoices
+          }
         />
       </Modal.Body>
     );

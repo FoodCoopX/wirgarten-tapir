@@ -34,6 +34,7 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
     accordions_in_bestell_wizard = ProductTypeAccordionInBestellWizardSerializer(
         many=True
     )
+    title_bestellwizard_product_choice = serializers.CharField(allow_blank=True)
 
 
 class ExtendedProductTypeAndConfigSerializer(serializers.Serializer):

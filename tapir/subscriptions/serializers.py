@@ -145,6 +145,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "single_subscription_only",
             "force_waiting_list",
             "accordions",
+            "title_bestellwizard_product_choice",
         ]
 
     products = SerializerMethodField()

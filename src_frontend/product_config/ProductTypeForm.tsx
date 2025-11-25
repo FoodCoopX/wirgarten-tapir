@@ -49,6 +49,8 @@ interface ProductTypeFormProps {
   setForceWaitingList: (forceWaitingList: boolean) => void;
   accordions: ProductTypeAccordionInBestellWizard[];
   setAccordions: (accordions: ProductTypeAccordionInBestellWizard[]) => void;
+  titleBestellWizardProductChoices: string;
+  setTitleBestellWizardProductChoices: (title: string) => void;
 }
 
 const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
@@ -91,6 +93,8 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
   setForceWaitingList,
   accordions,
   setAccordions,
+  titleBestellWizardProductChoices,
+  setTitleBestellWizardProductChoices,
 }) => {
   function setAccordionTitle(title: string, index: number) {
     accordions[index].title = title;
@@ -436,6 +440,21 @@ const ProductTypeForm: React.FC<ProductTypeFormProps> = ({
               />
             </Col>
           </Row>
+        </Row>
+        <Row className={"mt-2"}>
+          <Form.Group controlId={"title_bestellwizard"}>
+            <Form.Label>
+              Title im BestellWizard bei der Produkt-Größe-Auswahl
+            </Form.Label>
+            <Form.Control
+              type={"text"}
+              onChange={(event) =>
+                setTitleBestellWizardProductChoices(event.target.value)
+              }
+              required={true}
+              value={titleBestellWizardProductChoices}
+            />
+          </Form.Group>
         </Row>
       </Col>
     </Row>

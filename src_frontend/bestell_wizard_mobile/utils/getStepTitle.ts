@@ -57,6 +57,6 @@ export function getStepTitle(
     case "intro":
       return "Unser " + productType.name;
     default:
-      return undefined;
+      return productType.titleBestellwizardProductChoice;
   }
 }
