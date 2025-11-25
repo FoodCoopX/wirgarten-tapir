@@ -51,7 +51,10 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
   }
 
   useEffect(() => {
-    if (parseInt(internalNumberOfShares) < minimumNumberOfShares) {
+    if (
+      isNaN(parseInt(internalNumberOfShares)) ||
+      parseInt(internalNumberOfShares) < minimumNumberOfShares
+    ) {
       setInternalNumberOfShares(minimumNumberOfShares.toString());
     }
   }, [minimumNumberOfShares]);
