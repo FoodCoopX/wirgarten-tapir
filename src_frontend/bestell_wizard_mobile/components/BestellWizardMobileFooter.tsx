@@ -80,24 +80,26 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         style={{ width: "auto", height: "100%", paddingBottom: "0.5rem" }}
         className={"d-flex flex-column justify-content-end gap-2 mx-2"}
       >
-        <div
-          className={
-            "d-flex flex-row gap-2 align-items-center justify-content-center"
-          }
-        >
-          <TapirButton
-            size={"sm"}
-            icon={"chevron_line_up"}
-            variant={BUTTON_VARIANT}
-            onClick={() => setCurrentStep(steps[0])}
-          />
-          <TapirButton
-            size={"sm"}
-            icon={"keyboard_arrow_up"}
-            variant={BUTTON_VARIANT}
-            onClick={goToPreviousStep}
-          />
-        </div>
+        {currentStep !== steps[steps.length - 1] && (
+          <div
+            className={
+              "d-flex flex-row gap-2 align-items-center justify-content-center"
+            }
+          >
+            <TapirButton
+              size={"sm"}
+              icon={"chevron_line_up"}
+              variant={BUTTON_VARIANT}
+              onClick={() => setCurrentStep(steps[0])}
+            />
+            <TapirButton
+              size={"sm"}
+              icon={"keyboard_arrow_up"}
+              variant={BUTTON_VARIANT}
+              onClick={goToPreviousStep}
+            />
+          </div>
+        )}
         <small
           className={
             "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
