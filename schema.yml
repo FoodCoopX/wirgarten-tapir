@@ -4848,6 +4848,8 @@ components:
           type: string
         step9_title:
           type: string
+        step9_payment_rhythm_modal_text:
+          type: string
         step10_title:
           type: string
         step11_title:
@@ -4894,6 +4896,7 @@ components:
       - step6c_checkbox_statute
       - step6c_text_statute
       - step8_title
+      - step9_payment_rhythm_modal_text
       - step9_title
     BlankEnum:
       enum:

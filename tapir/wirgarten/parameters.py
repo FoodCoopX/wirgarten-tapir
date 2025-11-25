@@ -1303,6 +1303,17 @@ class ParameterDefinitions(TapirParameterDefinitionImporter):
         bestellwizard_parameter_order -= 1
 
         self.parameter_definition(
+            key=ParameterKeys.BESTELLWIZARD_STEP9_PAYMENT_RHYTHM_MODAL_TEXT,
+            label="Seite 9: Bankverbindung - Erklärungstext Zahlungsintervalle",
+            datatype=TapirParameterDatatype.STRING,
+            initial_value="Dieses Text soll in der Konfig angepasst werden unter 'Seite 9: Bankverbindung - Erklärungstext Zahlungsintervalle'",
+            description="",
+            category=ParameterCategory.BESTELLWIZARD,
+            order_priority=bestellwizard_parameter_order,
+        )
+        bestellwizard_parameter_order -= 1
+
+        self.parameter_definition(
             key=ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
             label="Seite 10: Zusammenfassung - Titel",
             datatype=TapirParameterDatatype.STRING,

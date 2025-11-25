@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
-import { Form } from "react-bootstrap";
+import { Form, Modal } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -33,6 +35,7 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
   solidarityContribution,
 }) => {
   const [accountOwnerSetManually, setAccountOwnerSetManually] = useState(false);
+  const [paymentRhythmModalOpen, setPaymentRhythmModalOpen] = useState(false);
 
   useEffect(() => {
     if (accountOwnerSetManually) {
@@ -81,25 +84,33 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           type={"text"}
         />
         {(isAtLeastOneProductOrdered(shoppingCart) ||
-          solidarityContribution > 0) && (
-          <Form.FloatingLabel label={"Zahlungsintervall"}>
-            <Form.Select
-              value={personalData.paymentRhythm}
-              onChange={(event) => {
-                personalData.paymentRhythm = event.target.value;
-                setPersonalData(Object.assign({}, personalData));
-              }}
-            >
-              {Object.entries(settings.paymentRhythmChoices).map(
-                ([rhythm, displayName]) => (
-                  <option key={rhythm} value={rhythm}>
-                    {displayName}
-                  </option>
-                ),
-              )}
-            </Form.Select>
-          </Form.FloatingLabel>
-        )}
+          solidarityContribution > 0) &&
+          Object.entries(settings.paymentRhythmChoices).length > 1 && (
+            <div className={"d-flex flex-row gap-2"}>
+              <Form.FloatingLabel label={"Zahlungsintervall"}>
+                <Form.Select
+                  value={personalData.paymentRhythm}
+                  onChange={(event) => {
+                    personalData.paymentRhythm = event.target.value;
+                    setPersonalData(Object.assign({}, personalData));
+                  }}
+                >
+                  {Object.entries(settings.paymentRhythmChoices).map(
+                    ([rhythm, displayName]) => (
+                      <option key={rhythm} value={rhythm}>
+                        {displayName}
+                      </option>
+                    ),
+                  )}
+                </Form.Select>
+              </Form.FloatingLabel>
+              <TapirButton
+                icon={"help"}
+                variant={BUTTON_VARIANT}
+                onClick={() => setPaymentRhythmModalOpen(true)}
+              />
+            </div>
+          )}
         <Form.Group controlId={"sepa"}>
           <Form.Check
             onChange={(event) => setSepaAllowed(event.target.checked)}
@@ -121,6 +132,20 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
         onClick={goToNextStep}
         disabled={!sepaAllowed || !contractAccepted}
       />
+      <Modal
+        show={paymentRhythmModalOpen}
+        onHide={() => setPaymentRhythmModalOpen(false)}
+        centered={true}
+      >
+        <Modal.Header closeButton={true}>Zahlungsintervalle</Modal.Header>
+        <Modal.Body>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: settings.strings.step9PaymentRhythmModalText,
+            }}
+          ></span>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };

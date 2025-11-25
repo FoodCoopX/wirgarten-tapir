@@ -492,6 +492,7 @@ class BestellWizardBaseDataApiView(APIView):
             "step6c_checkbox_commitment": ParameterKeys.BESTELLWIZARD_STEP6C_CHECKBOX_COMMITMENT,
             "step8_title": ParameterKeys.BESTELLWIZARD_STEP8_TITLE,
             "step9_title": ParameterKeys.BESTELLWIZARD_STEP9_TITLE,
+            "step9_payment_rhythm_modal_text": ParameterKeys.BESTELLWIZARD_STEP9_PAYMENT_RHYTHM_MODAL_TEXT,
             "step10_title": ParameterKeys.BESTELLWIZARD_STEP10_TITLE,
             "step11_title": ParameterKeys.BESTELLWIZARD_STEP11_TITLE,
             "step12_title": ParameterKeys.BESTELLWIZARD_STEP12_TITLE,

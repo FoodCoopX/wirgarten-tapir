@@ -71,6 +71,7 @@ class BestellWizardStringsSerializer(serializers.Serializer):
     step6c_checkbox_commitment = serializers.CharField()
     step8_title = serializers.CharField()
     step9_title = serializers.CharField()
+    step9_payment_rhythm_modal_text = serializers.CharField()
     step10_title = serializers.CharField()
     step11_title = serializers.CharField()
     step12_title = serializers.CharField()

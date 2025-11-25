@@ -164,6 +164,9 @@ class ParameterKeys:
     BESTELLWIZARD_STEP9_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step9.background_image"
     )
+    BESTELLWIZARD_STEP9_PAYMENT_RHYTHM_MODAL_TEXT = (
+        f"{PREFIX}.bestellwizard.step9.payment_rhythm_modal_text"
+    )
     BESTELLWIZARD_STEP10_TITLE = f"{PREFIX}.bestellwizard.step10.title"
     BESTELLWIZARD_STEP10_BACKGROUND_IMAGE = (
         f"{PREFIX}.bestellwizard.step10.background_image"
