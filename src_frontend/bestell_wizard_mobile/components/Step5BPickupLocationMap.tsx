@@ -15,6 +15,8 @@ interface Step5BPickupLocationMapProps {
   selectedPickupLocations: PublicPickupLocation[];
   setSelectedPickupLocations: (locations: PublicPickupLocation[]) => void;
   tabIsActive: boolean;
+  mapRef: MapRef;
+  setMapRef: (mr: MapRef) => void;
 }
 
 const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
@@ -22,24 +24,25 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   selectedPickupLocations,
   setSelectedPickupLocations,
   tabIsActive,
+  mapRef,
+  setMapRef,
 }) => {
-  const [map, setMap] = useState<MapRef>(null);
   const [firstRender, setFirstRender] = useState(true);
 
   useEffect(() => {
-    if (map === null) {
+    if (!mapRef) {
       return;
     }
 
     if (!tabIsActive) {
-      map.closePopup();
+      mapRef.closePopup();
     }
 
     if (selectedPickupLocations.length === 0) {
       return;
     }
 
-    map.setView(
+    mapRef.setView(
       {
         lat: parseFloat(selectedPickupLocations[0].coordsLon),
         lng: parseFloat(selectedPickupLocations[0].coordsLat),
@@ -50,9 +53,9 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
   }, [selectedPickupLocations]);
 
   useEffect(() => {
-    if (tabIsActive && map) {
+    if (tabIsActive && mapRef) {
       setTimeout(() => {
-        map.invalidateSize(true);
+        mapRef.invalidateSize(true);
         setTimeout(() => {
           if (firstRender) {
             setMapBoundaries();
@@ -61,10 +64,10 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         }, 10);
       }, 10);
     }
-  }, [tabIsActive, map]);
+  }, [tabIsActive, mapRef]);
 
   function setMapBoundaries() {
-    if (!map) {
+    if (!mapRef) {
       return;
     }
 
@@ -74,7 +77,7 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         parseFloat(pickupLocation.coordsLat),
       ]),
     );
-    map.fitBounds(bounds);
+    mapRef.fitBounds(bounds);
   }
 
   function updateSelection(pickupLocation: PublicPickupLocation) {
@@ -82,9 +85,9 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
       setSelectedPickupLocations(
         selectedPickupLocations.filter((pl) => pl !== pickupLocation),
       );
-      if (map) {
+      if (mapRef) {
         setMapBoundaries();
-        map.closePopup();
+        mapRef.closePopup();
       }
     } else {
       setSelectedPickupLocations([pickupLocation]);
@@ -100,7 +103,8 @@ const Step5BPickupLocationMap: React.FC<Step5BPickupLocationMapProps> = ({
         ]}
         zoom={13}
         scrollWheelZoom={false}
-        ref={setMap}
+        ref={setMapRef}
+        style={{ position: "absolute", top: 0, bottom: 0, right: 0, left: 0 }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { ButtonGroup, Carousel, ToggleButton } from "react-bootstrap";
 import Step5BPickupLocationList from "../components/Step5BPickupLocationList.tsx";
@@ -6,6 +6,8 @@ import { PublicPickupLocation } from "../../api-client";
 import Step5BPickupLocationMap from "../components/Step5BPickupLocationMap.tsx";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { CarouselRef } from "react-bootstrap/Carousel";
+import { MapRef } from "react-leaflet/MapContainer";
 
 interface Step5BPickupLocationChoiceProps {
   settings: BestellWizardSettings;
@@ -30,6 +32,25 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
 }) => {
   const tabs: PickupLocationTab[] = ["wishes", "list", "map"];
   const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
+  const carouselRef = useRef<CarouselRef>(null);
+  const [mapRef, setMapRef] = useState<MapRef>(null);
+
+  useEffect(() => {
+    if (!carouselRef.current?.element) {
+      return;
+    }
+
+    if (!mapRef) {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      mapRef.invalidateSize();
+    });
+    resizeObserver.observe(carouselRef.current?.element);
+
+    return () => resizeObserver.disconnect();
+  }, [carouselRef, mapRef]);
 
   return (
     <>
@@ -57,7 +78,9 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         controls={false}
         interval={null}
         touch={false}
-        style={{ width: "100%" }}
+        style={{ width: "100%", flexGrow: 1 }}
+        ref={carouselRef}
+        id={"pickup_location_carousel"}
       >
         <Carousel.Item>
           <div className={"text-center"} style={{ height: "50dvh" }}>
@@ -85,13 +108,17 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
             tabIsActive={currentTab === "list" && stepIsActive}
           />
         </Carousel.Item>
-        <Carousel.Item>
-          <Step5BPickupLocationMap
-            pickupLocations={settings.pickupLocations}
-            selectedPickupLocations={selectedPickupLocations}
-            setSelectedPickupLocations={setSelectedPickupLocations}
-            tabIsActive={currentTab === "map" && stepIsActive}
-          />
+        <Carousel.Item style={{ position: "absolute", inset: 0 }}>
+          <div style={{ position: "absolute", inset: 0 }}>
+            <Step5BPickupLocationMap
+              pickupLocations={settings.pickupLocations}
+              selectedPickupLocations={selectedPickupLocations}
+              setSelectedPickupLocations={setSelectedPickupLocations}
+              tabIsActive={currentTab === "map" && stepIsActive}
+              mapRef={mapRef}
+              setMapRef={setMapRef}
+            />
+          </div>
         </Carousel.Item>
       </Carousel>
       <NextStepButton
