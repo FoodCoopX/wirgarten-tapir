@@ -84,27 +84,28 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
         onClick={() => goToIndex(index)}
       >
         <Button variant={"outline-dark"} style={{ padding: 0 }}>
-          {product.urlOfImageInBestellwizard ? (
-            <img
-              src={product.urlOfImageInBestellwizard}
-              style={{
-                maxWidth: "8dvh",
-                objectFit: "contain",
-                filter: shouldShowWarningProductNotAvailable(
-                  product,
-                  productType,
-                  settings,
-                )
-                  ? "grayscale(1)"
-                  : "",
-              }}
-              alt={"Photo von " + productType.name + " " + product.name}
-            />
-          ) : (
+          <div className={"d-flex flex-column align-items-center"}>
             <span className={"material-icons"}>
               {isBeforeButton ? "chevron_left" : "chevron_right"}
             </span>
-          )}
+            {product.urlOfImageInBestellwizard && (
+              <img
+                src={product.urlOfImageInBestellwizard}
+                style={{
+                  maxWidth: "8dvh",
+                  objectFit: "contain",
+                  filter: shouldShowWarningProductNotAvailable(
+                    product,
+                    productType,
+                    settings,
+                  )
+                    ? "grayscale(1)"
+                    : "",
+                }}
+                alt={"Photo von " + productType.name + " " + product.name}
+              />
+            )}
+          </div>
         </Button>
       </div>
     );
