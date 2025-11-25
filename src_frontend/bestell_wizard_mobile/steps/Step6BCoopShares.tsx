@@ -32,6 +32,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
 }) => {
   const [statuteRead, setStatuteRead] = useState(false);
   const [commitmentChecked, setCommitmentChecked] = useState(false);
+  const [internalNumberOfShares, setInternalNumberOfShares] = useState("");
 
   useEffect(() => {
     setStatuteAccepted(statuteRead && commitmentChecked);
@@ -48,6 +49,25 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
 
     return selectedNumberOfCoopShares < minimumNumberOfShares;
   }
+
+  useEffect(() => {
+    if (parseInt(internalNumberOfShares) < minimumNumberOfShares) {
+      setInternalNumberOfShares(minimumNumberOfShares.toString());
+    }
+  }, [minimumNumberOfShares]);
+
+  useEffect(() => {
+    const newNumberOfShares = parseInt(internalNumberOfShares);
+    if (isNaN(newNumberOfShares)) {
+      return;
+    }
+    if (newNumberOfShares < minimumNumberOfShares) {
+      return;
+    }
+    if (newNumberOfShares !== selectedNumberOfCoopShares) {
+      setSelectedNumberOfCoopShares(newNumberOfShares);
+    }
+  }, [internalNumberOfShares]);
 
   return (
     <>
@@ -66,8 +86,11 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           icon={"remove"}
           variant={BUTTON_VARIANT}
           onClick={() => {
-            setSelectedNumberOfCoopShares(
-              Math.max(minimumNumberOfShares, selectedNumberOfCoopShares - 1),
+            setInternalNumberOfShares(
+              Math.max(
+                minimumNumberOfShares,
+                selectedNumberOfCoopShares - 1,
+              ).toString(),
             );
           }}
           disabled={selectedNumberOfCoopShares <= minimumNumberOfShares}
@@ -77,11 +100,8 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           <Form.Control
             min={minimumNumberOfShares}
             step={1}
-            value={selectedNumberOfCoopShares}
-            onChange={(event) =>
-              setSelectedNumberOfCoopShares(parseInt(event.target.value))
-            }
-            disabled={true}
+            value={internalNumberOfShares}
+            onChange={(event) => setInternalNumberOfShares(event.target.value)}
             size={"sm"}
           />
         </Form.Group>
@@ -89,7 +109,9 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           icon={"add"}
           variant={BUTTON_VARIANT}
           onClick={() => {
-            setSelectedNumberOfCoopShares(selectedNumberOfCoopShares + 1);
+            setInternalNumberOfShares(
+              (selectedNumberOfCoopShares + 1).toString(),
+            );
           }}
           size={"sm"}
         />
