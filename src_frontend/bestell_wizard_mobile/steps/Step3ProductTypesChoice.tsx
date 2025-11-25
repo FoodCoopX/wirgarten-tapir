@@ -117,6 +117,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             </div>
           </Form.Group>
         ))}
+        <hr />
         <Form.Group controlId={"investing"}>
           <Form.Check
             label={"Fördermitgliedschaft"}
