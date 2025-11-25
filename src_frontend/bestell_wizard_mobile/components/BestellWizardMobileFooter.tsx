@@ -112,11 +112,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                 bg={
                   steps.indexOf(currentStep) < index ? "secondary" : "primary"
                 }
+                key={step}
               >
                 {getPhaseName(getPhase(step))}
               </Badge>
             ) : (
               <span
+                key={step}
                 style={{
                   height: "7px",
                   width: "7px",

@@ -35,7 +35,7 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
 
       <div>
         {settings.distributionChannels.map((channel) => (
-          <Form.Group controlId={channel}>
+          <Form.Group controlId={channel} key={channel}>
             <Form.Check
               onChange={(event) =>
                 updateSelection(channel, event.target.checked)

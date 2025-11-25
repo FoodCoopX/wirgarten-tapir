@@ -88,7 +88,9 @@ const Step4DSolidarityContribution: React.FC<
           onChange={(event) => onSelect(event.target.value)}
         >
           {getValues().map((value) => (
-            <option value={value}>{getDisplay(value)}</option>
+            <option key={value} value={value}>
+              {getDisplay(value)}
+            </option>
           ))}
         </Form.Select>
         {selectedValue === "custom" && (
