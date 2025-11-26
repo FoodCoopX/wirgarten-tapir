@@ -55,7 +55,15 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
       pickupLocation.id!,
       firstDeliveryDatesByPickupLocationAndProductType,
     );
-    return <span className={"text-success"}>{dateAsString}</span>;
+    return (
+      <span
+        className={
+          selectedPickupLocations.includes(pickupLocation) ? "" : "text-success"
+        }
+      >
+        {dateAsString}
+      </span>
+    );
   }
 
   useEffect(() => {
