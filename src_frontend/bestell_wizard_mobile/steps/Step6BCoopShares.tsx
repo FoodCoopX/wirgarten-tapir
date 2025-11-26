@@ -99,7 +99,7 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           disabled={selectedNumberOfCoopShares <= minimumNumberOfShares}
           size={"sm"}
         />
-        <Form.Group style={{ maxWidth: "30px" }}>
+        <Form.Group style={{ maxWidth: "35px" }}>
           <Form.Control
             min={minimumNumberOfShares}
             step={1}

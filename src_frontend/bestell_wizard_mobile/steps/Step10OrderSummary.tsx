@@ -148,9 +148,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
       settings.paymentRhythmChoices,
     )) {
       if (rhythm === givenRhythm) {
-        if (rhythm === "monthly") {
-          return display.slice(0, display.indexOf("("));
-        }
         return display;
       }
     }
@@ -235,7 +232,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
                   {studentStatusEnabled
                     ? "Keine Anteile gezeichnet da student."
                     : numberOfCoopShares +
-                      " × " +
+                      " Genossenschaftsanteile à " +
                       formatCurrency(settings.priceOfAShare) +
                       " = " +
                       formatCurrency(
@@ -245,6 +242,7 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
               </Accordion.Item>
             </Accordion>
           )}
+          <hr />
           {(solidarityContribution > 0 ||
             isAtLeastOneProductOrdered(shoppingCart)) && (
             <Accordion>

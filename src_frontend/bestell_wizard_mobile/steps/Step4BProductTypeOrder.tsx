@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
@@ -11,6 +11,7 @@ import { formatShoppingCart } from "../../bestell_wizard/utils/formatShoppingCar
 import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/doesProductBelongToProductType.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import { CarouselRef } from "react-bootstrap/Carousel";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -27,19 +28,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   shoppingCart,
   setShoppingCart,
 }) => {
-  const [activeProductIndex, setActiveProductIndex] = useState(0);
-
-  useEffect(() => {
-    if (productType.products.length > 1) {
-      setActiveProductIndex(1);
-    } else {
-      setActiveProductIndex(0);
-    }
-  }, [productType]);
-
-  function handleSelect(index: number) {
-    setActiveProductIndex(index);
-  }
+  const carouselRef = useRef<CarouselRef>(null);
 
   function getNextButtonText() {
     if (!isProductTypeOrdered(productType, shoppingCart)) {
@@ -52,17 +41,6 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
       ),
     );
     return "Weiter mit " + formatShoppingCart(filteredShoppingCart, settings);
-  }
-
-  function getIndexWithinRange(index: number) {
-    index = index % productType.products.length;
-    if (index < 0) {
-      index += productType.products.length;
-    }
-    return index;
-  }
-  function goToIndex(index: number) {
-    setActiveProductIndex(getIndexWithinRange(index));
   }
 
   function buildImageAtIndex(index: number, isBeforeButton: boolean) {
@@ -81,7 +59,11 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
           cursor: "pointer",
         }}
         className={"d-flex flex-column align-items-center"}
-        onClick={() => goToIndex(index)}
+        onClick={() =>
+          isBeforeButton
+            ? carouselRef.current?.prev()
+            : carouselRef.current?.next()
+        }
       >
         <Button variant={"outline-dark"} style={{ padding: 0 }}>
           <div className={"d-flex flex-column align-items-center"}>
@@ -114,14 +96,15 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   return (
     <>
       <Carousel
-        activeIndex={activeProductIndex}
-        onSelect={handleSelect}
         indicators={false}
         controls={false}
         interval={null}
-        touch={false}
+        touch={true}
         style={{ width: "100%" }}
         variant={"dark"}
+        ref={carouselRef}
+        wrap={false}
+        defaultActiveIndex={productType.products.length > 1 ? 1 : 0}
       >
         {productType.products
           .sort((a, b) => a.price - b.price)

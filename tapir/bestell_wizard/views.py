@@ -439,6 +439,8 @@ class BestellWizardBaseDataApiView(APIView):
         cls, rhythm: MemberPaymentRhythm.Rhythm, cache: dict
     ):
         base_name = MemberPaymentRhythmService.get_rhythm_display_name(rhythm=rhythm)
+        if rhythm == MemberPaymentRhythm.Rhythm.MONTHLY:
+            return base_name
         growing_period = TapirCache.get_growing_period_at_date(
             reference_date=get_today(cache=cache), cache=cache
         )
@@ -464,7 +466,7 @@ class BestellWizardBaseDataApiView(APIView):
                     day=get_parameter_value(
                         key=ParameterKeys.PAYMENT_DUE_DAY, cache=cache
                     )
-                ).strftime("%d.%m")
+                ).strftime("%-d.%-m")
                 for month in relevant_months
             ]
         )

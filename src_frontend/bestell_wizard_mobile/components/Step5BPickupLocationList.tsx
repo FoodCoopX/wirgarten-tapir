@@ -75,9 +75,30 @@ const Step5BPickupLocationList: React.FC<Step5BPickupLocationListProps> = ({
     }
   }, [tabIsActive]);
 
+  function sortPickupLocations(
+    a: PublicPickupLocation,
+    b: PublicPickupLocation,
+  ) {
+    if (
+      pickupLocationsWithCapacityFull.has(a) &&
+      !pickupLocationsWithCapacityFull.has(b)
+    ) {
+      return 1;
+    }
+
+    if (
+      pickupLocationsWithCapacityFull.has(b) &&
+      !pickupLocationsWithCapacityFull.has(a)
+    ) {
+      return -1;
+    }
+
+    return a.name.localeCompare(b.name);
+  }
+
   return (
     <ListGroup style={{ maxHeight: "50dvh", overflow: "scroll" }}>
-      {pickupLocations.map((pickupLocation) => (
+      {pickupLocations.sort(sortPickupLocations).map((pickupLocation) => (
         <ListGroupItem
           key={pickupLocation.id}
           style={{

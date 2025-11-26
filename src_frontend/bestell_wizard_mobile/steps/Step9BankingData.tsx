@@ -87,7 +87,10 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
           solidarityContribution > 0) &&
           Object.entries(settings.paymentRhythmChoices).length > 1 && (
             <div className={"d-flex flex-row gap-2"}>
-              <Form.FloatingLabel label={"Zahlungsintervall"}>
+              <Form.FloatingLabel
+                label={"Zahlungsintervall"}
+                style={{ flexGrow: 1 }}
+              >
                 <Form.Select
                   value={personalData.paymentRhythm}
                   onChange={(event) => {
