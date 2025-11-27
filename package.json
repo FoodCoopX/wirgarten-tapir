@@ -13,7 +13,7 @@
     "@openapitools/openapi-generator-cli": "^2.20.2",
     "@types/iban": "^0.0.35",
     "@types/node": "^22.15.29",
-    "bootstrap": "^5.3.6",
+    "bootstrap": "^5.3.8",
     "chart.js": "^4.4.9",
     "dayjs": "^1.11.13",
     "email-validator": "^2.0.4",

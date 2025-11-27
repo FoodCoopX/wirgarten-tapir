@@ -1,5 +1,5 @@
 import React from "react";
-import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";

@@ -6,6 +6,8 @@ const init = (c_p_map_json, pe_c_map_json) => {
   activateDetails();
 };
 
+const CLASS_ROW_ACTIVE = "table-active";
+
 const activateGrowingPeriodList = (pe_c_map_json) => {
   const params = Tapir.getUrlParams();
   const children = Array.from(
@@ -14,9 +16,9 @@ const activateGrowingPeriodList = (pe_c_map_json) => {
   children.forEach((child) => {
     const id = `period-${params.periodId}`;
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 
@@ -31,9 +33,9 @@ const activateCapacityList = (c_p_map_json) => {
   const id = `c-${params.capacityId}`;
   children.forEach((child) => {
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 
@@ -47,9 +49,9 @@ const activateProductList = () => {
   const id = `p-${params.prodId}`;
   children.forEach((child) => {
     if (child.id === id) {
-      child.classList.add("active");
+      child.classList.add(CLASS_ROW_ACTIVE);
     } else {
-      child.classList.remove("active");
+      child.classList.remove(CLASS_ROW_ACTIVE);
     }
   });
 };
@@ -65,7 +67,7 @@ const setupCapacityList = (periodId, pe_c_map_json) => {
 
   Array.from(listItemsTypes).forEach((item) => {
     item.style["display"] = displayIds.includes(item.id) ? "table-row" : "none";
-    item.classList.remove("active");
+    item.classList.remove(CLASS_ROW_ACTIVE);
   });
 };
 
@@ -79,7 +81,7 @@ const setupProductList = (capacityId, c_p_map_json) => {
       : [];
   Array.from(listItems).forEach((item) => {
     item.style["display"] = displayIds.includes(item.id) ? "table-row" : "none";
-    item.classList.remove("active");
+    item.classList.remove(CLASS_ROW_ACTIVE);
   });
 };
 

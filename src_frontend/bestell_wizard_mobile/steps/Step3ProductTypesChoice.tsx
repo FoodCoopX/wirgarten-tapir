@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import TapirButton from "../../components/TapirButton.tsx";
 import { Form, Modal } from "react-bootstrap";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { PublicProductType } from "../../api-client";
@@ -93,38 +92,66 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
           {replaceTokens(settings.strings.step3Text, firstName)}
         </p>
       )}
+
       <div>
-        {settings.productTypes.map((productType) => (
-          <Form.Group
-            key={"checkbox_" + productType.id}
-            controlId={"control_" + productType.id}
-          >
-            <div className={"d-flex flex-row gap-2 align-items-center"}>
-              <Form.Check
-                label={productType.name}
-                checked={selectedProductTypes.includes(productType)}
+        <div className={"d-flex flex-row gap-2"}>
+          {settings.productTypes.map((productType) => (
+            <>
+              <input
+                type="checkbox"
+                className="btn-check"
+                id={productType.id}
+                autoComplete="off"
                 onChange={(event) =>
                   updateSelection(productType, event.target.checked)
                 }
+                checked={selectedProductTypes.includes(productType)}
                 disabled={productType.mustBeSubscribedTo}
               />
-              <TapirButton
-                icon={"help"}
-                variant={BUTTON_VARIANT}
-                size={"sm"}
-                onClick={() => setProductTypeForModal(productType)}
-              />
-            </div>
-          </Form.Group>
-        ))}
+              <label
+                className={"btn btn-" + BUTTON_VARIANT}
+                htmlFor={productType.id}
+              >
+                <div className={"d-flex flex-row gap-2 align-items-center"}>
+                  <Form.Check
+                    checked={selectedProductTypes.includes(productType)}
+                    style={{ pointerEvents: "none" }}
+                  />
+                  {productType.iconLink && (
+                    <img
+                      src={productType.iconLink}
+                      alt={"Produkt-Icon"}
+                      style={{ height: "1.5rem" }}
+                    />
+                  )}
+                  <span>{productType.name}</span>
+                </div>
+              </label>
+            </>
+          ))}
+        </div>
+
         <hr />
-        <Form.Group controlId={"investing"}>
-          <Form.Check
-            label={"Fördermitgliedschaft"}
-            checked={investingMembership}
+        <div className={"d-flex flex-row justify-content-center"}>
+          <input
+            type="checkbox"
+            className="btn-check"
+            id={"investing"}
+            autoComplete="off"
             onChange={(event) => setInvestingMembership(event.target.checked)}
+            defaultChecked={false}
+            checked={investingMembership}
           />
-        </Form.Group>
+          <label className={"btn btn-" + BUTTON_VARIANT} htmlFor={"investing"}>
+            <div className={"d-flex flex-row gap-2 align-items-center"}>
+              <Form.Check
+                checked={investingMembership}
+                style={{ pointerEvents: "none" }}
+              />
+              <span>Fördermitgliedschaft</span>
+            </div>
+          </label>
+        </div>
       </div>
       <NextStepButton onClick={goToNextStep} />
       <Modal

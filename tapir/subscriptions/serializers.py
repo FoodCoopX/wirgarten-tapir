@@ -146,6 +146,7 @@ class PublicProductTypeSerializer(serializers.ModelSerializer):
             "force_waiting_list",
             "accordions",
             "title_bestellwizard_product_choice",
+            "icon_link",
         ]
 
     products = SerializerMethodField()

@@ -8290,6 +8290,11 @@ components:
         title_bestellwizard_product_choice:
           type: string
           maxLength: 512
+        icon_link:
+          type: string
+          nullable: true
+          title: Link zum Icon
+          maxLength: 512
       required:
       - accordions
       - name

@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 
-import "../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../tapir/core/static/core/css/base.css";
 import { useApi } from "../hooks/useApi.ts";
 import {

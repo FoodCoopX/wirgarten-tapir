@@ -88,9 +88,9 @@
     const activateSelection = (id) => {
         for (elem of transactionRows) {
             if(elem.id === `transaction-${id}`){
-                elem.classList.add('active')
+                elem.classList.add('table-active')
             } else {
-                elem.classList.remove('active')
+                elem.classList.remove('table-active')
             }
         }
     }

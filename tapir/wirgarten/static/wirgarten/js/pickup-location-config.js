@@ -14,10 +14,10 @@ const initSelected = () => {
 
     for (const elem of locationRows) {
       if (elem.id === `row-${params.selected}`) {
-        elem.style.background = "var(--active-color)";
+        elem.classList.add("table-active");
         elem.scrollIntoView();
       } else {
-        elem.style.background = "";
+        elem.classList.remove("table-active");
       }
     }
 

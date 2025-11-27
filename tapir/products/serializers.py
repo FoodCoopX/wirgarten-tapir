@@ -19,7 +19,7 @@ class ExtendedProductTypeSerializer(serializers.Serializer):
         required=False, allow_blank=True
     )
     order_in_bestellwizard = serializers.IntegerField()
-    icon_link = serializers.URLField(required=False, allow_blank=True)
+    icon_link = serializers.CharField(required=False, allow_blank=True)
     contract_link = serializers.URLField(required=False, allow_blank=True)
     capacity = serializers.FloatField()
     delivery_cycle = serializers.ChoiceField(choices=DeliveryCycle)

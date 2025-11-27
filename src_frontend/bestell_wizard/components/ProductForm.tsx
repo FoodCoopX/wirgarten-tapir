@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, Col, Form, Row } from "react-bootstrap";
 
-import "../../../tapir/core/static/core/bootstrap/5.1.3/css/bootstrap.min.css";
+import "../../../tapir/core/static/core/bootstrap/5.3.8/css/bootstrap.min.css";
 import "../../../tapir/core/static/core/css/base.css";
 import { type PublicProductType } from "../../api-client";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
@@ -10,7 +10,7 @@ import BestellWizardCardSubtitle from "./BestellWizardCardSubtitle.tsx";
 import { BestellWizardSettings } from "../types/BestellWizardSettings.ts";
 import {
   shouldShowWarningProductNotAvailable,
-  shouldShowWarningProductTypeNotAvailable
+  shouldShowWarningProductTypeNotAvailable,
 } from "../../utils/shouldShowWarningNotAvailable.ts";
 
 interface ProductFormProps {

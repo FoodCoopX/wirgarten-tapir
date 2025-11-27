@@ -106,6 +106,12 @@ export interface PublicProductType {
      * @memberof PublicProductType
      */
     titleBestellwizardProductChoice?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PublicProductType
+     */
+    iconLink?: string | null;
 }
 
 /**
@@ -141,6 +147,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'forceWaitingList': json['force_waiting_list'] == null ? undefined : json['force_waiting_list'],
         'accordions': ((json['accordions'] as Array<any>).map(ProductTypeAccordionInBestellWizardFromJSON)),
         'titleBestellwizardProductChoice': json['title_bestellwizard_product_choice'] == null ? undefined : json['title_bestellwizard_product_choice'],
+        'iconLink': json['icon_link'] == null ? undefined : json['icon_link'],
     };
 }
 
@@ -164,6 +171,7 @@ export function PublicProductTypeFromJSONTyped(json: any, ignoreDiscriminator: b
         'single_subscription_only': value['singleSubscriptionOnly'],
         'force_waiting_list': value['forceWaitingList'],
         'title_bestellwizard_product_choice': value['titleBestellwizardProductChoice'],
+        'icon_link': value['iconLink'],
     };
 }
 
