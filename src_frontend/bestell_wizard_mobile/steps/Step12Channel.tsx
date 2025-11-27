@@ -1,7 +1,7 @@
 import React from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step12ChannelProps {
   settings: BestellWizardSettings;
@@ -33,18 +33,14 @@ const Step12Channel: React.FC<Step12ChannelProps> = ({
         Ist gerade nur als Platzhalder da, der Auswahl wird nicht gespeichert
       </p>
 
-      <div>
+      <div className={"d-flex flex-column gap-2"}>
         {settings.distributionChannels.map((channel) => (
-          <Form.Group controlId={channel} key={channel}>
-            <Form.Check
-              onChange={(event) =>
-                updateSelection(channel, event.target.checked)
-              }
-              required={true}
-              checked={selectedDistributionChannels.has(channel)}
-              label={channel}
-            />
-          </Form.Group>
+          <TapirCheckbox
+            checked={selectedDistributionChannels.has(channel)}
+            onChange={(checked) => updateSelection(channel, checked)}
+            controlId={"distribution_channels_" + channel}
+            label={channel}
+          />
         ))}
       </div>
       <NextStepButton onClick={goToNextStep} />

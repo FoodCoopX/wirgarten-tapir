@@ -113,6 +113,8 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                   steps.indexOf(currentStep) < index ? "secondary" : "primary"
                 }
                 key={step}
+                onClick={() => setCurrentStep(step)}
+                style={{ cursor: "pointer" }}
               >
                 {getPhaseName(getPhase(step))}
               </Badge>
@@ -127,7 +129,9 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                       ? "var(--bs-secondary)"
                       : "var(--bs-primary)",
                   borderRadius: "50%",
+                  cursor: "pointer",
                 }}
+                onClick={() => setCurrentStep(step)}
               />
             ),
           )}

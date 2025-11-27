@@ -8,6 +8,7 @@ import { ShoppingCart } from "../../bestell_wizard/types/ShoppingCart.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step9BankingDataProps {
   goToNextStep: () => void;
@@ -114,22 +115,20 @@ const Step9BankingData: React.FC<Step9BankingDataProps> = ({
               />
             </div>
           )}
-        <Form.Group controlId={"sepa"}>
-          <Form.Check
-            onChange={(event) => setSepaAllowed(event.target.checked)}
-            required={true}
+        <div className={"d-flex flex-column gap-2 mx-2"}>
+          <TapirCheckbox
+            onChange={setSepaAllowed}
             checked={sepaAllowed}
             label={settings.labelCheckboxSepaMandat}
+            controlId={"sepa"}
           />
-        </Form.Group>
-        <Form.Group controlId={"contract"}>
-          <Form.Check
-            onChange={(event) => setContractAccepted(event.target.checked)}
-            required={true}
+          <TapirCheckbox
+            onChange={setContractAccepted}
             checked={contractAccepted}
-            label={<span>{settings.labelCheckboxContractPolicy}</span>}
+            label={settings.labelCheckboxContractPolicy}
+            controlId={"contract"}
           />
-        </Form.Group>
+        </div>
       </div>
       <NextStepButton
         onClick={goToNextStep}

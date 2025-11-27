@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
-import { Accordion, Form } from "react-bootstrap";
+import { Accordion } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { scrollIntoView } from "../utils/scrollIntoView.ts";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step11LegalProps {
   settings: BestellWizardSettings;
@@ -38,21 +39,14 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
       <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"cancellation"} onClick={scrollIntoView}>
           <Accordion.Header>
-            <Form.Group
-              controlId={"cancellation"}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Form.Check
-                onChange={(event) => {
-                  setCancellationPolicyRead(event.target.checked);
-                }}
-                required={true}
-                checked={cancellationPolicyRead}
-                label={
-                  "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
-                }
-              />
-            </Form.Group>
+            <TapirCheckbox
+              controlId={"legal_cancellation"}
+              checked={cancellationPolicyRead}
+              onChange={setCancellationPolicyRead}
+              label={
+                "Ja, ich habe die Widerrufsbelehrung zur Kenntnis genommen."
+              }
+            />
           </Accordion.Header>
           <Accordion.Body>
             <span
@@ -66,21 +60,14 @@ const Step11Legal: React.FC<Step11LegalProps> = ({
       <Accordion style={{ width: "100%" }}>
         <Accordion.Item eventKey={"privacy"} onClick={scrollIntoView}>
           <Accordion.Header>
-            <Form.Group
-              controlId={"privacy"}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Form.Check
-                onChange={(event) => {
-                  setPrivacyPolicyRead(event.target.checked);
-                }}
-                required={true}
-                checked={privacyPolicyRead}
-                label={
-                  "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
-                }
-              />
-            </Form.Group>
+            <TapirCheckbox
+              controlId={"legal_privacy"}
+              checked={privacyPolicyRead}
+              onChange={setPrivacyPolicyRead}
+              label={
+                "Ja, ich habe die Datenschutzerklärung zur Kenntnis genommen."
+              }
+            />
           </Accordion.Header>
           <Accordion.Body>
             Wir behandeln deine Daten vertraulich, verwenden diese nur im Rahmen

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import PersonalDataFormControl from "../components/PersonalDataFormControl.tsx";
-import { Form } from "react-bootstrap";
 import NextStepButton from "../components/NextStepButton.tsx";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step8PersonalDataProps {
   goToNextStep: () => void;
@@ -75,14 +75,12 @@ const Step8PersonalData: React.FC<Step8PersonalDataProps> = ({
             type={getType(field)}
           />
         ))}
-        <Form.Group controlId={"over18"}>
-          <Form.Check
-            onChange={(event) => setIsOver18(event.target.checked)}
-            required={true}
-            checked={isOver18}
-            label={"Ich bin über 18 Jahre alt"}
-          />
-        </Form.Group>
+        <TapirCheckbox
+          onChange={setIsOver18}
+          checked={isOver18}
+          label={"Ich bin über 18 Jahre alt"}
+          controlId={"over18"}
+        />
       </div>
       <NextStepButton disabled={!isOver18} onClick={goToNextStep} />
     </>

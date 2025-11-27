@@ -12,6 +12,7 @@ import { doesProductBelongsToProductType } from "../../bestell_wizard/utils/does
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { CarouselRef } from "react-bootstrap/Carousel";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step4BProductTypeOrderProps {
   settings: BestellWizardSettings;
@@ -146,10 +147,11 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                 className={"mt-1 d-flex flex-row gap-2 justify-content-center"}
               >
                 {productType.singleSubscriptionOnly ? (
-                  <Form.Check
+                  <TapirCheckbox
+                    controlId={"single_sub_" + product.id}
                     checked={shoppingCart[product.id!] > 0}
-                    onChange={(event) => {
-                      shoppingCart[product.id!] = event.target.checked ? 1 : 0;
+                    onChange={(checked) => {
+                      shoppingCart[product.id!] = checked ? 1 : 0;
                       setShoppingCart(Object.assign({}, shoppingCart));
                     }}
                   />

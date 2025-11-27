@@ -6,6 +6,7 @@ import { Form } from "react-bootstrap";
 import { formatCurrency } from "../../utils/formatCurrency.ts";
 import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import TapirCheckbox from "../components/TapirCheckbox.tsx";
 
 interface Step6BCoopSharesProps {
   goToNextStep: () => void;
@@ -130,46 +131,48 @@ const Step6BCoopShares: React.FC<Step6BCoopSharesProps> = ({
           </strong>
         </span>
       </small>
-      {settings.studentStatusAllowed && (
-        <div>
-          <Form.Check
-            id={"studentStatus"}
-            checked={studentStatusEnabled}
-            onChange={(event) => {
-              setStudentStatusEnabled(event.target.checked);
-              setSelectedNumberOfCoopShares(
-                event.target.checked ? 0 : minimumNumberOfShares,
-              );
-            }}
-            label={
-              "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
-            }
-          />
-          {studentStatusEnabled && (
-            <Form.Text>
-              Die Immatrikulationsbescheinigung muss per Mail an{" "}
-              <a href={"mailto:" + settings.contactMailAddress}>
-                {settings.contactMailAddress}
-              </a>{" "}
-              gesendet werden.
-            </Form.Text>
-          )}
-        </div>
-      )}
-      <Form.Check
-        id={"statuteRead"}
-        checked={statuteRead && !studentStatusEnabled}
-        onChange={(event) => setStatuteRead(event.target.checked)}
-        label={settings.strings.step6cCheckboxStatute}
-        disabled={studentStatusEnabled}
-      />
-      <Form.Check
-        id={"commitment"}
-        checked={commitmentChecked && !studentStatusEnabled}
-        onChange={(event) => setCommitmentChecked(event.target.checked)}
-        label={settings.strings.step6cCheckboxCommitment}
-        disabled={studentStatusEnabled}
-      />
+      <div className={"d-flex flex-column gap-2 mx-4"}>
+        {settings.studentStatusAllowed && (
+          <>
+            <TapirCheckbox
+              checked={studentStatusEnabled}
+              onChange={(checked) => {
+                setStudentStatusEnabled(checked);
+                setSelectedNumberOfCoopShares(
+                  checked ? 0 : minimumNumberOfShares,
+                );
+              }}
+              label={
+                "Ich bin Student*in und kann keine Genossenschaftsanteile zeichnen"
+              }
+              controlId={"studentStatus"}
+            />
+            {studentStatusEnabled && (
+              <Form.Text>
+                Die Immatrikulationsbescheinigung muss per Mail an{" "}
+                <a href={"mailto:" + settings.contactMailAddress}>
+                  {settings.contactMailAddress}
+                </a>{" "}
+                gesendet werden.
+              </Form.Text>
+            )}
+          </>
+        )}
+        <TapirCheckbox
+          controlId={"statuteRead"}
+          checked={statuteRead && !studentStatusEnabled}
+          onChange={setStatuteRead}
+          label={settings.strings.step6cCheckboxStatute}
+          disabled={studentStatusEnabled}
+        />
+        <TapirCheckbox
+          controlId={"commitment"}
+          checked={commitmentChecked && !studentStatusEnabled}
+          onChange={(checked) => setCommitmentChecked(checked)}
+          label={settings.strings.step6cCheckboxCommitment}
+          disabled={studentStatusEnabled}
+        />
+      </div>
       <NextStepButton
         onClick={goToNextStep}
         disabled={isGoNextButtonDisabled()}
