@@ -482,6 +482,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
                 goToNextStep={goToNextStep}
                 shoppingCart={shoppingCart}
                 setShoppingCart={setShoppingCart}
+                active={step === currentStep}
               />
             );
         }
