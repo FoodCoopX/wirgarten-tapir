@@ -96,7 +96,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
       <div>
         <div className={"d-flex flex-row gap-2"}>
           {settings.productTypes.map((productType) => (
-            <>
+            <div key={productType.id}>
               <input
                 type="checkbox"
                 className="btn-check"
@@ -115,6 +115,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                 <div className={"d-flex flex-row gap-2 align-items-center"}>
                   <Form.Check
                     checked={selectedProductTypes.includes(productType)}
+                    readOnly={true}
                     style={{ pointerEvents: "none" }}
                   />
                   {productType.iconLink && (
@@ -127,7 +128,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
                   <span>{productType.name}</span>
                 </div>
               </label>
-            </>
+            </div>
           ))}
         </div>
 
@@ -139,7 +140,6 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
             id={"investing"}
             autoComplete="off"
             onChange={(event) => setInvestingMembership(event.target.checked)}
-            defaultChecked={false}
             checked={investingMembership}
           />
           <label className={"btn btn-" + BUTTON_VARIANT} htmlFor={"investing"}>
@@ -147,6 +147,7 @@ const Step3ProductTypesChoice: React.FC<Step3ProductTypeChoiceProps> = ({
               <Form.Check
                 checked={investingMembership}
                 style={{ pointerEvents: "none" }}
+                readOnly={true}
               />
               <span>Fördermitgliedschaft</span>
             </div>

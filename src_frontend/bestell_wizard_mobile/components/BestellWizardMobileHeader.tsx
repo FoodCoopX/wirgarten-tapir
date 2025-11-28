@@ -38,7 +38,9 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         }}
         className={"d-flex justify-content-center align-items-center"}
       >
-        <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />
+        {settings.logoUrl && (
+          <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />
+        )}
         {showShoppingCart && (
           <>
             <span

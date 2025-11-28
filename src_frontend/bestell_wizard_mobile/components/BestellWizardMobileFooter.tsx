@@ -69,6 +69,21 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
     return phase;
   }
 
+  function isProgressBarStepClickable(step: Step) {
+    console.log(
+      "CHECK " +
+        step +
+        " " +
+        steps.indexOf(step) +
+        " " +
+        currentStep +
+        " " +
+        steps.indexOf(currentStep),
+    );
+
+    return steps.indexOf(step) < steps.indexOf(currentStep);
+  }
+
   return (
     <div
       style={{
@@ -129,9 +144,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                       ? "var(--bs-secondary)"
                       : "var(--bs-primary)",
                   borderRadius: "50%",
-                  cursor: "pointer",
+                  cursor: "default",
                 }}
-                onClick={() => setCurrentStep(step)}
+                onClick={() => {
+                  if (isProgressBarStepClickable(step)) {
+                    setCurrentStep(step);
+                  }
+                }}
               />
             ),
           )}
