@@ -5,10 +5,11 @@ import { Step } from "../types/Step.ts";
 import TapirButton from "../../components/TapirButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import { getPhase } from "../utils/getPhase.ts";
-import { Badge } from "react-bootstrap";
+import { Badge, ProgressBar } from "react-bootstrap";
 import { Phase } from "../types/Phase.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
 import { FOOTER_HEIGHT } from "../utils/DIMENSIONS.ts";
+import "./footer.css";
 
 interface BestellWizardMobileFooterProps {
   steps: Step[];
@@ -119,9 +120,10 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         )}
         <small
           className={
-            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
+            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center footer-widescreen"
           }
           style={{ width: "100%" }}
+          id={"footer_widescreen"}
         >
           {steps.map((step, index) =>
             isStepFirstInPhase(step, index) ? (
@@ -163,6 +165,10 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
             ),
           )}
         </small>
+        <ProgressBar
+          className={"footer-narrowscreen"}
+          now={((steps.indexOf(currentStep) + 1) / steps.length) * 100}
+        />
       </div>
     </div>
   );
