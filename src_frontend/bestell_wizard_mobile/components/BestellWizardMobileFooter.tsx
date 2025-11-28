@@ -106,12 +106,14 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
               icon={"chevron_line_up"}
               variant={BUTTON_VARIANT}
               onClick={() => setCurrentStep(steps[0])}
+              text={"Zum Start"}
             />
             <TapirButton
               size={"sm"}
               icon={"keyboard_arrow_up"}
               variant={BUTTON_VARIANT}
               onClick={goToPreviousStep}
+              text={"Zurück"}
             />
           </div>
         )}
@@ -128,8 +130,14 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                   steps.indexOf(currentStep) < index ? "secondary" : "primary"
                 }
                 key={step}
-                onClick={() => setCurrentStep(step)}
-                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  isProgressBarStepClickable(step) && setCurrentStep(step)
+                }
+                style={{
+                  cursor: isProgressBarStepClickable(step)
+                    ? "pointer"
+                    : "default",
+                }}
               >
                 {getPhaseName(getPhase(step))}
               </Badge>
@@ -144,13 +152,13 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
                       ? "var(--bs-secondary)"
                       : "var(--bs-primary)",
                   borderRadius: "50%",
-                  cursor: "default",
+                  cursor: isProgressBarStepClickable(step)
+                    ? "pointer"
+                    : "default",
                 }}
-                onClick={() => {
-                  if (isProgressBarStepClickable(step)) {
-                    setCurrentStep(step);
-                  }
-                }}
+                onClick={() =>
+                  isProgressBarStepClickable(step) && setCurrentStep(step)
+                }
               />
             ),
           )}
