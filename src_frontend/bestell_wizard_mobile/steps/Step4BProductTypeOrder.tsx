@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import TapirButton from "../../components/TapirButton.tsx";
 import { PublicProductType } from "../../api-client";
 import { shouldShowWarningProductNotAvailable } from "../../utils/shouldShowWarningNotAvailable.ts";
@@ -20,6 +20,7 @@ interface Step4BProductTypeOrderProps {
   goToNextStep: () => void;
   shoppingCart: ShoppingCart;
   setShoppingCart: (cart: ShoppingCart) => void;
+  active: boolean;
 }
 
 const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
@@ -28,8 +29,27 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
   goToNextStep,
   shoppingCart,
   setShoppingCart,
+  active,
 }) => {
   const carouselRef = useRef<CarouselRef>(null);
+  const [showValidation, setShowValidation] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
+
+  function validate() {
+    setShowValidation(true);
+    if (
+      productType.mustBeSubscribedTo &&
+      !isProductTypeOrdered(productType, shoppingCart)
+    ) {
+      return;
+    }
+    goToNextStep();
+  }
 
   function getNextButtonText() {
     if (!isProductTypeOrdered(productType, shoppingCart)) {
@@ -170,7 +190,17 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
                       }}
                       disabled={shoppingCart[product.id!] === 0}
                     />
-                    <span>{shoppingCart[product.id!]}</span>
+                    <span
+                      className={
+                        showValidation &&
+                        !isProductTypeOrdered(productType, shoppingCart) &&
+                        productType.mustBeSubscribedTo
+                          ? "text-danger"
+                          : ""
+                      }
+                    >
+                      {shoppingCart[product.id!]}
+                    </span>
                     <TapirButton
                       variant={BUTTON_VARIANT}
                       icon={"add"}
@@ -214,7 +244,18 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
             </Carousel.Item>
           ))}
       </Carousel>
-      <NextStepButton onClick={goToNextStep} text={getNextButtonText()} />
+      {showValidation &&
+        !isProductTypeOrdered(productType, shoppingCart) &&
+        productType.mustBeSubscribedTo && (
+          <Form.Control.Feedback
+            type="invalid"
+            style={{ display: "block" }}
+            className={"text-center"}
+          >
+            Dieses Produkt muss bestellt werden.
+          </Form.Control.Feedback>
+        )}
+      <NextStepButton onClick={validate} text={getNextButtonText()} />
     </>
   );
 };
