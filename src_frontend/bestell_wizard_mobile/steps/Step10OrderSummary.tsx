@@ -13,8 +13,12 @@ import NextStepButton from "../components/NextStepButton.tsx";
 import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
 import formatAddress from "../../utils/formatAddress.ts";
 import { isAtLeastOneProductOrdered } from "../../bestell_wizard/utils/isAtLeastOneProductOrdered.ts";
-import { getProductByIdGlobal } from "../utils/getProductByIdGlobal.ts";
+import {
+  getProductById,
+  getProductByIdGlobal,
+} from "../utils/getProductByIdGlobal.ts";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
+import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
 
 interface Step10OrderSummaryProps {
   settings: BestellWizardSettings;
@@ -46,10 +50,6 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   solidarityContribution,
   personalData,
 }) => {
-  function getProductById(productType: PublicProductType, productId: string) {
-    return productType.products.find((product) => product.id === productId);
-  }
-
   function getTotalPriceForProductType(productType: PublicProductType) {
     let sum = 0;
     for (const [productId, quantity] of Object.entries(shoppingCart)) {
@@ -88,17 +88,13 @@ const Step10OrderSummary: React.FC<Step10OrderSummaryProps> = ({
   }
 
   function getPaymentsTitle() {
-    let monthlyPayment = solidarityContribution;
-    for (const [productId, quantity] of Object.entries(shoppingCart)) {
-      for (const productType of settings.productTypes) {
-        const product = getProductById(productType, productId);
-        if (!product) {
-          continue;
-        }
-        monthlyPayment += product.price * quantity;
-      }
-    }
-    return "Zahlungen: " + formatCurrency(monthlyPayment) + " / Monat";
+    return (
+      "Zahlungen: " +
+      formatCurrency(
+        getMonthlyPayment(solidarityContribution, shoppingCart, settings),
+      ) +
+      " / Monat"
+    );
   }
 
   function buildProductDetails(

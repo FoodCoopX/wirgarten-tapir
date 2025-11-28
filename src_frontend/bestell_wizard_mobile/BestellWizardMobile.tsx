@@ -528,6 +528,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
           selectedPickupLocations={selectedPickupLocations}
           steps={steps}
           setCurrentStep={setCurrentStep}
+          solidarityContribution={solidarityContribution}
         />
       </div>
       <div

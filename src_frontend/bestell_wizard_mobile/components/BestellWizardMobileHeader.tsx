@@ -7,6 +7,11 @@ import BestellWizardShoppingCartOverlay from "./BestellWizardShoppingCartOverlay
 import { Phase } from "../types/Phase.ts";
 import { PublicPickupLocation } from "../../api-client";
 import { Step } from "../types/Step.ts";
+import { BUTTON_VARIANT } from "../utils/BUTTON_VARIANT.ts";
+import TapirButton from "../../components/TapirButton.tsx";
+import { HEADER_HEIGHT } from "../utils/DIMENSIONS.ts";
+import { getMonthlyPayment } from "../utils/getMonthlyPayment.ts";
+import { formatCurrency } from "../../utils/formatCurrency.ts";
 
 interface BestellWizardMobileHeaderProps {
   settings: BestellWizardSettings;
@@ -16,6 +21,7 @@ interface BestellWizardMobileHeaderProps {
   selectedPickupLocations: PublicPickupLocation[];
   steps: Step[];
   setCurrentStep: (step: Step) => void;
+  solidarityContribution: number;
 }
 
 const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
@@ -26,6 +32,7 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   selectedPickupLocations,
   steps,
   setCurrentStep,
+  solidarityContribution,
 }) => {
   const [showOverlay, setShowOverlay] = useState(false);
 
@@ -41,41 +48,29 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
         {settings.logoUrl && (
           <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />
         )}
-        {showShoppingCart && (
-          <>
-            <span
-              className={"material-icons"}
-              style={{
-                position: "absolute",
-                right: "2.5vh",
-                top: "2.5vh",
-                fontSize: "5vh",
-              }}
-              onClick={() => setShowOverlay(true)}
-            >
-              shopping_cart
-            </span>
-            <span
-              style={{
-                backgroundColor: "var(--bs-red)",
-                borderRadius: "50%",
-                width: "2.5vh",
-                height: "2.5vh",
-                color: "white",
-                position: "absolute",
-                top: "1vh",
-                right: "1vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {Object.values(shoppingCart).reduce(
-                (sum, quantity) => sum + quantity,
-                0,
-              )}
-            </span>
-          </>
+        {showShoppingCart ? (
+          <TapirButton
+            variant={BUTTON_VARIANT}
+            style={{
+              position: "absolute",
+              right: 0,
+              top: HEADER_HEIGHT / 2 + "dvh",
+              transform: "translate(0, -50%)",
+            }}
+            onClick={() => setShowOverlay(true)}
+            icon={"shopping_cart"}
+            text={
+              formatCurrency(
+                getMonthlyPayment(
+                  solidarityContribution,
+                  shoppingCart,
+                  settings,
+                ),
+              ) + " / Monat"
+            }
+          />
+        ) : (
+          <div />
         )}
       </div>
       <BestellWizardShoppingCartOverlay

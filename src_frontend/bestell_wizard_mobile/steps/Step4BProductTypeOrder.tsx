@@ -66,7 +66,7 @@ const Step4BProductTypeOrder: React.FC<Step4BProductTypeOrderProps> = ({
             : carouselRef.current?.next()
         }
       >
-        <Button variant={"outline-dark"} style={{ padding: 0 }}>
+        <Button variant={BUTTON_VARIANT} style={{ padding: 0 }}>
           <div className={"d-flex flex-column align-items-center"}>
             <span className={"material-icons"}>
               {isBeforeButton ? "chevron_left" : "chevron_right"}

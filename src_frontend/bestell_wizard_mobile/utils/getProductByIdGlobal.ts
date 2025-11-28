@@ -13,6 +13,9 @@ export function getProductByIdGlobal(
   return undefined;
 }
 
-function getProductById(productType: PublicProductType, productId: string) {
+export function getProductById(
+  productType: PublicProductType,
+  productId: string,
+) {
   return productType.products.find((product) => product.id === productId);
 }
