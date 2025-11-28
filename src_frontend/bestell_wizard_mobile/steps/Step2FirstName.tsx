@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { PersonalData } from "../../bestell_wizard/types/PersonalData.ts";
 import { BestellWizardSettings } from "../../bestell_wizard/types/BestellWizardSettings.ts";
@@ -19,11 +19,25 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
   settings,
   active,
 }) => {
-  useEffect(() => {
-    if (!active) return;
+  const [showValidation, setShowValidation] = useState(false);
 
-    setTimeout(() => document.getElementById("first_name_input")?.focus(), 200);
+  useEffect(() => {
+    if (active) {
+      setTimeout(
+        () => document.getElementById("first_name_input")?.focus(),
+        200,
+      );
+    } else {
+      setTimeout(() => setShowValidation(false), 200);
+    }
   }, [active]);
+
+  function validate() {
+    setShowValidation(true);
+    if (personalData.firstName.length > 0) {
+      goToNextStep();
+    }
+  }
 
   return (
     <>
@@ -38,13 +52,12 @@ const Step2FirstName: React.FC<Step2FirstNameProps> = ({
         }}
         id={"first_name_input"}
         onKeyUp={(event) => {
-          if (event.key === "Enter") goToNextStep();
+          if (event.key === "Enter") validate();
         }}
+        isValid={showValidation && personalData.firstName.length > 0}
+        isInvalid={showValidation && personalData.firstName.length === 0}
       />
-      <NextStepButton
-        onClick={goToNextStep}
-        disabled={personalData.firstName.length === 0}
-      />
+      <NextStepButton onClick={validate} />
     </>
   );
 };
