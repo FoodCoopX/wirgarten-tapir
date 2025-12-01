@@ -40,11 +40,12 @@ const BestellWizardMobileHeader: React.FC<BestellWizardMobileHeaderProps> = ({
   return (
     <>
       <div
+        id={"bw-header"}
         style={{
           width: "100%",
           height: "100%",
         }}
-        className={"d-flex bw-header align-items-center"}
+        className={"d-flex align-items-center"}
       >
         {settings.logoUrl && (
           <img src={settings.logoUrl} alt={"Logo"} style={{ height: "70%" }} />

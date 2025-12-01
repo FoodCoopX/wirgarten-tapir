@@ -1,12 +1,12 @@
 @media (max-width: 500px) {
-  .bw-header {
+  #bw-header {
     justify-content: left;
     padding-left: 0.5rem;
   }
 }
 
 @media (min-width: 501px) {
-  .bw-header {
+  #bw-header {
     justify-content: center;
   }
 }

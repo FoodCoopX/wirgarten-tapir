@@ -120,7 +120,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
         )}
         <small
           className={
-            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center footer-widescreen"
+            "d-flex flex-row flex-wrap gap-1 justify-content-center align-items-center"
           }
           style={{ width: "100%" }}
           id={"footer_widescreen"}
@@ -166,7 +166,7 @@ const BestellWizardMobileFooter: React.FC<BestellWizardMobileFooterProps> = ({
           )}
         </small>
         <ProgressBar
-          className={"footer-narrowscreen"}
+          id={"footer_narrowscreen"}
           now={((steps.indexOf(currentStep) + 1) / steps.length) * 100}
         />
       </div>

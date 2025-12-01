@@ -1,11 +1,11 @@
 @media (max-width: 1000px) {
-  .footer-widescreen {
+  #footer_widescreen {
     display: none !important;
   }
 }
 
 @media (min-width: 1001px) {
-  .footer-narrowscreen {
+  #footer_narrowscreen {
     display: none !important;
   }
 }
