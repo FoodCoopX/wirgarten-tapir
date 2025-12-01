@@ -20,6 +20,7 @@ interface Step5BPickupLocationChoiceProps {
   firstDeliveryDatesByPickupLocationAndProductType: {
     [key: string]: { [key: string]: Date };
   };
+  active: boolean;
 }
 
 type PickupLocationTab = "wishes" | "list" | "map";
@@ -33,11 +34,26 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
   goToNextStep,
   stepIsActive,
   firstDeliveryDatesByPickupLocationAndProductType,
+  active,
 }) => {
   const tabs: PickupLocationTab[] = ["wishes", "list", "map"];
+  const [showValidation, setShowValidation] = useState(false);
   const [currentTab, setCurrentTab] = useState<PickupLocationTab>("map");
   const carouselRef = useRef<CarouselRef>(null);
   const [mapRef, setMapRef] = useState<MapRef>(null);
+
+  useEffect(() => {
+    if (!active) {
+      setTimeout(() => setShowValidation(false), 200);
+    }
+  }, [active]);
+
+  function validate() {
+    setShowValidation(true);
+    if (selectedPickupLocations.length > 0) {
+      goToNextStep();
+    }
+  }
 
   useEffect(() => {
     if (!carouselRef.current?.element) {
@@ -133,8 +149,13 @@ const Step5BPickupLocationChoice: React.FC<Step5BPickupLocationChoiceProps> = ({
         </Carousel.Item>
       </Carousel>
       <NextStepButton
-        onClick={goToNextStep}
-        disabled={selectedPickupLocations.length === 0}
+        onClick={validate}
+        text={
+          showValidation && selectedPickupLocations.length === 0
+            ? "Noch kein Verteilstation ausgewählt"
+            : undefined
+        }
+        showError={showValidation && selectedPickupLocations.length === 0}
       />
     </>
   );

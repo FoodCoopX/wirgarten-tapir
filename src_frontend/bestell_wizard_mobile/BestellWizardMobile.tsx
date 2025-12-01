@@ -349,6 +349,7 @@ const BestellWizardMobile: React.FC<BestellWizardProps> = ({ csrfToken }) => {
             firstDeliveryDatesByPickupLocationAndProductType={
               firstDeliveryDatesByPickupLocationAndProductType
             }
+            active={currentStep === step}
           />
         );
       case "6a_coop_intro":

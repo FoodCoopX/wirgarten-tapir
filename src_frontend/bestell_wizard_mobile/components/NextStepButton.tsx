@@ -7,12 +7,14 @@ interface NextButtonProps {
   onClick: () => void;
   disabled?: boolean;
   text?: string;
+  showError?: boolean;
 }
 
 const NextStepButton: React.FC<NextButtonProps> = ({
   onClick,
   text,
   disabled,
+  showError,
 }) => {
   return (
     <div
@@ -20,7 +22,7 @@ const NextStepButton: React.FC<NextButtonProps> = ({
       className={"d-flex flex-column align-items-center justify-content-center"}
     >
       <TapirButton
-        variant={BUTTON_VARIANT}
+        variant={showError ? "outline-danger" : BUTTON_VARIANT}
         text={text ?? "Weiter"}
         onClick={onClick}
         icon={"keyboard_arrow_down"}
